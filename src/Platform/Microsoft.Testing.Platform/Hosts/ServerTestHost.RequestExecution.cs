@@ -132,6 +132,12 @@ internal sealed partial class ServerTestHost
             new MessageBusProxy(),
             method == JsonRpcMethods.TestingDiscoverTests,
             isServerRequest: true)).ConfigureAwait(false);
+        IGracefulStopTestExecutionCapability? perRequestGracefulStopCapability =
+            perRequestServiceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>();
+        if (perRequestGracefulStopCapability is not null)
+        {
+            RegisterActiveGracefulStopCapability(perRequestGracefulStopCapability);
+        }
 
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
@@ -167,6 +173,11 @@ internal sealed partial class ServerTestHost
         finally
         {
             requestExecuteStop ??= _clock.UtcNow;
+
+            if (perRequestGracefulStopCapability is not null)
+            {
+                UnregisterActiveGracefulStopCapability(perRequestGracefulStopCapability);
+            }
 
             // Cleanup all services
             // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -21,6 +22,27 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class CommonHostTests
 {
+    [TestMethod]
+    public async Task RequestGracefulSessionStopAsync_UsesActiveRequestCapabilitiesBeforeApplicationCapability()
+    {
+        Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> requestCapability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
+        TestableCommonHost host = new(serviceProvider);
+
+        host.RegisterActiveGracefulStopCapabilityForTesting(requestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        requestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        host.UnregisterActiveGracefulStopCapabilityForTesting(requestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [TestMethod]
     [DataRow(false, 1)]
     [DataRow(true, 0)]
@@ -448,6 +470,15 @@ public sealed class CommonHostTests
             ClientInfo client,
             bool isDiscoveryRequest = false)
             => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client, isDiscoveryRequest);
+
+        public void RegisterActiveGracefulStopCapabilityForTesting(IGracefulStopTestExecutionCapability capability)
+            => RegisterActiveGracefulStopCapability(capability);
+
+        public Task RequestGracefulSessionStopForTestingAsync()
+            => RequestGracefulSessionStopAsync(CancellationToken.None);
+
+        public void UnregisterActiveGracefulStopCapabilityForTesting(IGracefulStopTestExecutionCapability capability)
+            => UnregisterActiveGracefulStopCapability(capability);
 
         protected override Task<int> InternalRunAsync(CancellationToken cancellationToken)
             => Task.FromResult(0);

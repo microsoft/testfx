@@ -64,9 +64,9 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
             {
-                ["TESTINGPLATFORM_DEADLINE"] = DateTimeOffset.UtcNow.AddSeconds(1).ToString("o"),
                 ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
                 ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
+                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = "1",
                 ["WAIT_FOR_STOP"] = "1",
             },
             cancellationToken: TestContext.CancellationToken);
@@ -190,6 +190,13 @@ internal sealed class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START") == "1")
+        {
+            Environment.SetEnvironmentVariable(
+                "TESTINGPLATFORM_DEADLINE",
+                DateTimeOffset.UtcNow.AddSeconds(1).ToString("o"));
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         builder.AddHotReloadProvider();

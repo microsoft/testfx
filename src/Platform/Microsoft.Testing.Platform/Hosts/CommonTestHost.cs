@@ -20,6 +20,13 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IHost
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _activeGracefulStopCapabilitiesSync = new();
+#else
+    private readonly object _activeGracefulStopCapabilitiesSync = new();
+#endif
+    private readonly List<IGracefulStopTestExecutionCapability> _activeGracefulStopCapabilities = [];
+
     public ServiceProvider ServiceProvider => serviceProvider;
 
     protected IPushOnlyProtocol? PushOnlyProtocol => ServiceProvider.GetService<IPushOnlyProtocol>();
@@ -204,14 +211,42 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
     // stop so the framework stops scheduling new tests but still emits trx/logs/artifacts for whatever completed
     // (mirroring the local '--maximum-failed-tests' behavior). Fall back to hard cancellation when the running
     // framework has no graceful-stop capability (e.g. the test host controller), which is the only lever left.
-    private async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    protected void RegisterActiveGracefulStopCapability(IGracefulStopTestExecutionCapability capability)
     {
-        IGracefulStopTestExecutionCapability? capability =
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            _activeGracefulStopCapabilities.Add(capability);
+        }
+    }
+
+    protected void UnregisterActiveGracefulStopCapability(IGracefulStopTestExecutionCapability capability)
+    {
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            _activeGracefulStopCapabilities.Remove(capability);
+        }
+    }
+
+    protected async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    {
+        IGracefulStopTestExecutionCapability[] capabilities;
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            capabilities = [.. _activeGracefulStopCapabilities.Distinct()];
+        }
+
+        if (capabilities.Length > 0)
+        {
+            await Task.WhenAll(capabilities.Select(capability => capability.StopTestExecutionAsync(cancellationToken))).ConfigureAwait(false);
+            return;
+        }
+
+        IGracefulStopTestExecutionCapability? applicationCapability =
             ServiceProvider.GetService<ITestFrameworkCapabilities>()?.GetCapability<IGracefulStopTestExecutionCapability>();
 
-        if (capability is not null)
+        if (applicationCapability is not null)
         {
-            await capability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
+            await applicationCapability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
