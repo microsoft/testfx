@@ -155,6 +155,16 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return Task.CompletedTask;
             }
 
+            // A framework that retries in-process reports every attempt under the same uid, so a superseded attempt
+            // is not the test's outcome. Skipping it here — as the annotation, slow-test and TRX consumers all do —
+            // keeps a [Retry] test that goes on to pass out of the failure set entirely. Merely overwriting it when
+            // the final attempt arrives would not be enough: while the superseded failure is held it counts against
+            // the bounded retention set and can permanently evict the diagnostics of a test that really is failing.
+            if (update.TestNode.IsSupersededRetryAttempt())
+            {
+                return Task.CompletedTask;
+            }
+
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
 
