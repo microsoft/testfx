@@ -27,13 +27,27 @@ public sealed class ArtifactPostProcessingHelperTests
     [TestCleanup]
     public void Cleanup()
     {
+        IOException? cleanupException = null;
+
         for (int i = _trackedDirectories.Count - 1; i >= 0; i--)
         {
             string directory = _trackedDirectories[i];
-            if (Directory.Exists(directory))
+            try
             {
-                Directory.Delete(directory, recursive: true);
+                if (Directory.Exists(directory))
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
             }
+            catch (IOException ex)
+            {
+                cleanupException ??= ex;
+            }
+        }
+
+        if (cleanupException is not null)
+        {
+            throw cleanupException;
         }
     }
 
@@ -52,6 +66,7 @@ public sealed class ArtifactPostProcessingHelperTests
     {
         string path = Path.Combine(Path.GetTempPath(), nameof(ArtifactPostProcessingHelperTests), Guid.NewGuid().ToString("N"));
 
+        // A non-existent path cannot be inspected, so the method conservatively returns true.
         bool result = Invoke(path);
 
         Assert.IsTrue(result);
