@@ -1,13 +1,22 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-08-23 UTC
+2026-08-25 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-08-23, run 32668394261): **4 (verify prior PR/issue status), 2 (scan CrashDump/HangDump/MSTest.Sdk), 5 (check issues), 7 (monthly summary)**
-Last run before this: Tasks 4/2/5/7 (2026-08-22, run 32600423002)
-Next run should prioritise: Task 6 (measurement infrastructure — check for maintainer response to #10549 regression-gating proposal, still zero comments after 7+ runs). Code scan: all major src/ areas now reviewed at least once (TestFramework, Adapter, Analyzers, Platform core + Retry/HotReload/VSTestBridge/CrashDump/HangDump, MSTest.Sdk). Consider re-scanning oldest-reviewed areas for drift, or pivot fully to Task 6.
+Tasks run this session (2026-08-25, run 32902831050): **4 (verify prior PR/issue status), 2 (review recent commits, no new opportunities), 5 (check issues), 7 (monthly summary)**
+Last run before this: Tasks 4/2/5/7 (2026-08-23, run 32668394261)
+Next run should prioritise: Task 3 (implementation) if a fresh Task 2 scan turns up a concrete item, or Task 6 follow-up now that #10549 is resolved — consider proposing a smaller measurement-infra improvement, or scanning for other measurement gaps. Code scan: all major src/ areas now reviewed at least once. Consider re-scanning oldest-reviewed areas for drift.
+
+## 2026-08-25 Run Notes
+
+- **Milestone**: #10549 (the long-standing "Add regression gating to nightly PlainProcess performance timing pipeline" proposal opened 2026-08-10, zero comments for 9+ consecutive runs) is now **CLOSED**, resolved by maintainer PR #10720 "Add nightly performance regression detection" (merged 2026-08-25 16:11 UTC by Evangelink). This directly addresses the Task 6 issue we filed. No further action needed on this item — removing from all future "watch for response" notes.
+- Reviewed ~40 commits landed 2026-08-24→08-25: all maintainer/Copilot-authored feature/infra/dedup/test/localization work (#10740 doc, #10735 dedup AzDO parsing, #10734 report-merge dir handling, #10742 changelogs, #10640 markdownlint migration, #10731 symlink test, #10728/#10723/#10721/#10724 various, #10719 CI summary module split, #10722 workflow incident handling, #10695 failure-only summaries, #10717 report post-processing dedup, #10697 GH summary section selection, #10706/#10700 adapter fixes, #10690/#10692/#10683/#10687/#10686/#10688/#10678/#10677 various small fixes). No new hot-path efficiency regressions or unreviewed opportunities spotted — all changes are either bugfixes, dedup/refactors, or infra/CI work outside our four focus areas.
+- Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain. Confirmed no leftover PRs from `efficiency/cache-regex-matches` or `efficiency/trx-reparse-point-syscall` branches (both superseded by maintainer PRs #10661/#10648 per earlier run notes).
+- Task 5: searched for open efficiency/performance/energy/green-software issues — none found (search returned 0 results; only #10382, our own monthly tracker, exists under `area/performance` besides now-closed #10549). No comment made this run (nothing actionable).
+- Task 7: updated #10382 with full body rewrite — cleared "watch #10549" framing, backlog unchanged (LOW-only), no suggested actions pending.
+- Pure monitoring pass — no new PR created (no genuinely measurable HIGH/MEDIUM opportunity this run, consistent with prior ~6 runs). Repo continues to be very actively self-optimized by maintainers.
 
 ## 2026-08-23 Run Notes
 
