@@ -79,6 +79,16 @@ public class UnitTest1
     }
 
     [TestMethod]
+    [DataRow(1, "managed", true)]
+    public async Task TestMethod4(int size, string category, bool enabled)
+    {
+        await Task.Yield();
+        Assert.AreEqual(1, size);
+        Assert.AreEqual("managed", category);
+        Assert.IsTrue(enabled);
+    }
+
+    [TestMethod]
     public void Overload()
     {
     }
@@ -178,6 +188,8 @@ public class UnitTest1
         string registration = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registration.g.cs", StringComparison.Ordinal)));
         StringAssert.Contains(registration, "availableMethods ??= type.GetMethods(memberFlags)");
         StringAssert.Contains(registration, "ResolveMethod(availableMethods, method.Name, method.ParameterTypes)");
+        StringAssert.Contains(registration, "methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false)");
+        StringAssert.Contains(registration, "methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false)");
 
         // Behavioral evidence: tests still discover and run when the source-generated
         // ReflectionMetadataHook is the only metadata provider wired in at module init.
@@ -186,7 +198,7 @@ public class UnitTest1
         // catch silent discovery regressions where tests are not picked up.)
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 6, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 7, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
     }
 
