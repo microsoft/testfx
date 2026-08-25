@@ -148,4 +148,28 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
             PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
         }
     }
+
+    public async Task CompletedDiscoveryReleasesPendingStopOwnershipBeforeNextRun()
+    {
+        var discovery = MSTestGracefulStopTestExecutionCapability.Create();
+        var nextRun = MSTestGracefulStopTestExecutionCapability.Create();
+
+        try
+        {
+            discovery.NotifyTestExecutionPending();
+            (await discovery.TryStopTestExecutionAsync(CancellationToken.None)).Should().BeTrue();
+
+            discovery.NotifyTestExecutionCompleted();
+            nextRun.NotifyTestExecutionPending();
+            nextRun.NotifyTestExecutionStarting();
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeFalse();
+        }
+        finally
+        {
+            discovery.NotifyTestExecutionCompleted();
+            nextRun.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+        }
+    }
 }

@@ -243,6 +243,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     {
         if (!_isDisposed)
         {
+            _gracefulStopCapability.NotifyTestExecutionCompleted();
             _incomingRequestCounter.Dispose();
             _isDisposed = true;
         }
