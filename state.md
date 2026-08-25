@@ -148,3 +148,11 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Reviewed issue #10381 - no new maintainer comments since last check, no suggested actions pending.
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact) - all still low priority, not fixed.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-08-25 Notes
+- Task 2: dispatched explore-agent scan of MSTestAdapter.PlatformServices Utilities (ReflectionUtility/FileUtility/AssemblyUtility), Platform Hosts (per-execution-request code), Platform Requests, TestFramework Assertion classes not yet covered (ThrowsException/Fail/Inconclusive), Retry extension, MSBuild extension. Minor findings only: `ServerTestHost.RequestExecution.cs:84` `.Select().ToArray()` on testNodes (once per run request, low impact); `RetryArtifactProcessor.cs:71-111` GroupBy/Any(Count()) double-enumeration (only matters with many retries+artifacts, low volume). Both low priority/low frequency, not worth a PR. No new significant per-test hot-path findings; codebase remains thoroughly optimized (consistent with 08-14 through 08-24 runs).
+- Task 4: no open PRs with "[perf-improver]" title prefix (search_pull_requests 0 results).
+- Task 5: no open performance-labeled issues found (search_issues label:performance is:open 0 results).
+- Task 7: Monthly Activity issue #10381 (August 2026) still open and current - updated with this run's entry, no suggested actions pending.
+- Backlog unchanged plus two new minor items: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (new, minor), RetryArtifactProcessor.cs GroupBy/Count double-enum (new, minor) - all low priority, not fixed.
+- Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
