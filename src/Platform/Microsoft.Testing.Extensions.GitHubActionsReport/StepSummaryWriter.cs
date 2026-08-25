@@ -452,22 +452,46 @@ internal sealed class StepSummaryWriter
     /// Counts the full test project sections this extension has written to the shared summary file.
     /// </summary>
     /// <remarks>
-    /// Only a marker occupying a whole line counts. Failing tests' names and messages are rendered into the
-    /// summary, so a test whose output happens to contain the marker text would otherwise inflate the count —
-    /// and this reporter's own test suite refers to the marker by value, which makes that a live case rather
-    /// than a hypothetical one.
+    /// Failing tests' messages and stack traces are copied verbatim into the summary inside fenced code blocks,
+    /// so the marker text can appear there — on its own line — as ordinary user-controlled content. Only a marker
+    /// occupying a whole line <em>outside</em> a fence counts, otherwise a test could inflate the project count
+    /// the truncation note reports simply by printing the marker.
     /// </remarks>
     internal static int CountProjectSections(string summary)
     {
         int count = 0;
-        for (int index = summary.IndexOf(GitHubActionsSummaryReporter.ProjectSectionMarker, StringComparison.Ordinal);
-            index >= 0;
-            index = summary.IndexOf(GitHubActionsSummaryReporter.ProjectSectionMarker, index + GitHubActionsSummaryReporter.ProjectSectionMarker.Length, StringComparison.Ordinal))
+        int fenceLength = 0;
+        foreach (string rawLine in summary.Split('\n'))
         {
-            bool atLineStart = index == 0 || summary[index - 1] == '\n';
-            int end = index + GitHubActionsSummaryReporter.ProjectSectionMarker.Length;
-            bool atLineEnd = end == summary.Length || summary[end] == '\n' || summary[end] == '\r';
-            if (atLineStart && atLineEnd)
+            string line = rawLine.TrimEnd('\r');
+
+            // Fences are chosen longer than the longest backtick run in the body they wrap, so a fence only ever
+            // closes on a run at least as long as the one that opened it.
+            int backticks = 0;
+            while (backticks < line.Length && line[backticks] == '`')
+            {
+                backticks++;
+            }
+
+            if (fenceLength == 0)
+            {
+                if (backticks >= 3)
+                {
+                    fenceLength = backticks;
+                    continue;
+                }
+            }
+            else
+            {
+                if (backticks >= fenceLength && line.Length == backticks)
+                {
+                    fenceLength = 0;
+                }
+
+                continue;
+            }
+
+            if (string.Equals(line, GitHubActionsSummaryReporter.ProjectSectionMarker, StringComparison.Ordinal))
             {
                 count++;
             }

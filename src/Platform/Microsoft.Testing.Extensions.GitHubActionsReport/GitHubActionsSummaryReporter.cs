@@ -64,6 +64,19 @@ internal sealed partial class GitHubActionsSummaryReporter :
 #endif
 #pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
     private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The raw inputs for each failed test's diagnostics, held until session end.
+    /// </summary>
+    /// <remarks>
+    /// Only references already allocated by the test framework are kept here. Turning them into rendered
+    /// diagnostics — formatting <see cref="Exception.StackTrace"/>, walking it for a source location, and
+    /// clipping the result — costs far more than it looks, and only <see cref="MaxFailures"/> of them are ever
+    /// rendered. A run with thousands of failures would otherwise pay that cost, and retain tens of megabytes of
+    /// clipped text, for diagnostics it immediately discards.
+    /// </remarks>
+    private readonly Dictionary<string, (string? Explanation, Exception? Exception, TestNode TestNode)> _pendingFailures
+        = new Dictionary<string, (string?, Exception?, TestNode)>(StringComparer.Ordinal);
 #pragma warning restore IDE0028
 
     public GitHubActionsSummaryReporter(
@@ -115,6 +128,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         lock (_stateLock)
         {
             _records.Clear();
+            _pendingFailures.Clear();
         }
 
         return Task.CompletedTask;
@@ -158,13 +172,21 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
-            TestFailureDetails? failureDetails = kind == TerminalKind.Failed && _includeFailureDetails
-                ? CaptureFailureDetails(update.TestNode, state)
+            // Capture only what is cheap to hold: the explanation and the exception reference, both of which
+            // already exist. Formatting Exception.StackTrace, resolving its source location and clipping the
+            // result is the expensive part, and at most MaxFailures of these are ever rendered — so that work is
+            // deferred to session end and done only for the failures actually selected.
+            (string? Explanation, Exception? Exception)? pendingFailure = kind == TerminalKind.Failed && _includeFailureDetails
+                ? TryGetFailureInfo(state)
                 : null;
 
             lock (_stateLock)
             {
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration, failureDetails);
+                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
+                if (pendingFailure is { } failure)
+                {
+                    _pendingFailures[uid] = (failure.Explanation, failure.Exception, update.TestNode);
+                }
             }
         }
         catch (OperationCanceledException)
@@ -203,11 +225,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
-            List<TestRecord> snapshot;
-            lock (_stateLock)
-            {
-                snapshot = [.. _records.Values];
-            }
+            List<TestRecord> snapshot = BuildSnapshot();
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
@@ -272,10 +290,56 @@ internal sealed partial class GitHubActionsSummaryReporter :
     }
 
     /// <summary>
-    /// Renders this project's section against the file length observed under the writer's lock, and writes it in
-    /// the same transaction. Best-effort: a failure to write the summary must not fail the test run, so it
-    /// surfaces as a warning.
+    /// Takes the recorded tests in a deterministic order and attaches diagnostics to the failures that will
+    /// actually be rendered.
     /// </summary>
+    /// <remarks>
+    /// The order matters twice. It makes which failures get expanded reproducible — dictionary order is arbitrary,
+    /// so without it a run could expand a different twenty failures each time — and it makes the direct path's
+    /// "first <see cref="MaxFailures"/> encountered" agree with the aggregated path's "first
+    /// <see cref="MaxFailures"/> by name", so exactly the failures that need diagnostics are the ones that pay
+    /// for them.
+    /// </remarks>
+    private List<TestRecord> BuildSnapshot()
+    {
+        List<KeyValuePair<string, TestRecord>> entries;
+        Dictionary<string, (string? Explanation, Exception? Exception, TestNode TestNode)> pending;
+        lock (_stateLock)
+        {
+            entries = [.. _records];
+            pending = new Dictionary<string, (string?, Exception?, TestNode)>(_pendingFailures, StringComparer.Ordinal);
+        }
+
+        entries.Sort(static (left, right) =>
+        {
+            int result = StringComparer.Ordinal.Compare(left.Value.FullyQualifiedName, right.Value.FullyQualifiedName);
+            return result != 0 ? result : StringComparer.Ordinal.Compare(left.Value.DisplayName, right.Value.DisplayName);
+        });
+
+        var snapshot = new List<TestRecord>(entries.Count);
+        int expanded = 0;
+        foreach (KeyValuePair<string, TestRecord> entry in entries)
+        {
+            TestRecord record = entry.Value;
+            if (record.Kind == TerminalKind.Failed
+                && expanded < MaxFailures
+                && pending.TryGetValue(entry.Key, out (string? Explanation, Exception? Exception, TestNode TestNode) failure))
+            {
+                expanded++;
+                record = new TestRecord(
+                    record.DisplayName,
+                    record.FullyQualifiedName,
+                    record.Kind,
+                    record.Duration,
+                    CaptureFailureDetails(failure.TestNode, failure.Explanation, failure.Exception));
+            }
+
+            snapshot.Add(record);
+        }
+
+        return snapshot;
+    }
+
     /// <returns>
     /// <see langword="false"/> only when the writer refused the content because it would have taken the file past
     /// GitHub's cap. A write that failed for any other reason has already been reported and returns
@@ -439,16 +503,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// clipped here rather than at render time so an enormous stack trace never reaches the aggregation fragment
     /// written to disk.
     /// </remarks>
-    private TestFailureDetails? CaptureFailureDetails(TestNode testNode, TestNodeStateProperty? state)
+    private TestFailureDetails? CaptureFailureDetails(TestNode testNode, string? explanationInput, Exception? exception)
     {
-        (string? Explanation, Exception? Exception)? failure = TryGetFailureInfo(state);
-
-        if (failure is null)
-        {
-            return null;
-        }
-
-        Exception? exception = failure.Value.Exception;
         string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
         (string RelativeNormalizedPath, int LineNumber)? stackLocation = StackTraceSourceLocationResolver.TryResolve(
             exception?.StackTrace,
@@ -462,9 +518,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
         // Fall back on whitespace, not just null: Clip treats a whitespace-only value as absent, so an empty
         // explanation would otherwise discard a perfectly good exception message.
-        string? explanation = RoslynString.IsNullOrWhiteSpace(failure.Value.Explanation)
+        string? explanation = RoslynString.IsNullOrWhiteSpace(explanationInput)
             ? exception?.Message
-            : failure.Value.Explanation;
+            : explanationInput;
 
         return new TestFailureDetails(
             GitHubActionsFailureDetails.Clip(explanation, GitHubActionsFailureDetails.MaxMessageLength, GitHubActionsFailureDetails.MaxMessageRows),

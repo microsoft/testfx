@@ -1512,6 +1512,46 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void CountProjectSections_IgnoresTheMarker_WhenAFailureBodyPrintsItOnItsOwnLine()
+    {
+        // A failure message is copied verbatim into a fenced block, so a test can print the marker on a line of
+        // its own. Counting it would inflate the project count the truncation note reports, on user-controlled
+        // input.
+        string summary =
+            GitHubActionsSummaryReporter.ProjectSectionMarker + "\n## Real project\n\n"
+            + "```text\n"
+            + GitHubActionsSummaryReporter.ProjectSectionMarker + "\n"
+            + "   at T.Boom()\n"
+            + "```\n";
+
+        Assert.AreEqual(1, StepSummaryWriter.CountProjectSections(summary));
+    }
+
+    [TestMethod]
+    public void CountProjectSections_CountsMarkersAfterAFenceCloses()
+    {
+        // The scan must resume after the fence, or a project section following a failure body would be lost.
+        string summary =
+            GitHubActionsSummaryReporter.ProjectSectionMarker + "\n"
+            + "```text\n" + GitHubActionsSummaryReporter.ProjectSectionMarker + "\n```\n"
+            + GitHubActionsSummaryReporter.ProjectSectionMarker + "\n";
+
+        Assert.AreEqual(2, StepSummaryWriter.CountProjectSections(summary));
+    }
+
+    [TestMethod]
+    public void CountProjectSections_HandlesLongerFences()
+    {
+        // The renderer picks a fence longer than the longest backtick run in the body, so a shorter run inside
+        // must not close it early.
+        string summary =
+            GitHubActionsSummaryReporter.ProjectSectionMarker + "\n"
+            + "````text\n```\n" + GitHubActionsSummaryReporter.ProjectSectionMarker + "\n````\n";
+
+        Assert.AreEqual(1, StepSummaryWriter.CountProjectSections(summary));
+    }
+
+    [TestMethod]
     public async Task UpsertStepSummaryWithRetryAsync_ReplacesMatchingSection()
     {
         string path = Path.GetTempFileName();
