@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -709,7 +710,8 @@ public sealed class CiRunSummaryAggregationTests
                     ["manifest"] = ["manifest.json"],
                 }),
                 environment.Object,
-                new SystemFileSystem());
+                new SystemFileSystem(),
+                new Mock<ILoggerFactory>().Object);
 
             ProcessedArtifact? result = await processor.ProcessAsync(
                 [

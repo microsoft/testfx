@@ -61,6 +61,25 @@ internal sealed class CiRunSummaryTest
     public string FullyQualifiedName { get; set; } = string.Empty;
 
     public long DurationTicks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the failure explanation (or exception message) of a failing test. Only populated for failures,
+    /// and omitted from the fragment when absent so passing/slow-test entries stay small.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ErrorMessage { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ErrorType { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? StackTrace { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? FilePath { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? LineNumber { get; set; }
 }
 
 internal sealed class CiRunSummaryFailingClass
