@@ -218,6 +218,20 @@ Never hand-edit a `.lock.yml`, inject a toolcache path through `engine.command`,
 detection to avoid the installer. Those changes are brittle, overwritten by compilation, or remove
 a security control.
 
+### `detection` job fails with `awf: command not found`
+
+**Symptom.** A long-running workflow reaches threat detection, then the detection job fails before
+the model starts with `awf: command not found`. The tracker records `parse_error` because no
+`THREAT_DETECTION_RESULT` was produced.
+
+**Why.** This is a runner/runtime failure, not a malformed detector response and not evidence that
+the agent output contained a threat. Repository prompt changes cannot repair a missing `awf`
+executable.
+
+**What to do.** Re-run the failed workflow. If the failure repeats on current generated locks,
+capture the detection job log and report it upstream to `github/gh-aw`. Do not disable threat
+detection or weaken the safe-output gate.
+
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
 **Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the
@@ -235,16 +249,21 @@ that the marker was found and then failed to parse:
 
 - `Lines containing THREAT_DETECTION_RESULT (1 of N)` means the marker is present, so the detection
   model ran and answered. That is the formatting cause described here.
-- `No THREAT_DETECTION_RESULT found` means no result was ever written. That is the installer failure
-  in [the previous section](#detection-job-fails-at-install-github-copilot-cli), or another
+- `No THREAT_DETECTION_RESULT found` means no result was ever written. That can be the
+  [Copilot CLI installer failure](#detection-job-fails-at-install-github-copilot-cli), or another
   job-level failure that stopped the model before it answered.
 
-**Why.** The model wrapped its result line in Markdown emphasis, so the line starts with
+**Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the line starts with
 `**THREAT_…` instead of `THREAT_…`. gh-aw's parser slices the JSON at a fixed offset from the start
 of the line instead of from the index of the marker it just located, so the two extra characters
 move the cut two positions into `RESULT` and it tries to parse `T:{"prompt"…`. This cannot be fixed
 in this repository: the parser is `parse_threat_detection_results.cjs` inside the gh-aw actions
 bundle that every run downloads to `${{ runner.temp }}/gh-aw/actions`.
+
+Another observed cause is invalid JSON inside an otherwise correctly positioned marker, such as a
+reason string containing an unescaped quoted gh-aw redaction marker. The affected workflow should
+constrain the detector prompt to emit exactly one single-line result and JSON-escape quotes and
+backslashes inside reason strings.
 
 **Status.** Mitigated by pinning the detector to a model that does not add the emphasis, rather than
 by changing the parser. `safe-outputs.threat-detection.engine.model: gpt-5-mini` was applied to the
