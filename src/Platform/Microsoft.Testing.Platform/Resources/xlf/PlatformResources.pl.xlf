@@ -739,7 +739,7 @@ W katalogu domyślnym „TestResults” zostanie wygenerowany plik, jeśli nie z
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
+        <target state="translated">Zastąp „[log]_.” określonym prefiksem nazwy pliku dziennika.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -921,7 +921,7 @@ Aby uzyskać więcej informacji na temat kodów zakończenia, zobacz stronę htt
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="new">Microsoft Testing Platform command line provider.</target>
+        <target state="translated">Dostawca wiersza polecenia platformy testowania firmy Microsoft.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,7 +950,7 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="new">For testing purposes.</target>
+        <target state="translated">Do celów testowych.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

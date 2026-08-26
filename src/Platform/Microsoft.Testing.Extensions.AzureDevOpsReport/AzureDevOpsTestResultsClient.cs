@@ -117,19 +117,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
         // From this point on the AzDO server has accepted the results. Failing to parse the response
         // must not cause the caller to retry the publish (that would duplicate result rows).
-        try
-        {
-            string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
-            return ParsePublishedResults(payload, results, validateAutomatedTestName: true);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return null;
-        }
-        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException or InvalidOperationException or ArgumentException)
-        {
-            return null;
-        }
+        return await TryReadAndParsePublishedResultsAsync(response, requestTimeoutSource.Token, cancellationToken, results, validateAutomatedTestName: true).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -154,12 +142,28 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         requestTimeoutSource.CancelAfter(RequestTimeout);
         using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
 
+        return await TryReadAndParsePublishedResultsAsync(response, requestTimeoutSource.Token, cancellationToken, results, validateAutomatedTestName: false).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Reads the response body and parses it into published results, swallowing parse/transport failures
+    /// that must not cause the caller to retry (the server has already accepted the write).
+    /// </summary>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    private static async Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> TryReadAndParsePublishedResultsAsync(
+        HttpResponseMessage response,
+        CancellationToken readTimeoutToken,
+        CancellationToken userCancellationToken,
+        IReadOnlyList<AzureDevOpsTestCaseResult> results,
+        bool validateAutomatedTestName)
+    {
         try
         {
-            string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
-            return ParsePublishedResults(payload, results, validateAutomatedTestName: false);
+            string payload = await ReadAsStringAsync(response.Content, readTimeoutToken).ConfigureAwait(false);
+            return ParsePublishedResults(payload, results, validateAutomatedTestName);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (!userCancellationToken.IsCancellationRequested)
         {
             return null;
         }
