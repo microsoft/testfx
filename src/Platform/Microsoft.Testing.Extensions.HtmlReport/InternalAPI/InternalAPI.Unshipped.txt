@@ -1,5 +1,9 @@
 #nullable enable
 const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.HtmlArtifactKind = "microsoft.testing.html" -> string!
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.init -> void
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Description.get -> string!
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.DisplayName.get -> string!

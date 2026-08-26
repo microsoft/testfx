@@ -352,6 +352,10 @@ public sealed class GitHubActionsSummaryReporterTests
                 CancellationToken.None);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
                 CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
                 CancellationToken.None);
             await reporter.OnTestSessionFinishingAsync(context.Object);
@@ -362,8 +366,8 @@ public sealed class GitHubActionsSummaryReporterTests
                 GitHubSummaryPostProcessor.Provider,
                 new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
             Assert.IsEmpty(aggregate.FlakyTests);
-            Assert.AreEqual(2, aggregate.TotalTests);
-            Assert.AreEqual(1, aggregate.PassedTests);
+            Assert.AreEqual(3, aggregate.TotalTests);
+            Assert.AreEqual(2, aggregate.PassedTests);
             Assert.AreEqual(1, aggregate.FailedTests);
             Assert.AreEqual("Tests.SharedTitle", aggregate.Modules.Single().Failures.Single().FullyQualifiedName);
         }

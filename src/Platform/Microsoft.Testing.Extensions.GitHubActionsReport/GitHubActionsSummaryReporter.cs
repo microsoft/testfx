@@ -178,25 +178,19 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     // Keep this sticky for the session: folded data-driven rows can share a uid and arrive in
                     // either order, so a later passing row must not turn a mixed-outcome uid into a recovery.
                     _notRecoveredTests.Add(uid);
-                    for (int i = 0; i < _records.Count; i++)
-                    {
-                        (string existingUid, TestRecord record) = _records[i];
-                        if (existingUid == uid && record.IsFlaky)
-                        {
-                            _records[i] = (existingUid, new TestRecord(
-                                record.DisplayName,
-                                record.FullyQualifiedName,
-                                record.Kind,
-                                record.Duration,
-                                isFlaky: false));
-                        }
-                    }
+                    ClearFlakyRecords(uid);
                 }
 
                 bool isFlaky = kind == TerminalKind.Passed
                     && !_notRecoveredTests.Contains(uid)
                     && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
                 _records.Add((uid, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
+                if (_records.Count(entry => entry.Uid == uid) > 1)
+                {
+                    // Multiple final rows share one UID, so the protocol cannot identify which row recovered.
+                    // Keep every row and its outcome, but fail closed instead of attributing flakiness to all of them.
+                    ClearFlakyRecords(uid);
+                }
             }
         }
         catch (OperationCanceledException)
@@ -209,6 +203,23 @@ internal sealed partial class GitHubActionsSummaryReporter :
         }
 
         return Task.CompletedTask;
+    }
+
+    private void ClearFlakyRecords(string uid)
+    {
+        for (int i = 0; i < _records.Count; i++)
+        {
+            (string existingUid, TestRecord record) = _records[i];
+            if (existingUid == uid && record.IsFlaky)
+            {
+                _records[i] = (existingUid, new TestRecord(
+                    record.DisplayName,
+                    record.FullyQualifiedName,
+                    record.Kind,
+                    record.Duration,
+                    isFlaky: false));
+            }
+        }
     }
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)

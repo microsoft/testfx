@@ -44,6 +44,8 @@ internal static class HtmlReportMerger
         "stackTrace",
         "standardOutput",
         "standardError",
+        "retryAttemptNumber",
+        "isSupersededRetryAttempt",
     ];
 
     internal static string Merge(IReadOnlyList<string> inputReports)
@@ -469,7 +471,8 @@ internal static class HtmlReportMerger
             "\0",
             CreateTestIdentity(test),
             ReadRequiredString(test.Test, "displayName"),
-            ReadOptionalInt(test.Test, "attemptIndex")?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
+            (ReadOptionalInt(test.Test, "rowOccurrence") ?? ReadOptionalInt(test.Test, "attemptIndex"))
+                ?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
 
     private static int? ReadOptionalInt(JsonObject owner, string propertyName)
         => owner[propertyName] is JsonValue value && value.TryGetValue(out int result)
