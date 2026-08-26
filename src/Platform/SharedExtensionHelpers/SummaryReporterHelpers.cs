@@ -11,11 +11,17 @@ namespace Microsoft.Testing.Extensions;
 internal readonly struct TestRecord
 {
     public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration)
+        : this(displayName, fullyQualifiedName, kind, duration, isFlaky: false)
+    {
+    }
+
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, bool isFlaky)
     {
         DisplayName = displayName;
         FullyQualifiedName = fullyQualifiedName;
         Kind = kind;
         Duration = duration;
+        IsFlaky = isFlaky;
     }
 
     public string DisplayName { get; }
@@ -25,6 +31,8 @@ internal readonly struct TestRecord
     public TerminalKind Kind { get; }
 
     public TimeSpan Duration { get; }
+
+    public bool IsFlaky { get; }
 }
 
 /// <summary>

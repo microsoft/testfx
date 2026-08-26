@@ -63,6 +63,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
 #endif
 #pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
     private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
+    private readonly HashSet<string> _inProcessFailedTests = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _notRecoveredTests = new(StringComparer.Ordinal);
 #pragma warning restore IDE0028
 
     public GitHubActionsSummaryReporter(
@@ -113,6 +115,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
         lock (_stateLock)
         {
             _records.Clear();
+            _inProcessFailedTests.Clear();
+            _notRecoveredTests.Clear();
         }
 
         return Task.CompletedTask;
@@ -138,6 +142,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
+            RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
 
             // Resolve the stable, fully-qualified name the same way the annotation and slow-test reporters do
             // (preferring TestMethodIdentifierProperty) so a given test renders identically across all three surfaces.
@@ -158,7 +163,24 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             lock (_stateLock)
             {
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
+                if (retryAttempt is { IsSuperseded: true })
+                {
+                    if (kind == TerminalKind.Failed)
+                    {
+                        _inProcessFailedTests.Add(uid);
+                    }
+                }
+                else if (kind is TerminalKind.Failed or TerminalKind.Skipped)
+                {
+                    // Keep this sticky for the session: folded data-driven rows can share a uid and arrive in
+                    // either order, so a later passing row must not turn a mixed-outcome uid into a recovery.
+                    _notRecoveredTests.Add(uid);
+                }
+
+                bool isFlaky = kind == TerminalKind.Passed
+                    && (_inProcessFailedTests.Contains(uid)
+                        || (GetAttemptNumber() > 1 && !_notRecoveredTests.Contains(uid)));
+                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky);
             }
         }
         catch (OperationCanceledException)

@@ -9,6 +9,8 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.StepSummaryOnFailureValue = "on-failure" -> string!
 override Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode
+Microsoft.Testing.Extensions.TestRecord.IsFlaky.get -> bool
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections.All = Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections.TestResults | Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections.SlowTests | Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections.Coverage -> Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections.Coverage = 4 -> Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections

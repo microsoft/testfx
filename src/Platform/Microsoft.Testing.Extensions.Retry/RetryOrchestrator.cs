@@ -5,6 +5,7 @@ using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
@@ -394,6 +395,17 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             $"testfx-retry-postprocess-{Guid.NewGuid():N}");
         try
         {
+            ArtifactPostProcessingRunSummary? artifactRunSummary = suiteCountsKnown
+                && finalFailedTestResults + suiteSkippedTests <= suiteTotalTests
+                    ? new ArtifactPostProcessingRunSummary(
+                        suiteTotalTests,
+                        suiteTotalTests - finalFailedTestResults - suiteSkippedTests,
+                        finalFailedTestResults,
+                        suiteSkippedTests,
+                        orchestrationStopwatch.Elapsed,
+                        exitCodes[^1],
+                        testModuleCount: 1)
+                    : null;
             IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
                 _serviceProvider,
                 this,
@@ -401,6 +413,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 logger,
                 attemptArtifacts,
                 attemptCount,
+                artifactRunSummary,
                 postProcessingDirectory,
                 cancellationToken).ConfigureAwait(false);
 

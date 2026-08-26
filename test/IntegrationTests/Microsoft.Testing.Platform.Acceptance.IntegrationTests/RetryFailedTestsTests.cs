@@ -681,6 +681,63 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_GitHubActionsSummary_ReportsFlakyTest(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string summaryPath = Path.Combine(resultDirectory, "github-step-summary.md");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-gh --report-gh-annotations off --report-gh-groups off",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "GITHUB_ACTIONS", "true" },
+                { "GITHUB_STEP_SUMMARY", summaryPath },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(summaryPath));
+        string summary = File.ReadAllText(summaryPath);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Duration |", summary, summary);
+        Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
+        Assert.Contains("### ⚠️ Flaky tests (1)", summary, summary);
+        Assert.Contains("`DummyClassName.TestMethod1`", summary, summary);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_HtmlReport_ContainsCompleteRunAndRetryHistory(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-html",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        string reportPath = Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single();
+        string report = File.ReadAllText(reportPath);
+        Assert.Contains(@"""total"":3", report, report);
+        Assert.Contains(@"""passed"":3", report, report);
+        Assert.Contains(@"""flaky"":1", report, report);
+        Assert.Contains(@"""retryAttempts""", report, report);
+        Assert.Contains("Retry history", report, report);
+        Assert.Contains("badge flaky", report, report);
+    }
+
     private static string ReadRequiredStringProperty(string filePath, string propertyName)
     {
         using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(filePath));
@@ -701,7 +758,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion));
 
         private const string TestCode = """
 #file RetryFailedTests.csproj
@@ -718,6 +776,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
@@ -758,6 +818,8 @@ public class Program
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
         builder.AddCtrfReportProvider();
 #pragma warning restore TPEXP
+        builder.AddGitHubActionsProvider();
+        builder.AddHtmlReportProvider();
         builder.AddRetryProvider();
         builder.AddMSBuild();
         builder.AddTreeNodeFilterService(treeNodeFilterExtension);

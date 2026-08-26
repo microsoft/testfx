@@ -79,6 +79,14 @@ internal static partial class CiRunSummaryAggregation
                     .Take(MaxFailures)
                     .Select(ToSummaryTest),
             ],
+            FlakyTests =
+            [
+                .. records
+                    .Where(static record => record.IsFlaky)
+                    .OrderBy(static record => record.FullyQualifiedName, StringComparer.Ordinal)
+                    .ThenBy(static record => record.DisplayName, StringComparer.Ordinal)
+                    .Select(ToSummaryTest),
+            ],
             SlowestTests =
             [
                 .. records
