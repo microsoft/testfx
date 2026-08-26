@@ -11,12 +11,18 @@ permissions:
   contents: read
   pull-requests: read
 
+network:
+  allowed:
+    - defaults
+    - dotnet
+
 tools:
   cache-memory:
     - id: repo-history
       key: repo-history  # shared cache produced by the repo-historian workflow
   github:
     toolsets: [pull_requests, repos]
+  web-fetch:
 
 # Attribution is provided by the Copilot banner the expert-reviewer prepends to
 # every comment/review body (see .github/agents/expert-reviewer.agent.md). The

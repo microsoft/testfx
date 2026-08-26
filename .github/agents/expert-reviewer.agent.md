@@ -502,12 +502,60 @@ Applies to changes in `src/Platform/` involving serialization/deserialization.
 1. Dependency versions must be managed through Arcade/Maestro. Manual edits to `eng/Versions.props` require justification.
 2. Verify compatibility with all build entry points: Arcade CLI, VS, `dotnet build`.
 3. CI/CD pipeline changes require validation before merge.
+4. Every dependency version change requires a **Dependency Upgrade Assessment**, even when the change is acceptable and produces no actionable finding.
+5. Classify the update as patch, minor, major, pre-release progression, or pre-release-to-stable. Do not assume a green build proves downstream compatibility.
+6. Identify every consuming project and classify the dependency as runtime, build-time, analyzer, test-only, or development-only. Determine whether each consumer is shipping, nonshipping, or pre-release, whether the dependency is exposed through public API signatures, and whether it is automatically injected into consumer projects.
+7. Compare the old and new package metadata for every supported TFM. Report removed TFMs, fallback to less-specific assets, runtime/native asset changes, and minimum framework changes.
+8. Compare dependency groups from the exact old and new package versions using authoritative package-registry metadata. Report added and removed dependencies, major-version shifts, tightened version ranges, and target-specific differences. Follow newly added dependencies far enough to explain the effective transitive impact. Clearly distinguish direct metadata evidence from unresolved transitive impact.
+9. Read upstream release notes, changelogs, migration guides, and official breaking-change documentation for the entire old-exclusive/new-inclusive range. Report source, binary, behavioral, and configuration breaks; obsolete or removed APIs; changed defaults; and known compatibility constraints.
+10. Judge acceptability in the context of the product release train. A major dependency bump is not automatically unacceptable, but raising a public or transitive dependency major in a stable MSTest/MTP minor release requires explicit compatibility evidence. Pre-release or nonshipping packages may accept more churn, but the assessment must state that rationale.
+11. Use authoritative sources only: NuGet package metadata, the dependency's source repository and release notes, and official Microsoft documentation. Link every compatibility claim. If evidence is unavailable, mark it unknown instead of guessing.
 
 **CHECK — Flag if:**
 - [ ] `eng/Versions.props` manually edited without justification
 - [ ] CI YAML change not validated
 - [ ] New package reference without justification
 - [ ] Bootstrap build compatibility not verified
+- [ ] Dependency version changed without a complete Dependency Upgrade Assessment
+- [ ] New or upgraded package drops a supported TFM or selects a less-specific fallback asset
+- [ ] Dependency graph adds an unexplained package, major-version shift, or restrictive version range
+- [ ] Upstream breaking change affects code, public API, behavior, or configuration in this repository
+- [ ] Stable minor release raises an exposed or transitive dependency major without explicit compatibility evidence
+
+#### Required output for dependency version changes
+
+The Build Infrastructure & Dependencies dimension agent MUST emit this report before its normal `LGTM` or `ISSUE` block:
+
+```markdown
+## Dependency Upgrade Assessment
+
+| Package | Change | Update kind | Shipping/public impact | TFM or asset delta | Dependency graph delta | Upstream breaking changes | Verdict |
+|---------|--------|-------------|------------------------|--------------------|------------------------|---------------------------|---------|
+| Package.Id | 1.2.3 → 2.0.0 | Major | ... | ... | ... | ... | ACCEPTABLE / ACCEPTABLE WITH CONDITIONS / DEFER TO NEXT MAJOR / INSUFFICIENT EVIDENCE |
+
+### Evidence
+- **Consumers:** <projects and how the package reaches users>
+- **Dependency metadata:** <added/removed/shifted dependencies, including TFM-specific groups>
+- **Compatibility:** <source, binary, behavioral, configuration, and target-framework evidence>
+- **Release policy:** <why the update fits or conflicts with the current MSTest/MTP release train>
+- **Sources:** <authoritative links>
+```
+
+Use these verdicts consistently:
+
+- **ACCEPTABLE** — no known source, binary, behavioral, TFM, asset, or dependency-graph incompatibility, and the update fits the current release policy.
+- **ACCEPTABLE WITH CONDITIONS** — safe only after named validation, coordinated package updates, or consumer changes.
+- **DEFER TO NEXT MAJOR** — the update changes a public dependency contract, raises a consequential transitive major, drops support, or carries an upstream break that is inappropriate for the current stable minor release.
+- **INSUFFICIENT EVIDENCE** — authoritative metadata or compatibility evidence could not be obtained. State exactly what remains unknown.
+
+Map the assessment verdict to the dimension result:
+
+- `ACCEPTABLE` may end with `Build Infrastructure & Dependencies — LGTM` when no other finding exists.
+- `ACCEPTABLE WITH CONDITIONS` MUST also emit an `ISSUE` while any required condition remains unmet.
+- `DEFER TO NEXT MAJOR` MUST also emit a `BLOCKING` `ISSUE` so the final review requests changes.
+- `INSUFFICIENT EVIDENCE` MUST also emit a `MODERATE` `ISSUE` that names the evidence a maintainer must provide before acceptability can be determined.
+
+This report is informational in addition to the mapped dimension result and must always be surfaced. Do not manufacture an `ISSUE` solely because an update is major; base the verdict and mapped finding on concrete dependency, compatibility, or release-policy evidence. If an authoritative source is on a firewalled domain, record the blocked evidence and use `INSUFFICIENT EVIDENCE` unless equivalent official metadata is available through NuGet or the upstream GitHub repository.
 
 ---
 
@@ -628,6 +676,8 @@ Before analyzing the diff, load the repository history knowledge base produced b
 
    Each sub-agent receives: the PR diff, PR description, the single dimension's rules and checklist, and the folder context.
 
+   When a dependency version changes, the Build Infrastructure & Dependencies agent also receives the exact old and new versions, the affected project files, and any release-note links from the PR description. It must use the required Dependency Upgrade Assessment output contract above and then emit its normal `LGTM` or `ISSUE` block.
+
    Include verbatim in every sub-agent prompt:
 
    > You evaluate **one dimension only**: $DimensionName.
@@ -697,9 +747,11 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
 
    Confirm only with concrete evidence. Dispute if a lock, blocking call, or control flow prevents the scenario. **Never validate against `main`.**
 
+   Independently validate every factual claim in a Dependency Upgrade Assessment against the cited authoritative source. Ensure the package versions are exact, dependency groups match the relevant TFMs, and release notes cover the complete version interval. Preserve unknowns when the available metadata cannot prove the full transitive graph.
+
 ### Wave 3: Post
 
-> **Tool availability note**: Steps 4–6 reference gh-aw safe-output tools (`create_pull_request_review_comment`, `submit_pull_request_review`, `add_comment`). When running outside an agentic workflow (e.g. locally in VS Code), these tools are unavailable — use the closest GitHub MCP or CLI equivalents instead (e.g. `gh api` to create PR review comments, `gh pr review` to submit a review, `gh pr comment` to post general comments). When running fully locally (no PR context), simply output the findings in structured markdown.
+> **Tool availability note**: Steps 4–7 reference gh-aw safe-output tools (`create_pull_request_review_comment`, `submit_pull_request_review`, `add_comment`). When running outside an agentic workflow (e.g. locally in VS Code), these tools are unavailable — use the closest GitHub MCP or CLI equivalents instead (e.g. `gh api` to create PR review comments, `gh pr review` to submit a review, `gh pr comment` to post general comments). When running fully locally (no PR context), simply output the findings in structured markdown.
 
 4. Post **inline review comments** on the exact diff lines using the `create_pull_request_review_comment` safe-output tool. Each comment must target a specific `path` and `line` in the PR diff. Format:
 
@@ -725,11 +777,13 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
 
    **Every inline comment must be actionable.** Do NOT post comments that only praise existing code or say "looks good". If a dimension is clean, do not leave an inline comment for it.
 
-5. Post design-level concerns (not tied to a specific diff line) as a single PR comment via the `add_comment` safe-output tool — one bullet each. The comment body MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the bullet list of concerns.
+5. When the PR changes dependency versions, you MUST post the complete validated **Dependency Upgrade Assessment** via the `add_comment` safe-output tool regardless of its verdict and regardless of whether any other concern exists. Append any design-level concerns to the same comment. The comment body MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the assessment and any bullet list of concerns. This mandatory informational report does not violate the rule against empty praise.
+
+6. When no Dependency Upgrade Assessment comment was posted, post design-level concerns (not tied to a specific diff line) as a single PR comment via the `add_comment` safe-output tool — one bullet each. Do not post this comment when there are no concerns. The comment body MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the bullet list of concerns.
 
 ### Wave 4: Summary
 
-6. Submit the final review verdict via the `submit_pull_request_review` safe-output tool. Include the summary table in the review `body` and set the `event` field. The `body` MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the summary content described below.
+7. Submit the final review verdict via the `submit_pull_request_review` safe-output tool. Include the summary table in the review `body` and set the `event` field. The `body` MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the summary content described below.
 
    **Omit all LGTM dimensions from the table** — only list dimensions that have findings. Show the count of clean dimensions as a single summary line.
 
@@ -788,6 +842,14 @@ If the PR only changes `.md`, `.txt`, `.resx`, `.xlf`, or other non-code files, 
 
 - If the PR changes production code and adds no tests, flag as a coverage concern.
 - Exception: purely mechanical changes (renames, formatting, build config).
+- A dependency-only PR does not require a new test file solely because it changes a version, but it does require the Dependency Upgrade Assessment and any targeted validation named by that assessment.
+
+### Dependency-only PRs
+
+- Do not stop at the manifest diff or Dependabot compatibility badge.
+- Trace the dependency to every shipping and nonshipping consumer in this repository.
+- Post the Dependency Upgrade Assessment even when all 22 dimensions are otherwise clean.
+- Coordinate related package upgrades when one package constrains or exposes another package's version.
 
 ### PRs that only change tests
 
