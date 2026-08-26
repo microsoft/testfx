@@ -19,6 +19,8 @@ This package extends Microsoft.Testing.Platform with:
 - **CTRF (Common Test Report Format) report**: a single JSON file conforming to the [CTRF schema](https://github.com/ctrf-io/ctrf/blob/main/schema/ctrf.schema.json) that can be consumed by any tool that understands CTRF (dashboards, CI integrations, AI agents, etc.) without requiring a TRX or JUnit XML parser.
 - **Cross-tool interoperability**: same shape as outputs produced by other testing frameworks that adopt CTRF, so results from multiple test runs can be aggregated by a single consumer.
 
+## Usage
+
 Enable the report via the `--report-ctrf` command line option. The report file name can be overridden with `--report-ctrf-filename <name>.json`.
 
 ## Documentation
