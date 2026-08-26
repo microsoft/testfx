@@ -65,6 +65,10 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
+        bool downstreamPostProcessingWillPublishSummary =
+            context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            && !RoslynString.IsNullOrEmpty(
+                environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID));
         bool writeOnFailureOnly = aggregate.Modules.Count > 0
             && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
         bool runFailed = aggregate.IsPartial
@@ -72,7 +76,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
                 : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
-        if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
+        if (!downstreamPostProcessingWillPublishSummary
+            && !RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
             && (!writeOnFailureOnly || runFailed))
         {
             await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(

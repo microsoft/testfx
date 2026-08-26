@@ -613,6 +613,105 @@ public sealed class HtmlArtifactPostProcessorTests
     }
 
     [TestMethod]
+    public async Task ProcessAsync_ForRetryAttempts_KeepsFoldedDataRowsDistinct()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string attempt1Path = Path.Combine(directory, "attempt1.html");
+            string attempt2Path = Path.Combine(directory, "attempt2.html");
+            File.WriteAllText(
+                attempt1Path,
+                CreateReport(
+                    "tests.dll",
+                    "MSTest",
+                    Epoch,
+                    Epoch.AddMinutes(1),
+                    Test("shared-uid", "Data row A", "failed", 10),
+                    Test("shared-uid", "Data row B", "passed", 5)));
+            File.WriteAllText(
+                attempt2Path,
+                CreateReport(
+                    "tests.dll",
+                    "MSTest",
+                    Epoch.AddMinutes(2),
+                    Epoch.AddMinutes(3),
+                    Test("shared-uid", "Data row A", "passed", 12)));
+
+            ProcessedArtifact? output = await new HtmlArtifactPostProcessor().ProcessAsync(
+                [
+                    CreateInput(attempt1Path, module: "tests.dll", executionId: "1"),
+                    CreateInput(attempt2Path, module: "tests.dll", executionId: "2"),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None, ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            JsonObject merged = ParseReport(File.ReadAllText(output.Path));
+            var tests = (JsonArray)merged["tests"]!;
+            Assert.HasCount(2, tests);
+            var rowA = (JsonObject)tests.Single(test => (string?)test!["displayName"] == "Data row A")!;
+            var rowB = (JsonObject)tests.Single(test => (string?)test!["displayName"] == "Data row B")!;
+            Assert.IsTrue((bool?)rowA["flaky"]);
+            Assert.HasCount(1, (JsonArray)rowA["retryAttempts"]!);
+            Assert.IsNull(rowB["flaky"]);
+            Assert.IsNull(rowB["retryAttempts"]);
+            Assert.AreEqual(2, (int?)merged["summary"]!["total"]);
+            Assert.AreEqual(1, (int?)merged["summary"]!["flaky"]);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_ForRetryAttempts_UsesFinalAttemptExitCode()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string attempt1Path = Path.Combine(directory, "attempt1.html");
+            string attempt2Path = Path.Combine(directory, "attempt2.html");
+            File.WriteAllText(
+                attempt1Path,
+                CreateReportWithExitCode(
+                    2,
+                    "tests.dll",
+                    "MSTest",
+                    Epoch,
+                    Epoch.AddMinutes(1),
+                    Test("flaky", "Flaky test", "failed", 10)));
+            File.WriteAllText(
+                attempt2Path,
+                CreateReportWithExitCode(
+                    0,
+                    "tests.dll",
+                    "MSTest",
+                    Epoch.AddMinutes(2),
+                    Epoch.AddMinutes(3),
+                    Test("flaky", "Flaky test", "passed", 12)));
+
+            ProcessedArtifact? output = await new HtmlArtifactPostProcessor().ProcessAsync(
+                [
+                    CreateInput(attempt1Path, module: "tests.dll", executionId: "1"),
+                    CreateInput(attempt2Path, module: "tests.dll", executionId: "2"),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None, ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            Assert.AreEqual(0, (int?)ParseReport(File.ReadAllText(output.Path))["exitCode"]);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ProcessAsync_ForRetryAttempts_FlagsFlakyTestAndRetainsAttemptHistory()
     {
         string directory = CreateTemporaryDirectory();
@@ -1056,6 +1155,19 @@ public sealed class HtmlArtifactPostProcessorTests
             ["summary"] = new JsonObject(),
         };
 
+        return $"<!DOCTYPE html><script id=\"mtp-data\" type=\"application/json\">{report.ToJsonString()}</script>";
+    }
+
+    private static string CreateReportWithExitCode(
+        int exitCode,
+        string testApplication,
+        string framework,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        params JsonObject[] tests)
+    {
+        JsonObject report = ParseReport(CreateReport(testApplication, framework, startTime, endTime, tests));
+        report["exitCode"] = exitCode;
         return $"<!DOCTYPE html><script id=\"mtp-data\" type=\"application/json\">{report.ToJsonString()}</script>";
     }
 

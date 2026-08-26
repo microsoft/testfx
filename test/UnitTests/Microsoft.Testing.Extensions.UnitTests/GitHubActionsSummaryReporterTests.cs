@@ -133,6 +133,48 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task SummaryPostProcessor_ForDotnetTestRetryAttempts_DefersStepSummaryToDownstreamProcessor()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-dotnet-retry-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule module = CreateRetryModule("session-1", attempt: 1, passed: 1, failed: 0);
+            string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            environment
+                .Setup(item => item.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"))
+                .Returns("execution");
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem());
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
+                directory,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            Assert.AreEqual(GitHubSummaryPostProcessor.FragmentArtifactKind, output.Kind);
+            Assert.IsFalse(File.Exists(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_WhenDeferred_PersistsOnFailurePolicyInFragmentAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-summary-reporter-{Guid.NewGuid():N}");
@@ -197,6 +239,79 @@ public sealed class GitHubActionsSummaryReporterTests
                 new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
             Assert.IsTrue(aggregate.Modules.Single().WriteOnFailureOnly);
             Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_WhenFoldedUidHasFinalFailure_DoesNotMarkLaterPassAsFlakyAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-folded-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var configuration = new Mock<IConfiguration>();
+            configuration.SetupGet(item => item[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(directory);
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(Path.Combine(directory, "step-summary.md"));
+            var moduleInfo = new Mock<ITestApplicationModuleInfo>();
+            moduleInfo.Setup(item => item.TryGetAssemblyName()).Returns("Tests");
+            moduleInfo.Setup(item => item.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(directory, "Tests.dll"));
+            var coverage = new Mock<ITestCoverageResult>();
+            coverage.SetupGet(item => item.Scopes).Returns([]);
+            coverage.SetupGet(item => item.Thresholds).Returns([]);
+            var messageBus = new Mock<IMessageBus>();
+            SessionFileArtifact? artifact = null;
+            messageBus
+                .Setup(item => item.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
+                .Callback<IDataProducer, IData>((_, data) => artifact = (SessionFileArtifact)data)
+                .Returns(Task.CompletedTask);
+            var loggerFactory = new Mock<ILoggerFactory>();
+            loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+            GitHubActionsSummaryReporter reporter = new(
+                new TestCommandLineOptions(new()
+                {
+                    [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+                }),
+                configuration.Object,
+                environment.Object,
+                new SystemFileSystem(),
+                messageBus.Object,
+                Mock.Of<IOutputDevice>(),
+                moduleInfo.Object,
+                Mock.Of<ITestApplicationProcessExitCode>(),
+                coverage.Object,
+                loggerFactory.Object,
+                static () => true);
+            var context = new Mock<ITestSessionContext>();
+            context.SetupGet(item => item.SessionUid).Returns(new SessionUid("session"));
+            context.SetupGet(item => item.CancellationToken).Returns(CancellationToken.None);
+
+            await reporter.OnTestSessionStartingAsync(context.Object);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("superseded row"), attempt: 1, isSuperseded: true),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false),
+                CancellationToken.None);
+            await reporter.OnTestSessionFinishingAsync(context.Object);
+
+            Assert.IsNotNull(artifact);
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [new InputArtifact(artifact.FileInfo.FullName, artifact.Kind, null, null, null, null)],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            Assert.IsEmpty(aggregate.FlakyTests);
         }
         finally
         {

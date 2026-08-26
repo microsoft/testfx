@@ -178,8 +178,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 }
 
                 bool isFlaky = kind == TerminalKind.Passed
-                    && (_inProcessFailedTests.Contains(uid)
-                        || (GetAttemptNumber() > 1 && !_notRecoveredTests.Contains(uid)));
+                    && !_notRecoveredTests.Contains(uid)
+                    && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
                 _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky);
             }
         }

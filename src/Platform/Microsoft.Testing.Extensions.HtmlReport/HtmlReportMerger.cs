@@ -163,7 +163,10 @@ internal static class HtmlReportMerger
             ["summary"] = summary,
         };
 
-        if (TryGetCommonInt(reports, "exitCode", out int exitCode))
+        bool hasExitCode = mode == HtmlMergeMode.CollapseRetryAttempts
+            ? TryGetInt(reports[^1], "exitCode", out int exitCode)
+            : TryGetCommonInt(reports, "exitCode", out exitCode);
+        if (hasExitCode)
         {
             merged["exitCode"] = exitCode;
         }
@@ -245,7 +248,7 @@ internal static class HtmlReportMerger
 
         foreach (MergedTest mergedTest in orderedTests)
         {
-            string identity = CreateTestIdentity(mergedTest);
+            string identity = CreateRetryTestIdentity(mergedTest);
             if (slotByIdentity.TryGetValue(identity, out int index))
             {
                 (MergedTest previousFinal, List<JsonObject> priors) = slots[index];
@@ -460,6 +463,23 @@ internal static class HtmlReportMerger
             test.ProducingTestModule ?? string.Empty,
             test.TargetFramework ?? string.Empty,
             test.Architecture ?? string.Empty);
+
+    private static string CreateRetryTestIdentity(MergedTest test)
+        => string.Join(
+            "\0",
+            CreateTestIdentity(test),
+            ReadRequiredString(test.Test, "displayName"));
+
+    private static bool TryGetInt(JsonObject owner, string propertyName, out int value)
+    {
+        if (owner[propertyName] is JsonValue jsonValue && jsonValue.TryGetValue(out value))
+        {
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
 
     private static void AddOptionalString(JsonObject owner, string propertyName, string? value)
     {
