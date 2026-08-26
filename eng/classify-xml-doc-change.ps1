@@ -171,12 +171,16 @@ function Get-GitFileText {
 function Test-GitDiff {
     param(
         [string]$BaseRevision,
-        [string]$HeadRevision
+        [string]$HeadRevision,
+        [string]$Repository
     )
 
-    $repositoryOutput = @(Invoke-Git $PSScriptRoot @("rev-parse", "--show-toplevel"))
-    $repository = $repositoryOutput[0]
-    $changes = @(Invoke-Git $repository @(
+    if ([string]::IsNullOrEmpty($Repository)) {
+        $repositoryOutput = @(Invoke-Git $PSScriptRoot @("rev-parse", "--show-toplevel"))
+        $Repository = $repositoryOutput[0]
+    }
+
+    $changes = @(Invoke-Git $Repository @(
         "diff",
         "--name-status",
         "--no-renames",
@@ -196,14 +200,71 @@ function Test-GitDiff {
             return $false
         }
 
-        $oldText = Get-GitFileText $repository $BaseRevision $path
-        $newText = Get-GitFileText $repository $HeadRevision $path
+        $oldText = Get-GitFileText $Repository $BaseRevision $path
+        $newText = Get-GitFileText $Repository $HeadRevision $path
         if (-not (Test-XmlDocOnlyTextChange $oldText $newText)) {
             return $false
         }
     }
 
     return $true
+}
+
+function Invoke-GitDiffSelfTest {
+    $repository = Join-Path ([System.IO.Path]::GetTempPath()) "testfx-xml-doc-classifier-$([System.Guid]::NewGuid().ToString('N'))"
+    [System.IO.Directory]::CreateDirectory($repository) | Out-Null
+
+    try {
+        $null = Invoke-Git $repository @("init", "--quiet")
+        $null = Invoke-Git $repository @("config", "user.name", "XML documentation classifier")
+        $null = Invoke-Git $repository @("config", "user.email", "classifier@example.invalid")
+
+        $firstPath = Join-Path $repository "First.cs"
+        $secondPath = Join-Path $repository "Second.cs"
+        [System.IO.File]::WriteAllText($firstPath, "/// old first`nclass First { }`n")
+        [System.IO.File]::WriteAllText($secondPath, "/// old second`nclass Second { int Value => 1; }`n")
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Base")
+        $baseRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+
+        [System.IO.File]::WriteAllText($firstPath, "/// new first`nclass First { }`n")
+        [System.IO.File]::WriteAllText($secondPath, "/// new second`nclass Second { int Value => 1; }`n")
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Documentation")
+        $documentationRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        if (-not (Test-GitDiff $baseRevision $documentationRevision $repository)) {
+            throw "Git self-test expected a two-file documentation-only diff to classify as true."
+        }
+
+        [System.IO.File]::WriteAllText($firstPath, "/// newest first`nclass First { }`n")
+        [System.IO.File]::WriteAllText($secondPath, "/// new second`nclass Second { int Value => 2; }`n")
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Mixed")
+        $mixedRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        if (Test-GitDiff $documentationRevision $mixedRevision $repository) {
+            throw "Git self-test expected a mixed documentation and code diff to classify as false."
+        }
+
+        $addedPath = Join-Path $repository "Added.cs"
+        [System.IO.File]::WriteAllText($addedPath, "/// added`nclass Added { }`n")
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Added")
+        $addedRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        if (Test-GitDiff $mixedRevision $addedRevision $repository) {
+            throw "Git self-test expected an added file to classify as false."
+        }
+
+        [System.IO.File]::Delete($addedPath)
+        $null = Invoke-Git $repository @("add", "--all")
+        $null = Invoke-Git $repository @("commit", "--quiet", "-m", "Deleted")
+        $deletedRevision = @(Invoke-Git $repository @("rev-parse", "HEAD"))[0]
+        if (Test-GitDiff $addedRevision $deletedRevision $repository) {
+            throw "Git self-test expected a deleted file to classify as false."
+        }
+    }
+    finally {
+        Remove-Item -LiteralPath $repository -Recurse -Force
+    }
 }
 
 function Invoke-SelfTest {
@@ -306,6 +367,8 @@ function Invoke-SelfTest {
             throw "Path self-test '$($pathCase.Path)' expected '$($pathCase.Expected)' but got '$actual'."
         }
     }
+
+    Invoke-GitDiffSelfTest
 
     Write-Output "XML documentation change classifier self-tests passed."
 }
