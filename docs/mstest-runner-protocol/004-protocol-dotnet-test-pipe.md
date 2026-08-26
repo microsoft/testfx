@@ -546,8 +546,9 @@ int), `IsSuperseded`(10, bool).
 - `Expected`/`Actual` (added after `SessionUid`, older readers skip them) carry structured
   assertion-diff values captured by assertion libraries from `Exception.Data["assert.expected"]` /
   `["assert.actual"]`. Only failed tests populate them; error/timeout/cancelled send null.
-- `RetryAttemptNumber`/`IsSuperseded` (added after `Expected`/`Actual`, older readers skip them) carry
-  the in-process retry metadata surfaced by `RetryAttemptProperty` (for example MSTest's `[Retry]`
+- `RetryAttemptNumber`/`IsSuperseded` (added after `SessionUid` on successful messages and after
+  `Expected`/`Actual` on failed messages; older readers skip them) carry the in-process retry metadata
+  surfaced by `RetryAttemptProperty` (for example MSTest's `[Retry]`
   attribute): the 1-based attempt number within the current test host run, and whether a later attempt
   for the same test node follows this one. They accompany any outcome state (passed, failed, etc.) and
   are null when the test was not retried. Consumers that want a single row per test should ignore

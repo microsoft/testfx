@@ -528,6 +528,44 @@ public sealed class HtmlArtifactPostProcessorTests
     }
 
     [TestMethod]
+    public async Task ProcessAsync_RetryModeUsesDistinctOutputPath()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.html");
+            string secondPath = Path.Combine(directory, "second.html");
+            File.WriteAllText(firstPath, CreateReport("tests.dll", "MSTest", Epoch, Epoch.AddMinutes(1), Test("a", "A", "passed", 1)));
+            File.WriteAllText(secondPath, CreateReport("tests.dll", "MSTest", Epoch.AddMinutes(2), Epoch.AddMinutes(3), Test("b", "B", "passed", 1)));
+            InputArtifact[] inputs =
+            [
+                CreateInput(firstPath, module: "tests.dll", executionId: "1"),
+                CreateInput(secondPath, module: "tests.dll", executionId: "2"),
+            ];
+            var processor = new HtmlArtifactPostProcessor();
+
+            ProcessedArtifact? moduleOutput = await processor.ProcessAsync(
+                inputs,
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None, ArtifactPostProcessingMode.TestModules),
+                CancellationToken.None);
+            ProcessedArtifact? retryOutput = await processor.ProcessAsync(
+                inputs,
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None, ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNotNull(moduleOutput);
+            Assert.IsNotNull(retryOutput);
+            Assert.AreNotEqual(moduleOutput.Path, retryOutput.Path);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ProcessAsync_ForRetryAttempts_KeepsAllInitialAttemptTests()
     {
         // Attempt 1 runs "flaky" and "stable"; attempt 2 (the retry) only re-runs "flaky", which is

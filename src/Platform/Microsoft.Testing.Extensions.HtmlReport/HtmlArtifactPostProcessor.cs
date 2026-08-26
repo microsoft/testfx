@@ -72,7 +72,7 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs);
+        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs, context.Mode);
         string outputPath = Path.Combine(mergedDirectory, $"merged-{mergeId}.html");
         HtmlMergeMode mergeMode = context.Mode == ArtifactPostProcessingMode.RetryAttempts
             ? HtmlMergeMode.CollapseRetryAttempts
@@ -92,11 +92,19 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
         => CreateMergeIdFromOrderedInputs(
-            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true));
+            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
+            ArtifactPostProcessingMode.TestModules);
 
-    private static string CreateMergeIdFromOrderedInputs(IEnumerable<InputArtifact> orderedInputs)
+    private static string CreateMergeIdFromOrderedInputs(
+        IEnumerable<InputArtifact> orderedInputs,
+        ArtifactPostProcessingMode mode)
     {
         var identity = new StringBuilder();
+        if (mode == ArtifactPostProcessingMode.RetryAttempts)
+        {
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, mode.ToString());
+        }
+
         foreach (InputArtifact input in orderedInputs)
         {
             IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, Path.GetFullPath(input.Path));

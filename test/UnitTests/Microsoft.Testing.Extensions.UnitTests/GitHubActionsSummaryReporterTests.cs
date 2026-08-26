@@ -344,15 +344,15 @@ public sealed class GitHubActionsSummaryReporterTests
             await reporter.OnTestSessionStartingAsync(context.Object);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateRetryUpdate(new FailedTestNodeStateProperty("superseded row"), attempt: 1, isSuperseded: true),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("superseded row"), attempt: 1, isSuperseded: true, displayName: "Tests.RowA"),
                 CancellationToken.None);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false, displayName: "Tests.RowA"),
                 CancellationToken.None);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false, displayName: "Tests.RowB"),
                 CancellationToken.None);
             await reporter.OnTestSessionFinishingAsync(context.Object);
 
@@ -362,6 +362,10 @@ public sealed class GitHubActionsSummaryReporterTests
                 GitHubSummaryPostProcessor.Provider,
                 new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
             Assert.IsEmpty(aggregate.FlakyTests);
+            Assert.AreEqual(2, aggregate.TotalTests);
+            Assert.AreEqual(1, aggregate.PassedTests);
+            Assert.AreEqual(1, aggregate.FailedTests);
+            Assert.AreEqual("Tests.RowA", aggregate.Modules.Single().Failures.Single().FullyQualifiedName);
         }
         finally
         {
@@ -852,13 +856,14 @@ public sealed class GitHubActionsSummaryReporterTests
     private static TestNodeUpdateMessage CreateRetryUpdate(
         TestNodeStateProperty state,
         int attempt,
-        bool isSuperseded)
+        bool isSuperseded,
+        string displayName = "Tests.Flaky")
         => new(
             new SessionUid("session"),
             new TestNode
             {
                 Uid = "flaky",
-                DisplayName = "Tests.Flaky",
+                DisplayName = displayName,
                 Properties = new PropertyBag(
                     state,
                     new RetryAttemptProperty(attempt, isSuperseded)),
