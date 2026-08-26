@@ -950,6 +950,11 @@ public sealed class GitHubActionsSummaryReporterTests
         }.Select(static notice => notice.Split('\n')))
         {
             Assert.AreEqual(GitHubActionsSummaryReporter.TruncationNoticeMarker, lines[0]);
+
+            // The strength token goes on its own line. Appending it to the marker's line would silently break
+            // every consumer that greps for the marker as a whole line, which is how the validation workflow
+            // and anything else scanning the summary matches it.
+            Assert.DoesNotContain("truncation-strength", lines[0]);
             Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeEndMarker, lines);
         }
     }
@@ -1549,7 +1554,15 @@ public sealed class GitHubActionsSummaryReporterTests
 
             await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("## More\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
 
-            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, File.ReadAllText(path));
+            string summary = File.ReadAllText(path);
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
+
+            // The hoist rewrites the file, so the section that merely looked like a marker has to come through it
+            // unharmed — both the appended content and the fenced text that provoked the ambiguity. That fenced
+            // copy is why this test cannot assert a single occurrence of the marker: two is correct here, and only
+            // one of them is a notice.
+            Assert.Contains("## More", summary);
+            Assert.Contains($"expected {GitHubActionsSummaryReporter.TruncationNoticeMarker}", summary);
         }
         finally
         {
@@ -1606,6 +1619,12 @@ public sealed class GitHubActionsSummaryReporterTests
                 GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength,
                 StepSummaryWriter.GetLeadingNoticeStrength(summary));
             AssertSingleNotice(summary);
+
+            // The replacement must not eat either section, and the weaker note's own wording must be gone rather
+            // than left stranded below the stronger one.
+            Assert.Contains("## Earlier", summary);
+            Assert.Contains("## Later", summary);
+            Assert.DoesNotContain("take up too much space", summary);
         }
         finally
         {
@@ -1982,11 +2001,13 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public async Task UpsertStepSummary_CountsSectionsTheDirectPathAlreadyWrote()
+    public async Task UpsertStepSummary_CountsOtherWritersSections_ButNotItsOwn()
     {
         // A job can mix the two writing modes across steps — `dotnet test` aggregating in one, a standalone test
         // executable writing directly in another — into one summary file. The note counts how much of that file is
-        // fully reported, so it has to see the sections the direct path wrote, not just this run's modules.
+        // fully reported, so it has to see the sections the direct path wrote. It must not also see this run's own
+        // modules, which the caller adds itself: on a re-run the file still holds the previous copy of this
+        // section, and counting those markers too would report the run's projects twice.
         string path = Path.GetTempFileName();
         try
         {
@@ -1994,24 +2015,31 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, GitHubActionsSummaryReporter.ProjectSectionMarker + "\nA\n\n" + GitHubActionsSummaryReporter.ProjectSectionMarker + "\nB\n");
             var fileSystem = new SystemFileSystem();
 
+            // Three full modules, marked the way the aggregate rendering marks them.
+            string aggregateBlock = string.Concat(Enumerable.Repeat(GitHubActionsSummaryReporter.ProjectSectionMarker + "\nmodule\n\n", 3));
+
             int observed = -1;
-            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync(
-                "run-1",
-                "aggregate block",
-                CancellationToken.None,
-                count =>
-                {
-                    observed = count;
+            Func<int, string> factory = count =>
+            {
+                observed = count;
+                return GitHubActionsSummaryReporter.BuildTruncationNotice(count + 3);
+            };
 
-                    // What the post-processor does: the file's own sections plus the modules this run reported fully.
-                    return GitHubActionsSummaryReporter.BuildTruncationNotice(count + 3);
-                });
-
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", aggregateBlock, CancellationToken.None, factory);
             Assert.AreEqual(2, observed, "The two sections already in the file have to be counted.");
 
             string summary = File.ReadAllText(path);
             Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
-            Assert.Contains("5", summary, "The note reports the whole file's fully reported projects, not just this run's.");
+
+            // A later direct writer sees this run's modules too, which is why they are marked at all.
+            Assert.AreEqual(5, StepSummaryWriter.CountProjectSections(summary));
+
+            // Re-running the same aggregation must not count its own previous modules on top of the ones the
+            // caller adds — the file already holds them.
+            observed = -1;
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", aggregateBlock, CancellationToken.None, factory);
+            Assert.AreEqual(2, observed, "This run's own section must be excised before counting.");
+            Assert.AreEqual(5, StepSummaryWriter.CountProjectSections(File.ReadAllText(path)));
         }
         finally
         {

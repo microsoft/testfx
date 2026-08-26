@@ -364,6 +364,11 @@ internal sealed partial class GitHubActionsSummaryReporter
             }
 
             bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
+
+            // A full module is a test project whose results are all here, which is exactly what the marker counts.
+            // Emitting it lets a direct per-project writer sharing this file count these modules too, so a note it
+            // writes later states how many projects the whole summary reports rather than only its own.
+            builder.Append(ProjectSectionMarker).Append('\n');
             builder.Append("<details>\n<summary>")
                 .Append(HtmlEncode(module.AssemblyName))
                 .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")

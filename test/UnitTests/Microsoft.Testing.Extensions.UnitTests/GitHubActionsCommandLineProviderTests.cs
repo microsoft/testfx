@@ -117,6 +117,12 @@ public sealed class GitHubActionsCommandLineProviderTests
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
 
         Assert.IsFalse(validationResult.IsValid);
+
+        // Pin the branch, not just the verdict: an unsupported value has to name itself in the message, or the
+        // user is told only that something was wrong.
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummaryValue, "maybe"),
+            validationResult.ErrorMessage);
     }
 
     [TestMethod]

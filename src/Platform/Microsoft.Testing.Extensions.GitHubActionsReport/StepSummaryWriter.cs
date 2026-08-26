@@ -688,6 +688,11 @@ internal sealed class StepSummaryWriter
                     // blocks. The section now carries rendered failure messages, so a test can print the exact
                     // end-marker text inside its diagnostics; matching it anywhere would end the block early and
                     // leave its stale tail behind on the next upsert.
+                    //
+                    // The project-section count is taken with this run's own section excised, so it counts only
+                    // what other writers contributed. The caller adds back whatever this run reports in full, and
+                    // that stays right on a re-run, where the file still holds the previous copy of this section.
+                    int otherProjectSections;
                     int start = IndexOfMarkerLine(existing, startMarker);
                     if (start >= 0)
                     {
@@ -697,10 +702,13 @@ internal sealed class StepSummaryWriter
                             throw new FormatException("The existing GitHub step summary contains an incomplete Microsoft Testing Platform summary section.");
                         }
 
-                        existing = existing.Remove(start, end + endMarker.Length - start).Insert(start, section.TrimEnd());
+                        string withoutOwnSection = existing.Remove(start, end + endMarker.Length - start);
+                        otherProjectSections = CountProjectSections(withoutOwnSection);
+                        existing = withoutOwnSection.Insert(start, section.TrimEnd());
                     }
                     else
                     {
+                        otherProjectSections = CountProjectSections(existing);
                         existing = existing.Length == 0
                             ? section
                             : existing.TrimEnd() + "\n\n" + section;
@@ -710,9 +718,8 @@ internal sealed class StepSummaryWriter
                     // The two writing modes share one marker so a summary can never carry two of them, but a note
                     // already there only wins if it describes a loss at least as bad as this one — otherwise a
                     // weaker note would suppress a stronger one and the summary would never say results are
-                    // missing. The count is taken from the file before this section lands, so sections written by
-                    // the direct per-project path are counted alongside whatever this run reports in full.
-                    string? leadingNotice = leadingNoticeFactory?.Invoke(CountProjectSections(existing));
+                    // missing.
+                    string? leadingNotice = leadingNoticeFactory?.Invoke(otherProjectSections);
                     if (!RoslynString.IsNullOrWhiteSpace(leadingNotice)
                         && GetLeadingNoticeStrength(existing) < GetLeadingNoticeStrength(leadingNotice!))
                     {
