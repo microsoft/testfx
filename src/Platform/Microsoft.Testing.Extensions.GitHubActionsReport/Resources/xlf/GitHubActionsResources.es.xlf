@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="new">At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</target>
+        <target state="translated">Se requiere al menos una sección de resumen del trabajo de Acciones de GitHub. Los valores válidos son 'test-results', 'slow-tests', 'coverage' o 'all'.</target>
         <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
@@ -134,12 +134,12 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="new">Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</target>
+        <target state="translated">La sección de resumen del trabajo de GitHub Actions '{0}' no es válida. Los valores válidos son 'test-results', 'slow-tests', 'coverage' o 'all'. Los valores pueden repetirse, separarse por espacios o por comas.</target>
         <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</target>
+        <target state="translated">Valor no válido '{0}'. Los valores válidos son 'on' (o 'true', 'enable', '1'), 'off' (o 'false', 'disable', '0') o 'on-failure'.</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="new">Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</target>
+        <target state="translated">Seleccione el contenido incluido en el resumen del trabajo de Acciones de GitHub. Especifique uno o varios valores, repetidos, separados por espacios o separados por comas: 'test-results', 'slow-tests', 'coverage' o 'all'. El valor predeterminado es 'all'. Requiere '--report-gh'.</target>
         <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">

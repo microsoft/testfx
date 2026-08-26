@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="new">At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</target>
+        <target state="translated">少なくとも 1 つの GitHub Actions ジョブの要約セクションが必要です。有効な値は 'test-results'、'slow-tests'、'coverage'、または 'all' です。</target>
         <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
@@ -134,12 +134,12 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="new">Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</target>
+        <target state="translated">GitHub Actions ジョブの要約セクション '{0}' が無効です。有効な値は 'test-results'、'slow-tests'、'coverage'、または 'all' です。値は、繰り返し、スペース区切り、またはコンマ区切りにできます。</target>
         <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</target>
+        <target state="translated">値 '{0}' が無効です。有効な値は、'on' (または 'true'、'enable'、'1') または 'off' (または 'false'、'disable'、'0')、あるいは 'on-failure' です。</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
         <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">GITHUB_STEP_SUMMARY ファイルへのマークダウン ジョブの要約の書き込みを制御します。有効な値は、'on' ('true'、'enable'、'1' も指定可能)、'off' ('false'、'disable'、'0' も指定可能)、またはテストの呼び出しが失敗した場合のみ書き込む 'on-failure' です。GitHub Actions で実行する場合、既定値は 'on' です。</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
