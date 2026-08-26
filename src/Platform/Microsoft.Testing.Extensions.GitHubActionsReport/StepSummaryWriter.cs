@@ -18,6 +18,16 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 /// </remarks>
 internal sealed class StepSummaryWriter
 {
+    /// <summary>
+    /// Ceiling on how much of the shared summary file this writer will read into memory in one go.
+    /// </summary>
+    /// <remarks>
+    /// Callers that pass no explicit bound would otherwise size a buffer from a file other producers control.
+    /// Sixty-four megabytes is far above any summary GitHub would accept — it discards anything over 1 MB — and
+    /// far below the point where the allocation itself is the failure.
+    /// </remarks>
+    private const long MaxReadableSummaryBytes = 64L * 1024 * 1024;
+
     private readonly IFileSystem _fileSystem;
     private readonly ILogger _logger;
     private readonly int _maxAttempts;
@@ -241,7 +251,18 @@ internal sealed class StepSummaryWriter
             {
                 Stream inner = stream.Stream;
 
-                byte[] existingBytes = new byte[(int)Math.Min(inner.Length, int.MaxValue)];
+                // The file is shared with producers this extension does not control, so its size is not ours to
+                // trust. Reading it before checking would let one of them decide how much memory this process
+                // allocates — up to the ~2 GiB the old int.MaxValue clamp permitted, which takes the test host
+                // down with an OutOfMemoryException. Nothing this method can write fits once the existing content
+                // alone is over the bound, so refuse before allocating for it.
+                long existingLength = inner.Length;
+                if (existingLength > maxTotalBytes || existingLength > MaxReadableSummaryBytes)
+                {
+                    return false;
+                }
+
+                byte[] existingBytes = new byte[(int)existingLength];
                 inner.Seek(0, SeekOrigin.Begin);
                 int totalRead = 0;
                 while (totalRead < existingBytes.Length)
@@ -675,6 +696,13 @@ internal sealed class StepSummaryWriter
                         FileShare.ReadWrite | FileShare.Delete))
                     using (var reader = new StreamReader(summaryStream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
                     {
+                        // Same reason as the append path: another producer's output decides this size, so refuse
+                        // before reading rather than allocating whatever it happens to be.
+                        long existingLength = summaryStream.Stream.Length;
+                        if (existingLength > maxTotalBytes || existingLength > MaxReadableSummaryBytes)
+                        {
+                            return false;
+                        }
 #if NET8_0_OR_GREATER
                         existing = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
 #else

@@ -2052,6 +2052,34 @@ public sealed class GitHubActionsSummaryReporterTests
         }
     }
 
+    [TestMethod]
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_RefusesBeforeReadingAFileAlreadyOverTheBound()
+    {
+        // The file is shared with producers this extension does not control, so its size decides how much memory
+        // this process would allocate to read it. Nothing this method writes can fit once the existing content
+        // alone is over the bound, so it has to refuse without reading — the alternative is letting another
+        // producer's output size an allocation big enough to take the test host down.
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, new string('x', 4096));
+            var fileSystem = new SystemFileSystem();
+
+            bool written = await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync(
+                "## Mine\n",
+                static _ => GitHubActionsSummaryReporter.BuildTruncationNotice(3),
+                CancellationToken.None,
+                maxTotalBytes: 1024);
+
+            Assert.IsFalse(written);
+            Assert.AreEqual(4096, new FileInfo(path).Length, "A refused write leaves the file untouched.");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static StepSummaryWriter NewWriter(IFileSystem fileSystem, string path, int maxAttempts)
         => new(fileSystem, path, new Mock<ILogger>().Object, maxAttempts, TimeSpan.Zero);
 
