@@ -169,7 +169,7 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_EmitsRetryMetadataAndStableRowOccurrence()
+    public async Task GenerateReportAsync_EmitsRetryMetadata()
     {
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
@@ -198,7 +198,6 @@ public class HtmlReportEngineTests
         string html = memoryStream.GetUtf8Content();
         Assert.Contains(@"""retryAttemptNumber"":1", html);
         Assert.Contains(@"""isSupersededRetryAttempt"":true", html);
-        Assert.HasCount(2, Regex.Matches(html, @"""rowOccurrence"":1"));
     }
 
     [TestMethod]

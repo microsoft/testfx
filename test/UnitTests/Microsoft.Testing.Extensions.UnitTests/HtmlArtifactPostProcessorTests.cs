@@ -651,7 +651,7 @@ public sealed class HtmlArtifactPostProcessorTests
     }
 
     [TestMethod]
-    public async Task ProcessAsync_ForRetryAttempts_KeepsFoldedDataRowsDistinct()
+    public async Task ProcessAsync_ForRetryAttempts_LeavesAmbiguousFoldedRowsUncollapsed()
     {
         string directory = CreateTemporaryDirectory();
         try
@@ -659,13 +659,9 @@ public sealed class HtmlArtifactPostProcessorTests
             string attempt1Path = Path.Combine(directory, "attempt1.html");
             string attempt2Path = Path.Combine(directory, "attempt2.html");
             JsonObject firstRowAttempt1 = Test("shared-uid", "Shared title", "failed", 10);
-            firstRowAttempt1["rowOccurrence"] = 1;
             JsonObject secondRowAttempt1 = Test("shared-uid", "Shared title", "passed", 5);
-            secondRowAttempt1["rowOccurrence"] = 2;
             JsonObject firstRowAttempt2 = Test("shared-uid", "Shared title", "passed", 12);
-            firstRowAttempt2["rowOccurrence"] = 1;
             JsonObject secondRowAttempt2 = Test("shared-uid", "Shared title", "passed", 6);
-            secondRowAttempt2["rowOccurrence"] = 2;
             File.WriteAllText(
                 attempt1Path,
                 CreateReport(
@@ -697,13 +693,11 @@ public sealed class HtmlArtifactPostProcessorTests
             Assert.IsNotNull(output);
             JsonObject merged = ParseReport(File.ReadAllText(output.Path));
             var tests = (JsonArray)merged["tests"]!;
-            Assert.HasCount(2, tests);
-            var flakyRow = (JsonObject)tests.Single(test => (bool?)test!["flaky"] == true)!;
-            var stableRow = (JsonObject)tests.Single(test => test!["flaky"] is null)!;
-            Assert.HasCount(1, (JsonArray)flakyRow["retryAttempts"]!);
-            Assert.HasCount(1, (JsonArray)stableRow["retryAttempts"]!);
-            Assert.AreEqual(2, (int?)merged["summary"]!["total"]);
-            Assert.AreEqual(1, (int?)merged["summary"]!["flaky"]);
+            Assert.HasCount(4, tests);
+            Assert.DoesNotContain(test => test!["flaky"] is not null, tests);
+            Assert.DoesNotContain(test => test!["retryAttempts"] is not null, tests);
+            Assert.AreEqual(4, (int?)merged["summary"]!["total"]);
+            Assert.AreEqual(0, (int?)merged["summary"]!["flaky"]);
         }
         finally
         {
@@ -720,15 +714,12 @@ public sealed class HtmlArtifactPostProcessorTests
             string attempt1Path = Path.Combine(directory, "attempt1.html");
             string attempt2Path = Path.Combine(directory, "attempt2.html");
             JsonObject inProcessAttempt1 = Test("retry-uid", "Retried test", "failed", 10);
-            inProcessAttempt1["rowOccurrence"] = 1;
             inProcessAttempt1["retryAttemptNumber"] = 1;
             inProcessAttempt1["isSupersededRetryAttempt"] = true;
             JsonObject inProcessAttempt2 = Test("retry-uid", "Retried test", "failed", 11);
-            inProcessAttempt2["rowOccurrence"] = 1;
             inProcessAttempt2["retryAttemptNumber"] = 2;
             inProcessAttempt2["isSupersededRetryAttempt"] = false;
             JsonObject hostAttempt2 = Test("retry-uid", "Retried test", "passed", 12);
-            hostAttempt2["rowOccurrence"] = 1;
             File.WriteAllText(
                 attempt1Path,
                 CreateReport(

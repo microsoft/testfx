@@ -245,12 +245,25 @@ internal static class HtmlReportMerger
     private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, double TotalDurationMs, int? Flaky) CollapseRetryAttempts(
         MergedTest[] orderedTests)
     {
+        HashSet<(int ReportIndex, string BaseIdentity)> ambiguousIdentities =
+        [
+            .. orderedTests
+                .GroupBy(test => (
+                    test.OriginalReportIndex,
+                    BaseIdentity: CreateRetryBaseIdentity(test),
+                    RetryAttempt: ReadOptionalInt(test.Test, "retryAttemptNumber")))
+                .Where(static group => group.Count() > 1)
+                .Select(static group => (group.Key.OriginalReportIndex, group.Key.BaseIdentity)),
+        ];
         var slots = new List<(MergedTest Final, List<JsonObject> Priors)>();
         var slotByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
 
         foreach (MergedTest mergedTest in orderedTests)
         {
-            string identity = CreateRetryTestIdentity(mergedTest);
+            string baseIdentity = CreateRetryBaseIdentity(mergedTest);
+            string identity = ambiguousIdentities.Contains((mergedTest.OriginalReportIndex, baseIdentity))
+                ? $"{baseIdentity}\0ambiguous\0{mergedTest.OriginalReportIndex.ToString(CultureInfo.InvariantCulture)}\0{mergedTest.OriginalTestIndex.ToString(CultureInfo.InvariantCulture)}"
+                : baseIdentity;
             if (slotByIdentity.TryGetValue(identity, out int index))
             {
                 (MergedTest previousFinal, List<JsonObject> priors) = slots[index];
@@ -466,13 +479,11 @@ internal static class HtmlReportMerger
             test.TargetFramework ?? string.Empty,
             test.Architecture ?? string.Empty);
 
-    private static string CreateRetryTestIdentity(MergedTest test)
+    private static string CreateRetryBaseIdentity(MergedTest test)
         => string.Join(
             "\0",
             CreateTestIdentity(test),
-            ReadRequiredString(test.Test, "displayName"),
-            (ReadOptionalInt(test.Test, "rowOccurrence") ?? ReadOptionalInt(test.Test, "attemptIndex"))
-                ?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
+            ReadRequiredString(test.Test, "displayName"));
 
     private static int? ReadOptionalInt(JsonObject owner, string propertyName)
         => owner[propertyName] is JsonValue value && value.TryGetValue(out int result)

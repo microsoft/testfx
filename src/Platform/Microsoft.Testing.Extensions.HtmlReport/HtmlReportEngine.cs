@@ -97,7 +97,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         }
 
         Dictionary<string, int> emittedByUid = [];
-        Dictionary<string, int> emittedByLogicalAttempt = [];
 
         StringBuilder sb = new(8 * 1024);
         sb.Append('{');
@@ -145,11 +144,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             int attemptOf = countByUid[r.Uid];
             int attemptIndex = emittedByUid.TryGetValue(r.Uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
             emittedByUid[r.Uid] = attemptIndex;
-            string logicalAttemptKey = $"{r.Uid}\0{r.DisplayName}\0{r.RetryAttemptNumber?.ToString(CultureInfo.InvariantCulture) ?? string.Empty}";
-            int rowOccurrence = emittedByLogicalAttempt.TryGetValue(logicalAttemptKey, out int alreadyEmittedForAttempt)
-                ? alreadyEmittedForAttempt + 1
-                : 1;
-            emittedByLogicalAttempt[logicalAttemptKey] = rowOccurrence;
 
             sb.Append('{');
             AppendNumberPair(sb, "rowKey", i.ToString(CultureInfo.InvariantCulture));
@@ -161,8 +155,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             AppendStringPair(sb, "outcome", r.Outcome);
             sb.Append(',');
             AppendNumberPair(sb, "durationMs", r.Duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
-            sb.Append(',');
-            AppendNumberPair(sb, "rowOccurrence", rowOccurrence.ToString(CultureInfo.InvariantCulture));
 
             if (r.RetryAttemptNumber is int retryAttemptNumber)
             {

@@ -65,6 +65,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly List<(string Uid, string Key, TestRecord Record)> _records = [];
 #pragma warning disable IDE0028 // Collection expressions cannot pass the required comparer.
     private readonly Dictionary<string, int> _finalRowCountsByUid = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<int>> _flakyRecordIndicesByUid = new(StringComparer.Ordinal);
     private readonly HashSet<string> _inProcessFailedTests = new(StringComparer.Ordinal);
     private readonly HashSet<string> _notRecoveredTests = new(StringComparer.Ordinal);
 
@@ -135,6 +136,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         {
             _records.Clear();
             _finalRowCountsByUid.Clear();
+            _flakyRecordIndicesByUid.Clear();
             _inProcessFailedTests.Clear();
             _notRecoveredTests.Clear();
             _pendingFailures.Clear();
@@ -220,6 +222,17 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 _finalRowCountsByUid[uid] = finalRowCount;
                 string recordKey = $"{uid}\0{finalRowCount.ToString(CultureInfo.InvariantCulture)}";
                 _records.Add((uid, recordKey, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
+                if (isFlaky)
+                {
+                    if (!_flakyRecordIndicesByUid.TryGetValue(uid, out List<int>? indices))
+                    {
+                        indices = [];
+                        _flakyRecordIndicesByUid.Add(uid, indices);
+                    }
+
+                    indices.Add(_records.Count - 1);
+                }
+
                 if (finalRowCount > 1)
                 {
                     // Multiple final rows share one UID, so the protocol cannot identify which row recovered.
@@ -257,19 +270,22 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
     private void ClearFlakyRecords(string uid)
     {
-        for (int i = 0; i < _records.Count; i++)
+        if (!_flakyRecordIndicesByUid.TryGetValue(uid, out List<int>? indices))
         {
-            (string existingUid, string key, TestRecord record) = _records[i];
-            if (existingUid == uid && record.IsFlaky)
-            {
-                _records[i] = (existingUid, key, new TestRecord(
-                    record.DisplayName,
-                    record.FullyQualifiedName,
-                    record.Kind,
-                    record.Duration,
-                    isFlaky: false,
-                    record.Failure));
-            }
+            return;
+        }
+
+        _flakyRecordIndicesByUid.Remove(uid);
+        foreach (int index in indices)
+        {
+            (string existingUid, string key, TestRecord record) = _records[index];
+            _records[index] = (existingUid, key, new TestRecord(
+                record.DisplayName,
+                record.FullyQualifiedName,
+                record.Kind,
+                record.Duration,
+                isFlaky: false,
+                record.Failure));
         }
     }
 
