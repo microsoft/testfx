@@ -629,26 +629,6 @@ stages:
           displayName: Prepare and pack cached Release build outputs
           condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
-        # A cache hit materializes compiled outputs but does not run Arcade's restore phase, which installs the
-        # .NET runtimes declared in global.json. Release gets those runtimes from the sign/pack preparation above;
-        # initialize them explicitly for the cached Debug leg before launching its unit-test apphosts.
-        - pwsh: |
-            & ./eng/common/build.ps1 `
-              -ci `
-              -disablePipelineSetResult `
-              -configuration $(_BuildConfig) `
-              -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\PrepareTestRuntime.binlog" `
-              -restore `
-              -prepareMachine `
-              /p:ContinuousIntegrationBuild=true `
-              /p:FastAcceptanceTest=true `
-              /p:NoBuild=true `
-              /p:MSBuildCachePackageEnabled=true `
-              /p:MSBuildCacheEnabled=false
-            exit $LASTEXITCODE
-          displayName: Prepare cached Debug test runtime
-          condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
         # Publish only the project-level diagnostics; CacheClient.log and the OAuth-bearing cache environment stay
         # outside published artifacts. A successful cache build supplies the outputs consumed by the test steps.
         # On failure, remove its partial outputs before running the regular Arcade build as a fallback.
