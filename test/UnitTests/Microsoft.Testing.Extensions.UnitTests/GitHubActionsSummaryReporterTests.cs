@@ -1226,7 +1226,7 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, "existing\n");
             var fileSystem = new SystemFileSystem();
 
-            bool written = await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "a section that does not fit", CancellationToken.None, leadingNotice: null, maxTotalBytes: 16);
+            bool written = await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "a section that does not fit", CancellationToken.None, leadingNoticeFactory: null, maxTotalBytes: 16);
 
             Assert.IsFalse(written);
 
@@ -1855,7 +1855,7 @@ public sealed class GitHubActionsSummaryReporterTests
             var fileSystem = new SystemFileSystem();
             string notice = GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5);
 
-            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "aggregate block", CancellationToken.None, notice);
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "aggregate block", CancellationToken.None, _ => notice);
 
             string summary = File.ReadAllText(path);
             Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
@@ -1864,7 +1864,7 @@ public sealed class GitHubActionsSummaryReporterTests
             AssertSingleNotice(summary);
 
             // Re-running the same aggregation replaces its block; the warning must not be duplicated with it.
-            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "aggregate block v2", CancellationToken.None, notice);
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "aggregate block v2", CancellationToken.None, _ => notice);
 
             summary = File.ReadAllText(path);
             Assert.Contains("aggregate block v2", summary);
@@ -1974,6 +1974,44 @@ public sealed class GitHubActionsSummaryReporterTests
                 fileSystem.Interferences,
                 summary.Split(["foreign"], StringSplitOptions.None).Length - 1,
                 "Every foreign append has to survive.");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task UpsertStepSummary_CountsSectionsTheDirectPathAlreadyWrote()
+    {
+        // A job can mix the two writing modes across steps — `dotnet test` aggregating in one, a standalone test
+        // executable writing directly in another — into one summary file. The note counts how much of that file is
+        // fully reported, so it has to see the sections the direct path wrote, not just this run's modules.
+        string path = Path.GetTempFileName();
+        try
+        {
+            // Two sections as the direct per-project path leaves them.
+            File.WriteAllText(path, GitHubActionsSummaryReporter.ProjectSectionMarker + "\nA\n\n" + GitHubActionsSummaryReporter.ProjectSectionMarker + "\nB\n");
+            var fileSystem = new SystemFileSystem();
+
+            int observed = -1;
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync(
+                "run-1",
+                "aggregate block",
+                CancellationToken.None,
+                count =>
+                {
+                    observed = count;
+
+                    // What the post-processor does: the file's own sections plus the modules this run reported fully.
+                    return GitHubActionsSummaryReporter.BuildTruncationNotice(count + 3);
+                });
+
+            Assert.AreEqual(2, observed, "The two sections already in the file have to be counted.");
+
+            string summary = File.ReadAllText(path);
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
+            Assert.Contains("5", summary, "The note reports the whole file's fully reported projects, not just this run's.");
         }
         finally
         {

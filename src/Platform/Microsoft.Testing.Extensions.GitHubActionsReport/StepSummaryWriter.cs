@@ -617,6 +617,12 @@ internal sealed class StepSummaryWriter
     /// <summary>
     /// Replaces (or inserts) this run's section in the shared <c>GITHUB_STEP_SUMMARY</c> file.
     /// </summary>
+    /// <remarks>
+    /// The leading-notice factory is given the number of per-project sections already in the file and is evaluated
+    /// under the writer lock, against the file as it actually stands. The count belongs in the note, and a job can
+    /// mix this aggregated writer with the direct per-project one across steps, so a note counting only this run's
+    /// modules would understate how much of the summary is fully reported.
+    /// </remarks>
     /// <returns>
     /// <see langword="true"/> if the file was updated; <see langword="false"/> if the result would have exceeded
     /// <paramref name="maxTotalBytes"/>, in which case the file is left untouched so the caller can retry with a
@@ -626,7 +632,7 @@ internal sealed class StepSummaryWriter
         string aggregationId,
         string content,
         CancellationToken cancellationToken,
-        string? leadingNotice = null,
+        Func<int, string>? leadingNoticeFactory = null,
         long maxTotalBytes = long.MaxValue)
     {
         string startMarker = BuildSectionStartMarker(aggregationId);
@@ -704,7 +710,9 @@ internal sealed class StepSummaryWriter
                     // The two writing modes share one marker so a summary can never carry two of them, but a note
                     // already there only wins if it describes a loss at least as bad as this one — otherwise a
                     // weaker note would suppress a stronger one and the summary would never say results are
-                    // missing.
+                    // missing. The count is taken from the file before this section lands, so sections written by
+                    // the direct per-project path are counted alongside whatever this run reports in full.
+                    string? leadingNotice = leadingNoticeFactory?.Invoke(CountProjectSections(existing));
                     if (!RoslynString.IsNullOrWhiteSpace(leadingNotice)
                         && GetLeadingNoticeStrength(existing) < GetLeadingNoticeStrength(leadingNotice!))
                     {

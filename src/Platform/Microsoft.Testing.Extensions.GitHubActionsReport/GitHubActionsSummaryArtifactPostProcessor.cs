@@ -108,10 +108,13 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         // Losing whole project sections is a different loss from losing their diagnostics, so say whichever
         // actually happened. Shortening implies the budget was already exhausted, so it takes precedence. The
         // note describes what the *summary* lost, so it is derived from the summary's rendering, not the artifact's.
-        string? leadingNotice = rendered.CondensedModules > 0 || rendered.UnlistedModules > 0
-            ? GitHubActionsSummaryReporter.BuildTruncationNotice(rendered.FullyReportedModules(aggregate.Modules.Count))
+        // "Fully reported" spans the whole file, not just this run: the writer is evaluated under its own lock and
+        // hands back the number of per-project sections already there, which a job that mixes this aggregated path
+        // with the direct one will have.
+        Func<int, string>? leadingNotice = rendered.CondensedModules > 0 || rendered.UnlistedModules > 0
+            ? existingSections => GitHubActionsSummaryReporter.BuildTruncationNotice(existingSections + rendered.FullyReportedModules(aggregate.Modules.Count))
             : rendered.ModulesWithOmittedDetails > 0
-                ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(rendered.ModulesWithOmittedDetails, aggregate.Modules.Count)
+                ? _ => GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(rendered.ModulesWithOmittedDetails, aggregate.Modules.Count)
                 : null;
 
         // The step summary is shared with every other step in the job, so the rendered file can exceed GitHub's
@@ -136,7 +139,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 aggregationId,
                 condensed.Markdown,
                 cancellationToken,
-                GitHubActionsSummaryReporter.BuildTruncationNotice(0),
+                // Nothing this run contributes is a full section now, but sections the direct path already wrote
+                // still are, so they remain the count the note reports.
+                static existingSections => GitHubActionsSummaryReporter.BuildTruncationNotice(existingSections),
                 GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false)
                 && logger.IsEnabled(LogLevel.Warning))
             {
