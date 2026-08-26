@@ -1379,17 +1379,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
-        <target state="needs-review-translation">在使用 'Process.Start' 启动同一可执行文件之前使用 'File.Exists' 跳过测试的测试方法应改用 '[ExecutableCondition]' 属性。此属性提供声明性且可发现的工具要求，并将提前返回报告为跳过测试，而不是通过测试。</target>
+        <target state="translated">在使用 'Process.Start' 启动同一可执行文件之前使用 'File.Exists' 跳过测试的测试方法应改用 '[ExecutableCondition]' 属性。此属性提供声明性且可发现的工具要求，并将提前返回报告为跳过测试，而不是通过测试。</target>
         <note>{Locked="File.Exists"}{Locked="Process.Start"}{Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
-        <target state="needs-review-translation">在启动可执行文件“{0}”之前使用 '[ExecutableCondition]' 属性，而不是检查该文件</target>
+        <target state="translated">在启动可执行文件“{0}”之前使用 '[ExecutableCondition]' 属性，而不是检查该文件</target>
         <note>{0} is the executable path. {Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
-        <target state="needs-review-translation">在 'Process.Start' 之前使用 '[ExecutableCondition]' 属性而不是 'File.Exists' 检查</target>
+        <target state="translated">在 'Process.Start' 之前使用 '[ExecutableCondition]' 属性而不是 'File.Exists' 检查</target>
         <note>{Locked="[ExecutableCondition]"}{Locked="File.Exists"}{Locked="Process.Start"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
