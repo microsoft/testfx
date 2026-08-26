@@ -86,6 +86,7 @@ public static class GitHubActionsExtensions
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
                     serviceProvider.GetFileSystem(),
+                    serviceProvider.GetLoggerFactory(),
                     () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
                     {
                         IsRequiredArtifactPostProcessingSupported: true,

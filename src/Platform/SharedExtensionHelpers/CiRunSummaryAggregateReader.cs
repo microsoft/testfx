@@ -163,7 +163,8 @@ internal static partial class CiRunSummaryAggregation
     private static bool IsValidTest(CiRunSummaryTest test)
         => !RoslynString.IsNullOrWhiteSpace(test.DisplayName)
             && !RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
-            && test.DurationTicks >= 0;
+            && test.DurationTicks >= 0
+            && test.LineNumber is null or >= 0;
 
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {

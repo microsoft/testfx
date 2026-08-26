@@ -19,6 +19,28 @@ compiled (as `internal` types) into your own assembly. That means:
 - The launch/transport layer (loopback TCP listener the app dials back to, LSP-style
   `Content-Length` framing) and the strongly-typed protocol records.
 
+## Install the package
+
+```dotnetcli
+dotnet add package Microsoft.Testing.Platform.ServerMode.Client.Sources
+```
+
+## Usage
+
+The injected client types use the `Microsoft.Testing.Platform.ServerMode.Client` namespace:
+
+```csharp
+using Microsoft.Testing.Platform.ServerMode.Client;
+
+using IMtpServerClient client = await MtpServerClient.LaunchAsync(testApplicationPath);
+client.TestNodesUpdated += (_, update) => Console.WriteLine(update.RunId);
+
+await client.InitializeAsync();
+await client.DiscoverTestsAsync();
+MtpRunResult result = await client.RunTestsAsync();
+await client.ExitAsync();
+```
+
 ## Consumer requirements
 
 Because the source is compiled into your assembly, your project must provide the ambient pieces the
@@ -44,3 +66,9 @@ do):
 
 The injected types are `internal`; delete any previous hand-written MTP client in your repo when you
 adopt this package to avoid duplicate symbols.
+
+## Documentation
+
+For the server-mode JSON-RPC protocol, see <https://github.com/microsoft/testfx/blob/main/docs/mstest-runner-protocol/001-protocol-intro.md>.
+
+For comprehensive Microsoft.Testing.Platform documentation, see <https://aka.ms/testingplatform>.

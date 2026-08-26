@@ -22,6 +22,8 @@ This package extends Microsoft.Testing.Platform with:
 - **Performance**: pagination keeps the report usable even for very large runs
 - **Automatic consolidation**: reports from multi-process, multi-target-framework and retry runs are merged into one HTML summary while the original per-process reports remain available
 
+## Usage
+
 Enable the report via the `--report-html` command line option. The report file name can be overridden with `--report-html-filename <name>.html`.
 
 ## Documentation

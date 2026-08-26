@@ -77,7 +77,7 @@ internal static partial class CiRunSummaryAggregation
                     .OrderBy(record => record.FullyQualifiedName, StringComparer.Ordinal)
                     .ThenBy(record => record.DisplayName, StringComparer.Ordinal)
                     .Take(MaxFailures)
-                    .Select(ToSummaryTest),
+                    .Select(record => ToSummaryTest(record, includeFailureDetails: true)),
             ],
             FlakyTests =
             [
@@ -85,7 +85,7 @@ internal static partial class CiRunSummaryAggregation
                     .Where(static record => record.IsFlaky)
                     .OrderBy(static record => record.FullyQualifiedName, StringComparer.Ordinal)
                     .ThenBy(static record => record.DisplayName, StringComparer.Ordinal)
-                    .Select(ToSummaryTest),
+                    .Select(record => ToSummaryTest(record, includeFailureDetails: false)),
             ],
             SlowestTests =
             [
@@ -94,7 +94,7 @@ internal static partial class CiRunSummaryAggregation
                     .OrderByDescending(record => record.Duration)
                     .ThenBy(record => record.FullyQualifiedName, StringComparer.Ordinal)
                     .Take(MaxSlowestTests)
-                    .Select(ToSummaryTest),
+                    .Select(record => ToSummaryTest(record, includeFailureDetails: false)),
             ],
             TopFailingClasses =
             [
@@ -108,13 +108,28 @@ internal static partial class CiRunSummaryAggregation
         };
     }
 
-    private static CiRunSummaryTest ToSummaryTest(TestRecord record)
-        => new()
+    private static CiRunSummaryTest ToSummaryTest(TestRecord record, bool includeFailureDetails)
+    {
+        var test = new CiRunSummaryTest
         {
             DisplayName = record.DisplayName,
             FullyQualifiedName = record.FullyQualifiedName,
             DurationTicks = record.Duration.Ticks,
         };
+
+        // Diagnostics are only meaningful on the failures list; carrying them on the slowest-tests entries would
+        // duplicate potentially large stack traces inside every fragment for no rendering benefit.
+        if (includeFailureDetails && record.Failure is { IsEmpty: false } failure)
+        {
+            test.ErrorMessage = failure.Message;
+            test.ErrorType = failure.ExceptionType;
+            test.StackTrace = failure.StackTrace;
+            test.FilePath = failure.FilePath;
+            test.LineNumber = failure.LineNumber > 0 ? failure.LineNumber : null;
+        }
+
+        return test;
+    }
 
     private static string GetClassName(string fullyQualifiedName)
     {

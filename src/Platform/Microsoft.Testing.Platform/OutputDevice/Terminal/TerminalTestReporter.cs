@@ -84,8 +84,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         set;
     }
 
-    private bool? _shouldShowPassedTests;
-
     private int _counter;
 
     /// <summary>

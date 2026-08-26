@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -15,6 +16,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     ICommandLineOptions commandLineOptions,
     IEnvironment environment,
     IFileSystem fileSystem,
+    ILoggerFactory loggerFactory,
     Func<bool> downstreamRequiredPostProcessingSupported)
     : IArtifactPostProcessorRequiresPostProcessing
 {
@@ -34,6 +36,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     private readonly bool _isEnabled =
         GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary)
         || commandLineOptions.IsOptionSet(ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName);
+
+    private readonly bool _includeFailureDetails =
+        GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
 
     public string Uid => "Microsoft.Testing.Extensions.GitHubActionsReport.SummaryPostProcessor";
 
@@ -71,12 +76,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
-
+        string? outputPath = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? null
+            : CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
-        bool downstreamPostProcessingWillPublishSummary =
-            context.Mode == ArtifactPostProcessingMode.RetryAttempts
-            && downstreamRequiredPostProcessingSupported();
+        ILogger logger = loggerFactory.CreateLogger<GitHubActionsSummaryArtifactPostProcessor>();
+
+        // Honour the modules' own on-failure preference: only skip the summary when every module asked for it and
+        // the run actually passed.
         bool writeOnFailureOnly = aggregate.Modules.Count > 0
             && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
         bool runFailed = aggregate.IsPartial
@@ -84,21 +91,101 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
                 : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
-        if (!downstreamPostProcessingWillPublishSummary
-            && !RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
-            && (!writeOnFailureOnly || runFailed))
+        bool downstreamPostProcessingWillPublishSummary =
+            context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            && downstreamRequiredPostProcessingSupported();
+        StepSummaryWriter? writer = downstreamPostProcessingWillPublishSummary
+            || RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
+            || (writeOnFailureOnly && !runFailed)
+            ? null
+            : new StepSummaryWriter(fileSystem, stepSummaryPath!, logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
+
+        // The artifact is a standalone file, so what other steps wrote to the job summary is none of its business:
+        // it is rendered without that contribution. Its own size still degrades it on the same thresholds, which
+        // also keeps a pathological run from building a multi-hundred-megabyte string.
+        GitHubActionsSummaryReporter.AggregateRenderResult artifact = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails);
+        if (outputPath is not null)
         {
-            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
-                fileSystem,
-                stepSummaryPath!,
-                aggregationId,
-                markdown,
-                StepSummaryMaxWriteAttempts,
-                StepSummaryRetryDelay,
-                cancellationToken).ConfigureAwait(false);
+            await CiRunSummaryAggregation.WriteOutputAsync(outputPath, artifact.Markdown).ConfigureAwait(false);
         }
 
-        if (context.Mode == ArtifactPostProcessingMode.RetryAttempts)
+        if (writer is null)
+        {
+            return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath).ConfigureAwait(false);
+        }
+
+        // Bounding the summary rendering against its own size alone would be useless: it is appended to a file
+        // other steps also write to, and it is that file GitHub measures. Seeding the budget with what is already
+        // there is what makes the degradation bound the artifact GitHub sees. Measured once — a refused write
+        // leaves the file untouched, so the fallback below faces the same length.
+        long alreadyWritten = writer.GetSummaryLengthExcludingSection(aggregationId);
+        GitHubActionsSummaryReporter.AggregateRenderResult rendered = alreadyWritten == 0
+            ? artifact
+            : GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, condenseAllModules: false, alreadyWritten);
+
+        // Losing whole project sections is a different loss from losing their diagnostics, so say whichever
+        // actually happened. Shortening implies the budget was already exhausted, so it takes precedence. The
+        // note describes what the *summary* lost, so it is derived from the summary's rendering, not the artifact's.
+        // "Fully reported" spans the whole file, not just this run: the writer is evaluated under its own lock and
+        // hands back the number of per-project sections already there, which a job that mixes this aggregated path
+        // with the direct one will have.
+        Func<int, string>? leadingNotice = rendered.CondensedModules > 0 || rendered.UnlistedModules > 0
+            ? existingSections => GitHubActionsSummaryReporter.BuildTruncationNotice(existingSections + rendered.FullyReportedModules(aggregate.Modules.Count))
+            : rendered.ModulesWithOmittedDetails > 0
+                ? _ => GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(rendered.ModulesWithOmittedDetails, aggregate.Modules.Count)
+                : null;
+
+        // The step summary is shared with every other step in the job, so the rendered file can exceed GitHub's
+        // cap even though this section was budgeted. The writer refuses rather than replacing the file with one
+        // GitHub would discard in full; fall back to a verdict line per test project, which is the smallest
+        // report this can produce.
+        bool? writeResult = await TryUpsertStepSummaryAsync(
+            writer,
+            aggregationId,
+            rendered.Markdown,
+            leadingNotice,
+            logger,
+            cancellationToken).ConfigureAwait(false);
+        if (writeResult is false)
+        {
+            // Every listed module is a verdict line in this rendering, so no test project has a full section.
+            GitHubActionsSummaryReporter.AggregateRenderResult condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
+                aggregate,
+                includeFailureDetails: false,
+                condenseAllModules: true,
+                alreadyWritten);
+
+            bool? condensedWriteResult = await TryUpsertStepSummaryAsync(
+                writer,
+                aggregationId,
+                condensed.Markdown,
+                // Nothing this run contributes is a full section now, but sections the direct path already wrote
+                // still are, so they remain the count the note reports.
+                static existingSections => GitHubActionsSummaryReporter.BuildTruncationNotice(existingSections),
+                logger,
+                cancellationToken).ConfigureAwait(false);
+            if (condensedWriteResult is false && logger.IsEnabled(LogLevel.Warning))
+            {
+                // Both renderings were refused, so this run contributed nothing to the job summary. Saying so is
+                // the whole point of the refusal: the alternative is a summary that is silently missing a
+                // section, indistinguishable from a run that produced none.
+                logger.LogWarning(string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.StepSummaryLimitExceededWarning,
+                    (writer.GetSummaryLength() ?? 0).ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture)));
+            }
+        }
+
+        return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath).ConfigureAwait(false);
+    }
+
+    private static async Task<ProcessedArtifact> CreateOutputArtifactAsync(
+        CiRunSummaryAggregate aggregate,
+        string outputDirectory,
+        string? summaryOutputPath)
+    {
+        if (aggregate.Context.Mode == ArtifactPostProcessingMode.RetryAttempts)
         {
             CiRunSummaryModule mergedModule = CreateRetryMergedModule(aggregate);
             string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
@@ -113,10 +200,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 GitHubActionsResources.Description);
         }
 
-        string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
-        await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
         return new ProcessedArtifact(
-            outputPath,
+            summaryOutputPath!,
             SummaryArtifactKind,
             GitHubActionsResources.DisplayName,
             GitHubActionsResources.Description);
@@ -160,6 +245,34 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(
                 GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules)),
         };
+    }
+
+    private static async Task<bool?> TryUpsertStepSummaryAsync(
+        StepSummaryWriter writer,
+        string aggregationId,
+        string markdown,
+        Func<int, string>? leadingNotice,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await writer.UpsertStepSummaryWithRetryAsync(
+                aggregationId,
+                markdown,
+                cancellationToken,
+                leadingNotice,
+                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            if (logger.IsEnabled(LogLevel.Warning))
+            {
+                logger.LogWarning(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, writer.Path, ex.Message));
+            }
+
+            return null;
+        }
     }
 }
 

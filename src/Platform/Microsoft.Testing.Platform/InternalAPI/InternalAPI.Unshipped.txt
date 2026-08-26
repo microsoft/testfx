@@ -328,6 +328,7 @@ Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Deconstruc
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.SuccessfulTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, string? StandardOutput, string? ErrorOutput, string? SessionUid) -> void
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid) -> void
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption = "show-slowest-tests" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.OutputOptionMinimalArgument = "minimal" -> string!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.get -> int
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.init -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RecordTestDuration(string! testNodeUid, string! displayName, System.TimeSpan? duration) -> void
@@ -599,3 +600,27 @@ Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DuplicateProperti
 Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.DuplicateProperties.get -> System.Collections.Generic.List<string!>!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, int maxNumberOfServerInstances, System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, System.Threading.CancellationToken cancellationToken) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowPassedTests.get -> System.Func<bool>!
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowPassedTests.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowTestResults.get -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowTestResults.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.All = 7 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.Failed = 2 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.None = 0 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.Passed = 1 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.Skipped = 4 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption = "show-test-results" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsPassedArgument = "passed" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsFailedArgument = "failed" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsSkippedArgument = "skipped" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsAllArgument = "all" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsNoneArgument = "none" -> string!
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility?
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.TryParseShowTestResultsArguments(string![]! arguments, out Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility visibility, out Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError error) -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.AllOrNoneCombinedWithOtherValues = 3 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.EmptySelection = 2 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.None = 0 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.UnknownValue = 1 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+static Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.GetShowTestResultsVisibility(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility

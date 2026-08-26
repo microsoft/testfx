@@ -23,6 +23,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAnnotations, GitHubActionsResources.AnnotationsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummary, GitHubActionsResources.StepSummaryOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections, GitHubActionsResources.StepSummarySectionsOptionDescription, ArgumentArity.OneOrMore, false),
+                new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails, GitHubActionsResources.FailureDetailsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices, GitHubActionsResources.SlowTestNoticesOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold, GitHubActionsResources.SlowTestThresholdOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsOptionName, GitHubActionsResources.OptionDescription, ArgumentArity.Zero, false),
@@ -37,7 +38,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
                     && !arguments[0].Equals(GitHubActionsCommandLineOptions.StepSummaryOnFailureValue, StringComparison.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummaryValue, arguments[0])),
-            GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices
+            GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices or GitHubActionsCommandLineOptions.GitHubActionsFailureDetails
                 when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidOnOffValue, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold
@@ -60,6 +61,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 GitHubActionsCommandLineOptions.GitHubActionsAnnotations,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummary,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections,
+                GitHubActionsCommandLineOptions.GitHubActionsFailureDetails,
                 GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices,
                 GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold,
             ],

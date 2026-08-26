@@ -2,6 +2,7 @@
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Extensions.TestRecord.IsFlaky.get -> bool
 Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky) -> void
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure = null) -> void
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, string! displayLabel, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetDisplayLabel(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
@@ -197,3 +198,13 @@ static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.o
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.RecordAttempts(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! attempts, long? totalDurationInMs, System.DateTimeOffset? startedDate, System.DateTimeOffset? completedDate) -> void
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.BuildNextAttempts(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result) -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>!
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.BuildNextTotalDuration(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result) -> long?
+Microsoft.Testing.Extensions.TestFailureDetails
+Microsoft.Testing.Extensions.TestFailureDetails.ExceptionType.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.FilePath.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.IsEmpty.get -> bool
+Microsoft.Testing.Extensions.TestFailureDetails.LineNumber.get -> int
+Microsoft.Testing.Extensions.TestFailureDetails.Message.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.StackTrace.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.TestFailureDetails(string? message, string? exceptionType, string? stackTrace, string? filePath, int lineNumber) -> void
+Microsoft.Testing.Extensions.TestRecord.Failure.get -> Microsoft.Testing.Extensions.TestFailureDetails?
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, Microsoft.Testing.Extensions.TestFailureDetails? failure) -> void
