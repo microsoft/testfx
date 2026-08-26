@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -37,9 +37,9 @@ Options:
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -50,6 +50,8 @@ Options:
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --enable-dynamic-extensions
+        Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
@@ -57,8 +59,9 @@ Options:
     --help
         Show the command line help.
     --ignore-exit-code
-        Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
@@ -106,9 +109,9 @@ Extension options:
     --maximum-failed-tests
         Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --settings
-        The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+        The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.
     --test-parameter
-        Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
+        Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
@@ -127,12 +130,12 @@ Extension options:
   MSTestExtension
     Name: MSTest
     Version: {MSTestVersion}
-    Description: MSTest Framework for Microsoft Testing Platform
+    Description: MSTest Framework for Microsoft Testing Platform.
     Options:
       --settings
         Arity: 1
         Hidden: False
-        Description: The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+        Description: The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.
       --filter
         Arity: 1
         Hidden: False
@@ -140,7 +143,7 @@ Extension options:
       --test-parameter
         Arity: 1..N
         Hidden: False
-        Description: Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
+        Description: Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.
       --maximum-failed-tests
         Arity: 1
         Hidden: False

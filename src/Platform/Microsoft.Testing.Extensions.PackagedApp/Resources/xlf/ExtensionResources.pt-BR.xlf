@@ -2,6 +2,61 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pt-BR" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="ActivationArgumentsInvalidArgumentCount">
+        <source>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</source>
+        <target state="translated">O conteúdo do argumento de ativação da Microsoft Testing Platform tem uma contagem de argumentos inválida.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidArgumentLength">
+        <source>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</source>
+        <target state="translated">O conteúdo do argumento de ativação do Microsoft Testing Platform tem um comprimento de argumentos inválido.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidFileKey">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</source>
+        <target state="translated">Os argumentos de ativação do Microsoft Testing Platform contêm uma chave de conteúdo de arquivo inválida.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidFileReference">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</source>
+        <target state="translated">Os argumentos de ativação do Microsoft Testing Platform contêm uma referência de conteúdo de arquivo inválida.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidInlinePayload">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</source>
+        <target state="translated">Os argumentos de ativação do Microsoft Testing Platform contêm uma carga embutida inválida.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsMissingPayload">
+        <source>The launch activation does not contain Microsoft Testing Platform arguments.</source>
+        <target state="translated">A ativação de inicialização não contém argumentos do Microsoft Testing Platform.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadAuthenticationFailed">
+        <source>The Microsoft Testing Platform activation-argument payload failed authentication.</source>
+        <target state="translated">Falha na autenticação do conteúdo do argumento de ativação do Microsoft Testing Platform.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadReadFailed">
+        <source>The Microsoft Testing Platform activation-argument payload could not be read.</source>
+        <target state="translated">Não foi possível ler o conteúdo do argumento de ativação do Microsoft Testing Platform.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadTooLarge">
+        <source>The Microsoft Testing Platform activation-argument payload is too large.</source>
+        <target state="translated">O conteúdo do argumento de ativação do Microsoft Testing Platform é muito grande.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadTruncated">
+        <source>The Microsoft Testing Platform activation-argument payload is truncated.</source>
+        <target state="translated">O conteúdo do argumento de ativação do Microsoft Testing Platform está truncado.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsTrailingData">
+        <source>The Microsoft Testing Platform activation-argument payload contains trailing data.</source>
+        <target state="translated">O conteúdo do argumento de ativação do Microsoft Testing Platform contém dados no final.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
         <target state="translated">O manifesto do aplicativo empacotado declara vários aplicativos e nenhum corresponde exclusivamente ao executável ''{0}''. IDs de Modelo de Usuário do Aplicativo Candidato: {1}.</target>
@@ -18,9 +73,9 @@
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">Registra um host de teste da área de trabalho MSIX empacotado e de confiança total e o ativa por Application User Model ID (build do Windows) — e, quando aceito por meio do TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — implanta um host de teste do Windows não empacotado (layout solto) em um diretório isolado e o inicia de lá. Por padrão, fica habilitado apenas para um layout empacotado, então um aplicativo não empacotado permanece no caminho de inicialização padrão. Não há suporte para hosts UWP/AppContainer verdadeiros. Veja https://github.com/microsoft/testfx/issues/9933.</target>
-        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="UWP"}{Locked="AppContainer"}.</note>
+        <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
+        <target state="translated">Registra um host de teste MSIX empacotado e o ativa por meio do Application User Model ID (build do Windows), fornecendo os argumentos do Microsoft Testing Platform por meio de argv para hosts packagedClassicApp/win32App (incluindo hosts clássicos do AppContainer) ou usando a ativação de inicialização para hosts windowsApp/UWP. Quando ativado com TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, ele também implanta um host de teste do Windows não empacotado (layout avulso) em um diretório isolado e o inicia a partir dele. Por padrão, fica habilitado apenas para um layout empacotado, portanto, um aplicativo não empacotado permanece no caminho de inicialização padrão. A execução de AppContainer de ponta a ponta também exige autorização do pipe do controlador. Veja https://github.com/microsoft/testfx/issues/10486.</target>
+        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>

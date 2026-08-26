@@ -49,6 +49,26 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task WhenRunPassesAndSummaryIsOnFailure_SummaryIsNotCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "pass", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreEqual(string.Empty, summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenTestFailsAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "fail", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.Contains("❌ Test Run Summary", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WhenZeroTestsRan_EmitsExitCodeAnnotationAndCallout(string tfm)
     {
         (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "zero");
@@ -60,6 +80,17 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         result.AssertOutputContains("ZeroTests");
         Assert.Contains("❌ Test Run Summary", summary);
         Assert.Contains("[!WARNING]", summary);
+        Assert.Contains("ZeroTests", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenZeroTestsRanAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "zero", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.ZeroTests);
+        Assert.Contains("❌ Test Run Summary", summary);
         Assert.Contains("ZeroTests", summary);
     }
 
@@ -169,9 +200,7 @@ public class Program
         builder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
             (_, __) => new DummyTestFramework());
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
         builder.AddGitHubActionsProvider();
-#pragma warning restore TPEXP
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }

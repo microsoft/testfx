@@ -12,11 +12,13 @@ Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.RunSettin
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Configurations.IConfigurationProvider!>!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Description.get -> string!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.LoadAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Order.get -> int
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.RunSettingsConfigurationProviderBase() -> void
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.TryGet(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.TryGetScalar(string! key, out string? value) -> bool
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Description.get -> string!
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.DisplayName.get -> string!
@@ -45,6 +47,8 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.Mt
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.PlatformServicesConfigurationAdapter(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.this[string! key].get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter.EqtTraceLogger.InitializeLifetimeService() -> object?
+override Microsoft.VisualStudio.TestTools.UnitTesting.MTPTraceLogger.InitializeLifetimeService() -> object?
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsCommandLineOptionsProvider.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.DisplayName.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.Uid.get -> string!

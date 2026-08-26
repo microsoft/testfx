@@ -312,6 +312,8 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy) },
             { HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds, nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds) },
             { HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy) },
+            { HandshakeMessagePropertyNames.RequiredPostProcessorKinds, nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds) },
+            { HandshakeMessagePropertyNames.RequiredPostProcessingSupported, nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -332,6 +334,8 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds), properties[16]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -437,8 +441,24 @@ public sealed class ProtocolTests
             "MyExecId",
             "MyInstId",
             [
-                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1", "microsoft.testing.trx"),
-                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null, null),
+                new FileArtifactMessage(
+                    "/full/path/artifact1.txt",
+                    "artifact1",
+                    "description1",
+                    "uid-1",
+                    "Test 1",
+                    "session-1",
+                    "microsoft.testing.trx",
+                    ["/full/path/input1.trx", "/full/path/input2.trx"]),
+                new FileArtifactMessage(
+                    "/full/path/artifact2.coverage",
+                    "artifact2",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "microsoft.testing.coverage",
+                    ["/full/path/input1.coverage", "/full/path/input2.coverage"]),
             ]);
 
         var stream = new MemoryStream();
@@ -460,6 +480,7 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.TestDisplayName, actualArtifact.TestDisplayName);
             Assert.AreEqual(expected.SessionUid, actualArtifact.SessionUid);
             Assert.AreEqual(expected.Kind, actualArtifact.Kind);
+            Assert.AreSequenceEqual(expected.InputArtifactPaths, actualArtifact.InputArtifactPaths);
         }
     }
 

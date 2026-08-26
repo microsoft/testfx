@@ -51,10 +51,9 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="translated">テスト メソッド '{0}.{1}' を実行できません: テスト データがメソッド パラメーターと一致しません。カウントまたは型が異なります。
-型 '{3}'、
- を持つ、予期された {2} パラメーターをテストします
-ただし、型 '{5}' の引数 {4} を受け取りました。</target>
+        <target state="translated">テスト メソッド '{0}.{1}' を実行できません: テスト データがメソッドのパラメーターと一致しません。数または型が異なります。
+テストでは、{2} 個の型 '{3}' のパラメーターが想定されていますが、
+{4} 個の型 '{5}' の引数を受け取りました。</target>
         <note>{0} is the declaring type full name. {1} is the method name. {2} is the expected parameter count. {3} is the expected parameter type list. {4} is the received argument count. {5} is the received argument type list.</note>
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
@@ -125,7 +124,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
         <target state="translated">'mstest:execution:dependencies:nodes' 構成セクションのインデックス {0} の依存関係ノードには 'test' 値がないため、無視されます。</target>
-        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="test"}</note>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">
         <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>

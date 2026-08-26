@@ -3,8 +3,10 @@
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
@@ -40,9 +42,16 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetEnvironment(),
                     serviceProvider.GetFileSystem(),
+                    serviceProvider.GetMessageBus(),
                     serviceProvider.GetOutputDevice(),
                     serviceProvider.GetTestApplicationModuleInfo(),
-                    serviceProvider.GetLoggerFactory()));
+                    serviceProvider.GetTestApplicationProcessExitCode(),
+                    serviceProvider.GetRequiredService<ITestCoverageResult>(),
+                    serviceProvider.GetLoggerFactory(),
+                    () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
+                    {
+                        IsRequiredArtifactPostProcessingSupported: true,
+                    }));
 
         var compositeSlowTestReporter =
             new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
@@ -124,6 +133,15 @@ public static class AzureDevOpsExtensions
                 serviceProvider.GetLoggerFactory()));
 
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
+
+        if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
+                new AzureDevOpsSummaryArtifactPostProcessor(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice()));
+        }
     }
 
     private static AzureDevOpsHistoryService CreateHistoryService(IServiceProvider serviceProvider)

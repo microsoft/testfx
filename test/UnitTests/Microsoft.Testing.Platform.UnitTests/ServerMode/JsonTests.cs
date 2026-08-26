@@ -161,7 +161,7 @@ public sealed class JsonTests
 
         // Act
         string serialized = await _json.SerializeAsync(original);
-        ErrorMessage roundTripped = _json.Deserialize<ErrorMessage>(serialized.AsMemory());
+        ErrorMessage roundTripped = _json.Deserialize<ErrorMessage>(Encoding.UTF8.GetBytes(serialized).AsMemory());
 
         // Assert
         Assert.AreEqual(original.Id, roundTripped.Id);
@@ -182,7 +182,7 @@ public sealed class JsonTests
         });
 
         // Act
-        Person actual = json.Deserialize<Person>(new("""{"name":"Thomas"}""".ToCharArray()));
+        Person actual = json.Deserialize<Person>(Encoding.UTF8.GetBytes("""{"name":"Thomas"}""").AsMemory());
 
         // Assert
         Assert.AreEqual("Thomas", actual.Name);
@@ -216,7 +216,7 @@ public sealed class JsonTests
             """;
 
         // Act
-        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(initializeParams.AsMemory());
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
 
         // Assert
         Assert.IsTrue(args.Capabilities.IsStateful);
@@ -236,7 +236,7 @@ public sealed class JsonTests
             """;
 
         // Act
-        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(initializeParams.AsMemory());
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
 
         // Assert
         Assert.IsFalse(args.Capabilities.IsStateful);
@@ -285,6 +285,59 @@ public sealed class JsonTests
 
         // Assert
         Assert.IsFalse(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_UntypedDictionary_WithNonInt32Numbers_StjPath_PreservesNumericType()
+    {
+        // Arrange
+        // Real MTP notifications carry numbers that are NOT Int32: durations as doubles, timestamps and
+        // counts as longs. The untyped IDictionary<string, object?> deserializer used to call GetInt32() on
+        // every JSON number, which throws FormatException on those values and faulted the whole read loop
+        // on the net8 / System.Text.Json path (the net462 / Jsonite path decodes generically and was fine).
+        Json json = new();
+        const string payload = """
+            { "small": 42, "big": 9999999999, "huge": 79228162514264337593543950335, "duration": 40.5 }
+            """;
+
+        // Act
+        IDictionary<string, object?> actual = json.Deserialize<IDictionary<string, object?>>(Encoding.UTF8.GetBytes(payload).AsMemory());
+
+        // Assert
+        // Mirror the Jsonite reader exactly: a value that fits Int32 stays int, a larger integer widens to
+        // long, and a value with a fractional part becomes double.
+        Assert.IsInstanceOfType<int>(actual["small"]);
+        Assert.AreEqual(42, actual["small"]);
+        Assert.IsInstanceOfType<long>(actual["big"]);
+        Assert.AreEqual(9999999999L, actual["big"]);
+        Assert.IsInstanceOfType<decimal>(actual["huge"]);
+        Assert.AreEqual(decimal.MaxValue, actual["huge"]);
+        Assert.IsInstanceOfType<double>(actual["duration"]);
+        Assert.AreEqual(40.5d, actual["duration"]);
+    }
+
+    [TestMethod]
+    public void Deserialize_UntypedArray_WithNonInt32Numbers_StjPath_PreservesNumericType()
+    {
+        // Arrange
+        // Same fix, applied to the generic object[] array deserializer (server-to-client responses and
+        // notifications carry arrays, e.g. run attachments and test-node changes).
+        Json json = new();
+        const string payload = "[ 42, 9999999999, 79228162514264337593543950335, 40.5 ]";
+
+        // Act
+        object[] actual = json.Deserialize<object[]>(Encoding.UTF8.GetBytes(payload).AsMemory());
+
+        // Assert
+        Assert.HasCount(4, actual);
+        Assert.IsInstanceOfType<int>(actual[0]);
+        Assert.AreEqual(42, actual[0]);
+        Assert.IsInstanceOfType<long>(actual[1]);
+        Assert.AreEqual(9999999999L, actual[1]);
+        Assert.IsInstanceOfType<decimal>(actual[2]);
+        Assert.AreEqual(decimal.MaxValue, actual[2]);
+        Assert.IsInstanceOfType<double>(actual[3]);
+        Assert.AreEqual(40.5d, actual[3]);
     }
 
     private sealed class TestJsonObjectSerializer : JsonObjectSerializer;

@@ -22,6 +22,11 @@
         <target state="translated">Generátor sestav GitHub Actions</target>
         <note />
       </trans-unit>
+      <trans-unit id="EmptyStepSummarySections">
+        <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
+        <target state="new">At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
         <source>Test run failed (exit code {0}: {1})</source>
         <target state="translated">Spuštění testů se nepovedlo (ukončovací kód {0}: {1})</target>
@@ -127,6 +132,16 @@
         <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="InvalidStepSummarySection">
+        <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
+        <target state="new">Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</target>
+        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidStepSummaryValue">
+        <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
+        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
         <target state="translated">Test neproběhl úspěšně bez poskytnutí zprávy o chybě.</target>
@@ -168,14 +183,24 @@
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
-        <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="new">Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+      </trans-unit>
+      <trans-unit id="StepSummarySectionsOptionDescription">
+        <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
+        <target state="new">Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
         <target state="translated">Zápis souhrnu úlohy GitHub Actions do {0} se nezdařil: {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="SubOptionsRequireReportGh">
+        <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
+        <target state="translated">Dílčí možnosti sestavy GitHub Actions vyžadují zadání parametru '--{0}'.</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
       </trans-unit>
     </body>
   </file>

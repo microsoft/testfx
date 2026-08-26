@@ -33,6 +33,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new TestRunCountsRequestSerializer(), typeof(TestRunCountsRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new ArtifactRequestSerializer(), typeof(ArtifactRequest));
         _failedTests = failedTests;
     }
 
@@ -84,6 +85,8 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     /// </summary>
     public bool CountsReported { get; private set; }
 
+    public List<ArtifactRequest> Artifacts { get; } = [];
+
     public Task WaitForConnectionAsync(CancellationToken cancellationToken)
         => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken);
 
@@ -111,6 +114,12 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             SkippedTests = testRunCounts.SkippedTests;
             RecoveredTests = testRunCounts.RecoveredTestUids;
             CountsReported = true;
+            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+        }
+
+        if (request is ArtifactRequest artifact)
+        {
+            Artifacts.Add(artifact);
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 

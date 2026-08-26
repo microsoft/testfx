@@ -508,6 +508,32 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodCreatesFileSymbolicLinkToConstantTarget_NoDiagnostic()
+    {
+        // Only 'path' is created by File.CreateSymbolicLink; 'pathToTarget' merely names the file the link points at,
+        // so a constant target - like a shared fixture file - must not be flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string link = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    File.CreateSymbolicLink(link, "shared-fixture.txt");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     [DataRow("AppendAllTextAsync", "\"shared.txt\", \"entry\"")]
     [DataRow("AppendAllLinesAsync", "\"shared.txt\", new[] { \"line\" }")]
     [DataRow("WriteAllBytesAsync", "\"shared.txt\", new byte[] { 1 }")]
@@ -555,6 +581,64 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
             {
                 [TestInitialize]
                 public void Setup()
+                {
+                    {|#0:File.WriteAllText("setup.txt", "data")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("setup.txt"));
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyInitializeWritesConstantPath_NoDiagnostic()
+    {
+        // [AssemblyInitialize] is serialized before any tests run, so its mutation cannot race a concurrent test.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblySetup(TestContext context)
+                {
+                    File.WriteAllText("setup.txt", "data");
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalTestInitializeWritesConstantPath_Diagnostic()
+    {
+        // [GlobalTestInitialize] runs around every test and can race concurrent tests.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalSetup(TestContext context)
                 {
                     {|#0:File.WriteAllText("setup.txt", "data")|};
                 }

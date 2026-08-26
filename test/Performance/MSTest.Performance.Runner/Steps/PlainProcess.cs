@@ -41,12 +41,13 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
         List<object> results = [];
         for (int i = 0; i < _numberOfRun; i++)
         {
+            long startTimestamp = Stopwatch.GetTimestamp();
             using Process process = Process.Start(processStartInfo)!;
-            await process.WaitForExitAsync();
+            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
             var result = new
             {
-                ElapsedTime = process.ExitTime - process.StartTime,
-                process.TotalProcessorTime,
+                ElapsedTime = Stopwatch.GetElapsedTime(startTimestamp),
+                TotalProcessorTime = totalProcessorTime,
                 Environment.ProcessorCount,
                 GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
             };
@@ -54,9 +55,15 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
             results.Add(result);
         }
 
-        await File.AppendAllTextAsync(Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"), JsonSerializer.Serialize(
-            results,
-            JsonOptions));
+        var report = new
+        {
+            PipelineName = (string)context.Properties["PipelineName"],
+            Measurements = results,
+        };
+
+        await File.WriteAllTextAsync(
+            Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"),
+            JsonSerializer.Serialize(report, JsonOptions));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);

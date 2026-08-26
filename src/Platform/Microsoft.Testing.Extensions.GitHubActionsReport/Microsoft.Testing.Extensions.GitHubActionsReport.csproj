@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
-    <VersionPrefix>$(MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
@@ -12,6 +9,7 @@
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RuntimeFeatureHelper.cs" Link="Helpers\RuntimeFeatureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
@@ -21,6 +19,11 @@
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReporterLoggingExtensions.cs" Link="Helpers\ReporterLoggingExtensions.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestNodeIdentity.cs" Link="Helpers\TestNodeIdentity.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SummaryReporterHelpers.cs" Link="Helpers\SummaryReporterHelpers.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiCoverageSummary.cs" Link="Helpers\CiCoverageSummary.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryAggregateReader.cs" Link="Helpers\CiRunSummaryAggregateReader.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryAggregation.cs" Link="Helpers\CiRunSummaryAggregation.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryFragmentIo.cs" Link="Helpers\CiRunSummaryFragmentIo.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryModels.cs" Link="Helpers\CiRunSummaryModels.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\StackTraceSourceLocationResolver.cs" Link="Helpers\StackTraceSourceLocationResolver.cs" />
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
   </ItemGroup>
@@ -61,6 +64,10 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
   <ItemGroup>

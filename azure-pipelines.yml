@@ -153,33 +153,120 @@ stages:
     # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
     # soon as main changes to avoid forcing the entire 204-node graph to miss.
     - pwsh: |
-        & ./eng/common/msbuild.ps1 -ci -prepareMachine -warnAsError:$false ./TestFx.slnx `
-          /restore `
-          /graph `
-          /m `
-          /reportfileaccesses `
-          /nr:false `
-          /t:Build `
-          /v:minimal `
-          /p:Configuration=$(_BuildConfig) `
-          /p:FastAcceptanceTest=true `
-          /p:Publish=false `
-          "/p:RepoRoot=$(Build.SourcesDirectory)\" `
-          /p:Test=false `
-          /p:MSBuildCachePackageEnabled=true `
-          /p:MSBuildCacheEnabled=true `
-          /p:MSBuildCacheRemoteCacheIsReadOnly=false `
+        trap {
+          Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+          Write-Host "##vso[task.logissue type=warning]Seeding MSBuildCache failed unexpectedly ($($_.Exception.Message)); continuing with the regular Arcade build."
+          exit 0
+        }
+
+        Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+
+        $pwsh = Join-Path $PSHOME "pwsh.exe"
+        $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"
+        New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
+
+        # Do not pass -ci here: on failure it reports the pipeline result itself and prevents this step from
+        # handing off cleanly to the fallback build.
+        $arguments = @(
+          "-NoLogo",
+          "-NoProfile",
+          "-File", "./eng/common/msbuild.ps1",
+          "-prepareMachine",
+          "-warnAsError:`$false",
+          "./TestFx.slnx",
+          "/restore",
+          "/graph",
+          "/m",
+          "/reportfileaccesses",
+          "/nr:false",
+          "/t:Build",
+          "/v:minimal",
+          "/bl:$binlogDirectory\MSBuildCache.binlog",
+          "/p:Configuration=$(_BuildConfig)",
+          "/p:ContinuousIntegrationBuild=true",
+          "/p:FastAcceptanceTest=true",
+          "/p:Publish=false",
+          "/p:RepoRoot=$(Build.SourcesDirectory)\",
+          "/p:Test=false",
+          "/p:MSBuildCachePackageEnabled=true",
+          "/p:MSBuildCacheEnabled=true",
+          "/p:MSBuildCacheRemoteCacheIsReadOnly=false",
           "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
-        exit $LASTEXITCODE
+        )
+
+        $previousPSNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
+        try {
+          $PSNativeCommandUseErrorActionPreference = $false
+          & $pwsh @arguments
+          $exitCode = $LASTEXITCODE
+        }
+        finally {
+          $PSNativeCommandUseErrorActionPreference = $previousPSNativeCommandUseErrorActionPreference
+        }
+
+        if ($exitCode -eq 0) {
+          Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]true"
+          exit 0
+        }
+
+        Write-Host "##vso[task.logissue type=warning]Seeding MSBuildCache failed with exit code $exitCode; continuing with the regular Arcade build."
+        exit 0
       displayName: Seed $(_BuildConfig) project cache
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         # MSBuildCache reads NUGET_PACKAGES to build its path normalizer, and every restored package file is a
         # fingerprinted input. The seeding and the consuming builds must therefore agree on this folder or every
-        # node misses. Arcade's -ci switch already redirects restore here (eng/common/tools.ps1 sets
-        # NUGET_PACKAGES to $(RepoRoot).packages when -ci is passed), but the consuming build in the `build`
-        # stage cannot use -ci, so pin the value explicitly on both sides instead of relying on that default.
+        # node misses. Both cache build paths avoid Arcade's -ci switch so they can inspect the real exit code,
+        # so pin the package folder explicitly instead of relying on -ci to redirect restore.
         NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
+        DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+    # A failed cache build can leave partial outputs behind. Preserve its diagnostics, then clean those outputs
+    # before using the same regular Arcade build that PR validation uses as its correctness fallback.
+    - pwsh: |
+        $cacheLogSource = "$(Agent.TempDirectory)\MSBuildCache"
+        $cacheLogDestination = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\MSBuildCache"
+
+        try {
+          if (Test-Path $cacheLogSource) {
+            New-Item $cacheLogDestination -ItemType Directory -Force | Out-Null
+            Get-ChildItem $cacheLogSource -Force |
+              Where-Object Name -NE "CacheClient.log" |
+              Copy-Item -Destination $cacheLogDestination -Recurse -Force
+          }
+        }
+        catch {
+          Write-Host "##vso[task.logissue type=warning]Failed to preserve MSBuildCache diagnostics. $($_.Exception.Message)"
+        }
+
+        $artifactsDirectory = "$(Build.SourcesDirectory)\artifacts"
+        if (Test-Path $artifactsDirectory) {
+          Get-ChildItem $artifactsDirectory -Force |
+            Where-Object Name -NotIn @("log", "msbuild-cache", "toolset") |
+            Remove-Item -Recurse -Force
+        }
+
+        @(
+          $cacheLogSource,
+          "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Sdk.props",
+          "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Runner\Runner.targets"
+        ) |
+          Where-Object { Test-Path $_ } |
+          Remove-Item -Recurse -Force
+      displayName: Preserve cache diagnostics and clean failed seed outputs
+      condition: and(always(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
+
+    - script: eng\common\CIBuild.cmd
+        -configuration $(_BuildConfig)
+        -prepareMachine
+        /p:Publish=false
+        /p:Test=false
+        /p:FastAcceptanceTest=true
+        /p:MSBuildCachePackageEnabled=true
+        /p:MSBuildCacheEnabled=false
+      name: Build
+      displayName: Build
+      condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
     - ${{ if eq(parameters.SkipTests, False) }}:
       # The Debug cache seed already produced the compiled solution outputs. Run the remaining Arcade phases that
@@ -189,19 +276,33 @@ stages:
             -ci `
             -disablePipelineSetResult `
             -configuration $(_BuildConfig) `
+            -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog" `
             -restore `
             -sign `
             -pack `
             -prepareMachine `
             /p:ContinuousIntegrationBuild=true `
             /p:FastAcceptanceTest=true `
+            /p:NoBuild=true `
             /p:MSBuildCachePackageEnabled=true `
             /p:MSBuildCacheEnabled=false
           exit $LASTEXITCODE
         displayName: Prepare and pack Debug build outputs
-        condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+        condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
       - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
+        parameters:
+          # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
+          enableAffectedTests: false
+          affectedTestsMode: collect
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish cache seed build binlogs'
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        ArtifactName: Build_Binlogs_MSBuildCacheSeed_$(_BuildConfig)_Attempt$(System.JobAttempt)
+      condition: always()
+      continueOnError: true
 
 - stage: build
   displayName: Build
@@ -230,6 +331,8 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: false
+    - pwsh: ./eng/validate-affected-tests.ps1
+      displayName: Validate affected-test rollout
     - bash: |
         set -euo pipefail
 
@@ -287,8 +390,10 @@ stages:
       testResultsFormat: 'vstest'
       artifacts:
         publish:
-          artifacts: true
-          logs: true
+          artifacts:
+            name: 'Artifacts_$(Agent.JobName)_$(_BuildConfig)'
+          logs:
+            name: 'Logs_Build_$(Agent.JobName)_$(_BuildConfig)'
           manifests: true
       enableTelemetry: true
       jobs:
@@ -339,6 +444,9 @@ stages:
             }
 
             $pwsh = Join-Path $PSHOME "pwsh.exe"
+            $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"
+            New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
+
             # Azure Pipeline cache entries are immutable. The batched main-merge stage is the only remote publisher;
             # keeping this canary read-only prevents manual or scheduled runs from racing with it.
             $arguments = @(
@@ -355,6 +463,7 @@ stages:
               "/nr:false",
               "/t:Build",
               "/v:minimal",
+              "/bl:$binlogDirectory\MSBuildCache.binlog",
               "/p:Configuration=$(_BuildConfig)",
               "/p:ContinuousIntegrationBuild=true",
               "/p:FastAcceptanceTest=true",
@@ -488,12 +597,14 @@ stages:
               "-ci",
               "-disablePipelineSetResult",
               "-configuration", "$(_BuildConfig)",
+              "-binaryLogName", "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog",
               "-restore",
               "-sign",
               "-pack",
               "-prepareMachine",
               "/p:ContinuousIntegrationBuild=true",
               "/p:FastAcceptanceTest=true",
+              "/p:NoBuild=true",
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=false"
             )
@@ -609,6 +720,10 @@ stages:
         - ${{ if eq(parameters.SkipTests, False) }}:
 
           - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
+            parameters:
+              # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
+              enableAffectedTests: false
+              affectedTestsMode: run
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
@@ -649,6 +764,25 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
 
+          # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and
+          # CopyFiles@2 hard-fails when SourceFolder does not exist. A Test failure early enough to skip the
+          # suite therefore reported one real problem as three failed steps: Test, Copy binlogs, and Publish
+          # integration tests binlogs all failed in
+          # https://dev.azure.com/dnceng/internal/_build/results?buildId=3045544. Probe for the binlogs so
+          # both steps skip when there are none. When the suite did produce binlogs they are copied and
+          # published exactly as before, including on a failed run, which is why these use always().
+          - pwsh: |
+              $testsuite = Join-Path '$(Build.SourcesDirectory)' 'artifacts/tmp/$(_BuildConfig)/testsuite'
+              $hasBinlogs = 'false'
+              if (Test-Path -LiteralPath $testsuite -PathType Container) {
+                $binlog = Get-ChildItem -LiteralPath $testsuite -Filter '*.binlog' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($null -ne $binlog) { $hasBinlogs = 'true' }
+              }
+              Write-Host "Integration tests binlogs under '$testsuite': $hasBinlogs"
+              Write-Host "##vso[task.setvariable variable=HasIntegrationTestBinlogs]$hasBinlogs"
+            displayName: 'Check for integration tests binlogs'
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
             inputs:
@@ -656,14 +790,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish local dumps'
@@ -671,6 +805,32 @@ stages:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/CrashDumps'
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
+
+      # Real UWP and packaged WinUI activation require more than a Windows image label. Keep this as a
+      # separate blocking job: its strict preflight verifies the VS/UWP SDKs and interactive machine state
+      # before packing and running the application-model acceptance tests. If this image stops satisfying
+      # those requirements, move the job to a purpose-built pool rather than weakening or skipping tests.
+      - job: WindowsAppModel
+        displayName: Windows application-model acceptance
+        dependsOn: DetectChanges
+        condition: and(succeeded(), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false')))
+        timeoutInMinutes: 120
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
+          - name: _BuildConfig
+            value: Debug
+          - name: Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup
+            value: 0
+        steps:
+        - checkout: self
+          clean: true
+
+        - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+        - template: /eng/pipelines/steps/test-windows-app-model.yml
 
       - job: Linux
         dependsOn: DetectChanges

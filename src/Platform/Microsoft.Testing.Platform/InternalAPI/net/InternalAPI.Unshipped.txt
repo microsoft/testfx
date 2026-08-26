@@ -1,5 +1,11 @@
 #nullable enable
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! consumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.FormatterUtilities.MessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
+*REMOVED*Microsoft.Testing.Platform.ServerMode.IMessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
+*REMOVED*Microsoft.Testing.Platform.ServerMode.Json.Json.Deserialize<T>(System.ReadOnlyMemory<char> utf8Json) -> T
+Microsoft.Testing.Platform.ServerMode.FormatterUtilities.MessageFormatter.Deserialize<T>(System.ReadOnlyMemory<byte> serializedUtf8Content) -> T
+Microsoft.Testing.Platform.ServerMode.IMessageFormatter.Deserialize<T>(System.ReadOnlyMemory<byte> serializedUtf8Content) -> T
+Microsoft.Testing.Platform.ServerMode.Json.Json.Deserialize<T>(System.ReadOnlyMemory<byte> utf8Json) -> T
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void

@@ -23,6 +23,7 @@
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceAssert.cs" Link="Helpers\AcceptanceAssert.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="Helpers\AcceptanceFixture.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceTestBase.cs" Link="Helpers\AcceptanceTestBase.cs" />
+    <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\BinlogReader.cs" Link="Helpers\BinlogReader.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="Helpers\RootFinder.cs" />
   </ItemGroup>
@@ -45,6 +46,10 @@
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+    <!-- The MTP server-mode client under test (P4). Referenced through the `serverclient` extern alias so
+         its internal TestNode/TestNodeUpdateMessage (same namespaces as the platform's public types) stay
+         out of the global namespace and never clash in the non-aliased files of this assembly. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerMode.Client.Sources\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" Aliases="serverclient" />
   </ItemGroup>
 
   <!--

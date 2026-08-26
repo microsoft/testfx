@@ -17,10 +17,31 @@ internal static partial class CtrfReportMerger
         CancellationToken cancellationToken)
         => MergeToFileAsync(inputPaths, outputPath, CtrfMergeMode.Concatenate, cancellationToken);
 
-    internal static async Task MergeToFileAsync(
+    internal static Task MergeAllToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        CancellationToken cancellationToken)
+        => MergeToFileAsync(inputPaths, outputPath, CtrfMergeMode.Concatenate, requireAllReports: true, cancellationToken);
+
+    internal static Task MergeAllToFileAsync(
         IReadOnlyList<string> inputPaths,
         string outputPath,
         CtrfMergeMode mode,
+        CancellationToken cancellationToken)
+        => MergeToFileAsync(inputPaths, outputPath, mode, requireAllReports: true, cancellationToken);
+
+    internal static Task MergeToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        CtrfMergeMode mode,
+        CancellationToken cancellationToken)
+        => MergeToFileAsync(inputPaths, outputPath, mode, requireAllReports: false, cancellationToken);
+
+    private static async Task MergeToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        CtrfMergeMode mode,
+        bool requireAllReports,
         CancellationToken cancellationToken)
     {
         if (inputPaths is null)
@@ -55,7 +76,7 @@ internal static partial class CtrfReportMerger
 #endif
         }
 
-        string merged = Merge(reports, mode);
+        string merged = Merge(reports, mode, requireAllReports, nameof(inputPaths));
 
         string? outputDirectory = Path.GetDirectoryName(outputPath);
         if (!RoslynString.IsNullOrEmpty(outputDirectory))

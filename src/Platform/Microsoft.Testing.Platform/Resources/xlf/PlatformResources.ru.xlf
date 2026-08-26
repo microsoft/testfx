@@ -82,6 +82,11 @@
         <target state="translated">Не удается прочитать манифест постобработки артефактов: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="translated">В манифесте постобработки артефакта runSummary должны содержаться допустимые значения totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode и testModuleCount.</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
         <target state="translated">Постобработчик артефактов {0} объявляет возможность {1}, которая не может содержать разделитель точки с запятой.</target>
@@ -109,7 +114,7 @@
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</source>
-        <target state="new">Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</target>
+        <target state="translated">Не удалось создать файл журнала диагностики "{0}" после {1} попыток. Последняя ошибка: {2}</target>
         <note>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
@@ -321,6 +326,136 @@
         <source>Discovering tests from</source>
         <target state="translated">Обнаружение тестов из</target>
         <note />
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
+        <target state="translated">Не удалось загрузить сборку "{0}" расширения "{1}", объявленного в манифесте расширения "{2}".</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
+        <target state="translated">Сборка "{0}" расширения "{1}", объявленного в манифесте расширения "{2}", не найдена.</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
+        <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
+        <target state="translated">Расширение "{0}", объявленное в манифесте расширения "{1}", попыталось зарегистрировать платформу тестирования. Динамически загружаемые расширения не должны заменять платформу тестирования, так как это привело бы к незаметному изменению набора выполняемых тестов и сообщаемых ими результатов.</target>
+        <note>{0} is the extension display name. {1} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
+        <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
+        <target state="translated">Идентификатор расширения "{0}" объявлен дважды с разным содержимым: "{1}" в манифесте расширения "{2}" и "{3}" в манифесте расширения "{4}". Идентификаторы должны обозначать одно и то же расширение, иначе одно объявление незаметно заменит другое.</target>
+        <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookFailedErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
+        <target state="translated">Обработчик расширения "{0}.{1}" из сборки "{2}", объявленный в манифесте расширения "{3}", завершился сбоем.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
+        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
+        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
+        <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
+        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
+        <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
+        <target state="translated">Не удалось выполнить поиск манифестов расширений в каталоге "{0}", поэтому платформа не может определить, требовалось ли загрузить какое-либо расширение. Удалите "{1}" из командной строки, чтобы пропустить обнаружение манифестов расширений.</target>
+        <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: свойство "{1}" объявлено более одного раза, поэтому одно из объявлений будет отброшено.</target>
+        <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: расширение с индексом "{1}" объявляет свойство "{2}" более одного раза, поэтому одно из объявлений будет отброшено.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": путь сборки "{2}" расширения в индексе {1} не является допустимым путем.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: у расширения с индексом "{1}" отсутствует обязательное свойство "{2}" или его значение пусто.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: элемент с индексом "{1}" в "{2}" должен быть объектом JSON.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: свойство "{2}" расширения с индексом "{1}" должно быть логическим значением JSON.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": свойство "{2}" расширения в индексе {1} должно быть строкой JSON.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": свойство "{1}" должно быть массивом JSON.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
+        <source>The extension manifest '{0}' is not valid JSON. {1}</source>
+        <target state="translated">Манифест расширения "{0}" не является допустимым JSON. {1}</target>
+        <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": отсутствует обязательное свойство "{1}".</target>
+        <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
+        <source>The extension manifest '{0}' could not be read.</source>
+        <target state="translated">Не удалось прочитать манифест расширения "{0}".</target>
+        <note>{0} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: элемент верхнего уровня JSON должен быть объектом, но был обнаружен "{1}".</target>
+        <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
+        <source>Unexpected content after the top-level JSON object.</source>
+        <target state="translated">Непредвиденное содержимое после объекта JSON верхнего уровня.</target>
+        <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
+        <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
+        <target state="translated">Тип "{0}" не найден в сборке "{1}", объявленной в манифесте расширения "{2}".</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedEntry">
+        <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
+        <target state="translated">  {0} -&gt; {1} ({2}), объявлен в {3}</target>
+        <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedHeader">
+        <source>Dynamically loaded test platform extensions ({0}):</source>
+        <target state="translated">Динамически загруженные расширения тестовой платформы ({0}):</target>
+        <note>{0} is the number of extensions that were loaded.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
+        <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
+        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -580,9 +715,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
         <target state="translated">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Trace".
-Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог</target>
+Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -603,8 +738,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Префикс для имени файла журнала, который заменит "[log]_."</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="translated">Заменить "[log]_." на указанный префикс имени файла журнала.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -686,6 +821,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <target state="translated">Выбирает транспорт предварительного запуска для протокола dotnet test.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
+        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
+        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <note>{Locked="'*.testingplatformextensions.json'"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
@@ -719,11 +859,13 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">Не сообщать о неуспешном значении выхода для определенных кодов выхода
-(например, "--ignore-exit-code 8;9" игнорирует коды выхода 8 и 9 и в этих случаях возвращает 0)</target>
-        <note>{Locked="--ignore-exit-code 8;9"}</note>
+        <source>Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
+        <target state="new">Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -778,8 +920,8 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Поставщик командной строки платформы тестирования Майкрософт</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="translated">Поставщик командной строки Microsoft Testing Platform.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -807,8 +949,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Для тестирования</target>
+        <source>For testing purposes.</source>
+        <target state="translated">Для тестирования.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -1059,6 +1201,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <source>Test adapter test session failure</source>
         <target state="translated">Сбой тестового сеанса адаптера теста</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
+        <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
+        <target state="translated">Средство запуска тестового узла "{0}" (UID: {1}) запросило авторизацию удостоверения безопасности "{2}" для подключения к контроллеру тестового узла, но можно авторизовать только удостоверение одного приложения в песочнице (в Windows — идентификатор безопасности вида 'S-1-15-2-...'). Пользователям, группам и универсальному идентификатору безопасности "{3}" доступ никогда не предоставляется.</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>

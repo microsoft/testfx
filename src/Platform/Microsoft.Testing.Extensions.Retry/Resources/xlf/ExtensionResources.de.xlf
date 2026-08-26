@@ -22,10 +22,15 @@
         <target state="translated">Der Schwellenwert für den Prozentsatz fehlgeschlagener Tests ist {0} %, und {1} % Tests mit Fehlern ({2}/{3})</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
-      <trans-unit id="RetryArtifactsMoved">
-        <source>Retry: moved {0} result file(s) to '{1}'</source>
-        <target state="translated">Wiederholung: {0} Ergebnisdatei(en) in '{1}' verschoben</target>
-        <note>{0} is the number of files moved. {1} is the destination result directory.</note>
+      <trans-unit id="RetryArtifactPostProcessorFailed">
+        <source>Retry artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">Wiederholen des Artefakt-Post-Prozessor „{0}“ ist fehlgeschlagen: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="RetryArtifactsPublished">
+        <source>Retry: published {0} result file(s) to '{1}'</source>
+        <target state="translated">Wiederholen: Die {0} Ergebnisdatei(en) wurde(n) in „{1}“ veröffentlicht</target>
+        <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
         <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>
@@ -63,7 +68,7 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
-        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
         <target state="translated">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
@@ -73,7 +78,7 @@
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
-        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
         <target state="translated">Wiederholungsmechanismus deaktivieren, wenn die Anzahl fehlerhafter Tests größer als der angegebene Wert ist</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
@@ -88,7 +93,7 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Retry failed tests the given number of times</source>
+        <source>Retry failed tests the given number of times.</source>
         <target state="translated">Fehlgeschlagene Tests erneut ausführen (siehe Angabe zur Anzahl der Wiederholungsversuche)</target>
         <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>

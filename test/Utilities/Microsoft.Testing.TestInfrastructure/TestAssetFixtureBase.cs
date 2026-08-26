@@ -62,7 +62,11 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     {
         (string assetId, string assetName, string assetCode) = GetAssetsToGenerate();
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetId, assetCode, _tempDirectory);
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: assetName, cancellationToken: cancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath} -c Release -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true",
+            warnAsError: false,
+            callerMemberName: assetName,
+            cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
 
@@ -80,6 +84,9 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
                 DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
                     $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
                     failIfReturnValueIsNotZero: false,
+                    // Every source-generation mode carries warning promotion in sourceGenArgs. Disable
+                    // the shared default here so acceptance runs verify that explicit contract.
+                    warnAsError: false,
                     callerMemberName: $"{assetName}_{AcceptanceSourceGen.GetOutputSubFolder(mode)}",
                     cancellationToken: cancellationToken);
 

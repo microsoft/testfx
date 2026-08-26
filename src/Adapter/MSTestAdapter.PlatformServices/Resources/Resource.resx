@@ -389,7 +389,7 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="DependencyConfigurationNodeWithoutTest" xml:space="preserve">
     <value>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</value>
-    <comment>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="test"}</comment>
+    <comment>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</comment>
   </data>  <data name="DependencyConfigurationEmptyChain" xml:space="preserve">
     <value>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</value>
     <comment>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</comment>

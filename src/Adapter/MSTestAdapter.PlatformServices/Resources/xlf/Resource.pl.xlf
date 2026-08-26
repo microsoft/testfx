@@ -123,8 +123,8 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
       </trans-unit>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
-        <target state="translated">Węzeł zależności pod indeksem {0} w sekcji konfiguracji „mstest:execution:dependencies:nodes” nie ma wartości „test” i jest ignorowany.</target>
-        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="test"}</note>
+        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">
         <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>

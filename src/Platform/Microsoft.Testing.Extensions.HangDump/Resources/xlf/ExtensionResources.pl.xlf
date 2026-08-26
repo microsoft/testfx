@@ -83,8 +83,8 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej),
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
-        <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Wygeneruj plik zrzutu, jeśli proces testowy zawiesza się</target>
+        <source>Generate a dump file if the test process hangs.</source>
+        <target state="translated">Wygeneruj plik zrzutu, jeśli proces testowy zawiesza się.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -136,10 +136,10 @@ Wartość limitu czasu jest określana w jednym z następujących formatów:
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</source>
-        <target state="translated">Określ typ zrzutu.
-Prawidłowe wartości to: {0}.
-Domyślny typ to „Full”</target>
+Default type is 'Full'.</source>
+        <target state="new">Specify the type of the dump.
+Valid values are {0}.
+Default type is 'Full'.</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">

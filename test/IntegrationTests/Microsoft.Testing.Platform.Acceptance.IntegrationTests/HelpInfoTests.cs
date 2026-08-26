@@ -31,9 +31,9 @@ Options:
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -44,6 +44,8 @@ Options:
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --enable-dynamic-extensions
+        Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
@@ -51,8 +53,9 @@ Options:
     --help
         Show the command line help.
     --ignore-exit-code
-        Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
@@ -164,7 +167,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: .+
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --\?
         Arity: 0
@@ -190,11 +193,11 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
-        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag
+        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag\.
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
-        Description: Prefix for the log file name that will replace '\[log\]_\.'
+        Description: Replace '\[log\]_\.' with the specified log file name prefix\.
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
@@ -227,6 +230,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Selects the pre-launch transport for the dotnet test protocol\.
+      --enable-dynamic-extensions
+        Arity: 0
+        Hidden: False
+        Description: Enable loading test platform extensions declared by '\*\.testingplatformextensions\.json' manifests found next to the test application\. Disabled by default\.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -242,8 +249,9 @@ Built-in command line providers:
       --ignore-exit-code
         Arity: 1
         Hidden: False
-        Description: Do not report non successful exit value for specific exit codes
-        \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
+        Description: Do not report a non-successful exit value for the specified exit codes\.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases\.
+        For more information about exit codes, see https://learn\.microsoft\.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes\.
       --info
         Arity: 0
         Hidden: False
@@ -255,7 +263,7 @@ Built-in command line providers:
       --internal-testingplatform-skipbuildercheck
         Arity: 0
         Hidden: True
-        Description: For testing purposes
+        Description: For testing purposes\.
       --list-tests
         Arity: 0..1
         Hidden: False

@@ -24,9 +24,8 @@ namespace MSTest.Performance.Runner.Steps;
 /// <para>
 /// <b>Measurement note:</b> <see cref="Process.TotalProcessorTime"/> reflects only the
 /// <c>dotnet test</c> parent process; the spawned test-host child's CPU time is not included.
-/// <see cref="Process.ExitTime"/> minus <see cref="Process.StartTime"/> (wall-clock) is the
-/// primary metric and represents the end-to-end time a user observes when running
-/// <c>dotnet test</c>.
+/// Wall-clock time is the primary metric and represents the end-to-end time a user observes
+/// when running <c>dotnet test</c>.
 /// </para>
 /// </remarks>
 internal class DotnetTestProcess : IStep<BuildArtifact, Files>
@@ -90,11 +89,13 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
         List<object> results = [];
         for (int i = 0; i < _numberOfRun; i++)
         {
+            long startTimestamp = Stopwatch.GetTimestamp();
             using Process process = Process.Start(psi)!;
             // Drain stdout/stderr asynchronously to prevent buffer deadlocks.
             Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
             Task<string> stderrTask = process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
+            TimeSpan elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
             await Task.WhenAll(stdoutTask, stderrTask);
 
             // Fail fast on a non-zero exit code: `dotnet test` has many infrastructure failure
@@ -110,8 +111,8 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 
             var result = new
             {
-                ElapsedTime = process.ExitTime - process.StartTime,
-                process.TotalProcessorTime,
+                ElapsedTime = elapsedTime,
+                TotalProcessorTime = totalProcessorTime,
                 Environment.ProcessorCount,
                 GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
             };
@@ -119,9 +120,15 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
             results.Add(result);
         }
 
-        await File.AppendAllTextAsync(
+        var report = new
+        {
+            PipelineName = (string)context.Properties["PipelineName"],
+            Measurements = results,
+        };
+
+        await File.WriteAllTextAsync(
             Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"),
-            JsonSerializer.Serialize(results, JsonOptions));
+            JsonSerializer.Serialize(report, JsonOptions));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);

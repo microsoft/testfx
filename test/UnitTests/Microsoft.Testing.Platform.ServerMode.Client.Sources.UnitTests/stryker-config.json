@@ -1,0 +1,22 @@
+{
+  "stryker-config": {
+    "project": "Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj",
+    "target-framework": "net8.0",
+    "test-runner": "mtp",
+    "mutation-level": "Standard",
+    "mutate": [
+      "Client/**/*.cs"
+    ],
+    "reporters": [
+      "html",
+      "json",
+      "progress"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 0
+    },
+    "break-on-initial-test-failure": true
+  }
+}

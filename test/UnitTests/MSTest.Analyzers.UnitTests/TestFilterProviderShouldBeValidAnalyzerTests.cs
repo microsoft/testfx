@@ -48,6 +48,25 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    // Activator.CreateInstance(Type) can instantiate a non-public type as long as its parameterless
+    // constructor is public, so the type's effective accessibility must not cause a diagnostic.
+    [TestMethod]
+    public async Task WhenFilterTypeIsInternalWithPublicParameterlessConstructor_NoDiagnostic()
+    {
+        string code = Header + """
+            [assembly: TestFilterProvider(typeof(MyFilter))]
+
+            internal sealed class MyFilter : ITestFilter
+            {
+                public MyFilter() { }
+
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     [TestMethod]
     public async Task WhenNoProviderIsRegistered_NoDiagnostic()
     {
@@ -244,6 +263,27 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
             public sealed class MyFilter : ITestFilter
             {
                 private MyFilter() { }
+
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.NoParameterlessConstructorRule)
+                .WithLocation(0)
+                .WithArguments("MyFilter"));
+    }
+
+    [TestMethod]
+    public async Task WhenFilterTypeIsInternalWithInternalParameterlessConstructor_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(typeof(MyFilter))|}]
+
+            internal sealed class MyFilter : ITestFilter
+            {
+                internal MyFilter() { }
 
                 public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
             }

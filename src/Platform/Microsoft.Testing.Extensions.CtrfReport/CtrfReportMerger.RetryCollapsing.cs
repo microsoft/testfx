@@ -3,6 +3,8 @@
 
 using System.Text.Json.Nodes;
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
 /// <summary>
@@ -143,7 +145,8 @@ internal static partial class CtrfReportMerger
                 // A suite segment is normally a string, but the document is untrusted. Fall back to the
                 // segment's JSON text so a non-string segment still contributes a distinct, deterministic part
                 // of the key instead of throwing on the string conversion.
-                AppendIdentityComponent(
+                identity.Append('\u001f');
+                IdentityKeyBuilder.AppendLengthPrefixedComponent(
                     identity,
                     segment is JsonValue segmentValue && segmentValue.TryGetValue(out string? segmentText)
                         ? segmentText
@@ -151,14 +154,14 @@ internal static partial class CtrfReportMerger
             }
         }
 
-        AppendIdentityComponent(identity, name);
-        AppendIdentityComponent(identity, ReadString(test, "filePath"));
-        AppendIdentityComponent(identity, test["parameters"]?.ToJsonString());
+        identity.Append('\u001f');
+        IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, name);
+        identity.Append('\u001f');
+        IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, ReadString(test, "filePath"));
+        identity.Append('\u001f');
+        IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, test["parameters"]?.ToJsonString());
         return identity.ToString();
     }
-
-    private static void AppendIdentityComponent(StringBuilder identity, string? component)
-        => identity.Append('\u001f').Append(component?.Length ?? -1).Append(':').Append(component);
 
     private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors)
     {

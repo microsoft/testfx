@@ -212,6 +212,11 @@
         <target state="translated">Użyj właściwości „DisplayName” zamiast argumentu ciągu</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckFix">
+        <source>Use '[ExecutableCondition]' attribute</source>
+        <target state="new">Use '[ExecutableCondition]' attribute</target>
+        <note>{Locked="'[ExecutableCondition]'"}</note>
+      </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
         <target state="translated">Zamiast tego użyj atrybutu „Description” narzędzia MSTest</target>

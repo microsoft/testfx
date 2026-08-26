@@ -11,11 +11,18 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// </summary>
 internal sealed class AppxApplicationInfo
 {
-    internal AppxApplicationInfo(string id, string? executable, string appUserModelId)
+    internal AppxApplicationInfo(string id, string? executable, string appUserModelId, bool usesLaunchActivationArguments)
+        : this(id, executable, appUserModelId, usesLaunchActivationArguments, runsInAppContainer: usesLaunchActivationArguments)
+    {
+    }
+
+    internal AppxApplicationInfo(string id, string? executable, string appUserModelId, bool usesLaunchActivationArguments, bool runsInAppContainer)
     {
         Id = id;
         Executable = executable;
         AppUserModelId = appUserModelId;
+        UsesLaunchActivationArguments = usesLaunchActivationArguments;
+        RunsInAppContainer = runsInAppContainer;
     }
 
     /// <summary>Gets the application id (the manifest's <c>Application/@Id</c>).</summary>
@@ -33,4 +40,24 @@ internal sealed class AppxApplicationInfo
     /// application.
     /// </summary>
     public string AppUserModelId { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether this application receives launch arguments through
+    /// <c>LaunchActivatedEventArgs.Arguments</c> instead of process <c>argv</c>.
+    /// </summary>
+    public bool UsesLaunchActivationArguments { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether this application runs inside a Windows AppContainer, and therefore
+    /// with a restricted token whose restricting SIDs contain the package SID.
+    /// </summary>
+    /// <remarks>
+    /// This is deliberately <em>not</em> the same question as
+    /// <see cref="UsesLaunchActivationArguments"/>. A <c>packagedClassicApp</c> whose
+    /// <c>TrustLevel</c> is <c>appContainer</c> receives its arguments as ordinary process <c>argv</c> yet
+    /// still runs sandboxed, so it needs the controller connection to authorize its package SID even though
+    /// it needs no activation-argument bootstrap. Conflating the two would leave exactly that shape unable
+    /// to connect.
+    /// </remarks>
+    public bool RunsInAppContainer { get; }
 }
