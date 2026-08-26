@@ -207,6 +207,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         Assert.AreEqual(maxTimerDueTime, firstInterval);
         Assert.IsGreaterThan(firstInterval, deadline - Now);
         Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
+        Assert.IsGreaterThan(secondInterval, firstInterval);
         Assert.AreEqual(TimeSpan.Zero, AbortAtDeadlineExtension.GetTimerDueTime(deadline, deadline));
     }
 
