@@ -249,8 +249,8 @@ that the marker was found and then failed to parse:
 
 - `Lines containing THREAT_DETECTION_RESULT (1 of N)` means the marker is present, so the detection
   model ran and answered. That is the formatting cause described here.
-- `No THREAT_DETECTION_RESULT found` means no result was ever written. That is the installer failure
-  in [the previous section](#detection-job-fails-at-install-github-copilot-cli), or another
+- `No THREAT_DETECTION_RESULT found` means no result was ever written. That can be the
+  [Copilot CLI installer failure](#detection-job-fails-at-install-github-copilot-cli), or another
   job-level failure that stopped the model before it answered.
 
 **Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the line starts with
