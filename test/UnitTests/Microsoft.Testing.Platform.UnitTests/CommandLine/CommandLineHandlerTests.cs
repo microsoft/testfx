@@ -530,6 +530,7 @@ public sealed class CommandLineHandlerTests
         Assert.AreEqual(
             """
             Unknown option '--x'
+            Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
             Command line: --x
             """, result.ErrorMessage);
     }

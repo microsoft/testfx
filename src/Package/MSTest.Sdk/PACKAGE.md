@@ -29,3 +29,15 @@ Supported platforms:
 For setup guidance, see <https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-getting-started>.
 
 For SDK configuration options, see <https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-sdk>.
+
+### GitHub Actions reporting
+
+The `--report-gh` option is provided by `Microsoft.Testing.Extensions.GitHubActionsReport`; it is not included in the default extension profile. Enable it explicitly:
+
+```xml
+<PropertyGroup>
+  <EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
+</PropertyGroup>
+```
+
+Alternatively, set `TestingExtensionsProfile` to `AllMicrosoft`. After the extension is included, `--help` lists `--report-gh` and its related options.

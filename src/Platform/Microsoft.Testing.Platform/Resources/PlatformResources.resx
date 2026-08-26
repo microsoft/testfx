@@ -467,6 +467,10 @@
     <value>Unknown option '--{0}'</value>
     <comment>{0} is the unknown option name without the leading dashes.</comment>
   </data>
+  <data name="CommandLineUnknownOptionsHint" xml:space="preserve">
+    <value>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</value>
+    <comment>{Locked="'--help'"}</comment>
+  </data>
   <data name="InvalidCommandLineArguments" xml:space="preserve">
     <value>Invalid command line arguments:</value>
   </data>
