@@ -39,6 +39,7 @@
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
     <!-- GitHub Actions -->
+    <EnableMicrosoftTestingExtensionsGitHubActionsReport Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'Default' " >true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
     <EnableMicrosoftTestingExtensionsGitHubActionsReport Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
     <MicrosoftTestingExtensionsGitHubActionsReportVersion Condition=" '$(MicrosoftTestingExtensionsGitHubActionsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsGitHubActionsReportVersion>
 

@@ -161,7 +161,7 @@ An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits
 - **Job summary** (`--report-gh-step-summary`): writes a markdown roll-up to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page. Set it to `on-failure` to write only when the test invocation fails. `--report-gh-step-summary-sections` independently selects `test-results`, `coverage`, `slow-tests`, or any combination (`all`, the default); values may be repeated, space-separated, or comma-separated. A capable SDK aggregates multi-module `dotnet test` runs into one authoritative overall section with per-assembly detail through artifact post-processing; mixed module selections are combined so the aggregate includes every requested section, and older fragments retain full output. Each failed test is expanded into a collapsible `<details>` section carrying its failure message, exception type, source location and stack trace; turn this off with `--report-gh-failure-details off` to keep the compact one-line-per-failure list. Diagnostics are bounded on four axes — message and stack trace are each clipped by length *and* by line count, the failure list is capped, and expansion stops once the shared UTF-8 byte budget is spent — so this reporter's own contribution stays well inside GitHub's 1 MiB limit no matter how many test projects write to it, and every truncation is stated in the rendered output. The remaining headroom absorbs what other steps and test frameworks append to the same file, which this reporter can observe but not control.
 - **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
 
-When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
+When using [MSTest.Sdk](#mstestsdk), the extension is included automatically by the `Default` and `AllMicrosoft` profiles; pass `--report-gh` to activate it on GitHub Actions, or set `<EnableMicrosoftTestingExtensionsGitHubActionsReport>false</EnableMicrosoftTestingExtensionsGitHubActionsReport>` to remove it. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
 
 ## H
 
@@ -302,8 +302,8 @@ In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework`
 
 | Value | Extensions enabled automatically |
 | --- | --- |
-| `Default` (default) | TrxReport and CodeCoverage |
-| `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, GitHubActionsReport, HtmlReport, and Fakes |
+| `Default` (default) | TrxReport, CodeCoverage, and GitHubActionsReport |
+| `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, HtmlReport, and Fakes |
 | `None` | No extensions |
 
 Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for a packaged WinUI test application because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
@@ -317,7 +317,7 @@ Set an individual `Enable*` property to `false` to remove an extension supplied 
 | `EnableMicrosoftTestingExtensionsHotReload` | Off | On | Off | Not added; emits warning if enabled | Build error |
 | `EnableMicrosoftTestingExtensionsRetry` | Off | On | Off | Not added; emits warning if enabled | Build error |
 | `EnableMicrosoftTestingExtensionsAzureDevOpsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
-| `EnableMicrosoftTestingExtensionsGitHubActionsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsGitHubActionsReport` | On | On | Off | Not added; emits unsupported warning | Build error |
 | `EnableMicrosoftTestingExtensionsHtmlReport` | Off | On | Off | Not available | Build error |
 | `EnableMicrosoftTestingExtensionsFakes` | Off | On | Off | Not available | Not added |
 | `EnableMicrosoftTestingExtensionsCtrfReport` | Off | Off | Off | Not available | Build error |

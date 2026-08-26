@@ -32,12 +32,12 @@ For SDK configuration options, see <https://learn.microsoft.com/dotnet/core/test
 
 ### GitHub Actions reporting
 
-In ClassicEngine mode, the `--report-gh` option is provided by `Microsoft.Testing.Extensions.GitHubActionsReport`; it is not included in the default extension profile. Enable it explicitly:
+In ClassicEngine mode, the `--report-gh` option is provided by `Microsoft.Testing.Extensions.GitHubActionsReport`, which is included in the default extension profile. Reporting remains opt-in at execution time: pass `--report-gh` to activate it when running on GitHub Actions.
 
 ```xml
 <PropertyGroup>
-  <EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
+  <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-gh</TestingPlatformCommandLineArguments>
 </PropertyGroup>
 ```
 
-Alternatively, set `TestingExtensionsProfile` to `AllMicrosoft`. After the extension is included, `--help` lists `--report-gh` and its related options. The extension is not supported in VSTest or NativeAOT mode.
+Set `EnableMicrosoftTestingExtensionsGitHubActionsReport` to `false` to remove the extension. When included, `--help` lists `--report-gh` and its related options. The extension is not supported in VSTest or NativeAOT mode.
