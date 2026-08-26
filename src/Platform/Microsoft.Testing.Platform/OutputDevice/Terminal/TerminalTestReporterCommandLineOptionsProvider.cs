@@ -146,9 +146,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
 
         foreach (string rawArgument in arguments)
         {
-            foreach (string rawToken in rawArgument.Split(','))
+            foreach (string token in rawArgument.Split(',').Select(static rawToken => rawToken.Trim()))
             {
-                string token = rawToken.Trim();
                 if (token.Length == 0)
                 {
                     // Tolerate stray empty tokens produced by a leading/trailing/doubled comma; the overall

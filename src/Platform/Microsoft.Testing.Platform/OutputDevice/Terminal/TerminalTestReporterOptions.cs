@@ -11,8 +11,7 @@ internal sealed class TerminalTestReporterOptions
     /// <summary>
     /// Gets the set of test outcomes whose per-test terminal block (result line, informative details, stack
     /// trace, expected/actual, and captured stdout/stderr) is rendered. Resolved once, at construction time, from
-    /// <c>--show-test-results</c> (when passed) or from <c>--output</c> otherwise; see
-    /// <see cref="TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption"/>.
+    /// <c>--show-test-results</c> (when passed) or from <c>--output</c> otherwise.
     /// </summary>
     public TestResultVisibility ShowTestResults { get; init; } = TestResultVisibility.All;
 
@@ -127,8 +126,7 @@ internal enum OutputShowMode
 
 /// <summary>
 /// Which test outcomes get a rendered per-test terminal block. Resolved once from <c>--show-test-results</c> or
-/// <c>--output</c> into <see cref="TerminalTestReporterOptions.ShowTestResults"/>; see
-/// <see cref="TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption"/> for the command-line surface.
+/// <c>--output</c> into <see cref="TerminalTestReporterOptions.ShowTestResults"/>.
 /// </summary>
 [Embedded]
 [Flags]
