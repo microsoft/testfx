@@ -63,6 +63,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
 #endif
     private readonly List<(string Uid, TestRecord Record)> _records = [];
 #pragma warning disable IDE0028 // Collection expressions cannot pass the required comparer.
+    private readonly Dictionary<string, int> _finalRowCountsByUid = new(StringComparer.Ordinal);
     private readonly HashSet<string> _inProcessFailedTests = new(StringComparer.Ordinal);
     private readonly HashSet<string> _notRecoveredTests = new(StringComparer.Ordinal);
 #pragma warning restore IDE0028
@@ -115,6 +116,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         lock (_stateLock)
         {
             _records.Clear();
+            _finalRowCountsByUid.Clear();
             _inProcessFailedTests.Clear();
             _notRecoveredTests.Clear();
         }
@@ -185,7 +187,11 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     && !_notRecoveredTests.Contains(uid)
                     && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
                 _records.Add((uid, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
-                if (_records.Count(entry => entry.Uid == uid) > 1)
+                int finalRowCount = _finalRowCountsByUid.TryGetValue(uid, out int existingFinalRowCount)
+                    ? existingFinalRowCount + 1
+                    : 1;
+                _finalRowCountsByUid[uid] = finalRowCount;
+                if (finalRowCount > 1)
                 {
                     // Multiple final rows share one UID, so the protocol cannot identify which row recovered.
                     // Keep every row and its outcome, but fail closed instead of attributing flakiness to all of them.
