@@ -38,6 +38,15 @@ internal static class DeadlineHelper
             return false;
         }
 
+        bool hasExplicitOffset = raw.EndsWith("Z", StringComparison.OrdinalIgnoreCase)
+            || (raw.Length >= 6
+                && raw[^6] is '+' or '-'
+                && raw[^3] == ':');
+        if (!hasExplicitOffset)
+        {
+            return false;
+        }
+
         if (!DateTimeOffset.TryParseExact(
                 raw,
                 SupportedDeadlineFormats,
