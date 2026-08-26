@@ -240,7 +240,7 @@ public class CtrfReportEngineTests
         Assert.AreEqual(2, summary.GetProperty("failed").GetInt32());
         Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
         Assert.AreSequenceEqual(
-            new[] { "Row A", "Row B", "Row C", "Solo" },
+            ["Row A", "Row B", "Row C", "Solo"],
             testArray.EnumerateArray().Select(t => t.GetProperty("name").GetString()!).ToArray());
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
