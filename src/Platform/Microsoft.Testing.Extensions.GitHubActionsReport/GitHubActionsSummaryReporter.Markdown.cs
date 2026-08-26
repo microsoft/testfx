@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
-
-using static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails;
+using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal sealed partial class GitHubActionsSummaryReporter
 {
+    private const int MaxListedFlakyTests = 20;
+
     /// <summary>
     /// Marks a full test project section, so the truncation note can state how many test projects got their
     /// results into the summary without depending on the localized heading text.
@@ -144,8 +145,10 @@ internal sealed partial class GitHubActionsSummaryReporter
         int passed = 0;
         int failed = 0;
         int skipped = 0;
+        int flaky = 0;
         TimeSpan totalDuration = TimeSpan.Zero;
         var failures = new List<TestRecord>();
+        var flakyTests = new List<TestRecord>();
 
         foreach (TestRecord record in records)
         {
@@ -167,6 +170,12 @@ internal sealed partial class GitHubActionsSummaryReporter
                     skipped++;
                     break;
             }
+
+            if (record.IsFlaky)
+            {
+                flaky++;
+                flakyTests.Add(record);
+            }
         }
 
         // Reflect the process verdict, not just the failed-test count: a run can end in failure with zero failed
@@ -179,12 +188,13 @@ internal sealed partial class GitHubActionsSummaryReporter
         builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Flaky | Duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|---:|\n");
             builder.Append("| ").Append(total.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(passed.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(flaky.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
         }
 
@@ -227,6 +237,8 @@ internal sealed partial class GitHubActionsSummaryReporter
                     includeFailureDetails,
                     budget);
             }
+
+            AppendFlakyTests(builder, flakyTests.Select(static test => test.FullyQualifiedName), flaky);
         }
 
         if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0)
@@ -278,12 +290,13 @@ internal sealed partial class GitHubActionsSummaryReporter
         builder.Append("## ").Append(statusIcon).Append(" Overall Test Run Summary\n\n");
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Flaky | Duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|---:|\n");
             builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.FlakyTests.Count.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(duration).Append(" |\n\n");
         }
 
@@ -314,6 +327,11 @@ internal sealed partial class GitHubActionsSummaryReporter
                     GitHubActionsExitCode.GetReason(authoritativeExitCode));
                 builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
             }
+
+            AppendFlakyTests(
+                builder,
+                aggregate.FlakyTests.Select(static test => test.FullyQualifiedName),
+                aggregate.FlakyTests.Count);
         }
 
         // One shared budget, byte-denominated, drives every decision below: which shape each module is rendered
@@ -536,12 +554,13 @@ internal sealed partial class GitHubActionsSummaryReporter
             .Append(EscapeInlineCode(module.AssemblyName)).Append("\n\n");
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
-            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Flaky | Test duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|---:|\n");
             builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.FlakyTests.Length.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
         }
 
@@ -576,6 +595,12 @@ internal sealed partial class GitHubActionsSummaryReporter
                     includeFailureDetails,
                     budget);
             }
+
+            AppendFlakyTests(
+                builder,
+                module.FlakyTests.Select(static test => test.FullyQualifiedName),
+                module.FlakyTests.Length,
+                headingLevel + 1);
         }
 
         if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0
@@ -593,6 +618,45 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         return omittedDetails;
     }
+
+    private static string FormatDuration(TimeSpan duration)
+        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
+
+    private static void AppendFlakyTests(
+        StringBuilder builder,
+        IEnumerable<string> testNames,
+        int count,
+        int headingLevel = 3)
+    {
+        if (count == 0)
+        {
+            return;
+        }
+
+        builder.Append(new string('#', headingLevel)).Append(" ⚠️ Flaky tests (")
+            .Append(count.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
+        foreach (string testName in testNames.Take(MaxListedFlakyTests))
+        {
+            builder.Append("- `").Append(EscapeInlineCode(testName)).Append("`\n");
+        }
+
+        if (count > MaxListedFlakyTests)
+        {
+            builder.Append("- … and ")
+                .Append((count - MaxListedFlakyTests).ToString(CultureInfo.InvariantCulture))
+                .Append(" more\n");
+        }
+
+        builder.Append('\n');
+    }
+
+    private static string EscapeInlineCode(string value)
+        => RoslynString.IsNullOrEmpty(value)
+            ? value
+            : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
+
+    private static string HtmlEncode(string value)
+        => System.Net.WebUtility.HtmlEncode(value);
 
     private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
         => modules.Count(candidate =>

@@ -46,6 +46,190 @@ public sealed class GitHubActionsSummaryReporterTests
     private const int MinimumExpectedTestsExitCode = 9;
 
     [TestMethod]
+    public void SummaryPostProcessor_SupportsRetryAttempts()
+    {
+        GitHubSummaryPostProcessor processor = new(
+            new TestCommandLineOptions([]),
+            Mock.Of<IEnvironment>(),
+            new SystemFileSystem(),
+            Mock.Of<ILoggerFactory>(),
+            static () => false);
+
+        Assert.AreSequenceEqual(
+            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            processor.SupportedModes);
+    }
+
+    [TestMethod]
+    public async Task SummaryPostProcessor_ForRetryAttempts_ReturnsChainableFragmentAndWritesSummary()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-retry-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var flakyTest = new GitHubCiRunSummaryTest
+            {
+                DisplayName = "Flaky",
+                FullyQualifiedName = "Tests.Flaky",
+                DurationTicks = TimeSpan.FromMilliseconds(10).Ticks,
+            };
+            GitHubCiRunSummaryModule first = CreateRetryModule("session-1", attempt: 1, passed: 2, failed: 1);
+            first.Failures = [flakyTest];
+            first.TestDurationTicks = TimeSpan.FromMilliseconds(100).Ticks;
+            GitHubCiRunSummaryModule retry = CreateRetryModule("session-2", attempt: 2, passed: 1, failed: 0);
+            retry.FlakyTests = [flakyTest];
+            retry.TestDurationTicks = TimeSpan.FromMilliseconds(200).Ticks;
+            string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                first);
+            string retryPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                retry);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(),
+                static () => false);
+            var context = new ArtifactPostProcessingContext(
+                ArtifactPostProcessingTruncationReason.None,
+                ArtifactPostProcessingMode.RetryAttempts,
+                new ArtifactPostProcessingRunSummary(
+                    totalTests: 3,
+                    passedTests: 3,
+                    failedTests: 0,
+                    skippedTests: 0,
+                    duration: TimeSpan.FromSeconds(1),
+                    exitCode: 0,
+                    testModuleCount: 1));
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1"),
+                    new InputArtifact(retryPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "2"),
+                ],
+                directory,
+                context,
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            Assert.AreEqual(GitHubSummaryPostProcessor.FragmentArtifactKind, output.Kind);
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [new InputArtifact(output.Path, output.Kind, null, null, null, null)],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            Assert.AreEqual(3, aggregate.TotalTests);
+            Assert.AreEqual(3, aggregate.PassedTests);
+            Assert.AreEqual(0, aggregate.FailedTests);
+            Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
+            Assert.AreEqual(TimeSpan.FromMilliseconds(300).Ticks, aggregate.Modules.Single().TestDurationTicks);
+            string summary = File.ReadAllText(stepSummaryPath);
+            Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
+            Assert.Contains("### ⚠️ Flaky tests (1)", summary, summary);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SummaryPostProcessor_ForRetryAttemptsWithoutAuthoritativeSummary_FailsClosed()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-unknown-retry-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule module = CreateRetryModule("session-1", attempt: 1, passed: 1, failed: 1);
+            string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(),
+                static () => false);
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
+                directory,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsFalse(File.Exists(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SummaryPostProcessor_ForDotnetTestRetryAttempts_DefersStepSummaryToDownstreamProcessor()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-dotnet-retry-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule module = CreateRetryModule("session-1", attempt: 1, passed: 1, failed: 0);
+            string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem(),
+                Mock.Of<ILoggerFactory>(),
+                static () => true);
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
+                directory,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts,
+                    new ArtifactPostProcessingRunSummary(
+                        totalTests: 1,
+                        passedTests: 1,
+                        failedTests: 0,
+                        skippedTests: 0,
+                        duration: TimeSpan.FromSeconds(1),
+                        exitCode: 0,
+                        testModuleCount: 1)),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            Assert.AreEqual(GitHubSummaryPostProcessor.FragmentArtifactKind, output.Kind);
+            Assert.IsFalse(File.Exists(stepSummaryPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_WhenDeferred_PersistsOnFailurePolicyInFragmentAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-summary-reporter-{Guid.NewGuid():N}");
@@ -92,6 +276,14 @@ public sealed class GitHubActionsSummaryReporterTests
             context.SetupGet(item => item.CancellationToken).Returns(CancellationToken.None);
 
             await reporter.OnTestSessionStartingAsync(context.Object);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("first attempt"), attempt: 1, isSuperseded: true),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false),
+                CancellationToken.None);
             await reporter.OnTestSessionFinishingAsync(context.Object);
 
             Assert.IsNotNull(artifact);
@@ -101,6 +293,88 @@ public sealed class GitHubActionsSummaryReporterTests
                 GitHubSummaryPostProcessor.Provider,
                 new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
             Assert.IsTrue(aggregate.Modules.Single().WriteOnFailureOnly);
+            Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_WhenFoldedUidHasFinalFailure_DoesNotMarkLaterPassAsFlakyAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-folded-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var configuration = new Mock<IConfiguration>();
+            configuration.SetupGet(item => item[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(directory);
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(Path.Combine(directory, "step-summary.md"));
+            var moduleInfo = new Mock<ITestApplicationModuleInfo>();
+            moduleInfo.Setup(item => item.TryGetAssemblyName()).Returns("Tests");
+            moduleInfo.Setup(item => item.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(directory, "Tests.dll"));
+            var coverage = new Mock<ITestCoverageResult>();
+            coverage.SetupGet(item => item.Scopes).Returns([]);
+            coverage.SetupGet(item => item.Thresholds).Returns([]);
+            var messageBus = new Mock<IMessageBus>();
+            SessionFileArtifact? artifact = null;
+            messageBus
+                .Setup(item => item.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
+                .Callback<IDataProducer, IData>((_, data) => artifact = (SessionFileArtifact)data)
+                .Returns(Task.CompletedTask);
+            var loggerFactory = new Mock<ILoggerFactory>();
+            loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+            GitHubActionsSummaryReporter reporter = new(
+                new TestCommandLineOptions(new()
+                {
+                    [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+                }),
+                configuration.Object,
+                environment.Object,
+                new SystemFileSystem(),
+                messageBus.Object,
+                Mock.Of<IOutputDevice>(),
+                moduleInfo.Object,
+                Mock.Of<ITestApplicationProcessExitCode>(),
+                coverage.Object,
+                loggerFactory.Object,
+                static () => true);
+            var context = new Mock<ITestSessionContext>();
+            context.SetupGet(item => item.SessionUid).Returns(new SessionUid("session"));
+            context.SetupGet(item => item.CancellationToken).Returns(CancellationToken.None);
+
+            await reporter.OnTestSessionStartingAsync(context.Object);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("superseded row"), attempt: 1, isSuperseded: true, displayName: "Tests.SharedTitle"),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
+                CancellationToken.None);
+            await reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
+                CancellationToken.None);
+            await reporter.OnTestSessionFinishingAsync(context.Object);
+
+            Assert.IsNotNull(artifact);
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [new InputArtifact(artifact.FileInfo.FullName, artifact.Kind, null, null, null, null)],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            Assert.IsEmpty(aggregate.FlakyTests);
+            Assert.AreEqual(3, aggregate.TotalTests);
+            Assert.AreEqual(2, aggregate.PassedTests);
+            Assert.AreEqual(1, aggregate.FailedTests);
+            Assert.AreEqual("Tests.SharedTitle", aggregate.Modules.Single().Failures.Single().FullyQualifiedName);
         }
         finally
         {
@@ -121,9 +395,45 @@ public sealed class GitHubActionsSummaryReporterTests
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0", SuccessExitCode);
 
         Assert.Contains("## ✅ Test Run Summary — CalculatorTests (net9.0)", markdown);
-        Assert.Contains("| 3 | 2 | 0 | 1 | 30ms |", markdown);
+        Assert.Contains("| 3 | 2 | 0 | 1 | 0 | 30ms |", markdown);
         Assert.DoesNotContain("### ❌ Failures", markdown);
+        Assert.DoesNotContain("### ⚠️ Flaky tests", markdown);
         Assert.DoesNotContain("[!WARNING]", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_FlakyTest_IsCountedAndListed()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("Flaky", "CalculatorTests.Flaky", GitHubActionsTerminalKind.Passed, TimeSpan.FromMilliseconds(10), isFlaky: true),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0", SuccessExitCode);
+
+        Assert.Contains("| 1 | 1 | 0 | 0 | 1 | 10ms |", markdown);
+        Assert.Contains("### ⚠️ Flaky tests (1)", markdown);
+        Assert.Contains("- `CalculatorTests.Flaky`", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_ManyFlakyTests_TruncatesList()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            .. Enumerable.Range(1, 21).Select(index =>
+                new GitHubActionsTestRecord(
+                    $"Flaky{index}",
+                    $"CalculatorTests.Flaky{index}",
+                    GitHubActionsTerminalKind.Passed,
+                    TimeSpan.Zero,
+                    isFlaky: true)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0", SuccessExitCode);
+
+        Assert.Contains("### ⚠️ Flaky tests (21)", markdown);
+        Assert.Contains("- … and 1 more", markdown);
     }
 
     [TestMethod]
@@ -183,7 +493,7 @@ public sealed class GitHubActionsSummaryReporterTests
             AtLeastOneTestFailedExitCode,
             GitHubActionsStepSummarySections.TestResults);
 
-        Assert.Contains("| 2 | 1 | 1 | 0 | 1m 15s |", markdown);
+        Assert.Contains("| 2 | 1 | 1 | 0 | 0 | 1m 15s |", markdown);
         Assert.Contains("### ❌ Failures (1)", markdown);
         Assert.Contains("`T.Fail`", markdown);
         Assert.DoesNotContain("### ⏱ Slowest tests", markdown);
@@ -209,7 +519,7 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("## ❌ Test Run Summary — T (net9.0)", markdown);
         Assert.Contains("### ⏱ Slowest tests", markdown);
         Assert.Contains("`T.Slow` — 1m 05s", markdown);
-        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Duration |", markdown);
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Flaky | Duration |", markdown);
         Assert.DoesNotContain("### ❌ Failures", markdown);
         Assert.DoesNotContain("[!WARNING]", markdown);
     }
@@ -224,7 +534,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", SuccessExitCode);
 
-        Assert.Contains("| 1 | 1 | 0 | 0 | 1m 05s |", markdown);
+        Assert.Contains("| 1 | 1 | 0 | 0 | 0 | 1m 05s |", markdown);
         Assert.Contains("### ⏱ Slowest tests", markdown);
         Assert.Contains("`T.Slow` — 1m 05s", markdown);
     }
@@ -235,7 +545,7 @@ public sealed class GitHubActionsSummaryReporterTests
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown([], "Empty", "net9.0", SuccessExitCode);
 
         Assert.Contains("## ✅ Test Run Summary — Empty (net9.0)", markdown);
-        Assert.Contains("| 0 | 0 | 0 | 0 | 0ms |", markdown);
+        Assert.Contains("| 0 | 0 | 0 | 0 | 0 | 0ms |", markdown);
     }
 
     [TestMethod]
@@ -1102,12 +1412,21 @@ public sealed class GitHubActionsSummaryReporterTests
             "SlowTests",
             ["slow-tests"],
             "SlowTests.Slow");
+        testResultsModule.FlakyTests =
+        [
+            new GitHubCiRunSummaryTest
+            {
+                DisplayName = "Flaky",
+                FullyQualifiedName = "TestResults.Flaky",
+            },
+        ];
         GitHubCiRunSummaryAggregate aggregate = CreateAggregate([testResultsModule, slowTestsModule]);
 
         string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
 
-        Assert.Contains("| Total | Passed | Failed | Skipped | Duration |", markdown);
-        Assert.Contains("| Total | Passed | Failed | Skipped | Test duration |", markdown);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Duration |", markdown);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Test duration |", markdown);
+        Assert.Contains("#### ⚠️ Flaky tests (1)", markdown);
         Assert.Contains("#### ⏱ Slowest tests", markdown);
         Assert.Contains("`TestResults.Slow` — 2.00s", markdown);
         Assert.Contains("`SlowTests.Slow` — 2.00s", markdown);
@@ -1128,8 +1447,8 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("### Code coverage", markdown);
         Assert.Contains("#### Code coverage", markdown);
         Assert.Contains("| Overall | Line | 80 | 100 | 80.0% |", markdown);
-        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Duration |", markdown);
-        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Test duration |", markdown);
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Flaky | Duration |", markdown);
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Flaky | Test duration |", markdown);
         Assert.DoesNotContain("Slowest tests", markdown);
     }
 
@@ -1145,9 +1464,9 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
 
-        Assert.Contains("| Total | Passed | Failed | Skipped | Duration |", markdown);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Duration |", markdown);
         Assert.Contains("### Code coverage", markdown);
-        Assert.Contains("| Total | Passed | Failed | Skipped | Test duration |", markdown);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Test duration |", markdown);
         Assert.Contains("#### ⏱ Slowest tests", markdown);
         Assert.Contains("`Legacy.Slow` — 2.00s", markdown);
     }
@@ -2236,6 +2555,22 @@ public sealed class GitHubActionsSummaryReporterTests
         return fileSystem;
     }
 
+    private static TestNodeUpdateMessage CreateRetryUpdate(
+        TestNodeStateProperty state,
+        int attempt,
+        bool isSuperseded,
+        string displayName = "Tests.Flaky")
+        => new(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = "flaky",
+                DisplayName = displayName,
+                Properties = new PropertyBag(
+                    state,
+                    new RetryAttemptProperty(attempt, isSuperseded)),
+            });
+
     /// <summary>
     /// The real file system, plus another writer appending to the summary in the window between staging the
     /// replacement and swapping it in — the window this extension's own lock cannot cover, because a file that is
@@ -2317,6 +2652,26 @@ public sealed class GitHubActionsSummaryReporterTests
                 },
             ],
             GitHubActionsStepSummarySections = sections,
+        };
+
+    private static GitHubCiRunSummaryModule CreateRetryModule(
+        string sessionUid,
+        int attempt,
+        long passed,
+        long failed)
+        => new()
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = sessionUid,
+            AttemptNumber = attempt,
+            ExitCode = failed > 0 ? AtLeastOneTestFailedExitCode : SuccessExitCode,
+            TotalTests = passed + failed,
+            PassedTests = passed,
+            FailedTests = failed,
         };
 
     private static GitHubCiCoverageSummaryData CreateCoverageSummary()

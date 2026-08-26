@@ -1,5 +1,9 @@
 #nullable enable
 const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.HtmlArtifactKind = "microsoft.testing.html" -> string!
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.init -> void
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Description.get -> string!
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.DisplayName.get -> string!
@@ -15,9 +19,13 @@ Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Version.get ->
 static Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.CreateMergeId(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> string!
 static Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.ExtractReportJson(string! html) -> string!
 static Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.RenderReport(string! json) -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode.CollapseRetryAttempts = 1 -> Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode.Concatenate = 0 -> Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger
 static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports) -> string!
-static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports, Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode mode) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputPath, Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.MergeOutputFileHelper
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void

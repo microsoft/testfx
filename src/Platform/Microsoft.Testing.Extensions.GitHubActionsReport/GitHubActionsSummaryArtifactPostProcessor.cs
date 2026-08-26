@@ -16,7 +16,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     ICommandLineOptions commandLineOptions,
     IEnvironment environment,
     IFileSystem fileSystem,
-    ILoggerFactory loggerFactory)
+    ILoggerFactory loggerFactory,
+    Func<bool> downstreamRequiredPostProcessingSupported)
     : IArtifactPostProcessorRequiresPostProcessing
 {
     internal const string FragmentArtifactKind = "microsoft.testing.github-actions-summary-fragment";
@@ -25,9 +26,12 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     internal const string ProviderSlug = "github-actions";
 
     private const string StepSummaryEnvironmentVariable = "GITHUB_STEP_SUMMARY";
+    private const int MaxSlowestTests = 10;
     private const int StepSummaryMaxWriteAttempts = 20;
     private static readonly string[] SupportedArtifactKinds = [FragmentArtifactKind];
-    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes =
+        [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts];
+
     private static readonly TimeSpan StepSummaryRetryDelay = TimeSpan.FromMilliseconds(50);
     private readonly bool _isEnabled =
         GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary)
@@ -62,9 +66,19 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (context.Mode == ArtifactPostProcessingMode.RetryAttempts && context.RunSummary is null)
+        {
+            // Retry inputs overlap, so summing their per-attempt fragments would publish plausible but incorrect
+            // logical totals. Leave the artifacts untouched when the orchestrator cannot supply an authoritative
+            // passed/failed/skipped split.
+            return null;
+        }
+
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
+        string? outputPath = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? null
+            : CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
         ILogger logger = loggerFactory.CreateLogger<GitHubActionsSummaryArtifactPostProcessor>();
 
@@ -77,7 +91,12 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
                 : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
-        StepSummaryWriter? writer = RoslynString.IsNullOrWhiteSpace(stepSummaryPath) || (writeOnFailureOnly && !runFailed)
+        bool downstreamPostProcessingWillPublishSummary =
+            context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            && downstreamRequiredPostProcessingSupported();
+        StepSummaryWriter? writer = downstreamPostProcessingWillPublishSummary
+            || RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
+            || (writeOnFailureOnly && !runFailed)
             ? null
             : new StepSummaryWriter(fileSystem, stepSummaryPath!, logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
 
@@ -85,15 +104,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         // it is rendered without that contribution. Its own size still degrades it on the same thresholds, which
         // also keeps a pathological run from building a multi-hundred-megabyte string.
         GitHubActionsSummaryReporter.AggregateRenderResult artifact = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails);
-        await CiRunSummaryAggregation.WriteOutputAsync(outputPath, artifact.Markdown).ConfigureAwait(false);
+        if (outputPath is not null)
+        {
+            await CiRunSummaryAggregation.WriteOutputAsync(outputPath, artifact.Markdown).ConfigureAwait(false);
+        }
 
         if (writer is null)
         {
-            return new ProcessedArtifact(
-                outputPath,
-                SummaryArtifactKind,
-                GitHubActionsResources.DisplayName,
-                GitHubActionsResources.Description);
+            return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath).ConfigureAwait(false);
         }
 
         // Bounding the summary rendering against its own size alone would be useless: it is appended to a file
@@ -159,11 +177,74 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             }
         }
 
+        return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath).ConfigureAwait(false);
+    }
+
+    private static async Task<ProcessedArtifact> CreateOutputArtifactAsync(
+        CiRunSummaryAggregate aggregate,
+        string outputDirectory,
+        string? summaryOutputPath)
+    {
+        if (aggregate.Context.Mode == ArtifactPostProcessingMode.RetryAttempts)
+        {
+            CiRunSummaryModule mergedModule = CreateRetryMergedModule(aggregate);
+            string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
+                outputDirectory,
+                Provider,
+                ProviderSlug,
+                mergedModule).ConfigureAwait(false);
+            return new ProcessedArtifact(
+                fragmentPath,
+                FragmentArtifactKind,
+                GitHubActionsResources.DisplayName,
+                GitHubActionsResources.Description);
+        }
+
         return new ProcessedArtifact(
-            outputPath,
+            summaryOutputPath!,
             SummaryArtifactKind,
             GitHubActionsResources.DisplayName,
             GitHubActionsResources.Description);
+    }
+
+    private static CiRunSummaryModule CreateRetryMergedModule(CiRunSummaryAggregate aggregate)
+    {
+        CiRunSummaryModule first = aggregate.Modules[0];
+        CiRunSummaryModule last = aggregate.Modules[^1];
+        return new CiRunSummaryModule
+        {
+            AssemblyName = first.AssemblyName,
+            ModulePath = first.ModulePath,
+            TargetFramework = first.TargetFramework,
+            Architecture = first.Architecture,
+            ExecutionId = first.ExecutionId,
+            SessionUid = last.SessionUid,
+            RequestedOutputPath = first.RequestedOutputPath,
+            WriteOnFailureOnly = aggregate.Modules.All(static module => module.WriteOnFailureOnly),
+            AttemptNumber = 1,
+            ExitCode = aggregate.ExitCode ?? last.ExitCode,
+            TotalTests = aggregate.TotalTests,
+            PassedTests = aggregate.PassedTests,
+            FailedTests = aggregate.FailedTests,
+            SkippedTests = aggregate.SkippedTests,
+            TestDurationTicks = aggregate.Modules.Sum(static module => module.TestDurationTicks),
+            Failures = last.Failures,
+            FlakyTests = [.. aggregate.FlakyTests],
+            SlowestTests =
+            [
+                .. aggregate.Modules
+                    .SelectMany(static module => module.SlowestTests)
+                    .GroupBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
+                    .Select(static group => group.OrderByDescending(test => test.DurationTicks).First())
+                    .OrderByDescending(static test => test.DurationTicks)
+                    .ThenBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
+                    .Take(MaxSlowestTests),
+            ],
+            TopFailingClasses = last.TopFailingClasses,
+            Coverage = aggregate.Coverage,
+            GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(
+                GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules)),
+        };
     }
 
     private static async Task<bool?> TryUpsertStepSummaryAsync(

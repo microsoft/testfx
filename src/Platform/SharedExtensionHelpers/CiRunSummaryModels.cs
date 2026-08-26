@@ -44,6 +44,8 @@ internal sealed class CiRunSummaryModule
 
     public CiRunSummaryTest[] Failures { get; set; } = [];
 
+    public CiRunSummaryTest[] FlakyTests { get; set; } = [];
+
     public CiRunSummaryTest[] SlowestTests { get; set; } = [];
 
     public CiRunSummaryFailingClass[] TopFailingClasses { get; set; } = [];
@@ -168,9 +170,19 @@ internal sealed class CiRunSummaryAggregate
         ExitCode = exitCode;
         HasAuthoritativeRunSummary = hasAuthoritativeRunSummary;
         IsPartial = isPartial;
+        FlakyTests =
+        [
+            .. modules
+                .SelectMany(static module => module.FlakyTests)
+                .OrderBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
+                .ThenBy(static test => test.DisplayName, StringComparer.Ordinal),
+        ];
+        IReadOnlyList<CiRunSummaryModule> coverageModules = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? modules.OrderBy(static module => module.AttemptNumber).Take(1).ToArray()
+            : modules;
         Coverage = CiCoverageSummary.Aggregate(
-            modules,
-            Math.Max(modules.Count, context.RunSummary?.TestModuleCount ?? modules.Count));
+            coverageModules,
+            Math.Max(coverageModules.Count, context.RunSummary?.TestModuleCount ?? coverageModules.Count));
     }
 
     public IReadOnlyList<CiRunSummaryModule> Modules { get; }
@@ -192,6 +204,8 @@ internal sealed class CiRunSummaryAggregate
     public bool HasAuthoritativeRunSummary { get; }
 
     public bool IsPartial { get; }
+
+    public IReadOnlyList<CiRunSummaryTest> FlakyTests { get; }
 
     public CiCoverageSummaryData Coverage { get; }
 }
