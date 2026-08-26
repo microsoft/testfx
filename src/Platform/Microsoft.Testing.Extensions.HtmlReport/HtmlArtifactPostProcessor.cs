@@ -48,7 +48,7 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
 
         InputArtifact[] orderedInputs =
         [
-            .. OrderInputs(inputs),
+            .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
         ];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
@@ -81,7 +81,8 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
     }
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
-        => CreateMergeIdFromOrderedInputs(OrderInputs(inputs));
+        => CreateMergeIdFromOrderedInputs(
+            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true));
 
     private static string CreateMergeIdFromOrderedInputs(IEnumerable<InputArtifact> orderedInputs)
     {
@@ -105,11 +106,4 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
 
         return result.ToString();
     }
-
-    private static IOrderedEnumerable<InputArtifact> OrderInputs(IEnumerable<InputArtifact> inputs)
-        => inputs.OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-            .ThenBy(input => input.ProducingTestModule, StringComparer.Ordinal)
-            .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
-            .ThenBy(input => input.Architecture, StringComparer.Ordinal)
-            .ThenBy(input => input.ExecutionId, StringComparer.Ordinal);
 }

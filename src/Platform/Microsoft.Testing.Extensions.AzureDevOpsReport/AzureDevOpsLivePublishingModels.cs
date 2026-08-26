@@ -99,8 +99,10 @@ internal sealed record AzureDevOpsTestCaseResult(
     /// </summary>
     /// <remarks>
     /// Declared as properties rather than positional parameters so that adding them does not change the
-    /// record's constructor and deconstructor signatures. All three are absent from a freshly created
-    /// result and are only populated when a retry attempt turns an existing result into a rerun.
+    /// record's constructor and deconstructor signatures. <see cref="Id"/> is populated only when updating
+    /// an existing result. <see cref="ResultGroupType"/> and <see cref="SubResults"/> are also populated on
+    /// a freshly created, attachment-bearing result when retry tracking is enabled, so its attachments can
+    /// target the first attempt.
     /// </remarks>
     [JsonPropertyName("id")]
     public int? Id { get; init; }
@@ -141,6 +143,22 @@ internal sealed record AzureDevOpsTestCaseResultWithAttachments(
     AzureDevOpsTestCaseResult Result,
     IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments);
 
+internal sealed class AzureDevOpsPublishedTestResult
+{
+    public AzureDevOpsPublishedTestResult(int id, IReadOnlyDictionary<int, int> subResultIdsBySequenceId)
+    {
+        Id = id;
+        SubResultIdsBySequenceId = subResultIdsBySequenceId;
+    }
+
+    public int Id { get; }
+
+    public IReadOnlyDictionary<int, int> SubResultIdsBySequenceId { get; }
+
+    public bool TryGetSubResultId(int sequenceId, out int subResultId)
+        => SubResultIdsBySequenceId.TryGetValue(sequenceId, out subResultId);
+}
+
 /// <summary>
 /// Describes an attachment to upload to Azure DevOps (either to a test result or to the test run).
 /// The payload can come from a file on disk (<see cref="FilePath"/>) or from inline string content (<see cref="InlineContent"/>).
@@ -172,18 +190,6 @@ internal sealed class AzureDevOpsTestResultAttachment
 
     public static AzureDevOpsTestResultAttachment FromString(string content, string fileName, string attachmentType, string? comment = null)
         => new(fileName, attachmentType, comment, filePath: null, inlineContent: content);
-
-    /// <summary>
-    /// Returns a copy of this attachment published under a different file name.
-    /// </summary>
-    /// <remarks>
-    /// Every attempt of a rerun uploads its attachments against the same parent result, where Azure DevOps
-    /// accumulates rather than replaces them. Two attempts would therefore both contribute a
-    /// <c>stdout.log</c>, leaving no way to tell which attempt produced which. Renaming per attempt keeps
-    /// them distinguishable without needing a sub-result id we cannot reliably obtain.
-    /// </remarks>
-    public AzureDevOpsTestResultAttachment WithFileName(string fileName)
-        => new(fileName, AttachmentType, Comment, FilePath, InlineContent);
 }
 
 internal sealed record AzureDevOpsTestResultsPublisherOptions(

@@ -58,6 +58,12 @@ tools:
     - dotnet
 
 safe-outputs:
+  # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
+  # result JSON that gh-aw cannot parse (#10711). Same fix as #10684.
+  threat-detection:
+    engine:
+      id: copilot
+      model: gpt-5-mini
   report-failure-as-issue: false
   missing-tool:
     create-issue: false
@@ -72,6 +78,11 @@ safe-outputs:
     draft: true
     title-prefix: "[ResourceLock] "
     labels: [type/automation, type/tech-debt]
+    target-repo: "microsoft/testfx"
+    head-repo: "nohwnd-bot/testfx"
+    allowed-repos: ["microsoft/testfx", "nohwnd-bot/testfx"]
+    github-token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
+    head-github-token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
     base-branch: main
     allowed-branches:
       - resource-lock/*
@@ -242,6 +253,10 @@ changes, then call `create_pull_request` exactly once with:
   is minimal, every validation command with its result, and the workflow run URL
 - an explicit note when the project remains sequential that this is preparation
   for a later parallelization opt-in, not an opt-in itself
+
+Pass the complete Markdown body as the safe-output tool's `body` value. Never
+pass `--body -` or otherwise use `-` as a stdin placeholder; the safe-output CLI
+treats it as the literal pull request body.
 
 If no high-confidence bounded candidate exists, make no changes, call `noop`
 with a concise explanation, and stop.

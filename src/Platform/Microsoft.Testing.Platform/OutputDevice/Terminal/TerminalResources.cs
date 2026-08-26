@@ -205,6 +205,14 @@ internal static partial class TerminalResources
 
     internal static string @TerminalShowStdoutOptionDescription => GetResourceString("TerminalShowStdoutOptionDescription");
 
+    internal static string @TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument => GetResourceString("TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument");
+
+    internal static string @TerminalShowTestResultsOptionDescription => GetResourceString("TerminalShowTestResultsOptionDescription");
+
+    internal static string @TerminalShowTestResultsOptionEmptySelectionInvalidArgument => GetResourceString("TerminalShowTestResultsOptionEmptySelectionInvalidArgument");
+
+    internal static string @TerminalShowTestResultsOptionUnknownValueInvalidArgument => GetResourceString("TerminalShowTestResultsOptionUnknownValueInvalidArgument");
+
     internal static string @TerminalTestReporterDescription => GetResourceString("TerminalTestReporterDescription");
 
     internal static string @TerminalTestReporterDisplayName => GetResourceString("TerminalTestReporterDisplayName");

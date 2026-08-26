@@ -78,7 +78,7 @@ Example: 'MyReport_{tfm}.xml'.</target>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
         <source>Produce a JUnit XML report for the current test session.</source>
-        <target state="new">Produce a JUnit XML report for the current test session.</target>
+        <target state="translated">Genere un informe XML de JUnit para la sesión de prueba actual.</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
@@ -93,7 +93,7 @@ Example: 'MyReport_{tfm}.xml'.</target>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report.</source>
-        <target state="new">Enable generating a JUnit XML report.</target>
+        <target state="translated">Habilitar la generación de un informe XML de JUnit.</target>
         <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportRequiresArtifactPostProcessing">

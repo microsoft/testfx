@@ -18,6 +18,8 @@ This package extends Microsoft.Testing.Platform with:
 - **Standardized format**: TRX is a widely supported XML-based test results format
 - **CI integration**: TRX files can be published to Azure DevOps, GitHub Actions and other CI systems for rich test result visualization
 
+## Usage
+
 Enable TRX report generation via the `--report-trx` command line option.
 
 ## Related packages

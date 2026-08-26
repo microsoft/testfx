@@ -49,6 +49,54 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task WhenTestFailsWithException_SummaryExpandsTheFailureIntoACollapsibleSection(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "failex");
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        Assert.Contains("<details>", summary);
+        Assert.Contains("<code>FailingTest</code>", summary);
+        Assert.Contains("**Exception:** `System.InvalidOperationException`", summary);
+        Assert.Contains("Expected 42 but got 41", summary);
+        Assert.Contains("</details>", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenRunPassesAndSummaryIsOnFailure_SummaryIsNotCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "pass", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreEqual(string.Empty, summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenFailureDetailsAreDisabled_SummaryKeepsTheCompactFailureList(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "failex", extraArgs: "--report-gh-failure-details off");
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        Assert.Contains("### ❌ Failures (1)", summary);
+        Assert.DoesNotContain("<details>", summary);
+        Assert.DoesNotContain("**Exception:**", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenTestFailsAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "fail", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.Contains("❌ Test Run Summary", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WhenZeroTestsRan_EmitsExitCodeAnnotationAndCallout(string tfm)
     {
         (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "zero");
@@ -60,6 +108,17 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         result.AssertOutputContains("ZeroTests");
         Assert.Contains("❌ Test Run Summary", summary);
         Assert.Contains("[!WARNING]", summary);
+        Assert.Contains("ZeroTests", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenZeroTestsRanAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "zero", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.ZeroTests);
+        Assert.Contains("❌ Test Run Summary", summary);
         Assert.Contains("ZeroTests", summary);
     }
 
@@ -196,6 +255,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         // The behavior under test is selected by the GH_TEST_MODE environment variable set by the acceptance test:
         //   "zero"     -> publish no tests (exit code ZeroTests)
         //   "fail"     -> publish a single failing test (exit code AtLeastOneTestFailed)
+        //   "failex"   -> publish a single failing test carrying a real exception, so the job summary can expand it
+        //                 into a collapsible section with the exception type and stack trace
         //   "pass"     -> publish a single passing test (exit code Success, unless --minimum-expected-tests forces a violation)
         //   "location" -> publish a failing and a skipped test, both carrying a TestFileLocationProperty and no
         //                 exception, so the annotations can only be pinned through the declared-location fallback
@@ -210,6 +271,29 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     Uid = "test-1",
                     DisplayName = "FailingTest",
                     Properties = new PropertyBag(new FailedTestNodeStateProperty("Expected 1 but got 2")),
+                }));
+        }
+        else if (mode == "failex")
+        {
+            // Throw and catch so the exception carries a real stack trace, which is what the collapsible
+            // failure section renders alongside the exception type.
+            Exception exception;
+            try
+            {
+                throw new InvalidOperationException("Expected 42 but got 41");
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-1",
+                    DisplayName = "FailingTest",
+                    Properties = new PropertyBag(new FailedTestNodeStateProperty(exception, "Expected 42 but got 41")),
                 }));
         }
         else if (mode == "location")

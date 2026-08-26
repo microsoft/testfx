@@ -72,12 +72,27 @@ steps:
     # secret, so the history service simply no-ops there; trusted branch builds run it end-to-end.
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+# artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
+# PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the tests run
+# therefore reported one real problem as two failed steps, the way the official build did in
+# https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. This template is shared by the Linux
+# and MacOS jobs, so the probe covers both. When the tests did write results they are published exactly as
+# before, including on a failed run, which is why this uses always().
+- pwsh: |
+    $testResults = Join-Path '$(Build.SourcesDirectory)' 'artifacts/TestResults/$(_BuildConfig)'
+    $hasTestResults = 'false'
+    if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
+    Write-Host "Test results under '$testResults': $hasTestResults"
+    Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+  displayName: 'Check for Test Results folders'
+  condition: always()
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Test Results folders'
   inputs:
     PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
     ArtifactName: TestResults_${{ parameters.osName }}_$(_BuildConfig)_Attempt$(System.JobAttempt)
-  condition: always()
+  condition: and(always(), eq(variables.HasTestResults, 'true'))
 
 # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and CopyFiles@2
 # hard-fails when SourceFolder does not exist. A Test failure early enough to skip the suite therefore

@@ -12,9 +12,11 @@ internal static class GitHubActionsCommandLineOptions
     public const string GitHubActionsAnnotations = "report-gh-annotations";
     public const string GitHubActionsStepSummary = "report-gh-step-summary";
     public const string GitHubActionsStepSummarySections = "report-gh-step-summary-sections";
+    public const string GitHubActionsFailureDetails = "report-gh-failure-details";
     public const string GitHubActionsSlowTestNotices = "report-gh-slow-test-notices";
     public const string GitHubActionsSlowTestThreshold = "report-gh-slow-test-threshold";
 
+    public const string StepSummaryOnFailureValue = "on-failure";
     public const int SlowTestThresholdDefaultSeconds = 60;
 }
 

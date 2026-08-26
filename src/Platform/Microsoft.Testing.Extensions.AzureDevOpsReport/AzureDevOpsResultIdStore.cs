@@ -116,7 +116,7 @@ internal sealed class AzureDevOpsResultIdStore
             result.AutomatedTestName,
             result.TestCaseTitle,
             resultId,
-            [ToSubResult(result, sequenceId: 1)])
+            [CreateFirstAttempt(result)])
         {
             TotalDurationInMs = result.DurationInMs,
             StartedDate = result.StartedDate,
@@ -124,6 +124,9 @@ internal sealed class AzureDevOpsResultIdStore
         };
         _hasUnsavedChanges = true;
     }
+
+    public static AzureDevOpsTestSubResult CreateFirstAttempt(AzureDevOpsTestCaseResult result)
+        => ToSubResult(result, sequenceId: 1);
 
     /// <summary>
     /// Builds what the attempt history would become if <paramref name="result"/> were published, without

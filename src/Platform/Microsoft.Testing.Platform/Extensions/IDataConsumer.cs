@@ -8,6 +8,11 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// <summary>
 /// Represents a data consumer that can consume data produced by a data producer.
 /// </summary>
+/// <remarks>
+/// The message bus does not dispatch data to a consumer when the consumer and producer have the same
+/// <see cref="IExtension.Uid"/>. Producer and consumer registrations that communicate through the message bus
+/// must use different UIDs. An extension that processes its own data should invoke that processing directly.
+/// </remarks>
 public interface IDataConsumer : IExtension
 {
     /// <summary>
