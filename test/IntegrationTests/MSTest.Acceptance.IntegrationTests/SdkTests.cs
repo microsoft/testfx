@@ -75,15 +75,27 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
+        // 'dotnet test' runs the target frameworks in parallel and writes each framework's summary as two separate
+        // writes: the 'Passed!  - Failed: ...' counts, then the ' - MSTestSdk.dll (<tfm>)' suffix. Those writes
+        // interleave, so the two halves of one framework's summary are not guaranteed to share an output line. Assert
+        // the two independent facts instead: every expected framework ran, and every framework reported a clean result.
+        List<string> expectedTargetFrameworks = ["net10.0"];
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
+        expectedTargetFrameworks.Add("net8.0");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
+            expectedTargetFrameworks.Add("net462");
         }
+
+        foreach (string targetFramework in expectedTargetFrameworks)
+        {
+            compilationResult.AssertOutputContains($" - MSTestSdk.dll ({targetFramework})");
+        }
+
+        compilationResult.AssertOutputMatchesRegexTimes("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1", expectedTargetFrameworks.Count);
+        compilationResult.AssertOutputDoesNotContain("Failed!");
     }
 
     [TestMethod]

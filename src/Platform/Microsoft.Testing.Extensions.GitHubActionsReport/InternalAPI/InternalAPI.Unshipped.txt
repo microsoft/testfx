@@ -2,7 +2,6 @@
 *REMOVED*Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GitHubActionsAnnotationReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLine, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDisplay, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
 *REMOVED*Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GitHubActionsSummaryReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
 *REMOVED*Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GitHubActionsSummaryReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
-*REMOVED*Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration) -> void
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetErrorAnnotation(string! testName, string? explanation, System.Exception? exception, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, bool skipAssertionFrames) -> string!
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetSkippedAnnotation(string! testName, string? explanation) -> string!
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testName, System.TimeSpan elapsed) -> string!
@@ -38,6 +37,9 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode
+Microsoft.Testing.Extensions.TestRecord.IsFlaky.get -> bool
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky) -> void
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure = null) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Duration.get -> System.TimeSpan
@@ -95,7 +97,7 @@ Microsoft.Testing.Extensions.TestFailureDetails.Message.get -> string?
 Microsoft.Testing.Extensions.TestFailureDetails.StackTrace.get -> string?
 Microsoft.Testing.Extensions.TestFailureDetails.TestFailureDetails(string? message, string? exceptionType, string? stackTrace, string? filePath, int lineNumber) -> void
 Microsoft.Testing.Extensions.TestRecord.Failure.get -> Microsoft.Testing.Extensions.TestFailureDetails?
-Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, Microsoft.Testing.Extensions.TestFailureDetails? failure = null) -> void
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, Microsoft.Testing.Extensions.TestFailureDetails? failure) -> void
 Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!

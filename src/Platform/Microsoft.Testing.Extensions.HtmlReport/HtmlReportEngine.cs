@@ -156,6 +156,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             sb.Append(',');
             AppendNumberPair(sb, "durationMs", r.Duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
 
+            if (r.RetryAttemptNumber is int retryAttemptNumber)
+            {
+                sb.Append(',');
+                AppendNumberPair(sb, "retryAttemptNumber", retryAttemptNumber.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',');
+                AppendBooleanPair(sb, "isSupersededRetryAttempt", r.IsSupersededRetryAttempt == true);
+            }
+
             if (attemptOf > 1)
             {
                 sb.Append(',');
@@ -307,6 +315,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     {
         AppendKey(sb, key);
         sb.Append(number);
+    }
+
+    private static void AppendBooleanPair(StringBuilder sb, string key, bool value)
+    {
+        AppendKey(sb, key);
+        sb.Append(value ? "true" : "false");
     }
 
     private static void AppendString(StringBuilder sb, string value)

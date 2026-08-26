@@ -74,6 +74,10 @@ const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Actual = 11
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.RetryAttemptNumber = 12 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.IsSuperseded = 13 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.RetryAttemptNumber = 9 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.IsSuperseded = 10 -> ushort
 Microsoft.Testing.Extensions.MergeOutputFileHelper
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void

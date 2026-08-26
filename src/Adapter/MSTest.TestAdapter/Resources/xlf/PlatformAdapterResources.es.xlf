@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="MSTestExtensionDescription">
         <source>MSTest Framework for Microsoft Testing Platform.</source>
-        <target state="new">MSTest Framework for Microsoft Testing Platform.</target>
+        <target state="translated">MSTest Framework para Microsoft Testing Platform.</target>
         <note>Do not localize {Locked="MSTest"} or {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="MissingRunSettingsAttribute">

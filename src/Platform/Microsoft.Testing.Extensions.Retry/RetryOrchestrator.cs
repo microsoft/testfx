@@ -5,6 +5,7 @@ using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
@@ -158,6 +159,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         Dictionary<string, string> flakyTestsByUid = [];
         int finalFailedTestResults = 0;
         int retriedExecutions = 0;
+        bool sawSkippedResults = false;
         Dictionary<string, string> pendingRetriedTests = [];
 
         // Parse the delay once before the loop since command-line options don't change.
@@ -245,6 +247,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             exitCodes.Add(attemptResult.ExitCode);
 
             int failedThisAttempt = retryFailedTestsPipeServer.FailedTests.Count;
+            sawSkippedResults |= retryFailedTestsPipeServer.SkippedTests > 0;
             if (attemptCount == 1)
             {
                 // The first attempt runs the full suite, so its counts are the suite's. Skipped tests are tracked
@@ -394,6 +397,22 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             $"testfx-retry-postprocess-{Guid.NewGuid():N}");
         try
         {
+            // Once retries run, any skipped result makes the final passed/skipped split ambiguous: a folded UID can
+            // contain both failed and skipped rows, and a retry can move a row in either direction. Fail closed rather
+            // than publishing authoritative-looking counts until the retry protocol carries per-UID row outcomes.
+            bool logicalPassedAndSkippedCountsKnown = attemptCount == 1 || !sawSkippedResults;
+            ArtifactPostProcessingRunSummary? artifactRunSummary = suiteCountsKnown
+                && logicalPassedAndSkippedCountsKnown
+                && finalFailedTestResults + suiteSkippedTests <= suiteTotalTests
+                    ? new ArtifactPostProcessingRunSummary(
+                        suiteTotalTests,
+                        suiteTotalTests - finalFailedTestResults - suiteSkippedTests,
+                        finalFailedTestResults,
+                        suiteSkippedTests,
+                        orchestrationStopwatch.Elapsed,
+                        exitCodes[^1],
+                        testModuleCount: 1)
+                    : null;
             IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
                 _serviceProvider,
                 this,
@@ -401,6 +420,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 logger,
                 attemptArtifacts,
                 attemptCount,
+                artifactRunSummary,
                 postProcessingDirectory,
                 cancellationToken).ConfigureAwait(false);
 

@@ -64,13 +64,34 @@ internal static class RetryArtifactProcessor
         int attemptCount,
         string outputDirectory,
         CancellationToken cancellationToken)
+        => await ProcessAsync(
+            serviceProvider,
+            producer,
+            outputDevice,
+            logger,
+            artifacts,
+            attemptCount,
+            runSummary: null,
+            outputDirectory,
+            cancellationToken).ConfigureAwait(false);
+
+    public static async Task<IReadOnlyDictionary<string, string>> ProcessAsync(
+        IServiceProvider serviceProvider,
+        IOutputDeviceDataProducer producer,
+        IOutputDevice outputDevice,
+        ILogger logger,
+        IReadOnlyList<RetryAttemptArtifact> artifacts,
+        int attemptCount,
+        ArtifactPostProcessingRunSummary? runSummary,
+        string outputDirectory,
+        CancellationToken cancellationToken)
     {
         IArtifactPostProcessor[] processors =
         [
             .. serviceProvider.GetServicesInternal<IArtifactPostProcessor>()
                 .Where(processor => processor.SupportedModes.Contains(ArtifactPostProcessingMode.RetryAttempts)),
         ];
-        if (processors.Length == 0 || attemptCount < 2)
+        if (processors.Length == 0)
         {
             return new Dictionary<string, string>();
         }
@@ -79,10 +100,16 @@ internal static class RetryArtifactProcessor
         var replacements = new Dictionary<string, string>(GetPathComparer());
         var context = new ArtifactPostProcessingContext(
             ArtifactPostProcessingTruncationReason.None,
-            ArtifactPostProcessingMode.RetryAttempts);
+            ArtifactPostProcessingMode.RetryAttempts,
+            runSummary);
 
         foreach (IArtifactPostProcessor processor in processors)
         {
+            if (attemptCount < 2 && processor is not IArtifactPostProcessorRequiresPostProcessing)
+            {
+                continue;
+            }
+
             RetryAttemptArtifact[] matchingArtifacts =
             [
                 .. unmatchedArtifacts.Where(artifact => Matches(processor, artifact)),

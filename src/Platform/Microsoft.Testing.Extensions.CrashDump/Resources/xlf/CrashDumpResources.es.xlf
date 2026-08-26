@@ -108,9 +108,9 @@ Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del pr
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
+        <target state="translated">Especifique el tipo de volcado.
+Los valores válidos son "Mini", "Heap", "Triage" o "Full". El tipo predeterminado es "Full".
+Para obtener más información, visite https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">

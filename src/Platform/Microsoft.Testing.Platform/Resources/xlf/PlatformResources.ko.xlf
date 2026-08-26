@@ -741,8 +741,8 @@ Note that this is slowing down the test execution.</source>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="translated">진단 로깅을 활성화합니다. 기본 로그 수준은 'Trace'입니다.
+파일은 log_[yyMMddHHmmssfff].diag라는 이름으로 출력 디렉터리에 기록됩니다.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -764,7 +764,7 @@ If not specified the file will be generated inside the default 'TestResults' dir
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
+        <target state="translated">'[log]_.'를 지정된 로그 파일 이름 접두사로 바꿉니다.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -946,7 +946,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="new">Microsoft Testing Platform command line provider.</target>
+        <target state="translated">Microsoft 테스팅 플랫폼 명령줄 공급자입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -975,7 +975,7 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="new">For testing purposes.</target>
+        <target state="translated">테스트용입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

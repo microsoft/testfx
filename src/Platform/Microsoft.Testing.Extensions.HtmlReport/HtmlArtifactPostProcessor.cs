@@ -14,7 +14,8 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
     private const string MergedReportDirectoryName = "merged";
 
     private static readonly string[] SupportedArtifactKinds = [HtmlReportGenerator.HtmlArtifactKind];
-    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes =
+        [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts];
 
     public string Uid => "Microsoft.Testing.Extensions.HtmlReport.PostProcessor";
 
@@ -46,10 +47,15 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        InputArtifact[] orderedInputs =
-        [
-            .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
-        ];
+        // RetryAttempts inputs are successive attempts of the same module and must stay in the execution order
+        // RetryArtifactProcessor supplies them in: OrderInputs sorts by full path for deterministic TestModules
+        // concatenation, which is not the attempt order retries need for "last attempt wins".
+        InputArtifact[] orderedInputs = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? [.. inputs]
+            :
+            [
+                .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
+            ];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
         try
@@ -66,11 +72,15 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs);
+        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs, context.Mode);
         string outputPath = Path.Combine(mergedDirectory, $"merged-{mergeId}.html");
+        HtmlMergeMode mergeMode = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? HtmlMergeMode.CollapseRetryAttempts
+            : HtmlMergeMode.Concatenate;
         await HtmlReportMerger.MergeToFileAsync(
             orderedInputs,
             outputPath,
+            mergeMode,
             cancellationToken).ConfigureAwait(false);
 
         return new ProcessedArtifact(
@@ -82,11 +92,19 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
         => CreateMergeIdFromOrderedInputs(
-            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true));
+            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
+            ArtifactPostProcessingMode.TestModules);
 
-    private static string CreateMergeIdFromOrderedInputs(IEnumerable<InputArtifact> orderedInputs)
+    private static string CreateMergeIdFromOrderedInputs(
+        IEnumerable<InputArtifact> orderedInputs,
+        ArtifactPostProcessingMode mode)
     {
         var identity = new StringBuilder();
+        if (mode == ArtifactPostProcessingMode.RetryAttempts)
+        {
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, mode.ToString());
+        }
+
         foreach (InputArtifact input in orderedInputs)
         {
             IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, Path.GetFullPath(input.Path));

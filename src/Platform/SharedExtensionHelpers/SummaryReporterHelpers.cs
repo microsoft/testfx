@@ -11,12 +11,28 @@ namespace Microsoft.Testing.Extensions;
 /// </summary>
 internal readonly struct TestRecord
 {
-    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, TestFailureDetails? failure = null)
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration)
+        : this(displayName, fullyQualifiedName, kind, duration, isFlaky: false, failure: null)
+    {
+    }
+
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, bool isFlaky)
+        : this(displayName, fullyQualifiedName, kind, duration, isFlaky, failure: null)
+    {
+    }
+
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, TestFailureDetails? failure)
+        : this(displayName, fullyQualifiedName, kind, duration, isFlaky: false, failure)
+    {
+    }
+
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, bool isFlaky, TestFailureDetails? failure = null)
     {
         DisplayName = displayName;
         FullyQualifiedName = fullyQualifiedName;
         Kind = kind;
         Duration = duration;
+        IsFlaky = isFlaky;
         Failure = failure;
     }
 
@@ -27,6 +43,8 @@ internal readonly struct TestRecord
     public TerminalKind Kind { get; }
 
     public TimeSpan Duration { get; }
+
+    public bool IsFlaky { get; }
 
     /// <summary>
     /// Gets the diagnostics captured for a <see cref="TerminalKind.Failed"/> record, or <see langword="null"/> when the

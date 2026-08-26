@@ -386,13 +386,13 @@ Quando vengono specificati sia --ansi sia --no-ansi, --ansi ha la priorità.</ta
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="needs-review-translation">Livello di dettaglio di output durante la creazione di report di test.
-I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal'.</target>
+        <target state="new">Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
         <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="needs-review-translation">l’--output prevede un singolo parametro con un valore 'Normal' o 'Detailed'.</target>
+        <target state="new">--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</target>
         <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">

@@ -128,6 +128,30 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual("errorMessage", actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
         Assert.AreEqual("expectedValue", actual.FailedTestMessages[0].Expected);
         Assert.AreEqual("actualValue", actual.FailedTestMessages[0].Actual);
+
+        // RetryAttemptNumber/IsSuperseded were not supplied above (they default to null); confirm they round-trip
+        // as absent rather than as some default sentinel value.
+        Assert.IsNull(actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.IsNull(actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_RoundTripsWithRetryAttemptMetadata()
+    {
+        // A superseded (non-final) retry attempt that failed, followed by the final attempt that passed - the
+        // typical shape produced by MSTest's [Retry] attribute for a flaky test that eventually succeeds.
+        var supersededFail = new FailedTestResultMessage("uid", "displayName", TestStates.Failed, 100, "reason", null, "standardOutput", "errorOutput", "sessionUid", null, null, RetryAttemptNumber: 1, IsSuperseded: true);
+        var finalSuccess = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 120, "reason", "standardOutput", "errorOutput", "sessionUid", RetryAttemptNumber: 2, IsSuperseded: false);
+        var message = new TestResultMessages("executionId", "instanceId", [finalSuccess], [supersededFail]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.AreEqual(2, actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsFalse(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.AreEqual(1, actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsTrue(actual.FailedTestMessages[0].IsSuperseded);
     }
 
     [TestMethod]
@@ -143,6 +167,22 @@ public sealed class DotnetTestProtocolSerializerTests
 
         static ushort GetConstantValue(string fieldName)
             => (ushort)typeof(FailedTestResultMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
+    public void TestResultMessageFieldIds_RetryAttempt_AreStable()
+    {
+        // Externally shared wire ids for the retry-attempt metadata added on top of Expected/Actual; renumbering
+        // any of these would silently break cross-process decoding without failing the round-trip tests (which
+        // use the same constant on both writer and reader). Pin the literals here, read via reflection (a runtime
+        // read, not a compile-time constant) so that renumbering is actually caught rather than folded away.
+        Assert.AreEqual((ushort)9, GetConstantValue(typeof(SuccessfulTestResultMessageFieldsId), nameof(SuccessfulTestResultMessageFieldsId.RetryAttemptNumber)));
+        Assert.AreEqual((ushort)10, GetConstantValue(typeof(SuccessfulTestResultMessageFieldsId), nameof(SuccessfulTestResultMessageFieldsId.IsSuperseded)));
+        Assert.AreEqual((ushort)12, GetConstantValue(typeof(FailedTestResultMessageFieldsId), nameof(FailedTestResultMessageFieldsId.RetryAttemptNumber)));
+        Assert.AreEqual((ushort)13, GetConstantValue(typeof(FailedTestResultMessageFieldsId), nameof(FailedTestResultMessageFieldsId.IsSuperseded)));
+
+        static ushort GetConstantValue(Type declaringType, string fieldName)
+            => (ushort)declaringType.GetField(fieldName)!.GetRawConstantValue()!;
     }
 
     [TestMethod]

@@ -62,8 +62,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
 #else
     private readonly object _stateLock = new();
 #endif
-#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
-    private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
+    private readonly List<(string Uid, string Key, TestRecord Record)> _records = [];
+#pragma warning disable IDE0028 // Collection expressions cannot pass the required comparer.
+    private readonly Dictionary<string, int> _finalRowCountsByUid = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<int>> _flakyRecordIndicesByUid = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _inProcessFailedTests = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _notRecoveredTests = new(StringComparer.Ordinal);
 
     /// <summary>
     /// The raw inputs for each failed test's diagnostics, held until session end.
@@ -131,6 +135,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
         lock (_stateLock)
         {
             _records.Clear();
+            _finalRowCountsByUid.Clear();
+            _flakyRecordIndicesByUid.Clear();
+            _inProcessFailedTests.Clear();
+            _notRecoveredTests.Clear();
             _pendingFailures.Clear();
         }
 
@@ -155,18 +163,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return Task.CompletedTask;
             }
 
-            // A framework that retries in-process reports every attempt under the same uid, so a superseded attempt
-            // is not the test's outcome. Skipping it here — as the annotation, slow-test and TRX consumers all do —
-            // keeps a [Retry] test that goes on to pass out of the failure set entirely. Merely overwriting it when
-            // the final attempt arrives would not be enough: while the superseded failure is held it counts against
-            // the bounded retention set and can permanently evict the diagnostics of a test that really is failing.
-            if (update.TestNode.IsSupersededRetryAttempt())
-            {
-                return Task.CompletedTask;
-            }
-
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
+            RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
 
             // Resolve the stable, fully-qualified name the same way the annotation and slow-test reporters do
             // (preferring TestMethodIdentifierProperty) so a given test renders identically across all three surfaces.
@@ -196,7 +195,51 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             lock (_stateLock)
             {
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
+                if (retryAttempt is { IsSuperseded: true })
+                {
+                    if (kind == TerminalKind.Failed)
+                    {
+                        _inProcessFailedTests.Add(uid);
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                if (kind is TerminalKind.Failed or TerminalKind.Skipped)
+                {
+                    // Keep this sticky for the session: folded data-driven rows can share a uid and arrive in
+                    // either order, so a later passing row must not turn a mixed-outcome uid into a recovery.
+                    _notRecoveredTests.Add(uid);
+                    ClearFlakyRecords(uid);
+                }
+
+                bool isFlaky = kind == TerminalKind.Passed
+                    && !_notRecoveredTests.Contains(uid)
+                    && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
+                int finalRowCount = _finalRowCountsByUid.TryGetValue(uid, out int existingFinalRowCount)
+                    ? existingFinalRowCount + 1
+                    : 1;
+                _finalRowCountsByUid[uid] = finalRowCount;
+                string recordKey = $"{uid}\0{finalRowCount.ToString(CultureInfo.InvariantCulture)}";
+                _records.Add((uid, recordKey, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
+                if (isFlaky)
+                {
+                    if (!_flakyRecordIndicesByUid.TryGetValue(uid, out List<int>? indices))
+                    {
+                        indices = [];
+                        _flakyRecordIndicesByUid.Add(uid, indices);
+                    }
+
+                    indices.Add(_records.Count - 1);
+                }
+
+                if (finalRowCount > 1)
+                {
+                    // Multiple final rows share one UID, so the protocol cannot identify which row recovered.
+                    // Keep every row and its outcome, but fail closed instead of attributing flakiness to all of them.
+                    ClearFlakyRecords(uid);
+                }
+
                 PendingFailure? failure = null;
                 if (pendingFailure is { } info)
                 {
@@ -210,7 +253,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                         declared?.LineSpan.Start.Line ?? 0);
                 }
 
-                ApplyPendingFailure(_pendingFailures, uid, failure, MaxFailures);
+                ApplyPendingFailure(_pendingFailures, recordKey, failure, MaxFailures);
             }
         }
         catch (OperationCanceledException)
@@ -223,6 +266,27 @@ internal sealed partial class GitHubActionsSummaryReporter :
         }
 
         return Task.CompletedTask;
+    }
+
+    private void ClearFlakyRecords(string uid)
+    {
+        if (!_flakyRecordIndicesByUid.TryGetValue(uid, out List<int>? indices))
+        {
+            return;
+        }
+
+        _flakyRecordIndicesByUid.Remove(uid);
+        foreach (int index in indices)
+        {
+            (string existingUid, string key, TestRecord record) = _records[index];
+            _records[index] = (existingUid, key, new TestRecord(
+                record.DisplayName,
+                record.FullyQualifiedName,
+                record.Kind,
+                record.Duration,
+                isFlaky: false,
+                record.Failure));
+        }
     }
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
@@ -434,7 +498,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// </remarks>
     private List<TestRecord> BuildSnapshot()
     {
-        List<KeyValuePair<string, TestRecord>> entries;
+        List<(string Uid, string Key, TestRecord Record)> entries;
         Dictionary<string, PendingFailure> pending;
         lock (_stateLock)
         {
@@ -443,13 +507,19 @@ internal sealed partial class GitHubActionsSummaryReporter :
         }
 
         entries.Sort(static (left, right)
-            => CompareForRendering(left.Key, left.Value.FullyQualifiedName, left.Value.DisplayName, right.Key, right.Value.FullyQualifiedName, right.Value.DisplayName));
+            => CompareForRendering(
+                left.Key,
+                left.Record.FullyQualifiedName,
+                left.Record.DisplayName,
+                right.Key,
+                right.Record.FullyQualifiedName,
+                right.Record.DisplayName));
 
         var snapshot = new List<TestRecord>(entries.Count);
         int expanded = 0;
-        foreach (KeyValuePair<string, TestRecord> entry in entries)
+        foreach ((string Uid, string Key, TestRecord Record) entry in entries)
         {
-            TestRecord record = entry.Value;
+            TestRecord record = entry.Record;
             if (record.Kind == TerminalKind.Failed
                 && expanded < MaxFailures
                 && pending.TryGetValue(entry.Key, out PendingFailure failure))
@@ -460,6 +530,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     record.FullyQualifiedName,
                     record.Kind,
                     record.Duration,
+                    record.IsFlaky,
                     CaptureFailureDetails(failure));
             }
 

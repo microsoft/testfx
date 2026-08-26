@@ -4,7 +4,7 @@ param()
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
-$testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-debug-coverage.yml"
+$testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
 
 $configuration = Get-Content -LiteralPath $globalJsonPath -Raw | ConvertFrom-Json
 $affectedTests = $configuration.test.affectedTests
