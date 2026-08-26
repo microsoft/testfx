@@ -128,6 +128,15 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         TimeSpan stopMargin = DeadlineHelper.GetStopMargin(environment);
         TimeSpan dumpMargin = DeadlineHelper.GetDumpMargin(environment);
         DateTimeOffset stopAt = DeadlineHelper.SubtractSaturating(deadline, stopMargin);
+        bool areMarginsInverted = dumpMargin >= stopMargin;
+        if (areMarginsInverted)
+        {
+            _startupWarnings.Add(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.AbortAtDeadlineInvalidMarginOrderWarning,
+                dumpMargin,
+                stopMargin));
+        }
 
         // A deadline given without an offset is parsed as UTC (AssumeUniversal), which is easy to get
         // wrong. Log the resolved instants and margins so a misconfigured offset is visible.
@@ -137,14 +146,9 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
 
             // stopMargin is meant to be larger than dumpMargin so the graceful stop is attempted before
             // the hang dump. Warn when the ordering is inverted rather than silently misbehaving.
-            if (dumpMargin >= stopMargin)
+            if (areMarginsInverted)
             {
                 _logger.LogWarning($"Deadline dump margin ({dumpMargin}) is greater than or equal to the stop margin ({stopMargin}). The graceful stop is meant to run before the hang dump; with these margins the hang dump may fire first.");
-                _startupWarnings.Add(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.AbortAtDeadlineInvalidMarginOrderWarning,
-                    dumpMargin,
-                    stopMargin));
             }
         });
 

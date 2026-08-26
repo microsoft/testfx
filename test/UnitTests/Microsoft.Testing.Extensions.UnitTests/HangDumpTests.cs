@@ -126,6 +126,30 @@ public sealed class HangDumpTests
             HangDumpProcessLifetimeHandler.EnsureProcessIdPlaceholder(pattern));
 
     [TestMethod]
+    [DataRow(null, "testhost", 123, 123, "testhost_%p_hang.dmp")]
+    [DataRow("hang.dmp", "testhost", 123, 123, "hang.dmp")]
+    [DataRow("hang.dmp", "child", 456, 123, "hang_%p.dmp")]
+    [DataRow("hang_%p.dmp", "child", 456, 123, "hang_%p.dmp")]
+    public void GetDumpFileNamePattern_PreservesRootNameAndMakesChildNamesUnique(
+        string? configuredPattern,
+        string processName,
+        int processId,
+        int rootProcessId,
+        string expected)
+        => Assert.AreEqual(
+            expected,
+            HangDumpProcessLifetimeHandler.GetDumpFileNamePattern(configuredPattern, processName, processId, rootProcessId));
+
+    [TestMethod]
+    public void TryGetProcessById_WhenProcessHasExited_ReturnsNull()
+    {
+        Mock<IProcessHandler> processHandler = new();
+        processHandler.Setup(x => x.GetProcessById(123)).Throws<ArgumentException>();
+
+        Assert.IsNull(HangDumpProcessLifetimeHandler.TryGetProcessById(processHandler.Object, 123));
+    }
+
+    [TestMethod]
     [DataRow(HangDumpCommandLineProvider.HangDumpFileNameOptionName)]
     [DataRow(HangDumpCommandLineProvider.HangDumpTimeoutOptionName)]
     [DataRow(HangDumpCommandLineProvider.HangDumpTypeOptionName)]

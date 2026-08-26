@@ -242,6 +242,24 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     }
 
     [TestMethod]
+    public async Task InvertedMarginsAreVisibleWhenDiagnosticLoggingThrows()
+    {
+        List<IOutputDeviceData> displayedData = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.FromMinutes(1),
+            onDisplayData: displayedData.Add,
+            stopMargin: "10",
+            dumpMargin: "30",
+            throwOnSynchronousLog: true);
+
+        Assert.IsTrue(await extension.IsEnabledAsync());
+        Assert.HasCount(1, displayedData);
+        WarningMessageOutputDeviceData warning = Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(displayedData[0]);
+        Assert.Contains("00:00:30", warning.Message);
+        Assert.Contains("00:00:10", warning.Message);
+    }
+
+    [TestMethod]
     public async Task MissingGracefulStopCapabilityIsVisibleWithoutDiagnosticLogging()
     {
         List<IOutputDeviceData> displayedData = [];
@@ -434,7 +452,8 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         string? deadlineValue = null,
         string stopMargin = "0",
         string? dumpMargin = null,
-        bool hasCapability = true)
+        bool hasCapability = true,
+        bool throwOnSynchronousLog = false)
     {
         Mock<IEnvironment> environment = new();
         _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
@@ -460,6 +479,13 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             .Setup(x => x.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>()))
             .Returns((LogLevel logLevel, string _, Exception? _, Func<string, Exception?, string> _)
                 => onLog is null ? Task.CompletedTask : onLog(logLevel));
+        if (throwOnSynchronousLog)
+        {
+            logger
+                .Setup(x => x.Log(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>()))
+                .Throws<InvalidOperationException>();
+        }
+
         Mock<ILoggerFactory> loggerFactory = new();
         _ = loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
 

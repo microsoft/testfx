@@ -60,6 +60,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private Timer? _activityTimer;
     private DateTimeOffset? _deadlineDumpAt;
     private Timer? _deadlineTimer;
+    private bool _hostExited;
 
     /// <summary>
     /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
@@ -190,7 +191,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpFileNameOptionName, out string[]? fileName))
         {
-            _dumpFileNamePattern = EnsureProcessIdPlaceholder(fileName[0]);
+            _dumpFileNamePattern = fileName[0];
         }
 
         await _logger.LogInformationAsync($"Hang dump timeout setup {_activityTimerValue}.").ConfigureAwait(false);
@@ -389,13 +390,28 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             // Timer.DisposeAsync waits for the timer callback, but TriggerDumpOnce returns as soon as it
             // publishes the actual dump task. Capture and await that task before enumerating its artifacts.
+            _hostExited = true;
             _dumpTaken = 1;
             activityIndicatorTask = _activityIndicatorTask;
         }
 
         if (activityIndicatorTask is not null)
         {
-            await activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            try
+            {
+                await activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                await RunBestEffortDiagnosticAsync(
+                    () => _logger.LogErrorAsync("The hang dump operation failed while the test host was exiting.", ex),
+                    BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+                await RunBestEffortDiagnosticAsync(
+                    () => _outputDisplay.DisplayAsync(
+                        new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, ex, GetDiskInfo())),
+                        CancellationToken.None),
+                    BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+            }
         }
 
         if (!testHostProcessInformation.HasExitedGracefully)
@@ -458,6 +474,14 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // out-of-process on a full runtime, so yielding to the thread pool here is safe.
         await Task.Yield();
 
+        lock (_dumpLock)
+        {
+            if (_hostExited)
+            {
+                return;
+            }
+        }
+
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
         string dumpReason = triggeredByDeadline
@@ -479,7 +503,14 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 cancellationToken),
             BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
-        using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
+        using IProcess? process = TryGetProcessById(_processHandler, _testHostProcessInformation.PID);
+        if (process is null)
+        {
+            await RunBestEffortDiagnosticAsync(
+                () => _logger.LogDebugAsync("The test host exited before the hang dump could start."),
+                BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+            return;
+        }
 
         // Walking the tree writes diagnostics through the same logger and output device, so deadline-driven
         // enumeration gets a short bound. Fall back to the root test host process: dumping and killing at least
@@ -671,6 +702,25 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             : Path.Combine(directory, uniqueFileName);
     }
 
+    internal static string GetDumpFileNamePattern(string? configuredPattern, string processName, int processId, int rootProcessId)
+        => configuredPattern is null
+            ? $"{processName}_%p_hang.dmp"
+            : processId == rootProcessId
+                ? configuredPattern
+                : EnsureProcessIdPlaceholder(configuredPattern);
+
+    internal static IProcess? TryGetProcessById(IProcessHandler processHandler, int processId)
+    {
+        try
+        {
+            return processHandler.GetProcessById(processId);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Asks the test host which tests are still running, so the dump can be annotated with them.
     /// </summary>
@@ -747,7 +797,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         string processId = process.Id.ToString(CultureInfo.InvariantCulture);
         Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(process.Name, processId, _clock.UtcNow);
 
-        string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
+        string pattern = GetDumpFileNamePattern(
+            _dumpFileNamePattern,
+            process.Name,
+            process.Id,
+            _testHostProcessInformation.PID);
 
         // First resolve {placeholder} templates, then handle legacy %p pattern for backward compatibility.
         string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
