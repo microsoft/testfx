@@ -60,7 +60,7 @@ public sealed class GitHubActionsExitCodeTests
     }
 
     [TestMethod]
-    public void GetReason_ForDeadlineStop_IsNotTheUnknownFallback()
+    public void GetReason_ForDeadlineStop_IsSpecificAndNotTheUnknownFallback()
     {
         // 15 is the newest arm, so it is the one most likely to be dropped and silently answered by the
         // unknown fallback. Pin it to its own text so that regression is visible.
@@ -68,6 +68,7 @@ public sealed class GitHubActionsExitCodeTests
 
         Assert.AreNotEqual(GitHubActionsExitCode.GetReason(255), deadlineReason);
         Assert.AreNotEqual(GitHubActionsExitCode.GetReason(13), deadlineReason);
+        Assert.Contains("deadline", deadlineReason);
         Assert.IsFalse(string.IsNullOrWhiteSpace(deadlineReason));
         Assert.AreEqual("TestExecutionStoppedAtDeadline", GitHubActionsExitCode.GetName(15));
     }
