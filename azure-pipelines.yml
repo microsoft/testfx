@@ -327,8 +327,6 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: false
-    - pwsh: ./eng/classify-xml-doc-change.ps1 -SelfTest
-      displayName: Validate XML documentation change classifier
     - pwsh: ./eng/validate-affected-tests.ps1
       displayName: Validate affected-test rollout
     - bash: |
@@ -374,9 +372,15 @@ stages:
               hasSamples=false
             fi
 
-            # Roslyn distinguishes documentation trivia from code, directives, strings, and ordinary comments.
-            # The classifier fails closed: unsupported syntax or any ambiguous/mixed change returns false.
-            if ! xmlDocsOnly="$(pwsh -NoProfile -File ./eng/classify-xml-doc-change.ps1 -Base "${base}" -Head HEAD)"; then
+            # Never let a PR classify itself with code from its own branch. Extract the classifier from the
+            # trusted target branch and fail closed when it is missing, broken, or returns an unexpected value.
+            classifier="${AGENT_TEMPDIRECTORY}/classify-xml-doc-change.ps1"
+            xmlDocsOnly=false
+            if ! git show "origin/${target}:eng/classify-xml-doc-change.ps1" > "${classifier}"; then
+              echo "##vso[task.logissue type=warning]The trusted target branch does not contain the XML documentation classifier; using full validation."
+            elif ! pwsh -NoProfile -File "${classifier}" -SelfTest; then
+              echo "##vso[task.logissue type=warning]The trusted XML documentation classifier failed its self-tests; using full validation."
+            elif ! xmlDocsOnly="$(pwsh -NoProfile -File "${classifier}" -Base "${base}" -Head HEAD -Repository "${BUILD_SOURCESDIRECTORY}")"; then
               echo "##vso[task.logissue type=warning]XML documentation change classification did not run; using full validation."
               xmlDocsOnly=false
             fi

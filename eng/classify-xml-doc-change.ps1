@@ -6,6 +6,9 @@ param(
     [Parameter(Mandatory, ParameterSetName = "GitDiff")]
     [string]$Head,
 
+    [Parameter(ParameterSetName = "GitDiff")]
+    [string]$Repository,
+
     [Parameter(Mandatory, ParameterSetName = "SelfTest")]
     [switch]$SelfTest
 )
@@ -379,7 +382,7 @@ if ($SelfTest) {
 }
 
 try {
-    Write-Output ((Test-GitDiff $Base $Head).ToString().ToLowerInvariant())
+    Write-Output ((Test-GitDiff $Base $Head $Repository).ToString().ToLowerInvariant())
 }
 catch {
     [Console]::Error.WriteLine("##vso[task.logissue type=warning]XML documentation change classification failed; running full validation. $($_.Exception.Message)")
