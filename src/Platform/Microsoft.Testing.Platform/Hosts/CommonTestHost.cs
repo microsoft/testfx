@@ -26,6 +26,8 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
     private readonly object _activeGracefulStopCapabilitiesSync = new();
 #endif
     private readonly List<IGracefulStopTestExecutionCapability> _activeGracefulStopCapabilities = [];
+    private CancellationToken _gracefulSessionStopCancellationToken;
+    private bool _isGracefulSessionStopRequested;
 
     public ServiceProvider ServiceProvider => serviceProvider;
 
@@ -211,12 +213,20 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
     // stop so the framework stops scheduling new tests but still emits trx/logs/artifacts for whatever completed
     // (mirroring the local '--maximum-failed-tests' behavior). Fall back to hard cancellation when the running
     // framework has no graceful-stop capability (e.g. the test host controller), which is the only lever left.
-    protected void RegisterActiveGracefulStopCapability(IGracefulStopTestExecutionCapability capability)
+    protected Task RegisterActiveGracefulStopCapabilityAsync(IGracefulStopTestExecutionCapability capability)
     {
+        CancellationToken cancellationToken;
+        bool stopCapability;
         lock (_activeGracefulStopCapabilitiesSync)
         {
+            stopCapability = _isGracefulSessionStopRequested && !_activeGracefulStopCapabilities.Contains(capability);
+            cancellationToken = _gracefulSessionStopCancellationToken;
             _activeGracefulStopCapabilities.Add(capability);
         }
+
+        return stopCapability
+            ? capability.StopTestExecutionAsync(cancellationToken)
+            : Task.CompletedTask;
     }
 
     protected void UnregisterActiveGracefulStopCapability(IGracefulStopTestExecutionCapability capability)
@@ -232,6 +242,8 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         IGracefulStopTestExecutionCapability[] capabilities;
         lock (_activeGracefulStopCapabilitiesSync)
         {
+            _isGracefulSessionStopRequested = true;
+            _gracefulSessionStopCancellationToken = cancellationToken;
             capabilities = [.. _activeGracefulStopCapabilities.Distinct()];
         }
 

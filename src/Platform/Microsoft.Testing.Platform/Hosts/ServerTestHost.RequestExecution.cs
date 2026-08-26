@@ -159,7 +159,7 @@ internal sealed partial class ServerTestHost
                 perRequestServiceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>();
             if (perRequestGracefulStopCapability is not null)
             {
-                RegisterActiveGracefulStopCapability(perRequestGracefulStopCapability);
+                await RegisterActiveGracefulStopCapabilityAsync(perRequestGracefulStopCapability).ConfigureAwait(false);
             }
 
             adapterLoadStop = _clock.UtcNow;

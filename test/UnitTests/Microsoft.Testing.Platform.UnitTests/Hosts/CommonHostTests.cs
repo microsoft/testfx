@@ -31,7 +31,7 @@ public sealed class CommonHostTests
         serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
         TestableCommonHost host = new(serviceProvider);
 
-        host.RegisterActiveGracefulStopCapabilityForTesting(requestCapability.Object);
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(requestCapability.Object);
         await host.RequestGracefulSessionStopForTestingAsync();
 
         requestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -41,6 +41,26 @@ public sealed class CommonHostTests
         await host.RequestGracefulSessionStopForTestingAsync();
 
         applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RegisterActiveGracefulStopCapabilityAsync_AfterStoppedRequestUnregisters_StopsNextRequest()
+    {
+        Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> completedRequestCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> nextRequestCapability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
+        TestableCommonHost host = new(serviceProvider);
+
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(completedRequestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+        host.UnregisterActiveGracefulStopCapabilityForTesting(completedRequestCapability.Object);
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(nextRequestCapability.Object);
+
+        completedRequestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        nextRequestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -471,8 +491,8 @@ public sealed class CommonHostTests
             bool isDiscoveryRequest = false)
             => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client, isDiscoveryRequest);
 
-        public void RegisterActiveGracefulStopCapabilityForTesting(IGracefulStopTestExecutionCapability capability)
-            => RegisterActiveGracefulStopCapability(capability);
+        public Task RegisterActiveGracefulStopCapabilityForTestingAsync(IGracefulStopTestExecutionCapability capability)
+            => RegisterActiveGracefulStopCapabilityAsync(capability);
 
         public Task RequestGracefulSessionStopForTestingAsync()
             => RequestGracefulSessionStopAsync(CancellationToken.None);
