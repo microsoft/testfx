@@ -1379,18 +1379,18 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
-        <target state="translated">Aynı yürütülebilir dosyayı 'Process.Start' ile başlatmadan önce testi atlamak için 'File.Exists' kullanan test yöntemleri, bunun yerine '[ExecutableCondition]' özniteliğini kullanmalıdır. Bu öznitelik, bildirime dayalı ve kolayca bulunabilir bir araç gereksinimi sağlar ve erken dönüş olursa başarılı bir test yerine atlanmış bir test olarak bildirir.</target>
-        <note>{Locked="'File.Exists'"}{Locked="'Process.Start'"}{Locked="'[ExecutableCondition]'"}</note>
+        <target state="needs-review-translation">Aynı yürütülebilir dosyayı 'Process.Start' ile başlatmadan önce testi atlamak için 'File.Exists' kullanan test yöntemleri, bunun yerine '[ExecutableCondition]' özniteliğini kullanmalıdır. Bu öznitelik, bildirime dayalı ve kolayca bulunabilir bir araç gereksinimi sağlar ve erken dönüş olursa başarılı bir test yerine atlanmış bir test olarak bildirir.</target>
+        <note>{Locked="File.Exists"}{Locked="Process.Start"}{Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
-        <target state="translated">Başlatmadan önce yürütülebilir '{0}' yolunu denetlemek yerine '[ExecutableCondition]' özniteliğini kullanın</target>
-        <note>{0} is the executable path. {Locked="'[ExecutableCondition]'"}</note>
+        <target state="needs-review-translation">Başlatmadan önce yürütülebilir '{0}' yolunu denetlemek yerine '[ExecutableCondition]' özniteliğini kullanın</target>
+        <note>{0} is the executable path. {Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
-        <target state="translated">'Process.Start' öncesinde 'File.Exists' denetimleri yerine '[ExecutableCondition]' özniteliğini kullanın</target>
-        <note>{Locked="'[ExecutableCondition]'"}{Locked="'File.Exists'"}{Locked="'Process.Start'"}</note>
+        <target state="needs-review-translation">'Process.Start' öncesinde 'File.Exists' denetimleri yerine '[ExecutableCondition]' özniteliğini kullanın</target>
+        <note>{Locked="[ExecutableCondition]"}{Locked="File.Exists"}{Locked="Process.Start"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
