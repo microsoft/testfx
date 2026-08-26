@@ -4,6 +4,7 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixture>
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -39,6 +40,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 
         string outputPattern = $"""
   In process file artifacts produced:
+    - For test 'FailingTest': .+?failure\.log
     - {ctrfPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -67,6 +69,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 
         string outputPattern = $"""
   In process file artifacts produced:
+    - For test 'FailingTest': .+?failure\.log
     - {expectedFilePath}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -96,6 +99,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 
         string outputPattern = $"""
   In process file artifacts produced:
+    - For test 'FailingTest': .+?failure\.log
     - {expectedFilePath}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -128,17 +132,12 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         // order, indentation, escaping, conditional-emission shape, and the actual values
         // baked from the dummy test framework — must match byte-for-byte.
         //
-        // The dummy framework emits three tests that exercise the CTRF status and retry
-        // model end to end:
-        //  - PassingTest             → status: "passed"
-        //  - FailingTest             → status: "failed" + `message`
-        //  - FlakyTest (retried)     → first attempt failed, retried successfully:
-        //                              final status: "passed", retries: 1,
-        //                              retryAttempts[].status: "failed", flaky: true
-        //
-        // The retry shape follows the model confirmed in ctrf-io/ctrf#58: `retryAttempts[]`
-        // holds attempts 1..N-1 (the final attempt's outcome IS the test object), so
-        // `retries` equals `retryAttempts.length` and the final attempt is `retries + 1`.
+        // The dummy framework emits four tests that exercise status, attachments, and
+        // duplicate UIDs end to end:
+        //  - PassingTest             -> status: "passed"
+        //  - FailingTest             -> status: "failed" + message + attachment
+        //  - DuplicateUidFailure     -> status: "failed"
+        //  - DuplicateUidPass        -> status: "passed" with the same UID as the prior row
         string actual = File.ReadAllText(filePath);
         string normalized = NormalizeCtrfReport(actual);
 
@@ -159,13 +158,13 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
       }
     },
     "summary": {
-      "tests": 3,
+      "tests": 4,
       "passed": 2,
-      "failed": 1,
+      "failed": 2,
       "skipped": 0,
       "pending": 0,
       "other": 0,
-      "flaky": 1,
+      "flaky": 0,
       "start": <EPOCH_MS>,
       "stop": <EPOCH_MS>,
       "duration": <DURATION_MS>
@@ -194,24 +193,33 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "failed",
         "duration": <DURATION_MS>,
         "message": "Expected 1 but got 2",
+        "attachments": [
+          {
+            "name": "failure.log",
+            "contentType": "text/plain",
+            "path": "<ATTACHMENT_PATH>",
+            "extra": {
+              "description": "Failure diagnostics"
+            }
+          }
+        ],
         "extra": {
           "uid": "test-2"
         }
       },
       {
-        "name": "FlakyTest",
+        "name": "DuplicateUidFailure",
+        "status": "failed",
+        "duration": <DURATION_MS>,
+        "message": "Transient failure",
+        "extra": {
+          "uid": "test-3"
+        }
+      },
+      {
+        "name": "DuplicateUidPass",
         "status": "passed",
         "duration": <DURATION_MS>,
-        "retries": 1,
-        "retryAttempts": [
-          {
-            "attempt": 1,
-            "status": "failed",
-            "duration": <DURATION_MS>,
-            "message": "Transient failure"
-          }
-        ],
-        "flaky": true,
         "extra": {
           "uid": "test-3"
         }
@@ -245,6 +253,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         normalized = Regex.Replace(normalized, @"""machine"": ""[^""]*""", @"""machine"": ""<MACHINE>""");
         normalized = Regex.Replace(normalized, @"""exitCode"": -?\d+", @"""exitCode"": <EXIT_CODE>");
         normalized = Regex.Replace(normalized, @"""testApplication"": ""[^""]*""", @"""testApplication"": ""<TEST_APPLICATION_PATH>""");
+        normalized = Regex.Replace(normalized, @"""path"": ""[^""]*failure\.log""", @"""path"": ""<ATTACHMENT_PATH>""");
         return normalized;
     }
 
@@ -310,6 +319,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        string attachmentPath = Path.Combine(AppContext.BaseDirectory, "failure.log");
+        File.WriteAllText(attachmentPath, "Failure diagnostics");
+
         // 1) A plain passing test.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
             context.Request.Session.SessionUid,
@@ -328,18 +340,18 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             {
                 Uid = "test-2",
                 DisplayName = "FailingTest",
-                Properties = new PropertyBag(new FailedTestNodeStateProperty("Expected 1 but got 2")),
+                Properties = new PropertyBag(
+                    new FailedTestNodeStateProperty("Expected 1 but got 2"),
+                    new FileArtifactProperty(new FileInfo(attachmentPath), "failure.log", "Failure diagnostics")),
             }));
 
-        // 3) A flaky test: same Uid published twice — first failing, then passing.
-        //    The CTRF engine collapses these into a single test entry with retries=1,
-        //    retryAttempts[0].status=failed, and flaky=true on the final passing record.
+        // 3) Distinct executions with the same UID must remain separate results.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
             context.Request.Session.SessionUid,
             new TestNode()
             {
                 Uid = "test-3",
-                DisplayName = "FlakyTest",
+                DisplayName = "DuplicateUidFailure",
                 Properties = new PropertyBag(new FailedTestNodeStateProperty("Transient failure")),
             }));
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
@@ -347,7 +359,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             new TestNode()
             {
                 Uid = "test-3",
-                DisplayName = "FlakyTest",
+                DisplayName = "DuplicateUidPass",
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }));
 

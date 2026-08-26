@@ -143,6 +143,43 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public async Task TestResultCapture_CapturesAndSerializesFileArtifacts()
+    {
+        string screenshotPath = Path.Combine(Path.GetTempPath(), "screenshot.png");
+        string diagnosticsPath = Path.Combine(Path.GetTempPath(), "diagnostics.unknown");
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new FileArtifactProperty(new FileInfo(screenshotPath), "Screenshot", "Browser failure"));
+        bag.Add(new FileArtifactProperty(new FileInfo(diagnosticsPath), string.Empty));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.Attachments);
+        Assert.HasCount(2, result.Attachments);
+        CapturedAttachment screenshot = result.Attachments.Single(a => a.Name == "Screenshot");
+        CapturedAttachment diagnostics = result.Attachments.Single(a => a.Name == "diagnostics.unknown");
+        Assert.AreEqual("image/png", screenshot.ContentType);
+        Assert.AreEqual(new FileInfo(screenshotPath).FullName, screenshot.Path);
+        Assert.AreEqual("Browser failure", screenshot.Description);
+        Assert.AreEqual("application/octet-stream", diagnostics.ContentType);
+
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        await engine.GenerateReportAsync([result]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement attachments = document.RootElement.GetProperty("results").GetProperty("tests")[0].GetProperty("attachments");
+        Assert.AreEqual(2, attachments.GetArrayLength());
+        JsonElement screenshotJson = attachments.EnumerateArray().Single(a => a.GetProperty("name").GetString() == "Screenshot");
+        JsonElement diagnosticsJson = attachments.EnumerateArray().Single(a => a.GetProperty("name").GetString() == "diagnostics.unknown");
+        Assert.AreEqual("image/png", screenshotJson.GetProperty("contentType").GetString());
+        Assert.AreEqual(new FileInfo(screenshotPath).FullName, screenshotJson.GetProperty("path").GetString());
+        Assert.AreEqual("Browser failure", screenshotJson.GetProperty("extra").GetProperty("description").GetString());
+        Assert.AreEqual("application/octet-stream", diagnosticsJson.GetProperty("contentType").GetString());
+        Assert.IsFalse(diagnosticsJson.TryGetProperty("extra", out _));
+    }
+
+    [TestMethod]
     public void TestResultCapture_Returns_Null_For_NonTerminalStates()
     {
         TestNode discovered = new() { Uid = "a", DisplayName = "x", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) };
@@ -177,7 +214,7 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_CollapsesDuplicateUidsIntoRetryAttempts_AndFlagsFlaky()
+    public async Task GenerateReportAsync_PreservesDuplicateUidsAsDistinctResults()
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
@@ -195,54 +232,19 @@ public class CtrfReportEngineTests
         JsonElement results = document.RootElement.GetProperty("results");
         JsonElement testArray = results.GetProperty("tests");
 
-        // Duplicate-UID captures must collapse into a single CTRF test entry; the
-        // earlier attempts are recorded as nested retryAttempts[]. Top-level
-        // entries should therefore equal the number of unique UIDs.
-        Assert.AreEqual(2, testArray.GetArrayLength(), "Duplicate UIDs must collapse to one tests[] row.");
+        Assert.AreEqual(4, testArray.GetArrayLength(), "MTP permits distinct executions to share a UID.");
 
         JsonElement summary = results.GetProperty("summary");
-        Assert.AreEqual(2, summary.GetProperty("tests").GetInt32(), "summary.tests must count unique UIDs only.");
+        Assert.AreEqual(4, summary.GetProperty("tests").GetInt32());
         Assert.AreEqual(2, summary.GetProperty("passed").GetInt32());
-        Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
-        Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
-
-        JsonElement dupRow = default;
-        JsonElement soloRow = default;
-        foreach (JsonElement t in testArray.EnumerateArray())
-        {
-            if (t.GetProperty("name").GetString() == "Row C")
-            {
-                dupRow = t;
-            }
-            else if (t.GetProperty("name").GetString() == "Solo")
-            {
-                soloRow = t;
-            }
-        }
-
-        Assert.AreNotEqual(JsonValueKind.Undefined, dupRow.ValueKind, "Final attempt name must surface as the collapsed test name.");
-        Assert.AreEqual("passed", dupRow.GetProperty("status").GetString());
-        Assert.AreEqual(2, dupRow.GetProperty("retries").GetInt32(), "retries must equal the number of prior attempts.");
-        Assert.IsTrue(dupRow.GetProperty("flaky").GetBoolean(), "passed-after-failed runs must be marked flaky.");
-
-        JsonElement retryAttempts = dupRow.GetProperty("retryAttempts");
-        Assert.AreEqual(2, retryAttempts.GetArrayLength(), "retryAttempts must record every prior attempt.");
-
-        var attemptNumbers = new List<int>();
-        var attemptStatuses = new List<string>();
-        foreach (JsonElement a in retryAttempts.EnumerateArray())
-        {
-            attemptNumbers.Add(a.GetProperty("attempt").GetInt32());
-            attemptStatuses.Add(a.GetProperty("status").GetString()!);
-        }
-
-        Assert.AreSequenceEqual(new[] { 1, 2 }, attemptNumbers);
-        Assert.AreSequenceEqual(new[] { "failed", "failed" }, attemptStatuses);
-
-        // Single-attempt entries must not surface retry metadata.
-        Assert.IsFalse(soloRow.TryGetProperty("retries", out _));
-        Assert.IsFalse(soloRow.TryGetProperty("retryAttempts", out _));
-        Assert.IsFalse(soloRow.TryGetProperty("flaky", out _));
+        Assert.AreEqual(2, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
+        Assert.AreSequenceEqual(
+            new[] { "Row A", "Row B", "Row C", "Solo" },
+            testArray.EnumerateArray().Select(t => t.GetProperty("name").GetString()!).ToArray());
+        Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
+        Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
+        Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
     }
 
     [TestMethod]

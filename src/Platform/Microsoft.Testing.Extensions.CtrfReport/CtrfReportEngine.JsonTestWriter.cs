@@ -9,9 +9,8 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed partial class CtrfReportEngine
 {
-    private static void WriteTest(Utf8JsonWriter writer, CollapsedTestResult c)
+    private static void WriteTest(Utf8JsonWriter writer, CapturedTestResult r)
     {
-        CapturedTestResult r = c.Final;
         writer.WriteStartObject();
 
         // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID
@@ -75,29 +74,9 @@ internal sealed partial class CtrfReportEngine
             writer.WriteNumber("line", lineNumber);
         }
 
-        if (c.PriorAttempts.Count > 0)
-        {
-            // CTRF 9.20/9.21 as clarified by ctrf-io/ctrf#58: `retries` is the number of
-            // re-executions, which equals `retryAttempts.length` because the array holds
-            // attempts 1..N-1 only — so the final attempt's number is `retries + 1`.
-            writer.WriteNumber("retries", c.PriorAttempts.Count);
-            writer.WritePropertyName("retryAttempts");
-            writer.WriteStartArray();
-            for (int i = 0; i < c.PriorAttempts.Count; i++)
-            {
-                WriteRetryAttempt(writer, c.PriorAttempts[i], attemptNumber: i + 1);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        if (c.IsFlaky)
-        {
-            writer.WriteBoolean("flaky", true);
-        }
-
         WriteOutputLines(writer, "stdout", r.StandardOutput);
         WriteOutputLines(writer, "stderr", r.StandardError);
+        WriteAttachments(writer, r.Attachments);
 
         // CTRF spec 9.14 (`tags`): top-level string array on the Test object used
         // for keyless classification. We promote MSTest `[TestCategory("…")]` trait
@@ -217,57 +196,76 @@ internal sealed partial class CtrfReportEngine
         return false;
     }
 
-    private static void WriteRetryAttempt(Utf8JsonWriter writer, CapturedTestResult attempt, int attemptNumber)
+    private static void WriteAttachments(Utf8JsonWriter writer, IReadOnlyList<CapturedAttachment>? attachments)
     {
-        writer.WriteStartObject();
-        writer.WriteNumber("attempt", attemptNumber);
-        writer.WriteString("status", attempt.Status);
-        writer.WriteNumber("duration", (long)Math.Max(0, attempt.Duration.TotalMilliseconds));
-        if (attempt.StartTime is { } start)
+        if (attachments is not { Count: > 0 })
         {
-            writer.WriteNumber("start", start.ToUnixTimeMilliseconds());
+            return;
         }
 
-        if (attempt.EndTime is { } end)
+        writer.WritePropertyName("attachments");
+        writer.WriteStartArray();
+        foreach (CapturedAttachment attachment in attachments)
         {
-            writer.WriteNumber("stop", end.ToUnixTimeMilliseconds());
-        }
-
-        if (attempt.ErrorMessage is not null)
-        {
-            writer.WriteString("message", attempt.ErrorMessage);
-        }
-
-        if (attempt.StackTrace is not null)
-        {
-            writer.WriteString("trace", attempt.StackTrace);
-        }
-
-        if (attempt.Line is { } line)
-        {
-            writer.WriteNumber("line", line);
-        }
-
-        WriteOutputLines(writer, "stdout", attempt.StandardOutput);
-        WriteOutputLines(writer, "stderr", attempt.StandardError);
-
-        if (attempt.RawStatus is not null || attempt.ExceptionType is not null)
-        {
-            writer.WritePropertyName("extra");
             writer.WriteStartObject();
-            if (attempt.RawStatus is not null)
+            writer.WriteString("name", attachment.Name);
+            writer.WriteString("contentType", attachment.ContentType);
+            writer.WriteString("path", attachment.Path);
+            if (attachment.Description is not null)
             {
-                writer.WriteString("rawStatus", attempt.RawStatus);
-            }
-
-            if (attempt.ExceptionType is not null)
-            {
-                writer.WriteString("exceptionType", attempt.ExceptionType);
+                writer.WritePropertyName("extra");
+                writer.WriteStartObject();
+                writer.WriteString("description", attachment.Description);
+                writer.WriteEndObject();
             }
 
             writer.WriteEndObject();
         }
 
-        writer.WriteEndObject();
+        writer.WriteEndArray();
+    }
+
+    // CTRF `stdout`/`stderr` are typed as an array of lines (each item is one line
+    // of captured output). Splitting on LF (handling optional CR) preserves the
+    // original line structure for consumers that present output per-line.
+    private static void WriteOutputLines(Utf8JsonWriter writer, string propertyName, string? output)
+    {
+        if (output is null)
+        {
+            return;
+        }
+
+        writer.WritePropertyName(propertyName);
+        writer.WriteStartArray();
+        int start = 0;
+        for (int i = 0; i < output.Length; i++)
+        {
+            if (output[i] == '\n')
+            {
+                int end = i;
+                if (end > start && output[end - 1] == '\r')
+                {
+                    end--;
+                }
+
+                writer.WriteStringValue(output.AsSpan(start, end - start));
+                start = i + 1;
+            }
+        }
+
+        if (start < output.Length)
+        {
+            // Emit the trailing segment after the last LF (no trailing entry when
+            // the input ends with LF — a trailing newline isn't an additional line).
+            int end = output.Length;
+            if (end > start && output[end - 1] == '\r')
+            {
+                end--;
+            }
+
+            writer.WriteStringValue(output.AsSpan(start, end - start));
+        }
+
+        writer.WriteEndArray();
     }
 }

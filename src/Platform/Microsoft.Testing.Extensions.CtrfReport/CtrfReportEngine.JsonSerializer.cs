@@ -12,34 +12,20 @@ internal sealed partial class CtrfReportEngine
 {
     private byte[] BuildCtrfJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        // Collapse multiple captures sharing the same UID into a single CTRF test
-        // entry. The CTRF spec models retries as nested `retryAttempts[]` records
-        // and exposes `flaky: true` on the final passing row; emitting separate
-        // top-level rows for retries would inflate `summary.tests` and double-count
-        // outcomes.
-        List<CollapsedTestResult> collapsed = CollapseAttempts(results);
-
-        // Aggregate summary counts from the collapsed (final) outcomes only.
         int passed = 0;
         int failed = 0;
         int skipped = 0;
         int pending = 0;
         int other = 0;
-        int flaky = 0;
-        foreach (CollapsedTestResult c in collapsed)
+        foreach (CapturedTestResult result in results)
         {
-            switch (c.Final.Status)
+            switch (result.Status)
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
                 case "skipped": skipped++; break;
                 case "pending": pending++; break;
                 default: other++; break;
-            }
-
-            if (c.IsFlaky)
-            {
-                flaky++;
             }
         }
 
@@ -106,13 +92,16 @@ internal sealed partial class CtrfReportEngine
             // results.summary
             writer.WritePropertyName("summary");
             writer.WriteStartObject();
-            writer.WriteNumber("tests", collapsed.Count);
+            writer.WriteNumber("tests", results.Length);
             writer.WriteNumber("passed", passed);
             writer.WriteNumber("failed", failed);
             writer.WriteNumber("skipped", skipped);
             writer.WriteNumber("pending", pending);
             writer.WriteNumber("other", other);
-            writer.WriteNumber("flaky", flaky);
+            // MTP UIDs are not unique per execution, so they cannot establish retry
+            // relationships. Keep flaky at zero until explicit attempt correlation is
+            // available rather than dropping duplicate-UID results or inventing retries.
+            writer.WriteNumber("flaky", 0);
             writer.WriteNumber("start", startMs);
             writer.WriteNumber("stop", stopMs);
             writer.WriteNumber("duration", durationMs);
@@ -145,9 +134,9 @@ internal sealed partial class CtrfReportEngine
             writer.WritePropertyName("tests");
             writer.WriteStartArray();
 
-            foreach (CollapsedTestResult c in collapsed)
+            foreach (CapturedTestResult result in results)
             {
-                WriteTest(writer, c);
+                WriteTest(writer, result);
             }
 
             writer.WriteEndArray();
