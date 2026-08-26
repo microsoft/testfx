@@ -48,7 +48,7 @@ See `docs/RFCs/011-Soft-Assertions-Nullability-Design.md` for the nullability-an
 
 ### AzureDevOpsReport
 
-An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting. Its optional Extensions-tab Markdown summary is aggregated across modules through artifact post-processing when the SDK advertises the required capability; live publishing to the Azure DevOps Tests tab remains a separate path. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>`; the extension is enabled automatically by the `AllMicrosoft` profile. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode.
+An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting. Its optional Extensions-tab Markdown summary is aggregated across modules through artifact post-processing when the SDK advertises the required capability; live publishing to the Azure DevOps Tests tab remains a separate path. When using [MSTest.Sdk](#mstestsdk), the extension is included automatically by the `Default` and `AllMicrosoft` profiles; pass `--report-azdo` to activate it on Azure DevOps, or set `<EnableMicrosoftTestingExtensionsAzureDevOpsReport>false</EnableMicrosoftTestingExtensionsAzureDevOpsReport>` to remove it. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode.
 
 ### Aspire testing
 
@@ -302,8 +302,8 @@ In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework`
 
 | Value | Extensions enabled automatically |
 | --- | --- |
-| `Default` (default) | TrxReport, CodeCoverage, and GitHubActionsReport |
-| `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, HtmlReport, and Fakes |
+| `Default` (default) | TrxReport, CodeCoverage, AzureDevOpsReport, and GitHubActionsReport |
+| `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, HtmlReport, and Fakes |
 | `None` | No extensions |
 
 Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for a packaged WinUI test application because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
@@ -316,7 +316,7 @@ Set an individual `Enable*` property to `false` to remove an extension supplied 
 | `EnableMicrosoftTestingExtensionsHangDump` | Off | On | Off | Not added; emits warning if enabled | Build error |
 | `EnableMicrosoftTestingExtensionsHotReload` | Off | On | Off | Not added; emits warning if enabled | Build error |
 | `EnableMicrosoftTestingExtensionsRetry` | Off | On | Off | Not added; emits warning if enabled | Build error |
-| `EnableMicrosoftTestingExtensionsAzureDevOpsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsAzureDevOpsReport` | On | On | Off | Not added; emits unsupported warning | Build error |
 | `EnableMicrosoftTestingExtensionsGitHubActionsReport` | On | On | Off | Not added; emits unsupported warning | Build error |
 | `EnableMicrosoftTestingExtensionsHtmlReport` | Off | On | Off | Not available | Build error |
 | `EnableMicrosoftTestingExtensionsFakes` | Off | On | Off | Not available | Not added |

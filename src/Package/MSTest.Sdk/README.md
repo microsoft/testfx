@@ -28,8 +28,8 @@ Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through t
 
 | `TestingExtensionsProfile` | Included extensions |
 | --- | --- |
-| `Default` | TrxReport, CodeCoverage, and GitHubActionsReport |
-| `AllMicrosoft` | `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, HtmlReport, and Fakes |
+| `Default` | TrxReport, CodeCoverage, AzureDevOpsReport, and GitHubActionsReport |
+| `AllMicrosoft` | `Default`, plus CrashDump, HangDump, HotReload, Retry, HtmlReport, and Fakes |
 | `None` | No extensions |
 
 Individual extensions can be enabled or disabled with their `Enable*` MSBuild properties. See the [complete MSTest.Sdk property reference](https://github.com/microsoft/testfx/blob/main/docs/glossary.md#mstestsdk) for profiles, runner compatibility, test-library usage, NativeAOT restrictions, and advanced version controls.

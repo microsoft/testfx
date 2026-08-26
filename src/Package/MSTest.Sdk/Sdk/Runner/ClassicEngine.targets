@@ -35,6 +35,7 @@
     <MicrosoftTestingExtensionsHangDumpVersion Condition=" '$(MicrosoftTestingExtensionsHangDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHangDumpVersion>
 
     <!-- AzDO -->
+    <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'Default' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
