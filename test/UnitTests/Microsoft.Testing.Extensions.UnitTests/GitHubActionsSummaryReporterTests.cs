@@ -393,8 +393,13 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("<details>\n<summary><code>CalcTests.Boom</code> — 2.40s</summary>", markdown);
         Assert.Contains("**Exception:** `System.Exception`", markdown);
         Assert.Contains("**Location:** `src/Calc.cs:42`", markdown);
-        Assert.Contains("Expected: 42", markdown);
-        Assert.Contains("at Calc.Add() in Calc.cs:line 42", markdown);
+
+        // Assert the whole fenced block, not the message and stack trace separately: they have to land inside one
+        // code block. Rendered outside it, an assertion diff's leading spaces and angle brackets would be eaten as
+        // markdown, and a stack frame would fold onto the line above.
+        Assert.Contains(
+            "```text\nExpected: 42\nActual:   41\n\n   at Calc.Add() in Calc.cs:line 42\n```",
+            markdown);
         Assert.Contains("</details>", markdown);
     }
 
