@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -108,7 +110,7 @@ public class UnitTest1
 public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfReportRetryAttributeTests.TestAssetFixture>
 {
     [TestMethod]
-    public async Task CtrfReport_WithMSTestRetryAttribute_MarksRetriedTestAsFlaky()
+    public async Task CtrfReport_WithMSTestRetryAttribute_PreservesEachAttempt()
     {
         string fileName = Guid.NewGuid().ToString("N") + ".ctrf.json";
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
@@ -122,17 +124,23 @@ public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfRepor
         string ctrfFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
         string ctrfContent = File.ReadAllText(ctrfFile);
 
-        // One logical test, collapsed from its two attempts, counted once and reported as flaky.
-        Assert.Contains(@"""tests"": 1", ctrfContent, ctrfContent);
-        Assert.Contains(@"""passed"": 1", ctrfContent, ctrfContent);
-        Assert.Contains(@"""failed"": 0", ctrfContent, ctrfContent);
-        Assert.Contains(@"""flaky"": 1", ctrfContent, ctrfContent);
+        using var document = JsonDocument.Parse(ctrfContent);
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(2, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
 
-        // The per-test entry carries the earlier failed attempt.
-        Assert.Contains(@"""retries"": 1", ctrfContent, ctrfContent);
-        Assert.Contains(@"""retryAttempts""", ctrfContent, ctrfContent);
-        Assert.Contains(@"""flaky"": true", ctrfContent, ctrfContent);
-        Assert.Contains("Failing on the first attempt", ctrfContent, ctrfContent);
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(2, tests);
+        Assert.AreSequenceEqual(
+            ["failed", "passed"],
+            tests.Select(test => test.GetProperty("status").GetString()!).ToArray());
+        Assert.Contains("Failing on the first attempt", tests[0].GetProperty("message").GetString()!);
+        Assert.DoesNotContain(test => test.TryGetProperty("retries", out _), tests);
+        Assert.DoesNotContain(test => test.TryGetProperty("retryAttempts", out _), tests);
+        Assert.DoesNotContain(test => test.TryGetProperty("flaky", out _), tests);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
