@@ -117,7 +117,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.11" />
     <!-- Third-party (community) package that brings xUnit.Combinatorial-style [CombinatorialData] support to
          MSTest. Used by the acceptance tests to replace bespoke build-matrix DynamicData helpers. -->
     <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
