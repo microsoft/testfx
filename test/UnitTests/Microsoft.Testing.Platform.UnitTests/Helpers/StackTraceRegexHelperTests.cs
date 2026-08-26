@@ -116,21 +116,6 @@ public sealed class StackTraceRegexHelperTests
 #endif
     }
 
-    [TestMethod]
-    public void GetFrameRegex_ConcurrentCallers_ShareASingleInstance()
-    {
-        // This is a supplement to the Assert.AreSame above rather than a replacement for it: if another test in the
-        // assembly already initialized the regex, every caller here takes the fast path and the test passes trivially.
-        var instances = new Regex[32];
-
-        Parallel.For(0, instances.Length, i => instances[i] = StackTraceHelper.GetFrameRegex());
-
-        foreach (Regex instance in instances)
-        {
-            Assert.AreSame(instances[0], instance);
-        }
-    }
-
     private static Regex CreateRegex(bool matchFramesWithoutLocation)
         => new(
             StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation),

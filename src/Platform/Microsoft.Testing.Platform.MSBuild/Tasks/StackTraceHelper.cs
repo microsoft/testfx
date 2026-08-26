@@ -79,21 +79,11 @@ internal static class StackTraceHelper
     }
 
     private static Regex GetOrCreateRegex()
-    {
-        Regex? regex = Volatile.Read(ref s_regex);
-        if (regex is not null)
-        {
-            return regex;
-        }
-
-        // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
-        regex = new Regex(
-            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
-            RegexOptions.Compiled,
-            StackTraceRegexHelper.MatchTimeout);
-
-        // Racing callers on first use may each build an instance. Publish the first one and return it to all of them,
-        // so every caller observes the same object, and once it is published no caller builds the regex again.
-        return Interlocked.CompareExchange(ref s_regex, regex, null) ?? regex;
-    }
+        => LazyInitializer.EnsureInitialized(
+            ref s_regex,
+            // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
+            static () => new Regex(
+                StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
+                RegexOptions.Compiled,
+                StackTraceRegexHelper.MatchTimeout))!;
 }
