@@ -130,6 +130,18 @@ internal static class AcceptanceAssert
     public static void AssertOutputMatchesRegex(this DotnetMuxerResult dotnetMuxerResult, [StringSyntax("Regex")] string pattern, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsTrue(Regex.IsMatch(dotnetMuxerResult.StandardOutput, pattern), GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
+    /// <summary>
+    /// Ensure the output contains exactly <paramref name="expectedMatchCount"/> matches of <paramref name="pattern"/>.
+    /// </summary>
+    /// <remarks>
+    /// Use this when several test hosts write to the same output concurrently. Their writes interleave, so a given
+    /// occurrence cannot be tied to the host that produced it, and a regex spanning two of a host's writes matches
+    /// whatever happened to be written in between. Counting occurrences still verifies that every host reported the
+    /// expected result, without depending on where the line breaks fall.
+    /// </remarks>
+    public static void AssertOutputMatchesRegexTimes(this DotnetMuxerResult dotnetMuxerResult, [StringSyntax("Regex")] string pattern, int expectedMatchCount, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => Assert.HasCount(expectedMatchCount, Regex.Matches(dotnetMuxerResult.StandardOutput, pattern), GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
+
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsFalse(testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
