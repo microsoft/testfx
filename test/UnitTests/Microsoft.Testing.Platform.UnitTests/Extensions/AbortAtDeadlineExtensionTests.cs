@@ -177,6 +177,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
 
         Task completed = await Task.WhenAny(triggered.Task, Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken));
         Assert.AreNotSame(triggered.Task, completed, "The deadline fired even though the shared policy state reported completed execution.");
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Never);
         _capability.Verify(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -232,7 +233,8 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             deadlineIn: TimeSpan.FromMinutes(1),
             onDisplayData: displayedData.Add,
             stopMargin: "10",
-            dumpMargin: "30");
+            dumpMargin: "30",
+            isHangDumpEnabled: true);
 
         Assert.IsTrue(await extension.IsEnabledAsync());
         Assert.HasCount(1, displayedData);
@@ -250,6 +252,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             onDisplayData: displayedData.Add,
             stopMargin: "10",
             dumpMargin: "30",
+            isHangDumpEnabled: true,
             throwOnSynchronousLog: true);
 
         Assert.IsTrue(await extension.IsEnabledAsync());
@@ -257,6 +260,20 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         WarningMessageOutputDeviceData warning = Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(displayedData[0]);
         Assert.Contains("00:00:30", warning.Message);
         Assert.Contains("00:00:10", warning.Message);
+    }
+
+    [TestMethod]
+    public async Task InvertedMarginsWithoutHangDumpDoNotWarn()
+    {
+        List<IOutputDeviceData> displayedData = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.FromMinutes(1),
+            onDisplayData: displayedData.Add,
+            stopMargin: "10",
+            dumpMargin: "30");
+
+        Assert.IsTrue(await extension.IsEnabledAsync());
+        Assert.IsEmpty(displayedData);
     }
 
     [TestMethod]
@@ -453,6 +470,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         string stopMargin = "0",
         string? dumpMargin = null,
         bool hasCapability = true,
+        bool isHangDumpEnabled = false,
         bool throwOnSynchronousLog = false)
     {
         Mock<IEnvironment> environment = new();
@@ -509,7 +527,8 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             cancellationTokenSource.Object,
             outputDevice.Object,
             loggerFactory.Object,
-            reportTimeout);
+            reportTimeout,
+            isHangDumpEnabled);
     }
 }
 

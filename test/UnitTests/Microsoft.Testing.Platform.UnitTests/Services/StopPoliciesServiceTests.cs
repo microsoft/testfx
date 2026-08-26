@@ -60,6 +60,8 @@ public sealed class StopPoliciesServiceTests : IDisposable
         StopPoliciesService service = new(_cancellationTokenSource.Object);
         service.NotifyTestExecutionCompleted();
 
+        Assert.IsTrue(service.IsTestExecutionCompleted);
+
         service.NotifyTestExecutionStarting();
 
         Assert.IsFalse(service.IsTestExecutionCompleted);
@@ -141,6 +143,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
         await service.ExecuteDeadlineCallbacksAsync();
 
         Assert.AreEqual(1, invocationCount);
+        Assert.IsTrue(service.IsDeadlineTriggered);
     }
 
     [TestMethod]

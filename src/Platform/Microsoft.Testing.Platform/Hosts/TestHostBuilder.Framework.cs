@@ -16,6 +16,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class TestHostBuilder
 {
+    private const string HangDumpOptionName = "hangdump";
+
     private static async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
     {
         if (!testFrameworkBuilderData.IsForDiscoveryRequest)
@@ -158,7 +160,8 @@ internal sealed partial class TestHostBuilder
                 serviceProvider.GetRequiredService<IStopPoliciesService>(),
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
                 serviceProvider.GetOutputDevice(),
-                serviceProvider.GetLoggerFactory());
+                serviceProvider.GetLoggerFactory(),
+                isHangDumpEnabled: serviceProvider.GetCommandLineOptions().IsOptionSet(HangDumpOptionName));
 
             if (await abortAtDeadlineExtension.IsEnabledAsync().ConfigureAwait(false))
             {

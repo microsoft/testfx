@@ -97,7 +97,8 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         ITestApplicationCancellationTokenSource cancellationTokenSource,
         IOutputDevice outputDevice,
         ILoggerFactory loggerFactory,
-        TimeSpan? reportTimeout = null)
+        TimeSpan? reportTimeout = null,
+        bool isHangDumpEnabled = false)
     {
         _capability = capability;
         _policiesService = policiesService;
@@ -128,7 +129,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         TimeSpan stopMargin = DeadlineHelper.GetStopMargin(environment);
         TimeSpan dumpMargin = DeadlineHelper.GetDumpMargin(environment);
         DateTimeOffset stopAt = DeadlineHelper.SubtractSaturating(deadline, stopMargin);
-        bool areMarginsInverted = dumpMargin >= stopMargin;
+        bool areMarginsInverted = isHangDumpEnabled && dumpMargin >= stopMargin;
         if (areMarginsInverted)
         {
             _startupWarnings.Add(string.Format(
@@ -138,8 +139,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
                 stopMargin));
         }
 
-        // A deadline given without an offset is parsed as UTC (AssumeUniversal), which is easy to get
-        // wrong. Log the resolved instants and margins so a misconfigured offset is visible.
+        // Log the resolved instants and margins so any misconfiguration is visible.
         TryLog(() =>
         {
             _logger.LogInformation($"Deadline-aware cancellation: deadline={deadline:o}, stopMargin={stopMargin}, dumpMargin={dumpMargin}, graceful stop scheduled at {stopAt:o} (UTC).");

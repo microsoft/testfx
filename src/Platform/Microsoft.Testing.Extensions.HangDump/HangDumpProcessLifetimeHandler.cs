@@ -482,7 +482,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             }
         }
 
-        ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
+        ITestHostProcessInformation testHostProcessInformation =
+            _testHostProcessInformation ?? throw ApplicationStateGuard.Unreachable();
 
         string dumpReason = triggeredByDeadline
             ? $"CI deadline approaching (dump scheduled at {_deadlineDumpAt:o})"
@@ -503,7 +504,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 cancellationToken),
             BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
-        using IProcess? process = TryGetProcessById(_processHandler, _testHostProcessInformation.PID);
+        using IProcess? process = TryGetProcessById(_processHandler, testHostProcessInformation.PID);
         if (process is null)
         {
             await RunBestEffortDiagnosticAsync(
@@ -791,7 +792,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task TakeDumpAsync(IProcess process, (string, int)[] inProgressTests, CancellationToken cancellationToken)
     {
-        ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
+        ITestHostProcessInformation testHostProcessInformation =
+            _testHostProcessInformation ?? throw ApplicationStateGuard.Unreachable();
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         string processId = process.Id.ToString(CultureInfo.InvariantCulture);
@@ -801,7 +803,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _dumpFileNamePattern,
             process.Name,
             process.Id,
-            _testHostProcessInformation.PID);
+            testHostProcessInformation.PID);
 
         // First resolve {placeholder} templates, then handle legacy %p pattern for backward compatibility.
         string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
