@@ -41,6 +41,7 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
         }
         finally
         {
+            capability.NotifyTestExecutionCompleted();
             PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
         }
     }
