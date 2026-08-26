@@ -726,7 +726,7 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
 
 ### Wave 2: Validate
 
-3. For each non-LGTM finding, launch a validation agent that **proves or disproves it** using:
+3. Launch a validation agent for each non-LGTM finding **and for every Dependency Upgrade Assessment, including assessments whose dimension result is `LGTM`**. The validation agent proves or disproves findings and independently verifies the assessment using:
 
    - **Code flow tracing**: Read full source from the PR branch (`github-mcp-server-get_file_contents` with `ref: "refs/pull/{pr}/head"`). Trace callers, callees, locks, thread boundaries.
    - **Thread timeline**: For concurrency issues, write the interleaving step-by-step:
@@ -743,6 +743,13 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
    VERDICT: CONFIRMED | DISPUTED
    EVIDENCE: <code trace, test, or timeline>
    TEST_SNIPPET: <proof-of-concept code, if applicable>
+   ```
+
+   Output per Dependency Upgrade Assessment:
+   ```
+   ASSESSMENT_VERDICT: VALIDATED | CORRECTED | INSUFFICIENT_EVIDENCE
+   EVIDENCE: <authoritative metadata and release-note checks>
+   CORRECTIONS: <corrected claims or "none">
    ```
 
    Confirm only with concrete evidence. Dispute if a lock, blocking call, or control flow prevents the scenario. **Never validate against `main`.**
