@@ -23,7 +23,7 @@ The caller (typically `build-failure-analysis.md` or `build-failure-analysis-com
 
 | Variable                  | Meaning |
 | ------------------------- | ------- |
-| `GH_AW_BINLOG_LIST`       | Newline-separated list of in-container binlog paths — one per failed-build leg. The fetch step stages them under `/data/binlogs` with a unique numeric prefix per artifact/file (e.g. `/data/binlogs/1_0_Logs_Build_Linux_Debug.binlog`), so match on the `.binlog` suffix rather than an exact leg name. Pass each as `binlog_file` on the `binlog_*` MCP tools. |
+| `GH_AW_BINLOG_LIST`       | Newline-separated list of in-container binlog paths — one per failed-build leg. The fetch step stages them under `/data/binlogs` with a unique numeric prefix per artifact/file (e.g. `/data/binlogs/1_0_Logs_Build_Linux_Release.binlog`), so match on the `.binlog` suffix rather than an exact leg name. Pass each as `binlog_file` on the `binlog_*` MCP tools. |
 | `GH_AW_BINLOG_DIR`        | Directory the binlogs are mounted under (`/data/binlogs`); enumerate `*.binlog` here if `GH_AW_BINLOG_LIST` is unavailable. |
 | `GH_AW_BINLOG_PATH`       | The first entry of `GH_AW_BINLOG_LIST` — a single-path convenience for prompts/tools that expect one. Empty when no binlog was retrieved. |
 | `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
