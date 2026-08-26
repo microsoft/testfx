@@ -10,7 +10,11 @@ internal static class TelemetryProperties
     public const string ReporterIdPropertyName = "reporter id";
     public const string IsCIPropertyName = "is ci";
 
-    public const string VersionValue = "20";
+    // Bump this whenever the telemetry schema changes so dashboards can branch old vs new.
+    // 21: Microsoft.ApplicationInsights 3.x (OpenTelemetry shim) removed TrackEvent's metrics
+    //     parameter, so numeric measurements are now folded into event properties
+    //     (customDimensions) instead of customMeasurements. See #7465.
+    public const string VersionValue = "21";
 
     public const string True = "true";
     public const string False = "false";
