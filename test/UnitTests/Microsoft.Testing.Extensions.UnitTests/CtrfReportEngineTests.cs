@@ -28,6 +28,12 @@ public class CtrfReportEngineTests
     private static readonly int MaxStandardStreamLength =
         (int)CaptureHelperType.GetField(nameof(MaxStandardStreamLength), BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
 
+    private static readonly int MaxIdentityFieldLength =
+        (int)CaptureHelperType.GetField(nameof(MaxIdentityFieldLength), BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
+
+    private static readonly int MaxMessageLength =
+        (int)CaptureHelperType.GetField(nameof(MaxMessageLength), BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -185,20 +191,79 @@ public class CtrfReportEngineTests
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new FileArtifactProperty(new FileInfo("valid.log"), "Valid"));
         bag.Add(new FileArtifactProperty(new FileInfo("invalid.log"), "Invalid"));
-        MethodInfo captureAttachments = typeof(TestResultCapture).GetMethod(
-            "CaptureAttachments",
-            BindingFlags.NonPublic | BindingFlags.Static)!;
         Func<FileInfo, string> resolveFullPath = fileInfo
             => fileInfo.Name == "invalid.log"
                 ? throw new IOException("Invalid path")
                 : fileInfo.FullName;
 
-        var attachments = (IReadOnlyList<CapturedAttachment>?)captureAttachments.Invoke(null, [bag, resolveFullPath]);
+        IReadOnlyList<CapturedAttachment>? attachments = CaptureAttachmentsForTest(bag, resolveFullPath);
 
         Assert.IsNotNull(attachments);
         Assert.HasCount(1, attachments);
         Assert.AreEqual("Valid", attachments[0].Name);
         Assert.EndsWith("valid.log", attachments[0].Path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_TruncatesAttachmentFieldsWithoutSplittingSurrogatePairs()
+    {
+        string name = new string('n', MaxIdentityFieldLength - 1) + "\U0001F642-name";
+        string path = new string('p', MaxIdentityFieldLength - 1) + "\U0001F642-path.json";
+        string description = new string('d', MaxMessageLength - 1) + "\U0001F642-description";
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new FileArtifactProperty(new FileInfo("artifact.json"), name, description));
+
+        IReadOnlyList<CapturedAttachment>? attachments = CaptureAttachmentsForTest(bag, _ => path);
+
+        Assert.IsNotNull(attachments);
+        Assert.HasCount(1, attachments);
+        AssertTruncated(attachments[0].Name, MaxIdentityFieldLength - 1);
+        AssertTruncated(attachments[0].Path, MaxIdentityFieldLength - 1);
+        Assert.IsNotNull(attachments[0].Description);
+        AssertTruncated(attachments[0].Description!, MaxMessageLength - 1);
+
+        static void AssertTruncated(string value, int expectedPrefixLength)
+        {
+            Assert.AreEqual(expectedPrefixLength, value.IndexOf('\n'));
+            Assert.DoesNotContain(char.IsSurrogate, value);
+            Assert.DoesNotContain("\uFFFD", value);
+            Assert.Contains("[truncated, original length:", value);
+        }
+    }
+
+    [DataRow("artifact.BMP", "image/bmp")]
+    [DataRow("artifact.csv", "text/csv")]
+    [DataRow("artifact.gif", "image/gif")]
+    [DataRow("artifact.htm", "text/html")]
+    [DataRow("artifact.HTML", "text/html")]
+    [DataRow("artifact.jpeg", "image/jpeg")]
+    [DataRow("artifact.jpg", "image/jpeg")]
+    [DataRow("artifact.json", "application/json")]
+    [DataRow("artifact.log", "text/plain")]
+    [DataRow("artifact.txt", "text/plain")]
+    [DataRow("artifact.pdf", "application/pdf")]
+    [DataRow("artifact.png", "image/png")]
+    [DataRow("artifact.svg", "image/svg+xml")]
+    [DataRow("artifact.tif", "image/tiff")]
+    [DataRow("artifact.tiff", "image/tiff")]
+    [DataRow("artifact.webp", "image/webp")]
+    [DataRow("artifact.xml", "application/xml")]
+    [DataRow("artifact.zip", "application/zip")]
+    [DataRow("artifact.unknown", "application/octet-stream")]
+    [TestMethod]
+    public void TestResultCapture_MapsAttachmentExtensionToContentType(string fileName, string expectedContentType)
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new FileArtifactProperty(new FileInfo(fileName), "Artifact"));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.Attachments);
+        Assert.HasCount(1, result.Attachments);
+        Assert.AreEqual(expectedContentType, result.Attachments[0].ContentType);
     }
 
     [TestMethod]
@@ -614,6 +679,17 @@ public class CtrfReportEngineTests
             RawStatus = rawStatus,
             Duration = TimeSpan.Zero,
         };
+
+    private static IReadOnlyList<CapturedAttachment>? CaptureAttachmentsForTest(
+        PropertyBag properties,
+        Func<FileInfo, string>? resolveFullPath = null)
+    {
+        MethodInfo captureAttachments = typeof(TestResultCapture).GetMethod(
+            "CaptureAttachments",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+        resolveFullPath ??= static fileInfo => fileInfo.FullName;
+        return (IReadOnlyList<CapturedAttachment>?)captureAttachments.Invoke(null, [properties, resolveFullPath]);
+    }
 
     [TestMethod]
     public async Task GenerateReportAsync_Environment_HasSchemaCompliantShape()
