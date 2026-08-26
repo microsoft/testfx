@@ -60,11 +60,13 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
             discoveryCapability.NotifyTestExecutionPending();
 
             PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
-            (await runCapability.TryStopTestExecutionAsync(CancellationToken.None)).Should().BeFalse();
+            discoveryCapability.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
         }
         finally
         {
             runCapability.NotifyTestExecutionCompleted();
+            discoveryCapability.NotifyTestExecutionCompleted();
             PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
         }
     }
