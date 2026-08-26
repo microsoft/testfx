@@ -84,7 +84,7 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej),
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs.</source>
-        <target state="new">Generate a dump file if the test process hangs.</target>
+        <target state="translated">Wygeneruj plik zrzutu, jeśli proces testowy zawiesza się.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">

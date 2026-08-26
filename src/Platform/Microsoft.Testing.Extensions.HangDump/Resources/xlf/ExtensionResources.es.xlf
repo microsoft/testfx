@@ -84,7 +84,7 @@ Admite los siguientes marcadores de posición: {pname} (nombre de la aplicación
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs.</source>
-        <target state="new">Generate a dump file if the test process hangs.</target>
+        <target state="translated">Genere un archivo de volcado si el proceso de prueba se bloquea.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
