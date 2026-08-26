@@ -72,8 +72,10 @@ public sealed class GitHubActionsSummaryReporterTests
             };
             GitHubCiRunSummaryModule first = CreateRetryModule("session-1", attempt: 1, passed: 2, failed: 1);
             first.Failures = [flakyTest];
+            first.TestDurationTicks = TimeSpan.FromMilliseconds(100).Ticks;
             GitHubCiRunSummaryModule retry = CreateRetryModule("session-2", attempt: 2, passed: 1, failed: 0);
             retry.FlakyTests = [flakyTest];
+            retry.TestDurationTicks = TimeSpan.FromMilliseconds(200).Ticks;
             string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
                 directory,
                 GitHubSummaryPostProcessor.Provider,
@@ -122,9 +124,48 @@ public sealed class GitHubActionsSummaryReporterTests
             Assert.AreEqual(3, aggregate.PassedTests);
             Assert.AreEqual(0, aggregate.FailedTests);
             Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
+            Assert.AreEqual(TimeSpan.FromMilliseconds(300).Ticks, aggregate.Modules.Single().TestDurationTicks);
             string summary = File.ReadAllText(stepSummaryPath);
             Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
             Assert.Contains("### ⚠️ Flaky tests (1)", summary, summary);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task SummaryPostProcessor_ForRetryAttemptsWithoutAuthoritativeSummary_FailsClosed()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-unknown-retry-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule module = CreateRetryModule("session-1", attempt: 1, passed: 1, failed: 1);
+            string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            GitHubSummaryPostProcessor processor = new(
+                new TestCommandLineOptions([]),
+                environment.Object,
+                new SystemFileSystem());
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
+                directory,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsFalse(File.Exists(stepSummaryPath));
         }
         finally
         {
@@ -161,7 +202,15 @@ public sealed class GitHubActionsSummaryReporterTests
                 directory,
                 new ArtifactPostProcessingContext(
                     ArtifactPostProcessingTruncationReason.None,
-                    ArtifactPostProcessingMode.RetryAttempts),
+                    ArtifactPostProcessingMode.RetryAttempts,
+                    new ArtifactPostProcessingRunSummary(
+                        totalTests: 1,
+                        passedTests: 1,
+                        failedTests: 0,
+                        skippedTests: 0,
+                        duration: TimeSpan.FromSeconds(1),
+                        exitCode: 0,
+                        testModuleCount: 1)),
                 CancellationToken.None);
 
             Assert.IsNotNull(output);

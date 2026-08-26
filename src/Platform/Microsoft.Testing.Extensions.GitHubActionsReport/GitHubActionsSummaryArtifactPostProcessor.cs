@@ -60,6 +60,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (context.Mode == ArtifactPostProcessingMode.RetryAttempts && context.RunSummary is null)
+        {
+            // Retry inputs overlap, so summing their per-attempt fragments would publish plausible but incorrect
+            // logical totals. Leave the artifacts untouched when the orchestrator cannot supply an authoritative
+            // passed/failed/skipped split.
+            return null;
+        }
+
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
         string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
@@ -134,8 +142,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             PassedTests = aggregate.PassedTests,
             FailedTests = aggregate.FailedTests,
             SkippedTests = aggregate.SkippedTests,
-            TestDurationTicks = aggregate.Duration?.Ticks
-                ?? aggregate.Modules.Sum(static module => module.TestDurationTicks),
+            TestDurationTicks = aggregate.Modules.Sum(static module => module.TestDurationTicks),
             Failures = last.Failures,
             FlakyTests = [.. aggregate.FlakyTests],
             SlowestTests =

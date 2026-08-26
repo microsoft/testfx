@@ -124,11 +124,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string summaryPath = Path.Combine(resultDirectory, "github-step-summary.md");
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 1 --results-directory {resultDirectory} --report-gh --report-gh-annotations off --report-gh-groups off",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "GITHUB_ACTIONS", "true" },
+                { "GITHUB_STEP_SUMMARY", summaryPath },
                 { "METHOD1", "1" },
                 { "FAIL", "1" },
                 { "SKIPONRETRY", "1" },
@@ -155,6 +158,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputContains("  failed: 0");
         testHostResult.AssertOutputContains("  succeeded: 3");
         testHostResult.AssertOutputContains("  skipped: 0");
+        Assert.IsFalse(
+            File.Exists(summaryPath),
+            "GitHub summary aggregation must fail closed while the final passed/skipped split is ambiguous.");
     }
 
     /// <summary>
