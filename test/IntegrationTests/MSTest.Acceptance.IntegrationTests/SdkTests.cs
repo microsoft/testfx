@@ -316,7 +316,7 @@ namespace MSTestSdkTest
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-azdo --report-gh --report-trx", cancellationToken: TestContext.CancellationToken);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx", cancellationToken: TestContext.CancellationToken);
             if (enableDefaultExtensions)
             {
                 testHostResult.AssertOutputContainsSummary(0, 1, 0);
