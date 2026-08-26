@@ -67,8 +67,7 @@ internal sealed partial class AzureDevOpsTestResultsClient
             IReadOnlyList<AzureDevOpsTestSubResult>? submittedSubResults = submitted.SubResults;
             Dictionary<int, int> subResultIdsBySequenceId = [];
             if (submittedSubResults is { Count: > 0 }
-                && published.SubResults is { } publishedSubResults
-                && publishedSubResults.Length == submittedSubResults.Count)
+                && published.SubResults is { } publishedSubResults)
             {
                 var submittedSequenceIds = new HashSet<int>();
                 for (int j = 0; j < submittedSubResults.Count; j++)
@@ -84,13 +83,24 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     for (int j = 0; j < publishedSubResults.Length; j++)
                     {
                         PublishedTestSubResult publishedSubResult = publishedSubResults[j];
-                        if (publishedSubResult.Id <= 0 || !submittedSequenceIds.Remove(publishedSubResult.SequenceId))
+                        if (!submittedSequenceIds.Contains(publishedSubResult.SequenceId))
+                        {
+                            continue;
+                        }
+
+                        if (publishedSubResult.Id <= 0
+                            || subResultIdsBySequenceId.ContainsKey(publishedSubResult.SequenceId))
                         {
                             subResultIdsBySequenceId.Clear();
                             break;
                         }
 
                         subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                    }
+
+                    if (subResultIdsBySequenceId.Count != submittedSubResults.Count)
+                    {
+                        subResultIdsBySequenceId.Clear();
                     }
                 }
             }
