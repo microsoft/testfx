@@ -13,6 +13,18 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $false
 
+$roslynAssemblies = @(
+    (Join-Path $PSHOME "Microsoft.CodeAnalysis.dll"),
+    (Join-Path $PSHOME "Microsoft.CodeAnalysis.CSharp.dll")
+)
+foreach ($assembly in $roslynAssemblies) {
+    if (-not (Test-Path -LiteralPath $assembly -PathType Leaf)) {
+        throw "The PowerShell Roslyn assembly '$assembly' is unavailable."
+    }
+}
+
+Add-Type -Path $roslynAssemblies
+
 function Get-CSharpSyntaxKind {
     param([Microsoft.CodeAnalysis.SyntaxTrivia]$Trivia)
 
@@ -190,6 +202,12 @@ function Invoke-SelfTest {
             New = "class C {`n    /// first`n    /// second`n    void M() { }`n}"
         },
         @{
+            Name = "Removed XML documentation"
+            Expected = $true
+            Old = "class C {`n    /// removed`n    void M() { }`n}"
+            New = "class C {`n    void M() { }`n}"
+        },
+        @{
             Name = "Multiline XML documentation"
             Expected = $true
             Old = "class C {`n    /** old */`n    void M() { }`n}"
@@ -224,6 +242,18 @@ function Invoke-SelfTest {
             Expected = $false
             Old = "class C { void M() { } }"
             New = "class C {  void M() { } }"
+        },
+        @{
+            Name = "Identical files"
+            Expected = $false
+            Old = "class C { }"
+            New = "class C { }"
+        },
+        @{
+            Name = "Mixed XML documentation and preprocessor directive"
+            Expected = $false
+            Old = "#if DEBUG`n/// old`nclass C { }`n#endif"
+            New = "#if RELEASE`n/// new`nclass C { }`n#endif"
         }
     )
 
