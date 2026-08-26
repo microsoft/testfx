@@ -210,7 +210,15 @@ internal static class GitHubActionsFailureDetails
 
         if (normalized.Length > maxLength)
         {
-            normalized = normalized.Substring(0, maxLength).TrimEnd();
+            int clipLength = maxLength;
+            if (clipLength > 0
+                && char.IsHighSurrogate(normalized[clipLength - 1])
+                && char.IsLowSurrogate(normalized[clipLength]))
+            {
+                clipLength--;
+            }
+
+            normalized = normalized.Substring(0, clipLength).TrimEnd();
             truncated = true;
         }
 

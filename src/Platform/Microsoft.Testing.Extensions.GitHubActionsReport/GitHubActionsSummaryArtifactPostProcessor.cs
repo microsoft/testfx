@@ -121,12 +121,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         // cap even though this section was budgeted. The writer refuses rather than replacing the file with one
         // GitHub would discard in full; fall back to a verdict line per test project, which is the smallest
         // report this can produce.
-        if (!await writer.UpsertStepSummaryWithRetryAsync(
+        bool? writeResult = await TryUpsertStepSummaryAsync(
+            writer,
             aggregationId,
             rendered.Markdown,
-            cancellationToken,
             leadingNotice,
-            GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false))
+            logger,
+            cancellationToken).ConfigureAwait(false);
+        if (writeResult is false)
         {
             // Every listed module is a verdict line in this rendering, so no test project has a full section.
             GitHubActionsSummaryReporter.AggregateRenderResult condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
@@ -135,15 +137,16 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 condenseAllModules: true,
                 alreadyWritten);
 
-            if (!await writer.UpsertStepSummaryWithRetryAsync(
+            bool? condensedWriteResult = await TryUpsertStepSummaryAsync(
+                writer,
                 aggregationId,
                 condensed.Markdown,
-                cancellationToken,
                 // Nothing this run contributes is a full section now, but sections the direct path already wrote
                 // still are, so they remain the count the note reports.
                 static existingSections => GitHubActionsSummaryReporter.BuildTruncationNotice(existingSections),
-                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false)
-                && logger.IsEnabled(LogLevel.Warning))
+                logger,
+                cancellationToken).ConfigureAwait(false);
+            if (condensedWriteResult is false && logger.IsEnabled(LogLevel.Warning))
             {
                 // Both renderings were refused, so this run contributed nothing to the job summary. Saying so is
                 // the whole point of the refusal: the alternative is a summary that is silently missing a
@@ -161,6 +164,34 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             SummaryArtifactKind,
             GitHubActionsResources.DisplayName,
             GitHubActionsResources.Description);
+    }
+
+    private static async Task<bool?> TryUpsertStepSummaryAsync(
+        StepSummaryWriter writer,
+        string aggregationId,
+        string markdown,
+        Func<int, string>? leadingNotice,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await writer.UpsertStepSummaryWithRetryAsync(
+                aggregationId,
+                markdown,
+                cancellationToken,
+                leadingNotice,
+                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            if (logger.IsEnabled(LogLevel.Warning))
+            {
+                logger.LogWarning(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, writer.Path, ex.Message));
+            }
+
+            return null;
+        }
     }
 }
 

@@ -699,6 +699,7 @@ internal sealed class StepSummaryWriter
                 using (lockStream)
                 {
                     string existing;
+                    long lengthAtCapture;
                     using (IFileStream summaryStream = _fileSystem.NewFileStream(
                         Path,
                         FileMode.OpenOrCreate,
@@ -708,8 +709,8 @@ internal sealed class StepSummaryWriter
                     {
                         // Same reason as the append path: another producer's output decides this size, so refuse
                         // before reading rather than allocating whatever it happens to be.
-                        long existingLength = summaryStream.Stream.Length;
-                        if (existingLength > maxTotalBytes || existingLength > MaxReadableSummaryBytes)
+                        lengthAtCapture = summaryStream.Stream.Length;
+                        if (lengthAtCapture > maxTotalBytes || lengthAtCapture > MaxReadableSummaryBytes)
                         {
                             return false;
                         }
@@ -787,7 +788,47 @@ internal sealed class StepSummaryWriter
                     }
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    _fileSystem.ReplaceFile(tempPath, Path);
+
+                    // Hold an exclusive handle across validation and replacement, closing the final check/swap
+                    // window where another .NET writer could append content that the replacement would lose.
+                    // Windows needs delete sharing so File.Replace can swap the open path; Unix permits renaming
+                    // an open file, and FileShare.None is what asks the runtime for an exclusive advisory lock.
+                    FileShare validationShare = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                        ? FileShare.Delete
+                        : FileShare.None;
+                    IFileStream validationStream;
+                    try
+                    {
+                        validationStream = _fileSystem.NewFileStream(
+                            Path,
+                            FileMode.OpenOrCreate,
+                            FileAccess.Read,
+                            validationShare);
+                    }
+                    catch (IOException) when (attempt < _maxAttempts)
+                    {
+                        await Task.Delay(_retryDelay, cancellationToken).ConfigureAwait(false);
+                        continue;
+                    }
+
+                    using (validationStream)
+                    {
+                        if (validationStream.Stream.Length != lengthAtCapture)
+                        {
+                            if (attempt < _maxAttempts)
+                            {
+                                continue;
+                            }
+
+                            // There is no append-only fallback for an upsert: it would duplicate this run's section.
+                            // Preserve the foreign output and surface the persistent contention as a write failure
+                            // instead of misreporting it as a size-limit refusal.
+                            throw new IOException($"The GitHub step summary '{Path}' kept changing while its replacement was staged.");
+                        }
+
+                        cancellationToken.ThrowIfCancellationRequested();
+                        _fileSystem.ReplaceFile(tempPath, Path);
+                    }
                 }
             }
             finally

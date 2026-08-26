@@ -1024,6 +1024,16 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void Clip_AtSupplementaryCharacterBoundary_DoesNotSplitSurrogatePair()
+    {
+        string clipped = GitHubActionsFailureDetails.Clip(new string('a', 9) + "\U0001F600tail", maxLength: 10)!;
+
+        Assert.StartsWith(new string('a', 9) + "\n", clipped);
+        Assert.DoesNotContain(static character => char.IsSurrogate(character), clipped);
+        Assert.Contains("[... truncated]", clipped);
+    }
+
+    [TestMethod]
     public void Clip_ShortOrEmptyValue_IsReturnedAsIsOrNull()
     {
         Assert.AreEqual("short", GitHubActionsFailureDetails.Clip("short", maxLength: 10));
@@ -1998,6 +2008,83 @@ public sealed class GitHubActionsSummaryReporterTests
                 fileSystem.Interferences,
                 summary.Split(["foreign"], StringSplitOptions.None).Length - 1,
                 "Every foreign append has to survive.");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task UpsertStepSummaryWithRetryAsync_DoesNotOverwriteAForeignAppendWhenAttemptsRunOut()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "existing\n");
+            var fileSystem = new InterferingFileSystem(path, "foreign\n");
+
+            await Assert.ThrowsExactlyAsync<IOException>(() => NewWriter(fileSystem, path, 2)
+                .UpsertStepSummaryWithRetryAsync("run-1", "mine\n", CancellationToken.None));
+
+            Assert.IsGreaterThan(0, fileSystem.Interferences, "The test is vacuous unless the foreign append actually landed.");
+
+            string summary = File.ReadAllText(path);
+            Assert.Contains("existing", summary);
+            Assert.DoesNotContain("mine", summary);
+            Assert.AreEqual(
+                fileSystem.Interferences,
+                summary.Split(["foreign"], StringSplitOptions.None).Length - 1,
+                "Every foreign append has to survive.");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task UpsertStepSummaryWithRetryAsync_ExcludesForeignWritersThroughReplacement()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "existing\n");
+            var inner = new SystemFileSystem();
+            bool appendWasBlocked = false;
+
+            var fileSystem = new Mock<IFileSystem>();
+            fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns<string>(inner.ExistFile);
+            fileSystem.Setup(f => f.DeleteFile(It.IsAny<string>())).Callback<string>(inner.DeleteFile);
+            fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+                .Returns<string, FileMode, FileAccess, FileShare>(inner.NewFileStream);
+            fileSystem.Setup(f => f.ReplaceFile(It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string>((source, destination) =>
+                {
+                    try
+                    {
+                        File.AppendAllText(path, "foreign\n");
+                    }
+                    catch (IOException)
+                    {
+                        appendWasBlocked = true;
+                    }
+
+                    inner.ReplaceFile(source, destination);
+                });
+
+            bool written = await NewWriter(fileSystem.Object, path, 1)
+                .UpsertStepSummaryWithRetryAsync("run-1", "mine\n", CancellationToken.None);
+
+            Assert.IsTrue(written);
+            Assert.IsTrue(appendWasBlocked, "A foreign append must be excluded until the replacement completes.");
+
+            // A co-writer that retries after the exclusive validation handle is released appends to the new file.
+            File.AppendAllText(path, "foreign\n");
+            string summary = File.ReadAllText(path);
+            Assert.Contains("existing", summary);
+            Assert.Contains("mine", summary);
+            Assert.Contains("foreign", summary);
         }
         finally
         {
