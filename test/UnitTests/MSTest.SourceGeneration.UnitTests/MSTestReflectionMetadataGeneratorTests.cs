@@ -111,6 +111,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> descriptorTestMethods, System.Type[] descriptorCompleteTypes) { }
             }
         }
         """;
@@ -164,6 +165,65 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("Type = typeof(global::Sample.MyTests)");
         registry.Should().Contain("Name = \"Test1\"");
         registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return Task.CompletedTask; },");
+        registry.Should().Contain("SupportsGeneratedDescriptors = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("IsDescriptorSupported = true");
+    }
+
+    [TestMethod]
+    public void Generator_DeclaresDescriptorSupportOnlyForBoundedSynchronousSubset()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    public void Supported(int value) { }
+
+                    [TestMethod]
+                    [TestCategory("fallback")]
+                    public void AttributeFallback() { }
+
+                    [TestMethod]
+                    public async System.Threading.Tasks.Task AsyncFallback()
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+
+                    [TestMethod]
+                    private void InaccessibleFallback() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        string registration = result.GeneratedSources
+            .Single(source => source.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        int supportedIndex = registry.IndexOf("Name = \"Supported\"", System.StringComparison.Ordinal);
+        int attributeFallbackIndex = registry.IndexOf("Name = \"AttributeFallback\"", System.StringComparison.Ordinal);
+        int asyncFallbackIndex = registry.IndexOf("Name = \"AsyncFallback\"", System.StringComparison.Ordinal);
+        supportedIndex.Should().BeGreaterThan(-1);
+        attributeFallbackIndex.Should().BeGreaterThan(supportedIndex);
+        asyncFallbackIndex.Should().BeGreaterThan(attributeFallbackIndex);
+        registry.Substring(supportedIndex, attributeFallbackIndex - supportedIndex)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(attributeFallbackIndex, asyncFallbackIndex - attributeFallbackIndex)
+            .Should().Contain("IsDescriptorSupported = false");
+        registry[asyncFallbackIndex..].Should().Contain("IsDescriptorSupported = false");
+        registration.Should().Contain("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
+        registration.Should().Contain("descriptorCompleteTypes.Add(type);");
+        registration.Should().Contain("descriptorTestMethods, descriptorCompleteTypes.ToArray()");
     }
 
     [TestMethod]
@@ -2420,7 +2480,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("methodInvokers[methodInfo] = method.Invoke;");
         registration.Should().Contain("constructorInvokers[type] = constructors;");
         registration.Should().Contain("propertySetters[propertyInfo] = property.Set;");
-        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
 
         // Only [TestMethod]-annotated methods become test roots; the registry's IsTestMethod flag
         // drives that filtering at module-load time.
@@ -3131,7 +3191,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         resolvedGuard.Should().BeGreaterThan(-1);
         completenessGuard.Should().BeGreaterThan(resolvedGuard);
         assignment.Should().BeGreaterThan(completenessGuard);
-        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
         outputCompilation.GetDiagnostics()
             .Where(d => d.Severity >= DiagnosticSeverity.Warning
                 && d.Location.SourceTree?.FilePath.EndsWith(".g.cs", System.StringComparison.Ordinal) is true)

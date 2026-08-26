@@ -28,6 +28,9 @@ internal static class TestClassModelBuilder
 {
     private const string AsyncStateMachineAttributeName = "global::System.Runtime.CompilerServices.AsyncStateMachineAttribute";
     private const string DebuggerStepThroughAttributeName = "global::System.Diagnostics.DebuggerStepThroughAttribute";
+    private const string TestClassAttributeName = "global::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
+    private const string TestMethodAttributeName = "global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute";
+    private const string DataRowAttributeName = "global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute";
 
     public static TestClassModel Build(INamedTypeSymbol typeSymbol, List<DiagnosticInfo> diagnostics)
     {
@@ -46,6 +49,7 @@ internal static class TestClassModelBuilder
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
         ImmutableArray<string>.Builder baseTypes = ImmutableArray.CreateBuilder<string>();
+        bool hasUnsupportedTestMethod = false;
 
         string leafFqn = typeSymbol.ToDisplayString(SymbolDisplayFormats.FullyQualified);
 
@@ -73,10 +77,17 @@ internal static class TestClassModelBuilder
             {
                 switch (member)
                 {
-                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                        when TestMemberValidationHelper.IsAccessibleFromConsumer(method):
+                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                        if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method))
+                        {
+                            hasUnsupportedTestMethod |= TestMemberValidationHelper.IsTestMethodAttributePresent(method);
+                            break;
+                        }
+
                         if (TestMemberValidationHelper.TryReportUnsupportedMethod(method, leafFqn, diagnostics))
                         {
+                            hasUnsupportedTestMethod |= TestMemberValidationHelper.IsTestMethodAttributePresent(method);
+
                             // Skip generic / by-ref methods entirely so the emitter does not produce
                             // code that references unbound type parameters or ref/in/out arguments.
                             break;
@@ -129,6 +140,26 @@ internal static class TestClassModelBuilder
             AttributeMaterializationHelper.BuildAttributesWithCompleteness(
                 AttributeMaterializationHelper.CollectInheritedAttributes(typeSymbol),
                 consumingAssembly);
+        bool supportsGeneratedDescriptors = classAttributes.IsComplete
+            && classAttributes.Attributes.Length == 1
+            && classAttributes.Attributes[0].FullyQualifiedAttributeType == TestClassAttributeName;
+
+        var duplicateTestMethodNames = new HashSet<string>(
+            methods
+                .Where(static method => method.IsTestMethod)
+                .GroupBy(static method => method.Name, StringComparer.Ordinal)
+                .Where(static group => group.Count() > 1)
+                .Select(static group => group.Key),
+            StringComparer.Ordinal);
+
+        var finalizedMethods = methods
+            .Select(method => duplicateTestMethodNames.Contains(method.Name)
+                ? method with { IsDescriptorSupported = false }
+                : method)
+            .ToImmutableArray();
+        bool areGeneratedDescriptorsComplete = supportsGeneratedDescriptors
+            && !hasUnsupportedTestMethod
+            && finalizedMethods.Where(static method => method.IsTestMethod).All(static method => method.IsDescriptorSupported);
 
         return new TestClassModel(
             FullyQualifiedTypeName: leafFqn,
@@ -139,10 +170,12 @@ internal static class TestClassModelBuilder
             IsAbstract: typeSymbol.IsAbstract,
             IsStatic: typeSymbol.IsStatic,
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
-            Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
+            Methods: new EquatableArray<TestMethodModel>(finalizedMethods),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
             Attributes: classAttributes.Attributes,
             AreAttributesComplete: classAttributes.IsComplete,
+            SupportsGeneratedDescriptors: supportsGeneratedDescriptors,
+            AreGeneratedDescriptorsComplete: areGeneratedDescriptorsComplete,
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
     }
 
@@ -165,6 +198,15 @@ internal static class TestClassModelBuilder
             : inheritedAttributes;
         AttributeMaterializationHelper.AttributeMaterializationResult methodAttributes =
             AttributeMaterializationHelper.BuildAttributesWithCompleteness(attributesToMaterialize, consumingAssembly);
+        bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(method);
+        bool isDescriptorSupported = isTestMethod
+            && methodAttributes.IsComplete
+            && method.DeclaredAccessibility == Accessibility.Public
+            && !method.IsStatic
+            && !method.IsAbstract
+            && !method.IsAsync
+            && returnsVoid
+            && HasOnlyDescriptorSupportedAttributes(methodAttributes.Attributes);
 
         return new TestMethodModel(
             Name: method.Name,
@@ -173,11 +215,34 @@ internal static class TestClassModelBuilder
             ReturnsTask: returnsTask,
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
-            IsTestMethod: TestMemberValidationHelper.IsTestMethodAttributePresent(method),
+            IsTestMethod: isTestMethod,
+            IsDescriptorSupported: isDescriptorSupported,
             Parameters: BuildParameters(method),
             Attributes: methodAttributes.Attributes,
             AreAttributesComplete: methodAttributes.IsComplete,
             DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
+    }
+
+    private static bool HasOnlyDescriptorSupportedAttributes(EquatableArray<AttributeApplicationModel> attributes)
+    {
+        int testMethodAttributeCount = 0;
+        foreach (AttributeApplicationModel attribute in attributes)
+        {
+            switch (attribute.FullyQualifiedAttributeType)
+            {
+                case TestMethodAttributeName:
+                    testMethodAttributeCount++;
+                    break;
+
+                case DataRowAttributeName:
+                    break;
+
+                default:
+                    return false;
+            }
+        }
+
+        return testMethodAttributeCount == 1;
     }
 
     private static bool IsCompilerSpecialAsyncAttribute(AttributeData attribute)

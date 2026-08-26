@@ -123,6 +123,8 @@ internal static class RuntimeRegistrationEmitter
         sb.AppendLine($"var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>({methodCount});");
         sb.AppendLine($"var constructorInvokers = new Dictionary<Type, {ConstructorInvokerInfoFullName}[]>(testClasses.Count);");
         sb.AppendLine($"var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>({propertySetterCount});");
+        sb.AppendLine("var descriptorTestMethods = new Dictionary<Type, MethodInfo[]>(testClasses.Count);");
+        sb.AppendLine("var descriptorCompleteTypes = new List<Type>(testClasses.Count);");
         sb.AppendLine();
 
         using (sb.Block("for (int classIndex = 0; classIndex < testClasses.Count; classIndex++)"))
@@ -149,6 +151,7 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine();
 
             sb.AppendLine("var testMethodRoots = new List<MethodInfo>(testClass.Methods.Count);");
+            sb.AppendLine("var descriptorMethodRoots = new List<MethodInfo>(testClass.Methods.Count);");
             using (sb.Block("for (int methodIndex = 0; methodIndex < testClass.Methods.Count; methodIndex++)"))
             {
                 sb.AppendLine($"{RegistryNamespace}.TestMethodReflectionInfo method = testClass.Methods[methodIndex];");
@@ -184,6 +187,10 @@ internal static class RuntimeRegistrationEmitter
                     using (sb.Block("if (method.IsTestMethod)"))
                     {
                         sb.AppendLine("testMethodRoots.Add(methodInfo);");
+                        using (sb.Block("if (testClass.SupportsGeneratedDescriptors && method.IsDescriptorSupported)"))
+                        {
+                            sb.AppendLine("descriptorMethodRoots.Add(methodInfo);");
+                        }
                     }
                 }
 
@@ -201,6 +208,12 @@ internal static class RuntimeRegistrationEmitter
             }
 
             sb.AppendLine("testMethods[type] = testMethodRoots.ToArray();");
+            sb.AppendLine("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
+            using (sb.Block("if (testClass.AreGeneratedDescriptorsComplete)"))
+            {
+                sb.AppendLine("descriptorCompleteTypes.Add(type);");
+            }
+
             sb.AppendLine();
             sb.AppendLine("PropertyInfo[]? availableProperties = null;");
 
@@ -225,7 +238,7 @@ internal static class RuntimeRegistrationEmitter
 
         sb.AppendLine();
         sb.AppendLine($"object[] assemblyAttributes = {RegistryNamespace}.MSTestReflectionMetadata.AssemblyAttributes;");
-        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
     }
 
     private static void EmitResolveMethodHelper(IndentedStringBuilder sb)

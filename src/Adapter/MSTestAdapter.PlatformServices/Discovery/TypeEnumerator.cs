@@ -48,6 +48,12 @@ internal class TypeEnumerator
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
     internal virtual List<UnitTestElement>? Enumerate(List<string> warnings)
+        => EnumerateCore(warnings, useGeneratedDescriptors: false);
+
+    internal virtual List<UnitTestElement>? Enumerate(List<string> warnings, bool useGeneratedDescriptors)
+        => EnumerateCore(warnings, useGeneratedDescriptors);
+
+    private List<UnitTestElement>? EnumerateCore(List<string> warnings, bool useGeneratedDescriptors)
     {
         if (!_typeValidator.IsValidTestClass(_type, warnings))
         {
@@ -66,7 +72,13 @@ internal class TypeEnumerator
 #endif
 
         // If test class is valid, then get the tests
-        return GetTests(warnings);
+        return useGeneratedDescriptors
+            && PlatformServiceProvider.Instance.ReflectionOperations.TryGetTestMethodDescriptors(
+                _type,
+                out MethodInfo[]? descriptorMethods,
+                out bool areAllTestMethodsSupported)
+                ? GetTests(warnings, descriptorMethods, areAllTestMethodsSupported)
+                : GetTests(warnings);
     }
 
     /// <summary>
@@ -75,10 +87,16 @@ internal class TypeEnumerator
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> List of Valid Tests. </returns>
     internal List<UnitTestElement> GetTests(List<string> warnings)
+        => GetTests(warnings, [], areAllTestMethodsSupported: false);
+
+    private List<UnitTestElement> GetTests(List<string> warnings, MethodInfo[] descriptorMethods, bool areAllTestMethodsSupported)
     {
         bool foundDuplicateTests = false;
         var foundTests = new HashSet<string>();
-        var tests = new List<UnitTestElement>();
+        var tests = new List<UnitTestElement>(descriptorMethods.Length);
+        HashSet<MethodInfo>? descriptorMethodSet = descriptorMethods.Length == 0
+            ? null
+            : new HashSet<MethodInfo>(descriptorMethods);
 
         // Instead of asking reflect helper to query the type for every method we have, we ask once for the type.
         bool classDisablesParallelization = _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(_type);
@@ -86,15 +104,29 @@ internal class TypeEnumerator
         // Test class is already valid. Verify methods.
         // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
-        foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
+        foreach (MethodInfo method in descriptorMethods)
         {
-            if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
-            {
-                // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
-                foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
-                UnitTestElement testMethod = GetTestFromMethod(method, classDisablesParallelization, warnings);
+            foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
+            tests.Add(GetTestFromMethod(method, classDisablesParallelization, warnings, isFromGeneratedDescriptor: true));
+        }
 
-                tests.Add(testMethod);
+        if (!areAllTestMethodsSupported)
+        {
+            foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
+            {
+                if (descriptorMethodSet?.Contains(method) == true)
+                {
+                    continue;
+                }
+
+                if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
+                {
+                    // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
+                    foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
+                    UnitTestElement testMethod = GetTestFromMethod(method, classDisablesParallelization, warnings);
+
+                    tests.Add(testMethod);
+                }
             }
         }
 
@@ -134,8 +166,9 @@ internal class TypeEnumerator
     /// <param name="method">The reflected method.</param>
     /// <param name="classDisablesParallelization">Whether the test class disables parallelization.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
+    /// <param name="isFromGeneratedDescriptor">Whether native MTP discovery selected this method from generated metadata.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings, bool isFromGeneratedDescriptor = false)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
@@ -157,6 +190,7 @@ internal class TypeEnumerator
         IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
         var testElement = new UnitTestElement(testMethod)
         {
+            IsFromGeneratedDescriptor = isFromGeneratedDescriptor,
             TestCategory = reflectionOperations.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
             ResourceLocks = MergeResourceLocks(GetClassResourceLocks(), ReadResourceLocks(method)),

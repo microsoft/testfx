@@ -68,8 +68,9 @@ internal class AssemblyEnumerator
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
     /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
+    /// <param name="useGeneratedDescriptors">Whether native MTP discovery may consume complete source-generated descriptors.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors = false)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -97,7 +98,7 @@ internal class AssemblyEnumerator
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, mustSerialize);
+                dataSourcesUnfoldingStrategy, mustSerialize, useGeneratedDescriptors);
             tests.AddRange(testsInType);
         }
 
@@ -161,7 +162,8 @@ internal class AssemblyEnumerator
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        bool mustSerialize)
+        bool mustSerialize,
+        bool useGeneratedDescriptors)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -170,7 +172,9 @@ internal class AssemblyEnumerator
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
-            List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
+            List<UnitTestElement>? unitTestCases = useGeneratedDescriptors
+                ? testTypeEnumerator.Enumerate(warningMessages, useGeneratedDescriptors: true)
+                : testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
             {
