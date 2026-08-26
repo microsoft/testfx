@@ -129,8 +129,19 @@ function Test-XmlDocOnlyTextChange {
 
     $oldDocumentation = @(Get-ComparedTrivia $oldRoot -Documentation)
     $newDocumentation = @(Get-ComparedTrivia $newRoot -Documentation)
+    if (@($oldDocumentation + $newDocumentation | Where-Object { $_ -cmatch '<\s*include\b' }).Count -ne 0) {
+        return $false
+    }
 
     return -not (Test-SequenceEqual $oldDocumentation $newDocumentation)
+}
+
+function Test-EligiblePath {
+    param([string]$Path)
+
+    return (
+        [System.IO.Path]::GetExtension($Path) -ceq ".cs" -and
+        -not $Path.StartsWith("samples/", [System.StringComparison]::Ordinal))
 }
 
 function Invoke-Git {
@@ -181,7 +192,7 @@ function Test-GitDiff {
 
     foreach ($change in $changes) {
         $status, $path = $change -split "`t", 2
-        if ($status -ne "M" -or [System.IO.Path]::GetExtension($path) -cne ".cs") {
+        if ($status -ne "M" -or -not (Test-EligiblePath $path)) {
             return $false
         }
 
@@ -220,6 +231,12 @@ function Invoke-SelfTest {
             Expected = $true
             Old = "class C {`n    /** old */`n    void M() { }`n}"
             New = "class C {`n    /** new */`n    void M() { }`n}"
+        },
+        @{
+            Name = "XML documentation include"
+            Expected = $false
+            Old = "class C {`n    /// <include file='docs.xml' path='old'/>`n    void M() { }`n}"
+            New = "class C {`n    /// <include file='Docs.xml' path='new'/>`n    void M() { }`n}"
         },
         @{
             Name = "Ordinary comment"
@@ -275,6 +292,18 @@ function Invoke-SelfTest {
         $actual = Test-XmlDocOnlyTextChange $case.Old $case.New
         if ($actual -ne $case.Expected) {
             throw "Self-test '$($case.Name)' expected '$($case.Expected)' but got '$actual'."
+        }
+    }
+
+    foreach ($pathCase in @(
+        @{ Path = "src/Product.cs"; Expected = $true },
+        @{ Path = "samples/public/Sample.cs"; Expected = $false },
+        @{ Path = "samples/internal/Sample.cs"; Expected = $false },
+        @{ Path = "src/Product.vb"; Expected = $false }
+    )) {
+        $actual = Test-EligiblePath $pathCase.Path
+        if ($actual -ne $pathCase.Expected) {
+            throw "Path self-test '$($pathCase.Path)' expected '$($pathCase.Expected)' but got '$actual'."
         }
     }
 
