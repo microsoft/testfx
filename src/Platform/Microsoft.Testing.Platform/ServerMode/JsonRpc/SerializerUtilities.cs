@@ -80,7 +80,8 @@ internal static partial class SerializerUtilities
         => idObj switch
         {
             int idInt => idInt,
-            string idStr => int.TryParse(idStr, out int id)
+            string idStr => int.TryParse(idStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+                && idStr == id.ToString(CultureInfo.InvariantCulture)
                 ? id
                 : null,
             _ => null,

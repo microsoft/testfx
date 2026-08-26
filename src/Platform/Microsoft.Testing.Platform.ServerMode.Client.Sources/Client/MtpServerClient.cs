@@ -121,10 +121,21 @@ internal sealed class MtpServerClient : IMtpServerClient
         var args = new InitializeRequestArgs(
             GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful));
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful))
+        {
+            ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
+        };
 
         ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken).ConfigureAwait(false);
         MtpServerCapabilities capabilities = DecodeCapabilities(AsResultDictionary(response.Result));
+        if (capabilities.ProtocolVersion is { } negotiatedProtocolVersion
+            && !_options.SupportedProtocolVersions.Contains(negotiatedProtocolVersion, StringComparer.Ordinal))
+        {
+            throw new MtpServerClientException(
+                $"The server negotiated unsupported protocol version '{negotiatedProtocolVersion}'. "
+                + $"Supported versions: {string.Join(", ", _options.SupportedProtocolVersions)}.");
+        }
+
         Capabilities = capabilities;
         return capabilities;
     }
@@ -210,6 +221,9 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
+        string? protocolVersion = result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj)
+            ? protocolVersionObj as string
+            : null;
         if (result.TryGetValue(JsonRpcStrings.Capabilities, out object? capabilitiesObj)
             && capabilitiesObj is IDictionary<string, object?> capabilities
             && capabilities.TryGetValue(JsonRpcStrings.Testing, out object? testingObj)
@@ -230,7 +244,8 @@ internal sealed class MtpServerClient : IMtpServerClient
             multiRequestSupport,
             vstestProviderSupport,
             supportsAttachments,
-            multiConnectionProvider);
+            multiConnectionProvider,
+            protocolVersion);
     }
 
     private static int? AsInt(object? value)

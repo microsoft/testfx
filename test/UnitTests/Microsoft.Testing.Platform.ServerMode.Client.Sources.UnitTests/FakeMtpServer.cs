@@ -69,7 +69,10 @@ internal sealed class FakeMtpServer : IDisposable
                 MultiRequestSupport: true,
                 VSTestProviderSupport: false,
                 SupportsAttachments: true,
-                MultiConnectionProvider: false)));
+                MultiConnectionProvider: false)))
+        {
+            ProtocolVersion = JsonRpcProtocolVersions.Current,
+        };
 
         _ = Task.Run(AcceptAndServeAsync);
     }

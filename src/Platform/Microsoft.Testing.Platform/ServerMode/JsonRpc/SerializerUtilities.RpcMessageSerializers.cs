@@ -77,6 +77,11 @@ internal static partial class SerializerUtilities
                 [JsonRpcStrings.Capabilities] = Serialize(res.Capabilities),
             };
 
+            if (res.ProtocolVersion is not null)
+            {
+                values[JsonRpcStrings.ProtocolVersion] = res.ProtocolVersion;
+            }
+
             return values;
         });
 

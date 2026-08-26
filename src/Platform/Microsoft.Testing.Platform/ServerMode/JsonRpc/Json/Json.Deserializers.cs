@@ -90,7 +90,7 @@ internal sealed partial class Json
 
             if (json.TryBind(jsonElement, out string? method, JsonRpcStrings.Method))
             {
-                bool hasId = json.TryBind(jsonElement, out int id, JsonRpcStrings.Id);
+                bool hasId = TryGetRpcId(jsonElement, out int id);
 
                 object? @params = null;
                 if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
@@ -131,6 +131,13 @@ internal sealed partial class Json
                         @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
                     }
                 }
+                else if (method is JsonRpcMethods.Initialize
+                    or JsonRpcMethods.TestingDiscoverTests
+                    or JsonRpcMethods.TestingRunTests
+                    or JsonRpcMethods.CancelRequest)
+                {
+                    @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, "'params' field is missing");
+                }
 
                 return hasId
                     ? new RequestMessage(id, method!, @params)
@@ -142,7 +149,7 @@ internal sealed partial class Json
                 // Note: Because the result message does not contain the original method name,
                 //       it's not possible for us to do a typed deserialization.
                 //       The best option we've got is to return a generic property bag.
-                int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
+                int id = BindRpcId(jsonElement);
 
                 IDictionary<string, object?>? result = element.ValueKind == JsonValueKind.Null ? null :
                     json.Bind<IDictionary<string, object?>>(jsonElement, JsonRpcStrings.Result);
@@ -153,10 +160,17 @@ internal sealed partial class Json
             return json.TryBind(jsonElement, out ErrorMessage? errorMessage) ? errorMessage! : throw new MessageFormatException();
         });
 
-        deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) => new InitializeRequestArgs(
+        deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) =>
+        {
+            json.TryArrayBind(jsonElement, out string[]? protocolVersions, JsonRpcStrings.ProtocolVersions);
+            return new InitializeRequestArgs(
                 ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
                 ClientInfo: json.Bind<ClientInfo>(jsonElement, JsonRpcStrings.ClientInfo),
-                Capabilities: json.Bind<ClientCapabilities>(jsonElement, JsonRpcStrings.Capabilities)));
+                Capabilities: json.Bind<ClientCapabilities>(jsonElement, JsonRpcStrings.Capabilities))
+            {
+                ProtocolVersions = protocolVersions,
+            };
+        });
 
         deserializers[typeof(ClientInfo)] = new JsonElementDeserializer<ClientInfo>((json, jsonElement) => new ClientInfo(
                 Name: json.Bind<string>(jsonElement, JsonRpcStrings.Name),
@@ -176,10 +190,17 @@ internal sealed partial class Json
         });
 
         deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
-          (json, jsonElement) => new InitializeResponseArgs(
+          (json, jsonElement) =>
+          {
+              json.TryBind(jsonElement, out string? protocolVersion, JsonRpcStrings.ProtocolVersion);
+              return new InitializeResponseArgs(
                   ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
                   ServerInfo: json.Bind<ServerInfo>(jsonElement, JsonRpcStrings.ServerInfo),
-                  Capabilities: json.Bind<ServerCapabilities>(jsonElement, JsonRpcStrings.Capabilities)));
+                  Capabilities: json.Bind<ServerCapabilities>(jsonElement, JsonRpcStrings.Capabilities))
+              {
+                  ProtocolVersion = protocolVersion,
+              };
+          });
 
         deserializers[typeof(ServerInfo)] = new JsonElementDeserializer<ServerInfo>(
           (json, jsonElement) => new ServerInfo(
@@ -192,11 +213,11 @@ internal sealed partial class Json
 
         deserializers[typeof(ServerTestingCapabilities)] = new JsonElementDeserializer<ServerTestingCapabilities>(
           (json, jsonElement) => new ServerTestingCapabilities(
-                        SupportsDiscovery: json.Bind<bool>(jsonElement, JsonRpcStrings.SupportsDiscovery),
-                        MultiRequestSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiRequestSupport),
-                        VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport),
-                        SupportsAttachments: json.Bind<bool>(jsonElement, JsonRpcStrings.AttachmentsSupport),
-                        MultiConnectionProvider: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiConnectionProvider)));
+              SupportsDiscovery: json.Bind<bool>(jsonElement, JsonRpcStrings.SupportsDiscovery),
+              MultiRequestSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiRequestSupport),
+              VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport),
+              SupportsAttachments: json.Bind<bool>(jsonElement, JsonRpcStrings.AttachmentsSupport),
+              MultiConnectionProvider: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiConnectionProvider)));
 
         deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
         {
@@ -259,7 +280,9 @@ internal sealed partial class Json
             });
 
         deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
-          (json, jsonElement) => json.TryBind(jsonElement, out int id, JsonRpcStrings.Id) ? new CancelRequestArgs(id) : throw new MessageFormatException("id field should be an int"));
+          (json, jsonElement) => TryGetRpcId(jsonElement, out int id)
+              ? new CancelRequestArgs(id)
+              : throw new MessageFormatException("id field is missing"));
 
         deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(
           (json, jsonElement) => new ExitRequestArgs());
@@ -269,7 +292,7 @@ internal sealed partial class Json
           {
               ValidateJsonRpcHeader(json, jsonElement);
 
-              int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
+              int id = BindRpcId(jsonElement);
               JsonElement error = jsonElement.GetProperty(JsonRpcStrings.Error);
 
               int code = json.Bind<int>(error, JsonRpcStrings.Code);
@@ -335,4 +358,35 @@ internal sealed partial class Json
         return element.GetDouble();
     }
 #pragma warning restore IDE0046 // Convert to conditional expression
+
+    private static bool TryGetRpcId(JsonElement jsonElement, out int id)
+    {
+        if (!jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement)
+            || idElement.ValueKind == JsonValueKind.Null)
+        {
+            id = default;
+            return false;
+        }
+
+        id = ReadRpcId(idElement);
+        return true;
+    }
+
+    private static int BindRpcId(JsonElement jsonElement)
+        => jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement)
+            ? ReadRpcId(idElement)
+            : throw new MessageFormatException($"'{JsonRpcStrings.Id}' field is missing");
+
+    private static int ReadRpcId(JsonElement idElement)
+        => idElement.ValueKind switch
+        {
+            JsonValueKind.Number when idElement.TryGetInt32(out int numericId) => numericId,
+            JsonValueKind.String when int.TryParse(
+                idElement.GetString(),
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out int stringId)
+                && idElement.GetString() == stringId.ToString(CultureInfo.InvariantCulture) => stringId,
+            _ => throw new MessageFormatException($"'{JsonRpcStrings.Id}' field should be an int or a numeric string"),
+        };
 }

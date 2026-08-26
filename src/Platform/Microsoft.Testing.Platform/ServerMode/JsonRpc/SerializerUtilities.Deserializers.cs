@@ -26,40 +26,52 @@ internal static partial class SerializerUtilities
 
                 object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
 
-                IDictionary<string, object?> paramsObj = method != JsonRpcMethods.Exit
-                    ? GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Params)
-                    : new Dictionary<string, object?>();
-
                 int? id = idObj is null
                             ? null
                             : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
                 object? @params;
-                try
+                object? rawParams = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Params);
+                bool paramsRequired = method is JsonRpcMethods.Initialize
+                    or JsonRpcMethods.TestingDiscoverTests
+                    or JsonRpcMethods.TestingRunTests
+                    or JsonRpcMethods.CancelRequest;
+                if (paramsRequired && rawParams is not IDictionary<string, object?>)
                 {
-                    // Parse the specific methods
-                    @params = method switch
-                    {
-                        JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
-                        JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
-                        JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
-                        JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
-                        JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
-
-                        // Note: Let the server report unknown RPC request back to the client.
-                        _ => null,
-                    };
+                    @params = new InvalidRequestParamsArgs(
+                        ErrorCodes.InvalidParams,
+                        rawParams is null ? "'params' field is missing" : "'params' field has wrong type (expected Object)");
                 }
-                catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
+                else
                 {
-                    // If params can't be deserialized for a request, capture the failure so
-                    // we can later send back a properly coded JSON-RPC error using the request id.
-                    // For notifications there's no one to respond to, but we still avoid
-                    // crashing the message-handling loop by swallowing into the sentinel.
-                    // We catch the broader set of deserialization-related exceptions because the
-                    // request payload is untrusted client input and the lower-level helpers can
-                    // throw types other than MessageFormatException.
-                    @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                    IDictionary<string, object?> paramsObj = rawParams as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+                    try
+                    {
+                        // Parse the specific methods
+                        @params = method switch
+                        {
+                            JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
+                            JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
+                            JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
+                            JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
+                            JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
+
+                            // Preserve server-to-client notification params when this formatter is used by a
+                            // client or protocol test, matching the System.Text.Json path.
+                            _ => rawParams is null ? null : paramsObj,
+                        };
+                    }
+                    catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
+                    {
+                        // If params can't be deserialized for a request, capture the failure so
+                        // we can later send back a properly coded JSON-RPC error using the request id.
+                        // For notifications there's no one to respond to, but we still avoid
+                        // crashing the message-handling loop by swallowing into the sentinel.
+                        // We catch the broader set of deserialization-related exceptions because the
+                        // request payload is untrusted client input and the lower-level helpers can
+                        // throw types other than MessageFormatException.
+                        @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                    }
                 }
 
                 return id.HasValue
@@ -92,8 +104,28 @@ internal static partial class SerializerUtilities
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ClientInfo clientInfo = Deserialize<ClientInfo>(properties);
             ClientCapabilities capabilities = Deserialize<ClientCapabilities>(properties);
+            object? protocolVersionsValue = GetOptionalPropertyFromJson(properties, JsonRpcStrings.ProtocolVersions);
+            string[]? protocolVersions = null;
+            if (protocolVersionsValue is not null)
+            {
+                if (protocolVersionsValue is not ICollection<object> protocolVersionsJson)
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.ProtocolVersions}' field has wrong type (expected Array)");
+                }
 
-            return new InitializeRequestArgs(processId, clientInfo, capabilities);
+                protocolVersions = new string[protocolVersionsJson.Count];
+                int index = 0;
+                foreach (object? protocolVersion in protocolVersionsJson)
+                {
+                    protocolVersions[index++] = protocolVersion as string
+                        ?? throw new MessageFormatException($"'{JsonRpcStrings.ProtocolVersions}' entries must be strings");
+                }
+            }
+
+            return new InitializeRequestArgs(processId, clientInfo, capabilities)
+            {
+                ProtocolVersions = protocolVersions,
+            };
         });
 
         Deserializers[typeof(ClientInfo)] = new ObjectDeserializer<ClientInfo>(properties =>
@@ -120,8 +152,12 @@ internal static partial class SerializerUtilities
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ServerInfo serverInfo = Deserialize<ServerInfo>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ServerInfo));
             ServerCapabilities capabilities = Deserialize<ServerCapabilities>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities));
+            string? protocolVersion = GetOptionalPropertyFromJson(properties, JsonRpcStrings.ProtocolVersion) as string;
 
-            return new InitializeResponseArgs(processId, serverInfo, capabilities);
+            return new InitializeResponseArgs(processId, serverInfo, capabilities)
+            {
+                ProtocolVersion = protocolVersion,
+            };
         });
 
         Deserializers[typeof(ServerInfo)] = new ObjectDeserializer<ServerInfo>(properties =>
@@ -140,7 +176,6 @@ internal static partial class SerializerUtilities
             bool vstestProviderSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.VSTestProviderSupport);
             bool attachmentsSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.AttachmentsSupport);
             bool multiConnectionProvider = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.MultiConnectionProvider);
-
             return new ServerCapabilities(new ServerTestingCapabilities(
                 SupportsDiscovery: supportsDiscovery,
                 MultiRequestSupport: multiRequestSupport,

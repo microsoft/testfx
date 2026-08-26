@@ -91,13 +91,21 @@ internal sealed partial class ServerTestHost
         => _ = Task.Run(() => TryLogAsync(logLevel, message));
 
     internal Task SendTestUpdateCompleteAsync(Guid runId, CancellationToken cancellationToken)
-        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null), cancellationToken);
+        => SendTestUpdateCompleteAsync(runId, cancellationToken, bestEffort: false);
+
+    private Task SendTestUpdateCompleteAsync(Guid runId, CancellationToken cancellationToken, bool bestEffort)
+        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null), cancellationToken, bestEffort);
 
     public Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update, CancellationToken cancellationToken)
+        => SendTestUpdateAsync(update, cancellationToken, bestEffort: false);
+
+    private Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update, CancellationToken cancellationToken, bool bestEffort)
         => SendMessageAsync(
             method: JsonRpcMethods.TestingTestUpdatesTests,
             @params: update,
-            cancellationToken);
+            cancellationToken,
+            checkServerExit: bestEffort,
+            rethrowException: !bestEffort);
 
     public Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args, CancellationToken cancellationToken)
         => SendMessageAsync(

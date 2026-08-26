@@ -35,9 +35,15 @@ internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, objec
 /// </remarks>
 internal sealed record ResponseMessage(int Id, object? Result) : RpcMessage;
 
-internal sealed record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities);
+internal sealed record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities)
+{
+    public string[]? ProtocolVersions { get; init; }
+}
 
-internal sealed record InitializeResponseArgs(int? ProcessId, ServerInfo ServerInfo, ServerCapabilities Capabilities);
+internal sealed record InitializeResponseArgs(int? ProcessId, ServerInfo ServerInfo, ServerCapabilities Capabilities)
+{
+    public string? ProtocolVersion { get; init; }
+}
 
 internal record RequestArgsBase(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter);
 
@@ -103,7 +109,9 @@ internal sealed record ServerTestingCapabilities(
     bool SupportsAttachments,
     bool MultiConnectionProvider)
 {
-    public static bool SupportsTestCoverageMessages => true;
+    // This capability describes JSON-RPC wire forwarding, not in-process coverage-message consumption.
+    // Keep it false until server mode forwards the first-class messages defined by RFC 019.
+    public static bool SupportsTestCoverageMessages => false;
 }
 
 internal sealed record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes)

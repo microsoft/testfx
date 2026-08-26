@@ -71,7 +71,10 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we push attachments
                                 SupportsAttachments: true,
                                 // This means we're a push node
-                                MultiConnectionProvider: true)));
+                                MultiConnectionProvider: true)))
+        {
+            ProtocolVersion = JsonRpcProtocolVersions.Current,
+        };
 
         await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return true;

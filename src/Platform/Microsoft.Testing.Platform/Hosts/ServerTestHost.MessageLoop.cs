@@ -118,6 +118,13 @@ internal sealed partial class ServerTestHost
             }
         }
 
+        if (Volatile.Read(ref _initializeState) != Initialized
+            && message.Method != JsonRpcMethods.CancelRequest)
+        {
+            _requestCounter.Signal();
+            return;
+        }
+
         // Note: Yield, so that the main message reading loop can continue.
         await Task.Yield();
 
@@ -169,6 +176,47 @@ internal sealed partial class ServerTestHost
         }
         else
         {
+            bool isInitializeRequest = request.Method == JsonRpcMethods.Initialize;
+            if (isInitializeRequest)
+            {
+                if (Interlocked.CompareExchange(ref _initializeState, Initializing, NotInitialized) != NotInitialized)
+                {
+                    try
+                    {
+                        await SendErrorAsync(
+                            reqId: request.Id,
+                            errorCode: ErrorCodes.InvalidRequest,
+                            message: "The server has already received an initialize request.",
+                            data: null,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        _requestCounter.Signal();
+                    }
+
+                    return;
+                }
+            }
+            else if (Volatile.Read(ref _initializeState) != Initialized)
+            {
+                try
+                {
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: ErrorCodes.ServerNotInitialized,
+                        message: "The server must be initialized before this request can be processed.",
+                        data: null,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    _requestCounter.Signal();
+                }
+
+                return;
+            }
+
             // We enqueue the request before to "unlink" the current thread so we're sure that we
             // correctly handle the completion also after the "exit"
             RpcInvocationState rpcState = new();
@@ -177,33 +225,102 @@ internal sealed partial class ServerTestHost
             // Note: Yield, so that the main message reading loop can continue.
             await Task.Yield();
 
+            bool testUpdateCompletionSent = false;
             try
             {
                 object response = await HandleRequestCoreAsync(request, rpcState, cancellationToken).ConfigureAwait(false);
+                testUpdateCompletionSent = await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken).ConfigureAwait(false);
+                if (isInitializeRequest)
+                {
+                    Volatile.Write(ref _initializeState, Initialized);
+                }
+
                 await SendResponseAsync(reqId: request.Id, result: response, cancellationToken).ConfigureAwait(false);
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetResult(response));
             }
             catch (OperationCanceledException e)
             {
-                // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
-                (string errorMessage, int errorCode) = rpcState.CancellationToken.IsCancellationRequested
-                    ? (string.Empty, ErrorCodes.RequestCanceled)
-                    : (e.ToString(), ErrorCodes.RequestCanceled);
+                if (isInitializeRequest)
+                {
+                    Volatile.Write(ref _initializeState, NotInitialized);
+                }
 
-                await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
+                try
+                {
+                    if (!testUpdateCompletionSent)
+                    {
+                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+                    }
+
+                    // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
+                    (string errorMessage, int errorCode) = rpcState.CancellationToken.IsCancellationRequested
+                        ? (string.Empty, ErrorCodes.RequestCanceled)
+                        : (e.ToString(), ErrorCodes.RequestCanceled);
+
+                    await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
+                }
             }
             catch (JsonRpcException e)
             {
-                await SendErrorAsync(reqId: request.Id, errorCode: e.ErrorCode, message: e.Message, data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
+                if (isInitializeRequest)
+                {
+                    Volatile.Write(ref _initializeState, NotInitialized);
+                }
+
+                try
+                {
+                    if (!testUpdateCompletionSent)
+                    {
+                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+                    }
+
+                    await SendErrorAsync(reqId: request.Id, errorCode: e.ErrorCode, message: e.Message, data: null, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
+                }
             }
             catch (Exception e)
             {
-                await SendErrorAsync(reqId: request.Id, errorCode: 0, message: e.ToString(), data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.SetException(e));
+                if (isInitializeRequest)
+                {
+                    Volatile.Write(ref _initializeState, NotInitialized);
+                }
+
+                try
+                {
+                    if (!testUpdateCompletionSent)
+                    {
+                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+                    }
+
+                    await SendErrorAsync(reqId: request.Id, errorCode: ErrorCodes.InternalError, message: e.ToString(), data: null, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
+                }
             }
         }
+    }
+
+    private async Task<bool> SendTestUpdateCompleteIfNeededAsync(
+        RequestMessage request,
+        CancellationToken cancellationToken,
+        bool bestEffort = false)
+    {
+        if (request.Params is not RequestArgsBase args)
+        {
+            return false;
+        }
+
+        await SendTestUpdateCompleteAsync(args.RunId, cancellationToken, bestEffort).ConfigureAwait(false);
+        return true;
     }
 
     private void CompleteRequest(

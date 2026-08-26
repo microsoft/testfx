@@ -70,11 +70,21 @@ internal static partial class SerializerUtilities
             },
         });
 
-        Serializers[typeof(InitializeRequestArgs)] = new ObjectSerializer<InitializeRequestArgs>(args => new Dictionary<string, object?>
+        Serializers[typeof(InitializeRequestArgs)] = new ObjectSerializer<InitializeRequestArgs>(args =>
         {
-            [JsonRpcStrings.ProcessId] = args.ProcessId,
-            [JsonRpcStrings.ClientInfo] = Serialize(args.ClientInfo),
-            [JsonRpcStrings.Capabilities] = Serialize(args.Capabilities),
+            Dictionary<string, object?> properties = new()
+            {
+                [JsonRpcStrings.ProcessId] = args.ProcessId,
+                [JsonRpcStrings.ClientInfo] = Serialize(args.ClientInfo),
+                [JsonRpcStrings.Capabilities] = Serialize(args.Capabilities),
+            };
+
+            if (args.ProtocolVersions is not null)
+            {
+                properties[JsonRpcStrings.ProtocolVersions] = args.ProtocolVersions;
+            }
+
+            return properties;
         });
 
         Serializers[typeof(DiscoverRequestArgs)] = new ObjectSerializer<DiscoverRequestArgs>(SerializeRequestArgs);

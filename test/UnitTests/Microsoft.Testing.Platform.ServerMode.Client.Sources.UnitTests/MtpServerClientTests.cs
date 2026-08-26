@@ -35,12 +35,42 @@ public sealed class MtpServerClientTests
         Assert.AreEqual(4242, capabilities.ServerProcessId);
         Assert.AreEqual("FakeMtpServer", capabilities.ServerName);
         Assert.AreEqual("1.2.3", capabilities.ServerVersion);
+        Assert.AreEqual(JsonRpcProtocolVersions.Current, capabilities.ProtocolVersion);
         Assert.IsTrue(capabilities.SupportsDiscovery);
         Assert.IsTrue(capabilities.MultiRequestSupport);
         Assert.IsFalse(capabilities.VSTestProviderSupport);
         Assert.IsTrue(capabilities.SupportsAttachments);
         Assert.IsFalse(capabilities.MultiConnectionProvider);
         Assert.AreSame(capabilities, client.Capabilities);
+
+        InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreSequenceEqual(JsonRpcProtocolVersions.Supported, initializeArgs.ProtocolVersions);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_LegacyServerWithoutProtocolVersion_Succeeds()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.IsNull(capabilities.ProtocolVersion);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_UnsupportedNegotiatedProtocolVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = "2.0.0" };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains("2.0.0", exception.Message);
+        Assert.IsNull(client.Capabilities);
     }
 
     [TestMethod]

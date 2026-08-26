@@ -52,11 +52,20 @@ internal sealed partial class Json
         });
 
         serializers[typeof(InitializeResponseArgs)] = new JsonObjectSerializer<InitializeResponseArgs>(response =>
-        [
-            (JsonRpcStrings.ProcessId, response.ProcessId),
-                (JsonRpcStrings.ServerInfo, response.ServerInfo),
-                (JsonRpcStrings.Capabilities, response.Capabilities)
-        ]);
+            response.ProtocolVersion is null
+                ?
+                [
+                    (JsonRpcStrings.ProcessId, response.ProcessId),
+                    (JsonRpcStrings.ServerInfo, response.ServerInfo),
+                    (JsonRpcStrings.Capabilities, response.Capabilities)
+                ]
+                :
+                [
+                    (JsonRpcStrings.ProcessId, response.ProcessId),
+                    (JsonRpcStrings.ServerInfo, response.ServerInfo),
+                    (JsonRpcStrings.Capabilities, response.Capabilities),
+                    (JsonRpcStrings.ProtocolVersion, response.ProtocolVersion)
+                ]);
 
         serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info =>
         [
