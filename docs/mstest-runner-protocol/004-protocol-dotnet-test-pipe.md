@@ -534,17 +534,25 @@ Mapping from MTP node state → which list is used:
 | Cancelled | 6 | Failed list |
 
 `SuccessfulTestResultMessage` fields: `Uid`(1), `DisplayName`(2), `State`(3, byte), `Duration`(4, long
-ticks), `Reason`(5), `StandardOutput`(6), `ErrorOutput`(7), `SessionUid`(8).
+ticks), `Reason`(5), `StandardOutput`(6), `ErrorOutput`(7), `SessionUid`(8), `RetryAttemptNumber`(9,
+int), `IsSuperseded`(10, bool).
 
 `FailedTestResultMessage` fields: `Uid`(1), `DisplayName`(2), `State`(3), `Duration`(4), `Reason`(5),
 `ExceptionMessageList`(6), `StandardOutput`(7), `ErrorOutput`(8), `SessionUid`(9), `Expected`(10),
-`Actual`(11).
+`Actual`(11), `RetryAttemptNumber`(12, int), `IsSuperseded`(13, bool).
 
 - `ExceptionMessage` fields: `ErrorMessage`(1), `ErrorType`(2), `StackTrace`(3). Exceptions are
   flattened (aggregate/inner exceptions expanded) before sending.
 - `Expected`/`Actual` (added after `SessionUid`, older readers skip them) carry structured
   assertion-diff values captured by assertion libraries from `Exception.Data["assert.expected"]` /
   `["assert.actual"]`. Only failed tests populate them; error/timeout/cancelled send null.
+- `RetryAttemptNumber`/`IsSuperseded` (added after `SessionUid` on successful messages and after
+  `Expected`/`Actual` on failed messages; older readers skip them) carry the in-process retry metadata
+  surfaced by `RetryAttemptProperty` (for example MSTest's `[Retry]`
+  attribute): the 1-based attempt number within the current test host run, and whether a later attempt
+  for the same test node follows this one. They accompany any outcome state (passed, failed, etc.) and
+  are null when the test was not retried. Consumers that want a single row per test should ignore
+  updates whose `IsSuperseded` is `true`; consumers that want the whole retry history keep them all.
 
 ### 9.4 `TestInProgressMessages` (ID 10)
 

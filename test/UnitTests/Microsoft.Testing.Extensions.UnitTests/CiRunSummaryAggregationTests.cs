@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -19,9 +20,12 @@ using Moq;
 
 using GitHubActionsStepSummarySections = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections;
 using GitHubActionsStepSummarySectionsParser = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySectionsParser;
+using GitHubCiCoverageMetric = ghactions::Microsoft.Testing.Extensions.CiCoverageMetric;
+using GitHubCiCoverageSummaryData = ghactions::Microsoft.Testing.Extensions.CiCoverageSummaryData;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
 using GitHubCiRunSummaryAggregation = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregation;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
+using GitHubCiRunSummaryTest = ghactions::Microsoft.Testing.Extensions.CiRunSummaryTest;
 using GitHubSummaryPostProcessor = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryArtifactPostProcessor;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -166,6 +170,15 @@ public sealed class CiRunSummaryAggregationTests
         {
             GitHubCiRunSummaryModule module = CreateGitHubModule("Selected");
             module.GitHubActionsStepSummarySections = ["test-results"];
+            module.FlakyTests =
+            [
+                new GitHubCiRunSummaryTest
+                {
+                    DisplayName = "Flaky",
+                    FullyQualifiedName = "Tests.Flaky",
+                    DurationTicks = TimeSpan.FromMilliseconds(10).Ticks,
+                },
+            ];
             string path = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
                 directory,
                 GitHubSummaryPostProcessor.Provider,
@@ -180,7 +193,9 @@ public sealed class CiRunSummaryAggregationTests
             string[] persistedSections = aggregate.Modules.Single().GitHubActionsStepSummarySections!;
 
             Assert.Contains("\"gitHubActionsStepSummarySections\"", json);
+            Assert.Contains("\"flakyTests\"", json);
             Assert.AreSequenceEqual(["test-results"], persistedSections);
+            Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
             Assert.AreEqual(
                 GitHubActionsStepSummarySections.TestResults,
                 GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules));
@@ -189,6 +204,35 @@ public sealed class CiRunSummaryAggregationTests
         {
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    [TestMethod]
+    public void GitHubAggregate_ForRetryAttempts_UsesInitialAttemptCoverage()
+    {
+        GitHubCiRunSummaryModule first = CreateGitHubModule("Tests");
+        first.AttemptNumber = 1;
+        first.Coverage = CreateGitHubCoverage(covered: 50, coverable: 100);
+        GitHubCiRunSummaryModule retry = CreateGitHubModule("Tests");
+        retry.AttemptNumber = 2;
+        retry.Coverage = CreateGitHubCoverage(covered: 10, coverable: 20);
+
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [retry, first],
+            new ArtifactPostProcessingContext(
+                ArtifactPostProcessingTruncationReason.None,
+                ArtifactPostProcessingMode.RetryAttempts),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        GitHubCiCoverageMetric metric = aggregate.Coverage.Metrics.Single();
+        Assert.AreEqual(50, metric.CoveredCount);
+        Assert.AreEqual(100, metric.CoverableCount);
     }
 
     [TestMethod]
@@ -709,7 +753,9 @@ public sealed class CiRunSummaryAggregationTests
                     ["manifest"] = ["manifest.json"],
                 }),
                 environment.Object,
-                new SystemFileSystem());
+                new SystemFileSystem(),
+                new Mock<ILoggerFactory>().Object,
+                static () => false);
 
             ProcessedArtifact? result = await processor.ProcessAsync(
                 [
@@ -746,6 +792,24 @@ public sealed class CiRunSummaryAggregationTests
             SessionUid = "session-" + assemblyName,
             AttemptNumber = 1,
             ExitCode = 0,
+        };
+
+    private static GitHubCiCoverageSummaryData CreateGitHubCoverage(long covered, long coverable)
+        => new()
+        {
+            Metrics =
+            [
+                new GitHubCiCoverageMetric
+                {
+                    ScopeLevel = CoverageScopeLevel.Overall,
+                    Metric = CoverageMetric.Line,
+                    ProducerId = "coverage",
+                    CoveredCount = covered,
+                    CoverableCount = coverable,
+                },
+            ],
+            ReportingModuleCount = 1,
+            TotalModuleCount = 1,
         };
 
     private static InputArtifact CreateGitHubInput(string path, GitHubCiRunSummaryModule module)

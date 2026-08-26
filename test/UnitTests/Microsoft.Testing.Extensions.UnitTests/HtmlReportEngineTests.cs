@@ -155,6 +155,52 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
+    public void TestResultCapture_CapturesRetryMetadata()
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.AreEqual(2, result.RetryAttemptNumber);
+        Assert.IsFalse(result.IsSupersededRetryAttempt);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_EmitsRetryMetadata()
+    {
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new()
+            {
+                Uid = "shared",
+                DisplayName = "Shared title",
+                Outcome = "failed",
+                RetryAttemptNumber = 1,
+                IsSupersededRetryAttempt = true,
+            },
+            new()
+            {
+                Uid = "shared",
+                DisplayName = "Shared title",
+                Outcome = "passed",
+                RetryAttemptNumber = 2,
+                IsSupersededRetryAttempt = false,
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        string html = memoryStream.GetUtf8Content();
+        Assert.Contains(@"""retryAttemptNumber"":1", html);
+        Assert.Contains(@"""isSupersededRetryAttempt"":true", html);
+    }
+
+    [TestMethod]
     public void TestResultCapture_DoesNotSplitSurrogatePair_AtTruncationBoundary()
     {
         // Build a string whose (maxLength-1)-th char is the high surrogate of a pair.

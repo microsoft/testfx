@@ -1,13 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
-#if NETFRAMEWORK
-using System.Diagnostics;
-#endif
-
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -16,10 +11,16 @@ public sealed class ArtifactPostProcessingHelperTests
 {
     // ArtifactPostProcessingHelper is linked into each report-engine assembly, so resolve the
     // TrxReport copy through reflection to avoid an ambiguous type reference.
+    private static readonly Type HelperType =
+        typeof(TrxReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.ArtifactPostProcessingHelper")
+        ?? throw new InvalidOperationException("Could not find type ArtifactPostProcessingHelper in the Trx report engine assembly.");
+
+    private static readonly MethodInfo OrderInputsMethod =
+        HelperType.GetMethod("OrderInputs", BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("Could not resolve ArtifactPostProcessingHelper.OrderInputs.");
+
     private static readonly MethodInfo IsReparsePointMethod =
-        (typeof(TrxReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.ArtifactPostProcessingHelper")
-            ?? throw new InvalidOperationException("Could not find type ArtifactPostProcessingHelper in the Trx report engine assembly."))
-        .GetMethod("IsReparsePoint", BindingFlags.NonPublic | BindingFlags.Static)
+        HelperType.GetMethod("IsReparsePoint", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve ArtifactPostProcessingHelper.IsReparsePoint.");
 
     private readonly List<string> _trackedDirectories = [];
@@ -49,6 +50,54 @@ public sealed class ArtifactPostProcessingHelperTests
         {
             throw cleanupException;
         }
+    }
+
+    [TestMethod]
+    public void OrderInputs_ModuleMetadataEnabled_SortsByPathThenModuleMetadataAndExecutionId()
+    {
+        string firstPath = Path.Combine("artifacts", "B.trx");
+        string secondPath = Path.Combine("artifacts", "a.trx");
+        InputArtifact byPath = CreateInput(firstPath, "z", "z", "z", "z");
+        InputArtifact byModule = CreateInput(secondPath, "B", "z", "z", "z");
+        InputArtifact byTargetFramework = CreateInput(secondPath, "a", "B", "z", "z");
+        InputArtifact byArchitecture = CreateInput(secondPath, "a", "a", "B", "z");
+        InputArtifact byExecutionIdUppercase = CreateInput(secondPath, "a", "a", "a", "A");
+        InputArtifact byExecutionIdLowercase = CreateInput(secondPath, "a", "a", "a", "a");
+
+        IReadOnlyList<InputArtifact> result = InvokeOrderInputs(
+            [byExecutionIdLowercase, byArchitecture, byTargetFramework, byPath, byExecutionIdUppercase, byModule],
+            includeModuleMetadata: true);
+
+        Assert.AreSequenceEqual(
+            [byPath, byModule, byTargetFramework, byArchitecture, byExecutionIdUppercase, byExecutionIdLowercase],
+            result);
+    }
+
+    [TestMethod]
+    public void OrderInputs_ModuleMetadataDisabled_SortsByExecutionIdWithoutUsingModuleMetadata()
+    {
+        string path = Path.Combine("artifacts", "report.trx");
+        InputArtifact metadataFirst = CreateInput(path, "a", "a", "a", "2");
+        InputArtifact executionIdFirst = CreateInput(path, "z", "z", "z", "1");
+
+        IReadOnlyList<InputArtifact> result =
+            InvokeOrderInputs([metadataFirst, executionIdFirst], includeModuleMetadata: false);
+
+        Assert.AreSequenceEqual([executionIdFirst, metadataFirst], result);
+    }
+
+    [TestMethod]
+    public void OrderInputs_EquivalentRelativeAndFullPaths_UsesExecutionIdAsTieBreaker()
+    {
+        string relativePath = Path.Combine(".", "artifact.trx");
+        string fullPath = Path.GetFullPath(relativePath);
+        InputArtifact relativePathInput = CreateInput(relativePath, "module", "tfm", "architecture", "2");
+        InputArtifact fullPathInput = CreateInput(fullPath, "module", "tfm", "architecture", "1");
+
+        IReadOnlyList<InputArtifact> result =
+            InvokeOrderInputs([relativePathInput, fullPathInput], includeModuleMetadata: false);
+
+        Assert.AreSequenceEqual([fullPathInput, relativePathInput], result);
     }
 
     [TestMethod]
@@ -145,6 +194,25 @@ public sealed class ArtifactPostProcessingHelperTests
 
         Assert.IsFalse(result);
     }
+
+    private static InputArtifact CreateInput(
+        string path,
+        string producingTestModule,
+        string targetFramework,
+        string architecture,
+        string executionId)
+        => new(
+            path,
+            kind: null,
+            producingTestModule,
+            targetFramework,
+            architecture,
+            executionId);
+
+    private static IReadOnlyList<InputArtifact> InvokeOrderInputs(
+        IEnumerable<InputArtifact> inputs,
+        bool includeModuleMetadata)
+        => ((IEnumerable<InputArtifact>)OrderInputsMethod.Invoke(null, [inputs, includeModuleMetadata])!).ToList();
 
     private string CreateTrackedDirectory()
     {

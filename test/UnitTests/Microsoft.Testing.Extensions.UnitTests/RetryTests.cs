@@ -227,6 +227,14 @@ public class RetryTests
                 });
             ServiceProvider serviceProvider = CreateServiceProvider(processor);
             var cancellationToken = new CancellationToken(canceled: false);
+            var runSummary = new ArtifactPostProcessingRunSummary(
+                totalTests: 3,
+                passedTests: 3,
+                failedTests: 0,
+                skippedTests: 0,
+                duration: TimeSpan.FromSeconds(1),
+                exitCode: 0,
+                testModuleCount: 1);
 
             IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
                 serviceProvider,
@@ -238,6 +246,7 @@ public class RetryTests
                     new RetryAttemptArtifact(firstPath, "report", attempt: 1, destinationPath: null),
                 ],
                 attemptCount: 2,
+                runSummary,
                 outputDirectory,
                 cancellationToken);
 
@@ -255,6 +264,7 @@ public class RetryTests
             Assert.IsNotNull(capturedContext);
             Assert.AreEqual(ArtifactPostProcessingMode.RetryAttempts, capturedContext.Mode);
             Assert.AreEqual(ArtifactPostProcessingTruncationReason.None, capturedContext.TruncationReason);
+            Assert.AreSame(runSummary, capturedContext.RunSummary);
             Assert.AreEqual(cancellationToken, capturedCancellationToken);
         }
         finally

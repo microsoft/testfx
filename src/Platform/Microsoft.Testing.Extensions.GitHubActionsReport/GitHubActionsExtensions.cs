@@ -15,6 +15,10 @@ namespace Microsoft.Testing.Extensions;
 /// </summary>
 public static class GitHubActionsExtensions
 {
+    // Must match Microsoft.Testing.Extensions.Retry's hidden child-host option. Referencing the retry assembly
+    // directly would create a package dependency solely for this internal orchestration handshake.
+    private const string RetryPipeOptionName = "internal-retry-pipename";
+
     /// <summary>
     /// Adds support to the test application builder.
     /// </summary>
@@ -33,10 +37,7 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetTestApplicationProcessExitCode(),
                 serviceProvider.GetRequiredService<ITestCoverageResult>(),
                 serviceProvider.GetLoggerFactory(),
-                () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
-                {
-                    IsRequiredArtifactPostProcessingSupported: true,
-                }));
+                () => ShouldDeferToArtifactPostProcessing(serviceProvider)));
 
         var compositeSlowTestReporter = new CompositeExtensionFactory<GitHubActionsSlowTestReporter>(serviceProvider =>
             new GitHubActionsSlowTestReporter(
@@ -84,7 +85,21 @@ public static class GitHubActionsExtensions
                 new GitHubActionsSummaryArtifactPostProcessor(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
-                    serviceProvider.GetFileSystem()));
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetLoggerFactory(),
+                    () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
+                    {
+                        IsRequiredArtifactPostProcessingSupported: true,
+                    }));
         }
+    }
+
+    private static bool ShouldDeferToArtifactPostProcessing(IServiceProvider serviceProvider)
+    {
+        bool dotnetTestRequiresPostProcessing =
+            serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection connection
+            && connection.IsRequiredArtifactPostProcessingSupported;
+        return dotnetTestRequiresPostProcessing
+            || serviceProvider.GetCommandLineOptions().IsOptionSet(RetryPipeOptionName);
     }
 }

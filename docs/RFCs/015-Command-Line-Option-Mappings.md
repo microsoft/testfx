@@ -300,7 +300,7 @@ The mapping API is additive. Existing `ICommandLineOptionsProvider` implementati
 
 ### What about `--logger console;verbosity=detailed`?
 
-In VSTest, the console logger options govern terminal output. In MTP, terminal output is governed by `--output` and the terminal-test-reporter options. A mapping for `--logger console` would naturally live in the same package that owns `--output`, and would translate `verbosity=detailed` to `--output detailed`, `verbosity=normal` to `--output normal`, etc. This is exemplary, not normative for this RFC — the mechanism is what we're shipping, not a fixed list of mappings.
+In VSTest, the console logger options govern terminal output. In MTP, terminal output is governed by `--output` and the terminal-test-reporter options. A mapping for `--logger console` would naturally live in the same package that owns `--output`, and would translate `verbosity=detailed` to `--output detailed` and `verbosity=normal` to `--output normal`. The `--output minimal` per-test-result preset has no VSTest console-verbosity counterpart. This is exemplary, not normative for this RFC — the mechanism is what we're shipping, not a fixed list of mappings.
 
 ### Sub-option handling and the `trx;LogFileName=` shape
 

@@ -89,6 +89,54 @@ public sealed class ProtocolEdgeCaseTests
     }
 
     [TestMethod]
+    public void SuccessfulAndFailedTestResultMessage_WithRetryAttemptMetadata_RoundTrips()
+    {
+        // A superseded (non-final) retry attempt that failed, followed by the final attempt that passed - the
+        // typical shape produced by MSTest's [Retry] attribute for a flaky test that eventually succeeds.
+        var message = new TestResultMessages(
+            "exec",
+            "inst",
+            [new SuccessfulTestResultMessage("uid", "F", TestStates.Passed, 1, "reason", null, null, "s", RetryAttemptNumber: 2, IsSuperseded: false)],
+            [new FailedTestResultMessage("uid", "F", TestStates.Failed, 1, "reason", [], null, null, "s", null, null, RetryAttemptNumber: 1, IsSuperseded: true)]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.AreEqual(2, actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsFalse(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.AreEqual(1, actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsTrue(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_WhenPayloadPredatesRetryAttemptFields_DeserializesWithNullRetryMetadata()
+    {
+        // Simulates a payload written by an older SDK/runner that predates the RetryAttemptNumber/IsSuperseded
+        // fields: the field ids are simply absent from the wire, rather than present with a null/default value.
+        // A new reader must treat that absence as "no retry metadata" instead of throwing or defaulting to zero.
+        byte[] successfulResult = WriteFields(
+            (SuccessfulTestResultMessageFieldsId.Uid, WriteString("p")),
+            (SuccessfulTestResultMessageFieldsId.DisplayName, WriteString("passed test")));
+        byte[] failedResult = WriteFields(
+            (FailedTestResultMessageFieldsId.Uid, WriteString("f")),
+            (FailedTestResultMessageFieldsId.DisplayName, WriteString("failed test")));
+        byte[] payload = WriteFields(
+            (TestResultMessagesFieldsId.InstanceId, WriteString("instance")),
+            (TestResultMessagesFieldsId.SuccessfulTestMessageList, WriteList(successfulResult)),
+            (TestResultMessagesFieldsId.FailedTestMessageList, WriteList(failedResult)));
+
+        TestResultMessages actual = DeserializePayload<TestResultMessages>(new TestResultMessagesSerializer(), payload);
+
+        Assert.HasCount(1, actual.SuccessfulTestMessages);
+        Assert.AreEqual("passed test", actual.SuccessfulTestMessages[0].DisplayName);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("failed test", actual.FailedTestMessages[0].DisplayName);
+        Assert.IsNull(actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
     public void TestResultMessages_WhenFieldsContainSpecialCharacters_RoundTripsExactly()
     {
         // Unicode, newlines, tabs, and a null character must survive the round-trip unchanged because failure

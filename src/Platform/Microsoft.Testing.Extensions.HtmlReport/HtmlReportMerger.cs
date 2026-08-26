@@ -9,18 +9,56 @@ using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
+/// <summary>
+/// Controls how <see cref="HtmlReportMerger"/> combines the "tests[]" arrays of its inputs.
+/// </summary>
+internal enum HtmlMergeMode
+{
+    /// <summary>
+    /// Concatenates the inputs, which is correct when they describe disjoint sets of tests (the shard or
+    /// per-module case). This is the default: MTP test UIDs are only unique WITHIN an assembly, so collapsing
+    /// by identity across modules would fuse same-named tests from different assemblies.
+    /// </summary>
+    Concatenate,
+
+    /// <summary>
+    /// Folds rows describing the same logical test into one, which is correct when the inputs are successive
+    /// attempts of the same test module (--retry-failed-tests): the LAST occurrence in the supplied execution
+    /// order wins and earlier occurrences become its "retryAttempts[]". Inputs MUST be supplied in attempt order
+    /// (as RetryArtifactProcessor already does) rather than re-sorted by embedded timestamp, and MUST come from
+    /// the same module for identities to be comparable.
+    /// </summary>
+    CollapseRetryAttempts,
+}
+
 internal static class HtmlReportMerger
 {
     private const string GeneratorName = "Microsoft.Testing.Extensions.HtmlReport";
 
+    // Fields copied verbatim from a folded (non-final) test row onto its "retryAttempts[]" entry, in addition to
+    // the always-present "attempt"/"outcome"/"durationMs".
+    private static readonly string[] RetryAttemptDetailFields =
+    [
+        "errorMessage",
+        "exceptionType",
+        "stackTrace",
+        "standardOutput",
+        "standardError",
+        "retryAttemptNumber",
+        "isSupersededRetryAttempt",
+    ];
+
     internal static string Merge(IReadOnlyList<string> inputReports)
+        => Merge(inputReports, HtmlMergeMode.Concatenate);
+
+    internal static string Merge(IReadOnlyList<string> inputReports, HtmlMergeMode mode)
     {
         IReadOnlyList<string> reports = inputReports ?? throw new ArgumentNullException(nameof(inputReports));
 
-        return Merge([.. reports.Select(report => new HtmlReportMergeInput(report, null, null, null, null))]);
+        return Merge([.. reports.Select(report => new HtmlReportMergeInput(report, null, null, null, null))], mode);
     }
 
-    private static string Merge(IReadOnlyList<HtmlReportMergeInput> inputs)
+    private static string Merge(IReadOnlyList<HtmlReportMergeInput> inputs, HtmlMergeMode mode)
     {
         if (inputs is null)
         {
@@ -74,13 +112,78 @@ internal static class HtmlReportMerger
         }
 
         IReadOnlyList<JsonObject> reports = [.. parsedReports.Select(report => report.Report)];
-        MergedTest[] orderedTests =
-        [
-            .. tests
-                .OrderBy(test => test.SourceReportStartTime)
-                .ThenBy(test => test.OriginalReportIndex)
-                .ThenBy(test => test.OriginalTestIndex),
-        ];
+
+        // TestModules concatenation sorts by embedded start time for deterministic chronological display across
+        // independently-timestamped shards. RetryAttempts collapsing must NOT do this: RetryArtifactProcessor
+        // already supplies inputs in true execution/attempt order, and an attempt's own embedded start/end time is
+        // not a reliable substitute for that order (clock skew, retried attempts sharing a machine, ...).
+        MergedTest[] orderedTests = mode == HtmlMergeMode.CollapseRetryAttempts
+            ? [.. tests]
+            :
+            [
+                .. tests
+                    .OrderBy(test => test.SourceReportStartTime)
+                    .ThenBy(test => test.OriginalReportIndex)
+                    .ThenBy(test => test.OriginalTestIndex),
+            ];
+
+        (JsonArray mergedTests, int passed, int failed, int skipped, int timedOut, int errored, double totalDurationMs, int? flaky) =
+            mode == HtmlMergeMode.CollapseRetryAttempts
+                ? CollapseRetryAttempts(orderedTests)
+                : ConcatenateTests(orderedTests);
+
+        bool hasCommonFramework = TryGetCommonFramework(reports, out string framework, out string frameworkUid, out string frameworkVersion);
+        var summary = new JsonObject
+        {
+            ["total"] = mergedTests.Count,
+            ["passed"] = passed,
+            ["failed"] = failed,
+            ["skipped"] = skipped,
+            ["timedOut"] = timedOut,
+            ["errored"] = errored,
+            ["totalDurationMs"] = totalDurationMs,
+        };
+        if (flaky is int flakyCount)
+        {
+            summary["flaky"] = flakyCount;
+        }
+
+        var merged = new JsonObject
+        {
+            ["schemaVersion"] = "1",
+            ["generator"] = GeneratorName,
+            ["generatorVersion"] = ExtensionVersion.DefaultSemVer,
+            ["testApplication"] = GetCommonString(reports, "testApplication") ?? ExtensionResources.HtmlMergedReportName,
+            ["machineName"] = GetCommonString(reports, "machineName") ?? string.Empty,
+            ["userName"] = GetCommonString(reports, "userName") ?? string.Empty,
+            ["framework"] = hasCommonFramework ? framework : string.Empty,
+            ["frameworkUid"] = hasCommonFramework ? frameworkUid : string.Empty,
+            ["frameworkVersion"] = hasCommonFramework ? frameworkVersion : string.Empty,
+            ["startTime"] = earliestStartTime!.Value.ToString("O", CultureInfo.InvariantCulture),
+            ["endTime"] = latestEndTime!.Value.ToString("O", CultureInfo.InvariantCulture),
+            ["tests"] = mergedTests,
+            ["summary"] = summary,
+        };
+
+        bool hasExitCode = mode == HtmlMergeMode.CollapseRetryAttempts
+            ? TryGetInt(reports[^1], "exitCode", out int exitCode)
+            : TryGetCommonInt(reports, "exitCode", out exitCode);
+        if (hasExitCode)
+        {
+            merged["exitCode"] = exitCode;
+        }
+
+        return HtmlReportEngine.RenderReport(merged.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
+    }
+
+    /// <summary>
+    /// Default (non-retry) merge: every row is kept, numbered "#N of M" via "attemptIndex"/"attemptOf" whenever more
+    /// than one row shares the same test identity (e.g. the same test UID appearing in more than one shard), so
+    /// nothing is silently collapsed away.
+    /// </summary>
+    private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, double TotalDurationMs, int? Flaky) ConcatenateTests(
+        MergedTest[] orderedTests)
+    {
         var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (string identity in orderedTests.Select(CreateTestIdentity))
         {
@@ -127,44 +230,144 @@ internal static class HtmlReportMerger
             mergedTests.Add((JsonNode)test);
         }
 
-        bool hasCommonFramework = TryGetCommonFramework(reports, out string framework, out string frameworkUid, out string frameworkVersion);
-        var merged = new JsonObject
-        {
-            ["schemaVersion"] = "1",
-            ["generator"] = GeneratorName,
-            ["generatorVersion"] = ExtensionVersion.DefaultSemVer,
-            ["testApplication"] = GetCommonString(reports, "testApplication") ?? ExtensionResources.HtmlMergedReportName,
-            ["machineName"] = GetCommonString(reports, "machineName") ?? string.Empty,
-            ["userName"] = GetCommonString(reports, "userName") ?? string.Empty,
-            ["framework"] = hasCommonFramework ? framework : string.Empty,
-            ["frameworkUid"] = hasCommonFramework ? frameworkUid : string.Empty,
-            ["frameworkVersion"] = hasCommonFramework ? frameworkVersion : string.Empty,
-            ["startTime"] = earliestStartTime!.Value.ToString("O", CultureInfo.InvariantCulture),
-            ["endTime"] = latestEndTime!.Value.ToString("O", CultureInfo.InvariantCulture),
-            ["tests"] = mergedTests,
-            ["summary"] = new JsonObject
-            {
-                ["total"] = orderedTests.Length,
-                ["passed"] = passed,
-                ["failed"] = failed,
-                ["skipped"] = skipped,
-                ["timedOut"] = timedOut,
-                ["errored"] = errored,
-                ["totalDurationMs"] = totalDurationMs,
-            },
-        };
+        return (mergedTests, passed, failed, skipped, timedOut, errored, totalDurationMs, null);
+    }
 
-        if (TryGetCommonInt(reports, "exitCode", out int exitCode))
+    /// <summary>
+    /// RetryAttempts merge: folds successive attempts of the same logical test (rows sharing the same test
+    /// identity) into a single row, using the LAST occurrence in the supplied execution order as the logical
+    /// result; earlier occurrences are appended, oldest first, to that row's "retryAttempts[]" with their outcome,
+    /// duration, and whichever error/output detail fields they carried. A test whose final outcome is "passed"
+    /// after at least one non-passed prior attempt is additionally flagged "flaky" so it stays visibly
+    /// distinguishable from a test that has always passed. Logical result counts use only the final occurrence,
+    /// while total duration includes every physical attempt so retry cost remains visible.
+    /// </summary>
+    private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, double TotalDurationMs, int? Flaky) CollapseRetryAttempts(
+        MergedTest[] orderedTests)
+    {
+        HashSet<(int ReportIndex, string BaseIdentity)> ambiguousIdentities =
+        [
+            .. orderedTests
+                .GroupBy(test => (
+                    test.OriginalReportIndex,
+                    BaseIdentity: CreateRetryBaseIdentity(test),
+                    RetryAttempt: ReadOptionalInt(test.Test, "retryAttemptNumber")))
+                .Where(static group => group.Count() > 1)
+                .Select(static group => (group.Key.OriginalReportIndex, group.Key.BaseIdentity)),
+        ];
+        var slots = new List<(MergedTest Final, List<JsonObject> Priors)>();
+        var slotByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (MergedTest mergedTest in orderedTests)
         {
-            merged["exitCode"] = exitCode;
+            string baseIdentity = CreateRetryBaseIdentity(mergedTest);
+            string identity = ambiguousIdentities.Contains((mergedTest.OriginalReportIndex, baseIdentity))
+                ? $"{baseIdentity}\0ambiguous\0{mergedTest.OriginalReportIndex.ToString(CultureInfo.InvariantCulture)}\0{mergedTest.OriginalTestIndex.ToString(CultureInfo.InvariantCulture)}"
+                : baseIdentity;
+            if (slotByIdentity.TryGetValue(identity, out int index))
+            {
+                (MergedTest previousFinal, List<JsonObject> priors) = slots[index];
+                priors.Add(previousFinal.Test);
+                slots[index] = (mergedTest, priors);
+            }
+            else
+            {
+                slotByIdentity.Add(identity, slots.Count);
+                slots.Add((mergedTest, []));
+            }
         }
 
-        return HtmlReportEngine.RenderReport(merged.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
+        var mergedTests = new JsonArray();
+        int passed = 0;
+        int failed = 0;
+        int skipped = 0;
+        int timedOut = 0;
+        int errored = 0;
+        int flaky = 0;
+        double totalDurationMs = 0;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            (MergedTest final, List<JsonObject> priors) = slots[i];
+            JsonObject test = final.Test;
+            string outcome = ReadRequiredString(test, "outcome");
+            double durationMs = ReadRequiredDouble(test, "durationMs");
+
+            test["rowKey"] = i;
+            _ = test.Remove("attemptIndex");
+            _ = test.Remove("attemptOf");
+            AddOptionalString(test, "testApplication", final.ProducingTestModule);
+            AddOptionalString(test, "targetFramework", final.TargetFramework);
+            AddOptionalString(test, "architecture", final.Architecture);
+            AddOptionalString(test, "executionId", final.ExecutionId);
+            test["sourceReportStartTime"] = final.SourceReportStartTime.ToString("O", CultureInfo.InvariantCulture);
+
+            if (priors.Count > 0)
+            {
+                var history = new JsonArray();
+                bool anyPriorNotPassed = false;
+                for (int attemptNumber = 1; attemptNumber <= priors.Count; attemptNumber++)
+                {
+                    JsonObject priorTest = priors[attemptNumber - 1];
+                    if (!string.Equals(ReadOptionalString(priorTest, "outcome"), "passed", StringComparison.Ordinal))
+                    {
+                        anyPriorNotPassed = true;
+                    }
+
+                    history.Add((JsonNode)BuildRetryAttempt(priorTest, attemptNumber));
+                }
+
+                test["retryAttempts"] = history;
+                test["retries"] = priors.Count;
+
+                if (string.Equals(outcome, "passed", StringComparison.Ordinal) && anyPriorNotPassed)
+                {
+                    test["flaky"] = true;
+                    flaky++;
+                }
+            }
+
+            CountOutcome(outcome, ref passed, ref failed, ref skipped, ref timedOut, ref errored);
+            totalDurationMs += durationMs;
+            foreach (JsonObject prior in priors)
+            {
+                totalDurationMs += ReadRequiredDouble(prior, "durationMs");
+            }
+
+            mergedTests.Add((JsonNode)test);
+        }
+
+        return (mergedTests, passed, failed, skipped, timedOut, errored, totalDurationMs, flaky);
+    }
+
+    /// <summary>
+    /// Projects a folded (non-final) test row onto its "retryAttempts[]" entry: the attempt number assigned by the
+    /// caller, its own outcome/duration, and whichever of <see cref="RetryAttemptDetailFields"/> it carries.
+    /// </summary>
+    private static JsonObject BuildRetryAttempt(JsonObject test, int attemptNumber)
+    {
+        var attempt = new JsonObject
+        {
+            ["attempt"] = attemptNumber,
+            ["outcome"] = ReadRequiredString(test, "outcome"),
+            ["durationMs"] = ReadRequiredDouble(test, "durationMs"),
+        };
+
+        foreach (string field in RetryAttemptDetailFields)
+        {
+            if (test[field] is JsonNode value)
+            {
+                attempt[field] = value.DeepClone();
+            }
+        }
+
+        return attempt;
     }
 
     internal static async Task MergeToFileAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputPath,
+        HtmlMergeMode mode,
         CancellationToken cancellationToken)
     {
         if (inputs is null)
@@ -202,7 +405,7 @@ internal static class HtmlReportMerger
                 input.ExecutionId));
         }
 
-        byte[] mergedBytes = Encoding.UTF8.GetBytes(Merge(reports));
+        byte[] mergedBytes = Encoding.UTF8.GetBytes(Merge(reports, mode));
         string? outputDirectory = Path.GetDirectoryName(outputPath);
         if (outputDirectory is { Length: > 0 })
         {
@@ -275,6 +478,28 @@ internal static class HtmlReportMerger
             test.ProducingTestModule ?? string.Empty,
             test.TargetFramework ?? string.Empty,
             test.Architecture ?? string.Empty);
+
+    private static string CreateRetryBaseIdentity(MergedTest test)
+        => string.Join(
+            "\0",
+            CreateTestIdentity(test),
+            ReadRequiredString(test.Test, "displayName"));
+
+    private static int? ReadOptionalInt(JsonObject owner, string propertyName)
+        => owner[propertyName] is JsonValue value && value.TryGetValue(out int result)
+            ? result
+            : null;
+
+    private static bool TryGetInt(JsonObject owner, string propertyName, out int value)
+    {
+        if (owner[propertyName] is JsonValue jsonValue && jsonValue.TryGetValue(out value))
+        {
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
 
     private static void AddOptionalString(JsonObject owner, string propertyName, string? value)
     {

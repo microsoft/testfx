@@ -52,31 +52,6 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerMode.Client.Sources\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" Aliases="serverclient" />
   </ItemGroup>
 
-  <!--
-    Dependabot anchors for the packages bundled by MSTest.Sdk (Microsoft.Playwright.MSTest.v4,
-    Aspire.Hosting.Testing). These are baked into the shipped SDK templates (Sdk/Features/*.targets)
-    and are otherwise referenced only there (which Dependabot doesn't restore), so their Central
-    Package Management PackageVersion entries in Directory.Packages.props are "orphans" that
-    Dependabot ignores unless a project references them.
-
-    The PackageReference (with ExcludeAssets="all") is the Dependabot ANCHOR: Dependabot reads the
-    PackageReference XML node to discover the dependency and bump its CPM PackageVersion.
-    ExcludeAssets="all" only stops the package's assets (compile/runtime/build, e.g. Playwright's
-    browser install) from flowing into this test project - it does NOT hide the reference from
-    Dependabot. A PackageDownload does NOT work as the anchor: Dependabot does not read
-    PackageDownload items at all (dependabot/dependabot-core#2502). Using PackageDownload as the
-    anchor is exactly why Playwright silently stopped updating - see #9362 / #9452.
-
-    Dependabot only bumps the literal PackageVersion in Directory.Packages.props, not the matching
-    *Version property the build consumes; the _ValidateBundledSdkFeatureVersions target in
-    Directory.Build.targets fails the build if the two drift apart, so a maintainer reconciles the
-    property in the Dependabot PR.
-  -->
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" ExcludeAssets="all" />
-    <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
-  </ItemGroup>
-
   <!-- Packages needed to stage nupkgs for the generated test assets (see
        CopyNuGetPackagesForTestAssets below) but that we don't want to reference. -->
   <ItemGroup>

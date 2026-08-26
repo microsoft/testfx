@@ -12,8 +12,8 @@ namespace Microsoft.Testing.Extensions;
 
 internal static partial class CiRunSummaryAggregation
 {
-    // Coverage was added as optional data without changing the schema so newer and older extension
-    // versions can still aggregate each other's fragments in mixed-version test runs.
+    // Additive fields such as coverage and flaky tests keep the same schema version so newer and older
+    // extension versions can still aggregate each other's fragments in mixed-version test runs.
     private const int SchemaVersion = 1;
 
     public static CiRunSummaryAggregate ReadAndAggregate(
@@ -39,7 +39,7 @@ internal static partial class CiRunSummaryAggregation
                 throw new FormatException($"Invalid {provider} summary fragment '{input.Path}'.");
             }
 
-            ValidateModule(fragment.Module, input);
+            ValidateModule(fragment.Module, input, context.Mode);
             string identity = GetModuleIdentity(fragment.Module);
             if (!identities.Add(identity))
             {
@@ -88,7 +88,10 @@ internal static partial class CiRunSummaryAggregation
                 isPartial: context.IsTruncated);
     }
 
-    private static void ValidateModule(CiRunSummaryModule module, InputArtifact input)
+    private static void ValidateModule(
+        CiRunSummaryModule module,
+        InputArtifact input,
+        ArtifactPostProcessingMode mode)
     {
         if (RoslynString.IsNullOrWhiteSpace(module.AssemblyName)
             || RoslynString.IsNullOrWhiteSpace(module.ModulePath)
@@ -103,12 +106,14 @@ internal static partial class CiRunSummaryAggregation
             || module.TestDurationTicks < 0
             || checked(module.PassedTests + module.FailedTests + module.SkippedTests) != module.TotalTests
             || module.Failures is null
+            || module.FlakyTests is null
             || module.SlowestTests is null
             || module.TopFailingClasses is null
             || module.Coverage is null
             || module.Coverage.Metrics is null
             || module.Coverage.Thresholds is null
             || module.Failures.Any(test => !IsValidTest(test))
+            || module.FlakyTests.Any(test => !IsValidTest(test))
             || module.SlowestTests.Any(test => !IsValidTest(test))
             || module.TopFailingClasses.Any(item => RoslynString.IsNullOrWhiteSpace(item.ClassName) || item.FailureCount <= 0)
             || module.Coverage.Metrics.Any(metric =>
@@ -146,7 +151,10 @@ internal static partial class CiRunSummaryAggregation
         }
 
         if (input.ExecutionId is not null
-            && !string.Equals(input.ExecutionId, module.ExecutionId, StringComparison.Ordinal))
+            && (mode == ArtifactPostProcessingMode.RetryAttempts
+                ? !int.TryParse(input.ExecutionId, NumberStyles.None, CultureInfo.InvariantCulture, out int attempt)
+                    || attempt != module.AttemptNumber
+                : !string.Equals(input.ExecutionId, module.ExecutionId, StringComparison.Ordinal)))
         {
             throw new FormatException($"CI summary execution provenance does not match '{input.Path}'.");
         }
@@ -155,7 +163,8 @@ internal static partial class CiRunSummaryAggregation
     private static bool IsValidTest(CiRunSummaryTest test)
         => !RoslynString.IsNullOrWhiteSpace(test.DisplayName)
             && !RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
-            && test.DurationTicks >= 0;
+            && test.DurationTicks >= 0
+            && test.LineNumber is null or >= 0;
 
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {

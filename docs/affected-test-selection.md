@@ -14,8 +14,8 @@ available yet. Ordinary test commands therefore remain unchanged.
 ## Prepared layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change and instrumentation scopes.
-- The trusted main-branch Windows Debug test is the future `--collect-test-map` entry point.
-- The Windows Debug PR test is the future `--affected-tests` entry point.
+- The trusted main-branch Windows Release test is the future `--collect-test-map` entry point.
+- The Windows Release PR test is the future `--affected-tests` entry point.
 - Both pipeline call sites pass `enableAffectedTests: false`. The inactive template branches restore the map through
   Azure Pipelines `Cache@2` and set `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for the affected-test commands.
 - `eng/validate-affected-tests.ps1` protects the disabled state and verifies that the public SDK gate and command names
