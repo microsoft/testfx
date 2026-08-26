@@ -386,13 +386,13 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="needs-review-translation">테스트를 보고할 때 세부 정보 표시를 출력합니다.
-유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
+        <target state="new">Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
         <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="needs-review-translation">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
+        <target state="new">--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</target>
         <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
