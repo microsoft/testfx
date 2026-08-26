@@ -61,8 +61,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
 #else
     private readonly object _stateLock = new();
 #endif
-#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
-    private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
+    private readonly List<(string Uid, TestRecord Record)> _records = [];
+#pragma warning disable IDE0028 // Collection expressions cannot pass the required comparer.
     private readonly HashSet<string> _inProcessFailedTests = new(StringComparer.Ordinal);
     private readonly HashSet<string> _notRecoveredTests = new(StringComparer.Ordinal);
 #pragma warning restore IDE0028
@@ -169,18 +169,34 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     {
                         _inProcessFailedTests.Add(uid);
                     }
+
+                    return Task.CompletedTask;
                 }
-                else if (kind is TerminalKind.Failed or TerminalKind.Skipped)
+
+                if (kind is TerminalKind.Failed or TerminalKind.Skipped)
                 {
                     // Keep this sticky for the session: folded data-driven rows can share a uid and arrive in
                     // either order, so a later passing row must not turn a mixed-outcome uid into a recovery.
                     _notRecoveredTests.Add(uid);
+                    for (int i = 0; i < _records.Count; i++)
+                    {
+                        (string existingUid, TestRecord record) = _records[i];
+                        if (existingUid == uid && record.IsFlaky)
+                        {
+                            _records[i] = (existingUid, new TestRecord(
+                                record.DisplayName,
+                                record.FullyQualifiedName,
+                                record.Kind,
+                                record.Duration,
+                                isFlaky: false));
+                        }
+                    }
                 }
 
                 bool isFlaky = kind == TerminalKind.Passed
                     && !_notRecoveredTests.Contains(uid)
                     && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
-                _records[$"{uid}\0{displayName}"] = new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky);
+                _records.Add((uid, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
             }
         }
         catch (OperationCanceledException)
@@ -222,7 +238,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             List<TestRecord> snapshot;
             lock (_stateLock)
             {
-                snapshot = [.. _records.Values];
+                snapshot = [.. _records.Select(static entry => entry.Record)];
             }
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";

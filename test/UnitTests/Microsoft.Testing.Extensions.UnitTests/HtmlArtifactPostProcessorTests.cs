@@ -658,6 +658,18 @@ public sealed class HtmlArtifactPostProcessorTests
         {
             string attempt1Path = Path.Combine(directory, "attempt1.html");
             string attempt2Path = Path.Combine(directory, "attempt2.html");
+            JsonObject firstRowAttempt1 = Test("shared-uid", "Shared title", "failed", 10);
+            firstRowAttempt1["attemptIndex"] = 1;
+            firstRowAttempt1["attemptOf"] = 2;
+            JsonObject secondRowAttempt1 = Test("shared-uid", "Shared title", "passed", 5);
+            secondRowAttempt1["attemptIndex"] = 2;
+            secondRowAttempt1["attemptOf"] = 2;
+            JsonObject firstRowAttempt2 = Test("shared-uid", "Shared title", "passed", 12);
+            firstRowAttempt2["attemptIndex"] = 1;
+            firstRowAttempt2["attemptOf"] = 2;
+            JsonObject secondRowAttempt2 = Test("shared-uid", "Shared title", "passed", 6);
+            secondRowAttempt2["attemptIndex"] = 2;
+            secondRowAttempt2["attemptOf"] = 2;
             File.WriteAllText(
                 attempt1Path,
                 CreateReport(
@@ -665,8 +677,8 @@ public sealed class HtmlArtifactPostProcessorTests
                     "MSTest",
                     Epoch,
                     Epoch.AddMinutes(1),
-                    Test("shared-uid", "Data row A", "failed", 10),
-                    Test("shared-uid", "Data row B", "passed", 5)));
+                    firstRowAttempt1,
+                    secondRowAttempt1));
             File.WriteAllText(
                 attempt2Path,
                 CreateReport(
@@ -674,7 +686,8 @@ public sealed class HtmlArtifactPostProcessorTests
                     "MSTest",
                     Epoch.AddMinutes(2),
                     Epoch.AddMinutes(3),
-                    Test("shared-uid", "Data row A", "passed", 12)));
+                    firstRowAttempt2,
+                    secondRowAttempt2));
 
             ProcessedArtifact? output = await new HtmlArtifactPostProcessor().ProcessAsync(
                 [
@@ -689,12 +702,10 @@ public sealed class HtmlArtifactPostProcessorTests
             JsonObject merged = ParseReport(File.ReadAllText(output.Path));
             var tests = (JsonArray)merged["tests"]!;
             Assert.HasCount(2, tests);
-            var rowA = (JsonObject)tests.Single(test => (string?)test!["displayName"] == "Data row A")!;
-            var rowB = (JsonObject)tests.Single(test => (string?)test!["displayName"] == "Data row B")!;
-            Assert.IsTrue((bool?)rowA["flaky"]);
-            Assert.HasCount(1, (JsonArray)rowA["retryAttempts"]!);
-            Assert.IsNull(rowB["flaky"]);
-            Assert.IsNull(rowB["retryAttempts"]);
+            var flakyRow = (JsonObject)tests.Single(test => (bool?)test!["flaky"] == true)!;
+            var stableRow = (JsonObject)tests.Single(test => test!["flaky"] is null)!;
+            Assert.HasCount(1, (JsonArray)flakyRow["retryAttempts"]!);
+            Assert.HasCount(1, (JsonArray)stableRow["retryAttempts"]!);
             Assert.AreEqual(2, (int?)merged["summary"]!["total"]);
             Assert.AreEqual(1, (int?)merged["summary"]!["flaky"]);
         }

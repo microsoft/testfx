@@ -468,7 +468,13 @@ internal static class HtmlReportMerger
         => string.Join(
             "\0",
             CreateTestIdentity(test),
-            ReadRequiredString(test.Test, "displayName"));
+            ReadRequiredString(test.Test, "displayName"),
+            ReadOptionalInt(test.Test, "attemptIndex")?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
+
+    private static int? ReadOptionalInt(JsonObject owner, string propertyName)
+        => owner[propertyName] is JsonValue value && value.TryGetValue(out int result)
+            ? result
+            : null;
 
     private static bool TryGetInt(JsonObject owner, string propertyName, out int value)
     {

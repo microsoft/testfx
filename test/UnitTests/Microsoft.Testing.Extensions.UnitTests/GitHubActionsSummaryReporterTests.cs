@@ -344,15 +344,15 @@ public sealed class GitHubActionsSummaryReporterTests
             await reporter.OnTestSessionStartingAsync(context.Object);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateRetryUpdate(new FailedTestNodeStateProperty("superseded row"), attempt: 1, isSuperseded: true, displayName: "Tests.RowA"),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("superseded row"), attempt: 1, isSuperseded: true, displayName: "Tests.SharedTitle"),
                 CancellationToken.None);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false, displayName: "Tests.RowA"),
+                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
                 CancellationToken.None);
             await reporter.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attempt: 2, isSuperseded: false, displayName: "Tests.RowB"),
+                CreateRetryUpdate(new FailedTestNodeStateProperty("final failed row"), attempt: 2, isSuperseded: false, displayName: "Tests.SharedTitle"),
                 CancellationToken.None);
             await reporter.OnTestSessionFinishingAsync(context.Object);
 
@@ -365,7 +365,7 @@ public sealed class GitHubActionsSummaryReporterTests
             Assert.AreEqual(2, aggregate.TotalTests);
             Assert.AreEqual(1, aggregate.PassedTests);
             Assert.AreEqual(1, aggregate.FailedTests);
-            Assert.AreEqual("Tests.RowA", aggregate.Modules.Single().Failures.Single().FullyQualifiedName);
+            Assert.AreEqual("Tests.SharedTitle", aggregate.Modules.Single().Failures.Single().FullyQualifiedName);
         }
         finally
         {
