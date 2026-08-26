@@ -327,6 +327,8 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: false
+    - pwsh: ./eng/classify-xml-doc-change.ps1 -SelfTest
+      displayName: Validate XML documentation change classifier
     - pwsh: ./eng/validate-affected-tests.ps1
       displayName: Validate affected-test rollout
     - bash: |

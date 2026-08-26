@@ -37,29 +37,37 @@ function Get-ComparedTrivia {
         [switch]$Documentation
     )
 
-    $descendIntoTrivia = [Func[Microsoft.CodeAnalysis.SyntaxNode, bool]] { $true }
+    $descendIntoChildren = [Func[Microsoft.CodeAnalysis.SyntaxNode, bool]] { $true }
     $result = [System.Collections.Generic.List[string]]::new()
 
-    foreach ($trivia in $Root.DescendantTrivia($descendIntoTrivia, $false)) {
-        $kind = Get-CSharpSyntaxKind $trivia
-        $isDocumentation = $kind -in @(
-            [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::SingleLineDocumentationCommentTrivia,
-            [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::MultiLineDocumentationCommentTrivia
-        )
+    $tokenIndex = 0
+    foreach ($token in $Root.DescendantTokens($descendIntoChildren, $false)) {
+        foreach ($side in @("Leading", "Trailing")) {
+            $triviaList = if ($side -eq "Leading") { $token.LeadingTrivia } else { $token.TrailingTrivia }
+            foreach ($trivia in $triviaList) {
+                $kind = Get-CSharpSyntaxKind $trivia
+                $isDocumentation = $kind -in @(
+                    [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::SingleLineDocumentationCommentTrivia,
+                    [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::MultiLineDocumentationCommentTrivia
+                )
 
-        if ($Documentation -ne $isDocumentation) {
-            continue
+                if ($Documentation -ne $isDocumentation) {
+                    continue
+                }
+
+                if (-not $Documentation -and $kind -in @(
+                    [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::WhitespaceTrivia,
+                    [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::EndOfLineTrivia
+                )) {
+                    continue
+                }
+
+                $text = $trivia.ToFullString()
+                $result.Add("${tokenIndex}:${side}:$($trivia.RawKind):$($text.Length):$text")
+            }
         }
 
-        if (-not $Documentation -and $kind -in @(
-            [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::WhitespaceTrivia,
-            [Microsoft.CodeAnalysis.CSharp.SyntaxKind]::EndOfLineTrivia
-        )) {
-            continue
-        }
-
-        $text = $trivia.ToFullString()
-        $result.Add("$($trivia.RawKind):$($text.Length):$text")
+        $tokenIndex++
     }
 
     return $result
@@ -254,6 +262,12 @@ function Invoke-SelfTest {
             Expected = $false
             Old = "#if DEBUG`n/// old`nclass C { }`n#endif"
             New = "#if RELEASE`n/// new`nclass C { }`n#endif"
+        },
+        @{
+            Name = "Relocated preprocessor directive"
+            Expected = $false
+            Old = "#nullable disable`n/// old`nclass C { }`nclass D { }"
+            New = "/// new`nclass C { }`n#nullable disable`nclass D { }"
         }
     )
 
