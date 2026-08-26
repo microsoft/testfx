@@ -73,7 +73,7 @@ Example: 'MyReport_{tfm}.html'.</target>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session.</source>
-        <target state="new">Produce a self-contained HTML report for the current test session.</target>
+        <target state="translated">Genere un informe HTML independiente para la sesión de prueba actual.</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
@@ -93,7 +93,7 @@ Example: 'MyReport_{tfm}.html'.</target>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report.</source>
-        <target state="new">Enable generating an HTML report.</target>
+        <target state="translated">Habilitar la generación de un informe HTML.</target>
         <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">
