@@ -714,6 +714,13 @@ stages:
           displayName: Build
           condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
+        # The Arcade job wrapper gathers artifacts/packages after the configured steps. Debug is unit-test-only and a
+        # cache hit intentionally skips sign/pack, so preserve the wrapper's source-directory contract with an empty
+        # folder rather than producing packages that no downstream job consumes.
+        - pwsh: New-Item "$(Build.SourcesDirectory)\artifacts\packages" -ItemType Directory -Force | Out-Null
+          displayName: Prepare cached Debug artifact directory
+          condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
+
         - ${{ if eq(parameters.SkipTests, False) }}:
 
           - template: /eng/pipelines/steps/test-windows-configuration-tests.yml
