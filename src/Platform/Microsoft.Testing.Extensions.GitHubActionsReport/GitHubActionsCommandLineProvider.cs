@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
@@ -20,6 +21,8 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
             GitHubActionsResources.Description,
             [
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsGroups, GitHubActionsResources.GroupsOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistory, GitHubActionsResources.HistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow, GitHubActionsResources.HistoryWindowOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAnnotations, GitHubActionsResources.AnnotationsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummary, GitHubActionsResources.StepSummaryOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections, GitHubActionsResources.StepSummarySectionsOptionDescription, ArgumentArity.OneOrMore, false),
@@ -44,6 +47,13 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
             GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold
                 when !(TimeSpanParser.TryParse(arguments[0], TimeSpanDefaultUnit.Seconds, out TimeSpan threshold) && threshold > TimeSpan.Zero)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidSlowTestThreshold, arguments[0])),
+            GitHubActionsCommandLineOptions.GitHubActionsHistory
+                when arguments is not [string historyPath] || RoslynString.IsNullOrWhiteSpace(historyPath)
+                => ValidationResult.InvalidTask(GitHubActionsResources.InvalidHistoryPath),
+            GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow
+                when !int.TryParse(arguments[0], NumberStyles.None, CultureInfo.InvariantCulture, out int historyWindow)
+                || historyWindow is < 1 or > 90
+                => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidHistoryWindow, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections
                 when !GitHubActionsStepSummarySectionsParser.TryParse(arguments, out _, out string? invalidValue, out bool hasEmptyValue)
                 => ValidationResult.InvalidTask(
@@ -58,6 +68,8 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
             commandLineOptions,
             [
                 GitHubActionsCommandLineOptions.GitHubActionsGroups,
+                GitHubActionsCommandLineOptions.GitHubActionsHistory,
+                GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow,
                 GitHubActionsCommandLineOptions.GitHubActionsAnnotations,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummary,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections,
@@ -67,5 +79,11 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
             ],
             GitHubActionsCommandLineOptions.GitHubActionsOptionName,
             () => string.Format(CultureInfo.CurrentCulture, GitHubActionsResources.SubOptionsRequireReportGh, GitHubActionsCommandLineOptions.GitHubActionsOptionName))
-        ?? ValidationResult.ValidTask;
+        ?? RequiresHistoryOptionAsync(commandLineOptions);
+
+    private static Task<ValidationResult> RequiresHistoryOptionAsync(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow)
+           && !commandLineOptions.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsHistory)
+               ? ValidationResult.InvalidTask(GitHubActionsResources.HistoryWindowRequiresHistory)
+               : ValidationResult.ValidTask;
 }

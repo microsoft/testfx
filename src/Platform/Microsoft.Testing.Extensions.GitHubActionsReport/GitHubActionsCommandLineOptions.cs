@@ -9,6 +9,8 @@ internal static class GitHubActionsCommandLineOptions
 {
     public const string GitHubActionsOptionName = "report-gh";
     public const string GitHubActionsGroups = "report-gh-groups";
+    public const string GitHubActionsHistory = "report-gh-history";
+    public const string GitHubActionsHistoryWindow = "report-gh-history-window";
     public const string GitHubActionsAnnotations = "report-gh-annotations";
     public const string GitHubActionsStepSummary = "report-gh-step-summary";
     public const string GitHubActionsStepSummarySections = "report-gh-step-summary-sections";
@@ -17,6 +19,7 @@ internal static class GitHubActionsCommandLineOptions
     public const string GitHubActionsSlowTestThreshold = "report-gh-slow-test-threshold";
 
     public const string StepSummaryOnFailureValue = "on-failure";
+    public const int HistoryWindowDefaultDays = 30;
     public const int SlowTestThresholdDefaultSeconds = 60;
 }
 

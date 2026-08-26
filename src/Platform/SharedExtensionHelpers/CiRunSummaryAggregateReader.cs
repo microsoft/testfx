@@ -104,10 +104,14 @@ internal static partial class CiRunSummaryAggregation
             || module.FailedTests < 0
             || module.SkippedTests < 0
             || module.TestDurationTicks < 0
+            || (module.GitHubActionsHistoryPath is not null
+                && (RoslynString.IsNullOrWhiteSpace(module.GitHubActionsHistoryPath)
+                    || module.GitHubActionsHistoryWindowInDays is < 1 or > 90))
             || checked(module.PassedTests + module.FailedTests + module.SkippedTests) != module.TotalTests
             || module.Failures is null
             || module.FlakyTests is null
             || module.SlowestTests is null
+            || module.HistoryTests is null
             || module.TopFailingClasses is null
             || module.Coverage is null
             || module.Coverage.Metrics is null
@@ -115,6 +119,12 @@ internal static partial class CiRunSummaryAggregation
             || module.Failures.Any(test => !IsValidTest(test))
             || module.FlakyTests.Any(test => !IsValidTest(test))
             || module.SlowestTests.Any(test => !IsValidTest(test))
+            || module.HistoryTests.Any(static test =>
+                RoslynString.IsNullOrWhiteSpace(test.TestId)
+                || RoslynString.IsNullOrWhiteSpace(test.DisplayName)
+                || RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
+                || test.Outcome is not ("passed" or "failed" or "skipped")
+                || test.DurationTicks < 0)
             || module.TopFailingClasses.Any(item => RoslynString.IsNullOrWhiteSpace(item.ClassName) || item.FailureCount <= 0)
             || module.Coverage.Metrics.Any(metric =>
                 RoslynString.IsNullOrWhiteSpace(metric.ProducerId)

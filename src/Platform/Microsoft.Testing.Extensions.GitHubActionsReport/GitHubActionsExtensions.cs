@@ -25,6 +25,19 @@ public static class GitHubActionsExtensions
     /// <param name="builder">The test application builder.</param>
     public static void AddGitHubActionsProvider(this ITestApplicationBuilder builder)
     {
+        Lazy<GitHubActionsHistoryService>? historyService = null;
+        object historyServiceLock = new();
+        Func<IServiceProvider, GitHubActionsHistoryService> getHistoryService = serviceProvider =>
+        {
+            lock (historyServiceLock)
+            {
+                historyService ??= new Lazy<GitHubActionsHistoryService>(
+                    () => CreateHistoryService(serviceProvider),
+                    LazyThreadSafetyMode.ExecutionAndPublication);
+                return historyService.Value;
+            }
+        };
+
         var compositeSummaryReporter = new CompositeExtensionFactory<GitHubActionsSummaryReporter>(serviceProvider =>
             new GitHubActionsSummaryReporter(
                 serviceProvider.GetCommandLineOptions(),
@@ -37,7 +50,8 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetTestApplicationProcessExitCode(),
                 serviceProvider.GetRequiredService<ITestCoverageResult>(),
                 serviceProvider.GetLoggerFactory(),
-                () => ShouldDeferToArtifactPostProcessing(serviceProvider)));
+                () => ShouldDeferToArtifactPostProcessing(serviceProvider),
+                getHistoryService(serviceProvider)));
 
         var compositeSlowTestReporter = new CompositeExtensionFactory<GitHubActionsSlowTestReporter>(serviceProvider =>
             new GitHubActionsSlowTestReporter(
@@ -63,8 +77,11 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetFileSystem(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                getHistoryService(serviceProvider)));
 
+        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
+            getHistoryService(serviceProvider));
         builder.TestHost.AddDataConsumer(compositeAnnotationReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeAnnotationReporter);
 
@@ -90,9 +107,22 @@ public static class GitHubActionsExtensions
                     () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
                     {
                         IsRequiredArtifactPostProcessingSupported: true,
-                    }));
+                    },
+                    CreateHistoryService(serviceProvider)));
         }
     }
+
+    private static GitHubActionsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
+       => new(
+           serviceProvider.GetCommandLineOptions(),
+           serviceProvider.GetEnvironment(),
+           serviceProvider.GetClock(),
+           serviceProvider.GetLoggerFactory(),
+           new GitHubActionsHistoryScope(
+               serviceProvider.GetTestApplicationModuleInfo().TryGetAssemblyName() ?? "unknown assembly name",
+               TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform(),
+               RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
+               serviceProvider.GetEnvironment().GetEnvironmentVariable("RUNNER_OS") ?? string.Empty));
 
     private static bool ShouldDeferToArtifactPostProcessing(IServiceProvider serviceProvider)
     {

@@ -38,11 +38,14 @@ internal sealed class GitHubActionsAnnotationReporter :
     ITestSessionLifetimeHandler,
     IOutputDeviceDataProducer
 {
+    private const int MinSamplesForRegressionContext = 5;
+
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDisplay;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger _logger;
+    private readonly IGitHubActionsHistoryService _historyService;
     private readonly bool _isEnabled;
 
     public GitHubActionsAnnotationReporter(
@@ -51,13 +54,15 @@ internal sealed class GitHubActionsAnnotationReporter :
         IFileSystem fileSystem,
         IOutputDevice outputDisplay,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IGitHubActionsHistoryService? historyService = null)
     {
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<GitHubActionsAnnotationReporter>();
+        _historyService = historyService ?? DisabledGitHubActionsHistoryService.Instance;
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLine, environment, GitHubActionsCommandLineOptions.GitHubActionsAnnotations);
     }
 
@@ -130,7 +135,13 @@ internal sealed class GitHubActionsAnnotationReporter :
                 return;
             }
 
-            await WriteAnnotationAsync(nodeUpdateMessage.TestNode, GetTestName(nodeUpdateMessage.TestNode), failure.Value.Explanation, failure.Value.Exception, cancellationToken).ConfigureAwait(false);
+            string testName = GetTestName(nodeUpdateMessage.TestNode);
+            await WriteAnnotationAsync(
+                nodeUpdateMessage.TestNode,
+                testName,
+                AppendHistoryContext(testName, failure.Value.Explanation, failure.Value.Exception),
+                failure.Value.Exception,
+                cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -223,6 +234,44 @@ internal sealed class GitHubActionsAnnotationReporter :
         }
 
         return DisplayAnnotationLineAsync(line, cancellationToken);
+    }
+
+    internal string? AppendHistoryContext(string testName, string? explanation, Exception? exception)
+    {
+        if (!_historyService.TryGetStats(testName, out GitHubActionsHistoryStats stats) || stats.TotalCount == 0)
+        {
+            return explanation;
+        }
+
+        string context = stats.FailCount > 0
+            ? string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.HistoryFailureContext,
+                stats.FailCount,
+                stats.FlakyCount,
+                stats.TotalCount,
+                _historyService.HistoryWindowInDays)
+            : stats.FlakyCount > 0
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.HistoryFlakyContext,
+                    stats.FlakyCount,
+                    stats.TotalCount,
+                    _historyService.HistoryWindowInDays)
+                : stats.TotalCount >= MinSamplesForRegressionContext
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.HistoryRegressionContext,
+                    stats.TotalCount,
+                    _historyService.HistoryWindowInDays)
+                : string.Empty;
+        if (context.Length == 0)
+        {
+            return explanation;
+        }
+
+        string failure = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
+        return $"{failure} {context}";
     }
 
     internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger, bool skipAssertionFrames, GitHubActionsSourceLocation? declaredLocation = null)

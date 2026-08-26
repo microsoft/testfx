@@ -21,6 +21,8 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistory)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
     public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSubOptionIsUsedWithoutReportGhAsync(string subOption)
@@ -42,6 +44,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAnnotations)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsHistory)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
     public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenSubOptionIsUsedWithReportGhAsync(string subOption)
@@ -65,6 +68,62 @@ public sealed class GitHubActionsCommandLineProviderTests
             [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
             [GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections] = ["test-results"],
         })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenHistoryWindowHasNoHistoryPathAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            [GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow] = ["7"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(GitHubActionsResources.HistoryWindowRequiresHistory, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("91")]
+    [DataRow("1.5")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryWindowIsOutOfRangeAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidHistoryWindow, value),
+            validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow(" ")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryPathIsEmptyAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsHistory);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(GitHubActionsResources.InvalidHistoryPath, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("30")]
+    [DataRow("90")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenHistoryWindowIsInRangeAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
     }

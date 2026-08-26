@@ -50,8 +50,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ITestCoverageResult _testCoverageResult;
     private readonly ILogger _logger;
+    private readonly IGitHubActionsHistoryService _historyService;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _isSummaryEnabled;
     private readonly bool _writeOnFailureOnly;
     private readonly GitHubActionsStepSummarySections _sections;
     private readonly bool _includeFailureDetails;
@@ -97,7 +99,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
-        Func<bool> shouldDeferToArtifactPostProcessing)
+        Func<bool> shouldDeferToArtifactPostProcessing,
+        IGitHubActionsHistoryService? historyService = null)
     {
         _configuration = configuration;
         _environment = environment;
@@ -108,8 +111,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _testCoverageResult = testCoverageResult;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
+        _historyService = historyService ?? DisabledGitHubActionsHistoryService.Instance;
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
-        _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _isSummaryEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _isEnabled = _isSummaryEnabled || _historyService.IsEnabled;
         _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
         _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _includeFailureDetails = GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
@@ -300,29 +305,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string? path = _environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
-            if (RoslynString.IsNullOrWhiteSpace(path))
-            {
-                // Outside a GitHub Actions step (or when summaries are unsupported) there is nowhere to
-                // write. Stay quiet apart from a low-noise trace so local/dev runs don't get a warning.
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace($"'{StepSummaryEnvironmentVariable}' is not set; skipping job summary.");
-                }
-
-                return;
-            }
-
-            List<TestRecord> snapshot = BuildSnapshot();
-
+            SummarySnapshot snapshot = BuildSnapshot();
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
+            CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
             if (_shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
                 string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                     resultsDirectory,
                     GitHubActionsSummaryArtifactPostProcessor.Provider,
@@ -339,8 +330,27 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
+            await _historyService.WriteAsync([module], testSessionContext.CancellationToken).ConfigureAwait(false);
+            if (!_isSummaryEnabled)
+            {
+                return;
+            }
+
+            string? path = _environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
+            if (RoslynString.IsNullOrWhiteSpace(path))
+            {
+                // Outside a GitHub Actions step (or when summaries are unsupported) there is nowhere to
+                // write. Stay quiet apart from a low-noise trace so local/dev runs don't get a warning.
+                if (_logger.IsEnabled(LogLevel.Trace))
+                {
+                    _logger.LogTrace($"'{StepSummaryEnvironmentVariable}' is not set; skipping job summary.");
+                }
+
+                return;
+            }
+
             if (_writeOnFailureOnly
-                && !snapshot.Any(static record => record.Kind == TerminalKind.Failed)
+                && !snapshot.Records.Any(static record => record.Kind == TerminalKind.Failed)
                 && !GitHubActionsExitCode.IndicatesFailure(exitCode))
             {
                 return;
@@ -362,7 +372,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // report where every project degrades gracefully into one where the first get everything and the rest
             // get nothing.
             var writer = new StepSummaryWriter(_fileSystem, path!, _logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
-            if (!await TryAppendRenderedSummaryAsync(writer, snapshot, assemblyName, exitCode, coverage, testSessionContext).ConfigureAwait(false))
+            if (!await TryAppendRenderedSummaryAsync(writer, snapshot.Records, assemblyName, exitCode, coverage, testSessionContext).ConfigureAwait(false))
             {
                 await ReportSectionDroppedAsync(writer, testSessionContext).ConfigureAwait(false);
             }
@@ -496,7 +506,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// <see cref="MaxFailures"/> by name", so exactly the failures that need diagnostics are the ones that pay
     /// for them.
     /// </remarks>
-    private List<TestRecord> BuildSnapshot()
+    private SummarySnapshot BuildSnapshot()
     {
         List<(string Uid, string Key, TestRecord Record)> entries;
         Dictionary<string, PendingFailure> pending;
@@ -516,6 +526,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 right.Record.DisplayName));
 
         var snapshot = new List<TestRecord>(entries.Count);
+        List<CiRunSummaryHistoryTest>? historyTests = _historyService.IsEnabled
+            ? new(entries.Count)
+            : null;
         int expanded = 0;
         foreach ((string Uid, string Key, TestRecord Record) entry in entries)
         {
@@ -535,9 +548,24 @@ internal sealed partial class GitHubActionsSummaryReporter :
             }
 
             snapshot.Add(record);
+            historyTests?.Add(new CiRunSummaryHistoryTest
+            {
+                TestId = entry.Uid,
+                DisplayName = record.DisplayName,
+                FullyQualifiedName = record.FullyQualifiedName,
+                Outcome = record.Kind switch
+                {
+                    TerminalKind.Passed => GitHubActionsHistoryOutcome.Passed,
+                    TerminalKind.Failed => GitHubActionsHistoryOutcome.Failed,
+                    TerminalKind.Skipped => GitHubActionsHistoryOutcome.Skipped,
+                    _ => throw new InvalidOperationException($"Unexpected terminal kind '{record.Kind}'."),
+                },
+                DurationTicks = record.Duration.Ticks,
+                IsFlaky = record.IsFlaky,
+            });
         }
 
-        return snapshot;
+        return new SummarySnapshot(snapshot, historyTests ?? []);
     }
 
     /// <returns>
@@ -644,13 +672,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
     }
 
     private CiRunSummaryModule CreateModule(
-        IReadOnlyList<TestRecord> records,
+        SummarySnapshot snapshot,
         string assemblyName,
         ITestSessionContext testSessionContext,
         CiCoverageSummaryData coverage)
     {
         CiRunSummaryModule module = CiRunSummaryAggregation.CreateModule(
-            records,
+            snapshot.Records,
             assemblyName,
             _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
             _targetFrameworkMoniker.Value,
@@ -661,8 +689,23 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _testApplicationProcessExitCode.GetProcessExitCode(),
             coverage: coverage,
             writeOnFailureOnly: _writeOnFailureOnly);
+        module.HistoryTests = [.. snapshot.HistoryTests];
+        module.GitHubActionsStepSummaryEnabled = _isSummaryEnabled;
+        module.GitHubActionsHistoryPath = _historyService.HistoryPath;
+        module.GitHubActionsHistoryWindowInDays = _historyService.IsEnabled
+            ? _historyService.HistoryWindowInDays
+            : 0;
         module.GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(_sections);
         return module;
+    }
+
+    private sealed class SummarySnapshot(
+        IReadOnlyList<TestRecord> records,
+        IReadOnlyList<CiRunSummaryHistoryTest> historyTests)
+    {
+        public IReadOnlyList<TestRecord> Records { get; } = records;
+
+        public IReadOnlyList<CiRunSummaryHistoryTest> HistoryTests { get; } = historyTests;
     }
 
     private int GetAttemptNumber()

@@ -5,9 +5,12 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
@@ -16,6 +19,30 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class GitHubActionsAnnotationReporterTests
 {
+    [TestMethod]
+    public void AppendHistoryContext_AddsPriorFailureCounts()
+    {
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        GitHubActionsAnnotationReporter reporter = new(
+            new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            }),
+            environment.Object,
+            Mock.Of<IFileSystem>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ITestApplicationProcessExitCode>(),
+            loggerFactory.Object,
+            new FakeHistoryService(new GitHubActionsHistoryStats(passCount: 7, failCount: 3), historyWindowInDays: 14));
+
+        string? message = reporter.AppendHistoryContext("Tests.Flaky", "boom", exception: null);
+
+        Assert.AreEqual("boom Historical context: failed 3 and flaked 0 of 10 prior runs within the 14-day history window.", message);
+    }
+
     [TestMethod]
     public void GetErrorAnnotation_ReportsResolvedFileWithLineColTitleAndEscaping()
     {
@@ -271,6 +298,28 @@ public sealed class GitHubActionsAnnotationReporterTests
         }
 
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Task.CompletedTask;
+    }
+
+    private sealed class FakeHistoryService(
+        GitHubActionsHistoryStats stats,
+        int historyWindowInDays) : IGitHubActionsHistoryService
+    {
+        public bool IsEnabled => true;
+
+        public string? HistoryPath => null;
+
+        public int HistoryWindowInDays { get; } = historyWindowInDays;
+
+        public bool TryGetStats(string testName, out GitHubActionsHistoryStats result)
+        {
+            result = stats;
+            return true;
+        }
+
+        public Task WriteAsync(
+            IReadOnlyList<ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule> modules,
+            CancellationToken cancellationToken)
             => Task.CompletedTask;
     }
 }
