@@ -389,8 +389,9 @@ public sealed class HangDumpTests
     [TestMethod]
     public async Task RunBestEffortDiagnostic_WhenDiagnosticNeverCompletes_ReturnsAfterTimeout()
     {
+        TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Task diagnostic = HangDumpProcessLifetimeHandler.RunBestEffortDiagnosticAsync(
-            () => Task.Delay(Timeout.Infinite, TestContext.CancellationToken),
+            () => neverCompletes.Task,
             TimeSpan.FromMilliseconds(50));
 
         Task completed = await Task.WhenAny(diagnostic, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));

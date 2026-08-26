@@ -60,8 +60,10 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
     [TestMethod]
     public async Task WhenDeadlineStopsAHotReloadRun_ReportersFinalize()
     {
+        string reportFileName = $"{Guid.NewGuid():N}.html";
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-html --report-html-filename {reportFileName}",
             environmentVariables: new()
             {
                 ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
@@ -74,6 +76,12 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
         testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
         testHostResult.AssertOutputContains(StopMessage);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+
+        string reportPath = Path.Combine(testHost.DirectoryName, "TestResults", reportFileName);
+        Assert.IsTrue(File.Exists(reportPath), $"HTML report should be generated at: {reportPath}");
+        string reportContent = File.ReadAllText(reportPath);
+        Assert.Contains("<!DOCTYPE html>", reportContent);
+        Assert.Contains("id=\"mtp-data\"", reportContent);
     }
 
     [TestMethod]
@@ -208,6 +216,7 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
@@ -237,6 +246,7 @@ internal sealed class Program
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         builder.AddHotReloadProvider();
+        builder.AddHtmlReportProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
