@@ -1000,6 +1000,8 @@ public sealed class HtmlArtifactPostProcessorTests
 
             string html = File.ReadAllText(output.Path);
             Assert.Contains("|| (t.retryAttempts && t.retryAttempts.length));", html);
+            Assert.Contains("prior attempt(s)", html);
+            Assert.DoesNotContain("non-passing attempt(s)", html);
         }
         finally
         {

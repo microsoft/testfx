@@ -752,7 +752,8 @@ public sealed class CiRunSummaryAggregationTests
                     ["manifest"] = ["manifest.json"],
                 }),
                 environment.Object,
-                new SystemFileSystem());
+                new SystemFileSystem(),
+                static () => false);
 
             ProcessedArtifact? result = await processor.ProcessAsync(
                 [

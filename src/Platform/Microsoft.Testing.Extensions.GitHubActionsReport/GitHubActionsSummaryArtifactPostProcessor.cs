@@ -14,7 +14,8 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     ICommandLineOptions commandLineOptions,
     IEnvironment environment,
-    IFileSystem fileSystem)
+    IFileSystem fileSystem,
+    Func<bool> downstreamRequiredPostProcessingSupported)
     : IArtifactPostProcessorRequiresPostProcessing
 {
     internal const string FragmentArtifactKind = "microsoft.testing.github-actions-summary-fragment";
@@ -75,8 +76,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
         bool downstreamPostProcessingWillPublishSummary =
             context.Mode == ArtifactPostProcessingMode.RetryAttempts
-            && !RoslynString.IsNullOrEmpty(
-                environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID));
+            && downstreamRequiredPostProcessingSupported();
         bool writeOnFailureOnly = aggregate.Modules.Count > 0
             && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
         bool runFailed = aggregate.IsPartial

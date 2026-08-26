@@ -1082,7 +1082,7 @@ footer {
     if (t.flaky) {
       var flakyBadge = document.createElement("span");
       flakyBadge.className = "badge flaky";
-      flakyBadge.title = "Passed after " + (t.retries || (t.retryAttempts ? t.retryAttempts.length : 0)) + " non-passing attempt(s)";
+      flakyBadge.title = "Passed after " + (t.retries || (t.retryAttempts ? t.retryAttempts.length : 0)) + " prior attempt(s)";
       flakyBadge.textContent = "Flaky";
       name.appendChild(flakyBadge);
     }

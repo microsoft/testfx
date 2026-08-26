@@ -85,7 +85,11 @@ public static class GitHubActionsExtensions
                 new GitHubActionsSummaryArtifactPostProcessor(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
-                    serviceProvider.GetFileSystem()));
+                    serviceProvider.GetFileSystem(),
+                    () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
+                    {
+                        IsRequiredArtifactPostProcessingSupported: true,
+                    }));
         }
     }
 

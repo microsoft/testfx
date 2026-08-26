@@ -50,7 +50,8 @@ public sealed class GitHubActionsSummaryReporterTests
         GitHubSummaryPostProcessor processor = new(
             new TestCommandLineOptions([]),
             Mock.Of<IEnvironment>(),
-            new SystemFileSystem());
+            new SystemFileSystem(),
+            static () => false);
 
         Assert.AreSequenceEqual(
             new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
@@ -92,7 +93,8 @@ public sealed class GitHubActionsSummaryReporterTests
             GitHubSummaryPostProcessor processor = new(
                 new TestCommandLineOptions([]),
                 environment.Object,
-                new SystemFileSystem());
+                new SystemFileSystem(),
+                static () => false);
             var context = new ArtifactPostProcessingContext(
                 ArtifactPostProcessingTruncationReason.None,
                 ArtifactPostProcessingMode.RetryAttempts,
@@ -154,7 +156,8 @@ public sealed class GitHubActionsSummaryReporterTests
             GitHubSummaryPostProcessor processor = new(
                 new TestCommandLineOptions([]),
                 environment.Object,
-                new SystemFileSystem());
+                new SystemFileSystem(),
+                static () => false);
 
             ProcessedArtifact? output = await processor.ProcessAsync(
                 [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
@@ -189,13 +192,11 @@ public sealed class GitHubActionsSummaryReporterTests
             string stepSummaryPath = Path.Combine(directory, "step-summary.md");
             var environment = new Mock<IEnvironment>();
             environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
-            environment
-                .Setup(item => item.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"))
-                .Returns("execution");
             GitHubSummaryPostProcessor processor = new(
                 new TestCommandLineOptions([]),
                 environment.Object,
-                new SystemFileSystem());
+                new SystemFileSystem(),
+                static () => true);
 
             ProcessedArtifact? output = await processor.ProcessAsync(
                 [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
