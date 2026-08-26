@@ -511,8 +511,18 @@ internal sealed class StepSummaryWriter
 
             string existing;
             using (IFileStream stream = _fileSystem.NewFileStream(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            using (var reader = new StreamReader(stream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
             {
+                // Discounting our own section means reading the file, and its size is set by producers this
+                // extension does not control. Past the ceiling, report the raw length rather than reading: it
+                // over-states the occupied space only by the size of this run's own previous block, and it makes
+                // the caller degrade or refuse instead of allocating whatever another producer happened to write.
+                long length = stream.Stream.Length;
+                if (length > MaxReadableSummaryBytes)
+                {
+                    return length;
+                }
+
+                using var reader = new StreamReader(stream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
                 existing = reader.ReadToEnd();
             }
 

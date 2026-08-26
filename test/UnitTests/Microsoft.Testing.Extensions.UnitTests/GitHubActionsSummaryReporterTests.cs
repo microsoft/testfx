@@ -2080,6 +2080,54 @@ public sealed class GitHubActionsSummaryReporterTests
         }
     }
 
+    [TestMethod]
+    public void GetSummaryLengthExcludingSection_ReportsTheRawLength_WithoutReadingAnOversizedFile()
+    {
+        // Discounting our own section requires reading the file, whose size other producers control. Past the
+        // ceiling this must report the length rather than read — the caller then sees no room and degrades, which
+        // is the outcome that keeps the run alive. The stream throws on read, so a regression fails loudly.
+        var stream = new LengthOnlyStream(128L * 1024 * 1024 * 1024);
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(stream);
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, It.IsAny<FileShare>()))
+            .Returns(fileStream.Object);
+
+        long measured = NewWriter(fileSystem.Object, "summary.md", 1).GetSummaryLengthExcludingSection("run-1");
+
+        Assert.AreEqual(128L * 1024 * 1024 * 1024, measured);
+    }
+
+    /// <summary>
+    /// Reports a length but refuses to be read, so a test can assert that a size guard runs before any read.
+    /// </summary>
+    private sealed class LengthOnlyStream(long length) : Stream
+    {
+        public override bool CanRead => true;
+
+        public override bool CanSeek => true;
+
+        public override bool CanWrite => false;
+
+        public override long Length { get; } = length;
+
+        public override long Position { get; set; }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new InvalidOperationException("The file must not be read once it is over the size ceiling.");
+
+        public override long Seek(long offset, SeekOrigin origin) => 0;
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
     private static StepSummaryWriter NewWriter(IFileSystem fileSystem, string path, int maxAttempts)
         => new(fileSystem, path, new Mock<ILogger>().Object, maxAttempts, TimeSpan.Zero);
 
