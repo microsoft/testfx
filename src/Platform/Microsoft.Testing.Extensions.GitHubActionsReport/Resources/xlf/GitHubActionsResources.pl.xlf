@@ -87,6 +87,11 @@
         <target state="translated">Adapter testowy zgłosił błąd sesji testowej.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
         <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
         <target state="translated">Wykonanie testów zostało zatrzymane po osiągnięciu limitu ustawionego za pomocą opcji --maximum-failed-tests.</target>

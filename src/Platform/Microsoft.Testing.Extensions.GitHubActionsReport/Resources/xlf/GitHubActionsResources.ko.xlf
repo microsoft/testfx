@@ -87,6 +87,11 @@
         <target state="translated">테스트 어댑터에서 테스트 세션 실패를 보고했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
         <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
         <target state="translated">--maximum-failed-tests에서 설정한 한도에 도달해 테스트 실행이 중지되었습니다.</target>
