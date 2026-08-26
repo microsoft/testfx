@@ -447,12 +447,11 @@ jobs:
           # "no build failure" from the legs that happened to upload.
           #
           # Ask the timeline whether each leg's log *publish* succeeded rather
-          # than guessing its artifact name from its display name. The artifact
-          # is named from `$(Agent.Os)`, which is not what the job is called:
-          # `MacOS Release` publishes `Logs_Build_Darwin_Release`, and
-          # `WindowsSamples Release` is named from `$(Agent.JobName)` instead. Name
-          # matching reported those healthy legs as missing on real builds —
-          # every macOS failure, and every `msbuild_cache_seed` job. Arcade's
+          # than guessing its artifact name from its display name. Artifact
+          # naming is configurable per job group and does not necessarily match
+          # the timeline display name. Name matching reported healthy legs as
+          # missing on real builds — every macOS failure, and every
+          # `msbuild_cache_seed` job. Arcade's
           # `Publish logs` task record answers the question directly, so no
           # spelling has to be inferred. A failed job carrying no such task
           # (the `Detect changed paths` classifier, the cache-seed stage) does
