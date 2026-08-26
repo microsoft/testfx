@@ -10,6 +10,19 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platf
 dotnet add package Microsoft.Testing.Platform
 ```
 
+## Usage
+
+Framework authors can create and run a test application directly:
+
+```csharp
+using Microsoft.Testing.Platform.Builder;
+
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+// Register the test framework and extensions with builder.
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+```
+
 ## About
 
 This package provides the core platform and the .NET implementation of the testing protocol. It includes:

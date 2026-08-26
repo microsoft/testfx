@@ -68,6 +68,12 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Exten
 dotnet add package Microsoft.Testing.Extensions.PackagedApp
 ```
 
+## Usage
+
+Referencing this package automatically registers its test-host launcher. Packaged layouts are detected automatically; set `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always` to opt a non-packaged loose layout into deployment, or `never` to disable the launcher.
+
+For a `windowsApp`/UWP host, restore the launch activation arguments with `PackagedAppExtensions.GetTestApplicationArguments` before creating the test application builder, as shown in [Launch-activation bootstrap](#launch-activation-bootstrap).
+
 ## About
 
 This package extends Microsoft.Testing.Platform with:
