@@ -19,6 +19,8 @@ public sealed class MtpServerProcessTests
     // Any value works: BuildLaunch only formats the port into the argument string, it never binds it.
     private const int Port = 12345;
 
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void BuildLaunchWhenSourceIsExeLaunchesItDirectly()
     {
@@ -110,49 +112,81 @@ public sealed class MtpServerProcessTests
             launch.FileName,
             "Starting a file with no execute bit throws 'Permission denied', so the launch must fall back to the muxer.");
     }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Unix execute permission classes do not apply on Windows.")]
+    [UnsupportedOSPlatform("windows")]
+    public async Task StartAsyncOnUnixWhenOnlyNonApplicableExecuteBitIsSetRetriesThroughDotnet()
+    {
+        using var temp = TempDirectory.Create();
+        string dll = temp.CreateFile("App.dll");
+        string apphost = temp.CreateFile("App");
+
+        // The owner class applies to this process, so GroupExecute does not grant execution even when the
+        // process is also a member of the file's group. The coarse mode-bit preflight accepts this candidate,
+        // and Process.Start must recover from the resulting EACCES by retrying through dotnet.
+        File.SetUnixFileMode(
+            apphost,
+            UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupExecute);
+
+        var log = new StringBuilder();
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromSeconds(5),
+            Logger = new DelegateMtpClientLogger((_, message) => log.AppendLine(message)),
+        };
+
+        _ = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(dll, options, TestContext.CancellationToken));
+
+        Assert.Contains(
+            "The sibling apphost could not be executed; retrying through 'dotnet",
+            log.ToString(),
+            "The EACCES failure should be recovered by retrying the managed assembly through dotnet.");
+    }
 #endif
 
     [TestMethod]
-    public void IsUsableApphostReturnsFalseWhenFileMissing()
+    public void IsApphostCandidateReturnsFalseWhenFileMissing()
     {
         using var temp = TempDirectory.Create();
 
-        Assert.IsFalse(MtpServerProcess.IsUsableApphost(Path.Combine(temp.Path, "Missing")));
+        Assert.IsFalse(MtpServerProcess.IsApphostCandidate(Path.Combine(temp.Path, "Missing")));
     }
 
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Windows has no execute bit, so this asserts the Windows-only branch.")]
-    public void IsUsableApphostOnWindowsReturnsTrueForExistingFile()
+    public void IsApphostCandidateOnWindowsReturnsTrueForExistingFile()
     {
         using var temp = TempDirectory.Create();
         string apphost = temp.CreateFile("App.exe");
 
-        Assert.IsTrue(MtpServerProcess.IsUsableApphost(apphost), "Windows has no execute bit, so existence is the whole check there.");
+        Assert.IsTrue(MtpServerProcess.IsApphostCandidate(apphost), "Windows has no execute bit, so existence is the whole check there.");
     }
 
 #if NET
     [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Unix file modes are a Unix concept.")]
     [UnsupportedOSPlatform("windows")]
-    public void IsUsableApphostOnUnixReturnsFalseForNonExecutableFile()
+    public void IsApphostCandidateOnUnixReturnsFalseForNonExecutableFile()
     {
         using var temp = TempDirectory.Create();
         string apphost = temp.CreateFile("App");
         File.SetUnixFileMode(apphost, UnixFileMode.UserRead | UnixFileMode.UserWrite);
 
-        Assert.IsFalse(MtpServerProcess.IsUsableApphost(apphost));
+        Assert.IsFalse(MtpServerProcess.IsApphostCandidate(apphost));
     }
 
     [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Unix file modes are a Unix concept.")]
     [UnsupportedOSPlatform("windows")]
-    public void IsUsableApphostOnUnixReturnsTrueForExecutableFile()
+    public void IsApphostCandidateOnUnixReturnsTrueForExecutableFile()
     {
         using var temp = TempDirectory.Create();
         string apphost = temp.CreateFile("App");
         MakeExecutable(apphost);
 
-        Assert.IsTrue(MtpServerProcess.IsUsableApphost(apphost));
+        Assert.IsTrue(MtpServerProcess.IsApphostCandidate(apphost));
     }
 
     /// <summary>
