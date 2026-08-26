@@ -133,6 +133,12 @@ public sealed class GitHubActionsCommandLineProviderTests
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
 
         Assert.IsFalse(validationResult.IsValid);
+
+        // Pin the branch, not just the verdict: this option shares the on/off validator with several others, so
+        // the message has to be the on/off one and has to name the value the user actually passed.
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidOnOffValue, "maybe"),
+            validationResult.ErrorMessage);
     }
 
     [TestMethod]
