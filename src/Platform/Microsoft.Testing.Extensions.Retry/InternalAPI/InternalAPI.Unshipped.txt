@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.InputArtifactPaths = 8 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
@@ -14,6 +14,7 @@ static Microsoft.Testing.Platform.IPC.NamedPipeServer.ResolvePipeDirectory(strin
 static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
 Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
@@ -93,3 +94,6 @@ Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact.DestinationPath.get -> 
 Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact.Kind.get -> string?
 Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact.Path.get -> string!
 static Microsoft.Testing.Extensions.Policy.RetrySummaryReporter.MoveArtifactsAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, string! currentTryResultFolder, string! resultDirectory, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! replacements, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!

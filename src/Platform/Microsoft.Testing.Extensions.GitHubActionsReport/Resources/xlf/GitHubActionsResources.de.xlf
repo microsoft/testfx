@@ -87,6 +87,11 @@
         <target state="translated">Der Testadapter hat einen Fehler in der Testsitzung gemeldet.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
         <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
         <target state="translated">Die Testausführung wurde beendet, nachdem das von --maximum-failed-tests festgelegte Limit erreicht wurde.</target>

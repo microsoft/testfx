@@ -40,6 +40,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly ITrxReportCapability? _trxReportCapability;
     private readonly PlatformServicesConfigurationAdapter _configuration;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly MSTestGracefulStopTestExecutionCapability _gracefulStopCapability;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private bool? _isTrxEnabled;
     private bool _isDisposed;
@@ -54,7 +55,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _trxReportCapability = capabilities.GetCapability<ITrxReportCapability>();
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        _gracefulStopCapability = (MSTestGracefulStopTestExecutionCapability)capabilities.GetCapability<IGracefulStopTestExecutionCapability>()!;
         PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
+        _gracefulStopCapability.NotifyTestExecutionPending();
 
         // Let the engine emit fixture/test-method spans that nest under the platform's test-case spans. This is a
         // no-op unless the OpenTelemetry extension is registered.
@@ -176,18 +179,26 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         // through the VSTest MSTestExecutor class. Results are published natively via MtpTestResultRecorder and the
         // MTP-specific filter provider evaluates the filter from the neutral UnitTestElement model so this path
         // never materializes a vstest TestCase (see #9769).
-        await new MSTestEngine(cancellationToken, CreateTelemetrySender())
-            .RunFromSourcesAsync(
-                assemblyPaths,
-                runSettings.SettingsXml,
-                runContext.TestRunDirectory,
-                handle.ToAdapterMessageLogger(),
-                settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
-                new MtpTestElementFilterProvider(runContext),
-                _configuration,
-                new TestSourceHandler(),
-                isMTP: true)
-            .ConfigureAwait(false);
+        _gracefulStopCapability.NotifyTestExecutionStarting();
+        try
+        {
+            await new MSTestEngine(cancellationToken, CreateTelemetrySender())
+                .RunFromSourcesAsync(
+                    assemblyPaths,
+                    runSettings.SettingsXml,
+                    runContext.TestRunDirectory,
+                    handle.ToAdapterMessageLogger(),
+                    settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
+                    new MtpTestElementFilterProvider(runContext),
+                    _configuration,
+                    new TestSourceHandler(),
+                    isMTP: true)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            _gracefulStopCapability.NotifyTestExecutionCompleted();
+        }
     }
 
     private MSTestRunSettings CreateRunSettings(MSTestFrameworkHandle handle)
@@ -232,6 +243,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     {
         if (!_isDisposed)
         {
+            _gracefulStopCapability.NotifyTestExecutionCompleted();
             _incomingRequestCounter.Dispose();
             _isDisposed = true;
         }
