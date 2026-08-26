@@ -306,18 +306,18 @@ stages:
   condition: and(succeeded(), not(and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
   jobs:
 
-  # Lightweight job that classifies the PR diff into two scopes (product vs samples)
-  # and exposes them as output variables. Downstream jobs use them to skip work that
+  # Lightweight job that classifies the PR diff into product, samples, and XML-documentation-only
+  # scopes and exposes them as output variables. Downstream jobs use them to skip work that
   # the diff does not touch (so e.g. a samples-only Dependabot PR does not spin up
   # the full Windows/Linux/macOS product matrix, and a product-only PR does not run
   # the samples build).
   #
   # Fail-safe behaviour:
   #   - Non-PR triggers (manual queue, scheduled, etc.) leave SYSTEM_PULLREQUEST_TARGETBRANCH
-  #     empty, so we emit "true" for both flags and run everything.
+  #     empty, so we emit "true" for both change flags and "false" for XML-documentation-only.
   #   - If the diff is empty (e.g. force-push to the same SHA), we also run everything.
-  #   - Downstream conditions use `ne(..., 'false')` rather than `eq(..., 'true')`
-  #     so a missing/empty output (e.g. detect step failed) still runs the job.
+  #   - Downstream conditions treat missing product/sample outputs as changed and a missing
+  #     XML-documentation-only output as false, so classification uncertainty runs full validation.
   - job: DetectChanges
     displayName: Detect changed paths
     pool:
@@ -340,6 +340,7 @@ stages:
           echo "Not a PR build (SYSTEM_PULLREQUEST_TARGETBRANCH is empty); running all jobs."
           hasProduct=true
           hasSamples=true
+          xmlDocsOnly=false
         else
           echo "PR target branch: ${target}"
           git fetch --no-tags --depth=200 origin "${target}" 2>/dev/null \
@@ -354,6 +355,7 @@ stages:
             echo "No files changed in diff; running all jobs."
             hasProduct=true
             hasSamples=true
+            xmlDocsOnly=false
           else
             # A file is a "samples-affecting" change if it lives under samples/** or it is
             # one of the eng/ scripts that drives the samples build (build-samples.ps1).
@@ -369,13 +371,32 @@ stages:
             else
               hasSamples=false
             fi
+
+            # Never let a PR classify itself with code from its own branch. Extract the classifier from the
+            # trusted target branch and fail closed when it is missing, broken, or returns an unexpected value.
+            classifier="${AGENT_TEMPDIRECTORY}/classify-xml-doc-change.ps1"
+            xmlDocsOnly=false
+            if ! git show "origin/${target}:eng/classify-xml-doc-change.ps1" > "${classifier}"; then
+              echo "##vso[task.logissue type=warning]The trusted target branch does not contain the XML documentation classifier; using full validation."
+            elif ! pwsh -NoProfile -File "${classifier}" -SelfTest; then
+              echo "##vso[task.logissue type=warning]The trusted XML documentation classifier failed its self-tests; using full validation."
+            elif ! xmlDocsOnly="$(pwsh -NoProfile -File "${classifier}" -Base "${base}" -Head HEAD -Repository "${BUILD_SOURCESDIRECTORY}")"; then
+              echo "##vso[task.logissue type=warning]XML documentation change classification did not run; using full validation."
+              xmlDocsOnly=false
+            fi
+            if [[ "${xmlDocsOnly}" != "true" && "${xmlDocsOnly}" != "false" ]]; then
+              echo "##vso[task.logissue type=warning]XML documentation change classification returned an unexpected value; using full validation."
+              xmlDocsOnly=false
+            fi
           fi
         fi
 
         echo "hasProductChanges=${hasProduct}"
         echo "hasSamplesChanges=${hasSamples}"
+        echo "xmlDocsOnly=${xmlDocsOnly}"
         echo "##vso[task.setvariable variable=hasProductChanges;isOutput=true]${hasProduct}"
         echo "##vso[task.setvariable variable=hasSamplesChanges;isOutput=true]${hasSamples}"
+        echo "##vso[task.setvariable variable=xmlDocsOnly;isOutput=true]${xmlDocsOnly}"
       name: detect
       displayName: Classify changed files
 
@@ -395,15 +416,17 @@ stages:
       jobs:
       - job: Windows
         dependsOn: DetectChanges
-        # Release always runs so every public PR computes and publishes coverage. Debug remains skippable for
-        # samples-only PRs, preserving the changed-path optimization where it does not affect coverage.
-        condition: and(succeededOrFailed(), or(eq(variables._BuildConfig, 'Release'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false')))
+        # Release normally runs full validation and coverage for every PR, but XML-documentation-only PRs use
+        # it only for compiler and package validation. Debug remains skippable for samples-only and XML-doc-only PRs.
+        condition: and(succeededOrFailed(), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
         variables:
           - template: /eng/pipelines/variables/test-env-vars.yml
+          - name: _XmlDocsOnly
+            value: $[ dependencies.DetectChanges.outputs['detect.xmlDocsOnly'] ]
         strategy:
           matrix:
             Release:
@@ -750,7 +773,7 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
-            condition: and(always(), eq(variables.HasTestResults, 'true'))
+            condition: and(always(), ne(variables._XmlDocsOnly, 'true'), eq(variables.HasTestResults, 'true'))
 
           # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and
           # CopyFiles@2 hard-fails when SourceFolder does not exist. A Test failure early enough to skip the
@@ -815,7 +838,7 @@ stages:
       - job: WindowsAppModel
         displayName: Windows application-model acceptance
         dependsOn: DetectChanges
-        condition: and(succeeded(), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false')))
+        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false')))
         timeoutInMinutes: 120
         pool:
           name: NetCore-Public
@@ -836,7 +859,7 @@ stages:
 
       - job: Linux
         dependsOn: DetectChanges
-        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
@@ -864,7 +887,7 @@ stages:
 
       - job: MacOS
         dependsOn: DetectChanges
-        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         # macOS agents are historically slow and flaky, so this job is intentionally non-blocking for PRs.
         # Rather than continueOnError (which yields "PartiallySucceeded" and is still blocked by Azure Repos
         # build-validation policies), every macOS command appends $(_MacOSNonBlockingTrailer) so a failed

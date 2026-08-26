@@ -30,7 +30,7 @@ steps:
       dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
     name: Test
     displayName: Test
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
       # Secret variables are not automatically exposed to scripts. Fork PR builds do not receive this token,
       # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
@@ -48,14 +48,14 @@ steps:
         "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
       path: '$(Pipeline.Workspace)\affected-test-map'
       cacheHitVar: AffectedTestsMapCacheRestored
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
 
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
       dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --collect-test-map
     name: Test
     displayName: Test and collect affected-test map
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -69,7 +69,7 @@ steps:
         "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
       path: '$(Pipeline.Workspace)\affected-test-map'
       cacheHitVar: AffectedTestsMapCacheRestored
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), eq(variables['Build.Reason'], 'PullRequest'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
 
   - pwsh: |
       dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --affected-tests
@@ -88,7 +88,7 @@ steps:
       exit 0
     name: TestAffected
     displayName: Test affected changes
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -108,7 +108,7 @@ steps:
       exit $LASTEXITCODE
     name: Test
     displayName: Test (affected-test fallback)
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -134,7 +134,7 @@ steps:
       /p:MSBuildCacheEnabled=false
     exit $LASTEXITCODE
   displayName: Prepare cached Debug test runtime
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
 # The Debug leg exists to exercise DEBUG-conditional product code and tests. The Release integration suite
 # already creates child test assets in both configurations, so repeating that suite in Debug is redundant.
@@ -142,7 +142,7 @@ steps:
 - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
   name: TestDebug
   displayName: Test (unit tests only)
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
