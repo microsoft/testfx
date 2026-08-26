@@ -180,6 +180,28 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public void TestResultCapture_InvalidAttachmentPath_IsSkippedWithoutLosingValidAttachments()
+    {
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new FileArtifactProperty(new FileInfo("valid.log"), "Valid"));
+        bag.Add(new FileArtifactProperty(new FileInfo("invalid.log"), "Invalid"));
+        MethodInfo captureAttachments = typeof(TestResultCapture).GetMethod(
+            "CaptureAttachments",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+        Func<FileInfo, string> resolveFullPath = fileInfo
+            => fileInfo.Name == "invalid.log"
+                ? throw new IOException("Invalid path")
+                : fileInfo.FullName;
+
+        var attachments = (IReadOnlyList<CapturedAttachment>?)captureAttachments.Invoke(null, [bag, resolveFullPath]);
+
+        Assert.IsNotNull(attachments);
+        Assert.HasCount(1, attachments);
+        Assert.AreEqual("Valid", attachments[0].Name);
+        Assert.EndsWith("valid.log", attachments[0].Path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
     public void TestResultCapture_Returns_Null_For_NonTerminalStates()
     {
         TestNode discovered = new() { Uid = "a", DisplayName = "x", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) };

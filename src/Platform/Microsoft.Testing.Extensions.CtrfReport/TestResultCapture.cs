@@ -75,8 +75,11 @@ internal static class TestResultCapture
         return (ns, identifier.TypeName, identifier.MethodName);
     }
 
-    private static IReadOnlyList<CapturedAttachment>? CaptureAttachments(PropertyBag properties)
+    private static IReadOnlyList<CapturedAttachment>? CaptureAttachments(
+        PropertyBag properties,
+        Func<FileInfo, string>? resolveFullPath = null)
     {
+        resolveFullPath ??= static fileInfo => fileInfo.FullName;
         List<CapturedAttachment>? attachments = null;
         PropertyBag.PropertyBagEnumerator enumerator = properties.GetStructEnumerator();
         while (enumerator.MoveNext())
@@ -89,7 +92,7 @@ internal static class TestResultCapture
             string fullPath;
             try
             {
-                fullPath = artifact.FileInfo.FullName;
+                fullPath = resolveFullPath(artifact.FileInfo);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
             {
