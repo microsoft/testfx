@@ -187,10 +187,14 @@ otherwise identical finding new.
 
 When the candidate matches a recorded finding:
 
-1. Prefer commenting on the recorded issue, but only if this run genuinely adds
-   something the issue does not already say.
-2. Otherwise discard the candidate and go back to 0.2 for a different area.
-3. If no unfiled finding survives, file nothing. `noop` is configured with
+1. If the recorded finding has an `issue`, prefer commenting on that issue, but
+   only if this run genuinely adds something the issue does not already say.
+2. If the recorded finding has no `issue`, treat it only as a possible
+   duplicate. A previous run may have cached the finding before `safe_outputs`
+   failed to create its issue. Carry the candidate through Phase 1.5 and suppress
+   it only if the issue tracker contains a corresponding report.
+3. Otherwise discard the candidate and go back to 0.2 for a different area.
+4. If no unfiled finding survives, file nothing. `noop` is configured with
    `report-as-issue: false`, so producing no output is a supported, correct
    result. A run that files nothing is better than a run that refiles.
 
@@ -406,6 +410,10 @@ Then decide:
   that a maintainer closed for another reason.
 - **Nothing covers it** — proceed to Phase 2.
 
+This last rule also applies when `history.json` contains a matching finding
+without an `issue`: cache memory alone is not proof that `safe_outputs`
+successfully created the report.
+
 Filing nothing is a supported outcome (`noop: report-as-issue: false`). Prefer it
 over a near-duplicate.
 
@@ -520,6 +528,8 @@ Record `findings` even when you decide not to file, so a later run knows the
 ground was already covered. Never truncate or drop `findings` from older runs:
 `recent_areas` is a 5-run window, but a finding stays relevant long after it
 leaves that window, and dropping it is what lets the same audit be filed twice.
+An entry without an `issue` is only a search hint and must never suppress a
+future report unless Phase 1.5 finds the corresponding issue.
 
 ## Success Criteria
 
