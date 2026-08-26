@@ -449,8 +449,8 @@ jobs:
           # Ask the timeline whether each leg's log *publish* succeeded rather
           # than guessing its artifact name from its display name. The artifact
           # is named from `$(Agent.Os)`, which is not what the job is called:
-          # `MacOS Debug` publishes `Logs_Build_Darwin_Debug`, and
-          # `WindowsSamples Debug` is named from `$(Agent.JobName)` instead. Name
+          # `MacOS Release` publishes `Logs_Build_Darwin_Release`, and
+          # `WindowsSamples Release` is named from `$(Agent.JobName)` instead. Name
           # matching reported those healthy legs as missing on real builds —
           # every macOS failure, and every `msbuild_cache_seed` job. Arcade's
           # `Publish logs` task record answers the question directly, so no
