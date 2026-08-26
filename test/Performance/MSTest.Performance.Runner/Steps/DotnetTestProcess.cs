@@ -120,9 +120,15 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
             results.Add(result);
         }
 
-        await File.AppendAllTextAsync(
+        var report = new
+        {
+            PipelineName = (string)context.Properties["PipelineName"],
+            Measurements = results,
+        };
+
+        await File.WriteAllTextAsync(
             Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"),
-            JsonSerializer.Serialize(results, JsonOptions));
+            JsonSerializer.Serialize(report, JsonOptions));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
