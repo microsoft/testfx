@@ -84,7 +84,7 @@ internal static class FixtureMethodFixer
         return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword));
     }
 
-    private static IEnumerable<SyntaxNode> GetParameters(SyntaxGenerator syntaxGenerator, bool isParameterLess,
+    private static IEnumerable<ParameterSyntax> GetParameters(SyntaxGenerator syntaxGenerator, bool isParameterLess,
         WellKnownTypeProvider wellKnownTypeProvider)
     {
         if (isParameterLess
@@ -96,7 +96,7 @@ internal static class FixtureMethodFixer
         }
 
         SyntaxNode testContextType = syntaxGenerator.TypeExpression(testContextTypeSymbol);
-        SyntaxNode testContextParameter = syntaxGenerator.ParameterDeclaration("testContext", testContextType);
+        var testContextParameter = (ParameterSyntax)syntaxGenerator.ParameterDeclaration("testContext", testContextType);
         return [testContextParameter];
     }
 }
