@@ -527,7 +527,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
         var snapshot = new List<TestRecord>(entries.Count);
         List<CiRunSummaryHistoryTest>? historyTests = _historyService.IsEnabled
-            ? new(entries.Count)
+            ? new(Math.Min(entries.Count, GitHubActionsHistoryStore.MaxTotalSamples))
             : null;
         int expanded = 0;
         foreach ((string Uid, string Key, TestRecord Record) entry in entries)

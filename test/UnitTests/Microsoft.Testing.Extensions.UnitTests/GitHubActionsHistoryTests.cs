@@ -106,14 +106,22 @@ public sealed class GitHubActionsHistoryTests
     [TestMethod]
     public void Merge_DeduplicatesRepeatedPostProcessingOfSameRun()
     {
-        GitHubActionsHistorySample sample = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Passed, Now);
+        GitHubActionsHistorySample existingSample = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Passed,
+            Now.AddMinutes(-1));
+        GitHubActionsHistorySample repeatedSample = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Passed,
+            Now);
 
         GitHubActionsHistorySnapshot merged = GitHubActionsHistoryStore.Merge(
-            new GitHubActionsHistorySnapshot { Samples = [sample] },
-            [sample],
+            new GitHubActionsHistorySnapshot { Samples = [existingSample] },
+            [repeatedSample],
             Now);
 
         Assert.HasCount(1, merged.Samples);
+        Assert.AreEqual(Now, merged.Samples[0].TimestampUtc);
     }
 
     [TestMethod]

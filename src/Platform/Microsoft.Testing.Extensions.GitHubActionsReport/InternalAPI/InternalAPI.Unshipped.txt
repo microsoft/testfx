@@ -129,7 +129,7 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.Test
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.TestId.set -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.TimestampUtc.get -> System.DateTimeOffset
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.TimestampUtc.set -> void
-Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.GetRunIdentity() -> string!
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.GetRunIdentity() -> (string! RunId, int RunAttempt, string! CommitSha, System.DateTimeOffset TimestampUtc, System.TimeSpan TimestampOffset)
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.IsInScope(Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope scope) -> bool
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryOutcome
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryOutcome.Failed = "failed" -> string!

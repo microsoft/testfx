@@ -325,9 +325,8 @@ internal static class GitHubActionsHistoryStore
             int passCount = 0;
             int failCount = 0;
             int flakyCount = 0;
-            foreach (IGrouping<string, GitHubActionsHistorySample> runGroup in testGroup.GroupBy(
-                static sample => sample.GetRunIdentity(),
-                StringComparer.Ordinal))
+            foreach (IGrouping<(string RunId, int RunAttempt, string CommitSha, DateTimeOffset TimestampUtc, TimeSpan TimestampOffset), GitHubActionsHistorySample> runGroup
+                in testGroup.GroupBy(static sample => sample.GetRunIdentity()))
             {
                 if (runGroup.Any(static sample => sample.Outcome == GitHubActionsHistoryOutcome.Failed))
                 {
@@ -426,10 +425,7 @@ internal static class GitHubActionsHistoryStore
                         sample.TestId,
                         sample.FullyQualifiedName,
                         sample.DisplayName,
-                        sample.RunId,
-                        sample.RunAttempt,
-                        sample.CommitSha,
-                        sample.TimestampUtc))
+                        Run: sample.GetRunIdentity()))
                     .Select(static group => group.OrderByDescending(static sample => sample.TimestampUtc).First())
                     .GroupBy(static sample => (
                         sample.AssemblyName,
@@ -563,10 +559,10 @@ internal sealed class GitHubActionsHistorySample
 
     public bool IsFlaky { get; set; }
 
-    internal string GetRunIdentity()
+    internal (string RunId, int RunAttempt, string CommitSha, DateTimeOffset TimestampUtc, TimeSpan TimestampOffset) GetRunIdentity()
         => RoslynString.IsNullOrWhiteSpace(RunId)
-            ? $"{CommitSha}\0{TimestampUtc:O}\0{RunAttempt.ToString(CultureInfo.InvariantCulture)}"
-            : $"{RunId}\0{RunAttempt.ToString(CultureInfo.InvariantCulture)}";
+            ? (string.Empty, RunAttempt, CommitSha, TimestampUtc, TimestampUtc.Offset)
+            : (RunId, RunAttempt, string.Empty, default, default);
 
     internal bool IsInScope(GitHubActionsHistoryScope scope)
         => string.Equals(AssemblyName, scope.AssemblyName, StringComparison.Ordinal)
