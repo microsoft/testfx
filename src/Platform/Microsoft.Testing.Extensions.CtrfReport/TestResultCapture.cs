@@ -27,6 +27,7 @@ internal static class TestResultCapture
         CapturedTestResultCoreData core = coreData.GetValueOrDefault();
         (string status, string? rawStatus) = ClassifyStatus(core.State);
         (string? ns, string? className, _) = GetClassAndMethodName(core.Properties.Identifier);
+        RetryAttemptProperty? retryAttempt = node.Properties.SingleOrDefault<RetryAttemptProperty>();
 
         var result = new CapturedTestResult
         {
@@ -36,6 +37,8 @@ internal static class TestResultCapture
             FilePath = TestResultCaptureHelper.Truncate(core.Properties.Location?.FilePath, TestResultCaptureHelper.MaxIdentityFieldLength),
             Line = core.Properties.Location?.LineSpan.Start.Line,
             Attachments = CaptureAttachments(node.Properties),
+            RetryAttemptNumber = retryAttempt?.AttemptNumber,
+            IsSupersededRetryAttempt = retryAttempt?.IsSuperseded == true,
         };
         result.PopulateBaseFields(node, core);
 

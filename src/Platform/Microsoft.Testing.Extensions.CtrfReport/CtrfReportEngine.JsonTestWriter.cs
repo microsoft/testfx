@@ -9,8 +9,9 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed partial class CtrfReportEngine
 {
-    private static void WriteTest(Utf8JsonWriter writer, CapturedTestResult r)
+    private static void WriteTest(Utf8JsonWriter writer, ReportTestResult result)
     {
+        CapturedTestResult r = result.Final;
         writer.WriteStartObject();
 
         // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID
@@ -72,6 +73,24 @@ internal sealed partial class CtrfReportEngine
         if (r.Line is { } lineNumber)
         {
             writer.WriteNumber("line", lineNumber);
+        }
+
+        if (result.PriorAttempts.Count > 0)
+        {
+            writer.WriteNumber("retries", result.PriorAttempts.Count);
+            writer.WritePropertyName("retryAttempts");
+            writer.WriteStartArray();
+            for (int index = 0; index < result.PriorAttempts.Count; index++)
+            {
+                WriteRetryAttempt(writer, result.PriorAttempts[index], attemptNumber: index + 1);
+            }
+
+            writer.WriteEndArray();
+        }
+
+        if (result.IsFlaky)
+        {
+            writer.WriteBoolean("flaky", true);
         }
 
         WriteOutputLines(writer, "stdout", r.StandardOutput);
@@ -178,6 +197,61 @@ internal sealed partial class CtrfReportEngine
         }
 
         writer.WriteEndObject();
+
+        writer.WriteEndObject();
+    }
+
+    private static void WriteRetryAttempt(Utf8JsonWriter writer, CapturedTestResult attempt, int attemptNumber)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber("attempt", attemptNumber);
+        writer.WriteString("status", attempt.Status);
+        writer.WriteNumber("duration", (long)Math.Max(0, attempt.Duration.TotalMilliseconds));
+        if (attempt.StartTime is { } start)
+        {
+            writer.WriteNumber("start", start.ToUnixTimeMilliseconds());
+        }
+
+        if (attempt.EndTime is { } end)
+        {
+            writer.WriteNumber("stop", end.ToUnixTimeMilliseconds());
+        }
+
+        if (attempt.ErrorMessage is not null)
+        {
+            writer.WriteString("message", attempt.ErrorMessage);
+        }
+
+        if (attempt.StackTrace is not null)
+        {
+            writer.WriteString("trace", attempt.StackTrace);
+        }
+
+        if (attempt.Line is { } line)
+        {
+            writer.WriteNumber("line", line);
+        }
+
+        WriteOutputLines(writer, "stdout", attempt.StandardOutput);
+        WriteOutputLines(writer, "stderr", attempt.StandardError);
+        WriteAttachments(writer, attempt.Attachments);
+
+        if (attempt.RawStatus is not null || attempt.ExceptionType is not null)
+        {
+            writer.WritePropertyName("extra");
+            writer.WriteStartObject();
+            if (attempt.RawStatus is not null)
+            {
+                writer.WriteString("rawStatus", attempt.RawStatus);
+            }
+
+            if (attempt.ExceptionType is not null)
+            {
+                writer.WriteString("exceptionType", attempt.ExceptionType);
+            }
+
+            writer.WriteEndObject();
+        }
 
         writer.WriteEndObject();
     }

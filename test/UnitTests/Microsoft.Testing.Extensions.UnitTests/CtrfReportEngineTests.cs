@@ -131,6 +131,20 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public void TestResultCapture_CapturesRetryAttemptMetadata()
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new RetryAttemptProperty(2, isSuperseded: false));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.AreEqual(2, result.RetryAttemptNumber);
+        Assert.IsFalse(result.IsSupersededRetryAttempt);
+    }
+
+    [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
         string huge = new('a', MaxStandardStreamLength + 7);
@@ -332,6 +346,60 @@ public class CtrfReportEngineTests
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesExplicitRetryAttemptsAndFlagsFlaky()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("retry", "Retrying", "failed", errorMessage: "first failure", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "passed", retryAttemptNumber: 2),
+            Captured("unique", "Solo", "passed"),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(2, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(2, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
+
+        JsonElement retry = results.GetProperty("tests")[0];
+        Assert.AreEqual("passed", retry.GetProperty("status").GetString());
+        Assert.AreEqual(1, retry.GetProperty("retries").GetInt32());
+        Assert.IsTrue(retry.GetProperty("flaky").GetBoolean());
+        JsonElement priorAttempt = Assert.ContainsSingle(retry.GetProperty("retryAttempts").EnumerateArray());
+        Assert.AreEqual(1, priorAttempt.GetProperty("attempt").GetInt32());
+        Assert.AreEqual("failed", priorAttempt.GetProperty("status").GetString());
+        Assert.AreEqual("first failure", priorAttempt.GetProperty("message").GetString());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_PreservesIncompleteExplicitRetrySequence()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("unique", "Solo", "passed"),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        Assert.AreEqual(2, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(2, results.GetProperty("tests").GetArrayLength());
+        Assert.DoesNotContain(
+            test => test.TryGetProperty("retryAttempts", out _),
+            results.GetProperty("tests").EnumerateArray());
     }
 
     [TestMethod]
@@ -659,8 +727,14 @@ public class CtrfReportEngineTests
         Assert.AreEqual(1, callCount);
     }
 
-    private static CapturedTestResult Captured(string uid, string name, string status,
-        TimeSpan? duration = null, string? errorMessage = null)
+    private static CapturedTestResult Captured(
+        string uid,
+        string name,
+        string status,
+        TimeSpan? duration = null,
+        string? errorMessage = null,
+        int? retryAttemptNumber = null,
+        bool isSupersededRetryAttempt = false)
         => new()
         {
             Uid = uid,
@@ -668,6 +742,8 @@ public class CtrfReportEngineTests
             Status = status,
             Duration = duration ?? TimeSpan.Zero,
             ErrorMessage = errorMessage,
+            RetryAttemptNumber = retryAttemptNumber,
+            IsSupersededRetryAttempt = isSupersededRetryAttempt,
         };
 
     private static CapturedTestResult CapturedRaw(string uid, string name, string status, string rawStatus)

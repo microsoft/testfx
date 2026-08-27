@@ -13,6 +13,10 @@ Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Path.get -> string!
 Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Path.init -> void
 Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Attachments.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment!>?
 Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Attachments.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.init -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.CtrfArtifactPostProcessor() -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Description.get -> string!

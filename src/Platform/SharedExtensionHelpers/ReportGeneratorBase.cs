@@ -180,8 +180,9 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     // Capture every update unconditionally — no UID-based deduplication. HTML, JUnit,
     // and CTRF preserve all results for tests that emit multiple updates per UID
-    // (parameterized rows, in-process retries, framework quirks). CTRF retry inference
-    // is performed only when reports are explicitly merged in CollapseRetryAttempts mode.
+    // (parameterized rows, in-process retries, framework quirks). CTRF groups only
+    // in-process updates explicitly tagged with RetryAttemptProperty; out-of-process
+    // retry inference occurs only during an explicit CollapseRetryAttempts merge.
     protected virtual void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
         TCapturedTestResult? captured = TryCapture(update);

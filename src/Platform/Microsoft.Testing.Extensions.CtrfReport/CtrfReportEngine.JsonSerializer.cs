@@ -12,20 +12,28 @@ internal sealed partial class CtrfReportEngine
 {
     private byte[] BuildCtrfJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
+        List<ReportTestResult> preparedResults = PrepareResults(results);
+
         int passed = 0;
         int failed = 0;
         int skipped = 0;
         int pending = 0;
         int other = 0;
-        foreach (CapturedTestResult result in results)
+        int flaky = 0;
+        foreach (ReportTestResult result in preparedResults)
         {
-            switch (result.Status)
+            switch (result.Final.Status)
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
                 case "skipped": skipped++; break;
                 case "pending": pending++; break;
                 default: other++; break;
+            }
+
+            if (result.IsFlaky)
+            {
+                flaky++;
             }
         }
 
@@ -92,16 +100,13 @@ internal sealed partial class CtrfReportEngine
             // results.summary
             writer.WritePropertyName("summary");
             writer.WriteStartObject();
-            writer.WriteNumber("tests", results.Length);
+            writer.WriteNumber("tests", preparedResults.Count);
             writer.WriteNumber("passed", passed);
             writer.WriteNumber("failed", failed);
             writer.WriteNumber("skipped", skipped);
             writer.WriteNumber("pending", pending);
             writer.WriteNumber("other", other);
-            // MTP UIDs are not unique per execution, so they cannot establish retry
-            // relationships. Keep flaky at zero until explicit attempt correlation is
-            // available rather than dropping duplicate-UID results or inventing retries.
-            writer.WriteNumber("flaky", 0);
+            writer.WriteNumber("flaky", flaky);
             writer.WriteNumber("start", startMs);
             writer.WriteNumber("stop", stopMs);
             writer.WriteNumber("duration", durationMs);
@@ -134,7 +139,7 @@ internal sealed partial class CtrfReportEngine
             writer.WritePropertyName("tests");
             writer.WriteStartArray();
 
-            foreach (CapturedTestResult result in results)
+            foreach (ReportTestResult result in preparedResults)
             {
                 WriteTest(writer, result);
             }
