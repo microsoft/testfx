@@ -170,7 +170,7 @@ internal sealed partial class TestHostControllersTestHost
             throw ApplicationStateGuard.Unreachable();
         }
 
-        bool testExecutionCanceled = timeoutCancellationTokenSource?.IsCancellationRequested == true
+        bool testExecutionCanceled = timeoutCancellationTokenSource?.IsCancellationRequested is true
             || applicationCancellationToken.IsCancellationRequested;
         int testHostProcessExitCode = testHostProcess.HasExited
             ? testHostProcess.ExitCode
@@ -214,13 +214,17 @@ internal sealed partial class TestHostControllersTestHost
                     await messageBusProxy.DisableAsync().WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException) when (finalizationCancellationTokenSource?.IsCancellationRequested == true)
+            catch (OperationCanceledException) when (finalizationCancellationTokenSource?.IsCancellationRequested is true)
             {
                 _skipLifetimeHandlerDisposal = true;
             }
 
             if (_skipLifetimeHandlerDisposal)
             {
+                // DisableCoreAsync observes cancellation arriving during its normal unbounded wait and
+                // downgrades to the canceled-shutdown budget. Without this transition, disposal would re-await
+                // the same unfinished graceful-disable task after our finalization token had already expired.
+                ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
                 await _logger.LogWarningAsync(
                     $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
             }

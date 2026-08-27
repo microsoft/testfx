@@ -36,7 +36,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.AreEqual(bool.FalseString, File.ReadAllText(finalizationFile));
     }
 

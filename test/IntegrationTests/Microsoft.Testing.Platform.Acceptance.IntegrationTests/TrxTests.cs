@@ -206,14 +206,19 @@ Out of process file artifacts produced:
             new() { ["WAIT_FOR_TIMEOUT"] = "1" },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertOutputContains("Test session was aborted; recovered 1 test result(s)");
 
         string[] trxFiles = Directory.GetFiles(testResultsPath, fileName, SearchOption.AllDirectories);
         Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
         string trxContent = File.ReadAllText(trxFiles[0]);
         Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
         Assert.Contains("was terminated because the test session was aborted", trxContent, trxContent);
-        Assert.Contains("testName=\"Test\"", trxContent, trxContent);
+        var trxDocument = XDocument.Parse(trxContent);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement recoveredResult = trxDocument.Descendants(ns + "UnitTestResult")
+            .Single(result => result.Attribute("testName")?.Value == "Test");
+        Assert.AreEqual("Passed", recoveredResult.Attribute("outcome")?.Value, trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]

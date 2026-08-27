@@ -220,9 +220,13 @@ internal sealed class TrxProcessLifetimeHandler :
 
             // Tell the user how many records survived the crash. Without this they have to grep the TRX
             // (or the controller logs) to know whether recovery did anything useful.
-            string recoverySummary = recoveredResults.Count == 0
-                ? "Test host crashed and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
-                : $"Test host crashed; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).";
+            string recoverySummary = testHostProcessInformation.ExitCode == (int)ExitCode.TestSessionAborted
+                ? recoveredResults.Count == 0
+                    ? "Test session was aborted and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
+                    : $"Test session was aborted; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at termination time may be missing)."
+                : recoveredResults.Count == 0
+                    ? "Test host crashed and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
+                    : $"Test host crashed; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).";
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(recoverySummary), cancellationToken).ConfigureAwait(false);
 
             await _messageBus.PublishAsync(
