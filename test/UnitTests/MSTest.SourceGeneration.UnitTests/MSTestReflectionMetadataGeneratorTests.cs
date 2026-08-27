@@ -375,6 +375,42 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_TestMethodAccessorRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class AccessorTests
+                {
+                    public int Value
+                    {
+                        get => 0;
+
+                        [TestMethod]
+                        [DataRow(1)]
+                        set { }
+                    }
+
+                    [TestMethod]
+                    public void Supported() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Supported\"");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("Name = \"set_Value\"");
+    }
+
+    [TestMethod]
     public void Generator_EmitsEmptyRegistry_WhenNoTestClasses()
     {
         const string userCode = """

@@ -107,9 +107,12 @@ internal static class TestClassModelBuilder
                         }
 
                         break;
-                    case IPropertySymbol property
-                        when !property.IsIndexer && TestMemberValidationHelper.IsAccessibleFromConsumer(property):
-                        if (!propertiesByName.ContainsKey(property.Name))
+                    case IPropertySymbol property:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
+                            || HasTestMethodAttribute(property.SetMethod);
+                        if (!property.IsIndexer
+                            && TestMemberValidationHelper.IsAccessibleFromConsumer(property)
+                            && !propertiesByName.ContainsKey(property.Name))
                         {
                             TestPropertyModel model = BuildProperty(property, consumingAssembly);
                             propertiesByName[property.Name] = model;
@@ -136,6 +139,14 @@ internal static class TestClassModelBuilder
                         }
 
                         ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
+                        break;
+                    case IEventSymbol eventSymbol:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(eventSymbol.AddMethod)
+                            || HasTestMethodAttribute(eventSymbol.RemoveMethod)
+                            || HasTestMethodAttribute(eventSymbol.RaiseMethod);
+                        break;
+                    case IMethodSymbol method:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(method);
                         break;
                 }
             }
@@ -188,6 +199,10 @@ internal static class TestClassModelBuilder
     private static bool IsPartial(INamedTypeSymbol type)
         => type.DeclaringSyntaxReferences.Any(static syntaxReference =>
             syntaxReference.GetSyntax().ChildTokens().Any(static token => token.IsKind(SyntaxKind.PartialKeyword)));
+
+    private static bool HasTestMethodAttribute(IMethodSymbol? method)
+        => method is not null
+        && TestMemberValidationHelper.IsTestMethodAttributePresent(AttributeMaterializationHelper.CollectInheritedAttributes(method));
 
     private static TestMethodModel BuildMethod(
         IMethodSymbol method,
