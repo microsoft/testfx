@@ -508,16 +508,61 @@ internal static class GitHubActionsHistoryStore
             || snapshot.Samples is null
             || snapshot.Samples.Length > MaxTotalSamples
             || snapshot.Samples.Any(static sample =>
-                RoslynString.IsNullOrWhiteSpace(sample.TestId)
+                sample is null
+                || RoslynString.IsNullOrWhiteSpace(sample.TestId)
                 || RoslynString.IsNullOrWhiteSpace(sample.FullyQualifiedName)
                 || RoslynString.IsNullOrWhiteSpace(sample.DisplayName)
                 || sample.TimestampUtc == default
                 || sample.RunAttempt <= 0
                 || sample.DurationTicks < 0
-                || sample.Outcome is not (GitHubActionsHistoryOutcome.Passed or GitHubActionsHistoryOutcome.Failed or GitHubActionsHistoryOutcome.Skipped)))
+                || sample.Outcome is not (GitHubActionsHistoryOutcome.Passed or GitHubActionsHistoryOutcome.Failed or GitHubActionsHistoryOutcome.Skipped))
+            || ExceedsPerTestSampleLimit(snapshot.Samples))
         {
             throw new FormatException($"Invalid GitHub Actions test history snapshot '{path}'.");
         }
+    }
+
+    private static bool ExceedsPerTestSampleLimit(IReadOnlyList<GitHubActionsHistorySample> samples)
+    {
+        var counts = new Dictionary<(
+            string AssemblyName,
+            string TargetFramework,
+            string Architecture,
+            string RunnerOs,
+            string TestId,
+            string FullyQualifiedName,
+            string DisplayName), int>();
+        foreach (GitHubActionsHistorySample sample in samples)
+        {
+            if (sample is null)
+            {
+                continue;
+            }
+
+            (string AssemblyName,
+                string TargetFramework,
+                string Architecture,
+                string RunnerOs,
+                string TestId,
+                string FullyQualifiedName,
+                string DisplayName) identity = (
+                sample.AssemblyName,
+                sample.TargetFramework,
+                sample.Architecture,
+                sample.RunnerOs,
+                sample.TestId,
+                sample.FullyQualifiedName,
+                sample.DisplayName);
+            int count = counts.TryGetValue(identity, out int existingCount) ? existingCount + 1 : 1;
+            if (count > MaxSamplesPerTest)
+            {
+                return true;
+            }
+
+            counts[identity] = count;
+        }
+
+        return false;
     }
 
     private static async Task WriteAtomicAsync(

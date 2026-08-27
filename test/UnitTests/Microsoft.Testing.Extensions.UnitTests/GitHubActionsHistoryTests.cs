@@ -296,6 +296,43 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public async Task ReadAsync_RejectsSnapshotAbovePerTestSampleLimitAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-too-many-test-samples-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "history.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var snapshot = new GitHubActionsHistorySnapshot
+            {
+                Samples =
+                [
+                    .. Enumerable.Range(0, GitHubActionsHistoryStore.MaxSamplesPerTest + 1)
+                        .Select(index =>
+                        {
+                            GitHubActionsHistorySample sample = CreateSample(
+                                "Tests.Crowded",
+                                GitHubActionsHistoryOutcome.Passed,
+                                Now);
+                            sample.RunId = index.ToString(CultureInfo.InvariantCulture);
+                            return sample;
+                        }),
+                ],
+            };
+            File.WriteAllText(
+                path,
+                JsonSerializer.Serialize(snapshot, GitHubActionsHistoryJsonContext.Default.GitHubActionsHistorySnapshot));
+
+            await Assert.ThrowsExactlyAsync<FormatException>(
+                () => GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task WriteMergedAsync_RoundTripsAndPrunesExpiredSamplesAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-history-{Guid.NewGuid():N}");
@@ -400,6 +437,33 @@ public sealed class GitHubActionsHistoryTests
 
             GitHubActionsHistorySnapshot snapshot = await GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None);
             Assert.HasCount(1, snapshot.Samples);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task WriteMergedAsync_ReplacesSnapshotContainingNullSampleAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-null-history-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "history.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(path, """{"schemaVersion":1,"samples":[null]}""");
+
+            await GitHubActionsHistoryStore.WriteMergedAsync(
+                path,
+                historyWindowInDays: 30,
+                Now,
+                [CreateSample("Tests.Current", GitHubActionsHistoryOutcome.Passed, Now)],
+                CancellationToken.None);
+
+            GitHubActionsHistorySnapshot snapshot =
+                await GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None);
+            Assert.AreEqual("Tests.Current", snapshot.Samples.Single().FullyQualifiedName);
         }
         finally
         {
