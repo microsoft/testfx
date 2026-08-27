@@ -203,10 +203,8 @@ Request:
 
 ```typescript
 interface InitializeParams {
-    // The process Id of the parent process that started the server. Is null if
-    // the process has not been started by another process. If the parent
-    // process is not alive then the server should exit (see exit notification)
-    // its process.
+    // The process ID of the client process that started the server.
+    // Protocol 1.0 requires this value to be an integer.
     processId: PID,
 
     clientInfo: {
