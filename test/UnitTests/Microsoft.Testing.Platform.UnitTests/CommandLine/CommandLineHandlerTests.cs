@@ -558,6 +558,40 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("abcdefgh", "abczefgx", true)]
+    [DataRow("abcdefgh", "abczefxy", false)]
+    [DataRow("abcdefghijklmn", "abczefghijklxy", true)]
+    [DataRow("abcdefghijklmn", "abczefghijkwxy", false)]
+    public async Task ParseAndValidateAsync_UnknownOption_RespectsSuggestionDistanceThresholds(
+        string registeredOptionName,
+        string unknownOptionName,
+        bool shouldSuggest)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([$"--{unknownOptionName}"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration(registeredOptionName),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Unknown option '--{unknownOptionName}'", result.ErrorMessage);
+        if (shouldSuggest)
+        {
+            Assert.Contains($"Did you mean '--{registeredOptionName}'?", result.ErrorMessage);
+        }
+        else
+        {
+            Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+        }
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_UnknownOptionWithAmbiguousMatches_DoesNotSuggestOption()
     {
         CommandLineParseResult parseResult = CommandLineParser.Parse(["--ad"], new SystemEnvironment());
