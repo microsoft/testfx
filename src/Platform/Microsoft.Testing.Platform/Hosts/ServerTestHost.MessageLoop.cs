@@ -75,6 +75,7 @@ internal sealed partial class ServerTestHost
 
                     case NotificationMessage notification:
                         // This task is recorded inside the _clientToServerRequests
+                        // Cancellation is applied synchronously so queued requests observe it before they resume.
                         _ = HandleNotificationAsync(notification, _serverClosingTokenSource.Token);
                         break;
                     case ResponseMessage response:
@@ -130,9 +131,6 @@ internal sealed partial class ServerTestHost
             _requestCounter.Signal();
             return;
         }
-
-        // Note: Yield, so that the main message reading loop can continue.
-        await Task.Yield();
 
         try
         {
