@@ -31,6 +31,9 @@ internal sealed partial class TestContextImplementation
     [DllImport("libc", EntryPoint = "mkdir", SetLastError = true)]
     private static extern int MkDir([In] byte[] path, uint mode);
 
+    [DllImport("libc", EntryPoint = "chmod", SetLastError = true)]
+    private static extern int ChMod([In] byte[] path, uint mode);
+
     /// <summary>
     /// Guards lazy creation of <see cref="_testTempDirectory"/>.
     /// </summary>
@@ -252,6 +255,13 @@ internal sealed partial class TestContextImplementation
             {
                 int error = Marshal.GetLastWin32Error();
                 throw new IOException($"Could not create test temporary directory '{path}'.", new System.ComponentModel.Win32Exception(error));
+            }
+
+            result = ChMod(nullTerminatedUtf8Path, TestTempDirectoryUnixCreateMode);
+            if (result != 0)
+            {
+                int error = Marshal.GetLastWin32Error();
+                throw new IOException($"Could not set permissions on test temporary directory '{path}'.", new System.ComponentModel.Win32Exception(error));
             }
 
             return;

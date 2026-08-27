@@ -58,15 +58,54 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
             Assert.IsTrue(File.Exists(Path.Combine(failingPath, "artifact.txt")), "Failing test artifact should be retained for inspection.");
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                UnixFileMode groupOrOtherPermissions =
-                    UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
-                    UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
-                Assert.AreEqual(UnixFileMode.None, File.GetUnixFileMode(failingPath) & groupOrOtherPermissions, "Test temp directories must be accessible only to their owner.");
+                UnixFileMode ownerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+                Assert.AreEqual(ownerOnly, File.GetUnixFileMode(failingPath), "Test temp directories must be accessible only to their owner.");
             }
         }
         finally
         {
             TryDeleteDirectory(recordDirectory);
+        }
+    }
+
+    [TestMethod]
+    public async Task TestTempDirectory_IsOwnerOnlyAndUsable_WithRestrictiveUmask()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string recordDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(recordDirectory);
+        string? tempDirectory = null;
+        try
+        {
+            var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                "--filter ClassName~RestrictiveUmask",
+                environmentVariables: new()
+                {
+                    ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
+                    ["MSTEST_TEST_TEMP_DIRECTORY_RETAIN"] = "1",
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(0);
+            testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+
+            tempDirectory = Assert.ContainsSingle(ReadRecords(recordDirectory)["umask"]);
+            Assert.IsTrue(File.Exists(Path.Combine(tempDirectory, "write-check.txt")), "The test must be able to write inside its temporary directory.");
+            UnixFileMode ownerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+            Assert.AreEqual(ownerOnly, File.GetUnixFileMode(tempDirectory));
+        }
+        finally
+        {
+            TryDeleteDirectory(recordDirectory);
+            if (tempDirectory is not null)
+            {
+                TryDeleteDirectory(tempDirectory);
+            }
         }
     }
 
@@ -247,6 +286,7 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
 #file UnitTest1.cs
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
@@ -338,6 +378,36 @@ public class AddResultFileRetention
         File.WriteAllText(attachment, "hello");
         TestContext.AddResultFile(attachment);
         Recorder.Record("addresultfile", attachment);
+    }
+}
+
+[TestClass]
+[DoNotParallelize]
+public class RestrictiveUmask
+{
+    private const uint AllPermissions = 0x1FF;
+
+    public TestContext TestContext { get; set; }
+
+    [DllImport("libc", EntryPoint = "umask")]
+    private static extern uint Umask(uint mask);
+
+    [TestMethod]
+    public void TestTempDirectoryRemainsUsable()
+    {
+        string tempDirectory;
+        uint previousUmask = Umask(AllPermissions);
+        try
+        {
+            tempDirectory = TestContext.TestTempDirectory;
+            File.WriteAllText(Path.Combine(tempDirectory, "write-check.txt"), "data");
+        }
+        finally
+        {
+            Umask(previousUmask);
+        }
+
+        Recorder.Record("umask", tempDirectory);
     }
 }
 
