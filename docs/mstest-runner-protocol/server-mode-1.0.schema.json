@@ -397,11 +397,13 @@
         },
         "location.line-start": {
           "type": "integer",
-          "minimum": 0
+          "minimum": -2147483648,
+          "maximum": 2147483647
         },
         "location.line-end": {
           "type": "integer",
-          "minimum": 0
+          "minimum": -2147483648,
+          "maximum": 2147483647
         },
         "time.duration-ms": {
           "type": "number",
