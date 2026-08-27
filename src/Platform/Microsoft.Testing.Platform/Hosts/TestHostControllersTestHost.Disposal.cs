@@ -38,7 +38,7 @@ internal sealed partial class TestHostControllersTestHost
         alreadyDisposed.AddRange(consumersStillRunning);
         // A handler that ignored a bounded start or exit callback token may still be running. Do not invoke
         // another lifecycle callback or dispose that same instance underneath its abandoned callback.
-        alreadyDisposed.AddRange(_lifetimeHandlersStillRunning);
+        alreadyDisposed.AddRange(_servicesStillRunning);
 
         foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {

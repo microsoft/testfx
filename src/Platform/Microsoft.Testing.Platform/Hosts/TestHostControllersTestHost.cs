@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
@@ -29,7 +28,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
-    private readonly List<ITestHostProcessLifetimeHandler> _lifetimeHandlersStillRunning = [];
+    private readonly List<object> _servicesStillRunning = [];
 
     // This flag means that the testhost was able to correctly complete in the child process.
     // But it doesn't mean we will exit successfully.

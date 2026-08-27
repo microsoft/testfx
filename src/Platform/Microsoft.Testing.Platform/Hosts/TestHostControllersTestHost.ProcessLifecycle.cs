@@ -119,7 +119,7 @@ internal sealed partial class TestHostControllersTestHost
                         applicationCancellationToken).ConfigureAwait(false);
                     if (!startHandlersCompleted)
                     {
-                        _lifetimeHandlersStillRunning.Add(lifetimeHandler);
+                        _servicesStillRunning.Add(lifetimeHandler);
                         break;
                     }
                 }
@@ -183,8 +183,6 @@ internal sealed partial class TestHostControllersTestHost
             ? (int)ExitCode.TestSessionAborted
             : testHostProcessExitCode;
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
-        CancellationToken postExecutionCancellationToken = testExecutionCanceled ? CancellationToken.None : applicationCancellationToken;
-
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         using CancellationTokenSource? finalizationCancellationTokenSource = testExecutionCanceled
             ? new(ControllerExtensionFinalizationTimeout)
@@ -198,7 +196,7 @@ internal sealed partial class TestHostControllersTestHost
                 await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcessExitCode}").ConfigureAwait(false);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
-                    if (_lifetimeHandlersStillRunning.Contains(lifetimeHandler))
+                    if (_servicesStillRunning.Contains(lifetimeHandler))
                     {
                         continue;
                     }
@@ -208,7 +206,7 @@ internal sealed partial class TestHostControllersTestHost
                         finalizationCancellationToken).ConfigureAwait(false);
                     if (!finalized)
                     {
-                        _lifetimeHandlersStillRunning.Add(lifetimeHandler);
+                        _servicesStillRunning.Add(lifetimeHandler);
                         _controllerFinalizationTimedOut = true;
                         break;
                     }
@@ -236,32 +234,35 @@ internal sealed partial class TestHostControllersTestHost
         {
             // The child owns timeout cancellation and reported an aborted exit. Report that state explicitly
             // after controller extensions have finalized, without canceling their independent cleanup token.
-            await ServiceProvider.GetRequiredService<IStopPoliciesService>().ExecuteAbortCallbacksAsync().ConfigureAwait(false);
+            IStopPoliciesService stopPoliciesService = ServiceProvider.GetRequiredService<IStopPoliciesService>();
+            bool abortReported = await TryRunControllerExtensionAsync(
+                _ => stopPoliciesService.ExecuteAbortCallbacksAsync(),
+                finalizationCancellationToken).ConfigureAwait(false);
+            if (!abortReported)
+            {
+                _servicesStillRunning.Add(stopPoliciesService);
+                _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
+                _controllerFinalizationTimedOut = true;
+            }
         }
 
         bool outputConsumerStillRunning = messageBusProxy.ConsumersStillRunning.Any(
             consumer => ReferenceEquals(consumer, outputDevice.OriginalOutputDevice));
         if (!_controllerFinalizationTimedOut && !outputConsumerStillRunning)
         {
-            try
+            bool outputFinalized = await TryRunControllerExtensionAsync(
+                token => outputDevice.DisplayAfterSessionEndRunAsync(token),
+                finalizationCancellationToken).ConfigureAwait(false);
+            if (!outputFinalized)
             {
-                await outputDevice.DisplayAfterSessionEndRunAsync(postExecutionCancellationToken)
-                    .WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (finalizationCancellationTokenSource?.IsCancellationRequested is true)
-            {
+                _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
                 _controllerFinalizationTimedOut = true;
             }
         }
 
-        if (_controllerFinalizationTimedOut)
+        if (outputConsumerStillRunning && !_servicesStillRunning.Contains(outputDevice.OriginalOutputDevice))
         {
-            // DisableCoreAsync observes cancellation arriving during its normal unbounded wait and
-            // downgrades to the canceled-shutdown budget. Without this transition, disposal would re-await
-            // the same unfinished graceful-disable task after our finalization token had already expired.
-            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
-            await _logger.LogWarningAsync(
-                $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
+            _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
         }
 
         string? extensionInformation = null;
@@ -292,8 +293,36 @@ internal sealed partial class TestHostControllersTestHost
                    CancellationRequested: '{testExecutionCanceled}'
                  """)
                 .ConfigureAwait(false);
-            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcessExitCode)), postExecutionCancellationToken).ConfigureAwait(false);
+            if (!_controllerFinalizationTimedOut)
+            {
+                bool diagnosticDisplayed = await TryRunControllerExtensionAsync(
+                    token => outputDevice.DisplayAsync(
+                        this,
+                        new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcessExitCode)),
+                        token),
+                    finalizationCancellationToken).ConfigureAwait(false);
+                if (!diagnosticDisplayed)
+                {
+                    if (!_servicesStillRunning.Contains(outputDevice.OriginalOutputDevice))
+                    {
+                        _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
+                    }
+
+                    _controllerFinalizationTimedOut = true;
+                }
+            }
+
             exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
+        }
+
+        if (_controllerFinalizationTimedOut)
+        {
+            // DisableCoreAsync observes cancellation arriving during its normal unbounded wait and
+            // downgrades to the canceled-shutdown budget. Without this transition, disposal would re-await
+            // the same unfinished graceful-disable task after our finalization token had already expired.
+            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
+            await _logger.LogWarningAsync(
+                $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
         }
 
         // Apply controller-only coverage thresholds to the child's pre-ignore verdict, then apply the
