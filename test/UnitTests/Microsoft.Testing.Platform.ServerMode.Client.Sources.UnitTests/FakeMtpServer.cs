@@ -242,6 +242,36 @@ internal sealed class FakeMtpServer : IDisposable
         return tcs.Task;
     }
 
+    /// <summary>Waits for and returns a client request with the given method.</summary>
+    public async Task<RequestMessage> WaitForRequestAsync(string method, TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            lock (_receivedRequestsLock)
+            {
+                foreach (RequestMessage request in _receivedRequests)
+                {
+                    if (request.Method == method)
+                    {
+                        return request;
+                    }
+                }
+            }
+
+            await Task.Delay(15).ConfigureAwait(false);
+        }
+
+        throw new TimeoutException($"Timed out waiting for a '{method}' request from the client.");
+    }
+
+    /// <summary>Sends the configured run response using the request's numeric or numeric-string ID form.</summary>
+    public Task SendRunResponseAsync(RequestMessage request, bool useStringId)
+        => WriteAsync(new ResponseMessage(request.Id, RunResponse)
+        {
+            StringId = useStringId ? request.Id.ToString(CultureInfo.InvariantCulture) : null,
+        });
+
     /// <summary>
     /// Writes a raw, pre-framed body to the client so a test can inject a malformed message. The
     /// <c>Content-Length</c> header is computed from the UTF-8 body so the client reads exactly this body.

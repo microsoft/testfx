@@ -304,7 +304,7 @@ internal sealed partial class ServerTestHost
                     stringId: request.StringId).ConfigureAwait(false);
                 if (isInitializeRequest)
                 {
-                    CompleteInitialization(success: true);
+                    CompleteInitialization();
                 }
 
                 CompleteRequest(
@@ -314,6 +314,9 @@ internal sealed partial class ServerTestHost
             }
             catch (OperationCanceledException e)
             {
+                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+                    ? MakeInitializationRetryable()
+                    : null;
                 try
                 {
                     if (!testUpdateCompletionSent)
@@ -336,10 +339,7 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    if (isInitializeRequest)
-                    {
-                        CompleteInitialization(success: false);
-                    }
+                    failedInitialization?.TrySetResult(false);
 
                     CompleteRequest(
                         ref _clientToServerRequests,
@@ -349,6 +349,9 @@ internal sealed partial class ServerTestHost
             }
             catch (JsonRpcException e)
             {
+                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+                    ? MakeInitializationRetryable()
+                    : null;
                 try
                 {
                     if (!testUpdateCompletionSent)
@@ -366,10 +369,7 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    if (isInitializeRequest)
-                    {
-                        CompleteInitialization(success: false);
-                    }
+                    failedInitialization?.TrySetResult(false);
 
                     CompleteRequest(
                         ref _clientToServerRequests,
@@ -379,6 +379,9 @@ internal sealed partial class ServerTestHost
             }
             catch (Exception e)
             {
+                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+                    ? MakeInitializationRetryable()
+                    : null;
                 try
                 {
                     if (!testUpdateCompletionSent)
@@ -396,10 +399,7 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    if (isInitializeRequest)
-                    {
-                        CompleteInitialization(success: false);
-                    }
+                    failedInitialization?.TrySetResult(false);
 
                     CompleteRequest(
                         ref _clientToServerRequests,
@@ -410,17 +410,30 @@ internal sealed partial class ServerTestHost
         }
     }
 
-    private void CompleteInitialization(bool success)
+    private void CompleteInitialization()
     {
         TaskCompletionSource<bool>? completionSource;
         lock (_initializeStateLock)
         {
-            _initializeState = success ? Initialized : NotInitialized;
+            _initializeState = Initialized;
             completionSource = _initializationCompletionSource;
             _initializationCompletionSource = null;
         }
 
-        completionSource?.TrySetResult(success);
+        completionSource?.TrySetResult(true);
+    }
+
+    private TaskCompletionSource<bool>? MakeInitializationRetryable()
+    {
+        lock (_initializeStateLock)
+        {
+            RoslynDebug.Assert(_initializeState == Initializing);
+            RoslynDebug.Assert(_initializationCompletionSource is not null);
+            _initializeState = NotInitialized;
+            TaskCompletionSource<bool>? completionSource = _initializationCompletionSource;
+            _initializationCompletionSource = null;
+            return completionSource;
+        }
     }
 
     private async Task<bool> SendTestUpdateCompleteIfNeededAsync(

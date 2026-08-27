@@ -219,13 +219,6 @@ public sealed class ServerTests
         Assert.AreEqual(2, incompatibleVersionError.Id);
         Assert.AreEqual(ErrorCodes.ProtocolVersionNotSupported, incompatibleVersionError.ErrorCode);
 
-        var queuedRequestError = (ErrorMessage)(await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ErrorMessage { Id: 20 },
-            "Wait queued request error",
-            timeout.Token))!;
-        Assert.AreEqual(ErrorCodes.ServerNotInitialized, queuedRequestError.ErrorCode);
-
         const string initializeMessage = """
             {
                 "jsonrpc": "2.0",
@@ -245,11 +238,23 @@ public sealed class ServerTests
             """;
         await WriteMessageAsync(writer, initializeMessage);
 
-        var initializeResponse = (ResponseMessage)(await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ResponseMessage { Id: 3 },
-            "Wait initialize response",
-            timeout.Token))!;
+        ErrorMessage? queuedRequestError = null;
+        ResponseMessage? initializeResponse = null;
+        while (queuedRequestError is null || initializeResponse is null)
+        {
+            RpcMessage? message = await messageHandler.ReadAsync(timeout.Token);
+            if (queuedRequestError is null && message is ErrorMessage { Id: 20 } error)
+            {
+                queuedRequestError = error;
+            }
+
+            if (initializeResponse is null && message is ResponseMessage { Id: 3 } response)
+            {
+                initializeResponse = response;
+            }
+        }
+
+        Assert.AreEqual(ErrorCodes.ServerNotInitialized, queuedRequestError.ErrorCode);
         InitializeResponseArgs initializeResult = SerializerUtilities.Deserialize<InitializeResponseArgs>(
             (IDictionary<string, object?>)initializeResponse.Result!);
         Assert.AreEqual(JsonRpcProtocolVersions.Current, initializeResult.ProtocolVersion);

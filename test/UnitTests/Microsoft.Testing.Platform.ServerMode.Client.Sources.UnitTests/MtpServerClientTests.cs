@@ -511,6 +511,25 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task RunTestsAsync_NumericStringResponseId_DoesNotCompleteNumericRequest()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        RequestMessage request = await server.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout).ConfigureAwait(false);
+        Task<MtpLogEventArgs> responseProcessed = WaitForEventAsync<MtpLogEventArgs>(handler => client.LogReceived += handler);
+
+        await server.SendRunResponseAsync(request, useStringId: true).ConfigureAwait(false);
+        await server.SendLogAsync("response barrier").ConfigureAwait(false);
+        _ = await WithTimeoutAsync(responseProcessed).ConfigureAwait(false);
+        Assert.IsFalse(runTask.IsCompleted);
+
+        await server.SendRunResponseAsync(request, useStringId: false).ConfigureAwait(false);
+        _ = await WithTimeoutAsync(runTask).ConfigureAwait(false);
+    }
+
+    [TestMethod]
     public async Task ReadLoop_MalformedFrame_FailsPendingRequestWithClientException()
     {
         using FakeMtpServer server = new() { WithholdRunResponse = true };
