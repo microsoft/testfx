@@ -21,6 +21,7 @@
     <File Path="eng/Analyzers.props" />
     <File Path="eng/Build.props" />
     <File Path="eng/coverage.config" />
+    <Project Path="eng/Dependabot.Dependencies/Dependabot.Dependencies.csproj" Build="false" />
     <File Path="eng/install-windows-sdk.ps1" />
     <File Path="eng/verify-nupkgs.ps1" />
     <File Path="eng/Version.Details.xml" />

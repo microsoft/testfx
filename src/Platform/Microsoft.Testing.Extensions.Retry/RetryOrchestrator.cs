@@ -5,6 +5,7 @@ using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
@@ -132,6 +133,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         bool thresholdPolicyKickedIn = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
+        List<RetryAttemptArtifact> attemptArtifacts = [];
 
         // Retries are the single most useful thing to measure about a flaky suite, and the orchestrator is the only
         // component that sees every attempt. Emitting the count here (rather than inferring it from duplicated test
@@ -157,6 +159,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         Dictionary<string, string> flakyTestsByUid = [];
         int finalFailedTestResults = 0;
         int retriedExecutions = 0;
+        bool sawSkippedResults = false;
         Dictionary<string, string> pendingRetriedTests = [];
 
         // Parse the delay once before the loop since command-line options don't change.
@@ -234,9 +237,17 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 return (int)ExitCode.GenericFailure;
             }
 
+            attemptArtifacts.AddRange(RetryArtifactProcessor.SnapshotAttemptArtifacts(
+                fileSystem,
+                retryFailedTestsPipeServer.Artifacts,
+                attemptCount,
+                currentTryResultFolder,
+                retryRootFolder));
+
             exitCodes.Add(attemptResult.ExitCode);
 
             int failedThisAttempt = retryFailedTestsPipeServer.FailedTests.Count;
+            sawSkippedResults |= retryFailedTestsPipeServer.SkippedTests > 0;
             if (attemptCount == 1)
             {
                 // The first attempt runs the full suite, so its counts are the suite's. Skipped tests are tracked
@@ -381,7 +392,67 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 
-        await RetrySummaryReporter.MoveArtifactsAsync(this, outputDevice, fileSystem, logger, currentTryResultFolder, resultDirectory, cancellationToken).ConfigureAwait(false);
+        string postProcessingDirectory = Path.Combine(
+            Path.GetTempPath(),
+            $"testfx-retry-postprocess-{Guid.NewGuid():N}");
+        try
+        {
+            // Once retries run, any skipped result makes the final passed/skipped split ambiguous: a folded UID can
+            // contain both failed and skipped rows, and a retry can move a row in either direction. Fail closed rather
+            // than publishing authoritative-looking counts until the retry protocol carries per-UID row outcomes.
+            bool logicalPassedAndSkippedCountsKnown = attemptCount == 1 || !sawSkippedResults;
+            ArtifactPostProcessingRunSummary? artifactRunSummary = suiteCountsKnown
+                && logicalPassedAndSkippedCountsKnown
+                && finalFailedTestResults + suiteSkippedTests <= suiteTotalTests
+                    ? new ArtifactPostProcessingRunSummary(
+                        suiteTotalTests,
+                        suiteTotalTests - finalFailedTestResults - suiteSkippedTests,
+                        finalFailedTestResults,
+                        suiteSkippedTests,
+                        orchestrationStopwatch.Elapsed,
+                        exitCodes[^1],
+                        testModuleCount: 1)
+                    : null;
+            IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+                _serviceProvider,
+                this,
+                outputDevice,
+                logger,
+                attemptArtifacts,
+                attemptCount,
+                artifactRunSummary,
+                postProcessingDirectory,
+                cancellationToken).ConfigureAwait(false);
+
+            await RetrySummaryReporter.MoveArtifactsAsync(
+                this,
+                outputDevice,
+                fileSystem,
+                logger,
+                currentTryResultFolder,
+                resultDirectory,
+                replacements,
+                cancellationToken).ConfigureAwait(false);
+            RetryArtifactProcessor.PublishExternalArtifacts(
+                fileSystem,
+                attemptArtifacts,
+                attemptCount,
+                replacements);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(postProcessingDirectory))
+                {
+                    Directory.Delete(postProcessingDirectory, recursive: true);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning($"Failed to clean retry artifact post-processing directory '{postProcessingDirectory}': {ex}");
+            }
+        }
 
         return exitCodes[^1];
     }

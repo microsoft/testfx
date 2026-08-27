@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Extensions.HtmlReport;
 
 internal sealed class HtmlReportGenerator : ReportGeneratorBase<HtmlReportGenerator, CapturedTestResult>
 {
+    internal const string HtmlArtifactKind = "microsoft.testing.html";
+
     public HtmlReportGenerator(IServiceProvider serviceProvider)
         : base(serviceProvider, HtmlReportGeneratorCommandLine.HtmlReportOptionName)
     {
@@ -24,7 +26,7 @@ internal sealed class HtmlReportGenerator : ReportGeneratorBase<HtmlReportGenera
 
     protected override string ArtifactDisplayName => ExtensionResources.HtmlReportArtifactDisplayName;
 
-    protected override string? ArtifactKind => "microsoft.testing.html";
+    protected override string? ArtifactKind => HtmlArtifactKind;
 
     protected override string ArtifactDescription => ExtensionResources.HtmlReportArtifactDescription;
 

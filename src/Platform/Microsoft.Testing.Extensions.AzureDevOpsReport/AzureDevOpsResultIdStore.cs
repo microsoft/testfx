@@ -54,8 +54,8 @@ internal sealed class AzureDevOpsResultIdStore
     private readonly int _buildId;
     private readonly int _runId;
 
-    // Keyed by (storage, name, title): automatedTestName is TestNode.Uid.Value, which can be shared by
-    // several folded data-driven rows. The title carries the row identity within that test application.
+    // Keyed by (storage, name, title): the fully-qualified automated test name can be shared by several
+    // folded data-driven rows. The title carries the row identity within that test application.
     private readonly Dictionary<string, AzureDevOpsPublishedResult> _results = [];
     private readonly HashSet<string> _ambiguousKeys = [];
 
@@ -116,7 +116,7 @@ internal sealed class AzureDevOpsResultIdStore
             result.AutomatedTestName,
             result.TestCaseTitle,
             resultId,
-            [ToSubResult(result, sequenceId: 1)])
+            [CreateFirstAttempt(result)])
         {
             TotalDurationInMs = result.DurationInMs,
             StartedDate = result.StartedDate,
@@ -124,6 +124,9 @@ internal sealed class AzureDevOpsResultIdStore
         };
         _hasUnsavedChanges = true;
     }
+
+    public static AzureDevOpsTestSubResult CreateFirstAttempt(AzureDevOpsTestCaseResult result)
+        => ToSubResult(result, sequenceId: 1);
 
     /// <summary>
     /// Builds what the attempt history would become if <paramref name="result"/> were published, without
@@ -291,10 +294,11 @@ internal sealed class AzureDevOpsResultIdStore
         }
     }
 
+    // Match PublishTestResults@2: the original execution is Attempt# 0, while sequence ids are 1-based.
     private static AzureDevOpsTestSubResult ToSubResult(AzureDevOpsTestCaseResult result, int sequenceId)
         => new(
             sequenceId,
-            result.TestCaseTitle,
+            $"Attempt# {(sequenceId - 1).ToString(CultureInfo.InvariantCulture)} - {result.TestCaseTitle}",
             result.Outcome,
             result.DurationInMs,
             result.ErrorMessage,

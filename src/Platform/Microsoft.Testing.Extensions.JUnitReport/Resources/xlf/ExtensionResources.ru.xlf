@@ -7,6 +7,31 @@
         <target state="translated">Недопустимый тип построителя тестового приложения. Ожидается тип "TestApplicationBuilder".</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
+      <trans-unit id="JUnitArtifactPostProcessorDescription">
+        <source>Merges JUnit XML reports produced by Microsoft.Testing.Extensions.JUnitReport</source>
+        <target state="translated">Объединяет XML-отчеты JUnit, создаваемые Microsoft.Testing.Extensions.JUnitReport</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"} or assembly name {Locked="Microsoft.Testing.Extensions.JUnitReport"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitArtifactPostProcessorDisplayName">
+        <source>JUnit XML report merger</source>
+        <target state="translated">Объединение XML-отчета JUnit</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitMergedArtifactDescription">
+        <source>{0} JUnit XML report files merged</source>
+        <target state="translated">Объединено файлов XML-отчетов JUnit: {0}</target>
+        <note>{0} is the number of merged files. Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitMergedArtifactDisplayName">
+        <source>JUnit XML report (merged)</source>
+        <target state="translated">XML-отчет JUnit (объединенный)</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitMergedReportName">
+        <source>Merged JUnit XML report</source>
+        <target state="translated">Объединенный XML-отчет JUnit</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
       <trans-unit id="JUnitReportArtifactDescription">
         <source>JUnit XML report file</source>
         <target state="translated">Файл XML-отчета JUnit</target>
@@ -35,11 +60,11 @@
       <trans-unit id="JUnitReportFileNameOptionDescription">
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: MyReport_{tfm}.xml</source>
-        <target state="translated">Имя сгенерированного XML-отчета JUnit. Может включать относительный или абсолютный путь; относительные пути разрешаются относительно каталога результатов тестов, а отсутствующие каталоги создаются.
-Поддерживает следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя входной сборки), {tfm} (моникер целевой платформы), {arch} (архитектура процесса), {time} (метка времени).
-Пример: MyReport_{tfm}.xml</target>
-        <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
+Example: 'MyReport_{tfm}.xml'.</source>
+        <target state="new">The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
+Example: 'MyReport_{tfm}.xml'.</target>
+        <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="'MyReport_{tfm}.xml'"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
@@ -52,8 +77,8 @@ Example: MyReport_{tfm}.xml</source>
         <note>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
-        <source>Produce a JUnit XML report for the current test session</source>
-        <target state="translated">Создание XML-отчета JUnit для текущего тестового сеанса</target>
+        <source>Produce a JUnit XML report for the current test session.</source>
+        <target state="translated">Создать XML-отчет JUnit для текущего тестового сеанса.</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
@@ -67,9 +92,14 @@ Example: MyReport_{tfm}.xml</source>
         <note>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
-        <source>Enable generating a JUnit XML report</source>
-        <target state="translated">Включение создания XML-отчета JUnit</target>
+        <source>Enable generating a JUnit XML report.</source>
+        <target state="translated">Включить создание XML-отчета JUnit.</target>
         <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitReportRequiresArtifactPostProcessing">
+        <source>JUnit report generation requires a test application builder that supports artifact post-processing.</source>
+        <target state="translated">Для создания отчета JUnit требуется построитель тестовых приложений с поддержкой последующей обработки артефактов.</target>
+        <note>Do not localize format name {Locked="JUnit"}.</note>
       </trans-unit>
     </body>
   </file>

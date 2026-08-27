@@ -19,7 +19,11 @@ This package extends Microsoft.Testing.Platform with:
 - **Retry delay**: optionally wait between retry attempts (`--retry-failed-tests-delay`)
 - **Integration-test focus**: intended for scenarios where transient environment issues can cause intermittent failures
 
+## Usage
+
 Configure retry using `--retry-failed-tests <retries>`, and optionally limit retries with `--retry-failed-tests-max-percentage` or `--retry-failed-tests-max-tests`, or add a delay between retries with `--retry-failed-tests-delay` (e.g. `1s`, `2.5m`, `1h`).
+
+This extension restarts the test host for each retry. It is independent from MSTest's in-process `RetryAttribute` and custom `RetryBaseAttribute` implementations. When both mechanisms are enabled, their attempt counts multiply: a test using `[Retry(n)]` can run up to `(n + 1) * (--retry-failed-tests + 1)` times.
 
 ## Documentation
 

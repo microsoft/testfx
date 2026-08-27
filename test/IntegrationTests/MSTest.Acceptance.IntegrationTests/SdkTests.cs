@@ -75,15 +75,27 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
+        // 'dotnet test' runs the target frameworks in parallel and writes each framework's summary as two separate
+        // writes: the 'Passed!  - Failed: ...' counts, then the ' - MSTestSdk.dll (<tfm>)' suffix. Those writes
+        // interleave, so the two halves of one framework's summary are not guaranteed to share an output line. Assert
+        // the two independent facts instead: every expected framework ran, and every framework reported a clean result.
+        List<string> expectedTargetFrameworks = ["net10.0"];
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
+        expectedTargetFrameworks.Add("net8.0");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
+            expectedTargetFrameworks.Add("net462");
         }
+
+        foreach (string targetFramework in expectedTargetFrameworks)
+        {
+            compilationResult.AssertOutputContains($" - MSTestSdk.dll ({targetFramework})");
+        }
+
+        compilationResult.AssertOutputMatchesRegexTimes("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1", expectedTargetFrameworks.Count);
+        compilationResult.AssertOutputDoesNotContain("Failed!");
     }
 
     [TestMethod]
@@ -368,6 +380,37 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    public async Task PublishReadyToRun_Smoke_Test()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <PublishReadyToRun>true</PublishReadyToRun>
+                <SelfContained>false</SelfContained>
+                <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                """),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
+            warnAsError: true,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, RID, Verb.publish);
+
+        string publishedAssemblyPath = Path.Combine(testHost.DirectoryName, $"{AssetName}.dll");
+        ReadyToRunAssertions.AssertIsReadyToRunImage(publishedAssemblyPath);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
     public async Task SettingIsTestApplicationToFalseReducesAddedExtensionsAndMakesProjectNotExecutable()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
@@ -381,7 +424,7 @@ namespace MSTestSdkTest
 
         compilationResult.AssertExitCodeIs(0);
 
-        SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath);
+        SL.Build binLog = BinlogReader.Read(compilationResult.BinlogPath!);
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 

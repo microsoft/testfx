@@ -18,9 +18,18 @@ public static class JUnitReportExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddJUnitReportProvider(this ITestApplicationBuilder builder)
-        => ReportProviderRegistration.AddReportProvider(
+    {
+        if (builder is not IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            throw new InvalidOperationException(ExtensionResources.JUnitReportRequiresArtifactPostProcessing);
+        }
+
+        ReportProviderRegistration.AddReportProvider(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
             () => new JUnitReportGeneratorCommandLine(),
             serviceProvider => new JUnitReportGenerator(serviceProvider));
+
+        artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new JUnitArtifactPostProcessor());
+    }
 }

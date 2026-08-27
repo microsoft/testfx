@@ -172,6 +172,10 @@
     <value>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</value>
     <comment>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</comment>
   </data>
+  <data name="ArtifactPostProcessingManifestRunSummaryInvalid" xml:space="preserve">
+    <value>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</value>
+    <comment>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</comment>
+  </data>
   <data name="ArtifactPostProcessingManifestReadError" xml:space="preserve">
     <value>Cannot read the artifact post-processing manifest: {0}</value>
     <comment>{0} is the exception message.</comment>
@@ -540,7 +544,7 @@ Note that this is slowing down the test execution.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
     <value>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</value>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</value>
     <comment>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage" xml:space="preserve">
@@ -557,7 +561,7 @@ If not specified the file will be generated inside the default 'TestResults' dir
     <comment>{Locked="TestResults"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription" xml:space="preserve">
-    <value>Prefix for the log file name that will replace '[log]_.'</value>
+    <value>Replace '[log]_.' with the specified log file name prefix.</value>
     <comment>{Locked="[log]_."}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticVerbosityOptionDescription" xml:space="preserve">
@@ -601,7 +605,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
     <comment>{0} is the option name without the leading dashes.</comment>
   </data>
   <data name="PlatformCommandLineProviderDescription" xml:space="preserve">
-    <value>Microsoft Testing Platform command line provider</value>
+    <value>Microsoft Testing Platform command line provider.</value>
   </data>
   <data name="PlatformCommandLineProviderDisplayName" xml:space="preserve">
     <value>Platform command line provider</value>
@@ -624,7 +628,7 @@ The default is TestResults in the directory that contains the test application.<
     <comment>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</comment>
   </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
-    <value>For testing purposes</value>
+    <value>For testing purposes.</value>
   </data>
   <data name="PlatformCommandLineTestHostControllerPIDOptionDescription" xml:space="preserve">
     <value>Eventual parent test host controller PID.</value>
@@ -726,6 +730,10 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="NamedPipeDirectoryNotWritableErrorMessage" xml:space="preserve">
     <value>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</value>
     <comment>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</comment>
+  </data>
+  <data name="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage" xml:space="preserve">
+    <value>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</value>
+    <comment>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</comment>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report a non-successful exit value for the specified exit codes.
@@ -941,6 +949,24 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   <data name="AbortForMaxFailedTestsDescription" xml:space="preserve">
     <value>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
     <comment>{Locked="--maximum-failed-tests"}</comment>
+  </data>
+  <data name="AbortAtDeadlineDescription" xml:space="preserve">
+    <value>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</value>
+  </data>
+  <data name="AbortAtDeadlineMessage" xml:space="preserve">
+    <value>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</value>
+  </data>
+  <data name="AbortAtDeadlineInvalidDeadlineWarning" xml:space="preserve">
+    <value>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</value>
+    <comment>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</comment>
+  </data>
+  <data name="AbortAtDeadlineInvalidMarginOrderWarning" xml:space="preserve">
+    <value>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</value>
+    <comment>{0} is the dump margin. {1} is the stop margin.</comment>
+  </data>
+  <data name="AbortAtDeadlineCapabilityUnavailableWarning" xml:space="preserve">
+    <value>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</value>
+    <comment>{0} is the environment variable name. {1} is the capability interface name.</comment>
   </data>
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
     <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>

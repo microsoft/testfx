@@ -28,6 +28,8 @@
   --timeout-bg: #fff1e5;
   --error: #d1242f;
   --error-bg: #ffebe9;
+  --flaky: #9a6700;
+  --flaky-bg: #fff8c5;
 
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -55,6 +57,8 @@
     --timeout-bg: rgba(219, 109, 40, 0.2);
     --error: #f85149;
     --error-bg: rgba(248, 81, 73, 0.15);
+    --flaky: #d29922;
+    --flaky-bg: rgba(187, 128, 9, 0.2);
   }
 }
 
@@ -136,6 +140,7 @@ main {
 .summary-card.skipped .value { color: var(--skip); }
 .summary-card.timedOut .value { color: var(--timeout); }
 .summary-card.errored .value { color: var(--error); }
+.summary-card.flaky .value { color: var(--flaky); }
 
 .meta {
   background: var(--bg-card);
@@ -431,6 +436,48 @@ button.chevron:focus-visible { outline: 2px solid var(--accent); outline-offset:
   letter-spacing: 0;
 }
 
+.badge.flaky {
+  background: var(--flaky-bg);
+  border-color: var(--flaky);
+  color: var(--flaky);
+}
+
+.retry-history {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.retry-history h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.retry-attempt {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+}
+
+.retry-attempt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.retry-attempt h5 {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
 .trait {
   display: inline-block;
   font-size: 10px;
@@ -710,6 +757,10 @@ footer {
       { key: "duration", label: "Duration", value: fmtDuration(summary.totalDurationMs) }
     ];
 
+    if (typeof summary.flaky === "number") {
+      cards.push({ key: "flaky", label: "Flaky", cls: "flaky" });
+    }
+
     var html = "";
     cards.forEach(function (c) {
       var cls = c.cls ? " " + c.cls : "";
@@ -762,6 +813,9 @@ footer {
           (t.displayName || "") + "\n" +
           (t.className || "") + "\n" +
           (t.methodName || "") + "\n" +
+          (t.testApplication || "") + "\n" +
+          (t.targetFramework || "") + "\n" +
+          (t.architecture || "") + "\n" +
           (t.errorMessage || "") + "\n" +
           (t.exceptionType || "");
         if (hay.toLowerCase().indexOf(q) === -1) continue;
@@ -1025,6 +1079,14 @@ footer {
       name.appendChild(badge);
     }
 
+    if (t.flaky) {
+      var flakyBadge = document.createElement("span");
+      flakyBadge.className = "badge flaky";
+      flakyBadge.title = "Passed after " + (t.retries || (t.retryAttempts ? t.retryAttempts.length : 0)) + " prior attempt(s)";
+      flakyBadge.textContent = "Flaky";
+      name.appendChild(flakyBadge);
+    }
+
     if (t.traits && t.traits.length) {
       for (var ti = 0; ti < t.traits.length; ti++) {
         var trait = t.traits[ti];
@@ -1043,6 +1105,16 @@ footer {
         + (t.methodName || "");
       name.appendChild(qual);
     }
+    if (t.testApplication || t.targetFramework || t.architecture) {
+      var source = document.createElement("span");
+      source.className = "qualified";
+      var sourceParts = [];
+      if (t.testApplication) sourceParts.push(t.testApplication);
+      if (t.targetFramework) sourceParts.push(t.targetFramework);
+      if (t.architecture) sourceParts.push(t.architecture);
+      source.textContent = sourceParts.join(" · ");
+      name.appendChild(source);
+    }
     row.appendChild(name);
 
     var dur = document.createElement("div");
@@ -1050,7 +1122,7 @@ footer {
     dur.textContent = fmtDuration(t.durationMs);
     row.appendChild(dur);
 
-    var hasDetail = !!(t.errorMessage || t.stackTrace || t.standardOutput || t.standardError || t.exceptionType);
+    var hasDetail = !!(t.errorMessage || t.stackTrace || t.standardOutput || t.standardError || t.exceptionType || (t.retryAttempts && t.retryAttempts.length));
 
     var chev;
     if (hasDetail) {
@@ -1114,29 +1186,74 @@ footer {
     return row;
   }
 
+  function addBlock(container, tagName, title, content) {
+    if (content == null || content === "") return;
+    var h = document.createElement(tagName);
+    h.textContent = title;
+    container.appendChild(h);
+    var pre = document.createElement("pre");
+    // Always use textContent — never innerHTML — to be immune to HTML
+    // injection from test-controlled output.
+    pre.textContent = content;
+    container.appendChild(pre);
+  }
+
   function buildDetail(t) {
     var detail = document.createElement("div");
     detail.className = "detail";
 
-    function addBlock(title, content) {
-      if (content == null || content === "") return;
-      var h = document.createElement("h4");
-      h.textContent = title;
-      detail.appendChild(h);
-      var pre = document.createElement("pre");
-      // Always use textContent — never innerHTML — to be immune to HTML
-      // injection from test-controlled output.
-      pre.textContent = content;
-      detail.appendChild(pre);
-    }
-
     if (t.exceptionType) {
-      addBlock("Exception type", t.exceptionType);
+      addBlock(detail, "h4", "Exception type", t.exceptionType);
     }
-    addBlock("Error message", t.errorMessage);
-    addBlock("Stack trace",   t.stackTrace);
-    addBlock("Standard output", t.standardOutput);
-    addBlock("Standard error",  t.standardError);
+    addBlock(detail, "h4", "Error message", t.errorMessage);
+    addBlock(detail, "h4", "Stack trace",   t.stackTrace);
+    addBlock(detail, "h4", "Standard output", t.standardOutput);
+    addBlock(detail, "h4", "Standard error",  t.standardError);
+
+    if (t.retryAttempts && t.retryAttempts.length) {
+      var history = document.createElement("div");
+      history.className = "retry-history";
+      var historyHeading = document.createElement("h4");
+      historyHeading.textContent = "Retry history";
+      history.appendChild(historyHeading);
+
+      for (var ai = 0; ai < t.retryAttempts.length; ai++) {
+        var attempt = t.retryAttempts[ai];
+        var attemptEl = document.createElement("div");
+        attemptEl.className = "retry-attempt";
+
+        var attemptHeader = document.createElement("div");
+        attemptHeader.className = "retry-attempt-header";
+
+        var attemptPill = document.createElement("span");
+        attemptPill.className = "outcome " + (attempt.outcome || "");
+        attemptPill.textContent = attempt.outcome || "unknown";
+        attemptHeader.appendChild(attemptPill);
+
+        var attemptLabel = document.createElement("span");
+        attemptLabel.textContent = "Attempt " + attempt.attempt;
+        attemptHeader.appendChild(attemptLabel);
+
+        var attemptDuration = document.createElement("span");
+        attemptDuration.className = "duration";
+        attemptDuration.textContent = fmtDuration(attempt.durationMs);
+        attemptHeader.appendChild(attemptDuration);
+
+        attemptEl.appendChild(attemptHeader);
+
+        if (attempt.exceptionType) {
+          addBlock(attemptEl, "h5", "Exception type", attempt.exceptionType);
+        }
+        addBlock(attemptEl, "h5", "Error message", attempt.errorMessage);
+        addBlock(attemptEl, "h5", "Stack trace",   attempt.stackTrace);
+        addBlock(attemptEl, "h5", "Standard output", attempt.standardOutput);
+        addBlock(attemptEl, "h5", "Standard error",  attempt.standardError);
+
+        history.appendChild(attemptEl);
+      }
+
+      detail.appendChild(history);
+    }
 
     if (detail.childNodes.length === 0) {
       var empty = document.createElement("div");

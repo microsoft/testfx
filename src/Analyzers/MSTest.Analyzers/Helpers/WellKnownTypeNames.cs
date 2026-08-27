@@ -29,6 +29,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DoNotParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDynamicDataSourceType = "Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingExecutableConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
@@ -60,6 +61,8 @@ internal static class WellKnownTypeNames
     public const string SystemCollectionsIDictionary = "System.Collections.IDictionary";
     public const string SystemConsole = "System.Console";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
+    public const string SystemDiagnosticsProcess = "System.Diagnostics.Process";
+    public const string SystemDiagnosticsProcessStartInfo = "System.Diagnostics.ProcessStartInfo";
     public const string SystemEnvironment = "System.Environment";
     public const string SystemFunc1 = "System.Func`1";
     public const string SystemGlobalizationCultureInfo = "System.Globalization.CultureInfo";

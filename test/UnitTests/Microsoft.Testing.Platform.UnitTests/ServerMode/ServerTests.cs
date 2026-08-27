@@ -495,6 +495,7 @@ public sealed class ServerTests
                 await Task.Delay(Timeout.Infinite, context.CancellationToken);
             },
         });
+
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
@@ -551,6 +552,124 @@ public sealed class ServerTests
 
         await serverTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, timeout.Token);
         Assert.AreEqual((int)ExitCode.TestSessionAborted, await serverTask);
+    }
+
+    [TestMethod]
+    public async Task DeadlineStateIsIsolatedBetweenServerRequests()
+    {
+        using var server = TcpServer.Create();
+        List<ServerRequestState> requestStates = [];
+
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(
+            _ => new TestFrameworkCapabilities(new RecordingGracefulStopCapability()),
+            (capabilities, serviceProvider) =>
+            {
+                IStopPoliciesService stopPoliciesService = serviceProvider.GetRequiredService<IStopPoliciesService>();
+                RecordingGracefulStopCapability capability = Assert.IsInstanceOfType<RecordingGracefulStopCapability>(
+                    capabilities.GetCapability<IGracefulStopTestExecutionCapability>());
+                ServerRequestState state = new(
+                    stopPoliciesService,
+                    serviceProvider.GetTestApplicationProcessExitCode(),
+                    capability);
+                requestStates.Add(state);
+
+                return new MockTestAdapter
+                {
+                    DiscoveryAction = async context =>
+                    {
+                        await stopPoliciesService.RegisterOnDeadlineCallbackAsync(
+                            () => capability.TryStopTestExecutionAsync(CancellationToken.None));
+                        context.Complete();
+                    },
+                };
+            });
+
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = Task.Run(testApplication.RunAsync);
+
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
+        using NetworkStream stream = client.GetStream();
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
+            client,
+            clientToServerStream: client.GetStream(),
+            serverToClientStream: client.GetStream(),
+            FormatterUtilities.CreateFormatter());
+
+        const string InitializeMessage = """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": true
+                        }
+                    }
+                }
+            }
+            """;
+        await WriteMessageAsync(writer, InitializeMessage);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage response && response.Id == 1,
+            "Wait initialize",
+            timeout.Token);
+
+        const string FirstDiscoverMessage = """
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000001"
+                }
+            }
+            """;
+        await WriteMessageAsync(writer, FirstDiscoverMessage);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage response && response.Id == 2,
+            "Wait first discovery",
+            timeout.Token);
+
+        const string SecondDiscoverMessage = """
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000002"
+                }
+            }
+            """;
+        await WriteMessageAsync(writer, SecondDiscoverMessage);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage response && response.Id == 3,
+            "Wait second discovery",
+            timeout.Token);
+
+        Assert.HasCount(2, requestStates);
+        await requestStates[0].StopPoliciesService.ExecuteDeadlineCallbacksAsync();
+
+        Assert.IsTrue(requestStates[0].StopPoliciesService.IsDeadlineTriggered);
+        Assert.AreEqual(1, requestStates[0].GracefulStopCapability.StopCount);
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, requestStates[0].TestApplicationResult.GetProcessExitCode());
+        Assert.IsFalse(requestStates[1].StopPoliciesService.IsDeadlineTriggered);
+        Assert.AreEqual(0, requestStates[1].GracefulStopCapability.StopCount);
+        Assert.AreEqual((int)ExitCode.ZeroTests, requestStates[1].TestApplicationResult.GetProcessExitCode());
+
+        await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
+
+        Assert.AreEqual(0, await serverTask);
     }
 
     [DataRow(JsonRpcMethods.TestingDiscoverTests)]
@@ -708,6 +827,28 @@ public sealed class ServerTests
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 
         public Task ExecuteRequestAsync(ExecuteRequestContext context) => DiscoveryAction is not null ? DiscoveryAction(context) : Task.CompletedTask;
+    }
+
+    private sealed record ServerRequestState(
+        IStopPoliciesService StopPoliciesService,
+        ITestApplicationProcessExitCode TestApplicationResult,
+        RecordingGracefulStopCapability GracefulStopCapability);
+
+    private sealed class RecordingGracefulStopCapability : IGracefulStopTestExecutionResultCapability
+    {
+        public int StopCount { get; private set; }
+
+        public Task StopTestExecutionAsync(CancellationToken cancellationToken)
+        {
+            StopCount++;
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
+        {
+            StopCount++;
+            return Task.FromResult(true);
+        }
     }
 
     private sealed class TcpServer : IDisposable

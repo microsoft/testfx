@@ -13,20 +13,23 @@ namespace MSTest.Analyzers.Test;
 public class UseParallelizeAttributeAnalyzerTests
 {
     private static async Task VerifyAsync(string code, bool includeTestAdapter, params DiagnosticResult[] expected)
+        => await VerifyAsync(code, includeTestAdapter ? "true" : null, expected);
+
+    private static async Task VerifyAsync(string code, string? adapterFlagValue, params DiagnosticResult[] expected)
     {
         var test = new VerifyCS.Test
         {
             TestCode = code,
         };
 
-        if (includeTestAdapter)
+        if (adapterFlagValue is not null)
         {
             test.TestState.AnalyzerConfigFiles.Add((
                 "/.globalconfig",
-                """
+                $"""
                 is_global = true
 
-                build_property.IsMSTestTestAdapterReferenced = true
+                build_property.IsMSTestTestAdapterReferenced = {adapterFlagValue}
                 """));
         }
 
@@ -41,6 +44,20 @@ public class UseParallelizeAttributeAnalyzerTests
     [TestMethod]
     public async Task WhenNoAttributeSpecified_TestAdapterReferenced_Diagnostic()
         => await VerifyAsync(string.Empty, includeTestAdapter: true, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
+
+    [TestMethod]
+    [DataRow("false", false)]
+    [DataRow("not-a-boolean", false)]
+    [DataRow("True", true)]
+    [DataRow("TRUE", true)]
+    public async Task WhenNoAttributeSpecified_AdapterFlagValue_ProducesExpectedDiagnostic(string adapterFlagValue, bool expectDiagnostic)
+    {
+        DiagnosticResult[] expected = expectDiagnostic
+            ? [VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation()]
+            : [];
+
+        await VerifyAsync(string.Empty, adapterFlagValue, expected);
+    }
 
     [TestMethod]
     public async Task WhenParallelizeAttributeSet_NoDiagnostic()

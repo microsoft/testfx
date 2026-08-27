@@ -17,6 +17,7 @@ public sealed class TrxArtifactPostProcessorTests
         TrxArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual(new[] { TrxReportEngine.TrxArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual(new[] { ArtifactPostProcessingMode.TestModules }, processor.SupportedModes);
         Assert.AreSequenceEqual(new[] { ".trx" }, processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }
@@ -176,6 +177,39 @@ public sealed class TrxArtifactPostProcessorTests
         }
     }
 
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedPathIsAFile_DoesNotMerge()
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"trx-post-processor-{Guid.NewGuid():N}");
+        string resultsDirectory = Path.Combine(root, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        File.WriteAllText(Path.Combine(resultsDirectory, "merged"), string.Empty);
+        try
+        {
+            string firstPath = Path.Combine(resultsDirectory, "first.trx");
+            string secondPath = Path.Combine(resultsDirectory, "second.trx");
+            WriteMinimalReport(firstPath, "first");
+            WriteMinimalReport(secondPath, "second");
+
+            ProcessedArtifact? output = await new TrxArtifactPostProcessor().ProcessAsync(
+                [
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
+                ],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsTrue(File.Exists(firstPath));
+            Assert.IsTrue(File.Exists(secondPath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
 #if NETCOREAPP
     [TestMethod]
     public async Task ProcessAsync_WhenMergedDirectoryIsAReparsePoint_DoesNotMerge()
@@ -219,6 +253,50 @@ public sealed class TrxArtifactPostProcessorTests
 
             Assert.IsNull(output);
             Assert.IsEmpty(Directory.GetFileSystemEntries(outsideDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsADanglingReparsePoint_DoesNotMerge()
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"trx-post-processor-{Guid.NewGuid():N}");
+        string resultsDirectory = Path.Combine(root, "results");
+        string missingDirectory = Path.Combine(root, "missing");
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), missingDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = Path.Combine(resultsDirectory, "first.trx");
+            string secondPath = Path.Combine(resultsDirectory, "second.trx");
+            WriteMinimalReport(firstPath, "first");
+            WriteMinimalReport(secondPath, "second");
+
+            ProcessedArtifact? output = await new TrxArtifactPostProcessor().ProcessAsync(
+                [
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
+                ],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsTrue(File.Exists(firstPath));
+            Assert.IsTrue(File.Exists(secondPath));
+            Assert.IsFalse(Directory.Exists(missingDirectory));
         }
         finally
         {

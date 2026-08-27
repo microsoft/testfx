@@ -20,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// via the richer
 /// <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]}, IReadOnlyDictionary{Type, Attribute[]}, object[])"/>
 /// family of overloads. Missing entries—including unresolved members and incompletely materialized
-/// attribute sets—fall back to runtime reflection. Reflection-free mode emits constructor
+/// attribute sets—fall back to runtime reflection. For complete async methods, registration keeps
+/// generated declared attributes authoritative and performs a targeted runtime merge of
+/// compiler-special <see cref="AsyncStateMachineAttribute"/> and
+/// <see cref="DebuggerStepThroughAttribute"/> metadata. Reflection-free mode emits constructor
 /// invocation and applicable property-setter delegates, but general constructor/property
 /// enumeration and lookup remain reflective; navigation data remains unpopulated.
 /// MethodInfo keys (and PropertyInfo keys for emitted setters) are resolved with bounded reflection

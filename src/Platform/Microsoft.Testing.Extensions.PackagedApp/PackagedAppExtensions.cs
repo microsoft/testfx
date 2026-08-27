@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.PackagedApp;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -35,9 +36,11 @@ public static class PackagedAppExtensions
     /// (see https://github.com/microsoft/testfx/issues/9933); the plain build rejects a packaged layout
     /// with an actionable error. Full-trust desktop hosts receive normal process arguments, while
     /// windowsApp/UWP hosts restore launch activation arguments with
-    /// <see cref="GetTestApplicationArguments(string)"/>. End-to-end AppContainer execution additionally
-    /// requires the exact package-SID controller-pipe authorization tracked by
-    /// https://github.com/microsoft/testfx/issues/10486.
+    /// <see cref="GetTestApplicationArguments(string)"/>. The launcher also contributes the selected
+    /// application's exact package SID to the controller connection through
+    /// <see cref="ITestHostControllerConnectionAuthorizer"/>. These are communication primitives; the
+    /// SDK/platform startup path still routes true UWP/AppContainer test projects to VSTest rather than
+    /// starting them as MTP test hosts.
     /// </summary>
     /// <remarks>
     /// The launcher only enables itself when the test application is a packaged layout, so calling this

@@ -80,13 +80,16 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputDoesNotContain("Test run summary: Passed!");
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
-            Assert.HasCount(2, trxFiles);
-            string trxContents1 = File.ReadAllText(trxFiles[0]);
-            string trxContents2 = File.ReadAllText(trxFiles[1]);
-            Assert.AreNotEqual(trxContents1, trxContents2);
-            string id1 = Regex.Match(trxContents1, "<TestRun id=\"(.+?)\"").Groups[1].Value;
-            string id2 = Regex.Match(trxContents2, "<TestRun id=\"(.+?)\"").Groups[1].Value;
-            Assert.AreEqual(id1, id2);
+            Assert.HasCount(3, trxFiles);
+            string[] trxContents = [.. trxFiles.Select(File.ReadAllText)];
+            Assert.HasCount(2, trxContents.Distinct(StringComparer.Ordinal));
+            string[] ids =
+            [
+                .. trxContents
+                    .Select(contents => Regex.Match(contents, "<TestRun id=\"(.+?)\"").Groups[1].Value)
+                    .Distinct(StringComparer.Ordinal),
+            ];
+            Assert.HasCount(1, ids);
         }
         else
         {
@@ -121,11 +124,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string summaryPath = Path.Combine(resultDirectory, "github-step-summary.md");
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 1 --results-directory {resultDirectory} --report-gh --report-gh-annotations off --report-gh-groups off",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "GITHUB_ACTIONS", "true" },
+                { "GITHUB_STEP_SUMMARY", summaryPath },
                 { "METHOD1", "1" },
                 { "FAIL", "1" },
                 { "SKIPONRETRY", "1" },
@@ -152,6 +158,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputContains("  failed: 0");
         testHostResult.AssertOutputContains("  succeeded: 3");
         testHostResult.AssertOutputContains("  skipped: 0");
+        Assert.IsFalse(
+            File.Exists(summaryPath),
+            "GitHub summary aggregation must fail closed while the final passed/skipped split is ambiguous.");
     }
 
     /// <summary>
@@ -501,23 +510,28 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         // Verify that the first attempt honored the treenode-filter.
         string[] retryTrxFiles = Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.trx", SearchOption.AllDirectories);
-        Assert.HasCount(1, retryTrxFiles);
+        Assert.HasCount(2, retryTrxFiles);
 
-        string retryTrxContent = File.ReadAllText(retryTrxFiles[0]);
-        Assert.Contains("TestMethod1", retryTrxContent);
-        Assert.Contains("TestMethod2", retryTrxContent);
-        Assert.DoesNotContain("TestMethod3", retryTrxContent);
+        string firstAttemptTrxContent = File.ReadAllText(
+            retryTrxFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "1"));
+        Assert.Contains("TestMethod1", firstAttemptTrxContent);
+        Assert.Contains("TestMethod2", firstAttemptTrxContent);
+        Assert.DoesNotContain("TestMethod3", firstAttemptTrxContent);
 
         // Verify that the retry attempt only ran the failed test (TestMethod1) - i.e. the treenode-filter was
         // dropped and replaced by --filter-uid 1.
-        // The TRX in the top-level results directory (not under Retries/) is from the last attempt.
+        string finalAttemptTrxContent = File.ReadAllText(
+            retryTrxFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "2"));
+        Assert.Contains("TestMethod1", finalAttemptTrxContent);
+        Assert.DoesNotContain("TestMethod2", finalAttemptTrxContent);
+        Assert.DoesNotContain("TestMethod3", finalAttemptTrxContent);
+
+        // TRX intentionally keeps final-attempt semantics, so the top-level file is a copy of attempt 2.
         string[] topLevelTrxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.TopDirectoryOnly);
         Assert.HasCount(1, topLevelTrxFiles);
 
         string trxContent = File.ReadAllText(topLevelTrxFiles[0]);
-        Assert.Contains("TestMethod1", trxContent);
-        Assert.DoesNotContain("TestMethod2", trxContent);
-        Assert.DoesNotContain("TestMethod3", trxContent);
+        Assert.AreEqual(finalAttemptTrxContent, trxContent);
     }
 
     [TestMethod]
@@ -601,19 +615,31 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
 
-        // Attempts 1..N-1 stay under Retries/<n>/; only the final attempt's report is moved to the top level.
+        // Every physical attempt stays under Retries/<n>/, and the top-level report is a new consolidated document.
         string[] ctrfFiles =
         [
             .. Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal),
         ];
-        Assert.HasCount(2, ctrfFiles, $"Expected one CTRF report per attempt.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
+        Assert.HasCount(3, ctrfFiles, $"Expected two per-attempt reports and one consolidated report.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
 
         string[] runIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "runId"))];
         string[] reportIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "reportId"))];
 
-        Assert.AreEqual(runIds[0], runIds[1], "Both attempts belong to the same logical run, so they must share a runId.");
-        Assert.AreNotEqual(reportIds[0], reportIds[1], "Each attempt is a distinct artifact, so it must have its own reportId.");
+        Assert.HasCount(1, runIds.Distinct(StringComparer.Ordinal));
+        Assert.HasCount(3, reportIds.Distinct(StringComparer.Ordinal));
         Assert.AreNotEqual(runIds[0], reportIds[0], "runId and reportId identify different things and must not be the same value.");
+
+        string consolidatedPath = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly).Single();
+        using var consolidated = System.Text.Json.JsonDocument.Parse(File.ReadAllText(consolidatedPath));
+        System.Text.Json.JsonElement results = consolidated.RootElement.GetProperty("results");
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("flaky").GetInt32());
+        System.Text.Json.JsonElement flakyTest = results.GetProperty("tests")
+            .EnumerateArray()
+            .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+        Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
+        Assert.AreEqual(1, flakyTest.GetProperty("retries").GetInt32());
+        Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
 
         if (expectedRunId is not null)
         {
@@ -623,6 +649,99 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         {
             Assert.IsTrue(Guid.TryParse(runIds[0], out _), $"An uncorrelated run must mint a GUID run id, got '{runIds[0]}'.");
         }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_CtrfAbsoluteFileName_PublishesConsolidatedReport(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string reportPath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.ctrf.json");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --report-ctrf --report-ctrf-filename \"{reportPath}\" --results-directory \"{resultDirectory}\"",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(reportPath));
+        Assert.IsEmpty(Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly));
+        Assert.HasCount(
+            2,
+            Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.ctrf.json", SearchOption.AllDirectories));
+
+        using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(reportPath));
+        System.Text.Json.JsonElement results = report.RootElement.GetProperty("results");
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("flaky").GetInt32());
+        System.Text.Json.JsonElement flakyTest = results.GetProperty("tests")
+            .EnumerateArray()
+            .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+        Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
+        Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_GitHubActionsSummary_ReportsFlakyTest(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string summaryPath = Path.Combine(resultDirectory, "github-step-summary.md");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-gh --report-gh-annotations off --report-gh-groups off",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "GITHUB_ACTIONS", "true" },
+                { "GITHUB_STEP_SUMMARY", summaryPath },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(summaryPath));
+        string summary = File.ReadAllText(summaryPath);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Duration |", summary, summary);
+        Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
+        Assert.Contains("### ⚠️ Flaky tests (1)", summary, summary);
+        Assert.Contains("`DummyClassName.TestMethod1`", summary, summary);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_HtmlReport_ContainsCompleteRunAndRetryHistory(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-html",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        string reportPath = Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single();
+        string report = File.ReadAllText(reportPath);
+        Assert.Contains(@"""total"":3", report, report);
+        Assert.Contains(@"""passed"":3", report, report);
+        Assert.Contains(@"""flaky"":1", report, report);
+        Assert.Contains(@"""retryAttempts""", report, report);
+        Assert.Contains("Retry history", report, report);
+        Assert.Contains("badge flaky", report, report);
     }
 
     private static string ReadRequiredStringProperty(string filePath, string propertyName)
@@ -645,7 +764,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion));
 
         private const string TestCode = """
 #file RetryFailedTests.csproj
@@ -662,6 +782,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
@@ -702,6 +824,8 @@ public class Program
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
         builder.AddCtrfReportProvider();
 #pragma warning restore TPEXP
+        builder.AddGitHubActionsProvider();
+        builder.AddHtmlReportProvider();
         builder.AddRetryProvider();
         builder.AddMSBuild();
         builder.AddTreeNodeFilterService(treeNodeFilterExtension);

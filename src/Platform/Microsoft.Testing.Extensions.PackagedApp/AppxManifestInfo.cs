@@ -264,6 +264,14 @@ internal sealed class AppxManifestInfo
                             canUsePackageFullTrustFallback:
                                 canRunFullTrust
                                 && applicationElements.Count == 1
+                                && !hasFullTrustCompanion),
+                        RunsInAppContainer(
+                            entryPoint,
+                            trustLevel,
+                            runtimeBehavior,
+                            canUsePackageFullTrustFallback:
+                                canRunFullTrust
+                                && applicationElements.Count == 1
                                 && !hasFullTrustCompanion));
             })
             .OfType<AppxApplicationInfo>()
@@ -271,6 +279,27 @@ internal sealed class AppxManifestInfo
 
         return new AppxManifestInfo(name, publisher, applications);
     }
+
+    /// <summary>
+    /// Classifies whether an application runs inside an AppContainer, i.e. with a restricted token. This is
+    /// the question the controller-connection authorization asks, and it differs from
+    /// <see cref="UsesLaunchActivationArguments"/> in one shape: a <c>packagedClassicApp</c> whose
+    /// <c>TrustLevel</c> is <c>appContainer</c> is sandboxed but still receives process <c>argv</c>.
+    /// </summary>
+    private static bool RunsInAppContainer(
+        string? entryPoint,
+        string? trustLevel,
+        string? runtimeBehavior,
+        bool canUsePackageFullTrustFallback)
+        // An explicit trust level wins over the activation model: it is a direct statement about the token
+        // the host will run with. In particular, a windowsApp can use launch activation while explicitly
+        // running at medium integrity, so UsesLaunchActivationArguments cannot answer this question alone.
+        => trustLevel switch
+        {
+            string value when string.Equals(value, "appContainer", StringComparison.OrdinalIgnoreCase) => true,
+            string value when string.Equals(value, "mediumIL", StringComparison.OrdinalIgnoreCase) => false,
+            _ => UsesLaunchActivationArguments(entryPoint, trustLevel, runtimeBehavior, canUsePackageFullTrustFallback),
+        };
 
     private static bool UsesLaunchActivationArguments(
         string? entryPoint,

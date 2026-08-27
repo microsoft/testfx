@@ -193,7 +193,8 @@
 
   <!-- The client types are internal (they compile into each consumer). Grant the unit tests access. -->
   <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests" Key="$(VsPublicKey)" Condition="'$(MutationTesting)' != 'true'" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests" Key="$(OpenPublicKey)" Condition="'$(MutationTesting)' == 'true'" />
     <!-- The MSTest acceptance project drives the client against a real packed MTP app (P4). It references
          this project via a non-global `serverclient` extern alias to avoid TestNode name clashes. -->
     <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />

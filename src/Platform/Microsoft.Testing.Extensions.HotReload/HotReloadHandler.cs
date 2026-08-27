@@ -23,6 +23,9 @@ namespace Microsoft.Testing.Extensions.Hosting;
 internal sealed class HotReloadHandler
 {
     private static readonly SemaphoreSlim SemaphoreSlim = new(1, 1);
+#pragma warning disable IDE0330 // Use 'System.Threading.Lock' - HotReload targets netstandard2.0.
+    private static readonly object Sync = new();
+#pragma warning restore IDE0330
     private static bool s_shutdownProcess;
     private readonly IConsole _console;
     private readonly IOutputDevice _outputDevice;
@@ -36,14 +39,7 @@ internal sealed class HotReloadHandler
 
         if (!IsCancelKeyPressNotSupported())
         {
-            _console.CancelKeyPress += (_, _) =>
-            {
-                if (!s_shutdownProcess)
-                {
-                    s_shutdownProcess = true;
-                    SemaphoreSlim.Release();
-                }
-            };
+            _console.CancelKeyPress += (_, _) => RequestShutdown();
         }
     }
 
@@ -65,7 +61,32 @@ internal sealed class HotReloadHandler
     }
 
     // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
-    public static void UpdateApplication(Type[]? _) => SemaphoreSlim.Release();
+    public static void UpdateApplication(Type[]? _) => SignalWaiter();
+
+    internal static void RequestShutdown()
+    {
+        lock (Sync)
+        {
+            if (s_shutdownProcess)
+            {
+                return;
+            }
+
+            s_shutdownProcess = true;
+            SignalWaiter();
+        }
+    }
+
+    private static void SignalWaiter()
+    {
+        lock (Sync)
+        {
+            if (SemaphoreSlim.CurrentCount == 0)
+            {
+                SemaphoreSlim.Release();
+            }
+        }
+    }
 
 #if !NET6_0_OR_GREATER
     public Task<bool> ShouldRunAsync(Task? waitExecutionCompletion, CancellationToken cancellationToken)
@@ -102,7 +123,7 @@ internal sealed class HotReloadHandler
             // We're closing
         }
 
-        if (!IsClearNotSupported())
+        if (!_console.IsOutputRedirected && !IsClearNotSupported())
         {
             _console.Clear();
         }

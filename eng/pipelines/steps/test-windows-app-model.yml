@@ -1,5 +1,5 @@
 # Strict build, test, diagnostics, and cleanup steps for the real Windows application-model acceptance tests.
-# The consuming job must use an interactive, elevated Windows agent and define _BuildConfig=Debug.
+# The consuming job must use an interactive, elevated Windows agent and define _BuildConfig=Release.
 steps:
 - task: PowerShell@2
   displayName: 'Preflight Windows application-model agent'
@@ -13,7 +13,7 @@ steps:
 - pwsh: |
     New-Item "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)" -ItemType Directory -Force | Out-Null
     New-Item "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)" -ItemType Directory -Force | Out-Null
-    & .\build.cmd -pack
+    & .\build.cmd -pack -configuration $(_BuildConfig)
     exit $LASTEXITCODE
   displayName: 'Pack app-model acceptance dependencies'
 

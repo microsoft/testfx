@@ -46,6 +46,9 @@ jobs:
       pr-number: ${{ steps.fetch.outputs.pr-number }}
       pr-head-sha: ${{ steps.fetch.outputs.pr-head-sha }}
       pr-merge-sha: ${{ steps.fetch.outputs.pr-merge-sha }}
+      pr-checkout-ref: ${{ steps.fetch.outputs.pr-checkout-ref }}
+      base-ref: ${{ steps.fetch.outputs.base-ref }}
+      push-blocked: ${{ steps.fetch.outputs.push-blocked }}
       ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
       ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
       missing-legs: ${{ steps.fetch.outputs.missing-legs }}
@@ -274,6 +277,89 @@ jobs:
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
 
+          # --- 2b. Resolve the ref the agent job should check out ---
+          # The agent edits the PR's tree in place when it can push a fix, so it
+          # needs the PR revision — not `check_run`'s ref, which is the default
+          # branch. Two cases:
+          #   * same-repo PR (dependency flow, maintainer branches): check out
+          #     the head BRANCH BY NAME. gh-aw derives the push target from
+          #     `git rev-parse --abbrev-ref HEAD`, so a detached checkout would
+          #     report `HEAD` and break bundle generation.
+          #   * fork PR: that branch does not exist here, so use the read-only
+          #     `refs/pull/<n>/head`. Detached is fine — gh-aw refuses pushes to
+          #     fork branches anyway, so those runs stay comment-only.
+          HEAD_REPO=$(printf '%s' "${PR_JSON}" | jq -r '.head.repo.full_name // empty')
+          HEAD_REF=$(printf '%s' "${PR_JSON}" | jq -r '.head.ref // empty')
+          if [ -n "${HEAD_REF}" ] && [ "${HEAD_REPO}" = "${GH_AW_REPO}" ]; then
+            CHECKOUT_REF="${HEAD_REF}"
+          else
+            CHECKOUT_REF="refs/pull/${PR_NUMBER}/head"
+          fi
+          echo "Agent checkout ref: '${CHECKOUT_REF}' (head repo '${HEAD_REPO}')"
+
+          # --- 2c. Trusted loop guard for the push escape hatch ---
+          # Only the automatic workflow enables `push-to-pull-request-branch`.
+          # The analyst is told not to push a second fix (Step 6b), but an
+          # instruction is not enforcement, and neither is anything installed
+          # inside the agent's sandbox. So the decision is made here, in trusted
+          # workflow code, and the automatic workflow applies it in its job-level
+          # `if:`: when this output is `true` the activation and agent jobs never
+          # run, and `safe_outputs` is skipped with them, so no push is even
+          # reachable. The command workflow ignores this output — it is
+          # comment-only and has nothing to guard.
+          #
+          # The condition is "the branch tip is itself an automated fix": the
+          # previous attempt is the newest thing on the branch and the build
+          # still fails, so it did not converge and a human has to take over.
+          # Scoping it to the tip rather than to the whole history means the
+          # workflow resumes the moment anyone pushes anything else, instead of
+          # abandoning the pull request forever after one attempt.
+          #
+          # The `[build-failure-analysis]` marker is not written by the model:
+          # the workflow sets `commit-title-suffix`, so gh-aw's push handler
+          # appends it to the commit title while applying the patch. A guard
+          # that depended on the agent remembering to write its own marker
+          # would not be a guard.
+          #
+          # Fails closed: an unreadable commit blocks the escape hatch.
+          PUSH_BLOCKED=true
+          PR_TIP_SHA=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
+          if [ "${HEAD_REPO}" != "${GH_AW_REPO}" ]; then
+            # gh-aw refuses pushes to fork branches, so the loop guard is moot
+            # here and must not suppress the (comment-only) analysis.
+            PUSH_BLOCKED=false
+          elif [ -n "${CHECK_PR_NUMBER}" ] && [ "${CHECK_PR_NUMBER}" != "${PR_NUMBER}" ]; then
+            # The push target is bound to `check_run.pull_requests[0].number`
+            # (see the `safe-outputs` block in the automatic workflow), while
+            # everything else keys off PR_NUMBER, which prefers the Azure
+            # Pipelines build's own source branch. Those agree in practice, but
+            # if they ever disagree the guard below would be checking one pull
+            # request while a push landed on another, so the loop would no
+            # longer be bounded. Refuse the run instead.
+            echo "::warning::The check payload names PR #${CHECK_PR_NUMBER} but the Azure Pipelines build belongs to PR #${PR_NUMBER}; skipping this run because the push target and the loop guard would disagree."
+          elif [ -z "${PR_TIP_SHA}" ]; then
+            echo "::warning::Could not resolve the head commit of PR #${PR_NUMBER}; skipping this run rather than risking a repeated automated fix."
+          elif TIP_SUBJECT=$(gh api "repos/${GH_AW_REPO}/commits/${PR_TIP_SHA}" --jq '.commit.message | split("\n")[0]'); then
+            # Deliberately a substring match, not an end-of-subject anchor.
+            # gh-aw appends the suffix by rewriting the first `Subject:` line
+            # of a `git format-patch` mbox, and git folds subjects longer than
+            # ~72 characters onto continuation lines, so `git am` reassembles
+            # the title with the marker in the *middle*, e.g.
+            #   Fix CS1503 after [build-failure-analysis] Microsoft.DotNet...
+            # Anchoring to the end would silently miss exactly those commits
+            # and let the push loop run unbounded — the one direction this
+            # guard must never fail in. The leading space is required, which
+            # is what the handler always inserts, so a subject that merely
+            # opens with the marker is not mistaken for an automated fix.
+            if printf '%s' "${TIP_SUBJECT}" | grep -qF ' [build-failure-analysis]'; then
+              echo "::warning::PR #${PR_NUMBER}'s tip commit is an automated [build-failure-analysis] fix and the build still fails, so the automated fix is not converging; skipping the automatic run and leaving the pull request to a human. Any further commit on the branch re-enables the analysis."
+            else
+              PUSH_BLOCKED=false
+            fi
+          else
+            echo "::warning::Could not read commit ${PR_TIP_SHA} of PR #${PR_NUMBER}; skipping this run rather than risking a repeated automated fix."
+          fi
+
           # --- 3. Validate the build, whichever way it was resolved ---
           # It must be the microsoft.testfx definition (209), have failed, and
           # belong to this PR (sourceBranch == refs/pull/<PR>/merge). No entry
@@ -361,12 +447,11 @@ jobs:
           # "no build failure" from the legs that happened to upload.
           #
           # Ask the timeline whether each leg's log *publish* succeeded rather
-          # than guessing its artifact name from its display name. The artifact
-          # is named from `$(Agent.Os)`, which is not what the job is called:
-          # `MacOS Debug` publishes `Logs_Build_Darwin_Debug`, and
-          # `WindowsSamples Debug` is named from `$(Agent.JobName)` instead. Name
-          # matching reported those healthy legs as missing on real builds —
-          # every macOS failure, and every `msbuild_cache_seed` job. Arcade's
+          # than guessing its artifact name from its display name. Artifact
+          # naming is configurable per job group and does not necessarily match
+          # the timeline display name. Name matching reported healthy legs as
+          # missing on real builds — every macOS failure, and every
+          # `msbuild_cache_seed` job. Arcade's
           # `Publish logs` task record answers the question directly, so no
           # spelling has to be inferred. A failed job carrying no such task
           # (the `Detect changed paths` classifier, the cache-seed stage) does
@@ -601,6 +686,9 @@ jobs:
             echo "pr-number=${PR_NUMBER}"
             echo "pr-head-sha=${HEAD_SHA}"
             echo "pr-merge-sha=${BUILD_MERGE_SHA}"
+            echo "pr-checkout-ref=${CHECKOUT_REF}"
+            echo "base-ref=${BASE_REF}"
+            echo "push-blocked=${PUSH_BLOCKED}"
             echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
           } >> "$GITHUB_OUTPUT"

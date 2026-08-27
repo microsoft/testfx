@@ -21,6 +21,23 @@ A manifest in the app's own directory is taken as the app's layout. A manifest i
 
 So referencing this package from an unpackaged app costs nothing: no extra process, and no copy of the build output.
 
+## Controller pipe access for AppContainer hosts
+
+The platform's test host controller talks to the test host over a named pipe created with the equivalent of `PipeOptions.CurrentUserOnly`: it is owned by the creating token's owner SID and its DACL grants only that SID, which is what keeps another user — or a differently-elevated process of the same user — out of the run.
+
+A **UWP or AppContainer-configured WinUI** host cannot connect to such a pipe. An AppContainer runs with a *restricted* token and Windows grants access only when the normal access check **and** the restricted-SID check both succeed; the restricting SIDs contain the app's package SID, so a DACL naming only the user denies the host even though it belongs to the same signed-in user.
+
+When the layout is a packaged app that declares an AppContainer application, this extension derives that package's own AppContainer SID from its package family name and asks the platform to authorize it on the pipe before the pipe is created. Sandbox membership is deliberately classified separately from argument delivery: a `packagedClassicApp` at `TrustLevel="appContainer"` receives plain `argv` but still needs the SID grant, while a `windowsApp` explicitly at `TrustLevel="mediumIL"` uses launch activation without running in an AppContainer. The grant is minimal and scoped:
+
+- only **that** package SID is added — `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) is never granted, and the platform rejects any request for a user, a group or `Everyone`;
+- it receives read, write, read-security and synchronize rights only, so it can never create another instance of the pipe, change its DACL, or delete it;
+- the DACL stays protected and the pipe rejects remote clients;
+- authorization-enabled pipes use the Windows-required `LOCAL\` namespace (`\\.\pipe\LOCAL\<name>`);
+- the pipe keeps the controller's own integrity level, so Mandatory Integrity Control stays a second gate behind the DACL;
+- a packaged full-trust host, an unpackaged app, and every non-Windows run keep the existing pipe unchanged.
+
+Set `TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION` to `never` to disable the grant entirely, or to `always` to request it for any packaged layout; `auto` (the default) probes the manifest.
+
 Set `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` to override that decision — `always` opts a non-packaged layout into deploy-and-launch, `never` keeps the launcher out of the way entirely, and `auto` (the default) probes the layout.
 
 ## Launch-activation bootstrap
@@ -41,7 +58,7 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 The handoff is versioned and length-prefixed, so empty values, whitespace, quotes, backslashes, Unicode, repeated options, and option order round-trip exactly. Payloads within Windows' documented 2,048-character launch-argument envelope stay entirely in the activation string. Larger payloads are written to package `LocalState` only as authenticated ciphertext; the one-shot key remains in the activation string, and both the host and launcher delete the file at the earliest cleanup point. User filters, runsettings, and other arguments are never persisted in plaintext.
 
-Argument delivery alone does not make an AppContainer run complete: the controller named pipe must also authorize the exact package SID. That separate security change is tracked by [#10486](https://github.com/microsoft/testfx/issues/10486). Full-trust packaged and unpackaged hosts do not depend on it.
+Argument restoration and exact package-SID pipe authorization are both implemented. They are the communication primitives needed after AppContainer activation; true UWP/AppContainer still is not an end-to-end MTP test-host mode because the SDK/platform startup path routes those projects to VSTest rather than starting an ordinary MTP controller process. Full-trust packaged and unpackaged hosts are unaffected by that limitation.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.PackagedApp` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
@@ -50,6 +67,12 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Exten
 ```dotnetcli
 dotnet add package Microsoft.Testing.Extensions.PackagedApp
 ```
+
+## Usage
+
+Referencing this package automatically registers its test-host launcher. Packaged layouts are detected automatically; set `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always` to opt a non-packaged loose layout into deployment, or `never` to disable the launcher.
+
+For a `windowsApp`/UWP host, restore the launch activation arguments with `PackagedAppExtensions.GetTestApplicationArguments` before creating the test application builder, as shown in [Launch-activation bootstrap](#launch-activation-bootstrap).
 
 ## About
 

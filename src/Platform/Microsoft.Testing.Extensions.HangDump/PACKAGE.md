@@ -20,6 +20,8 @@ This package extends Microsoft.Testing.Platform with:
 
 The timeout defaults to `30m` and can be configured in values such as `90s`, `5m`, or `1.5h`.
 
+## Usage
+
 Enable hang dump collection via the `--hangdump` command line option, and configure the timeout with `--hangdump-timeout`.
 
 ## Related packages

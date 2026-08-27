@@ -336,6 +336,70 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenReferencedTestClassIsInternalWithoutDiscoverInternals_NotATestClass()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            internal class PrerequisiteTests
+            {
+                [TestMethod]
+                public void Initialize() { }
+            }
+
+            [TestClass]
+            public class CheckoutTests
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(PrerequisiteTests))|}]
+                public void SubmitOrder() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NotATestClassRule)
+                .WithLocation(0)
+                .WithArguments("PrerequisiteTests"));
+    }
+
+    [TestMethod]
+    public async Task WhenReferencedTestClassIsInternalWithDiscoverInternals_Cycle()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            internal class PrerequisiteTests
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(CheckoutTests), nameof(CheckoutTests.SubmitOrder))|}]
+                public void Initialize() { }
+            }
+
+            [TestClass]
+            public class CheckoutTests
+            {
+                [TestMethod]
+                [{|#1:DependsOn(typeof(PrerequisiteTests), nameof(PrerequisiteTests.Initialize))|}]
+                public void SubmitOrder() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("PrerequisiteTests.Initialize > CheckoutTests.SubmitOrder > PrerequisiteTests.Initialize"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("CheckoutTests.SubmitOrder > PrerequisiteTests.Initialize > CheckoutTests.SubmitOrder"));
+    }
+
+    [TestMethod]
     public async Task WhenOverrideDropsTheBaseDependency_NoDiagnostic()
     {
         // '[DependsOn]' is not inherited across an override chain, so at run time 'Run' carries no

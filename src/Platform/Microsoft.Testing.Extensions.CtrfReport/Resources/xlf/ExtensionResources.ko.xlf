@@ -2,6 +2,26 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="CtrfArtifactPostProcessorDescription">
+        <source>Merges CTRF reports produced by Microsoft.Testing.Extensions.CtrfReport</source>
+        <target state="translated">Microsoft.Testing.Extensions.CtrfReport에서 생성한 CTRF 보고서 병합</target>
+        <note>Do not localize format name {Locked="CTRF"} or assembly name {Locked="Microsoft.Testing.Extensions.CtrfReport"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfArtifactPostProcessorDisplayName">
+        <source>CTRF report merger</source>
+        <target state="translated">CTRF 보고서 병합기</target>
+        <note>Do not localize format name {Locked="CTRF"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfMergedArtifactDescription">
+        <source>{0} CTRF files merged</source>
+        <target state="translated">{0}개의 CTRF 파일이 병합됨</target>
+        <note>{0} is the number of merged files. Do not localize format name {Locked="CTRF"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfMergedArtifactDisplayName">
+        <source>CTRF report (merged)</source>
+        <target state="translated">CTRF 보고서(병합됨)</target>
+        <note>Do not localize format name {Locked="CTRF"}.</note>
+      </trans-unit>
       <trans-unit id="CtrfReportArtifactDescription">
         <source>CTRF (Common Test Report Format) JSON test report</source>
         <target state="translated">CTRF(Common Test Report Format) JSON 테스트 보고서</target>
@@ -30,11 +50,11 @@
       <trans-unit id="CtrfReportFileNameOptionDescription">
         <source>The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-Example: MyReport_{tfm}.ctrf.json</source>
+Example: 'MyReport_{tfm}.ctrf.json'.</source>
         <target state="translated">생성된 CTRF 보고서의 이름입니다. 상대 경로 또는 절대 경로를 사용할 수 있습니다. 상대 경로는 테스트 결과 디렉터리를 기준으로 확인되며, 없는 디렉터리는 만들어집니다.
-자리 표시자 {pname}(테스트 애플리케이션 이름), {pid}(프로세스 ID), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {time}(타임스탬프)을 지원합니다.
-예: MyReport_{tfm}.ctrf.json</target>
-        <note>Do not localize option name {Locked="--report-ctrf-filename"}, format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="MyReport_{tfm}.ctrf.json"}.</note>
+자리 표시자 {pname}(테스트 애플리케이션 이름), {pid}(프로세스 ID), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {time}(타임스탬프)을(를) 지원합니다.
+예: 'MyReport_{tfm}.ctrf.json'.</target>
+        <note>Do not localize option name {Locked="--report-ctrf-filename"}, format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="'MyReport_{tfm}.ctrf.json'"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>
@@ -47,8 +67,8 @@ Example: MyReport_{tfm}.ctrf.json</source>
         <note>Do not localize option names {Locked="--report-ctrf-filename"}{Locked="--report-ctrf"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDescription">
-        <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
-        <target state="translated">현재 테스트 세션에 대한 CTRF(Common Test Report Format) JSON 보고서 생성(https://ctrf.io)</target>
+        <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).</source>
+        <target state="translated">현재 테스트 세션에 대한 CTRF(Common Test Report Format) JSON 보고서를 생성합니다(https://ctrf.io).</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDisplayName">
@@ -62,8 +82,8 @@ Example: MyReport_{tfm}.ctrf.json</source>
         <note>Do not localize option names {Locked="--report-ctrf"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportOptionDescription">
-        <source>Enable generating a CTRF (Common Test Report Format) JSON report</source>
-        <target state="translated">CTRF(Common Test Report Format) JSON 보고서 생성 사용</target>
+        <source>Enable generating a CTRF (Common Test Report Format) JSON report.</source>
+        <target state="translated">CTRF(Common Test Report Format) JSON 보고서 생성을 활성화합니다.</target>
         <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">

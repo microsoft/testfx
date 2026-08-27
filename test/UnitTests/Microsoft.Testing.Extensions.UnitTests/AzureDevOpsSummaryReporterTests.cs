@@ -7,10 +7,12 @@ using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -27,9 +29,12 @@ public sealed class AzureDevOpsSummaryReporterTests
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<IFileSystem> _fileSystemMock = new();
+    private readonly Mock<IMessageBus> _messageBusMock = new();
     private readonly Mock<IOutputDevice> _outputDeviceMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<ILoggerFactory> _loggerFactoryMock = new();
+    private readonly Mock<ITestApplicationProcessExitCode> _testApplicationProcessExitCodeMock = new();
+    private readonly Mock<ITestCoverageResult> _testCoverageResultMock = new();
     private readonly List<IOutputDeviceData> _outputData = [];
 
     public AzureDevOpsSummaryReporterTests()
@@ -37,6 +42,8 @@ public sealed class AzureDevOpsSummaryReporterTests
         _ = _configurationMock.SetupGet(c => c[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(ResultsDirectory);
         _ = _testApplicationModuleInfoMock.Setup(info => info.TryGetAssemblyName()).Returns("MyAssembly");
         _ = _loggerFactoryMock.Setup(loggerFactory => loggerFactory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        _ = _testCoverageResultMock.SetupGet(result => result.Scopes).Returns([]);
+        _ = _testCoverageResultMock.SetupGet(result => result.Thresholds).Returns([]);
         _ = _outputDeviceMock
             .Setup(outputDevice => outputDevice.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
             .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) => _outputData.Add(data))
@@ -138,6 +145,109 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_HtmlEncodesModuleSummaryLabel()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "<h1>A&B</h1>",
+            ModulePath = "A.dll",
+            TargetFramework = "net9.0<&>",
+            Architecture = "x64&arm64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            Coverage = new CiCoverageSummaryData
+            {
+                Metrics =
+                [
+                    new CiCoverageMetric
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        CoveredCount = 82,
+                        CoverableCount = 100,
+                    },
+                ],
+                Thresholds =
+                [
+                    new CiCoverageThreshold
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        ActualPercentage = 82,
+                        RequiredPercentage = 85,
+                        HasCoverableData = true,
+                        Passed = false,
+                    },
+                ],
+                ReportingModuleCount = 1,
+                TotalModuleCount = 1,
+            },
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
+        Assert.DoesNotContain("<summary><h1>", markdown);
+        Assert.Contains("| Overall | Line | 82 | 100 | 82.0% |", markdown);
+        Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 85.0% | ❌ Failed |", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_SameRenderedIdentityDifferentPaths_DisambiguatesSections()
+    {
+        var first = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "first/Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session-1",
+            AttemptNumber = 1,
+        };
+        var second = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "second/Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session-2",
+            AttemptNumber = 2,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [first, second],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("attempt 1, session session-1", markdown);
+        Assert.Contains("attempt 2, session session-2", markdown);
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_WritesSummaryFileAndEmitsUploadSummaryCommandAsync()
     {
         AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
@@ -176,9 +286,13 @@ public sealed class AzureDevOpsSummaryReporterTests
             _configurationMock.Object,
             _environmentMock.Object,
             _fileSystemMock.Object,
+            _messageBusMock.Object,
             _outputDeviceMock.Object,
             _testApplicationModuleInfoMock.Object,
-            _loggerFactoryMock.Object);
+            _testApplicationProcessExitCodeMock.Object,
+            _testCoverageResultMock.Object,
+            _loggerFactoryMock.Object,
+            static () => false);
 
     private static TestNodeUpdateMessage CreatePassed(string uid)
         => Create(uid, new PassedTestNodeStateProperty());

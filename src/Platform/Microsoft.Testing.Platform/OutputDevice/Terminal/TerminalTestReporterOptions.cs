@@ -9,9 +9,11 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
-    /// Gets a value indicating whether we should show passed tests.
+    /// Gets the set of test outcomes whose per-test terminal block (result line, informative details, stack
+    /// trace, expected/actual, and captured stdout/stderr) is rendered. Resolved once, at construction time, from
+    /// <c>--show-test-results</c> (when passed) or from <c>--output</c> otherwise.
     /// </summary>
-    public Func<bool> ShowPassedTests { get; init; } = () => true;
+    public TestResultVisibility ShowTestResults { get; init; } = TestResultVisibility.All;
 
     /// <summary>
     /// Gets minimum amount of tests to run.
@@ -120,6 +122,41 @@ internal enum OutputShowMode
     /// Never show the output.
     /// </summary>
     None,
+}
+
+/// <summary>
+/// Which test outcomes get a rendered per-test terminal block. Resolved once from <c>--show-test-results</c> or
+/// <c>--output</c> into <see cref="TerminalTestReporterOptions.ShowTestResults"/>.
+/// </summary>
+[Embedded]
+[Flags]
+internal enum TestResultVisibility
+{
+    /// <summary>
+    /// No test outcome is rendered.
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// Tests that passed.
+    /// </summary>
+    Passed = 1,
+
+    /// <summary>
+    /// Tests that did not pass: <see cref="TestOutcome.Fail"/>, <see cref="TestOutcome.Error"/>,
+    /// <see cref="TestOutcome.Timeout"/>, and <see cref="TestOutcome.Canceled"/>.
+    /// </summary>
+    Failed = 1 << 1,
+
+    /// <summary>
+    /// Tests that were skipped.
+    /// </summary>
+    Skipped = 1 << 2,
+
+    /// <summary>
+    /// Every test outcome.
+    /// </summary>
+    All = Passed | Failed | Skipped,
 }
 
 [Embedded]

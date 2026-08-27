@@ -213,6 +213,81 @@ public interface ITestHostControllersManager
    `ITestHostProcessLifetimeHandler` (and therefore hang dump and crash dump) all keep working with
    no changes.
 
+### Authorizing an AppContainer on the controller pipe
+
+The platform creates the `MONITORTOHOST` pipe with the equivalent of `PipeOptions.CurrentUserOnly`: the
+pipe is owned by the creating token's *owner* SID and its DACL contains a single ACE granting that same
+SID full control. That is enough for every ordinary child process, and it is what gives the pipe its
+current-user and elevation protection.
+
+It is *not* enough for a Windows AppContainer (a true UWP host, or a WinUI host configured for
+AppContainer). An AppContainer runs with a **restricted token**, and Windows grants access only when both
+the normal access check *and* the restricted-SID check succeed. The restricting SIDs of an AppContainer
+contain the package SID, so a DACL that names only the user SID denies the host even though it belongs to
+the same signed-in user — knowing the pipe name changes nothing.
+
+The pipe must exist before the host is launched, so a launcher cannot contribute the package identity from
+`LaunchTestHostAsync`. A launcher that needs it therefore *also* implements a hook that is deliberately
+phrased in OS-neutral terms — core MTP does not name AppContainer, MSIX or packaging anywhere in this
+surface, so the same hook can serve any launcher that starts the host under a restricted identity of its
+own:
+
+```csharp
+namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
+
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface ITestHostControllerConnectionAuthorizer
+{
+    /// <summary>
+    /// Returns the operating-system security identities that must be able to reach the
+    /// controller-to-host connection in addition to the current user.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(
+        string testHostFileName,
+        CancellationToken cancellationToken);
+}
+```
+
+The AppContainer specifics live on the two sides that legitimately own them: the packaged-app extension,
+which knows it launches an AppContainer and derives its package SID, and the platform's internal Windows
+named-pipe security helper, which knows how the OS expresses that identity. What core's *contract* says is
+only "here is a restricted identity that must be able to reach the connection".
+
+`TestHostControllersTestHost` calls it immediately before creating the pipe. The resulting security
+descriptor is deliberately minimal:
+
+| Principal | Rights |
+| --- | --- |
+| The creating token's owner SID (owner and group of the pipe) | `PipeAccessRights.FullControl` (`0x1f019f`) — identical to what `PipeOptions.CurrentUserOnly` grants |
+| Each authorized AppContainer package SID | `ReadWrite \| Synchronize` (`0x12019b`) only |
+
+and the DACL is protected (`D:P`) so nothing can be inherited into it. The package mask deliberately
+excludes `FILE_CREATE_PIPE_INSTANCE`, `DELETE`, `WRITE_DAC` and `WRITE_OWNER`, so an authorized package can
+talk to the controller but can never create a second instance of the pipe and impersonate it. The pipe is
+additionally created with `PIPE_REJECT_REMOTE_CLIENTS`.
+
+Authorization-enabled Windows pipes are also qualified with the packaged-app-required `LOCAL\` namespace:
+the controller creates `\\.\pipe\LOCAL\<name>` and hands `LOCAL\<name>` to the host. Ordinary runs retain
+their existing pipe name unchanged.
+
+No mandatory integrity label is emitted. The pipe keeps the controller's own integrity level, so Mandatory
+Integrity Control stays a second gate behind the DACL; a lowbox (AppContainer) token's access check is
+satisfied by the package-SID ACE and is not blocked by that label.
+
+Security rules the platform enforces on its own, independently of the extension:
+
+- Only a **specific** AppContainer SID may be authorized. Users, groups, `Everyone`, and in particular the
+  catch-all `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) and `ALL RESTRICTED APPLICATION PACKAGES`
+  (`S-1-15-2-2`) SIDs are rejected, and the run fails with an actionable error rather than silently
+  falling back to a weaker or a wider pipe.
+- Returning an empty collection — which is what every non-AppContainer launcher does — leaves the pipe
+  byte-for-byte as it is today.
+- The whole path is Windows-only. On any other operating system the returned values are logged and
+  ignored, and the existing pipe implementation is used unchanged.
+
+Loopback exemptions (`CheckNetIsolation LoopbackExempt`) are explicitly *not* part of the design: they
+apply to network loopback sockets, not to named-pipe DACLs, and would not help here.
+
 ### Contract requirements on the launcher
 
 - The launched host **must** end up with the values in `context.EnvironmentVariables` (so it connects
@@ -294,12 +369,13 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
 }
 ```
 
-> Note: enabling the controller→host pipe across the AppContainer sandbox requires a loopback/pipe-ACL
-> step that grants the exact package SID access to the named pipe. Argument delivery and pipe
-> authorization are deliberately separate: the reference packaged-app extension restores the opaque
-> `LaunchActivatedEventArgs.Arguments` through a reusable bootstrap, while [#10486](https://github.com/microsoft/testfx/issues/10486)
-> tracks the least-privilege pipe ACL. `CheckNetIsolation LoopbackExempt` is for network loopback and
-> does not authorize named pipes.
+> Note: enabling the controller→host pipe across the AppContainer sandbox additionally requires the
+> pipe DACL to grant the exact package SID access. Argument delivery and pipe authorization are
+> deliberately separate concerns: the reference packaged-app extension restores the opaque
+> `LaunchActivatedEventArgs.Arguments` through a reusable bootstrap, and contributes the package SID
+> through `ITestHostControllerConnectionAuthorizer` (see
+> [Authorizing an AppContainer on the controller pipe](#authorizing-an-appcontainer-on-the-controller-pipe)).
+> `CheckNetIsolation LoopbackExempt` is for network loopback and does not authorize named pipes.
 
 For launch activation, Windows documents a 2,048-character argument envelope on
 `SecondaryTile.Arguments`, one of the sources surfaced as `LaunchActivatedEventArgs.Arguments`.

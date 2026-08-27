@@ -50,6 +50,32 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NamedPipeServer"/> class, optionally authorizing a set
+    /// of security identities on the pipe in addition to the creating user.
+    /// </summary>
+    /// <param name="name">The friendly pipe name.</param>
+    /// <param name="callback">The request handler.</param>
+    /// <param name="environment">The environment abstraction.</param>
+    /// <param name="logger">The logger.</param>
+    /// <param name="task">The task abstraction.</param>
+    /// <param name="authorizedSecurityIdentities">
+    /// Security identities that must additionally be able to connect, or <see langword="null"/>/empty for
+    /// the default behavior.
+    /// </param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public NamedPipeServer(
+        string name,
+        Func<IRequest, Task<IResponse>> callback,
+        IEnvironment environment,
+        ILogger logger,
+        ITask task,
+        IReadOnlyList<string>? authorizedSecurityIdentities,
+        CancellationToken cancellationToken)
+        : this(GetPipeName(name), callback, environment, logger, task, maxNumberOfServerInstances: 1, authorizedSecurityIdentities, cancellationToken)
+    {
+    }
+
     public NamedPipeServer(
         PipeNameDescription pipeNameDescription,
         Func<IRequest, Task<IResponse>> callback,
@@ -69,18 +95,85 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         ITask task,
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
+        : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances, authorizedSecurityIdentities: null, cancellationToken)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NamedPipeServer"/> class, optionally authorizing a set
+    /// of security identities on the pipe in addition to the creating user.
+    /// </summary>
+    /// <param name="pipeNameDescription">The pipe name.</param>
+    /// <param name="callback">The request handler.</param>
+    /// <param name="environment">The environment abstraction.</param>
+    /// <param name="logger">The logger.</param>
+    /// <param name="task">The task abstraction.</param>
+    /// <param name="maxNumberOfServerInstances">The maximum number of concurrent server instances.</param>
+    /// <param name="authorizedSecurityIdentities">
+    /// Security identities that must additionally be able to connect, or <see langword="null"/>/empty for
+    /// the default behavior. Every entry must satisfy
+    /// <see cref="NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity"/> — on Windows the only identity
+    /// that may be added is that of a single sandboxed application, which the OS expresses as an
+    /// AppContainer package SID. The caller is responsible for filtering and reporting rejected entries.
+    /// Ignored on operating systems that cannot express such an identity.
+    /// </param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public NamedPipeServer(
+        PipeNameDescription pipeNameDescription,
+        Func<IRequest, Task<IResponse>> callback,
+        IEnvironment environment,
+        ILogger logger,
+        ITask task,
+        int maxNumberOfServerInstances,
+        IReadOnlyList<string>? authorizedSecurityIdentities,
+        CancellationToken cancellationToken)
     {
         if (pipeNameDescription is null)
         {
             throw new ArgumentNullException(nameof(pipeNameDescription));
         }
 
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
+        PipeName = authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported
+            ? new PipeNameDescription(NamedPipeServerSecurity.GetPipeNameForSandboxedApplication(pipeNameDescription.Name))
+            : pipeNameDescription;
+        _namedPipeServerStream = CreateServerStream(PipeName.Name, maxNumberOfServerInstances, authorizedSecurityIdentities);
         _callback = callback;
         _environment = environment;
         _logger = logger;
         _task = task;
         _cancellationToken = cancellationToken;
+    }
+
+    /// <summary>
+    /// Creates the underlying server stream, using the hardened Windows path only when a caller actually
+    /// asked for extra authorization. Every other run — including every run on a non-Windows
+    /// operating system — keeps the untouched <c>PipeOptions.CurrentUserOnly</c> pipe.
+    /// </summary>
+    private static NamedPipeServerStream CreateServerStream(string name, int maxNumberOfServerInstances, IReadOnlyList<string>? authorizedSecurityIdentities)
+    {
+        if (authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported)
+        {
+            // Snapshot before validating. The sequence comes from an extension, so re-enumerating it is not
+            // guaranteed to yield the same values; validating one enumeration and composing the descriptor
+            // from another would let a value that was never checked reach the SDDL. Everything downstream
+            // works off this copy, and NamedPipeServerSecurity.BuildSecurityDescriptor re-validates at the
+            // point of concatenation as well.
+            string[] securityIdentities = [.. authorizedSecurityIdentities];
+
+            foreach (string securityIdentity in securityIdentities)
+            {
+                if (!NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity))
+                {
+                    throw new ArgumentException(
+                        $"'{securityIdentity ?? "<null>"}' does not identify a single sandboxed application and cannot be authorized on the test host controller pipe.",
+                        nameof(authorizedSecurityIdentities));
+                }
+            }
+
+            return NamedPipeServerSecurity.CreateServerStream(name, maxNumberOfServerInstances, securityIdentities);
+        }
+
+        return new NamedPipeServerStream(name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
     }
 
     public PipeNameDescription PipeName { get; }

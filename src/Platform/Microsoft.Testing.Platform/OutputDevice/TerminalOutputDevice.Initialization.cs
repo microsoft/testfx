@@ -124,21 +124,10 @@ internal sealed partial class TerminalOutputDevice
             }
         }
 
-        // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
-        // we need to postpone that decision until the first test result.
-        //
-        // This works but is NOT USED, we prefer to have the same experience of not showing passed tests in hotReload mode as in normal mode.
-        // Func<bool> showPassed = () => _runtimeFeature.IsHotReloadEnabled;
-        Func<bool> showPassed = () => false;
-        bool outputOption = _commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? arguments);
-        if (outputOption && arguments?.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
-        {
-            showPassed = () => true;
-        }
-
         OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
         OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
         int slowestTestsCount = GetSlowestTestsCount(_commandLineOptions);
+        TestResultVisibility showTestResults = GetShowTestResultsVisibility(_commandLineOptions);
 
         Func<bool?> shouldShowProgress = noProgress
             // User preference is to not show progress.
@@ -157,7 +146,7 @@ internal sealed partial class TerminalOutputDevice
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, () => _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested, new()
         {
-            ShowPassedTests = showPassed,
+            ShowTestResults = showTestResults,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             ZeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions),
             AnsiMode = ansiMode,
@@ -216,6 +205,33 @@ internal sealed partial class TerminalOutputDevice
                 _ => OutputShowMode.All,
             }
             : isLLMEnvironment ? OutputShowMode.Failed : OutputShowMode.All;
+
+    // Resolves which per-test terminal blocks are rendered. An explicit --show-test-results always wins over
+    // --output, regardless of the order the two options appear on the command line (only --show-test-results is
+    // consulted for the override, via TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility).
+    // Absent --show-test-results, 'minimal' shows only failed results, 'detailed' shows every outcome, and
+    // everything else (including no --output at all) shows failed and skipped results (passed tests stay hidden).
+    // Internal for unit testing the parse seam that feeds
+    // TerminalTestReporterOptions.ShowTestResults.
+    internal static TestResultVisibility GetShowTestResultsVisibility(ICommandLineOptions commandLineOptions)
+    {
+        if (TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(commandLineOptions) is { } explicitVisibility)
+        {
+            return explicitVisibility;
+        }
+
+        string? outputArgument = commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? outputArguments)
+            && outputArguments is { Length: > 0 }
+                ? outputArguments[0]
+                : null;
+
+        return outputArgument switch
+        {
+            string s when TerminalTestReporterCommandLineOptionsProvider.OutputOptionMinimalArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => TestResultVisibility.Failed,
+            string s when TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => TestResultVisibility.All,
+            _ => TestResultVisibility.Failed | TestResultVisibility.Skipped,
+        };
+    }
 
     private enum AnsiOverride
     {

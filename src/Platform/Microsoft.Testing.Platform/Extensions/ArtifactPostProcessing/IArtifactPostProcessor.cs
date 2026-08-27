@@ -10,6 +10,11 @@ namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 public interface IArtifactPostProcessor : IExtension
 {
     /// <summary>
+    /// Gets the post-processing modes supported by this processor.
+    /// </summary>
+    IReadOnlyList<ArtifactPostProcessingMode> SupportedModes { get; }
+
+    /// <summary>
     /// Gets a value indicating whether this processor can process artifacts observed before a run was truncated.
     /// </summary>
     /// <remarks>
@@ -55,6 +60,17 @@ public interface IArtifactPostProcessor : IExtension
 }
 
 /// <summary>
+/// Marks an artifact post-processor whose inputs are internal coordination artifacts that must always be
+/// post-processed, including when only one matching input exists.
+/// </summary>
+/// <remarks>
+/// Orchestrators that support this capability advertise that support in the handshake response before a test
+/// session starts. Producers must preserve their standalone behavior when the capability is unavailable.
+/// </remarks>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostProcessor;
+
+/// <summary>
 /// Describes the test run that produced artifacts supplied to an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
@@ -65,7 +81,49 @@ public sealed class ArtifactPostProcessingContext
     /// </summary>
     /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
     public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason)
-        => TruncationReason = truncationReason;
+        : this(truncationReason, ArtifactPostProcessingMode.TestModules, runSummary: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingContext"/> class.
+    /// </summary>
+    /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
+    /// <param name="mode">The operation that supplied the artifacts.</param>
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode)
+        : this(truncationReason, mode, runSummary: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingContext"/> class.
+    /// </summary>
+    /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
+    /// <param name="runSummary">The authoritative orchestrator summary, or <see langword="null"/> when unavailable.</param>
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingRunSummary? runSummary)
+        : this(truncationReason, ArtifactPostProcessingMode.TestModules, runSummary)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingContext"/> class.
+    /// </summary>
+    /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
+    /// <param name="mode">The operation that supplied the artifacts.</param>
+    /// <param name="runSummary">The authoritative orchestrator summary, or <see langword="null"/> when unavailable.</param>
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode,
+        ArtifactPostProcessingRunSummary? runSummary)
+    {
+        TruncationReason = truncationReason;
+        Mode = mode;
+        RunSummary = runSummary;
+    }
 
     /// <summary>
     /// Gets a value indicating whether the test run was truncated.
@@ -73,9 +131,131 @@ public sealed class ArtifactPostProcessingContext
     public bool IsTruncated => TruncationReason != ArtifactPostProcessingTruncationReason.None;
 
     /// <summary>
+    /// Gets the operation that supplied the artifacts.
+    /// </summary>
+    public ArtifactPostProcessingMode Mode { get; }
+
+    /// <summary>
     /// Gets the reason the test run was truncated.
     /// </summary>
     public ArtifactPostProcessingTruncationReason TruncationReason { get; }
+
+    /// <summary>
+    /// Gets the authoritative orchestrator summary, or <see langword="null"/> when the invoking orchestrator
+    /// does not provide run-level totals, duration, and exit verdict.
+    /// </summary>
+    public ArtifactPostProcessingRunSummary? RunSummary { get; }
+}
+
+/// <summary>
+/// Describes authoritative run-level values supplied by the outer test orchestrator.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public sealed class ArtifactPostProcessingRunSummary
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingRunSummary"/> class.
+    /// </summary>
+    public ArtifactPostProcessingRunSummary(
+        long totalTests,
+        long passedTests,
+        long failedTests,
+        long skippedTests,
+        TimeSpan duration,
+        int exitCode,
+        int testModuleCount)
+    {
+        if (totalTests < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(totalTests));
+        }
+
+        if (passedTests < 0 || passedTests > totalTests)
+        {
+            throw new ArgumentOutOfRangeException(nameof(passedTests));
+        }
+
+        if (failedTests < 0 || failedTests > totalTests - passedTests)
+        {
+            throw new ArgumentOutOfRangeException(nameof(failedTests));
+        }
+
+        if (skippedTests < 0 || skippedTests != totalTests - passedTests - failedTests)
+        {
+            throw new ArgumentOutOfRangeException(nameof(skippedTests));
+        }
+
+        if (duration < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(duration));
+        }
+
+        if (testModuleCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(testModuleCount));
+        }
+
+        TotalTests = totalTests;
+        PassedTests = passedTests;
+        FailedTests = failedTests;
+        SkippedTests = skippedTests;
+        Duration = duration;
+        ExitCode = exitCode;
+        TestModuleCount = testModuleCount;
+    }
+
+    /// <summary>
+    /// Gets the total number of tests reported by the orchestrator.
+    /// </summary>
+    public long TotalTests { get; }
+
+    /// <summary>
+    /// Gets the number of passed tests reported by the orchestrator.
+    /// </summary>
+    public long PassedTests { get; }
+
+    /// <summary>
+    /// Gets the number of failed tests reported by the orchestrator.
+    /// </summary>
+    public long FailedTests { get; }
+
+    /// <summary>
+    /// Gets the number of skipped tests reported by the orchestrator.
+    /// </summary>
+    public long SkippedTests { get; }
+
+    /// <summary>
+    /// Gets the outer orchestrator wall-clock duration.
+    /// </summary>
+    public TimeSpan Duration { get; }
+
+    /// <summary>
+    /// Gets the outer orchestrator exit code.
+    /// </summary>
+    public int ExitCode { get; }
+
+    /// <summary>
+    /// Gets the number of test modules included in the orchestrator summary.
+    /// </summary>
+    public int TestModuleCount { get; }
+}
+
+/// <summary>
+/// Specifies how the supplied artifacts relate to one another.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public enum ArtifactPostProcessingMode
+{
+    /// <summary>
+    /// Artifacts were produced by distinct test modules in one test run.
+    /// </summary>
+    TestModules,
+
+    /// <summary>
+    /// Artifacts were produced by successive attempts of the same logical tests.
+    /// Inputs are ordered from the initial execution to the final attempt.
+    /// </summary>
+    RetryAttempts,
 }
 
 /// <summary>

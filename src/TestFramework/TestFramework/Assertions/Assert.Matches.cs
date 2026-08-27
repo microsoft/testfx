@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,6 +7,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
+    // Match the runtime's default static Regex cache size while bounding retained user-provided pattern text.
+    private const int RegexCacheSize = 15;
+    private const int MaximumCachedRegexPatternLength = 512;
+
+    private static readonly BoundedRegexCache RegexCache = new();
+
     #region MatchesRegex
 
     /// <summary>
@@ -195,9 +201,79 @@ public sealed partial class Assert
 
     #endregion // DoesNotMatchRegex
 
-    private static Regex? ToRegex([NotNull] string? pattern)
+    private static Regex ToRegex([NotNull] string? pattern)
     {
         CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
-        return new Regex(pattern);
+        if (pattern.Length > MaximumCachedRegexPatternLength)
+        {
+            return new Regex(pattern);
+        }
+
+        string cultureName = CultureInfo.CurrentCulture.Name;
+        if (RegexCache.TryGet(pattern, cultureName, out Regex cachedRegex))
+        {
+            return cachedRegex;
+        }
+
+        Regex regex = new(pattern);
+        return RegexCache.AddOrGetExisting(pattern, cultureName, regex);
+    }
+
+    private sealed class BoundedRegexCache
+    {
+#if NET9_0_OR_GREATER
+        private readonly Lock _lock = new();
+#else
+        private readonly object _lock = new();
+#endif
+
+        private readonly RegexCacheEntry?[] _entries = new RegexCacheEntry[RegexCacheSize];
+
+        private int _nextInsertionIndex;
+
+        public bool TryGet(string pattern, string cultureName, out Regex regex)
+        {
+            int nextInsertionIndex = Volatile.Read(ref _nextInsertionIndex);
+            for (int offset = 1; offset <= RegexCacheSize; offset++)
+            {
+                int index = (nextInsertionIndex - offset + RegexCacheSize) % RegexCacheSize;
+                RegexCacheEntry? entry = Volatile.Read(ref _entries[index]);
+                if (entry is not null
+                    && string.Equals(entry.Pattern, pattern, StringComparison.Ordinal)
+                    && string.Equals(entry.CultureName, cultureName, StringComparison.Ordinal))
+                {
+                    regex = entry.Regex;
+                    return true;
+                }
+            }
+
+            regex = null!;
+            return false;
+        }
+
+        public Regex AddOrGetExisting(string pattern, string cultureName, Regex regex)
+        {
+            lock (_lock)
+            {
+                if (TryGet(pattern, cultureName, out Regex cachedRegex))
+                {
+                    return cachedRegex;
+                }
+
+                int insertionIndex = _nextInsertionIndex;
+                Volatile.Write(ref _entries[insertionIndex], new RegexCacheEntry(pattern, cultureName, regex));
+                Volatile.Write(ref _nextInsertionIndex, (insertionIndex + 1) % RegexCacheSize);
+                return regex;
+            }
+        }
+    }
+
+    private sealed class RegexCacheEntry(string pattern, string cultureName, Regex regex)
+    {
+        public string Pattern { get; } = pattern;
+
+        public string CultureName { get; } = cultureName;
+
+        public Regex Regex { get; } = regex;
     }
 }

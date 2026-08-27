@@ -232,14 +232,14 @@ interface InitializeParams {
         testing: {
             // Reserved for future debugger callbacks. Protocol 1.0 accepts this field
             // for compatibility but does not send debugger requests.
-            debuggerProvider: true,
+            debuggerProvider: boolean,
 
             // If true, the client is stateful: it persists an addressable set of test nodes for the
             // whole session and keeps each node in its last-known state until it is explicitly updated
             // (for example, an IDE test explorer). If false or missing, the client is stateless: it
             // consumes test updates as a stream and does not retain node state after the run
             // (for example, `dotnet test`). Defaults to false.
-            isStateful: true,
+            isStateful?: boolean,
         },
     }
 }
@@ -251,8 +251,8 @@ Response:
 
 ```typescript
 interface InitializeResponse {
-    // Process ID of the server process, when one exists.
-    processId?: PID,
+    // The process Id of the server.
+    processId: PID,
 
     serverInfo: {
         // The name of the server.
@@ -267,7 +267,7 @@ interface InitializeResponse {
 
     capabilities: {
         testing: {
-            // If true, the server accepts testing/discoverTests.
+            // If true, the server supports test discovery.
             supportsDiscovery: boolean;
 
             // Experimental: The client currently uses this variable to determine if the test runner process can
@@ -276,17 +276,17 @@ interface InitializeResponse {
             // only needs to occur once.
             experimental_multiRequestSupport: boolean;
 
+            // If true, the server uses the VSTest test-node properties.
+            vstestProvider: boolean;
+
             // If true, the server will send attachments, on top
             // of test updates during test runs.
             // The client will then wait on both to complete,
             // before it marks a test run as completed.
             attachmentsSupport: boolean;
 
-            // If true, test nodes include VSTest compatibility properties described
-            // by 003-protocol-ide-integration-extensions.md.
-            vstestProvider: boolean;
-
-            // If true, additional passive test-host processes can connect to the client.
+            // If true, this server is an additional connection that sends test updates directly
+            // to the client rather than accepting discovery and run requests.
             multipleConnectionProvider: boolean;
 
             // If true, the server understands the first-class test-coverage message contract.
@@ -317,9 +317,8 @@ If the capability is missing/or false the server should assume that the client w
 lazy locations and send the full location.
 
 > [!NOTE]
-> Discovery/Run requests, as well as TestNode format specified in the initial release of the protocol
-> should be supported by all clients/servers.
-> As such, they're not expressed via capabilities.
+> The TestNode format specified in the initial release of the protocol should be supported by all
+> clients and servers. As such, it is not expressed via capabilities.
 
 ## Additional passive connections
 
