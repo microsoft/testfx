@@ -194,9 +194,6 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                     {
                         await System.Threading.Tasks.Task.Yield();
                     }
-
-                    [TestMethod]
-                    private void InaccessibleFallback() { }
                 }
             }
             """;
@@ -226,6 +223,36 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("testClass.AreGeneratedDescriptorsComplete && areDescriptorMethodsResolved");
         registration.Should().Contain("descriptorCompleteTypes.Add(type);");
         registration.Should().Contain("descriptorTestMethods, descriptorCompleteTypes.ToArray()");
+    }
+
+    [TestMethod]
+    public void Generator_InaccessibleTestMethodRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Supported() { }
+
+                    [TestMethod]
+                    private void InaccessibleFallback() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Supported\"");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("Name = \"InaccessibleFallback\"");
     }
 
     [TestMethod]
