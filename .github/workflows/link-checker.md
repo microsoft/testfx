@@ -42,12 +42,51 @@ steps:
       import re
       from pathlib import Path
 
+      def markdown_destinations(line):
+          cursor = 0
+          while (start := line.find("](", cursor)) != -1:
+              index = start + 2
+              while index < len(line) and line[index].isspace():
+                  index += 1
+
+              if index >= len(line):
+                  break
+
+              if line[index] == "<":
+                  url_start = index + 1
+                  url_end = line.find(">", url_start)
+                  if url_end == -1:
+                      cursor = index + 1
+                      continue
+              else:
+                  url_start = index
+                  depth = 0
+                  url_end = url_start
+                  while url_end < len(line):
+                      character = line[url_end]
+                      if character == "\\" and url_end + 1 < len(line):
+                          url_end += 2
+                          continue
+                      if character == "(":
+                          depth += 1
+                      elif character == ")":
+                          if depth == 0:
+                              break
+                          depth -= 1
+                      elif character.isspace() and depth == 0:
+                          break
+                      url_end += 1
+
+              url = line[url_start:url_end]
+              if url.startswith(("http://", "https://")):
+                  yield url, url_start, url_end
+              cursor = max(url_end + 1, index + 1)
+
       files = sorted(Path("docs").rglob("*.md")) if Path("docs").is_dir() else []
       if Path("README.md").is_file():
           files.append(Path("README.md"))
 
-      markdown_link = re.compile(r'!?\[[^\]]*\]\(\s*<?(https?://[^)\s>]+)>?')
-      bare_url = re.compile(r'https?://[^\s<>"\'\]\)]+')
+      bare_url = re.compile(r'https?://[^\s<>"\']+')
       links = set()
 
       for file in files:
@@ -67,8 +106,16 @@ steps:
               if in_fence:
                   continue
 
-              links.update(match.group(1) for match in markdown_link.finditer(line))
-              links.update(match.group(0).rstrip(".,;:!?}") for match in bare_url.finditer(line))
+              destinations = list(markdown_destinations(line))
+              links.update(url for url, _, _ in destinations)
+
+              masked_line = list(line)
+              for _, start, end in destinations:
+                  masked_line[start:end] = " " * (end - start)
+              links.update(
+                  match.group(0).rstrip(".,;:!?)]}")
+                  for match in bare_url.finditer("".join(masked_line))
+              )
 
       output = Path("/tmp/gh-aw/agent/unique-links.txt")
       output.write_text("".join(f"{url}\n" for url in sorted(links)), encoding="utf-8")
@@ -92,6 +139,7 @@ steps:
       TRANSIENT_COUNT=0
       PROCESSED_COUNT=0
       SCAN_DEADLINE=$(($(date +%s) + 2100))
+      : > /tmp/gh-aw/agent/confirmed-broken-links.txt
 
       while IFS= read -r url; do
         if [ "$(date +%s)" -ge "$SCAN_DEADLINE" ]; then
@@ -128,17 +176,72 @@ steps:
             ;;
           *)
             BROKEN_COUNT=$((BROKEN_COUNT + 1))
-            echo "❌ $url (HTTP $HTTP_CODE)" >> /tmp/gh-aw/agent/link-check-results.md
+            printf "%s\t%s\n" "$url" "$HTTP_CODE" >> /tmp/gh-aw/agent/confirmed-broken-links.txt
             ;;
         esac
       done < /tmp/gh-aw/agent/unique-links.txt
 
+      SELECTION_COUNTS=$(python - <<'PY'
+      import json
+      from pathlib import Path
+
+      broken_links = Path("/tmp/gh-aw/agent/confirmed-broken-links.txt")
+      report = Path("/tmp/gh-aw/agent/link-check-results.md")
+      cache_directory = Path("/tmp/gh-aw/cache-memory")
+      cursor_file = cache_directory / "link-checker-cursor.txt"
+      unfixable_file = cache_directory / "unfixable_links.json"
+
+      records = []
+      for line in broken_links.read_text(encoding="utf-8").splitlines():
+          url, status = line.rsplit("\t", 1)
+          records.append((url, status))
+
+      unfixable_urls = set()
+      if unfixable_file.is_file():
+          cache = json.loads(unfixable_file.read_text(encoding="utf-8"))
+          unfixable_urls = {
+              entry["url"]
+              for entry in cache.get("unfixable_links", [])
+          }
+
+      actionable = [
+          (url, status)
+          for url, status in records
+          if url not in unfixable_urls
+      ]
+
+      cursor = int(cursor_file.read_text(encoding="utf-8")) if cursor_file.is_file() else 0
+      if actionable:
+          start = cursor % len(actionable)
+          selected_count = min(20, len(actionable))
+          selected = [
+              actionable[(start + offset) % len(actionable)]
+              for offset in range(selected_count)
+          ]
+          next_cursor = (start + selected_count) % len(actionable)
+      else:
+          selected = []
+          next_cursor = 0
+
+      with report.open("a", encoding="utf-8") as stream:
+          for url, status in selected:
+              stream.write(f"❌ {url} (HTTP {status})\n")
+
+      cache_directory.mkdir(parents=True, exist_ok=True)
+      cursor_file.write_text(f"{next_cursor}\n", encoding="utf-8")
+      print(len(selected), len(records) - len(actionable))
+      PY
+      )
+      read -r SELECTED_COUNT CACHED_UNFIXABLE_COUNT <<< "$SELECTION_COUNTS"
+
       echo "" >> /tmp/gh-aw/agent/link-check-results.md
       echo "**Summary:** $WORKING_COUNT working, $BROKEN_COUNT confirmed broken, $TRANSIENT_COUNT inconclusive after retries" >> /tmp/gh-aw/agent/link-check-results.md
+      echo "**Candidates included:** $SELECTED_COUNT (maximum 20 per run; $CACHED_UNFIXABLE_COUNT cached as unfixable)" >> /tmp/gh-aw/agent/link-check-results.md
 
       echo "broken_count=$BROKEN_COUNT" >> $GITHUB_OUTPUT
       echo "working_count=$WORKING_COUNT" >> $GITHUB_OUTPUT
       echo "transient_count=$TRANSIENT_COUNT" >> $GITHUB_OUTPUT
+      echo "selected_count=$SELECTED_COUNT" >> $GITHUB_OUTPUT
 
       cat /tmp/gh-aw/agent/link-check-results.md
     shell: bash
@@ -192,7 +295,7 @@ Your workflow has already collected and tested all links in the previous step. U
 
 The link check step has already run and created a report at `/tmp/gh-aw/agent/link-check-results.md`. It contains:
 - The total number of links checked
-- Confirmed broken links and their HTTP status codes
+- A rotating subset of up to 20 confirmed broken links not already cached as unfixable
 - A count of inconclusive links that were excluded after retries
 
 Use bash to read the file:
@@ -225,7 +328,7 @@ The cache memory should store a JSON object with this structure:
 
 ## Step 3: Research and Fix Broken Links
 
-Process at most 20 confirmed broken links from the report that are not in the unfixable list. Leave any remaining candidates for a later daily run.
+Process every confirmed broken link in the report that is not in the unfixable list. The deterministic precheck limits the report to 20 candidates and persists a cursor so omitted candidates rotate into later daily runs.
 
 For each selected broken link:
 
