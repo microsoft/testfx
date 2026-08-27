@@ -158,7 +158,12 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
             // Dispose the activity
             activity?.Dispose();
 
-            await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed, isProcessShutdown: true).ConfigureAwait(false);
+            await DisposeServiceProviderCoreAsync(
+                ServiceProvider,
+                filter: null,
+                alreadyDisposed: alreadyDisposed,
+                isProcessShutdown: true,
+                disposeServiceAsync: DisposeProcessShutdownServiceAsync).ConfigureAwait(false);
             if (ServiceProvider.GetService<FileLoggerProvider>() is { } fileLoggerProvider
                 && !alreadyDisposed.Contains(fileLoggerProvider))
             {

@@ -14,9 +14,22 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal abstract partial class CommonHost
 {
-    protected static async Task DisposeServiceProviderAsync(ServiceProvider serviceProvider, Func<object, bool>? filter = null, List<object>? alreadyDisposed = null, bool isProcessShutdown = false)
+    protected static Task DisposeServiceProviderAsync(
+        ServiceProvider serviceProvider,
+        Func<object, bool>? filter = null,
+        List<object>? alreadyDisposed = null,
+        bool isProcessShutdown = false)
+        => DisposeServiceProviderCoreAsync(serviceProvider, filter, alreadyDisposed, isProcessShutdown, disposeServiceAsync: null);
+
+    private static async Task DisposeServiceProviderCoreAsync(
+        ServiceProvider serviceProvider,
+        Func<object, bool>? filter,
+        List<object>? alreadyDisposed,
+        bool isProcessShutdown,
+        Func<object, Task>? disposeServiceAsync)
     {
         alreadyDisposed ??= [];
+        disposeServiceAsync ??= DisposeHelper.DisposeAsync;
 
         // Close the message bus handshake before disposing anything at all. Consumers are routinely registered
         // as services in their own right, and several of them (the output device, the coverage accumulator) land
@@ -93,7 +106,7 @@ internal abstract partial class CommonHost
 
             if (!alreadyDisposed.Contains(service))
             {
-                await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
+                await disposeServiceAsync(service).ConfigureAwait(false);
                 alreadyDisposed.Add(service);
             }
 
@@ -110,7 +123,7 @@ internal abstract partial class CommonHost
                     // above, so this check is what spares them here.
                     if (!alreadyDisposed.Contains(dataConsumer))
                     {
-                        await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
+                        await disposeServiceAsync(dataConsumer).ConfigureAwait(false);
                         alreadyDisposed.Add(dataConsumer);
                     }
                 }

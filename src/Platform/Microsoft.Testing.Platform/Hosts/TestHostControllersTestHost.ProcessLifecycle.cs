@@ -170,7 +170,8 @@ internal sealed partial class TestHostControllersTestHost
             throw ApplicationStateGuard.Unreachable();
         }
 
-        int testHostProcessExitCode = testHostProcess.HasExited
+        bool testHostProcessExited = testHostProcess.HasExited;
+        int testHostProcessExitCode = testHostProcessExited
             ? testHostProcess.ExitCode
             : (int)ExitCode.TestSessionAborted;
         bool testExecutionCanceled = applicationCancellationToken.IsCancellationRequested
@@ -189,7 +190,7 @@ internal sealed partial class TestHostControllersTestHost
 
         try
         {
-            if (_testHostsInformation.LifetimeHandlers.Length > 0)
+            if (testHostProcessExited && _testHostsInformation.LifetimeHandlers.Length > 0)
             {
                 await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcessExitCode}").ConfigureAwait(false);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
@@ -280,7 +281,11 @@ internal sealed partial class TestHostControllersTestHost
 
         // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
         int exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcessExitCode;
-        if (exitCode == (int)ExitCode.Success && testExecutionCanceled)
+        if (!testHostProcessExited && testExecutionCanceled)
+        {
+            exitCode = (int)ExitCode.TestSessionAborted;
+        }
+        else if (exitCode == (int)ExitCode.Success && testExecutionCanceled)
         {
             // In case of cancellation, only alter exit code if it was success.
             // If there is another exit code indicating another failure, we prefer it over the cancellation.
