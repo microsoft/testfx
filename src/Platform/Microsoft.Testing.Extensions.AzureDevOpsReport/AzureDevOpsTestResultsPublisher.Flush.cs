@@ -163,7 +163,29 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     }
                 }
 
-                if (creations.Count > 0 && !await TryCreateResultsAsync(creations, deferredAttachments, cancellationToken).ConfigureAwait(false))
+                bool creationsAccepted = true;
+                if (creations.Count > 0)
+                {
+                    try
+                    {
+                        creationsAccepted = await TryCreateResultsAsync(creations, deferredAttachments, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (FirstAttemptSeedCanceledException)
+                    {
+                        // Creation already reached Azure DevOps, but its follow-up seed was canceled before
+                        // these updates were attempted. Release their claims and put them back so session
+                        // finalization can retry them or include them in the unpublished-result warning.
+                        foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
+                        {
+                            _claimedResultIds.Remove(published.Id);
+                        }
+
+                        RequeueUnsafe([.. updates.Select(update => update.Attempt)]);
+                        throw;
+                    }
+                }
+
+                if (!creationsAccepted)
                 {
                     // Nothing in this batch reached Azure DevOps: the creations failed, and the updates were
                     // not attempted. Release every parent claimed while classifying this untouched batch,
@@ -306,7 +328,14 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         if (firstAttemptSeeds.Count > 0)
         {
-            await SeedFirstAttemptsAsync(firstAttemptSeeds, deferredAttachments, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await SeedFirstAttemptsAsync(firstAttemptSeeds, deferredAttachments, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+            {
+                throw new FirstAttemptSeedCanceledException(ex);
+            }
         }
 
         return true;
@@ -589,6 +618,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         return count;
     }
+
+    private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
+        : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);
 
     private bool ShouldFlushUnsafe(bool force)
     {

@@ -379,8 +379,11 @@ internal sealed class AzureDevOpsResultIdStore
                         continue;
                     }
 
-                    if (entry.LastPublishedSubResultSequenceId is < 0
-                        || entry.LastPublishedSubResultSequenceId > entry.Attempts[^1].SequenceId)
+                    bool hasUnpublishedFirstAttempt = entry.LastPublishedSubResultSequenceId == 0
+                        && entry.Attempts.Count == 1
+                        && entry.Attempts[0].SequenceId == 1;
+                    bool hasFullyPublishedHistory = entry.LastPublishedSubResultSequenceId == entry.Attempts[^1].SequenceId;
+                    if (!hasUnpublishedFirstAttempt && !hasFullyPublishedHistory)
                     {
                         continue;
                     }
@@ -406,7 +409,7 @@ internal sealed class AzureDevOpsResultIdStore
 
                 _results[key] = new AzureDevOpsPublishedResult(entry.Storage!, entry.Name!, entry.Title!, entry.Id, entry.Attempts!)
                 {
-                    LastPublishedSubResultSequenceId = entry.LastPublishedSubResultSequenceId ?? 0,
+                    LastPublishedSubResultSequenceId = entry.LastPublishedSubResultSequenceId!.Value,
                     TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
                     StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts!),
                     CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts!),
