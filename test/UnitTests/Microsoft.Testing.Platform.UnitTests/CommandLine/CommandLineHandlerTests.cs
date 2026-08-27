@@ -628,7 +628,13 @@ public sealed class CommandLineHandlerTests
             Mock.Of<ICommandLineOptions>());
 
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Did you mean '--report-azdo'?", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Unknown option '--report-adzo'
+            Did you mean '--report-azdo'?
+            Command line: --report-adzo
+            """,
+            result.ErrorMessage);
     }
 
     [TestMethod]
