@@ -121,6 +121,7 @@ internal static partial class CommandLineOptionsValidator
         // does not change CLI behavior.
         var validOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var visibleOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool includeKnownExtensionOptions = !parseResult.HasTool;
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
@@ -151,7 +152,7 @@ internal static partial class CommandLineOptionsValidator
             if (!validOptionNames.Contains(optionRecord.Name))
             {
                 stringBuilder ??= new();
-                AppendUnknownOptionError(stringBuilder, optionRecord.Name, validOptionNames, visibleOptionNames);
+                AppendUnknownOptionError(stringBuilder, optionRecord.Name, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
             }
         }
 
@@ -167,7 +168,7 @@ internal static partial class CommandLineOptionsValidator
                 {
                     stringBuilder ??= new();
                     StringBuilder innerErrorBuilder = new();
-                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, validOptionNames, visibleOptionNames);
+                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
                     string innerError = innerErrorBuilder.ToTrimmedString();
                     stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
                 }
@@ -188,20 +189,24 @@ internal static partial class CommandLineOptionsValidator
         StringBuilder stringBuilder,
         string unknownOptionName,
         HashSet<string> validOptionNames,
-        HashSet<string> visibleOptionNames)
+        HashSet<string> visibleOptionNames,
+        bool includeKnownExtensionOptions)
     {
         stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, unknownOptionName));
 
-        string? packageName = GetKnownExtensionPackage(unknownOptionName);
-        if (packageName is not null)
+        if (includeKnownExtensionOptions
+            && GetKnownExtensionPackage(unknownOptionName) is { } packageName)
         {
             AppendMissingExtensionSuggestion(stringBuilder, unknownOptionName, packageName);
             return;
         }
 
+        IEnumerable<string> candidateOptionNames = includeKnownExtensionOptions
+            ? visibleOptionNames.Concat(KnownExtensionOptionsByPackage.Values.SelectMany(static optionNames => optionNames))
+            : visibleOptionNames;
         string? suggestedOptionName = FindSuggestedOption(
             unknownOptionName,
-            visibleOptionNames.Concat(KnownExtensionOptionsByPackage.Values.SelectMany(static optionNames => optionNames)));
+            candidateOptionNames);
         if (suggestedOptionName is null)
         {
             return;
@@ -209,10 +214,11 @@ internal static partial class CommandLineOptionsValidator
 
         stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionSuggestion, suggestedOptionName));
 
-        packageName = GetKnownExtensionPackage(suggestedOptionName);
-        if (packageName is not null && !validOptionNames.Contains(suggestedOptionName))
+        if (includeKnownExtensionOptions
+            && GetKnownExtensionPackage(suggestedOptionName) is { } suggestedPackageName
+            && !validOptionNames.Contains(suggestedOptionName))
         {
-            AppendMissingExtensionSuggestion(stringBuilder, suggestedOptionName, packageName);
+            AppendMissingExtensionSuggestion(stringBuilder, suggestedOptionName, suggestedPackageName);
         }
     }
 

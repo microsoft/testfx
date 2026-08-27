@@ -358,6 +358,30 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("--report-trx")]
+    [DataRow("--report-txr")]
+    public async Task ParseAndValidateAsync_KnownExtensionOptionInToolMode_DoesNotSuggestPackageOrOption(string option)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["tool", option], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("report-trx"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            providers,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Unknown option '{option}'", result.ErrorMessage);
+        Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+        Assert.DoesNotContain("Microsoft.Testing.Extensions.TrxReport", result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_UnknownJsonOptionForSelectedTool_ReturnsInvalid()
     {
         CommandLineParseResult parseResult = CommandLineParser.Parse(["tool"], new SystemEnvironment());
