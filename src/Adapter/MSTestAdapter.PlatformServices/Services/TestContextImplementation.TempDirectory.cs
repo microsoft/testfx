@@ -26,12 +26,10 @@ internal sealed partial class TestContextImplementation
     /// </summary>
     private const int TestTempDirectoryNameMinLength = 8;
 
-#if !NET7_0_OR_GREATER
     private const uint TestTempDirectoryUnixCreateMode = 0x1C0;
 
     [DllImport("libc", EntryPoint = "mkdir", SetLastError = true)]
     private static extern int MkDir([In] byte[] path, uint mode);
-#endif
 
     /// <summary>
     /// Guards lazy creation of <see cref="_testTempDirectory"/>.
@@ -240,11 +238,6 @@ internal sealed partial class TestContextImplementation
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-#if NET7_0_OR_GREATER
-            Directory.CreateDirectory(
-                path,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-#else
             byte[] nullTerminatedUtf8Path = System.Text.Encoding.UTF8.GetBytes(path + "\0");
             int result = MkDir(nullTerminatedUtf8Path, TestTempDirectoryUnixCreateMode);
             if (result != 0)
@@ -252,7 +245,6 @@ internal sealed partial class TestContextImplementation
                 int error = Marshal.GetLastWin32Error();
                 throw new IOException($"Could not create test temporary directory '{path}'.", new System.ComponentModel.Win32Exception(error));
             }
-#endif
 
             return;
         }
