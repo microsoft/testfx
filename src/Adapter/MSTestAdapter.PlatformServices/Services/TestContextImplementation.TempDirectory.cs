@@ -191,6 +191,16 @@ internal sealed partial class TestContextImplementation
     {
         string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource(), nameBudget);
 
+        try
+        {
+            Directory.CreateDirectory(baseDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            createdPath = string.Empty;
+            return false;
+        }
+
         // The suffix is a full 128-bit GUID, so two contexts choosing the same directory name is
         // cryptographically negligible. Exists + CreateDirectory is not an atomic exclusive create,
         // so the retry loop below is a belt-and-braces guard rather than a real necessity.
