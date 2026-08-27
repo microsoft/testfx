@@ -206,7 +206,7 @@ public sealed class FfmpegVideoRecorderTests
 
     private static string CreateTemporaryDirectory()
     {
-        string directory = Path.Combine(Path.GetTempPath(), "FfmpegVideoRecorderTests_" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(Path.GetTempPath(), $"{nameof(FfmpegVideoRecorderTests)}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
         return directory;
     }
