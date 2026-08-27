@@ -157,6 +157,14 @@ public sealed class AsyncVoidTests
             "MSTestReflectionMetadata.Registry.g.cs",
             SearchOption.AllDirectories).Single();
         string registry = File.ReadAllText(registryPath);
+        int synchronousMethodIndex = registry.IndexOf("Name = \"TestMethod1\"", StringComparison.Ordinal);
+        int synchronousNextMethodIndex = registry.IndexOf("Name = \"TestMethod2\"", synchronousMethodIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(-1, synchronousMethodIndex);
+        Assert.IsGreaterThan(synchronousMethodIndex, synchronousNextMethodIndex);
+        StringAssert.Contains(
+            registry.Substring(synchronousMethodIndex, synchronousNextMethodIndex - synchronousMethodIndex),
+            "IsDescriptorSupported = true");
+
         int asyncMethodIndex = registry.IndexOf("Name = \"TestMethod3\"", StringComparison.Ordinal);
         int nextMethodIndex = registry.IndexOf("Name = \"TestMethod4\"", asyncMethodIndex, StringComparison.Ordinal);
         Assert.IsGreaterThan(-1, asyncMethodIndex);
@@ -164,6 +172,9 @@ public sealed class AsyncVoidTests
         StringAssert.Contains(
             registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
             "AreAttributesComplete = true");
+        StringAssert.Contains(
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
+            "IsDescriptorSupported = false");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
