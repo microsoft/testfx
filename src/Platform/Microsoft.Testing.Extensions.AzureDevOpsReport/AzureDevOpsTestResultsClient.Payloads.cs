@@ -67,8 +67,7 @@ internal sealed partial class AzureDevOpsTestResultsClient
             IReadOnlyList<AzureDevOpsTestSubResult>? submittedSubResults = submitted.SubResults;
             Dictionary<int, int> subResultIdsBySequenceId = [];
             if (submittedSubResults is { Count: > 0 }
-                && published.SubResults is { } publishedSubResults
-                && publishedSubResults.Length == submittedSubResults.Count)
+                && published.SubResults is { } publishedSubResults)
             {
                 var submittedSequenceIds = new HashSet<int>();
                 for (int j = 0; j < submittedSubResults.Count; j++)
@@ -81,16 +80,51 @@ internal sealed partial class AzureDevOpsTestResultsClient
 
                 if (submittedSequenceIds.Count == submittedSubResults.Count)
                 {
-                    for (int j = 0; j < publishedSubResults.Length; j++)
+                    bool sequenceIdsOmitted = publishedSubResults.Length == submittedSubResults.Count;
+                    for (int j = 0; sequenceIdsOmitted && j < publishedSubResults.Length; j++)
                     {
-                        PublishedTestSubResult publishedSubResult = publishedSubResults[j];
-                        if (publishedSubResult.Id <= 0 || !submittedSequenceIds.Remove(publishedSubResult.SequenceId))
-                        {
-                            subResultIdsBySequenceId.Clear();
-                            break;
-                        }
+                        sequenceIdsOmitted = publishedSubResults[j].SequenceId == 0;
+                    }
 
-                        subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                    if (sequenceIdsOmitted)
+                    {
+                        // Azure DevOps' PATCH response returns only the appended sub-results, in request
+                        // order, but omits sequenceId. Correlate by position only for that exact-count shape.
+                        for (int j = 0; j < publishedSubResults.Length; j++)
+                        {
+                            if (publishedSubResults[j].Id <= 0)
+                            {
+                                subResultIdsBySequenceId.Clear();
+                                break;
+                            }
+
+                            subResultIdsBySequenceId.Add(submittedSubResults[j].SequenceId, publishedSubResults[j].Id);
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 0; j < publishedSubResults.Length; j++)
+                        {
+                            PublishedTestSubResult publishedSubResult = publishedSubResults[j];
+                            if (!submittedSequenceIds.Contains(publishedSubResult.SequenceId))
+                            {
+                                continue;
+                            }
+
+                            if (publishedSubResult.Id <= 0
+                                || subResultIdsBySequenceId.ContainsKey(publishedSubResult.SequenceId))
+                            {
+                                subResultIdsBySequenceId.Clear();
+                                break;
+                            }
+
+                            subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                        }
+                    }
+
+                    if (subResultIdsBySequenceId.Count != submittedSubResults.Count)
+                    {
+                        subResultIdsBySequenceId.Clear();
                     }
                 }
             }

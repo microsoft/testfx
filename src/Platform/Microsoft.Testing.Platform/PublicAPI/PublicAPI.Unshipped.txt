@@ -1,4 +1,6 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability.TryStopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.Configurations.IConfigurationRoot
 Microsoft.Testing.Platform.Configurations.IConfigurationRoot.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
 Microsoft.Testing.Platform.Configurations.IConfigurationRoot.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!

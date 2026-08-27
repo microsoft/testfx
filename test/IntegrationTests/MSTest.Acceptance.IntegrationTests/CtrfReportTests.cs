@@ -122,7 +122,7 @@ public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfRepor
         string ctrfFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
         string ctrfContent = File.ReadAllText(ctrfFile);
 
-        // One logical test, collapsed from its two attempts, counted once and reported as flaky.
+        // One logical test, collapsed from its two explicitly tagged attempts, counted once and reported as flaky.
         Assert.Contains(@"""tests"": 1", ctrfContent, ctrfContent);
         Assert.Contains(@"""passed"": 1", ctrfContent, ctrfContent);
         Assert.Contains(@"""failed"": 0", ctrfContent, ctrfContent);

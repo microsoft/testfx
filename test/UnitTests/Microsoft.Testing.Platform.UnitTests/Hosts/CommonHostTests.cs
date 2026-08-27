@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -22,7 +23,50 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class CommonHostTests
 {
     [TestMethod]
-    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_UsesCancellationTokenNoneForDisplayAfterSessionEndRun()
+    public async Task RequestGracefulSessionStopAsync_UsesActiveRequestCapabilitiesBeforeApplicationCapability()
+    {
+        Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> requestCapability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
+        TestableCommonHost host = new(serviceProvider);
+
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(requestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        requestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        host.UnregisterActiveGracefulStopCapabilityForTesting(requestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RegisterActiveGracefulStopCapabilityAsync_AfterStoppedRequestUnregisters_StopsNextRequest()
+    {
+        Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> completedRequestCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> nextRequestCapability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
+        TestableCommonHost host = new(serviceProvider);
+
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(completedRequestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+        host.UnregisterActiveGracefulStopCapabilityForTesting(completedRequestCapability.Object);
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(nextRequestCapability.Object);
+
+        completedRequestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        nextRequestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false, 1)]
+    [DataRow(true, 0)]
+    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_DisarmsStopPolicyOnlyForRun(bool isDiscoveryRequest, int expectedDisarmCount)
     {
         CancellationToken cancellationToken = new(canceled: true);
 
@@ -50,9 +94,12 @@ public sealed class CommonHostTests
             .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException(cancellationToken));
 
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -66,13 +113,51 @@ public sealed class CommonHostTests
             serviceProvider,
             baseMessageBusMock.Object,
             testFrameworkMock.Object,
-            client);
+            client,
+            isDiscoveryRequest);
 
         Assert.IsNotNull(displayAfterToken);
         Assert.IsFalse(displayAfterToken!.Value.CanBeCanceled);
 
         outputDeviceMock.Verify(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>()), Times.Once);
         testSessionLifetimeHandlerMock.Verify(x => x.OnTestSessionFinishingAsync(It.IsAny<ITestSessionContext>()), Times.Once);
+
+        // Disarming happens in a finally around the invoker, so it must also happen when the invoker threw
+        // because the session was canceled. Otherwise a deadline reached while the reporters finalize an
+        // already-canceled run would still mark it as truncated.
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Exactly(expectedDisarmCount));
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_WhenSessionStartupFails_DisarmsStopPolicy()
+    {
+        Mock<IPlatformOutputDevice> outputDeviceMock = new();
+        outputDeviceMock
+            .Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("session startup failure"));
+
+        Mock<ITestSessionContext> sessionContextMock = new();
+        sessionContextMock.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(policiesServiceMock.Object);
+
+        Mock<BaseMessageBus> baseMessageBusMock = new();
+        baseMessageBusMock.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await TestableCommonHost.ExecuteRequestForTestingAsync(
+                new ProxyOutputDevice(outputDeviceMock.Object, null),
+                sessionContextMock.Object,
+                serviceProvider,
+                baseMessageBusMock.Object,
+                new Mock<ITestFramework>().Object,
+                new ClientInfo("client", "1.0.0")));
+
+        Assert.AreEqual("session startup failure", ex.Message);
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
     }
 
     [TestMethod]
@@ -116,6 +201,7 @@ public sealed class CommonHostTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<IStopPoliciesService>().Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -154,9 +240,12 @@ public sealed class CommonHostTests
             .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("test framework failure"));
 
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -174,6 +263,10 @@ public sealed class CommonHostTests
         // The safety net is best effort: it must never replace the exception that is already propagating.
         Assert.AreEqual("test framework failure", ex.Message);
         baseMessageBusMock.Verify(x => x.DisableAsync(), Times.Once);
+
+        // Disarming sits in a finally around the invoker, so a failing test framework must not leave the
+        // deadline armed while the session tears down.
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
     }
 
     [TestMethod]
@@ -394,8 +487,18 @@ public sealed class CommonHostTests
             ServiceProvider serviceProvider,
             BaseMessageBus baseMessageBus,
             ITestFramework testFramework,
-            ClientInfo client)
-            => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client);
+            ClientInfo client,
+            bool isDiscoveryRequest = false)
+            => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client, isDiscoveryRequest);
+
+        public Task RegisterActiveGracefulStopCapabilityForTestingAsync(IGracefulStopTestExecutionCapability capability)
+            => RegisterActiveGracefulStopCapabilityAsync(capability);
+
+        public Task RequestGracefulSessionStopForTestingAsync()
+            => RequestGracefulSessionStopAsync(CancellationToken.None);
+
+        public void UnregisterActiveGracefulStopCapabilityForTesting(IGracefulStopTestExecutionCapability capability)
+            => UnregisterActiveGracefulStopCapability(capability);
 
         protected override Task<int> InternalRunAsync(CancellationToken cancellationToken)
             => Task.FromResult(0);

@@ -125,6 +125,19 @@ internal sealed class AzureDevOpsResultIdStore
         _hasUnsavedChanges = true;
     }
 
+    /// <summary>
+    /// Records the highest attempt sequence Azure DevOps has accepted as a sub-result for a newly created result.
+    /// </summary>
+    public void RecordPublishedSubResults(AzureDevOpsTestCaseResult result, int resultId, int lastPublishedSubResultSequenceId)
+    {
+        string key = CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle);
+        if (_results.TryGetValue(key, out AzureDevOpsPublishedResult? published) && published.Id == resultId)
+        {
+            _results[key] = published with { LastPublishedSubResultSequenceId = lastPublishedSubResultSequenceId };
+            _hasUnsavedChanges = true;
+        }
+    }
+
     public static AzureDevOpsTestSubResult CreateFirstAttempt(AzureDevOpsTestCaseResult result)
         => ToSubResult(result, sequenceId: 1);
 
@@ -165,6 +178,7 @@ internal sealed class AzureDevOpsResultIdStore
     public void RecordAttempts(
         AzureDevOpsPublishedResult published,
         IReadOnlyList<AzureDevOpsTestSubResult> attempts,
+        int lastPublishedSubResultSequenceId,
         long? totalDurationInMs,
         DateTimeOffset? startedDate,
         DateTimeOffset? completedDate)
@@ -172,6 +186,7 @@ internal sealed class AzureDevOpsResultIdStore
         _results[CreateKey(published.Storage, published.Name, published.Title)] = published with
         {
             Attempts = attempts,
+            LastPublishedSubResultSequenceId = lastPublishedSubResultSequenceId,
             TotalDurationInMs = totalDurationInMs,
             StartedDate = startedDate,
             CompletedDate = completedDate,
@@ -253,6 +268,7 @@ internal sealed class AzureDevOpsResultIdStore
             {
                 entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Title, published.Id, published.Attempts)
                 {
+                    LastPublishedSubResultSequenceId = published.LastPublishedSubResultSequenceId,
                     TotalDurationInMs = published.TotalDurationInMs,
                     StartedDate = published.StartedDate,
                     CompletedDate = published.CompletedDate,
@@ -363,6 +379,15 @@ internal sealed class AzureDevOpsResultIdStore
                         continue;
                     }
 
+                    bool hasUnpublishedFirstAttempt = entry.LastPublishedSubResultSequenceId == 0
+                        && entry.Attempts.Count == 1
+                        && entry.Attempts[0].SequenceId == 1;
+                    bool hasFullyPublishedHistory = entry.LastPublishedSubResultSequenceId == entry.Attempts[^1].SequenceId;
+                    if (!hasUnpublishedFirstAttempt && !hasFullyPublishedHistory)
+                    {
+                        continue;
+                    }
+
                     long? retainedDuration = SumDurations(entry.Attempts);
                     if (entry.TotalDurationInMs is < 0
                         || (entry.TotalDurationInMs is { } totalDuration && retainedDuration is { } retained && totalDuration < retained))
@@ -384,6 +409,7 @@ internal sealed class AzureDevOpsResultIdStore
 
                 _results[key] = new AzureDevOpsPublishedResult(entry.Storage!, entry.Name!, entry.Title!, entry.Id, entry.Attempts!)
                 {
+                    LastPublishedSubResultSequenceId = entry.LastPublishedSubResultSequenceId!.Value,
                     TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
                     StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts!),
                     CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts!),
@@ -507,6 +533,8 @@ internal sealed record AzureDevOpsPublishedResult(
     int Id,
     IReadOnlyList<AzureDevOpsTestSubResult> Attempts)
 {
+    public int LastPublishedSubResultSequenceId { get; init; }
+
     public long? TotalDurationInMs { get; init; }
 
     public DateTimeOffset? StartedDate { get; init; }
@@ -529,6 +557,9 @@ internal sealed record AzureDevOpsResultMapEntry(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("attempts")] IReadOnlyList<AzureDevOpsTestSubResult>? Attempts)
 {
+    [JsonPropertyName("lastPublishedSubResultSequenceId")]
+    public int? LastPublishedSubResultSequenceId { get; init; }
+
     [JsonPropertyName("totalDurationInMs")]
     public long? TotalDurationInMs { get; init; }
 
