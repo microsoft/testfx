@@ -279,6 +279,8 @@ Microsoft.Testing.Platform.ServerMode.ResponseMessage.StringId.get -> string?
 Microsoft.Testing.Platform.ServerMode.ResponseMessage.StringId.init -> void
 Microsoft.Testing.Platform.ServerMode.ErrorMessage.StringId.get -> string?
 Microsoft.Testing.Platform.ServerMode.ErrorMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.CancelRequestArgs.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.CancelRequestArgs.StringId.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void

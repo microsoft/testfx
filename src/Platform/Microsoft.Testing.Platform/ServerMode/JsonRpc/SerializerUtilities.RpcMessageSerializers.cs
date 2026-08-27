@@ -126,7 +126,7 @@ internal static partial class SerializerUtilities
         {
             Dictionary<string, object?> values = new()
             {
-                [JsonRpcStrings.Id] = ev.CancelRequestId,
+                [JsonRpcStrings.Id] = ev.StringId ?? (object)ev.CancelRequestId,
             };
 
             return values;

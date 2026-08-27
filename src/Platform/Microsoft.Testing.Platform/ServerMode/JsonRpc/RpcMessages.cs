@@ -92,7 +92,10 @@ internal sealed record RunResponseArgs(Artifact[] Artifacts) : ResponseArgsBase
 
 internal sealed record Artifact(string Uri, string Producer, string Type, string DisplayName, string? Description = null);
 
-internal sealed record CancelRequestArgs(int CancelRequestId);
+internal sealed record CancelRequestArgs(int CancelRequestId)
+{
+    public string? StringId { get; init; }
+}
 
 internal sealed record ExitRequestArgs;
 

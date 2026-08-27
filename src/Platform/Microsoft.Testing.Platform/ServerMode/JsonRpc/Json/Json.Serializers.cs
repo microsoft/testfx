@@ -126,7 +126,7 @@ internal sealed partial class Json
 
         serializers[typeof(CancelRequestArgs)] = new JsonObjectSerializer<CancelRequestArgs>(request =>
         [
-            (JsonRpcStrings.Id, request.CancelRequestId)
+            (JsonRpcStrings.Id, request.StringId ?? (object)request.CancelRequestId)
         ]);
 
         serializers[typeof(TelemetryEventArgs)] = new JsonObjectSerializer<TelemetryEventArgs>(ev =>

@@ -201,7 +201,9 @@
               ],
               "properties": {
                 "processId": {
-                  "type": "integer"
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647
                 },
                 "clientInfo": {
                   "type": "object",
@@ -366,7 +368,8 @@
       "properties": {
         "uid": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "\\S"
         },
         "display-name": {
           "type": "string"
@@ -634,7 +637,9 @@
           ],
           "properties": {
             "processId": {
-              "type": "integer"
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
             },
             "serverInfo": {
               "type": "object",
@@ -653,7 +658,14 @@
               "additionalProperties": true
             },
             "protocolVersion": {
-              "const": "1.0.0"
+              "oneOf": [
+                {
+                  "const": "1.0.0"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "capabilities": {
               "$ref": "#/$defs/serverCapabilities"

@@ -304,8 +304,8 @@ internal sealed partial class Json
             });
 
         deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
-          (json, jsonElement) => TryGetRpcId(jsonElement, out int id, out _)
-              ? new CancelRequestArgs(id)
+          (json, jsonElement) => TryGetRpcId(jsonElement, out int id, out string? stringId)
+              ? new CancelRequestArgs(id) { StringId = stringId }
               : throw new MessageFormatException("id field is missing"));
 
         deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(

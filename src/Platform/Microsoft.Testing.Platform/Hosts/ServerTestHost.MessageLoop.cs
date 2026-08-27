@@ -78,12 +78,18 @@ internal sealed partial class ServerTestHost
                         _ = HandleNotificationAsync(notification, _serverClosingTokenSource.Token);
                         break;
                     case ResponseMessage response:
-                        CompleteRequest(ref _serverToClientRequests, response.Id, completion => completion.TrySetResult(response));
+                        CompleteRequest(
+                            ref _serverToClientRequests,
+                            GetRequestKey(response.Id, response.StringId),
+                            completion => completion.TrySetResult(response));
                         break;
 
                     case ErrorMessage error:
                         RemoteInvocationException exception = new(error.ErrorCode, error.Message, error.Data);
-                        CompleteRequest(ref _serverToClientRequests, error.Id, completion => completion.TrySetException(exception));
+                        CompleteRequest(
+                            ref _serverToClientRequests,
+                            GetRequestKey(error.Id, error.StringId),
+                            completion => completion.TrySetException(exception));
                         break;
                 }
             }
@@ -133,7 +139,9 @@ internal sealed partial class ServerTestHost
             switch (message.Method, message.Params)
             {
                 case (JsonRpcMethods.CancelRequest, CancelRequestArgs args):
-                    if (_clientToServerRequests.TryGetValue(args.CancelRequestId, out RpcInvocationState? rpcState))
+                    if (_clientToServerRequests.TryGetValue(
+                        GetRequestKey(args.CancelRequestId, args.StringId),
+                        out RpcInvocationState? rpcState))
                     {
                         Exception? cancellationException = rpcState.CancelRequest();
                         if (cancellationException is not null)
@@ -232,7 +240,9 @@ internal sealed partial class ServerTestHost
             if (initializationTask is not null)
             {
                 rpcState = new RpcInvocationState();
-                requestRegistered = _clientToServerRequests.TryAdd(request.Id, rpcState);
+                requestRegistered = _clientToServerRequests.TryAdd(
+                    GetRequestKey(request.Id, request.StringId),
+                    rpcState);
                 bool initialized = await initializationTask.ConfigureAwait(false);
                 rejectRequest = !initialized;
             }
@@ -258,7 +268,7 @@ internal sealed partial class ServerTestHost
                             "The server must be initialized before this request can be processed.");
                         CompleteRequest(
                             ref _clientToServerRequests,
-                            request.Id,
+                            GetRequestKey(request.Id, request.StringId),
                             completion => completion.TrySetException(exception));
                     }
                     else
@@ -275,7 +285,7 @@ internal sealed partial class ServerTestHost
             rpcState ??= new RpcInvocationState();
             if (!requestRegistered)
             {
-                _clientToServerRequests.TryAdd(request.Id, rpcState);
+                _clientToServerRequests.TryAdd(GetRequestKey(request.Id, request.StringId), rpcState);
             }
 
             // Note: Yield, so that the main message reading loop can continue.
@@ -296,15 +306,13 @@ internal sealed partial class ServerTestHost
                     CompleteInitialization(success: true);
                 }
 
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetResult(response));
+                CompleteRequest(
+                    ref _clientToServerRequests,
+                    GetRequestKey(request.Id, request.StringId),
+                    completion => completion.TrySetResult(response));
             }
             catch (OperationCanceledException e)
             {
-                if (isInitializeRequest)
-                {
-                    CompleteInitialization(success: false);
-                }
-
                 try
                 {
                     if (!testUpdateCompletionSent)
@@ -327,16 +335,19 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
+                    if (isInitializeRequest)
+                    {
+                        CompleteInitialization(success: false);
+                    }
+
+                    CompleteRequest(
+                        ref _clientToServerRequests,
+                        GetRequestKey(request.Id, request.StringId),
+                        completion => completion.TrySetCanceled());
                 }
             }
             catch (JsonRpcException e)
             {
-                if (isInitializeRequest)
-                {
-                    CompleteInitialization(success: false);
-                }
-
                 try
                 {
                     if (!testUpdateCompletionSent)
@@ -354,16 +365,19 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
+                    if (isInitializeRequest)
+                    {
+                        CompleteInitialization(success: false);
+                    }
+
+                    CompleteRequest(
+                        ref _clientToServerRequests,
+                        GetRequestKey(request.Id, request.StringId),
+                        completion => completion.TrySetException(e));
                 }
             }
             catch (Exception e)
             {
-                if (isInitializeRequest)
-                {
-                    CompleteInitialization(success: false);
-                }
-
                 try
                 {
                     if (!testUpdateCompletionSent)
@@ -381,7 +395,15 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
+                    if (isInitializeRequest)
+                    {
+                        CompleteInitialization(success: false);
+                    }
+
+                    CompleteRequest(
+                        ref _clientToServerRequests,
+                        GetRequestKey(request.Id, request.StringId),
+                        completion => completion.TrySetException(e));
                 }
             }
         }
@@ -415,13 +437,13 @@ internal sealed partial class ServerTestHost
     }
 
     private void CompleteRequest(
-        ref ConcurrentDictionary<int, RpcInvocationState> rpcStates,
-        int reqId,
+        ref ConcurrentDictionary<(int Id, bool IsString), RpcInvocationState> rpcStates,
+        (int Id, bool IsString) requestKey,
         Action<TaskCompletionSource<object>> completion)
     {
         try
         {
-            if (rpcStates.TryRemove(reqId, out RpcInvocationState? completedInvocation))
+            if (rpcStates.TryRemove(requestKey, out RpcInvocationState? completedInvocation))
             {
                 completion(completedInvocation.CompletionSource);
                 completedInvocation.Dispose();
@@ -440,6 +462,9 @@ internal sealed partial class ServerTestHost
             _requestCounter.Signal();
         }
     }
+
+    private static (int Id, bool IsString) GetRequestKey(int id, string? stringId)
+        => (id, stringId is not null);
 
     private sealed class RpcInvocationState : IDisposable
     {

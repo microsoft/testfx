@@ -201,13 +201,30 @@ public sealed class ServerTests
                 }
             }
             """);
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 20,
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000020"
+                }
+            }
+            """);
 
-        var incompatibleVersionError = (ErrorMessage)(await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ErrorMessage { Id: 2 },
-            "Wait incompatible protocol error",
-            timeout.Token))!;
+        ErrorMessage incompatibleVersionError = Assert.IsInstanceOfType<ErrorMessage>(
+            await messageHandler.ReadAsync(timeout.Token));
+        Assert.AreEqual(2, incompatibleVersionError.Id);
         Assert.AreEqual(ErrorCodes.ProtocolVersionNotSupported, incompatibleVersionError.ErrorCode);
+
+        var queuedRequestError = (ErrorMessage)(await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ErrorMessage { Id: 20 },
+            "Wait queued request error",
+            timeout.Token))!;
+        Assert.AreEqual(ErrorCodes.ServerNotInitialized, queuedRequestError.ErrorCode);
 
         const string initializeMessage = """
             {
@@ -461,6 +478,134 @@ public sealed class ServerTests
             "Wait canceled discovery error",
             timeout.Token))!;
         Assert.AreEqual(ErrorCodes.RequestCanceled, cancellationError.ErrorCode);
+
+        await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
+        Assert.AreEqual(0, await serverTask);
+    }
+
+    [TestMethod]
+    public async Task NumericAndStringRequestIdsHaveIndependentCancellation()
+    {
+        using var server = TcpServer.Create();
+        TaskCompletionSource<bool> bothRequestsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseNumericRequest = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int startedRequestCount = 0;
+
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter
+        {
+            DiscoveryAction = async context =>
+            {
+                TreeNodeFilter filter = Assert.IsInstanceOfType<TreeNodeFilter>(
+                    Assert.IsInstanceOfType<TestExecutionRequest>(context.Request).Filter);
+                if (Interlocked.Increment(ref startedRequestCount) == 2)
+                {
+                    bothRequestsStarted.TrySetResult(true);
+                }
+
+                if (filter.Filter == "/string")
+                {
+                    await Task.Delay(Timeout.Infinite, context.CancellationToken);
+                }
+                else
+                {
+                    await releaseNumericRequest.Task;
+                    context.Complete();
+                }
+            },
+        });
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = Task.Run(testApplication.RunAsync);
+
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
+        using NetworkStream stream = client.GetStream();
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
+            client,
+            clientToServerStream: client.GetStream(),
+            serverToClientStream: client.GetStream(),
+            FormatterUtilities.CreateFormatter());
+
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": false
+                        }
+                    }
+                }
+            }
+            """);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 1 },
+            "Wait initialize response",
+            timeout.Token);
+
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000002",
+                    "filter": "/numeric"
+                }
+            }
+            """);
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": "2",
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000003",
+                    "filter": "/string"
+                }
+            }
+            """);
+        await bothRequestsStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, timeout.Token);
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "method": "$/cancelRequest",
+                "params": {
+                    "id": "2"
+                }
+            }
+            """);
+
+        var stringRequestError = (ErrorMessage)(await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ErrorMessage { Id: 2, StringId: "2" },
+            "Wait string request cancellation",
+            timeout.Token))!;
+        Assert.AreEqual(ErrorCodes.RequestCanceled, stringRequestError.ErrorCode);
+
+        releaseNumericRequest.TrySetResult(true);
+        var numericResponse = (ResponseMessage)(await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 2, StringId: null },
+            "Wait numeric request response",
+            timeout.Token))!;
+        Assert.IsNull(numericResponse.StringId);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
         Assert.AreEqual(0, await serverTask);

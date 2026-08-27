@@ -259,7 +259,7 @@ internal static partial class SerializerUtilities
             object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
             int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-            return new CancelRequestArgs(id);
+            return new CancelRequestArgs(id) { StringId = idObj as string };
         });
 
         Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(_ => new ExitRequestArgs());

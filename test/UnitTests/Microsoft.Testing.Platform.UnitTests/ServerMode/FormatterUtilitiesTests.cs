@@ -149,7 +149,9 @@ public sealed class FormatterUtilitiesTests
             """);
 
         NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(message);
-        Assert.AreEqual(42, Assert.IsInstanceOfType<CancelRequestArgs>(notification.Params).CancelRequestId);
+        CancelRequestArgs args = Assert.IsInstanceOfType<CancelRequestArgs>(notification.Params);
+        Assert.AreEqual(42, args.CancelRequestId);
+        Assert.AreEqual("42", args.StringId);
     }
 
     [TestMethod]

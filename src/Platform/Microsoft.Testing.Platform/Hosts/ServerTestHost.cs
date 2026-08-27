@@ -44,12 +44,12 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     // In-flight requests from the client to the server.
     // The client can cancel these requests at any time.
     // When the server completes the handler it will complete the backing RpcRequest.
-    private ConcurrentDictionary<int, RpcInvocationState> _clientToServerRequests;
+    private ConcurrentDictionary<(int Id, bool IsString), RpcInvocationState> _clientToServerRequests;
 
     // In-flight requests from the server to the client.
     // Whenever a client responds with a result or an error, the requests
     // get completed.
-    private ConcurrentDictionary<int, RpcInvocationState> _serverToClientRequests;
+    private ConcurrentDictionary<(int Id, bool IsString), RpcInvocationState> _serverToClientRequests;
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
     private IClientInfo? _clientInfoService;
