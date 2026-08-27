@@ -18,6 +18,12 @@ public class TempDirectory : IDisposable
         (_baseDirectory, Path) = CreateUniqueDirectory(subDirectory);
     }
 
+    private TempDirectory(string stableDirectoryName, string? subDirectory)
+    {
+        _cleanup = Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") != "0";
+        (_baseDirectory, Path) = CreateDirectory(stableDirectoryName, subDirectory);
+    }
+
     public string Path { get; }
 
 #pragma warning disable CS0618 // Type or member is obsolete - This is the only place where GetRepoRoot and GetTestSuiteDirectory should be called.
@@ -25,6 +31,9 @@ public class TempDirectory : IDisposable
 
     public static string TestSuiteDirectory { get; } = GetTestSuiteDirectory();
 #pragma warning restore CS0618 // Type or member is obsolete
+
+    internal static TempDirectory CreateStable(string stableDirectoryName)
+        => new(stableDirectoryName, subDirectory: null);
 
     public void Dispose()
     {
@@ -166,14 +175,19 @@ public class TempDirectory : IDisposable
     /// Path of the created directory.
     /// </returns>
     internal static (string BaseDirectory, string FinalDirectory) CreateUniqueDirectory(string? subDirectory)
+        => CreateDirectory(RandomId.Next(), subDirectory);
+
+    private static (string BaseDirectory, string FinalDirectory) CreateDirectory(string directoryName, string? subDirectory)
     {
-        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, RandomId.Next());
+        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, directoryName);
         Directory.CreateDirectory(directoryPath);
 
         string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
         File.WriteAllText(directoryBuildProps, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+    <Import Project="{RepoRoot}/eng/MSBuildCache.props"
+            Condition="'$(MSBuildCachePackageEnabled)' == 'true'" />
     <PropertyGroup>
       <RepoRoot>{RepoRoot}/</RepoRoot>
       <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
@@ -182,6 +196,16 @@ public class TempDirectory : IDisposable
       <!-- Prevent build warnings/errors on unsupported TFMs -->
       <CheckEolTargetFramework>false</CheckEolTargetFramework>
     </PropertyGroup>
+    <ItemGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'">
+      <PackageReference Include="$(MSBuildCachePackageName)"
+                        Version="$(MSBuildCachePackageVersion)"
+                        IncludeAssets="Runtime;Build;Native;contentFiles;Analyzers"
+                        PrivateAssets="All" />
+      <PackageReference Include="Microsoft.MSBuildCache.SharedCompilation"
+                        Version="$(MSBuildCachePackageVersion)"
+                        IncludeAssets="Runtime;Build;Native;contentFiles;Analyzers"
+                        PrivateAssets="All" />
+    </ItemGroup>
 </Project>
 """);
 

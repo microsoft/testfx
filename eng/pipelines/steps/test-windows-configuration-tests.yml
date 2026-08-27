@@ -17,6 +17,13 @@ parameters:
 - name: affectedTestsCacheVersion
   type: string
   default: v1
+- name: acceptanceTestCacheMode
+  type: string
+  default: disabled
+  values:
+  - disabled
+  - read
+  - write
 
 steps:
 # Because the build step is using -ci, restore is done in a local .packages directory.
@@ -32,6 +39,9 @@ steps:
     displayName: Test
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       # Secret variables are not automatically exposed to scripts. Fork PR builds do not receive this token,
       # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -58,6 +68,9 @@ steps:
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
@@ -91,6 +104,9 @@ steps:
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   # Scheduled and manual runs keep their full-validation contract. PRs also fall back when the cache is absent or the
@@ -110,6 +126,9 @@ steps:
     displayName: Test (affected-test fallback)
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
     env:
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'disabled')) }}:

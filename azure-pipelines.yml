@@ -291,6 +291,7 @@ stages:
           # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
           enableAffectedTests: false
           affectedTestsMode: collect
+          acceptanceTestCacheMode: write
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cache seed build binlogs'
@@ -751,6 +752,7 @@ stages:
               # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
               enableAffectedTests: false
               affectedTestsMode: run
+              acceptanceTestCacheMode: read
 
           # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
           # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the

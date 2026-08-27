@@ -59,36 +59,7 @@ public static class DotnetCli
         await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
         try
         {
-            environmentVariables ??= [];
-            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-            {
-                // Skip all unwanted environment variables.
-                string? key = entry.Key.ToString();
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                if (disableCodeCoverage)
-                {
-                    // Disable the code coverage during the build.
-                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-                }
-
-                // We use TryAdd to let tests "overwrite" existing environment variables.
-                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
-                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
-                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
-            }
-
-            if (disableTelemetry)
-            {
-                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-            }
+            environmentVariables = CreateEnvironmentVariables(environmentVariables, disableTelemetry, disableCodeCoverage);
 
             string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
@@ -107,6 +78,42 @@ public static class DotnetCli
         {
             s_maxOutstandingCommands_semaphore.Release();
         }
+    }
+
+    internal static Dictionary<string, string?> CreateEnvironmentVariables(
+        Dictionary<string, string?>? environmentVariables = null,
+        bool disableTelemetry = true,
+        bool disableCodeCoverage = true)
+    {
+        environmentVariables ??= [];
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            // Skip all unwanted environment variables.
+            string? key = entry.Key.ToString();
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (disableCodeCoverage
+                && CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            // We use TryAdd to let tests "overwrite" existing environment variables.
+            // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+            // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+            // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+            environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
+        }
+
+        if (disableTelemetry)
+        {
+            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+        }
+
+        return environmentVariables;
     }
 
     private static bool IsDotNetTestWithExeOrDll(string args)
