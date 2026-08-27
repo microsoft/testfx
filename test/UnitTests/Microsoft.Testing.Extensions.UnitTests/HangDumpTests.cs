@@ -97,24 +97,6 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    public void FarFutureDeadlineDumpIsScheduledInMultipleTimerIntervals()
-    {
-        DateTimeOffset now = new(2030, 1, 1, 12, 0, 0, TimeSpan.Zero);
-        DateTimeOffset deadline = now + TimeSpan.FromDays(60);
-        var maxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
-
-        TimeSpan firstInterval = HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, now);
-        DateTimeOffset afterFirstInterval = now + firstInterval;
-        TimeSpan secondInterval = HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, afterFirstInterval);
-
-        Assert.AreEqual(maxTimerDueTime, firstInterval);
-        Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
-        Assert.IsGreaterThan(secondInterval, firstInterval);
-        Assert.AreEqual(TimeSpan.Zero, HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, afterFirstInterval + secondInterval));
-        Assert.AreEqual(TimeSpan.Zero, HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, deadline));
-    }
-
-    [TestMethod]
     [DataRow("hang.dmp", "hang_%p.dmp")]
     [DataRow("hang", "hang_%p")]
     [DataRow("subdirectory/hang.dmp", "subdirectory/hang_%p.dmp")]

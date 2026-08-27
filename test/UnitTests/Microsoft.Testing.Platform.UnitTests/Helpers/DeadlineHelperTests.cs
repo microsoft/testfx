@@ -119,6 +119,25 @@ public sealed class DeadlineHelperTests
     }
 
     [TestMethod]
+    public void GetTimerDueTime_WhenDeadlineExceedsTimerLimit_ReturnsBoundedIntervals()
+    {
+        DateTimeOffset now = new(2030, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset deadline = now + TimeSpan.FromDays(60);
+        var maxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
+
+        TimeSpan firstInterval = DeadlineHelper.GetTimerDueTime(deadline, now);
+        DateTimeOffset afterFirstInterval = now + firstInterval;
+        TimeSpan secondInterval = DeadlineHelper.GetTimerDueTime(deadline, afterFirstInterval);
+
+        Assert.AreEqual(maxTimerDueTime, firstInterval);
+        Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
+        Assert.IsGreaterThan(secondInterval, firstInterval);
+        Assert.AreEqual(TimeSpan.Zero, DeadlineHelper.GetTimerDueTime(deadline, afterFirstInterval + secondInterval));
+        Assert.AreEqual(TimeSpan.Zero, DeadlineHelper.GetTimerDueTime(deadline, deadline));
+        Assert.AreEqual(TimeSpan.Zero, DeadlineHelper.GetTimerDueTime(deadline, deadline.AddSeconds(1)));
+    }
+
+    [TestMethod]
     public void SubtractSaturating_WhenNoUnderflow_SubtractsMargin()
     {
         var instant = new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
