@@ -160,6 +160,9 @@ public partial class TypeEnumeratorTests : TestContainer
             .Should().BeEquivalentTo(nameof(DescriptorCompleteTestClass.PlainTest), nameof(DescriptorCompleteTestClass.DataRowTest));
         tests.Select(test => test.TestMethod.Name)
             .Should().NotContain(nameof(DescriptorCompleteTestClass.FallbackOnlyTest));
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
     }
 
     #endregion
