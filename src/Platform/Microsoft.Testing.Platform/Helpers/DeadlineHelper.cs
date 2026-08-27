@@ -83,6 +83,10 @@ internal static class DeadlineHelper
     public static TimeSpan GetDumpMargin(IEnvironment environment)
         => GetMargin(environment, EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN, DefaultDumpMargin);
 
+    /// <summary>
+    /// Gets the timer due time for <paramref name="deadline"/>, clamping it to the maximum interval
+    /// accepted by <see cref="Timer"/> so far-future deadlines can be scheduled in multiple callbacks.
+    /// </summary>
     public static TimeSpan GetTimerDueTime(DateTimeOffset deadline, DateTimeOffset now)
     {
         TimeSpan remaining = deadline - now;
