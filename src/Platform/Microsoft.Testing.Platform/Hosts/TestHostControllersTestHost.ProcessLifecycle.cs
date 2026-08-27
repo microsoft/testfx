@@ -170,7 +170,8 @@ internal sealed partial class TestHostControllersTestHost
             throw ApplicationStateGuard.Unreachable();
         }
 
-        bool testExecutionCanceled = timeoutCancellationTokenSource?.IsCancellationRequested is true
+        bool testExecutionTimedOut = timeoutCancellationTokenSource?.IsCancellationRequested is true;
+        bool testExecutionCanceled = testExecutionTimedOut
             || applicationCancellationToken.IsCancellationRequested;
         int testHostProcessExitCode = testHostProcess.HasExited
             ? testHostProcess.ExitCode
@@ -228,6 +229,13 @@ internal sealed partial class TestHostControllersTestHost
                 await _logger.LogWarningAsync(
                     $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
             }
+        }
+
+        if (testExecutionTimedOut && !applicationCancellationToken.IsCancellationRequested)
+        {
+            // Timeout owns only test execution. Report the abort explicitly after controller extensions have
+            // finalized so output devices render an aborted verdict without canceling their cleanup token.
+            await ServiceProvider.GetRequiredService<IStopPoliciesService>().ExecuteAbortCallbacksAsync().ConfigureAwait(false);
         }
 
         await outputDevice.DisplayAfterSessionEndRunAsync(postExecutionCancellationToken).ConfigureAwait(false);

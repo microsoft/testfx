@@ -284,7 +284,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         int exitCode;
         using (platformOTelService?.StartActivity("Run"))
         {
-            exitCode = await InternalRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+            exitCode = await InternalRunAsync(testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false);
         }
 
         if (RunTestApplicationLifeCycleCallbacks)
@@ -304,5 +304,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         return exitCode;
     }
 
-    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken);
+#pragma warning disable RS0051 // Internal host implementation contract; not a stable API surface.
+    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed);
+#pragma warning restore RS0051
 }

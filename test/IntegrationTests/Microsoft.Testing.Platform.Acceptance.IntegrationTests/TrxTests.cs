@@ -208,6 +208,8 @@ Out of process file artifacts produced:
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputContains("Test session was aborted; recovered 1 test result(s)");
+        testHostResult.AssertOutputContains("Canceling the test session");
+        testHostResult.AssertOutputDoesNotContain("Test run summary: Passed!");
 
         string[] trxFiles = Directory.GetFiles(testResultsPath, fileName, SearchOption.AllDirectories);
         Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");

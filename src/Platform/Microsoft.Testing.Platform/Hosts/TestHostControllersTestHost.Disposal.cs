@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class TestHostControllersTestHost
 {
-    private async Task DisposeServicesAsync()
+    private async Task DisposeServicesAsync(List<object> alreadyDisposed)
     {
         // A CompositeExtensionFactory builds one object that is reused for every role it was registered
         // under, so the lifetime handlers and environment-variable providers disposed below can be the very
@@ -32,8 +32,6 @@ internal sealed partial class TestHostControllersTestHost
 
         ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
         ITestHostProcessLifetimeHandler[] lifetimeHandlers = _testHostsInformation.LifetimeHandlers;
-
-        List<object> alreadyDisposed = [with(lifetimeHandlers.Length + variableProviders.Length)];
 
         // Recording them as already disposed is what keeps them from being disposed by the service-provider
         // walk below either.

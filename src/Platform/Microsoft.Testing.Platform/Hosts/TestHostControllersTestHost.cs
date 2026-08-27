@@ -67,7 +67,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed)
     {
         int exitCode;
         TestHostProcessInformation testHostProcessInformation;
@@ -138,7 +138,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
             finally
             {
                 // Service disposal must still run if closing the connection reports a failure.
-                await DisposeServicesAsync().ConfigureAwait(false);
+                await DisposeServicesAsync(alreadyDisposed).ConfigureAwait(false);
             }
         }
 

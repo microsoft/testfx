@@ -179,6 +179,21 @@ public sealed class CommonHostTests
     }
 
     [TestMethod]
+    public async Task RunAsync_WhenInternalRunSkipsService_DoesNotDisposeItDuringProcessShutdown()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestApplicationCancellationTokenSource());
+        Mock<IDisposable> serviceToSkip = new();
+        serviceProvider.AddService(serviceToSkip.Object);
+        TestableCommonHost host = new(serviceProvider, serviceToSkip: serviceToSkip.Object);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(0, exitCode);
+        serviceToSkip.Verify(x => x.Dispose(), Times.Never);
+    }
+
+    [TestMethod]
     public async Task ExecuteRequestAsync_WhenSessionIsCancelled_DisablesTheMessageBus()
     {
         CancellationToken cancellationToken = new(canceled: true);
@@ -472,7 +487,10 @@ public sealed class CommonHostTests
         disposableRunningConsumer.Verify(x => x.Dispose(), Times.Never);
     }
 
-    private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)
+    private sealed class TestableCommonHost(
+        ServiceProvider serviceProvider,
+        bool runTestApplicationLifeCycleCallbacks = false,
+        object? serviceToSkip = null) : CommonHost(serviceProvider)
     {
         protected override string HostType => "TestHost";
 
@@ -500,8 +518,15 @@ public sealed class CommonHostTests
         public void UnregisterActiveGracefulStopCapabilityForTesting(IGracefulStopTestExecutionCapability capability)
             => UnregisterActiveGracefulStopCapability(capability);
 
-        protected override Task<int> InternalRunAsync(CancellationToken cancellationToken)
-            => Task.FromResult(0);
+        protected override Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed)
+        {
+            if (serviceToSkip is not null)
+            {
+                alreadyDisposed.Add(serviceToSkip);
+            }
+
+            return Task.FromResult(0);
+        }
     }
 
     private sealed class TestApplicationCancellationTokenSource : ITestApplicationCancellationTokenSource
