@@ -64,6 +64,11 @@ internal static partial class CommandLineOptionsValidator
             }
         }
 
+        if (stringBuilder?.Length > 0)
+        {
+            stringBuilder.AppendLine(PlatformResources.CommandLineUnknownOptionsHint);
+        }
+
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
