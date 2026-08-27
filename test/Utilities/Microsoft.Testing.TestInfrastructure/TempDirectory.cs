@@ -312,7 +312,7 @@ public class TempDirectory : IDisposable
             throw new ArgumentException("Lock file name must be relative.", nameof(stableDirectoryName));
         }
 
-        string lockPath = System.IO.Path.Combine(lockDirectory, lockFileName);
+        string lockPath = System.IO.Path.Join(lockDirectory, lockFileName);
         DateTime timeout = DateTime.UtcNow.AddMinutes(5);
 
         while (true)
