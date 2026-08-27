@@ -26,6 +26,12 @@ internal static class DeadlineHelper
     private static readonly TimeSpan DefaultDumpMargin = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
+    /// <see cref="uint.MaxValue"/> milliseconds). Longer delays are scheduled in chunks.
+    /// </summary>
+    private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
+
+    /// <summary>
     /// Attempts to read <see cref="EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE"/> and parse
     /// it as an absolute instant in UTC.
     /// </summary>
@@ -76,6 +82,16 @@ internal static class DeadlineHelper
     /// </summary>
     public static TimeSpan GetDumpMargin(IEnvironment environment)
         => GetMargin(environment, EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN, DefaultDumpMargin);
+
+    public static TimeSpan GetTimerDueTime(DateTimeOffset deadline, DateTimeOffset now)
+    {
+        TimeSpan remaining = deadline - now;
+        return remaining <= TimeSpan.Zero
+            ? TimeSpan.Zero
+            : remaining > MaxTimerDueTime
+                ? MaxTimerDueTime
+                : remaining;
+    }
 
     /// <summary>
     /// Subtracts <paramref name="margin"/> from <paramref name="instant"/>, clamping the result at

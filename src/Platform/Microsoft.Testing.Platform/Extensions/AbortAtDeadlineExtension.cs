@@ -83,12 +83,6 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     /// </remarks>
     private static readonly TimeSpan DefaultReportTimeout = TimeSpan.FromSeconds(10);
 
-    /// <summary>
-    /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
-    /// <see cref="uint.MaxValue"/> milliseconds). Longer delays are scheduled in chunks.
-    /// </summary>
-    private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
-
     public AbortAtDeadlineExtension(
         IEnvironment environment,
         IClock clock,
@@ -170,7 +164,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         // Timer cannot represent delays above ~49.7 days. Arm it in bounded chunks and re-check the
         // absolute instant on every callback so a far-future deadline never fires early.
         _timer = new Timer(static state => ((AbortAtDeadlineExtension)state!).OnTimerElapsed(), this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
-        _timer.Change(GetTimerDueTime(stopAt, clock.UtcNow), Timeout.InfiniteTimeSpan);
+        _timer.Change(DeadlineHelper.GetTimerDueTime(stopAt, clock.UtcNow), Timeout.InfiniteTimeSpan);
     }
 
     private static void TryLog(Action logAction)
@@ -186,19 +180,9 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         }
     }
 
-    internal static TimeSpan GetTimerDueTime(DateTimeOffset deadline, DateTimeOffset now)
-    {
-        TimeSpan remaining = deadline - now;
-        return remaining <= TimeSpan.Zero
-            ? TimeSpan.Zero
-            : remaining > MaxTimerDueTime
-                ? MaxTimerDueTime
-                : remaining;
-    }
-
     private void OnTimerElapsed()
     {
-        TimeSpan dueTime = GetTimerDueTime(_stopAt!.Value, _clock.UtcNow);
+        TimeSpan dueTime = DeadlineHelper.GetTimerDueTime(_stopAt!.Value, _clock.UtcNow);
         if (dueTime > TimeSpan.Zero)
         {
             lock (_lock)

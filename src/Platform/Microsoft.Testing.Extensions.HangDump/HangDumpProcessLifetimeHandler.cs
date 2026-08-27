@@ -63,12 +63,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private bool _hostExited;
 
     /// <summary>
-    /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
-    /// <see cref="uint.MaxValue"/> milliseconds).
-    /// </summary>
-    private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
-
-    /// <summary>
     /// Upper bound for the optional in-progress-test query before taking a dump. A connected but
     /// wedged host never answers the request/reply, and the application token is not cancelled while
     /// the run is still "in progress" (which is exactly when the deadline dump fires), so an unbounded
@@ -95,19 +89,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     // which takes _dumpLock again on its way out.
     private CancellationTokenSource? _handshakeCancellationTokenSource;
 
-    internal static TimeSpan GetTimerDueTime(DateTimeOffset deadline, DateTimeOffset now)
-    {
-        TimeSpan remaining = deadline - now;
-        return remaining <= TimeSpan.Zero
-            ? TimeSpan.Zero
-            : remaining > MaxTimerDueTime
-                ? MaxTimerDueTime
-                : remaining;
-    }
-
     private void OnDeadlineTimerElapsed(CancellationToken cancellationToken)
     {
-        TimeSpan dueTime = GetTimerDueTime(_deadlineDumpAt!.Value, _clock.UtcNow);
+        TimeSpan dueTime = DeadlineHelper.GetTimerDueTime(_deadlineDumpAt!.Value, _clock.UtcNow);
         if (dueTime > TimeSpan.Zero)
         {
             try
@@ -296,7 +280,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                     null,
                     Timeout.InfiniteTimeSpan,
                     TimeSpan.FromMilliseconds(-1));
-                _deadlineTimer.Change(GetTimerDueTime(deadlineDumpAt, _clock.UtcNow), Timeout.InfiniteTimeSpan);
+                _deadlineTimer.Change(DeadlineHelper.GetTimerDueTime(deadlineDumpAt, _clock.UtcNow), Timeout.InfiniteTimeSpan);
             }
 
             // Once a dump has started, the test host is being dumped and killed out from under this

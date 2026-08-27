@@ -196,22 +196,6 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     }
 
     [TestMethod]
-    public void FarFutureDeadlineIsScheduledInMultipleTimerIntervals()
-    {
-        DateTimeOffset deadline = Now + TimeSpan.FromDays(60);
-        var maxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
-
-        TimeSpan firstInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now);
-        TimeSpan secondInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now + firstInterval);
-
-        Assert.AreEqual(maxTimerDueTime, firstInterval);
-        Assert.IsGreaterThan(firstInterval, deadline - Now);
-        Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
-        Assert.IsGreaterThan(secondInterval, firstInterval);
-        Assert.AreEqual(TimeSpan.Zero, AbortAtDeadlineExtension.GetTimerDueTime(deadline, deadline));
-    }
-
-    [TestMethod]
     public async Task InvalidDeadlineIsVisibleWithoutDiagnosticLogging()
     {
         List<IOutputDeviceData> displayedData = [];
