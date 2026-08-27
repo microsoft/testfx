@@ -984,7 +984,7 @@ See full log [of v3.7.0...v3.7.1](https://github.com/microsoft/testfx/compare/v3
 
 ## <a name="1.5.0" />[1.5.0] - 2024-12-20
 
-See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
+See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/a6b6696371...378afeba899)
 
 ### Added
 
