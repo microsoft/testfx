@@ -81,15 +81,17 @@ internal static class TestClassModelBuilder
                 switch (member)
                 {
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
+                        bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
                         if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method))
                         {
-                            hasUnsupportedTestMethod |= TestMemberValidationHelper.IsTestMethodAttributePresent(method);
+                            hasUnsupportedTestMethod |= isTestMethod;
                             break;
                         }
 
                         if (TestMemberValidationHelper.TryReportUnsupportedMethod(method, leafFqn, diagnostics))
                         {
-                            hasUnsupportedTestMethod |= TestMemberValidationHelper.IsTestMethodAttributePresent(method);
+                            hasUnsupportedTestMethod |= isTestMethod;
 
                             // Skip generic / by-ref methods entirely so the emitter does not produce
                             // code that references unbound type parameters or ref/in/out arguments.
@@ -99,7 +101,7 @@ internal static class TestClassModelBuilder
                         string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
-                            TestMethodModel model = BuildMethod(method, consumingAssembly);
+                            TestMethodModel model = BuildMethod(method, consumingAssembly, inheritedAttributes, isTestMethod);
                             methodsByKey[key] = model;
                             methods.Add(model);
                         }
@@ -187,7 +189,11 @@ internal static class TestClassModelBuilder
         => type.DeclaringSyntaxReferences.Any(static syntaxReference =>
             syntaxReference.GetSyntax().ChildTokens().Any(static token => token.IsKind(SyntaxKind.PartialKeyword)));
 
-    private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
+    private static TestMethodModel BuildMethod(
+        IMethodSymbol method,
+        IAssemblySymbol consumingAssembly,
+        ImmutableArray<AttributeData> inheritedAttributes,
+        bool isTestMethod)
     {
         ITypeSymbol returnType = method.ReturnType;
         string returnTypeFqn = returnType.ToDisplayString(SymbolDisplayFormats.FullyQualified);
@@ -200,13 +206,11 @@ internal static class TestClassModelBuilder
             || returnTypeFqn.StartsWith("global::System.Threading.Tasks.ValueTask<", System.StringComparison.Ordinal);
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
-        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
         ImmutableArray<AttributeData> attributesToMaterialize = method.IsAsync
             ? inheritedAttributes.Where(static attribute => !IsCompilerSpecialAsyncAttribute(attribute)).ToImmutableArray()
             : inheritedAttributes;
         AttributeMaterializationHelper.AttributeMaterializationResult methodAttributes =
             AttributeMaterializationHelper.BuildAttributesWithCompleteness(attributesToMaterialize, consumingAssembly);
-        bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(method);
         bool isDescriptorSupported = isTestMethod
             && methodAttributes.IsComplete
             && method.DeclaredAccessibility == Accessibility.Public

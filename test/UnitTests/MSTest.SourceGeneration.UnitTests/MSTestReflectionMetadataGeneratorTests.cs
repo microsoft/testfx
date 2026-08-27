@@ -330,6 +330,51 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_InheritedCustomTestMethodOverrideRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, Inherited = true)]
+                public sealed class InheritedTestMethodAttribute : TestMethodAttribute
+                {
+                }
+
+                public class BaseTests
+                {
+                    [InheritedTestMethod]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+
+                    [TestMethod]
+                    public void Supported() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int runIndex = registry.IndexOf("Name = \"Run\"", System.StringComparison.Ordinal);
+        int supportedIndex = registry.IndexOf("Name = \"Supported\"", runIndex, System.StringComparison.Ordinal);
+        runIndex.Should().BeGreaterThan(-1);
+        supportedIndex.Should().BeGreaterThan(runIndex);
+        string runEntry = registry.Substring(runIndex, supportedIndex - runIndex);
+        runEntry.Should().Contain("IsTestMethod = true");
+        runEntry.Should().Contain("IsDescriptorSupported = false");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
     public void Generator_EmitsEmptyRegistry_WhenNoTestClasses()
     {
         const string userCode = """
