@@ -60,6 +60,10 @@ permissions:
   actions: read
   contents: read
 
+concurrency:
+  group: mtp-test-history-${{ github.repository }}
+  cancel-in-progress: false
+
 steps:
   - id: test-history
     name: Find latest test history
@@ -86,7 +90,7 @@ steps:
     run: dotnet test --report-gh --report-gh-history .test-history/history.json
 
   - name: Publish test history
-    if: always() && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
     with:
       name: mtp-test-history

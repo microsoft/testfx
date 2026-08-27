@@ -548,21 +548,24 @@ internal sealed partial class GitHubActionsSummaryReporter :
             }
 
             snapshot.Add(record);
-            historyTests?.Add(new CiRunSummaryHistoryTest
+            if (historyTests?.Count < GitHubActionsHistoryStore.MaxTotalSamples)
             {
-                TestId = entry.Uid,
-                DisplayName = record.DisplayName,
-                FullyQualifiedName = record.FullyQualifiedName,
-                Outcome = record.Kind switch
+                historyTests.Add(new CiRunSummaryHistoryTest
                 {
-                    TerminalKind.Passed => GitHubActionsHistoryOutcome.Passed,
-                    TerminalKind.Failed => GitHubActionsHistoryOutcome.Failed,
-                    TerminalKind.Skipped => GitHubActionsHistoryOutcome.Skipped,
-                    _ => throw new InvalidOperationException($"Unexpected terminal kind '{record.Kind}'."),
-                },
-                DurationTicks = record.Duration.Ticks,
-                IsFlaky = record.IsFlaky,
-            });
+                    TestId = entry.Uid,
+                    DisplayName = record.DisplayName,
+                    FullyQualifiedName = record.FullyQualifiedName,
+                    Outcome = record.Kind switch
+                    {
+                        TerminalKind.Passed => GitHubActionsHistoryOutcome.Passed,
+                        TerminalKind.Failed => GitHubActionsHistoryOutcome.Failed,
+                        TerminalKind.Skipped => GitHubActionsHistoryOutcome.Skipped,
+                        _ => throw new InvalidOperationException($"Unexpected terminal kind '{record.Kind}'."),
+                    },
+                    DurationTicks = record.Duration.Ticks,
+                    IsFlaky = record.IsFlaky,
+                });
+            }
         }
 
         return new SummarySnapshot(snapshot, historyTests ?? []);

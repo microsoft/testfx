@@ -168,24 +168,27 @@ internal sealed class GitHubActionsHistoryService :
         {
             GitHubActionsHistorySample[] samples =
             [
-                .. configuredGroup.SelectMany(module => module.HistoryTests.Select(test => new GitHubActionsHistorySample
-                {
-                    RunId = runId,
-                    RunAttempt = runAttempt,
-                    TimestampUtc = now,
-                    CommitSha = commitSha,
-                    RefName = refName,
-                    RunnerOs = runnerOs,
-                    AssemblyName = module.AssemblyName,
-                    TargetFramework = module.TargetFramework,
-                    Architecture = module.Architecture,
-                    TestId = test.TestId,
-                    FullyQualifiedName = test.FullyQualifiedName,
-                    DisplayName = test.DisplayName,
-                    Outcome = test.Outcome,
-                    DurationTicks = test.DurationTicks,
-                    IsFlaky = test.IsFlaky,
-                })),
+                .. configuredGroup
+                    .SelectMany(module => module.HistoryTests.Select(test => (Module: module, Test: test)))
+                    .Take(GitHubActionsHistoryStore.MaxTotalSamples)
+                    .Select(item => new GitHubActionsHistorySample
+                    {
+                        RunId = runId,
+                        RunAttempt = runAttempt,
+                        TimestampUtc = now,
+                        CommitSha = commitSha,
+                        RefName = refName,
+                        RunnerOs = runnerOs,
+                        AssemblyName = item.Module.AssemblyName,
+                        TargetFramework = item.Module.TargetFramework,
+                        Architecture = item.Module.Architecture,
+                        TestId = item.Test.TestId,
+                        FullyQualifiedName = item.Test.FullyQualifiedName,
+                        DisplayName = item.Test.DisplayName,
+                        Outcome = item.Test.Outcome,
+                        DurationTicks = item.Test.DurationTicks,
+                        IsFlaky = item.Test.IsFlaky,
+                    }),
             ];
 
             try
@@ -415,11 +418,27 @@ internal static class GitHubActionsHistoryStore
             Samples =
             [
                 .. samples
-                    .GroupBy(
-                        static sample => $"{sample.GetIdentity()}\0{sample.GetRunIdentity()}",
-                        StringComparer.Ordinal)
+                    .GroupBy(static sample => (
+                        sample.AssemblyName,
+                        sample.TargetFramework,
+                        sample.Architecture,
+                        sample.RunnerOs,
+                        sample.TestId,
+                        sample.FullyQualifiedName,
+                        sample.DisplayName,
+                        sample.RunId,
+                        sample.RunAttempt,
+                        sample.CommitSha,
+                        sample.TimestampUtc))
                     .Select(static group => group.OrderByDescending(static sample => sample.TimestampUtc).First())
-                    .GroupBy(static sample => sample.GetIdentity(), StringComparer.Ordinal)
+                    .GroupBy(static sample => (
+                        sample.AssemblyName,
+                        sample.TargetFramework,
+                        sample.Architecture,
+                        sample.RunnerOs,
+                        sample.TestId,
+                        sample.FullyQualifiedName,
+                        sample.DisplayName))
                     .SelectMany(static group => group
                         .OrderByDescending(static sample => sample.TimestampUtc)
                         .ThenByDescending(static sample => sample.RunAttempt)
@@ -543,9 +562,6 @@ internal sealed class GitHubActionsHistorySample
     public long DurationTicks { get; set; }
 
     public bool IsFlaky { get; set; }
-
-    internal string GetIdentity()
-        => $"{AssemblyName}\0{TargetFramework}\0{Architecture}\0{RunnerOs}\0{TestId}\0{FullyQualifiedName}\0{DisplayName}";
 
     internal string GetRunIdentity()
         => RoslynString.IsNullOrWhiteSpace(RunId)

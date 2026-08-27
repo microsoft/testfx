@@ -113,7 +113,7 @@ public static class GitHubActionsExtensions
     }
 
     private static GitHubActionsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
-       => new(
+        => new(
            serviceProvider.GetCommandLineOptions(),
            serviceProvider.GetEnvironment(),
            serviceProvider.GetClock(),

@@ -139,6 +139,40 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public void AggregateStats_RequiresMatchingTargetFrameworkArchitectureAndRunnerOs()
+    {
+        GitHubActionsHistorySample matching = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Passed, Now);
+        GitHubActionsHistorySample otherFramework = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Failed, Now);
+        otherFramework.TargetFramework = "net9.0";
+        GitHubActionsHistorySample otherArchitecture = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Failed, Now);
+        otherArchitecture.Architecture = "arm64";
+        GitHubActionsHistorySample otherRunner = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Failed, Now);
+        otherRunner.RunnerOs = "Linux";
+        var snapshot = new GitHubActionsHistorySnapshot
+        {
+            Samples = [matching, otherFramework, otherArchitecture, otherRunner],
+        };
+
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Flaky"];
+
+        Assert.AreEqual(1, stats.PassCount);
+        Assert.AreEqual(0, stats.FailCount);
+    }
+
+    [TestMethod]
+    public void AggregateStats_MatchesArchitectureAndRunnerOsCaseInsensitively()
+    {
+        GitHubActionsHistorySample sample = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Passed, Now);
+        sample.Architecture = "X64";
+        sample.RunnerOs = "WINDOWS";
+        var snapshot = new GitHubActionsHistorySnapshot { Samples = [sample] };
+
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Flaky"];
+
+        Assert.AreEqual(1, stats.PassCount);
+    }
+
+    [TestMethod]
     public void AggregateStats_CountsFlakyRuns()
     {
         GitHubActionsHistorySample sample = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Passed, Now);

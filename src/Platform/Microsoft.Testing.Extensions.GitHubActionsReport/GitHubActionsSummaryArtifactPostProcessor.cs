@@ -297,13 +297,19 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
     private static CiRunSummaryHistoryTest[] MergeRetryHistoryTests(IReadOnlyList<CiRunSummaryModule> modules)
     {
-        var latestByTest = new Dictionary<string, CiRunSummaryHistoryTest>(StringComparer.Ordinal);
-        var previouslyFailed = new HashSet<string>(StringComparer.Ordinal);
+        var latestByTest = new Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), CiRunSummaryHistoryTest>();
+        var previouslyFailed = new HashSet<(string TestId, string FullyQualifiedName, string DisplayName)>();
         foreach (CiRunSummaryModule module in modules.OrderBy(static module => module.AttemptNumber))
         {
             foreach (CiRunSummaryHistoryTest test in module.HistoryTests)
             {
-                string identity = $"{test.TestId}\0{test.FullyQualifiedName}\0{test.DisplayName}";
+                (string TestId, string FullyQualifiedName, string DisplayName) identity =
+                    (test.TestId, test.FullyQualifiedName, test.DisplayName);
+                if (latestByTest.Count >= GitHubActionsHistoryStore.MaxTotalSamples && !latestByTest.ContainsKey(identity))
+                {
+                    continue;
+                }
+
                 bool recovered = test.Outcome == GitHubActionsHistoryOutcome.Passed && previouslyFailed.Contains(identity);
                 latestByTest[identity] = new CiRunSummaryHistoryTest
                 {
