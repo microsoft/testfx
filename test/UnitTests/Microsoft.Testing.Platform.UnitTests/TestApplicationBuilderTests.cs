@@ -162,7 +162,7 @@ public sealed class TestApplicationBuilderTests
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(1));
         bool? wasCanceled = null;
 
-        bool finalized = await TryFinalizeControllerExtensionAsync(
+        bool finalized = await TryRunControllerExtensionAsync(
             token =>
             {
                 wasCanceled = token.IsCancellationRequested;
@@ -178,13 +178,23 @@ public sealed class TestApplicationBuilderTests
     public async Task TestHostControllerProcessLifetimeHandler_FinalizationIsBounded()
     {
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMilliseconds(100));
-        TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using ManualResetEventSlim releaseFinalization = new(initialState: false);
+        try
+        {
+            bool finalized = await TryRunControllerExtensionAsync(
+                _ =>
+                {
+                    releaseFinalization.Wait(CancellationToken.None);
+                    return Task.CompletedTask;
+                },
+                cancellationTokenSource.Token);
 
-        bool finalized = await TryFinalizeControllerExtensionAsync(
-            _ => neverCompletes.Task,
-            cancellationTokenSource.Token);
-
-        Assert.IsFalse(finalized);
+            Assert.IsFalse(finalized);
+        }
+        finally
+        {
+            releaseFinalization.Set();
+        }
     }
 
     [DataRow(true)]
@@ -253,16 +263,16 @@ public sealed class TestApplicationBuilderTests
         Assert.AreEqual(CompositeExtensionFactory<InvalidComposition>.ValidateCompositionErrorMessage, invalidOperationException.Message);
     }
 
-    private static Task<bool> TryFinalizeControllerExtensionAsync(
+    private static Task<bool> TryRunControllerExtensionAsync(
         Func<CancellationToken, Task> finalization,
         CancellationToken cancellationToken)
     {
         MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
-            "TryFinalizeControllerExtensionAsync",
+            "TryRunControllerExtensionAsync",
             BindingFlags.NonPublic | BindingFlags.Static)
-            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TryFinalizeControllerExtensionAsync.");
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TryRunControllerExtensionAsync.");
         return (Task<bool>?)method.Invoke(null, [finalization, cancellationToken])
-            ?? throw new InvalidOperationException("TestHostControllersTestHost.TryFinalizeControllerExtensionAsync returned null.");
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.TryRunControllerExtensionAsync returned null.");
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]

@@ -41,7 +41,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     private int? _testHostUnfilteredExitCodeReceived;
 
     private int? _testHostPID;
-    private bool _skipLifetimeHandlerDisposal;
+    private bool _controllerFinalizationTimedOut;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
