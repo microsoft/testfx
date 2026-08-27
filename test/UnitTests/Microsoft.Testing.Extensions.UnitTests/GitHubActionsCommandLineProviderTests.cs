@@ -90,6 +90,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow("0")]
     [DataRow("91")]
     [DataRow("1.5")]
+    [DataRow("-1")]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryWindowIsOutOfRangeAsync(string value)
     {
         GitHubActionsCommandLineProvider provider = new();
