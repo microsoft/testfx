@@ -148,6 +148,9 @@ public sealed class UnitTest1
         string? tempDirectory = TestContext.TestTempDirectory;
         Assert.IsNotNull(tempDirectory);
         Assert.IsTrue(Directory.Exists(tempDirectory));
+        string writeCheckPath = Path.Combine(tempDirectory, "write-check.txt");
+        File.WriteAllText(writeCheckPath, "data");
+        Assert.AreEqual("data", File.ReadAllText(writeCheckPath));
         Assert.AreEqual(4, 2 + 2);
     }
 
