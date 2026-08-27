@@ -59,7 +59,11 @@ internal sealed class PassiveNode : IDisposable
             await _logger.LogTraceAsync(message.ToString()).ConfigureAwait(false);
         }
 
-        var requestMessage = (RequestMessage)message;
+        if (message is not RequestMessage requestMessage)
+        {
+            return false;
+        }
+
         if (requestMessage.Method != JsonRpcMethods.Initialize)
         {
             await SendErrorAsync(

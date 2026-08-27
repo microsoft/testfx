@@ -56,6 +56,21 @@ public sealed class PassiveNodeTests
         Assert.AreEqual(ErrorCodes.ServerNotInitialized, error.ErrorCode);
     }
 
+    [DataRow(true)]
+    [DataRow(false)]
+    [TestMethod]
+    public async Task ConnectAsync_RejectsNonRequestInitialMessage(bool isNotification)
+    {
+        RpcMessage message = isNotification
+            ? new NotificationMessage(JsonRpcMethods.Exit, Params: null)
+            : new ResponseMessage(1, Result: null);
+        TestMessageHandler handler = new(message);
+        using PassiveNode node = CreatePassiveNode(handler);
+
+        Assert.IsFalse(await node.ConnectAsync());
+        Assert.IsNull(handler.WrittenMessage);
+    }
+
     private static PassiveNode CreatePassiveNode(TestMessageHandler handler)
     {
         var cancellationTokenSource = new Mock<ITestApplicationCancellationTokenSource>();
