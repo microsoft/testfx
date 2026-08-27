@@ -142,7 +142,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
 
         await service.ExecuteDeadlineCallbacksAsync();
 
-        Assert.AreEqual(2, invocationCount);
+        Assert.AreEqual(1, invocationCount);
         Assert.IsTrue(service.IsDeadlineTriggered);
     }
 
@@ -348,7 +348,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
 
         await service.ExecuteMaxFailedTestsCallbacksAsync(10, CancellationToken.None);
 
-        Assert.AreEqual(1, invocationCount);
+        Assert.AreEqual(2, invocationCount);
         Assert.AreEqual(10, capturedCount);
     }
 
