@@ -420,12 +420,16 @@ internal sealed partial class Json
 
     private static bool TryGetRpcId(JsonElement jsonElement, out int id, out string? stringId)
     {
-        if (!jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement)
-            || idElement.ValueKind == JsonValueKind.Null)
+        if (!jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement))
         {
             id = default;
             stringId = null;
             return false;
+        }
+
+        if (idElement.ValueKind == JsonValueKind.Null)
+        {
+            throw new MessageFormatException($"'{JsonRpcStrings.Id}' field cannot be null");
         }
 
         stringId = idElement.ValueKind == JsonValueKind.String ? idElement.GetString() : null;

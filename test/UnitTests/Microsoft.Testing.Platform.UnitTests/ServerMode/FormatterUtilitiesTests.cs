@@ -210,19 +210,15 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
-    public void NullRequestId_IsTreatedAsNotification()
-    {
-        RpcMessage message = Deserialize<RpcMessage>(
+    public void NullRequestId_IsRejected()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
             """
             {
                 "jsonrpc": "2.0",
                 "id": null,
                 "method": "testing/unknown"
             }
-            """);
-
-        Assert.IsInstanceOfType<NotificationMessage>(message);
-    }
+            """));
 
     [TestMethod]
     public void DeserializeInitializeRequest_NullProtocolVersions_UsesLegacyNegotiation()

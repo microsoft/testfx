@@ -136,12 +136,16 @@ internal static partial class SerializerUtilities
             if (properties.TryGetValue(JsonRpcStrings.Method, out object? methodObj) && methodObj is not null)
             {
                 string method = (string)methodObj;
-                object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
+                bool hasId = properties.TryGetValue(JsonRpcStrings.Id, out object? idObj);
+                if (hasId && idObj is null)
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.Id}' field cannot be null");
+                }
 
                 // Keep the params as the raw dictionary; the client decodes it based on the method name.
                 object? @params = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Params);
 
-                int? id = idObj is null
+                int? id = !hasId
                     ? null
                     : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
