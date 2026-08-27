@@ -185,10 +185,14 @@ what the client supports and limit functionality based on unsupported features.
 > Since the capabilities are fetched by sending an RPC request to a started executable, these can only be queried by the client after
 > the project was successfully built.
 
-The `initialize` request MUST be the first request sent on a connection. Before initialization completes,
-the server rejects requests with `ServerNotInitialized` (`-32002`) and ignores notifications other than
-`exit` and `$/cancelRequest`. A second `initialize` request on an initialized connection is rejected with `InvalidRequest`
-(`-32600`). If initialization fails, the client may correct the request and try again.
+The `initialize` request MUST be the first request sent on a connection:
+
+- Before `initialize` is received, requests are rejected with `ServerNotInitialized` (`-32002`) and
+  notifications other than `exit` and `$/cancelRequest` are ignored.
+- While initialization is in progress, non-initialize requests wait for it to complete. A second
+  `initialize` request is rejected with `InvalidRequest` (`-32600`).
+- After initialization succeeds, normal requests are processed and another `initialize` request is rejected.
+  If initialization fails, the client may correct the request and try again.
 
 ### Determine capabilities during test runner initialization
 

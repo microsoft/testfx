@@ -225,6 +225,11 @@ internal static partial class SerializerUtilities
             {
                 string uid = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.Uid);
                 string displayName = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.DisplayName);
+                if (RoslynString.IsNullOrWhiteSpace(uid))
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.Uid}' field cannot be empty or whitespace");
+                }
+
                 PropertyBag propertyBag = new();
 
                 if (properties.TryGetValue("location.file", out object? location_file))

@@ -279,6 +279,10 @@ internal sealed partial class Json
                     ?? throw new MessageFormatException($"'{JsonRpcStrings.Uid}' field cannot be null");
                 string displayName = json.Bind<string>(properties, JsonRpcStrings.DisplayName)
                     ?? throw new MessageFormatException($"'{JsonRpcStrings.DisplayName}' field cannot be null");
+                if (RoslynString.IsNullOrWhiteSpace(uid))
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.Uid}' field cannot be empty or whitespace");
+                }
 
                 if (json.TryBind(properties, out string? locationFile, "location.file"))
                 {
