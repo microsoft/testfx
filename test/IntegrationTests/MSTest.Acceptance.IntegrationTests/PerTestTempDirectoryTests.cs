@@ -58,8 +58,10 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
             Assert.IsTrue(File.Exists(Path.Combine(failingPath, "artifact.txt")), "Failing test artifact should be retained for inspection.");
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                UnixFileMode expectedMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
-                Assert.AreEqual(expectedMode, File.GetUnixFileMode(failingPath), "Test temp directories must be accessible only to their owner.");
+                UnixFileMode groupOrOtherPermissions =
+                    UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+                    UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+                Assert.AreEqual(UnixFileMode.None, File.GetUnixFileMode(failingPath) & groupOrOtherPermissions, "Test temp directories must be accessible only to their owner.");
             }
         }
         finally

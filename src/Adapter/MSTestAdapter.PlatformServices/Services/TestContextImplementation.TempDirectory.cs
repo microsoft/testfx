@@ -26,12 +26,9 @@ internal sealed partial class TestContextImplementation
     /// </summary>
     private const int TestTempDirectoryNameMinLength = 8;
 
+#if !NET7_0_OR_GREATER
     private const uint TestTempDirectoryUnixCreateMode = 0x1C0;
 
-#if NET7_0_OR_GREATER
-    [LibraryImport("libc", EntryPoint = "mkdir", StringMarshalling = StringMarshalling.Utf8, SetLastError = true)]
-    private static partial int MkDir(string path, uint mode);
-#else
     [DllImport("libc", EntryPoint = "mkdir", SetLastError = true)]
     private static extern int MkDir([In] byte[] path, uint mode);
 #endif
@@ -158,7 +155,7 @@ internal sealed partial class TestContextImplementation
             nameBudget = available < 0 ? 0 : Math.Min(available, TestTempDirectoryNameMaxLength);
         }
 
-        if (TryCreateTestTempDirectoryUnder(baseDirectory, nameBudget, baseIsTemp, out string created))
+        if (TryCreateTestTempDirectoryUnder(baseDirectory, nameBudget, out string created))
         {
             return created;
         }
@@ -172,7 +169,7 @@ internal sealed partial class TestContextImplementation
             int tempBudget = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? Math.Max(0, Math.Min(ComputeReadableNameBudget(tempBase), TestTempDirectoryNameMaxLength))
                 : TestTempDirectoryNameMaxLength;
-            if (TryCreateTestTempDirectoryUnder(tempBase, tempBudget, baseIsSystemTemp: true, out created))
+            if (TryCreateTestTempDirectoryUnder(tempBase, tempBudget, out created))
             {
                 return created;
             }
@@ -180,13 +177,6 @@ internal sealed partial class TestContextImplementation
 
         // Could not create anywhere with a readable name; make one last attempt under the system
         // temp directory and let any exception surface as a genuine error.
-#if NET7_0_OR_GREATER
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return Directory.CreateTempSubdirectory().FullName;
-        }
-#endif
-
         string fallback = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         CreateDirectoryWithRestrictedPermissions(fallback);
         return fallback;
@@ -197,26 +187,9 @@ internal sealed partial class TestContextImplementation
     /// Returns <see langword="false"/> (rather than throwing) when the base directory cannot be
     /// written to, so the caller can fall back to another location.
     /// </summary>
-    private bool TryCreateTestTempDirectoryUnder(string baseDirectory, int nameBudget, bool baseIsSystemTemp, out string createdPath)
+    private bool TryCreateTestTempDirectoryUnder(string baseDirectory, int nameBudget, out string createdPath)
     {
         string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource(), nameBudget);
-
-#if NET7_0_OR_GREATER
-        if (baseIsSystemTemp && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            try
-            {
-                string? prefix = namePart.Length == 0 ? null : $"{namePart}_";
-                createdPath = Directory.CreateTempSubdirectory(prefix).FullName;
-                return true;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
-            {
-                createdPath = string.Empty;
-                return false;
-            }
-        }
-#endif
 
         // The suffix is a full 128-bit GUID, so two contexts choosing the same directory name is
         // cryptographically negligible. Exists + CreateDirectory is not an atomic exclusive create,
@@ -258,20 +231,18 @@ internal sealed partial class TestContextImplementation
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
 #if NET7_0_OR_GREATER
-            int result = MkDir(path, TestTempDirectoryUnixCreateMode);
+            Directory.CreateDirectory(
+                path,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 #else
             byte[] nullTerminatedUtf8Path = System.Text.Encoding.UTF8.GetBytes(path + "\0");
             int result = MkDir(nullTerminatedUtf8Path, TestTempDirectoryUnixCreateMode);
-#endif
             if (result != 0)
             {
-#if NET7_0_OR_GREATER
-                int error = Marshal.GetLastPInvokeError();
-#else
                 int error = Marshal.GetLastWin32Error();
-#endif
                 throw new IOException($"Could not create test temporary directory '{path}'.", new System.ComponentModel.Win32Exception(error));
             }
+#endif
 
             return;
         }
