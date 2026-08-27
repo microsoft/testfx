@@ -577,6 +577,26 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_UnknownOptionWithCloseHiddenOption_DoesNotSuggestOption()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["--hiddden"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("hidden", isHidden: true),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--hiddden'", result.ErrorMessage);
+        Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("--report-azdo", "Microsoft.Testing.Extensions.AzureDevOpsReport")]
     [DataRow("--coverage-output-format", "Microsoft.Testing.Extensions.CodeCoverage")]
     [DataRow("--crashdump-type", "Microsoft.Testing.Extensions.CrashDump")]
@@ -954,7 +974,7 @@ public sealed class CommandLineHandlerTests
     }
 #pragma warning restore TPEXP
 
-    private sealed class ExtensionCommandLineProviderMockValidConfiguration(string optionName) : ICommandLineOptionsProvider
+    private sealed class ExtensionCommandLineProviderMockValidConfiguration(string optionName, bool isHidden = false) : ICommandLineOptionsProvider
     {
         public string Uid => nameof(ExtensionCommandLineProviderMockValidConfiguration);
 
@@ -967,7 +987,7 @@ public sealed class CommandLineHandlerTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)];
+            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden)];
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
             => ValidationResult.ValidTask;
