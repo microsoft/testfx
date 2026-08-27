@@ -195,15 +195,8 @@ public class TempDirectory : IDisposable
         string? subDirectory,
         bool recreateExisting = false)
     {
-        if (string.IsNullOrWhiteSpace(directoryName)
-            || System.IO.Path.IsPathRooted(directoryName)
-            || directoryName is "." or ".."
-            || directoryName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
-        {
-            throw new ArgumentException("Directory name must be a single relative directory segment.", nameof(directoryName));
-        }
-
-        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, directoryName);
+        string safeDirectoryName = ValidateDirectoryName(directoryName);
+        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, safeDirectoryName);
         if (recreateExisting && Directory.Exists(directoryPath))
         {
             Directory.Delete(directoryPath, recursive: true);
@@ -305,9 +298,10 @@ public class TempDirectory : IDisposable
 
     private static FileStream AcquireStableDirectoryLock(string stableDirectoryName)
     {
+        string safeDirectoryName = ValidateDirectoryName(stableDirectoryName);
         string lockDirectory = System.IO.Path.Combine(TestSuiteDirectory, ".locks");
         Directory.CreateDirectory(lockDirectory);
-        string lockPath = System.IO.Path.Combine(lockDirectory, stableDirectoryName + ".lock");
+        string lockPath = System.IO.Path.Combine(lockDirectory, safeDirectoryName + ".lock");
         DateTime timeout = DateTime.UtcNow.AddMinutes(5);
 
         while (true)
@@ -322,6 +316,14 @@ public class TempDirectory : IDisposable
             }
         }
     }
+
+    private static string ValidateDirectoryName(string directoryName)
+        => string.IsNullOrWhiteSpace(directoryName)
+            || System.IO.Path.IsPathRooted(directoryName)
+            || directoryName is "." or ".."
+            || directoryName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0
+                ? throw new ArgumentException("Directory name must be a single relative directory segment.", nameof(directoryName))
+                : System.IO.Path.GetFileName(directoryName);
 
     public override string ToString() => Path;
 }
