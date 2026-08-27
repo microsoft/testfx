@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file.</source>
-        <target state="new">The baseline TRX file.</target>
+        <target state="translated">Fichier TRX de référence.</target>
         <note>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highlights differences between 2 TRX reports.</source>
-        <target state="new">This tool allows to compare and highlights differences between 2 TRX reports.</target>
+        <target state="translated">Cet outil permet de comparer et met en surbrillance les différences entre 2 rapports TRX.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline.</source>
-        <target state="new">The TRX file to compare with the baseline.</target>
+        <target state="translated">Fichier TRX à comparer à la ligne de base.</target>
         <note>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
         <source>Merges multiple TRX files into one from the command line.</source>
-        <target state="new">Merges multiple TRX files into one from the command line.</target>
+        <target state="translated">Permet de fusionner plusieurs fichiers TRX en un seul depuis la ligne de commande.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths.</source>
-        <target state="new">Two or more input TRX file paths.</target>
+        <target state="translated">Deux chemins d’accès ou plus vers des fichiers TRX d’entrée.</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path.</source>
-        <target state="new">The output TRX file path.</target>
+        <target state="translated">Le chemin d’accès vers le fichier TRX de sortie.</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
@@ -126,9 +126,9 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: 'MyReport_{tfm}.trx'.</source>
-        <target state="new">The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: 'MyReport_{tfm}.trx'.</target>
+        <target state="translated">Le nom du rapport TRX généré. Peut inclure un chemin d’accès relatif ou absolu. Les chemins relatifs sont résolus sur le répertoire des résultats des tests et les répertoires manquants sont créés.
+Permet de prendre en charge les espaces réservés suivants: {pname} (nom de l’application de test), {pid} (ID de processus), {asm} (nom de l’assembly d’entrée), {tfm} (moniker de framework cible), {arch} (architecture du processus), {time} (horodateur).
+Exemple : 'MyReport_{tfm}.trx'.</target>
         <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
@@ -158,7 +158,7 @@ Example: 'MyReport_{tfm}.trx'.</target>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
         <source>Produce a TRX report for the current test session.</source>
-        <target state="new">Produce a TRX report for the current test session.</target>
+        <target state="translated">Produire un rapport TRX pour la session de test actuelle.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">
@@ -178,7 +178,7 @@ Example: 'MyReport_{tfm}.trx'.</target>
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report.</source>
-        <target state="new">Enable generating TRX report.</target>
+        <target state="translated">Activer la génération du rapport TRX.</target>
         <note>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

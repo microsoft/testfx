@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="new">At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</target>
+        <target state="translated">至少需要一个 GitHub Actions 作业摘要部分。有效值为 'test-results'、'slow-tests'、'coverage' 或 'all'。</target>
         <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
@@ -169,12 +169,12 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="new">Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</target>
+        <target state="translated">GitHub Actions 作业摘要部分“{0}”无效。有效值为 'test-results'、'slow-tests'、'coverage' 或 'all'。值可以重复、用空格分隔或用逗号分隔。</target>
         <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</target>
+        <target state="translated">值“{0}”无效。有效值为 'on' (或 'true'、'enable'、'1')、'off' (或 'false'、'disable'、'0') 或 'on-failure'。</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
@@ -239,7 +239,7 @@
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="new">Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</target>
+        <target state="translated">选择要包含在 GitHub Actions 作业摘要中的内容。指定一个或多个值，可重复、用空格分隔或用逗号分隔: 'test-results'、'slow-tests'、'coverage' 或 'all'。默认为 'all'。需要 '--report-gh'。</target>
         <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">

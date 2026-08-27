@@ -1379,17 +1379,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
-        <target state="needs-review-translation">Testovací metody, které používají 'File.Exists' k přeskočení testu před spuštěním stejného spustitelného souboru s 'Process.Start', by místo toho měly používat atribut '[ExecutableCondition]'. Tento atribut poskytuje deklarativní a snadno zjistitelný požadavek na nástroj a hlásí předčasný návrat jako přeskočený test, nikoli jako úspěšný test.</target>
+        <target state="translated">Testovací metody, které používají 'File.Exists' k přeskočení testu před spuštěním stejného spustitelného souboru s 'Process.Start', by místo toho měly používat atribut '[ExecutableCondition]'. Tento atribut poskytuje deklarativní a snadno zjistitelný požadavek na nástroj a hlásí předčasný návrat jako přeskočený test, nikoli jako úspěšný test.</target>
         <note>{Locked="File.Exists"}{Locked="Process.Start"}{Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
-        <target state="needs-review-translation">Před spuštěním použijte atribut '[ExecutableCondition]' namísto kontroly spustitelného souboru {0}</target>
+        <target state="translated">Před spuštěním použijte atribut '[ExecutableCondition]' namísto kontroly spustitelného souboru {0}</target>
         <note>{0} is the executable path. {Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
-        <target state="needs-review-translation">Použít atribut '[ExecutableCondition]' namísto kontrol 'File.Exists' před 'Process.Start'</target>
+        <target state="translated">Použít atribut '[ExecutableCondition]' namísto kontrol 'File.Exists' před 'Process.Start'</target>
         <note>{Locked="[ExecutableCondition]"}{Locked="File.Exists"}{Locked="Process.Start"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

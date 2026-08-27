@@ -239,7 +239,7 @@
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="new">Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</target>
+        <target state="translated">GitHub Actions ジョブの要約に含めるコンテンツを選択します。'test-results'、'slow-tests'、'coverage'、または 'all' の値を、繰り返し、スペース区切り、またはコンマ区切りで 1 つ以上指定してください。既定値は 'all' です。'--report-gh' が必要です。</target>
         <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">

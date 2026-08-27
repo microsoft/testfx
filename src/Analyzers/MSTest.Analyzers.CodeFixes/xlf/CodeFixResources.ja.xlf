@@ -214,7 +214,7 @@
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckFix">
         <source>Use '[ExecutableCondition]' attribute</source>
-        <target state="needs-review-translation">'[ExecutableCondition]' 属性を使用する</target>
+        <target state="translated">'[ExecutableCondition]' 属性を使用する</target>
         <note>{Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
