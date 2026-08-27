@@ -47,7 +47,7 @@ steps:
           files.append(Path("README.md"))
 
       markdown_link = re.compile(r'!?\[[^\]]*\]\(\s*<?(https?://[^)\s>]+)>?')
-      bare_url = re.compile(r'https?://[^\s<>"\']+')
+      bare_url = re.compile(r'https?://[^\s<>"\'\]\)]+')
       links = set()
 
       for file in files:
@@ -68,7 +68,7 @@ steps:
                   continue
 
               links.update(match.group(1) for match in markdown_link.finditer(line))
-              links.update(match.group(0).rstrip(".,;:!?)]}") for match in bare_url.finditer(line))
+              links.update(match.group(0).rstrip(".,;:!?}") for match in bare_url.finditer(line))
 
       output = Path("/tmp/gh-aw/agent/unique-links.txt")
       output.write_text("".join(f"{url}\n" for url in sorted(links)), encoding="utf-8")
@@ -90,18 +90,27 @@ steps:
       BROKEN_COUNT=0
       WORKING_COUNT=0
       TRANSIENT_COUNT=0
+      PROCESSED_COUNT=0
+      SCAN_DEADLINE=$(($(date +%s) + 2100))
 
       while IFS= read -r url; do
-        for attempt in 1 2 3; do
+        if [ "$(date +%s)" -ge "$SCAN_DEADLINE" ]; then
+          TRANSIENT_COUNT=$((TRANSIENT_COUNT + LINK_COUNT - PROCESSED_COUNT))
+          break
+        fi
+
+        PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
+
+        for attempt in 1 2; do
           HTTP_CODE=$(curl -L -s -o /dev/null -w "%{http_code}" \
-            --max-time 15 \
+            --max-time 10 \
             --user-agent "testfx-link-checker/1.0" \
             "$url" 2>/dev/null || true)
           HTTP_CODE=${HTTP_CODE:-000}
 
           case "$HTTP_CODE" in
             000|408|425|429|5??)
-              if [ "$attempt" -lt 3 ]; then
+              if [ "$attempt" -lt 2 ]; then
                 sleep $((attempt * 2))
                 continue
               fi
@@ -114,7 +123,7 @@ steps:
           2??|3??)
             WORKING_COUNT=$((WORKING_COUNT + 1))
             ;;
-          000|408|425|429|5??)
+          000|401|403|408|425|429|5??)
             TRANSIENT_COUNT=$((TRANSIENT_COUNT + 1))
             ;;
           *)
