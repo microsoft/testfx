@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
@@ -22,7 +22,7 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 [UnsupportedOSPlatform("ios")]
 [UnsupportedOSPlatform("tvos")]
 [UnsupportedOSPlatform("wasi")]
-internal sealed partial class FfmpegVideoRecorder
+internal sealed partial class FfmpegVideoRecorder : IVideoRecorder
 {
     private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(15);
 
