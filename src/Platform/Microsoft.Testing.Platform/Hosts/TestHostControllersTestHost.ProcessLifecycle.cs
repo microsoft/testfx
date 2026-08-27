@@ -232,6 +232,28 @@ internal sealed partial class TestHostControllersTestHost
             _controllerFinalizationTimedOut = true;
         }
 
+        if (testExecutionCanceled && !applicationCancellationToken.IsCancellationRequested)
+        {
+            // The child owns timeout cancellation and reported an aborted exit. Report that state explicitly
+            // after controller extensions have finalized, without canceling their independent cleanup token.
+            await ServiceProvider.GetRequiredService<IStopPoliciesService>().ExecuteAbortCallbacksAsync().ConfigureAwait(false);
+        }
+
+        bool outputConsumerStillRunning = messageBusProxy.ConsumersStillRunning.Any(
+            consumer => ReferenceEquals(consumer, outputDevice.OriginalOutputDevice));
+        if (!_controllerFinalizationTimedOut && !outputConsumerStillRunning)
+        {
+            try
+            {
+                await outputDevice.DisplayAfterSessionEndRunAsync(postExecutionCancellationToken)
+                    .WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (finalizationCancellationTokenSource?.IsCancellationRequested is true)
+            {
+                _controllerFinalizationTimedOut = true;
+            }
+        }
+
         if (_controllerFinalizationTimedOut)
         {
             // DisableCoreAsync observes cancellation arriving during its normal unbounded wait and
@@ -241,15 +263,6 @@ internal sealed partial class TestHostControllersTestHost
             await _logger.LogWarningAsync(
                 $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
         }
-
-        if (testExecutionCanceled && !applicationCancellationToken.IsCancellationRequested)
-        {
-            // The child owns timeout cancellation and reported an aborted exit. Report that state explicitly
-            // after controller extensions have finalized, without canceling their independent cleanup token.
-            await ServiceProvider.GetRequiredService<IStopPoliciesService>().ExecuteAbortCallbacksAsync().ConfigureAwait(false);
-        }
-
-        await outputDevice.DisplayAfterSessionEndRunAsync(postExecutionCancellationToken).ConfigureAwait(false);
 
         string? extensionInformation = null;
         // We collect info about the extensions before the dispose to avoid possible issue with cleanup.

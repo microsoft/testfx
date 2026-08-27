@@ -159,7 +159,7 @@ public sealed class TestApplicationBuilderTests
     [TestMethod]
     public async Task TestHostControllerProcessLifetimeHandler_FinalizationTokenStartsUncanceled()
     {
-        using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(1));
+        using CancellationTokenSource cancellationTokenSource = new();
         bool? wasCanceled = null;
 
         bool finalized = await TryRunControllerExtensionAsync(

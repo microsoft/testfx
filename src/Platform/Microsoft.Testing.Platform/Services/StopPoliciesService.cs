@@ -31,6 +31,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
 #endif
     private readonly List<Func<Task>> _deadlineCallbacks = [];
     private Func<Task<bool>>? _deadlineStopFallback;
+    private Task? _abortCallbacksTask;
 
     // Whether the callbacks have run. This is the one-shot gate and it is never cleared: once the callbacks
     // have run, a second trigger must not run them again and a late registration must be invoked on the spot.
@@ -120,22 +121,30 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
         }
     }
 
-    public async Task ExecuteAbortCallbacksAsync()
+    public Task ExecuteAbortCallbacksAsync()
     {
         Func<Task>[] callbacks;
         lock (_abortLock)
         {
-            if (_areAbortCallbacksExecuted)
+            if (_abortCallbacksTask is not null)
             {
-                return;
+                return _abortCallbacksTask;
             }
 
             _areAbortCallbacksExecuted = true;
             IsAbortTriggered = true;
             callbacks = [.. _abortCallbacks];
             _abortCallbacks.Clear();
+            _abortCallbacksTask = ExecuteAbortCallbacksCoreAsync(callbacks);
+            return _abortCallbacksTask;
         }
+    }
 
+    private static async Task ExecuteAbortCallbacksCoreAsync(Func<Task>[] callbacks)
+    {
+        // The shared task is published while the lock is held. Yield before invoking arbitrary callbacks so
+        // callback code can register other policies without running under the lock or racing task publication.
+        await Task.Yield();
         foreach (Func<Task> callback in callbacks)
         {
             // For now, we are fine if the callback crashed us. It shouldn't happen for our

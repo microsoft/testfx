@@ -361,7 +361,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 results.Add(enumerator.Current);
             }
 
-            await _logger.LogInformationAsync($"Recovered {results.Count} test result(s) from TRX streaming sidecar after test host crash.").ConfigureAwait(false);
+            await _logger.LogInformationAsync($"Recovered {results.Count} test result(s) from TRX streaming sidecar after test host termination.").ConfigureAwait(false);
             return results;
         }
         catch (Exception ex)

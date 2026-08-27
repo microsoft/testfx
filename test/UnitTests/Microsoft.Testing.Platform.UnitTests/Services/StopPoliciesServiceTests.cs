@@ -310,6 +310,29 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ExecuteAbortCallbacksAsync_WhenCalledConcurrently_ReturnsSharedTask()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        TaskCompletionSource<bool> callbackStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseCallback = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        await service.RegisterOnAbortCallbackAsync(async () =>
+        {
+            callbackStarted.SetResult(true);
+            await releaseCallback.Task;
+        });
+
+        Task firstExecution = service.ExecuteAbortCallbacksAsync();
+        await callbackStarted.Task;
+        Task secondExecution = service.ExecuteAbortCallbacksAsync();
+
+        Assert.AreSame(firstExecution, secondExecution);
+        Assert.IsFalse(secondExecution.IsCompleted);
+
+        releaseCallback.SetResult(true);
+        await Task.WhenAll(firstExecution, secondExecution);
+    }
+
+    [TestMethod]
     public async Task RegisterOnMaxFailedTestsCallbackAsync_ThrowsIfNotTestHost()
     {
         foreach (TestProcessRole? processRole in new TestProcessRole?[] { null, TestProcessRole.TestHostController })
