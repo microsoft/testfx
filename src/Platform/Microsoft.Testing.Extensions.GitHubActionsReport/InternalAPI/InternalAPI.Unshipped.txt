@@ -72,7 +72,11 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.FailCount.get -> int
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.FailureRate.get -> double
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.FlakyCount.get -> int
-Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.GitHubActionsHistoryStats(int passCount, int failCount, int flakyCount = 0) -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.DurationSampleCount.get -> int
+*REMOVED*Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.GitHubActionsHistoryStats(int passCount, int failCount, int flakyCount = 0) -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.GitHubActionsHistoryStats(int passCount, int failCount, int flakyCount = 0, long p95DurationTicks = 0, long p99DurationTicks = 0, int durationSampleCount = 0) -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.P95Duration.get -> System.TimeSpan
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.P99Duration.get -> System.TimeSpan
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.PassCount.get -> int
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.TotalCount.get -> int
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope
@@ -83,6 +87,7 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.Runne
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.TargetFramework.get -> string!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStore
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStore.MaxSamplesPerTest = 1000 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStore.MaxSnapshotBytes = 16777216 -> long
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStore.MaxTotalSamples = 10000 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStore.SchemaVersion = 1 -> int
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStore.AggregateStats(Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySnapshot! snapshot, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope scope) -> System.Collections.Generic.IReadOnlyDictionary<string!, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats>!
@@ -203,6 +208,7 @@ Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 override Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetErrorAnnotation(string! testName, string? explanation, System.Exception? exception, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, bool skipAssertionFrames, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation? declaredLocation = null) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetExitCodeAnnotation(int exitCode) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.FormatHistoryContext(string! failure, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats stats, int historyWindowInDays) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetSkippedAnnotation(string! testName, string? explanation, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation? declaredLocation = null) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation?
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.GetName(int exitCode) -> string!

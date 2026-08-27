@@ -238,41 +238,56 @@ internal sealed class GitHubActionsAnnotationReporter :
 
     internal string? AppendHistoryContext(string testName, string? explanation, Exception? exception)
     {
-        if (!_historyService.TryGetStats(testName, out GitHubActionsHistoryStats stats) || stats.TotalCount == 0)
+        if (!_historyService.TryGetStats(testName, out GitHubActionsHistoryStats stats)
+            || (stats.TotalCount == 0 && stats.DurationSampleCount == 0))
         {
             return explanation;
         }
 
-        string context = stats.FailCount > 0
+        string failure = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
+        return FormatHistoryContext(failure, stats, _historyService.HistoryWindowInDays);
+    }
+
+    internal static string FormatHistoryContext(
+        string failure,
+        GitHubActionsHistoryStats stats,
+        int historyWindowInDays)
+    {
+        string outcomeContext = stats.FailCount > 0
             ? string.Format(
                 CultureInfo.InvariantCulture,
                 GitHubActionsResources.HistoryFailureContext,
                 stats.FailCount,
                 stats.FlakyCount,
                 stats.TotalCount,
-                _historyService.HistoryWindowInDays)
+                historyWindowInDays)
             : stats.FlakyCount > 0
                 ? string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.HistoryFlakyContext,
                     stats.FlakyCount,
                     stats.TotalCount,
-                    _historyService.HistoryWindowInDays)
+                    historyWindowInDays)
                 : stats.TotalCount >= MinSamplesForRegressionContext
                 ? string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.HistoryRegressionContext,
                     stats.TotalCount,
-                    _historyService.HistoryWindowInDays)
+                    historyWindowInDays)
                 : string.Empty;
-        if (context.Length == 0)
-        {
-            return explanation;
-        }
-
-        string failure = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
-        return $"{failure} {context}";
+        string durationContext = stats.DurationSampleCount == 0
+            ? string.Empty
+            : string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.HistoryDurationContext,
+                FormatDuration(stats.P95Duration),
+                FormatDuration(stats.P99Duration),
+                stats.DurationSampleCount);
+        return string.Join(" ", new[] { failure, outcomeContext, durationContext }.Where(static value => value.Length > 0));
     }
+
+    private static string FormatDuration(TimeSpan duration)
+        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1}s", "{0}h {1}m {2}s");
 
     internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger, bool skipAssertionFrames, GitHubActionsSourceLocation? declaredLocation = null)
     {

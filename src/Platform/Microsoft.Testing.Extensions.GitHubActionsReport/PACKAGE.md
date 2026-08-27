@@ -61,7 +61,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mtp-test-history-${{ github.repository }}
+  group: mtp-test-history-${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && 'writer' || github.run_id }}
   cancel-in-progress: false
 
 steps:

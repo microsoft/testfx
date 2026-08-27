@@ -538,13 +538,29 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 && pending.TryGetValue(entry.Key, out PendingFailure failure))
             {
                 expanded++;
+                TestFailureDetails? failureDetails = CaptureFailureDetails(failure);
+                if (failureDetails is not null
+                    && _historyService.TryGetStats(record.FullyQualifiedName, out GitHubActionsHistoryStats historyStats)
+                    && (historyStats.TotalCount > 0 || historyStats.DurationSampleCount > 0))
+                {
+                    failureDetails = new TestFailureDetails(
+                        GitHubActionsAnnotationReporter.FormatHistoryContext(
+                            failureDetails.Message ?? GitHubActionsResources.NoFailureMessageFallback,
+                            historyStats,
+                            _historyService.HistoryWindowInDays),
+                        failureDetails.ExceptionType,
+                        failureDetails.StackTrace,
+                        failureDetails.FilePath,
+                        failureDetails.LineNumber);
+                }
+
                 record = new TestRecord(
                     record.DisplayName,
                     record.FullyQualifiedName,
                     record.Kind,
                     record.Duration,
                     record.IsFlaky,
-                    CaptureFailureDetails(failure));
+                    failureDetails);
             }
 
             snapshot.Add(record);

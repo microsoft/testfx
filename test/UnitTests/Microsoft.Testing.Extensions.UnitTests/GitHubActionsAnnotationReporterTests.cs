@@ -22,25 +22,54 @@ public sealed class GitHubActionsAnnotationReporterTests
     [TestMethod]
     public void AppendHistoryContext_AddsPriorFailureCounts()
     {
-        var environment = new Mock<IEnvironment>();
-        environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
-        var loggerFactory = new Mock<ILoggerFactory>();
-        loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
-        GitHubActionsAnnotationReporter reporter = new(
-            new TestCommandLineOptions(new Dictionary<string, string[]>
-            {
-                [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
-            }),
-            environment.Object,
-            Mock.Of<IFileSystem>(),
-            Mock.Of<IOutputDevice>(),
-            Mock.Of<ITestApplicationProcessExitCode>(),
-            loggerFactory.Object,
-            new FakeHistoryService(new GitHubActionsHistoryStats(passCount: 7, failCount: 3), historyWindowInDays: 14));
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount: 7, failCount: 3));
 
         string? message = reporter.AppendHistoryContext("Tests.Flaky", "boom", exception: null);
 
         Assert.AreEqual("boom Historical context: failed 3 and flaked 0 of 10 prior runs within the 14-day history window.", message);
+    }
+
+    [TestMethod]
+    public void AppendHistoryContext_AddsFlakyOnlyContext()
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount: 6, failCount: 0, flakyCount: 2));
+
+        string? message = reporter.AppendHistoryContext("Tests.Flaky", "boom", exception: null);
+
+        Assert.AreEqual("boom Historical context: flaked 2 of 6 prior runs within the 14-day history window.", message);
+    }
+
+    [TestMethod]
+    [DataRow(4, "boom")]
+    [DataRow(5, "boom Historical context: passed all 5 prior runs within the 14-day history window.")]
+    public void AppendHistoryContext_AppliesRegressionSampleBoundary(int passCount, string expected)
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount, failCount: 0));
+
+        string? message = reporter.AppendHistoryContext("Tests.Stable", "boom", exception: null);
+
+        Assert.AreEqual(expected, message);
+    }
+
+    [TestMethod]
+    public void AppendHistoryContext_AddsHistoricalDuration()
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(
+                passCount: 5,
+                failCount: 0,
+                p95DurationTicks: TimeSpan.FromSeconds(2).Ticks,
+                p99DurationTicks: TimeSpan.FromSeconds(3).Ticks,
+                durationSampleCount: 20));
+
+        string? message = reporter.AppendHistoryContext("Tests.Stable", "boom", exception: null);
+
+        Assert.AreEqual(
+            "boom Historical context: passed all 5 prior runs within the 14-day history window. Historical duration: p95 2.00s, p99 3.00s across 20 prior samples.",
+            message);
     }
 
     [TestMethod]
@@ -274,6 +303,25 @@ public sealed class GitHubActionsAnnotationReporterTests
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns(true);
         return fileSystem.Object;
+    }
+
+    private static GitHubActionsAnnotationReporter CreateReporter(GitHubActionsHistoryStats stats)
+    {
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        return new GitHubActionsAnnotationReporter(
+            new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            }),
+            environment.Object,
+            Mock.Of<IFileSystem>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ITestApplicationProcessExitCode>(),
+            loggerFactory.Object,
+            new FakeHistoryService(stats, historyWindowInDays: 14));
     }
 
     // Exception whose StackTrace is a caller-supplied synthetic string, letting tests exercise the

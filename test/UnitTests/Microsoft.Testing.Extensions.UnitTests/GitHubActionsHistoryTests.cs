@@ -3,6 +3,8 @@
 
 extern alias ghactions;
 
+using System.Text.Json;
+
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
@@ -194,6 +196,31 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public void AggregateStats_ComputesDurationPercentiles()
+    {
+        GitHubActionsHistorySample[] samples =
+        [
+            .. Enumerable.Range(1, 20).Select(index =>
+            {
+                GitHubActionsHistorySample sample = CreateSample(
+                    "Tests.Duration",
+                    GitHubActionsHistoryOutcome.Passed,
+                    Now.AddMinutes(index));
+                sample.RunId = index.ToString(CultureInfo.InvariantCulture);
+                sample.DurationTicks = TimeSpan.FromSeconds(index).Ticks;
+                return sample;
+            }),
+        ];
+        var snapshot = new GitHubActionsHistorySnapshot { Samples = samples };
+
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Duration"];
+
+        Assert.AreEqual(TimeSpan.FromSeconds(19), stats.P95Duration);
+        Assert.AreEqual(TimeSpan.FromSeconds(20), stats.P99Duration);
+        Assert.AreEqual(20, stats.DurationSampleCount);
+    }
+
+    [TestMethod]
     public async Task ReadAsync_ObservesCancellationBeforeWaitingForLockAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-cancelled-history-{Guid.NewGuid():N}");
@@ -210,6 +237,57 @@ public sealed class GitHubActionsHistoryTests
 
             await Assert.ThrowsExactlyAsync<OperationCanceledException>(
                 () => GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), cancellationTokenSource.Token));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAsync_RejectsOversizedFileBeforeDeserializationAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-oversized-history-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "history.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            using (FileStream stream = File.Create(path))
+            {
+                stream.SetLength(GitHubActionsHistoryStore.MaxSnapshotBytes + 1);
+            }
+
+            await Assert.ThrowsExactlyAsync<FormatException>(
+                () => GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAsync_RejectsSnapshotAboveSampleLimitAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-too-many-samples-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "history.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var snapshot = new GitHubActionsHistorySnapshot
+            {
+                Samples =
+                [
+                    .. Enumerable.Range(0, GitHubActionsHistoryStore.MaxTotalSamples + 1)
+                        .Select(index => CreateSample($"Tests.Test{index}", GitHubActionsHistoryOutcome.Passed, Now)),
+                ],
+            };
+            File.WriteAllText(
+                path,
+                JsonSerializer.Serialize(snapshot, GitHubActionsHistoryJsonContext.Default.GitHubActionsHistorySnapshot));
+
+            await Assert.ThrowsExactlyAsync<FormatException>(
+                () => GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None));
         }
         finally
         {

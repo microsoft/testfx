@@ -165,6 +165,10 @@
     <value>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</value>
     <comment>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</comment>
   </data>
+  <data name="HistoryDurationContext" xml:space="preserve">
+    <value>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</value>
+    <comment>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</comment>
+  </data>
   <data name="HistoryRegressionContext" xml:space="preserve">
     <value>Historical context: passed all {0} prior runs within the {1}-day history window.</value>
     <comment>{0} is the total prior result count, {1} is the history window in days.</comment>

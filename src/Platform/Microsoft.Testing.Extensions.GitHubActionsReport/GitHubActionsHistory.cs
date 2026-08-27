@@ -223,11 +223,20 @@ internal sealed class GitHubActionsHistoryService :
 
 internal readonly struct GitHubActionsHistoryStats
 {
-    public GitHubActionsHistoryStats(int passCount, int failCount, int flakyCount = 0)
+    public GitHubActionsHistoryStats(
+        int passCount,
+        int failCount,
+        int flakyCount = 0,
+        long p95DurationTicks = 0,
+        long p99DurationTicks = 0,
+        int durationSampleCount = 0)
     {
         PassCount = passCount;
         FailCount = failCount;
         FlakyCount = flakyCount;
+        P95Duration = TimeSpan.FromTicks(p95DurationTicks);
+        P99Duration = TimeSpan.FromTicks(p99DurationTicks);
+        DurationSampleCount = durationSampleCount;
     }
 
     public int PassCount { get; }
@@ -235,6 +244,12 @@ internal readonly struct GitHubActionsHistoryStats
     public int FailCount { get; }
 
     public int FlakyCount { get; }
+
+    public TimeSpan P95Duration { get; }
+
+    public TimeSpan P99Duration { get; }
+
+    public int DurationSampleCount { get; }
 
     public int TotalCount => PassCount + FailCount;
 
@@ -261,6 +276,7 @@ internal static class GitHubActionsHistoryStore
     internal const int SchemaVersion = 1;
     internal const int MaxSamplesPerTest = 1000;
     internal const int MaxTotalSamples = 10_000;
+    internal const long MaxSnapshotBytes = 16 * 1024 * 1024;
 
     private static readonly TimeSpan LockWaitBudget = TimeSpan.FromSeconds(30);
 
@@ -300,6 +316,12 @@ internal static class GitHubActionsHistoryStore
         }
 
         using FileStream stream = File.OpenRead(path);
+        if (stream.Length > MaxSnapshotBytes)
+        {
+            throw new FormatException(
+                $"GitHub Actions test history snapshot '{path}' exceeds the {MaxSnapshotBytes.ToString(CultureInfo.InvariantCulture)}-byte limit.");
+        }
+
         GitHubActionsHistorySnapshot? snapshot = JsonSerializer.Deserialize(stream, GitHubActionsHistoryJsonContext.Default.GitHubActionsHistorySnapshot);
         Validate(snapshot, path);
         snapshot!.Samples =
@@ -317,7 +339,13 @@ internal static class GitHubActionsHistoryStore
         GitHubActionsHistorySnapshot snapshot,
         GitHubActionsHistoryScope scope)
     {
-        var counts = new Dictionary<string, (int PassCount, int FailCount, int FlakyCount)>(StringComparer.Ordinal);
+        var counts = new Dictionary<string, (
+            int PassCount,
+            int FailCount,
+            int FlakyCount,
+            long P95DurationTicks,
+            long P99DurationTicks,
+            int DurationSampleCount)>(StringComparer.Ordinal);
         foreach (IGrouping<string, GitHubActionsHistorySample> testGroup in snapshot.Samples
             .Where(sample => sample.IsInScope(scope))
             .GroupBy(static sample => sample.FullyQualifiedName, StringComparer.Ordinal))
@@ -343,12 +371,31 @@ internal static class GitHubActionsHistoryStore
                 }
             }
 
-            counts[testGroup.Key] = (passCount, failCount, flakyCount);
+            long[] durationTicks =
+            [
+                .. testGroup
+                    .Where(static sample => sample.DurationTicks > 0)
+                    .Select(static sample => sample.DurationTicks)
+                    .OrderBy(static duration => duration),
+            ];
+            counts[testGroup.Key] = (
+                passCount,
+                failCount,
+                flakyCount,
+                ComputePercentile(durationTicks, 95),
+                ComputePercentile(durationTicks, 99),
+                durationTicks.Length);
         }
 
         return counts.ToDictionary(
             static pair => pair.Key,
-            static pair => new GitHubActionsHistoryStats(pair.Value.PassCount, pair.Value.FailCount, pair.Value.FlakyCount),
+            static pair => new GitHubActionsHistoryStats(
+                pair.Value.PassCount,
+                pair.Value.FailCount,
+                pair.Value.FlakyCount,
+                pair.Value.P95DurationTicks,
+                pair.Value.P99DurationTicks,
+                pair.Value.DurationSampleCount),
             StringComparer.Ordinal);
     }
 
@@ -459,6 +506,7 @@ internal static class GitHubActionsHistoryStore
         if (snapshot is null
             || snapshot.SchemaVersion != SchemaVersion
             || snapshot.Samples is null
+            || snapshot.Samples.Length > MaxTotalSamples
             || snapshot.Samples.Any(static sample =>
                 RoslynString.IsNullOrWhiteSpace(sample.TestId)
                 || RoslynString.IsNullOrWhiteSpace(sample.FullyQualifiedName)
@@ -513,6 +561,11 @@ internal static class GitHubActionsHistoryStore
 
     private static bool IsRetryableFileException(Exception exception)
         => exception is IOException or UnauthorizedAccessException;
+
+    private static long ComputePercentile(IReadOnlyList<long> sortedValues, int percentile)
+        => sortedValues.Count == 0
+            ? 0
+            : sortedValues[Math.Max(0, (int)Math.Ceiling(percentile / 100d * sortedValues.Count) - 1)];
 
     private static TimeSpan GetRetryDelay(int attempt)
         => TimeSpan.FromMilliseconds(Math.Min(1000, 50 * Math.Pow(2, Math.Min(attempt - 1, 5))));
