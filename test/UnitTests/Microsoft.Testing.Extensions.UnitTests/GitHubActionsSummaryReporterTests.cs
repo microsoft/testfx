@@ -154,6 +154,50 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task ReadAndAggregate_BoundsHistoryAcrossModulesAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-history-fragments-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubCiRunSummaryModule first = CreateRetryModule("session-1", attempt: 1, passed: 1, failed: 0);
+            first.ExecutionId = "first";
+            first.HistoryTests =
+            [
+                .. Enumerable.Range(0, 6_000).Select(index =>
+                    CreateHistoryTest($"first-{index}", $"Tests.First{index}", "passed")),
+            ];
+            GitHubCiRunSummaryModule second = CreateRetryModule("session-2", attempt: 1, passed: 1, failed: 0);
+            second.ExecutionId = "second";
+            second.HistoryTests =
+            [
+                .. Enumerable.Range(0, 6_000).Select(index =>
+                    CreateHistoryTest($"second-{index}", $"Tests.Second{index}", "passed")),
+            ];
+            string firstPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, first);
+            string secondPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory, GitHubSummaryPostProcessor.Provider, GitHubSummaryPostProcessor.ProviderSlug, second);
+
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [
+                    new InputArtifact(firstPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "first"),
+                    new InputArtifact(secondPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "second"),
+                ],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+            Assert.AreEqual(10_000, aggregate.Modules.Sum(module => module.HistoryTests.Length));
+            Assert.HasCount(6_000, aggregate.Modules[0].HistoryTests);
+            Assert.HasCount(4_000, aggregate.Modules[1].HistoryTests);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task SummaryPostProcessor_ForRetryAttempts_ReturnsChainableFragmentAndWritesSummary()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-summary-retry-{Guid.NewGuid():N}");

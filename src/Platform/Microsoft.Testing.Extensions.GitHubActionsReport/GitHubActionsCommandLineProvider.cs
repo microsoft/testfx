@@ -72,8 +72,8 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
 
         try
         {
-            _ = Path.GetFullPath(path);
-            return true;
+            string fullPath = Path.GetFullPath(path);
+            return !Directory.Exists(fullPath);
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {

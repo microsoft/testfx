@@ -15,6 +15,7 @@ internal static partial class CiRunSummaryAggregation
     // Additive fields such as coverage and flaky tests keep the same schema version so newer and older
     // extension versions can still aggregate each other's fragments in mixed-version test runs.
     private const int SchemaVersion = 1;
+    private const int MaxHistoryTests = 10_000;
 
     public static CiRunSummaryAggregate ReadAndAggregate(
         IReadOnlyList<InputArtifact> inputs,
@@ -23,6 +24,7 @@ internal static partial class CiRunSummaryAggregation
     {
         var modules = new List<CiRunSummaryModule>(inputs.Count);
         var identities = new HashSet<string>(StringComparer.Ordinal);
+        int remainingHistoryTests = MaxHistoryTests;
         foreach (InputArtifact input in inputs)
         {
             CiRunSummaryFragment? fragment;
@@ -40,6 +42,15 @@ internal static partial class CiRunSummaryAggregation
             }
 
             ValidateModule(fragment.Module, input, context.Mode);
+            if (fragment.Module.HistoryTests.Length > remainingHistoryTests)
+            {
+                fragment.Module.HistoryTests =
+                [
+                    .. fragment.Module.HistoryTests.Take(remainingHistoryTests),
+                ];
+            }
+
+            remainingHistoryTests -= fragment.Module.HistoryTests.Length;
             string identity = GetModuleIdentity(fragment.Module);
             if (!identities.Add(identity))
             {
@@ -112,6 +123,7 @@ internal static partial class CiRunSummaryAggregation
             || module.FlakyTests is null
             || module.SlowestTests is null
             || module.HistoryTests is null
+            || module.HistoryTests.Length > MaxHistoryTests
             || module.TopFailingClasses is null
             || module.Coverage is null
             || module.Coverage.Metrics is null

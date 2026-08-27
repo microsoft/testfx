@@ -118,6 +118,29 @@ public sealed class GitHubActionsCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryPathIsExistingDirectoryAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-history-directory-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            GitHubActionsCommandLineProvider provider = new();
+            CommandLineOption option = provider.GetCommandLineOptions().Single(
+                o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsHistory);
+
+            ValidationResult validationResult =
+                await provider.ValidateOptionArgumentsAsync(option, [directory]).ConfigureAwait(false);
+
+            Assert.IsFalse(validationResult.IsValid);
+            Assert.AreEqual(GitHubActionsResources.InvalidHistoryPath, validationResult.ErrorMessage);
+        }
+        finally
+        {
+            Directory.Delete(directory);
+        }
+    }
+
+    [TestMethod]
     [DataRow("1")]
     [DataRow("30")]
     [DataRow("90")]
