@@ -498,7 +498,8 @@
         "uri",
         "producer",
         "type",
-        "display-name"
+        "display-name",
+        "description"
       ],
       "properties": {
         "uri": {
@@ -587,7 +588,15 @@
               ],
               "properties": {
                 "level": {
-                  "type": "string"
+                  "enum": [
+                    "Trace",
+                    "Debug",
+                    "Information",
+                    "Warning",
+                    "Error",
+                    "Critical",
+                    "None"
+                  ]
                 },
                 "message": {
                   "type": "string"

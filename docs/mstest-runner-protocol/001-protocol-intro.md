@@ -626,7 +626,7 @@ Notifications:
 
     ```typescript
     interface AttachmentUpdatesParams {
-        attachments?: Attachment[],
+        attachments: Attachment[],
     }
     ```
 
@@ -640,33 +640,33 @@ interface RunTestsResponse {
     // rather than to a single test result.
     // Note: If multiple data collectors are generating attachments, they should send separate
     // attachment events.
-    attachments?: Attachment[]
+    attachments: Attachment[]
 }
 
 interface Attachment {
-    // OPTIONAL: If the attachment is based on a file (and the client can show a hyperlink to it)
-    //           the file's location should be specified by this property.
+    // If the attachment is based on a file (and the client can show a hyperlink to it),
+    // the file's location should be specified; otherwise this value is null.
     // Example: "uri": "file://some/coverage.trx"
-    uri: string,
+    uri: string | null,
 
     // The name of the extension that generated the attachment.
     // Note: For the time being the client does not special case attachments
     //       based on their producer.
     // Example: "producer": "TrxReportGeneratorProcessLifetimeHandler"
-    producer: string,
+    producer: string | null,
 
-    // OPTIONAL: The file extension can be used to resolve the attachment type
-    //           if that isn't ambiguous.
+    // The file extension can be used to resolve the attachment type if that isn't ambiguous;
+    // otherwise this value is null.
     // Note: For the time being the client does not special case attachments
     //       based on their type.
     // Example: "type": "file"
-    type: string,
+    type: string | null,
 
     // How the attachment can be displayed as by the client.
     // Example: "display-name": "Code Coverage"
-    'display-name': string;
+    'display-name': string | null;
 
-    description?: string;
+    description: string | null;
 }
 ```
 
