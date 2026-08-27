@@ -60,6 +60,17 @@ internal sealed class PassiveNode : IDisposable
         }
 
         var requestMessage = (RequestMessage)message;
+        if (requestMessage.Method != JsonRpcMethods.Initialize)
+        {
+            await SendErrorAsync(
+                requestMessage.Id,
+                ErrorCodes.ServerNotInitialized,
+                "The server must be initialized before this request can be processed.",
+                _testApplicationCancellationTokenSource.CancellationToken,
+                requestMessage.StringId).ConfigureAwait(false);
+            return false;
+        }
+
         if (requestMessage.Params is not InitializeRequestArgs initializeRequest)
         {
             await SendErrorAsync(

@@ -726,8 +726,11 @@ Notification:
 - params: `CancelParams` defined as follows:
 
 ```typescript
+type NumericStringId = `${bigint}`;
+
 interface CancelParams {
-    id: number;
+    // String IDs use the canonical decimal integer representation and signed 32-bit range.
+    id: number | NumericStringId;
 }
 ```
 

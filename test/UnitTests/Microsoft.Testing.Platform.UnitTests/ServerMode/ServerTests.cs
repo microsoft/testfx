@@ -400,12 +400,17 @@ public sealed class ServerTests
     {
         using var server = TcpServer.Create();
         using var testFrameworkCapabilities = new BlockingTestFrameworkCapabilities();
+        int discoveryInvocationCount = 0;
 
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => testFrameworkCapabilities, (_, __) => new MockTestAdapter
         {
-            DiscoveryAction = context => Task.Delay(Timeout.Infinite, context.CancellationToken),
+            DiscoveryAction = context =>
+            {
+                Interlocked.Increment(ref discoveryInvocationCount);
+                return Task.Delay(Timeout.Infinite, context.CancellationToken);
+            },
         });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
@@ -488,6 +493,7 @@ public sealed class ServerTests
             "Wait canceled discovery error",
             timeout.Token))!;
         Assert.AreEqual(ErrorCodes.RequestCanceled, cancellationError.ErrorCode);
+        Assert.AreEqual(0, Volatile.Read(ref discoveryInvocationCount));
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
         Assert.AreEqual(0, await serverTask);

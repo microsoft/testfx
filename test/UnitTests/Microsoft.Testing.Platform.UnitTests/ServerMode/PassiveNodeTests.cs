@@ -40,6 +40,22 @@ public sealed class PassiveNodeTests
         Assert.AreEqual(ErrorCodes.ProtocolVersionNotSupported, error.ErrorCode);
     }
 
+    [TestMethod]
+    public async Task ConnectAsync_RejectsNonInitializeRequestBeforeInitialization()
+    {
+        RequestMessage request = new(
+            1,
+            JsonRpcMethods.TestingDiscoverTests,
+            new DiscoverRequestArgs(Guid.NewGuid(), TestNodes: null, GraphFilter: null));
+        TestMessageHandler handler = new(request);
+        using PassiveNode node = CreatePassiveNode(handler);
+
+        Assert.IsFalse(await node.ConnectAsync());
+
+        ErrorMessage error = Assert.IsInstanceOfType<ErrorMessage>(handler.WrittenMessage);
+        Assert.AreEqual(ErrorCodes.ServerNotInitialized, error.ErrorCode);
+    }
+
     private static PassiveNode CreatePassiveNode(TestMessageHandler handler)
     {
         var cancellationTokenSource = new Mock<ITestApplicationCancellationTokenSource>();

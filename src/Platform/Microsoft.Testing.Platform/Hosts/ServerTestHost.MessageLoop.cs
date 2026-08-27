@@ -294,6 +294,7 @@ internal sealed partial class ServerTestHost
             bool testUpdateCompletionSent = false;
             try
             {
+                rpcState.CancellationToken.ThrowIfCancellationRequested();
                 object response = await HandleRequestCoreAsync(request, rpcState, cancellationToken).ConfigureAwait(false);
                 testUpdateCompletionSent = await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken).ConfigureAwait(false);
                 await SendResponseAsync(
