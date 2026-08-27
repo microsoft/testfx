@@ -291,13 +291,24 @@ internal sealed partial class Json
                         throw new MessageFormatException("'location.file' field cannot be null");
                     }
 
-                    json.TryBind(properties, out int locationLineStart, "location.line-start");
-                    json.TryBind(properties, out int locationLineEnd, "location.line-end");
+                    bool hasLineStart = json.TryBind(properties, out int locationLineStart, "location.line-start");
+                    bool hasLineEnd = json.TryBind(properties, out int locationLineEnd, "location.line-end");
+                    if (!hasLineStart || !hasLineEnd)
+                    {
+                        throw new MessageFormatException(
+                            "'location.file', 'location.line-start', and 'location.line-end' fields must be specified together");
+                    }
 
                     TestFileLocationProperty testFileLocationProperty = new(
                         locationFile,
                         new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
                     propertyBag.Add(testFileLocationProperty);
+                }
+                else if (properties.TryGetProperty("location.line-start", out _)
+                    || properties.TryGetProperty("location.line-end", out _))
+                {
+                    throw new MessageFormatException(
+                        "'location.file', 'location.line-start', and 'location.line-end' fields must be specified together");
                 }
 
                 return new TestNode

@@ -240,22 +240,24 @@ internal static partial class SerializerUtilities
 
                     bool hasLineStart = properties.TryGetValue("location.line-start", out object? locationLineStartValue);
                     bool hasLineEnd = properties.TryGetValue("location.line-end", out object? locationLineEndValue);
-                    if (hasLineStart || hasLineEnd)
+                    if (!hasLineStart || locationLineStartValue is not int locationLineStart
+                        || !hasLineEnd || locationLineEndValue is not int locationLineEnd)
                     {
-                        if (!hasLineStart || locationLineStartValue is not int locationLineStart
-                            || !hasLineEnd || locationLineEndValue is not int locationLineEnd)
-                        {
-                            throw new MessageFormatException(
-                                "'location.line-start' and 'location.line-end' fields must both be integers");
-                        }
-
-                        TestFileLocationProperty testFileLocationProperty = new(
-                            locationFile,
-                            new LinePositionSpan(
-                                new LinePosition(locationLineStart, 0),
-                                new LinePosition(locationLineEnd, 0)));
-                        propertyBag.Add(testFileLocationProperty);
+                        throw new MessageFormatException(
+                            "'location.file', 'location.line-start', and 'location.line-end' fields must be specified together as strings and integers");
                     }
+
+                    TestFileLocationProperty testFileLocationProperty = new(
+                        locationFile,
+                        new LinePositionSpan(
+                            new LinePosition(locationLineStart, 0),
+                            new LinePosition(locationLineEnd, 0)));
+                    propertyBag.Add(testFileLocationProperty);
+                }
+                else if (properties.ContainsKey("location.line-start") || properties.ContainsKey("location.line-end"))
+                {
+                    throw new MessageFormatException(
+                        "'location.file', 'location.line-start', and 'location.line-end' fields must be specified together");
                 }
 
                 return new TestNode

@@ -415,6 +415,20 @@
           "type": "boolean"
         }
       },
+      "dependentRequired": {
+        "location.file": [
+          "location.line-start",
+          "location.line-end"
+        ],
+        "location.line-start": [
+          "location.file",
+          "location.line-end"
+        ],
+        "location.line-end": [
+          "location.file",
+          "location.line-start"
+        ]
+      },
       "additionalProperties": true
     },
     "testUpdateNotification": {
