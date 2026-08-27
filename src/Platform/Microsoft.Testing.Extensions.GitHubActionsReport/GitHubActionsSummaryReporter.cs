@@ -529,6 +529,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
         List<CiRunSummaryHistoryTest>? historyTests = _historyService.IsEnabled
             ? new(Math.Min(entries.Count, GitHubActionsHistoryStore.MaxTotalSamples))
             : null;
+        Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), int>? historyIndices =
+            _historyService.IsEnabled ? [] : null;
         int expanded = 0;
         foreach ((string Uid, string Key, TestRecord Record) entry in entries)
         {
@@ -568,9 +570,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
             }
 
             snapshot.Add(record);
-            if (historyTests?.Count < GitHubActionsHistoryStore.MaxTotalSamples)
+            if (historyTests is not null && historyIndices is not null)
             {
-                historyTests.Add(new CiRunSummaryHistoryTest
+                var historyTest = new CiRunSummaryHistoryTest
                 {
                     TestId = entry.Uid,
                     DisplayName = record.DisplayName,
@@ -584,12 +586,44 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     },
                     DurationTicks = record.Duration.Ticks,
                     IsFlaky = record.IsFlaky,
-                });
+                };
+                (string TestId, string FullyQualifiedName, string DisplayName) identity = (
+                    historyTest.TestId,
+                    historyTest.FullyQualifiedName,
+                    historyTest.DisplayName);
+                if (historyIndices.TryGetValue(identity, out int existingIndex))
+                {
+                    historyTests[existingIndex] = MergeHistoryTest(historyTests[existingIndex], historyTest);
+                }
+                else if (historyTests.Count < GitHubActionsHistoryStore.MaxTotalSamples)
+                {
+                    historyIndices.Add(identity, historyTests.Count);
+                    historyTests.Add(historyTest);
+                }
             }
         }
 
         return new SummarySnapshot(snapshot, historyTests ?? []);
     }
+
+    private static CiRunSummaryHistoryTest MergeHistoryTest(
+        CiRunSummaryHistoryTest existing,
+        CiRunSummaryHistoryTest current)
+        => new()
+        {
+            TestId = existing.TestId,
+            FullyQualifiedName = existing.FullyQualifiedName,
+            DisplayName = existing.DisplayName,
+            Outcome = existing.Outcome == GitHubActionsHistoryOutcome.Failed
+                || current.Outcome == GitHubActionsHistoryOutcome.Failed
+                    ? GitHubActionsHistoryOutcome.Failed
+                    : existing.Outcome == GitHubActionsHistoryOutcome.Passed
+                        || current.Outcome == GitHubActionsHistoryOutcome.Passed
+                            ? GitHubActionsHistoryOutcome.Passed
+                            : GitHubActionsHistoryOutcome.Skipped,
+            DurationTicks = Math.Max(existing.DurationTicks, current.DurationTicks),
+            IsFlaky = existing.IsFlaky || current.IsFlaky,
+        };
 
     /// <returns>
     /// <see langword="false"/> only when the writer refused the content because it would have taken the file past

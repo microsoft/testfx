@@ -450,7 +450,8 @@ public sealed class GitHubActionsSummaryReporterTests
                 Mock.Of<ITestApplicationProcessExitCode>(),
                 coverage.Object,
                 loggerFactory.Object,
-                static () => true);
+                static () => true,
+                new CapturingHistoryService(isEnabled: true));
             var context = new Mock<ITestSessionContext>();
             context.SetupGet(item => item.SessionUid).Returns(new SessionUid("session"));
             context.SetupGet(item => item.CancellationToken).Returns(CancellationToken.None);
@@ -484,6 +485,9 @@ public sealed class GitHubActionsSummaryReporterTests
             Assert.AreEqual(2, aggregate.PassedTests);
             Assert.AreEqual(1, aggregate.FailedTests);
             Assert.AreEqual("Tests.SharedTitle", aggregate.Modules.Single().Failures.Single().FullyQualifiedName);
+            GitHubCiRunSummaryHistoryTest history = aggregate.Modules.Single().HistoryTests.Single();
+            Assert.AreEqual("failed", history.Outcome);
+            Assert.AreEqual("flaky", history.TestId);
         }
         finally
         {
@@ -2824,15 +2828,15 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-    private sealed class CapturingHistoryService : IGitHubActionsHistoryService
+    private sealed class CapturingHistoryService(bool isEnabled = false) : IGitHubActionsHistoryService
     {
         public List<IReadOnlyList<GitHubCiRunSummaryModule>> Writes { get; } = [];
 
-        public bool IsEnabled => false;
+        public bool IsEnabled { get; } = isEnabled;
 
-        public string? HistoryPath => null;
+        public string? HistoryPath => IsEnabled ? "history.json" : null;
 
-        public int HistoryWindowInDays => 0;
+        public int HistoryWindowInDays => IsEnabled ? 30 : 0;
 
         public bool TryGetStats(
             string testId,
