@@ -223,8 +223,8 @@ interface InitializeParams {
 
     // OPTIONAL for compatibility with clients predating protocol negotiation.
     // The server selects its most preferred mutually supported version.
-    // If omitted or empty, the server uses the legacy base protocol (1.0.0).
-    protocolVersions?: string[],
+    // If omitted, null, or empty, the server uses the legacy base protocol (1.0.0).
+    protocolVersions?: string[] | null,
 
     capabilities: {
         // Note: Since the initialize message is compatible with the LSP protocol,
@@ -543,7 +543,7 @@ Notifications:
         // These should be processed in order and also should be complete,
         // i.e. a server will send an update for the test, if it already sent updates
         // for all of the parent nodes.
-        changes: TestUpdateChange[]
+        changes: TestUpdateChange[] | null
 
         // Run id for which the notification is sent. It should match the id sent during the discovery request.
         runId: GUID

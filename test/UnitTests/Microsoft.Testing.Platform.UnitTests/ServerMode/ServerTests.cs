@@ -399,10 +399,11 @@ public sealed class ServerTests
     public async Task PipelinedRequestCanBeCanceledWhileInitializationCompletes()
     {
         using var server = TcpServer.Create();
+        using var testFrameworkCapabilities = new BlockingTestFrameworkCapabilities();
 
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter
+        builder.RegisterTestFramework(_ => testFrameworkCapabilities, (_, __) => new MockTestAdapter
         {
             DiscoveryAction = context => Task.Delay(Timeout.Infinite, context.CancellationToken),
         });
@@ -420,47 +421,56 @@ public sealed class ServerTests
             serverToClientStream: client.GetStream(),
             FormatterUtilities.CreateFormatter());
 
-        await WriteMessageAsync(
-            writer,
-            """
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "processId": 32,
-                    "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
-                    "capabilities": {
-                        "testing": {
-                            "debuggerProvider": false
+        testFrameworkCapabilities.BlockNextAccess();
+        try
+        {
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "processId": 32,
+                        "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                        "capabilities": {
+                            "testing": {
+                                "debuggerProvider": false
+                            }
                         }
                     }
                 }
-            }
-            """);
-        await WriteMessageAsync(
-            writer,
-            """
-            {
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "testing/discoverTests",
-                "params": {
-                    "runId": "00000000-0000-0000-0000-000000000002"
+                """);
+            await testFrameworkCapabilities.WaitUntilBlockedAsync().WaitAsync(timeout.Token);
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "testing/discoverTests",
+                    "params": {
+                        "runId": "00000000-0000-0000-0000-000000000002"
+                    }
                 }
-            }
-            """);
-        await WriteMessageAsync(
-            writer,
-            """
-            {
-                "jsonrpc": "2.0",
-                "method": "$/cancelRequest",
-                "params": {
-                    "id": 2
+                """);
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "method": "$/cancelRequest",
+                    "params": {
+                        "id": 2
+                    }
                 }
-            }
-            """);
+                """);
+        }
+        finally
+        {
+            testFrameworkCapabilities.Release();
+        }
 
         _ = await WaitForMessage(
             messageHandler,
@@ -1137,6 +1147,35 @@ public sealed class ServerTests
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 
         public Task ExecuteRequestAsync(ExecuteRequestContext context) => DiscoveryAction is not null ? DiscoveryAction(context) : Task.CompletedTask;
+    }
+
+    private sealed class BlockingTestFrameworkCapabilities : ITestFrameworkCapabilities, IDisposable
+    {
+        private readonly TaskCompletionSource<bool> _blocked = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly ManualResetEventSlim _release = new(initialState: false);
+        private int _blockNextAccess;
+
+        public IReadOnlyCollection<ITestFrameworkCapability> Capabilities
+        {
+            get
+            {
+                if (Interlocked.Exchange(ref _blockNextAccess, 0) == 1)
+                {
+                    _blocked.TrySetResult(true);
+                    _release.Wait();
+                }
+
+                return [];
+            }
+        }
+
+        public void BlockNextAccess() => Volatile.Write(ref _blockNextAccess, 1);
+
+        public Task WaitUntilBlockedAsync() => _blocked.Task;
+
+        public void Release() => _release.Set();
+
+        public void Dispose() => _release.Dispose();
     }
 
     private sealed record ServerRequestState(
