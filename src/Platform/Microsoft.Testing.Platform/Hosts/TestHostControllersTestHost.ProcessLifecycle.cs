@@ -184,9 +184,10 @@ internal sealed partial class TestHostControllersTestHost
             : testHostProcessExitCode;
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
-        using CancellationTokenSource? finalizationCancellationTokenSource = testExecutionCanceled
+        _controllerFinalizationCancellationTokenSource = testExecutionCanceled
             ? new(ControllerExtensionFinalizationTimeout)
             : null;
+        CancellationTokenSource? finalizationCancellationTokenSource = _controllerFinalizationCancellationTokenSource;
         CancellationToken finalizationCancellationToken = finalizationCancellationTokenSource?.Token ?? applicationCancellationToken;
 
         try
@@ -265,9 +266,14 @@ internal sealed partial class TestHostControllersTestHost
             _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
         }
 
+        if (_controllerFinalizationTimedOut)
+        {
+            ScheduleApplicationCancellation();
+        }
+
         string? extensionInformation = null;
         // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
-        if (telemetryInformation.IsEnabled)
+        if (telemetryInformation.IsEnabled && !_controllerFinalizationTimedOut)
         {
             extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider).ConfigureAwait(false);
         }
@@ -317,12 +323,7 @@ internal sealed partial class TestHostControllersTestHost
 
         if (_controllerFinalizationTimedOut)
         {
-            // DisableCoreAsync observes cancellation arriving during its normal unbounded wait and
-            // downgrades to the canceled-shutdown budget. Without this transition, disposal would re-await
-            // the same unfinished graceful-disable task after our finalization token had already expired.
-            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
-            await _logger.LogWarningAsync(
-                $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
+            ScheduleApplicationCancellation();
         }
 
         // Apply controller-only coverage thresholds to the child's pre-ignore verdict, then apply the
@@ -334,6 +335,31 @@ internal sealed partial class TestHostControllersTestHost
 
         return (exitCode, testHostProcessInformation, extensionInformation);
     }
+
+    private void ScheduleApplicationCancellation()
+    {
+        if (Interlocked.Exchange(ref _applicationCancellationScheduled, 1) != 0)
+        {
+            return;
+        }
+
+        // The cleanup deadline has expired, so extension cancellation callbacks and logging cannot be awaited
+        // without making the deadline unbounded again. Schedule both independently and observe later faults.
+        ObserveBackgroundTask(Task.Run(
+            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel,
+            CancellationToken.None));
+        ObserveBackgroundTask(Task.Run(
+            () => _logger.LogWarning(
+                $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout."),
+            CancellationToken.None));
+    }
+
+    private static void ObserveBackgroundTask(Task task)
+        => _ = task.ContinueWith(
+            static completedTask => _ = completedTask.Exception,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
 
     private static async Task<bool> TryRunControllerExtensionAsync(
         Func<CancellationToken, Task> finalization,

@@ -22,7 +22,12 @@ internal sealed partial class TestHostControllersTestHost
         object[] consumersStillRunning = [];
         if (ServiceProvider.GetService<BaseMessageBus>() is { } messageBus)
         {
-            await EnsureMessageBusDisabledAsync(messageBus, ServiceProvider).ConfigureAwait(false);
+            if (!await TryRunControllerCleanupAsync(
+                () => EnsureMessageBusDisabledAsync(messageBus, ServiceProvider)).ConfigureAwait(false))
+            {
+                AbandonRemainingServices(alreadyDisposed);
+                return;
+            }
 
             // Disabling is bounded on an aborted run, so it can return while a consumer that ignores the
             // cancellation token is still inside ConsumeAsync. Those instances must be skipped here too, for
@@ -47,7 +52,12 @@ internal sealed partial class TestHostControllersTestHost
                 continue;
             }
 
-            await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
+            if (!await TryRunControllerCleanupAsync(() => DisposeHelper.DisposeAsync(service)).ConfigureAwait(false))
+            {
+                AbandonRemainingServices(alreadyDisposed);
+                return;
+            }
+
             alreadyDisposed.Add(service);
         }
 
@@ -58,13 +68,44 @@ internal sealed partial class TestHostControllersTestHost
                 continue;
             }
 
-            await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
+            if (!await TryRunControllerCleanupAsync(() => DisposeHelper.DisposeAsync(service)).ConfigureAwait(false))
+            {
+                AbandonRemainingServices(alreadyDisposed);
+                return;
+            }
+
             alreadyDisposed.Add(service);
         }
 
-        await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed).ConfigureAwait(false);
+        if (!await TryRunControllerCleanupAsync(
+            () => DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed)).ConfigureAwait(false))
+        {
+            AbandonRemainingServices(alreadyDisposed);
+        }
+    }
+
+    private async Task<bool> TryRunControllerCleanupAsync(Func<Task> cleanup)
+    {
+        CancellationToken cancellationToken = _controllerFinalizationCancellationTokenSource?.Token ?? CancellationToken.None;
+        return !cancellationToken.IsCancellationRequested
+            && await TryRunControllerExtensionAsync(_ => cleanup(), cancellationToken).ConfigureAwait(false);
+    }
+
+    private void AbandonRemainingServices(List<object> alreadyDisposed)
+    {
+        _controllerFinalizationTimedOut = true;
+        foreach (object service in ServiceProvider.Services)
+        {
+            if (!alreadyDisposed.Contains(service))
+            {
+                alreadyDisposed.Add(service);
+            }
+        }
     }
 
     public void Dispose()
-        => _waitForPid.Dispose();
+    {
+        _controllerFinalizationCancellationTokenSource?.Dispose();
+        _waitForPid.Dispose();
+    }
 }
