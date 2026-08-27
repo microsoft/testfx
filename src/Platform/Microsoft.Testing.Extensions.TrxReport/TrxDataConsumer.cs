@@ -167,8 +167,8 @@ internal sealed class TrxReportGenerator :
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             await _logger.LogDebugAsync($"""
-CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
+TrxModeHelpers.IsTestHostControllerSupported: {TrxModeHelpers.IsTestHostControllerSupported}
 shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 """).ConfigureAwait(false);
         }

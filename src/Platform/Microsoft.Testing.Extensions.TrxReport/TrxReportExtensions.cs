@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
@@ -10,10 +11,6 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
-
-#if !NETCOREAPP
-using Polyfills;
-#endif
 
 namespace Microsoft.Testing.Extensions;
 
@@ -53,9 +50,9 @@ public static class TrxReportExtensions
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
-        if (!OperatingSystem.IsBrowser())
+        if (TrxModeHelpers.IsTestHostControllerSupported)
         {
-            NonBrowserRegistrations(builder);
+            ControllerBackedRegistrations(builder);
         }
 
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
@@ -80,7 +77,10 @@ public static class TrxReportExtensions
     }
 
     [UnsupportedOSPlatform("browser")]
-    private static void NonBrowserRegistrations(ITestApplicationBuilder builder)
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
+    private static void ControllerBackedRegistrations(ITestApplicationBuilder builder)
     {
         builder.TestHost.AddTestHostApplicationLifetime(serviceProvider =>
             new TrxTestApplicationLifecycleCallbacks(
