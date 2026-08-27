@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -155,6 +156,37 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostProcessLifetimeHandler).ToString()));
     }
 
+    [TestMethod]
+    public async Task TestHostControllerProcessLifetimeHandler_FinalizationTokenStartsUncanceled()
+    {
+        using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(1));
+        bool? wasCanceled = null;
+
+        bool finalized = await TryFinalizeControllerExtensionAsync(
+            token =>
+            {
+                wasCanceled = token.IsCancellationRequested;
+                return Task.CompletedTask;
+            },
+            cancellationTokenSource.Token);
+
+        Assert.IsTrue(finalized);
+        Assert.IsFalse(wasCanceled);
+    }
+
+    [TestMethod]
+    public async Task TestHostControllerProcessLifetimeHandler_FinalizationIsBounded()
+    {
+        using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMilliseconds(100));
+        TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        bool finalized = await TryFinalizeControllerExtensionAsync(
+            _ => neverCompletes.Task,
+            cancellationTokenSource.Token);
+
+        Assert.IsFalse(finalized);
+    }
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]
@@ -219,6 +251,18 @@ public sealed class TestApplicationBuilderTests
             : new CompositeExtensionFactory<InvalidComposition>(() => new InvalidComposition());
         InvalidOperationException invalidOperationException = Assert.ThrowsExactly<InvalidOperationException>(() => ((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance());
         Assert.AreEqual(CompositeExtensionFactory<InvalidComposition>.ValidateCompositionErrorMessage, invalidOperationException.Message);
+    }
+
+    private static Task<bool> TryFinalizeControllerExtensionAsync(
+        Func<CancellationToken, Task> finalization,
+        CancellationToken cancellationToken)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "TryFinalizeControllerExtensionAsync",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TryFinalizeControllerExtensionAsync.");
+        return (Task<bool>?)method.Invoke(null, [finalization, cancellationToken])
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.TryFinalizeControllerExtensionAsync returned null.");
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]

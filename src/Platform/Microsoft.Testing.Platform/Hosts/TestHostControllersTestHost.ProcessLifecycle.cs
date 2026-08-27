@@ -27,14 +27,23 @@ internal sealed partial class TestHostControllersTestHost
         ProxyOutputDevice outputDevice,
         ITelemetryInformation telemetryInformation,
         Stopwatch consoleRunStarted,
-        CancellationToken cancellationToken)
+        TimeSpan? executionTimeout,
+        CancellationToken applicationCancellationToken)
     {
+        using CancellationTokenSource? timeoutCancellationTokenSource = executionTimeout is null
+            ? null
+            : new();
+        using CancellationTokenSource? executionCancellationTokenSource = timeoutCancellationTokenSource is null
+            ? null
+            : CancellationTokenSource.CreateLinkedTokenSource(applicationCancellationToken, timeoutCancellationTokenSource.Token);
+        CancellationToken executionCancellationToken = executionCancellationTokenSource?.Token ?? applicationCancellationToken;
+
         // Apply the ITestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync
         if (_testHostsInformation.LifetimeHandlers.Length > 0)
         {
             foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
             {
-                await lifetimeHandler.BeforeTestHostProcessStartAsync(cancellationToken).ConfigureAwait(false);
+                await lifetimeHandler.BeforeTestHostProcessStartAsync(applicationCancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -47,7 +56,7 @@ internal sealed partial class TestHostControllersTestHost
         ITestHostLauncher? testHostLauncher = _testHostsInformation.TestHostLauncher;
         using IProcess testHostProcess = testHostLauncher is null
             ? process.Start(processStartInfo)
-            : await LaunchUsingCustomLauncherAsync(testHostLauncher, processStartInfo, partialCommandLine, cancellationToken).ConfigureAwait(false);
+            : await LaunchUsingCustomLauncherAsync(testHostLauncher, processStartInfo, partialCommandLine, applicationCancellationToken).ConfigureAwait(false);
 
         int? testHostProcessId = null;
         try
@@ -84,7 +93,7 @@ internal sealed partial class TestHostControllersTestHost
 
             // Wait for the test host controller to connect
             using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, applicationCancellationToken))
             {
                 await _logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
                 await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
@@ -113,16 +122,17 @@ internal sealed partial class TestHostControllersTestHost
                 TestHostProcessInformation partialTestHostProcessInformation = new(_testHostPID.Value);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
-                    await lifetimeHandler.OnTestHostProcessStartedAsync(partialTestHostProcessInformation, cancellationToken).ConfigureAwait(false);
+                    await lifetimeHandler.OnTestHostProcessStartedAsync(partialTestHostProcessInformation, applicationCancellationToken).ConfigureAwait(false);
                 }
             }
 
             await _logger.LogDebugAsync("Wait for test host process exit").ConfigureAwait(false);
+            timeoutCancellationTokenSource?.CancelAfter(executionTimeout!.Value);
             try
             {
-                await testHostProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                await testHostProcess.WaitForExitAsync(executionCancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (executionCancellationToken.IsCancellationRequested)
             {
                 // The run was canceled while waiting for the test host to exit. Tear the host down
                 // and wait (without cancellation) for it to fully exit, so the exit-code
@@ -142,7 +152,16 @@ internal sealed partial class TestHostControllersTestHost
                     await _logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
                 }
 
-                await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
+                try
+                {
+                    await testHostProcess.WaitForExitAsync(CancellationToken.None)
+                        .TimeoutAfterAsync(TestHostTerminationTimeout).ConfigureAwait(false);
+                }
+                catch (TimeoutException)
+                {
+                    await _logger.LogWarningAsync(
+                        $"Test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
+                }
             }
         }
 
@@ -151,27 +170,63 @@ internal sealed partial class TestHostControllersTestHost
             throw ApplicationStateGuard.Unreachable();
         }
 
-        TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostCompletedReceived);
+        bool testExecutionCanceled = timeoutCancellationTokenSource?.IsCancellationRequested == true
+            || applicationCancellationToken.IsCancellationRequested;
+        int testHostProcessExitCode = testHostProcess.HasExited
+            ? testHostProcess.ExitCode
+            : (int)ExitCode.TestSessionAborted;
+        int reportedTestHostExitCode = testExecutionCanceled
+            ? (int)ExitCode.TestSessionAborted
+            : testHostProcessExitCode;
+        TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
+        CancellationToken postExecutionCancellationToken = testExecutionCanceled ? CancellationToken.None : applicationCancellationToken;
 
         if (_testHostsInformation.LifetimeHandlers.Length > 0)
         {
-            await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcess.ExitCode}").ConfigureAwait(false);
+            await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcessExitCode}").ConfigureAwait(false);
             var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
+            using CancellationTokenSource? finalizationCancellationTokenSource = testExecutionCanceled
+                ? new(ControllerExtensionFinalizationTimeout)
+                : null;
+            CancellationToken finalizationCancellationToken = finalizationCancellationTokenSource?.Token ?? applicationCancellationToken;
 
-            foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+            try
             {
-                await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
+                foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+                {
+                    bool finalized = await TryFinalizeControllerExtensionAsync(
+                        token => lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, token),
+                        finalizationCancellationToken).ConfigureAwait(false);
+                    if (!finalized)
+                    {
+                        _skipLifetimeHandlerDisposal = true;
+                        break;
+                    }
 
-                // OnTestHostProcess could produce information that needs to be handled by others.
-                await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
+                    // OnTestHostProcess could produce information that needs to be handled by others.
+                    await messageBusProxy.DrainDataAsync().WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
+                }
+
+                if (!_skipLifetimeHandlerDisposal)
+                {
+                    // We disable after the drain because it's possible that the drain will produce more messages.
+                    await messageBusProxy.DrainDataAsync().WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
+                    await messageBusProxy.DisableAsync().WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException) when (finalizationCancellationTokenSource?.IsCancellationRequested == true)
+            {
+                _skipLifetimeHandlerDisposal = true;
             }
 
-            // We disable after the drain because it's possible that the drain will produce more messages
-            await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
-            await messageBusProxy.DisableAsync().ConfigureAwait(false);
+            if (_skipLifetimeHandlerDisposal)
+            {
+                await _logger.LogWarningAsync(
+                    $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
+            }
         }
 
-        await outputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
+        await outputDevice.DisplayAfterSessionEndRunAsync(postExecutionCancellationToken).ConfigureAwait(false);
 
         string? extensionInformation = null;
         // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
@@ -181,27 +236,27 @@ internal sealed partial class TestHostControllersTestHost
         }
 
         // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
-        int exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcess.ExitCode;
-        if (exitCode == (int)ExitCode.Success && cancellationToken.IsCancellationRequested)
+        int exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcessExitCode;
+        if (exitCode == (int)ExitCode.Success && testExecutionCanceled)
         {
             // In case of cancellation, only alter exit code if it was success.
             // If there is another exit code indicating another failure, we prefer it over the cancellation.
             exitCode = (int)ExitCode.TestSessionAborted;
         }
         else if (!testHostProcessInformation.HasExitedGracefully ||
-            _testHostExitCodeReceived != testHostProcess.ExitCode)
+            _testHostExitCodeReceived != testHostProcessExitCode)
         {
             await _logger.LogWarningAsync(
                 $"""
                  Test host did not exit gracefully.
-                   OS exit code: '{testHostProcess.ExitCode}'
+                   OS exit code: '{testHostProcessExitCode}'
                    IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
                    TestHostCompletedRequest received: '{_testHostCompletedReceived}'
                    PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}'
-                   CancellationRequested: '{cancellationToken.IsCancellationRequested}'
+                   CancellationRequested: '{testExecutionCanceled}'
                  """)
                 .ConfigureAwait(false);
-            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
+            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcessExitCode)), postExecutionCancellationToken).ConfigureAwait(false);
             exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
         }
 
@@ -210,9 +265,24 @@ internal sealed partial class TestHostControllersTestHost
         exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
         exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
 
-        await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
+        await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
 
         return (exitCode, testHostProcessInformation, extensionInformation);
+    }
+
+    private static async Task<bool> TryFinalizeControllerExtensionAsync(
+        Func<CancellationToken, Task> finalization,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await finalization(cancellationToken).WithCancellationAsync(cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
     }
 
     [UnsupportedOSPlatform("browser")]

@@ -195,6 +195,29 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Trx_WhenTimeoutTerminatesTestHost_RecoversCompletedResults(string tfm)
+    {
+        string fileName = $"{Guid.NewGuid():N}.trx";
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\" --timeout 2s",
+            new() { ["WAIT_FOR_TIMEOUT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+
+        string[] trxFiles = Directory.GetFiles(testResultsPath, fileName, SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+        string trxContent = File.ReadAllText(trxFiles[0]);
+        Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
+        Assert.Contains("was terminated because the test session was aborted", trxContent, trxContent);
+        Assert.Contains("testName=\"Test\"", trxContent, trxContent);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenTestHostCrash_RunningUnderDotnetTest_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
@@ -450,6 +473,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
             new TestNode() { Uid = "0", DisplayName = "Test", Properties = properties }));
+        if (Environment.GetEnvironmentVariable("WAIT_FOR_TIMEOUT") == "1")
+        {
+            Thread.Sleep(10000);
+        }
+
         context.Complete();
     }
 }

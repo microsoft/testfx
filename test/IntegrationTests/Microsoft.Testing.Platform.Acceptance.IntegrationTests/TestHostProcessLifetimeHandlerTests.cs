@@ -20,6 +20,26 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")));
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_FinalizesProcessLifetimeHandlerWithUncanceledToken(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string finalizationFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.txt");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["FINALIZATION_FILE"] = finalizationFile,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        Assert.AreEqual(bool.FalseString, File.ReadAllText(finalizationFile));
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
@@ -87,6 +107,11 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
     public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         System.IO.File.WriteAllText("OnTestHostProcessExitedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
+        if (Environment.GetEnvironmentVariable("FINALIZATION_FILE") is { Length: > 0 } finalizationFile)
+        {
+            System.IO.File.WriteAllText(finalizationFile, cancellationToken.IsCancellationRequested.ToString());
+        }
+
         return Task.CompletedTask;
     }
 
@@ -119,6 +144,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        if (Environment.GetEnvironmentVariable("BLOCK_UNTIL_TIMEOUT") == "1")
+        {
+            Thread.Sleep(10000);
+        }
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
         {
             Uid = "Test1",

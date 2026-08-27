@@ -38,6 +38,13 @@ internal sealed partial class TestHostControllersTestHost
         // Recording them as already disposed is what keeps them from being disposed by the service-provider
         // walk below either.
         alreadyDisposed.AddRange(consumersStillRunning);
+        if (_skipLifetimeHandlerDisposal)
+        {
+            // A handler that ignored the bounded finalization token may still be running. Do not dispose any
+            // lifetime handler underneath that callback; the controller process is exiting and will reclaim
+            // their resources.
+            alreadyDisposed.AddRange(lifetimeHandlers);
+        }
 
         foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {

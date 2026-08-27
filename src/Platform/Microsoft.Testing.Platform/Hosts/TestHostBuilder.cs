@@ -82,7 +82,26 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         ApplicationStateGuard.Ensure(TestFramework is not null);
         BuildContext context = await SetupCommonServicesAsync(loggingState, testApplicationOptions, unhandledExceptionsHandler, createBuilderStart).ConfigureAwait(false);
-        return await BuildHostAsync(context).ConfigureAwait(false);
+        IHost host = await BuildHostAsync(context).ConfigureAwait(false);
+
+        // A process-isolated run has one timeout owner: the controller. The child is identified by the
+        // internal controller PID option, while the controller host applies the timeout only to waiting for
+        // the child process. Keeping the controller application token alive lets its extensions finalize after
+        // the execution deadline instead of receiving an already-canceled token.
+        if (host is not TestHostControllersTestHost
+            && !context.TestHostControllerInfo.HasTestHostController
+            && context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
+            && context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        {
+            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
+        }
+
+        return host;
     }
 
     private sealed class BuildContext(

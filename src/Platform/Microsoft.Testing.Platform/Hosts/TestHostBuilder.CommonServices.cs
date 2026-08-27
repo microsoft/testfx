@@ -303,17 +303,6 @@ internal sealed partial class TestHostBuilder
 
         serviceProvider.TryAddService(context.CommandLineHandler);
 
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
-            && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
-        {
-            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
-            context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
-        }
-
         context.IsHelpCommand = context.CommandLineHandler.IsHelpInvoked();
         context.IsInfoCommand = context.CommandLineHandler.IsInfoInvoked();
 

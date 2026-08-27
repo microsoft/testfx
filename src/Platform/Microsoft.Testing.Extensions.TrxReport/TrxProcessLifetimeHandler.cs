@@ -204,10 +204,13 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostProcessInformation.ExitCode);
 #endif
 
+            string testHostExitInfo = testHostProcessInformation.ExitCode == (int)ExitCode.TestSessionAborted
+                ? $"Test host process pid: {testHostProcessInformation.PID} was terminated because the test session was aborted."
+                : $"Test host process pid: {testHostProcessInformation.PID} crashed.";
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 recoveredResults,
                 isTestHostCrashed: true,
-                testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
+                testHostCrashInfo: testHostExitInfo).ConfigureAwait(false);
             if (warning is not null)
             {
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);

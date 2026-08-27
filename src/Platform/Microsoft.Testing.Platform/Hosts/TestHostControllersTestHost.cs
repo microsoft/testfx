@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -18,6 +19,9 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
+    private static readonly TimeSpan ControllerExtensionFinalizationTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
+
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly PassiveNode? _passiveNode;
     private readonly IEnvironment _environment;
@@ -37,6 +41,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     private int? _testHostUnfilteredExitCodeReceived;
 
     private int? _testHostPID;
+    private bool _skipLifetimeHandlerDisposal;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
@@ -66,6 +71,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     {
         int exitCode;
         TestHostProcessInformation testHostProcessInformation;
+        TimeSpan? executionTimeout = GetExecutionTimeout();
 
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
@@ -117,6 +123,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
                     outputDevice,
                     telemetryInformation,
                     consoleRunStarted,
+                    executionTimeout,
                     cancellationToken).ConfigureAwait(false);
         }
         finally
@@ -150,5 +157,16 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         }
 
         return exitCode;
+    }
+
+    private TimeSpan? GetExecutionTimeout()
+    {
+        ICommandLineOptions commandLineOptions = ServiceProvider.GetCommandLineOptions();
+        return !commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
+            || !commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args)
+            ? null
+            : !TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout)
+            ? throw ApplicationStateGuard.Unreachable()
+            : timeout;
     }
 }
