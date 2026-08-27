@@ -320,7 +320,9 @@ internal sealed partial class ServerTestHost
             catch (OperationCanceledException e)
             {
                 TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
-                    ? MakeInitializationRetryable()
+                    ? MakeInitializationRetryable(
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState)
                     : null;
                 try
                 {
@@ -346,16 +348,19 @@ internal sealed partial class ServerTestHost
                 {
                     failedInitialization?.TrySetResult(false);
 
-                    CompleteRequest(
-                        ref _clientToServerRequests,
+                    CompleteFailedRequest(
+                        isInitializeRequest,
                         GetRequestKey(request.Id, request.StringId),
+                        rpcState,
                         completion => completion.TrySetCanceled());
                 }
             }
             catch (JsonRpcException e)
             {
                 TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
-                    ? MakeInitializationRetryable()
+                    ? MakeInitializationRetryable(
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState)
                     : null;
                 try
                 {
@@ -376,16 +381,19 @@ internal sealed partial class ServerTestHost
                 {
                     failedInitialization?.TrySetResult(false);
 
-                    CompleteRequest(
-                        ref _clientToServerRequests,
+                    CompleteFailedRequest(
+                        isInitializeRequest,
                         GetRequestKey(request.Id, request.StringId),
+                        rpcState,
                         completion => completion.TrySetException(e));
                 }
             }
             catch (Exception e)
             {
                 TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
-                    ? MakeInitializationRetryable()
+                    ? MakeInitializationRetryable(
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState)
                     : null;
                 try
                 {
@@ -406,9 +414,10 @@ internal sealed partial class ServerTestHost
                 {
                     failedInitialization?.TrySetResult(false);
 
-                    CompleteRequest(
-                        ref _clientToServerRequests,
+                    CompleteFailedRequest(
+                        isInitializeRequest,
                         GetRequestKey(request.Id, request.StringId),
+                        rpcState,
                         completion => completion.TrySetException(e));
                 }
             }
@@ -428,16 +437,48 @@ internal sealed partial class ServerTestHost
         completionSource?.TrySetResult(true);
     }
 
-    private TaskCompletionSource<bool>? MakeInitializationRetryable()
+    private TaskCompletionSource<bool>? MakeInitializationRetryable(
+        (int Id, bool IsString) requestKey,
+        RpcInvocationState rpcState)
     {
         lock (_initializeStateLock)
         {
             RoslynDebug.Assert(_initializeState == Initializing);
             RoslynDebug.Assert(_initializationCompletionSource is not null);
+            bool requestDetached = ((ICollection<KeyValuePair<(int Id, bool IsString), RpcInvocationState>>)_clientToServerRequests)
+                .Remove(new(requestKey, rpcState));
+            RoslynDebug.Assert(requestDetached);
             _initializeState = NotInitialized;
             TaskCompletionSource<bool>? completionSource = _initializationCompletionSource;
             _initializationCompletionSource = null;
             return completionSource;
+        }
+    }
+
+    private void CompleteFailedRequest(
+        bool requestWasDetached,
+        (int Id, bool IsString) requestKey,
+        RpcInvocationState rpcState,
+        Action<TaskCompletionSource<object>> completion)
+    {
+        if (!requestWasDetached)
+        {
+            CompleteRequest(ref _clientToServerRequests, requestKey, completion);
+            return;
+        }
+
+        try
+        {
+            completion(rpcState.CompletionSource);
+            rpcState.Dispose();
+            if (_clientToServerRequests.IsEmpty && _serverClosingTokenSource.IsCancellationRequested)
+            {
+                _stopMessageHandler.Cancel();
+            }
+        }
+        finally
+        {
+            _requestCounter.Signal();
         }
     }
 

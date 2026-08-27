@@ -224,7 +224,7 @@ public sealed class ServerTests
         const string initializeMessage = """
             {
                 "jsonrpc": "2.0",
-                "id": 3,
+                "id": 2,
                 "method": "initialize",
                 "params": {
                     "processId": 32,
@@ -250,7 +250,7 @@ public sealed class ServerTests
                 queuedRequestError = error;
             }
 
-            if (initializeResponse is null && message is ResponseMessage { Id: 3 } response)
+            if (initializeResponse is null && message is ResponseMessage { Id: 2 } response)
             {
                 initializeResponse = response;
             }
@@ -313,7 +313,7 @@ public sealed class ServerTests
             timeout.Token))!;
         Assert.AreEqual(ErrorCodes.InternalError, internalError.ErrorCode);
 
-        await WriteMessageAsync(writer, initializeMessage.Replace("\"id\": 3", "\"id\": 6"));
+        await WriteMessageAsync(writer, initializeMessage.Replace("\"id\": 2", "\"id\": 6"));
         var duplicateInitializeError = (ErrorMessage)(await WaitForMessage(
             messageHandler,
             rpcMessage => rpcMessage is ErrorMessage { Id: 6 },

@@ -704,6 +704,11 @@
           "additionalProperties": true
         }
       },
+      "not": {
+        "required": [
+          "method"
+        ]
+      },
       "additionalProperties": true
     },
     "errorResponse": {
@@ -739,6 +744,11 @@
           },
           "additionalProperties": true
         }
+      },
+      "not": {
+        "required": [
+          "method"
+        ]
       },
       "additionalProperties": true
     }
