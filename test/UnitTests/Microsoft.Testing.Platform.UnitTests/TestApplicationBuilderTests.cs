@@ -3,10 +3,13 @@
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -213,6 +216,41 @@ public sealed class TestApplicationBuilderTests
         Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
     }
 
+    [TestMethod]
+    public void TestHostControllerOutputFinalization_AbandonmentTracksProxyAndOriginalDevice()
+    {
+        Mock<IPlatformOutputDevice> originalOutputDevice = new();
+        ProxyOutputDevice proxyOutputDevice = new(originalOutputDevice.Object, serverModeOutputDevice: null);
+        List<object> servicesStillRunning = [];
+
+        MarkOutputDeviceStillRunning(servicesStillRunning, proxyOutputDevice);
+
+        Assert.HasCount(2, servicesStillRunning);
+        Assert.Contains(proxyOutputDevice, servicesStillRunning);
+        Assert.Contains(originalOutputDevice.Object, servicesStillRunning);
+    }
+
+    [TestMethod]
+    public void TestHostControllerFinalization_LateCancellationUsesSharedBoundedTokenSource()
+    {
+        Mock<IEnvironment> environment = new();
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        using var host = new TestHostControllersTestHost(
+            new([], [], [], testHostLauncher: null, requireProcessRestart: false),
+            new(),
+            passiveNode: null,
+            environment.Object,
+            loggerFactory.Object,
+            Mock.Of<IClock>());
+
+        CancellationTokenSource first = EnsureControllerFinalizationCancellationTokenSource(host);
+        CancellationTokenSource second = EnsureControllerFinalizationCancellationTokenSource(host);
+
+        Assert.AreSame(first, second);
+        Assert.IsFalse(first.IsCancellationRequested);
+    }
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]
@@ -299,6 +337,25 @@ public sealed class TestApplicationBuilderTests
             ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.WaitForExitAfterTerminationAsync.");
         return (Task<bool>?)method.Invoke(null, [process, timeout])
             ?? throw new InvalidOperationException("TestHostControllersTestHost.WaitForExitAfterTerminationAsync returned null.");
+    }
+
+    private static void MarkOutputDeviceStillRunning(List<object> servicesStillRunning, ProxyOutputDevice outputDevice)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "MarkOutputDeviceStillRunning",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.MarkOutputDeviceStillRunning.");
+        method.Invoke(null, [servicesStillRunning, outputDevice]);
+    }
+
+    private static CancellationTokenSource EnsureControllerFinalizationCancellationTokenSource(TestHostControllersTestHost host)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "EnsureControllerFinalizationCancellationTokenSource",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.EnsureControllerFinalizationCancellationTokenSource.");
+        return (CancellationTokenSource?)method.Invoke(host, null)
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.EnsureControllerFinalizationCancellationTokenSource returned null.");
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]

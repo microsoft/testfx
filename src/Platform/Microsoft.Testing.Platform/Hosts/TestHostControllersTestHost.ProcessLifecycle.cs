@@ -182,11 +182,53 @@ internal sealed partial class TestHostControllersTestHost
             : testHostProcessExitCode;
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
-        _controllerFinalizationCancellationTokenSource = testExecutionCanceled
-            ? new(_controllerExtensionFinalizationTimeout)
-            : null;
+        using CancellationTokenRegistration finalizationTransitionRegistration = applicationCancellationToken.Register(
+            static state => ((TestHostControllersTestHost)state!).EnsureControllerFinalizationCancellationTokenSource(),
+            this);
+        testExecutionCanceled |= applicationCancellationToken.IsCancellationRequested;
+        if (testExecutionCanceled)
+        {
+            EnsureControllerFinalizationCancellationTokenSource();
+        }
+
         CancellationTokenSource? finalizationCancellationTokenSource = _controllerFinalizationCancellationTokenSource;
         CancellationToken finalizationCancellationToken = finalizationCancellationTokenSource?.Token ?? applicationCancellationToken;
+        bool abortCallbacksJoined = false;
+
+        void TransitionToBoundedFinalizationIfCanceled()
+        {
+            if (!applicationCancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            testExecutionCanceled = true;
+            finalizationCancellationTokenSource = _controllerFinalizationCancellationTokenSource;
+            if (finalizationCancellationTokenSource is not null)
+            {
+                finalizationCancellationToken = finalizationCancellationTokenSource.Token;
+            }
+        }
+
+        async Task JoinAbortCallbacksIfCanceledAsync()
+        {
+            if (!testExecutionCanceled || abortCallbacksJoined)
+            {
+                return;
+            }
+
+            abortCallbacksJoined = true;
+            IStopPoliciesService stopPoliciesService = ServiceProvider.GetRequiredService<IStopPoliciesService>();
+            bool abortReported = await TryRunControllerExtensionAsync(
+                _ => stopPoliciesService.ExecuteAbortCallbacksAsync(),
+                finalizationCancellationToken).ConfigureAwait(false);
+            if (!abortReported)
+            {
+                _servicesStillRunning.Add(stopPoliciesService);
+                MarkOutputDeviceStillRunning(_servicesStillRunning, outputDevice);
+                _controllerFinalizationTimedOut = true;
+            }
+        }
 
         try
         {
@@ -206,6 +248,7 @@ internal sealed partial class TestHostControllersTestHost
                     if (!finalized)
                     {
                         _servicesStillRunning.Add(lifetimeHandler);
+                        TransitionToBoundedFinalizationIfCanceled();
                         _controllerFinalizationTimedOut = true;
                         break;
                     }
@@ -224,26 +267,16 @@ internal sealed partial class TestHostControllersTestHost
                 await messageBusProxy.DisableAsync().WithCancellationAsync(finalizationCancellationToken).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException) when (finalizationCancellationTokenSource?.IsCancellationRequested is true)
+        catch (OperationCanceledException) when (finalizationCancellationToken.IsCancellationRequested)
         {
+            TransitionToBoundedFinalizationIfCanceled();
             _controllerFinalizationTimedOut = true;
         }
 
-        if (testExecutionCanceled)
-        {
-            // Report the abort after controller extensions have finalized. ExecuteAbortCallbacksAsync is
-            // one-shot and returns the same in-flight task, so this also joins application-token cancellation.
-            IStopPoliciesService stopPoliciesService = ServiceProvider.GetRequiredService<IStopPoliciesService>();
-            bool abortReported = await TryRunControllerExtensionAsync(
-                _ => stopPoliciesService.ExecuteAbortCallbacksAsync(),
-                finalizationCancellationToken).ConfigureAwait(false);
-            if (!abortReported)
-            {
-                _servicesStillRunning.Add(stopPoliciesService);
-                _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
-                _controllerFinalizationTimedOut = true;
-            }
-        }
+        TransitionToBoundedFinalizationIfCanceled();
+        // Report the abort after controller extensions have finalized. ExecuteAbortCallbacksAsync is
+        // one-shot and returns the same in-flight task, so this also joins application-token cancellation.
+        await JoinAbortCallbacksIfCanceledAsync().ConfigureAwait(false);
 
         bool outputConsumerStillRunning = messageBusProxy.ConsumersStillRunning.Any(
             consumer => ReferenceEquals(consumer, outputDevice.OriginalOutputDevice));
@@ -254,15 +287,19 @@ internal sealed partial class TestHostControllersTestHost
                 finalizationCancellationToken).ConfigureAwait(false);
             if (!outputFinalized)
             {
-                _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
+                MarkOutputDeviceStillRunning(_servicesStillRunning, outputDevice);
+                TransitionToBoundedFinalizationIfCanceled();
                 _controllerFinalizationTimedOut = true;
             }
         }
 
-        if (outputConsumerStillRunning && !_servicesStillRunning.Contains(outputDevice.OriginalOutputDevice))
+        if (outputConsumerStillRunning)
         {
-            _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
+            MarkOutputDeviceStillRunning(_servicesStillRunning, outputDevice);
         }
+
+        TransitionToBoundedFinalizationIfCanceled();
+        await JoinAbortCallbacksIfCanceledAsync().ConfigureAwait(false);
 
         if (_controllerFinalizationTimedOut)
         {
@@ -315,11 +352,8 @@ internal sealed partial class TestHostControllersTestHost
                     finalizationCancellationToken).ConfigureAwait(false);
                 if (!diagnosticDisplayed)
                 {
-                    if (!_servicesStillRunning.Contains(outputDevice.OriginalOutputDevice))
-                    {
-                        _servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
-                    }
-
+                    MarkOutputDeviceStillRunning(_servicesStillRunning, outputDevice);
+                    TransitionToBoundedFinalizationIfCanceled();
                     _controllerFinalizationTimedOut = true;
                 }
             }
@@ -340,6 +374,33 @@ internal sealed partial class TestHostControllersTestHost
         await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
 
         return (exitCode, testHostProcessInformation, extensionInformation);
+    }
+
+    private CancellationTokenSource EnsureControllerFinalizationCancellationTokenSource()
+    {
+        var candidate = new CancellationTokenSource(_controllerExtensionFinalizationTimeout);
+        CancellationTokenSource? existing =
+            Interlocked.CompareExchange(ref _controllerFinalizationCancellationTokenSource, candidate, null);
+        if (existing is null)
+        {
+            return candidate;
+        }
+
+        candidate.Dispose();
+        return existing;
+    }
+
+    private static void MarkOutputDeviceStillRunning(List<object> servicesStillRunning, ProxyOutputDevice outputDevice)
+    {
+        if (!servicesStillRunning.Contains(outputDevice))
+        {
+            servicesStillRunning.Add(outputDevice);
+        }
+
+        if (!servicesStillRunning.Contains(outputDevice.OriginalOutputDevice))
+        {
+            servicesStillRunning.Add(outputDevice.OriginalOutputDevice);
+        }
     }
 
     private static async Task<bool> WaitForExitAfterTerminationAsync(
