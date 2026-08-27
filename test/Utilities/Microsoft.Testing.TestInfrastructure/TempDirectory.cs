@@ -196,6 +196,11 @@ public class TempDirectory : IDisposable
         bool recreateExisting = false)
     {
         string safeDirectoryName = ValidateDirectoryName(directoryName);
+        if (System.IO.Path.IsPathRooted(safeDirectoryName))
+        {
+            throw new ArgumentException("Directory name must be relative.", nameof(directoryName));
+        }
+
         string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, safeDirectoryName);
         if (recreateExisting && Directory.Exists(directoryPath))
         {
@@ -301,7 +306,13 @@ public class TempDirectory : IDisposable
         string safeDirectoryName = ValidateDirectoryName(stableDirectoryName);
         string lockDirectory = System.IO.Path.Combine(TestSuiteDirectory, ".locks");
         Directory.CreateDirectory(lockDirectory);
-        string lockPath = System.IO.Path.Combine(lockDirectory, safeDirectoryName + ".lock");
+        string lockFileName = safeDirectoryName + ".lock";
+        if (System.IO.Path.IsPathRooted(lockFileName))
+        {
+            throw new ArgumentException("Lock file name must be relative.", nameof(stableDirectoryName));
+        }
+
+        string lockPath = System.IO.Path.Combine(lockDirectory, lockFileName);
         DateTime timeout = DateTime.UtcNow.AddMinutes(5);
 
         while (true)
