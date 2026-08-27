@@ -419,6 +419,7 @@ public class CtrfReportEngineTests
         CapturedTestResult[] tests =
         [
             Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 2, isSupersededRetryAttempt: true),
             Captured("unique", "Solo", "passed"),
         ];
 
@@ -426,11 +427,38 @@ public class CtrfReportEngineTests
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         JsonElement results = document.RootElement.GetProperty("results");
-        Assert.AreEqual(2, results.GetProperty("summary").GetProperty("tests").GetInt32());
-        Assert.AreEqual(2, results.GetProperty("tests").GetArrayLength());
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(3, results.GetProperty("tests").GetArrayLength());
         Assert.DoesNotContain(
             test => test.TryGetProperty("retryAttempts", out _),
             results.GetProperty("tests").EnumerateArray());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesAlwaysFailingRetryWithoutFlaggingFlaky()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 2),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(1, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
+
+        JsonElement retry = Assert.ContainsSingle(results.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("failed", retry.GetProperty("status").GetString());
+        Assert.AreEqual(1, retry.GetProperty("retries").GetInt32());
+        Assert.IsFalse(retry.TryGetProperty("flaky", out _));
+        Assert.HasCount(1, retry.GetProperty("retryAttempts").EnumerateArray());
     }
 
     [TestMethod]
