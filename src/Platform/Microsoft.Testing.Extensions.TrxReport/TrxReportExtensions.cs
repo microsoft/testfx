@@ -11,6 +11,10 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
@@ -49,9 +53,9 @@ public static class TrxReportExtensions
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
-        if (TrxReport.TrxModeHelpers.IsTestHostControllerSupported)
+        if (!OperatingSystem.IsBrowser())
         {
-            ControllerBackedRegistrations(builder);
+            NonBrowserRegistrations(builder);
         }
 
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
@@ -76,10 +80,7 @@ public static class TrxReportExtensions
     }
 
     [UnsupportedOSPlatform("browser")]
-    [UnsupportedOSPlatform("ios")]
-    [UnsupportedOSPlatform("tvos")]
-    [UnsupportedOSPlatform("wasi")]
-    private static void ControllerBackedRegistrations(ITestApplicationBuilder builder)
+    private static void NonBrowserRegistrations(ITestApplicationBuilder builder)
     {
         builder.TestHost.AddTestHostApplicationLifetime(serviceProvider =>
             new TrxTestApplicationLifecycleCallbacks(

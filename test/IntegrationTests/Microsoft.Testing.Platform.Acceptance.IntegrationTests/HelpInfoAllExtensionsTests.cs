@@ -236,8 +236,6 @@ Extension options:
         Disable retry mechanism if the percentage of failed tests is greater than the specified value.
     --retry-failed-tests-max-tests
         Disable retry mechanism if the number of failed tests is greater than the specified value.
-    --trx-mode
-        Select TRX recovery mode: 'out-of-process' uses a surviving test-host controller and is the default when supported; 'in-process' avoids the additional process but cannot recover the report if the test host exits unexpectedly.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -750,10 +748,6 @@ Registered command line providers:
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: 'MyReport_{tfm}.trx'.
-      --trx-mode
-        Arity: 1
-        Hidden: False
-        Description: Select TRX recovery mode: 'out-of-process' uses a surviving test-host controller and is the default when supported; 'in-process' avoids the additional process but cannot recover the report if the test host exits unexpectedly.
   VideoRecorderCommandLineProvider
     Name: Video recorder
     Version: *

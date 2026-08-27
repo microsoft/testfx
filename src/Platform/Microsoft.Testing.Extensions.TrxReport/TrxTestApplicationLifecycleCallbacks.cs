@@ -26,7 +26,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
         _isEnabled =
            // TrxReportGenerator is enabled only when trx report is enabled
            commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName) &&
-           // The controller pipe is available only in a controller-launched test host.
+           // If crash dump is not enabled we run trx in-process only
            TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptionsService);
 
         _environment = environment;
