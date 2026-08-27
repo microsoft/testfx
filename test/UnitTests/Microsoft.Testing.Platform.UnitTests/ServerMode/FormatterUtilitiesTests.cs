@@ -231,6 +231,47 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
+    public void DeserializeUnknownNotification_NonObjectParams_DropsParams()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "method": "testing/unknown",
+                "params": "not-an-object"
+            }
+            """);
+
+        Assert.IsNull(Assert.IsInstanceOfType<NotificationMessage>(message).Params);
+    }
+
+    [TestMethod]
+    public void DeserializeInitializeResponse_NonStringProtocolVersion_Throws()
+    {
+        const string Json = """
+            {
+                "processId": 1,
+                "serverInfo": {
+                    "name": "server",
+                    "version": "1.2.3"
+                },
+                "capabilities": {
+                    "testing": {
+                        "supportsDiscovery": true,
+                        "experimental_multiRequestSupport": false,
+                        "vstestProvider": false,
+                        "attachmentsSupport": true,
+                        "multipleConnectionProvider": false
+                    }
+                },
+                "protocolVersion": 1
+            }
+            """;
+
+        Assert.Throws<MessageFormatException>(() => Deserialize<InitializeResponseArgs>(Json));
+    }
+
+    [TestMethod]
     public async Task Serialize_TestNodeWithRetryAttempt_EmitsRetryProperties()
     {
         // An unhandled property falls through the serializer's type chain and is silently dropped, which would

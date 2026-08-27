@@ -83,6 +83,9 @@ internal sealed class FakeMtpServer : IDisposable
     /// <summary>Gets or sets the response returned for an <c>initialize</c> request.</summary>
     public InitializeResponseArgs InitializeResponse { get; set; }
 
+    /// <summary>Gets or sets a raw response override for malformed-response tests.</summary>
+    public object? InitializeResponseOverride { get; set; }
+
     /// <summary>Gets or sets the response returned for a <c>testing/runTests</c> request.</summary>
     public RunResponseArgs RunResponse { get; set; } = new RunResponseArgs([]);
 
@@ -427,7 +430,7 @@ internal sealed class FakeMtpServer : IDisposable
         object? result;
         if (request.Method == JsonRpcMethods.Initialize)
         {
-            result = InitializeResponse;
+            result = InitializeResponseOverride ?? InitializeResponse;
         }
         else if (request.Method == JsonRpcMethods.TestingDiscoverTests)
         {

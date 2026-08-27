@@ -129,7 +129,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken).ConfigureAwait(false);
         MtpServerCapabilities capabilities = DecodeCapabilities(AsResultDictionary(response.Result));
         if (capabilities.ProtocolVersion is { } negotiatedProtocolVersion
-            && !_options.SupportedProtocolVersions.Contains(negotiatedProtocolVersion, StringComparer.Ordinal))
+            && !IsSupportedProtocolVersion(negotiatedProtocolVersion))
         {
             throw new MtpServerClientException(
                 $"The server negotiated unsupported protocol version '{negotiatedProtocolVersion}'. "
@@ -221,9 +221,18 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
-        string? protocolVersion = result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj)
-            ? protocolVersionObj as string
-            : null;
+        string? protocolVersion = null;
+        if (result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj))
+        {
+            protocolVersion = protocolVersionObj switch
+            {
+                null => null,
+                string value => value,
+                _ => throw new MtpServerClientException(
+                    $"Expected '{JsonRpcStrings.ProtocolVersion}' to be a string but it was '{protocolVersionObj.GetType()}'."),
+            };
+        }
+
         if (result.TryGetValue(JsonRpcStrings.Capabilities, out object? capabilitiesObj)
             && capabilitiesObj is IDictionary<string, object?> capabilities
             && capabilities.TryGetValue(JsonRpcStrings.Testing, out object? testingObj)
@@ -247,6 +256,11 @@ internal sealed class MtpServerClient : IMtpServerClient
             multiConnectionProvider,
             protocolVersion);
     }
+
+    private bool IsSupportedProtocolVersion(string negotiatedProtocolVersion)
+        => _options.SupportedProtocolVersions.Count == 0
+            ? negotiatedProtocolVersion == JsonRpcProtocolVersions.Current
+            : _options.SupportedProtocolVersions.Contains(negotiatedProtocolVersion, StringComparer.Ordinal);
 
     private static int? AsInt(object? value)
         => value switch

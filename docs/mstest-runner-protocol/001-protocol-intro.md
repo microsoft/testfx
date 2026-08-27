@@ -734,7 +734,6 @@ interface CancelParams {
 ### Launch debugger
 
 > Message direction: Server -> Client
-
 > [!NOTE]
 > Reserved protocol shape. Microsoft.Testing.Platform 1.0 does not currently send this request.
 
@@ -768,7 +767,6 @@ interface LaunchDebuggerParams {
 ### Attach debugger
 
 > Message direction: Server -> Client
-
 > [!NOTE]
 > Reserved protocol shape. Microsoft.Testing.Platform 1.0 does not currently send this request.
 

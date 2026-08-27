@@ -58,7 +58,7 @@ internal static partial class SerializerUtilities
 
                             // Preserve server-to-client notification params when this formatter is used by a
                             // client or protocol test, matching the System.Text.Json path.
-                            _ => rawParams is null ? null : paramsObj,
+                            _ => rawParams is IDictionary<string, object?> ? paramsObj : null,
                         };
                     }
                     catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
@@ -152,7 +152,14 @@ internal static partial class SerializerUtilities
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ServerInfo serverInfo = Deserialize<ServerInfo>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ServerInfo));
             ServerCapabilities capabilities = Deserialize<ServerCapabilities>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities));
-            string? protocolVersion = GetOptionalPropertyFromJson(properties, JsonRpcStrings.ProtocolVersion) as string;
+            object? protocolVersionValue = GetOptionalPropertyFromJson(properties, JsonRpcStrings.ProtocolVersion);
+            string? protocolVersion = protocolVersionValue switch
+            {
+                null => null,
+                string value => value,
+                _ => throw new MessageFormatException(
+                    $"'{JsonRpcStrings.ProtocolVersion}' field has wrong type (expected String)"),
+            };
 
             return new InitializeResponseArgs(processId, serverInfo, capabilities)
             {

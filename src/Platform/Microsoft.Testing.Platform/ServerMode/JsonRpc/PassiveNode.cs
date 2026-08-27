@@ -60,6 +60,27 @@ internal sealed class PassiveNode : IDisposable
         }
 
         var requestMessage = (RequestMessage)message;
+        if (requestMessage.Params is not InitializeRequestArgs initializeRequest)
+        {
+            await SendErrorAsync(
+                requestMessage.Id,
+                ErrorCodes.InvalidParams,
+                "The initialize request params are invalid.",
+                _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            return false;
+        }
+
+        string? negotiatedProtocolVersion = JsonRpcProtocolVersions.Negotiate(initializeRequest.ProtocolVersions);
+        if (negotiatedProtocolVersion is null)
+        {
+            await SendErrorAsync(
+                requestMessage.Id,
+                ErrorCodes.ProtocolVersionNotSupported,
+                $"None of the client's protocol versions are supported. Server versions: {string.Join(", ", JsonRpcProtocolVersions.Supported)}.",
+                _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            return false;
+        }
+
         var responseObject = new InitializeResponseArgs(
                         ProcessId: _environment.ProcessId,
                         ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
@@ -73,11 +94,22 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we're a push node
                                 MultiConnectionProvider: true)))
         {
-            ProtocolVersion = JsonRpcProtocolVersions.Current,
+            ProtocolVersion = negotiatedProtocolVersion,
         };
 
         await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return true;
+    }
+
+    private async Task SendErrorAsync(int reqId, int errorCode, string message, CancellationToken cancellationToken)
+    {
+        AssertInitialized();
+
+        ErrorMessage error = new(reqId, errorCode, message, Data: null);
+        using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await _messageHandler.WriteRequestAsync(error, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private async Task SendResponseAsync(int reqId, object result, CancellationToken cancellationToken)

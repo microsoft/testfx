@@ -192,7 +192,16 @@ internal sealed partial class Json
         deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
           (json, jsonElement) =>
           {
-              json.TryBind(jsonElement, out string? protocolVersion, JsonRpcStrings.ProtocolVersion);
+              string? protocolVersion = null;
+              if (jsonElement.TryGetProperty(JsonRpcStrings.ProtocolVersion, out JsonElement protocolVersionElement)
+                  && protocolVersionElement.ValueKind != JsonValueKind.Null)
+              {
+                  protocolVersion = protocolVersionElement.ValueKind == JsonValueKind.String
+                      ? protocolVersionElement.GetString()
+                      : throw new MessageFormatException(
+                          $"'{JsonRpcStrings.ProtocolVersion}' field has wrong type (expected String)");
+              }
+
               return new InitializeResponseArgs(
                   ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
                   ServerInfo: json.Bind<ServerInfo>(jsonElement, JsonRpcStrings.ServerInfo),

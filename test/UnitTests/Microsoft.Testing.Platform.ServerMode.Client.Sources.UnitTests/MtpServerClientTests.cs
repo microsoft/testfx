@@ -74,6 +74,55 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task InitializeAsync_EmptySupportedVersions_AcceptsLegacyVersion()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = [],
+        });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(
+            client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(JsonRpcProtocolVersions.Current, capabilities.ProtocolVersion);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_NonStringProtocolVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponseOverride = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.ProcessId] = 4242,
+            [JsonRpcStrings.ServerInfo] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Name] = "FakeMtpServer",
+                [JsonRpcStrings.Version] = "1.2.3",
+            },
+            [JsonRpcStrings.Capabilities] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = new Dictionary<string, object?>
+                {
+                    [JsonRpcStrings.SupportsDiscovery] = true,
+                    [JsonRpcStrings.MultiRequestSupport] = true,
+                    [JsonRpcStrings.VSTestProviderSupport] = false,
+                    [JsonRpcStrings.AttachmentsSupport] = true,
+                    [JsonRpcStrings.MultiConnectionProvider] = false,
+                },
+            },
+            [JsonRpcStrings.ProtocolVersion] = 1,
+        };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcStrings.ProtocolVersion, exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
     public async Task DiscoverTestsAsync_All_SendsDiscoverRequest()
     {
         using FakeMtpServer server = new();
