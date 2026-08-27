@@ -400,7 +400,9 @@ public class RestrictiveUmask
         try
         {
             tempDirectory = TestContext.TestTempDirectory;
-            File.WriteAllText(Path.Combine(tempDirectory, "write-check.txt"), "data");
+            string writeCheckPath = Path.Combine(tempDirectory, "write-check.txt");
+            File.WriteAllText(writeCheckPath, "data");
+            Assert.IsTrue(File.Exists(writeCheckPath));
         }
         finally
         {
