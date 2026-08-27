@@ -131,6 +131,34 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public void Merge_DeduplicatesArchitectureAndRunnerOsCasingVariants()
+    {
+        GitHubActionsHistorySample lowerCase = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Passed,
+            Now.AddMinutes(-1));
+        lowerCase.Architecture = "x64";
+        lowerCase.RunnerOs = "windows";
+        GitHubActionsHistorySample upperCase = CreateSample(
+            "Tests.Flaky",
+            GitHubActionsHistoryOutcome.Passed,
+            Now);
+        upperCase.Architecture = "X64";
+        upperCase.RunnerOs = "WINDOWS";
+
+        GitHubActionsHistorySnapshot merged = GitHubActionsHistoryStore.Merge(
+            new GitHubActionsHistorySnapshot { Samples = [lowerCase] },
+            [upperCase],
+            Now);
+
+        Assert.HasCount(1, merged.Samples);
+        Assert.AreEqual(Now, merged.Samples[0].TimestampUtc);
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(merged, CreateScope())[
+            ("Tests.Flaky", "Tests.Flaky", "Tests.Flaky")];
+        Assert.AreEqual(1, stats.DurationSampleCount);
+    }
+
+    [TestMethod]
     public void AggregateStats_DoesNotMixMatchingNamesFromOtherScopes()
     {
         GitHubActionsHistorySample otherAssembly = CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Failed, Now);
@@ -354,6 +382,8 @@ public sealed class GitHubActionsHistoryTests
                                 GitHubActionsHistoryOutcome.Passed,
                                 Now);
                             sample.RunId = index.ToString(CultureInfo.InvariantCulture);
+                            sample.Architecture = index % 2 == 0 ? "x64" : "X64";
+                            sample.RunnerOs = index % 2 == 0 ? "Windows" : "WINDOWS";
                             return sample;
                         }),
                 ],

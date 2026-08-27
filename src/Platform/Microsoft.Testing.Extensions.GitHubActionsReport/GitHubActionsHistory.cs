@@ -506,23 +506,10 @@ internal static class GitHubActionsHistoryStore
             [
                 .. samples
                     .GroupBy(static sample => (
-                        sample.AssemblyName,
-                        sample.TargetFramework,
-                        sample.Architecture,
-                        sample.RunnerOs,
-                        sample.TestId,
-                        sample.FullyQualifiedName,
-                        sample.DisplayName,
+                        Test: GetTestIdentity(sample),
                         Run: sample.GetRunIdentity()))
                     .Select(static group => group.OrderByDescending(static sample => sample.TimestampUtc).First())
-                    .GroupBy(static sample => (
-                        sample.AssemblyName,
-                        sample.TargetFramework,
-                        sample.Architecture,
-                        sample.RunnerOs,
-                        sample.TestId,
-                        sample.FullyQualifiedName,
-                        sample.DisplayName))
+                    .GroupBy(static sample => GetTestIdentity(sample))
                     .SelectMany(static group => group
                         .OrderByDescending(static sample => sample.TimestampUtc)
                         .ThenByDescending(static sample => sample.RunAttempt)
@@ -586,14 +573,7 @@ internal static class GitHubActionsHistoryStore
                 string RunnerOs,
                 string TestId,
                 string FullyQualifiedName,
-                string DisplayName) identity = (
-                sample.AssemblyName,
-                sample.TargetFramework,
-                sample.Architecture,
-                sample.RunnerOs,
-                sample.TestId,
-                sample.FullyQualifiedName,
-                sample.DisplayName);
+                string DisplayName) identity = GetTestIdentity(sample);
             int count = counts.TryGetValue(identity, out int existingCount) ? existingCount + 1 : 1;
             if (count > MaxSamplesPerTest)
             {
@@ -659,6 +639,23 @@ internal static class GitHubActionsHistoryStore
         => sortedValues.Count == 0
             ? 0
             : sortedValues[Math.Max(0, (int)Math.Ceiling(percentile / 100d * sortedValues.Count) - 1)];
+
+    private static (
+        string AssemblyName,
+        string TargetFramework,
+        string Architecture,
+        string RunnerOs,
+        string TestId,
+        string FullyQualifiedName,
+        string DisplayName) GetTestIdentity(GitHubActionsHistorySample sample)
+        => (
+            sample.AssemblyName,
+            sample.TargetFramework,
+            sample.Architecture.ToUpperInvariant(),
+            sample.RunnerOs.ToUpperInvariant(),
+            sample.TestId,
+            sample.FullyQualifiedName,
+            sample.DisplayName);
 
     private static TimeSpan GetRetryDelay(int attempt)
         => TimeSpan.FromMilliseconds(Math.Min(1000, 50 * Math.Pow(2, Math.Min(attempt - 1, 5))));
