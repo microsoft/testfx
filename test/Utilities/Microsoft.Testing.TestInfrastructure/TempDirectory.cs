@@ -7,6 +7,7 @@ public class TempDirectory : IDisposable
 {
     private readonly bool _cleanup;
     private readonly string _baseDirectory;
+    private readonly FileStream? _directoryLock;
     private bool _isDisposed;
 
     /// <summary>
@@ -21,7 +22,16 @@ public class TempDirectory : IDisposable
     private TempDirectory(string stableDirectoryName, string? subDirectory)
     {
         _cleanup = Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") != "0";
-        (_baseDirectory, Path) = CreateDirectory(stableDirectoryName, subDirectory);
+        _directoryLock = AcquireStableDirectoryLock(stableDirectoryName);
+        try
+        {
+            (_baseDirectory, Path) = CreateDirectory(stableDirectoryName, subDirectory, recreateExisting: true);
+        }
+        catch
+        {
+            _directoryLock.Dispose();
+            throw;
+        }
     }
 
     public string Path { get; }
@@ -46,20 +56,23 @@ public class TempDirectory : IDisposable
 
         if (!_cleanup)
         {
-            return;
-        }
-
-        if (!Directory.Exists(_baseDirectory))
-        {
+            _directoryLock?.Dispose();
             return;
         }
 
         try
         {
-            Directory.Delete(_baseDirectory, recursive: true);
+            if (Directory.Exists(_baseDirectory))
+            {
+                Directory.Delete(_baseDirectory, recursive: true);
+            }
         }
         catch
         {
+        }
+        finally
+        {
+            _directoryLock?.Dispose();
         }
     }
 
@@ -177,9 +190,25 @@ public class TempDirectory : IDisposable
     internal static (string BaseDirectory, string FinalDirectory) CreateUniqueDirectory(string? subDirectory)
         => CreateDirectory(RandomId.Next(), subDirectory);
 
-    private static (string BaseDirectory, string FinalDirectory) CreateDirectory(string directoryName, string? subDirectory)
+    private static (string BaseDirectory, string FinalDirectory) CreateDirectory(
+        string directoryName,
+        string? subDirectory,
+        bool recreateExisting = false)
     {
+        if (string.IsNullOrWhiteSpace(directoryName)
+            || System.IO.Path.IsPathRooted(directoryName)
+            || directoryName is "." or ".."
+            || directoryName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
+        {
+            throw new ArgumentException("Directory name must be a single relative directory segment.", nameof(directoryName));
+        }
+
         string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, directoryName);
+        if (recreateExisting && Directory.Exists(directoryPath))
+        {
+            Directory.Delete(directoryPath, recursive: true);
+        }
+
         Directory.CreateDirectory(directoryPath);
 
         string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
@@ -272,6 +301,26 @@ public class TempDirectory : IDisposable
         Directory.CreateDirectory(finalDirectory);
 
         return (directoryPath, finalDirectory);
+    }
+
+    private static FileStream AcquireStableDirectoryLock(string stableDirectoryName)
+    {
+        string lockDirectory = System.IO.Path.Combine(TestSuiteDirectory, ".locks");
+        Directory.CreateDirectory(lockDirectory);
+        string lockPath = System.IO.Path.Combine(lockDirectory, stableDirectoryName + ".lock");
+        DateTime timeout = DateTime.UtcNow.AddMinutes(5);
+
+        while (true)
+        {
+            try
+            {
+                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException) when (DateTime.UtcNow < timeout)
+            {
+                Thread.Sleep(100);
+            }
+        }
     }
 
     public override string ToString() => Path;
