@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.Configurations;
 [TestClass]
 public sealed class RunSettingsConfigurationProviderTests
 {
+    private const string RunSettingsContentEnvironmentVariable = "TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS";
+    private const string RunSettingsFileEnvironmentVariable = "TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE";
     private const string RunSettingsFilePath = "test.runsettings";
 
     private const string RunSettingsWithResultsDirectory = """
@@ -67,16 +69,30 @@ public sealed class RunSettingsConfigurationProviderTests
     }
 
     [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task BuildAsync_WithEmptyParseResult_ClearsConfiguration()
     {
-        RunSettingsConfigurationProvider provider = await CreateBuiltProviderAsync(RunSettingsWithResultsDirectory);
+        string? originalRunSettingsContent = Environment.GetEnvironmentVariable(RunSettingsContentEnvironmentVariable);
+        string? originalRunSettingsFile = Environment.GetEnvironmentVariable(RunSettingsFileEnvironmentVariable);
+        try
+        {
+            Environment.SetEnvironmentVariable(RunSettingsContentEnvironmentVariable, null);
+            Environment.SetEnvironmentVariable(RunSettingsFileEnvironmentVariable, null);
 
-        IConfigurationProvider builtProvider = await provider.BuildAsync(CommandLineParseResult.Empty);
-        bool result = provider.TryGet(PlatformConfigurationConstants.PlatformResultDirectory, out string? value);
+            RunSettingsConfigurationProvider provider = await CreateBuiltProviderAsync(RunSettingsWithResultsDirectory);
 
-        Assert.AreSame(provider, builtProvider);
-        Assert.IsFalse(result);
-        Assert.IsNull(value);
+            IConfigurationProvider builtProvider = await provider.BuildAsync(CommandLineParseResult.Empty);
+            bool result = provider.TryGet(PlatformConfigurationConstants.PlatformResultDirectory, out string? value);
+
+            Assert.AreSame(provider, builtProvider);
+            Assert.IsFalse(result);
+            Assert.IsNull(value);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(RunSettingsContentEnvironmentVariable, originalRunSettingsContent);
+            Environment.SetEnvironmentVariable(RunSettingsFileEnvironmentVariable, originalRunSettingsFile);
+        }
     }
 
     [TestMethod]
