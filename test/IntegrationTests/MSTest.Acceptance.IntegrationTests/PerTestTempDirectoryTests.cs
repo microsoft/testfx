@@ -56,6 +56,11 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
             string failingPath = Assert.ContainsSingle(records["fail"]);
             Assert.IsTrue(Directory.Exists(failingPath), $"Failing test temp directory should be retained but is missing: '{failingPath}'.");
             Assert.IsTrue(File.Exists(Path.Combine(failingPath, "artifact.txt")), "Failing test artifact should be retained for inspection.");
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                UnixFileMode expectedMode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+                Assert.AreEqual(expectedMode, File.GetUnixFileMode(failingPath), "Test temp directories must be accessible only to their owner.");
+            }
         }
         finally
         {
