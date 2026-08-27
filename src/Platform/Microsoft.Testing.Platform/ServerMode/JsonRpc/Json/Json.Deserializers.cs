@@ -447,7 +447,7 @@ internal sealed partial class Json
     private static int ReadRpcId(JsonElement idElement)
         => idElement.ValueKind switch
         {
-            JsonValueKind.Number when TryReadIntegralInt32(idElement, out int numericId) => numericId,
+            JsonValueKind.Number when RpcIdParser.TryParseNumericId(idElement.GetRawText(), out int numericId) => numericId,
             JsonValueKind.String when int.TryParse(
                 idElement.GetString(),
                 NumberStyles.Integer,
@@ -456,24 +456,4 @@ internal sealed partial class Json
                 && idElement.GetString() == stringId.ToString(CultureInfo.InvariantCulture) => stringId,
             _ => throw new MessageFormatException($"'{JsonRpcStrings.Id}' field should be an int or a numeric string"),
         };
-
-    private static bool TryReadIntegralInt32(JsonElement element, out int value)
-    {
-        if (element.TryGetInt32(out value))
-        {
-            return true;
-        }
-
-        if (element.TryGetDecimal(out decimal decimalValue)
-            && decimalValue == decimal.Truncate(decimalValue)
-            && decimalValue >= int.MinValue
-            && decimalValue <= int.MaxValue)
-        {
-            value = decimal.ToInt32(decimalValue);
-            return true;
-        }
-
-        value = default;
-        return false;
-    }
 }

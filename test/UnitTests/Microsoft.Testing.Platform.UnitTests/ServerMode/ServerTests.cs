@@ -214,9 +214,11 @@ public sealed class ServerTests
             }
             """);
 
-        ErrorMessage incompatibleVersionError = Assert.IsInstanceOfType<ErrorMessage>(
-            await messageHandler.ReadAsync(timeout.Token));
-        Assert.AreEqual(2, incompatibleVersionError.Id);
+        var incompatibleVersionError = (ErrorMessage)(await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ErrorMessage { Id: 2 },
+            "Wait incompatible protocol version error",
+            timeout.Token))!;
         Assert.AreEqual(ErrorCodes.ProtocolVersionNotSupported, incompatibleVersionError.ErrorCode);
 
         const string initializeMessage = """
@@ -476,6 +478,31 @@ public sealed class ServerTests
                     }
                 }
                 """);
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "initialize",
+                    "params": {
+                        "processId": 32,
+                        "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                        "capabilities": {
+                            "testing": {
+                                "debuggerProvider": false
+                            }
+                        }
+                    }
+                }
+                """);
+
+            var duplicateInitializeError = (ErrorMessage)(await WaitForMessage(
+                messageHandler,
+                rpcMessage => rpcMessage is ErrorMessage { Id: 3 },
+                "Wait duplicate initialize error after cancellation",
+                timeout.Token))!;
+            Assert.AreEqual(ErrorCodes.InvalidRequest, duplicateInitializeError.ErrorCode);
         }
         finally
         {
@@ -499,6 +526,136 @@ public sealed class ServerTests
             timeout.Token))!;
         Assert.AreEqual(ErrorCodes.RequestCanceled, cancellationError.ErrorCode);
         Assert.AreEqual(0, Volatile.Read(ref discoveryInvocationCount));
+
+        await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
+        Assert.AreEqual(0, await serverTask);
+    }
+
+    [TestMethod]
+    public async Task SlowCancellationCallbackDoesNotBlockMessageReader()
+    {
+        using var server = TcpServer.Create();
+        TaskCompletionSource<bool> discoveryStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> cancellationCallbackStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var releaseCancellationCallback = new ManualResetEventSlim(initialState: false);
+        using CancellationTokenSource cancellationCallbackTimeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter
+        {
+            DiscoveryAction = async context =>
+            {
+                var cancellationDelay = Task.Delay(Timeout.Infinite, context.CancellationToken);
+                using CancellationTokenRegistration registration = context.CancellationToken.Register(() =>
+                {
+                    cancellationCallbackStarted.TrySetResult(true);
+                    releaseCancellationCallback.Wait(cancellationCallbackTimeout.Token);
+                });
+                discoveryStarted.TrySetResult(true);
+                await cancellationDelay;
+            },
+        });
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = Task.Run(testApplication.RunAsync);
+
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
+        using NetworkStream stream = client.GetStream();
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
+            client,
+            clientToServerStream: client.GetStream(),
+            serverToClientStream: client.GetStream(),
+            FormatterUtilities.CreateFormatter());
+
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": false
+                        }
+                    }
+                }
+            }
+            """);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 1 },
+            "Wait initialize response",
+            timeout.Token);
+
+        try
+        {
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "testing/discoverTests",
+                    "params": {
+                        "runId": "00000000-0000-0000-0000-000000000002"
+                    }
+                }
+                """);
+            await discoveryStarted.Task.WaitAsync(timeout.Token);
+
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "method": "$/cancelRequest",
+                    "params": {
+                        "id": 2
+                    }
+                }
+                """);
+            await cancellationCallbackStarted.Task.WaitAsync(timeout.Token);
+
+            await WriteMessageAsync(
+                writer,
+                """
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "testing/unknown",
+                    "params": {}
+                }
+                """);
+            var methodNotFoundError = (ErrorMessage)(await WaitForMessage(
+                messageHandler,
+                rpcMessage => rpcMessage is ErrorMessage { Id: 3 },
+                "Wait method-not-found response while cancellation callback is blocked",
+                timeout.Token))!;
+            Assert.AreEqual(ErrorCodes.MethodNotFound, methodNotFoundError.ErrorCode);
+        }
+        finally
+        {
+            releaseCancellationCallback.Set();
+        }
+
+        _ = await WaitForMessage(
+            messageHandler,
+            IsTestUpdateCompletion,
+            "Wait canceled discovery completion",
+            timeout.Token);
+        var cancellationError = (ErrorMessage)(await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ErrorMessage { Id: 2 },
+            "Wait canceled discovery error",
+            timeout.Token))!;
+        Assert.AreEqual(ErrorCodes.RequestCanceled, cancellationError.ErrorCode);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
         Assert.AreEqual(0, await serverTask);

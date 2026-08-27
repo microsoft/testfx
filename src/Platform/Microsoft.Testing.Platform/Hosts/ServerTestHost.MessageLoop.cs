@@ -141,7 +141,14 @@ internal sealed partial class ServerTestHost
                         GetRequestKey(args.CancelRequestId, args.StringId),
                         out RpcInvocationState? rpcState))
                     {
-                        Exception? cancellationException = rpcState.CancelRequest();
+                        if (!rpcState.TryRequestCancellation())
+                        {
+                            break;
+                        }
+
+                        // Record cancellation synchronously so a queued request cannot resume into execution.
+                        // Run token callbacks asynchronously so extension code cannot block the message reader.
+                        Exception? cancellationException = await Task.Run(rpcState.CancelRequest).ConfigureAwait(false);
                         if (cancellationException is not null)
                         {
                             // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
@@ -292,7 +299,7 @@ internal sealed partial class ServerTestHost
             bool testUpdateCompletionSent = false;
             try
             {
-                rpcState.CancellationToken.ThrowIfCancellationRequested();
+                rpcState.ThrowIfCancellationRequested();
                 object response = await HandleRequestCoreAsync(request, rpcState, cancellationToken).ConfigureAwait(false);
                 testUpdateCompletionSent = await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken).ConfigureAwait(false);
                 await SendResponseAsync(
@@ -323,7 +330,7 @@ internal sealed partial class ServerTestHost
                     }
 
                     // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
-                    (string errorMessage, int errorCode) = rpcState.CancellationToken.IsCancellationRequested
+                    (string errorMessage, int errorCode) = rpcState.IsCancellationRequested
                         ? (string.Empty, ErrorCodes.RequestCanceled)
                         : (e.ToString(), ErrorCodes.RequestCanceled);
 
@@ -487,6 +494,7 @@ internal sealed partial class ServerTestHost
 #endif
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
+        private int _cancellationRequested;
 
         /// <remarks>
         /// For outbound requests, this is populated with the response from the client.
@@ -497,6 +505,20 @@ internal sealed partial class ServerTestHost
 
         // We don't expose directly the source because we need to synchronize the complete/cancel
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+
+        public bool IsCancellationRequested
+            => Volatile.Read(ref _cancellationRequested) != 0 || _cancellationTokenSource.IsCancellationRequested;
+
+        public bool TryRequestCancellation()
+            => Interlocked.Exchange(ref _cancellationRequested, 1) == 0;
+
+        public void ThrowIfCancellationRequested()
+        {
+            if (IsCancellationRequested)
+            {
+                throw new OperationCanceledException(CancellationToken);
+            }
+        }
 
         public AggregateException? CancelRequest()
         {

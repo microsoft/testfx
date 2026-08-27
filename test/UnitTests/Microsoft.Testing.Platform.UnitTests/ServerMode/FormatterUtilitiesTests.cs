@@ -142,6 +142,7 @@ public sealed class FormatterUtilitiesTests
     }
 
     [DataRow("1.00000000000000001")]
+    [DataRow("1.0000000000000000000000000000001")]
     [DataRow("1e-1")]
     [DataRow("2147483648.0")]
     [TestMethod]
