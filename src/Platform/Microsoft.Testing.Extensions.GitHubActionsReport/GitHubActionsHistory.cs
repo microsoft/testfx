@@ -537,6 +537,13 @@ internal static class GitHubActionsHistoryStore
                     cancellationToken).ConfigureAwait(false);
             }
 
+            long snapshotLength = new FileInfo(tempPath).Length;
+            if (snapshotLength > MaxSnapshotBytes)
+            {
+                throw new FormatException(
+                    $"GitHub Actions test history snapshot would be {snapshotLength.ToString(CultureInfo.InvariantCulture)} bytes, exceeding the {MaxSnapshotBytes.ToString(CultureInfo.InvariantCulture)}-byte limit.");
+            }
+
             if (File.Exists(path))
             {
                 File.Replace(tempPath, path, destinationBackupFileName: null);

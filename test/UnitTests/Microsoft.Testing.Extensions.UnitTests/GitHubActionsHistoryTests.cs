@@ -408,6 +408,52 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public async Task WriteMergedAsync_PreservesPriorSnapshotWhenNewSnapshotExceedsByteLimitAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-write-limit-history-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "history.json");
+        try
+        {
+            await GitHubActionsHistoryStore.WriteMergedAsync(
+                path,
+                historyWindowInDays: 30,
+                Now,
+                [CreateSample("Tests.Existing", GitHubActionsHistoryOutcome.Passed, Now.AddMinutes(-1))],
+                CancellationToken.None);
+            string priorSnapshot = File.ReadAllText(path);
+            string longPrefix = new('x', 600);
+            GitHubActionsHistorySample[] oversizedSamples =
+            [
+                .. Enumerable.Range(0, GitHubActionsHistoryStore.MaxTotalSamples)
+                    .Select(index => CreateSample(
+                        $"Tests.{longPrefix}{index.ToString(CultureInfo.InvariantCulture)}",
+                        GitHubActionsHistoryOutcome.Passed,
+                        Now)),
+            ];
+
+            await Assert.ThrowsExactlyAsync<FormatException>(
+                () => GitHubActionsHistoryStore.WriteMergedAsync(
+                    path,
+                    historyWindowInDays: 30,
+                    Now,
+                    oversizedSamples,
+                    CancellationToken.None));
+
+            Assert.AreEqual(priorSnapshot, File.ReadAllText(path));
+            GitHubActionsHistorySnapshot snapshot =
+                await GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None);
+            Assert.AreEqual("Tests.Existing", snapshot.Samples.Single().FullyQualifiedName);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public async Task HistoryService_LoadsPriorStatsAndWritesCurrentRunMetadataAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-history-service-{Guid.NewGuid():N}");
