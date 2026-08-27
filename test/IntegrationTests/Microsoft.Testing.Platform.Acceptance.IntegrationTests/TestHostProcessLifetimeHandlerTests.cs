@@ -57,7 +57,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["BLOCK_FINALIZATION"] = "1",
                 ["FINALIZATION_STARTED_FILE"] = finalizationStartedFile,
                 ["DISPOSAL_FILE"] = disposalFile,
-                ["TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS"] = "0.5",
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
             },
             cancellationToken: TestContext.CancellationToken);
 

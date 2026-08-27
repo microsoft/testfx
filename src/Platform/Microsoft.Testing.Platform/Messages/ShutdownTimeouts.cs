@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Messages;
 
 /// <summary>
-/// Bounds applied to the message bus shutdown handshake.
+/// Bounds applied during canceled-run shutdown.
 /// </summary>
 internal static class ShutdownTimeouts
 {
@@ -20,6 +20,11 @@ internal static class ShutdownTimeouts
     /// Default value of <see cref="GetCanceledConsumerCompletion(IEnvironment)"/>.
     /// </summary>
     public static readonly TimeSpan DefaultCanceledConsumerCompletion = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Default value of <see cref="GetControllerFinalization(IEnvironment)"/>.
+    /// </summary>
+    public static readonly TimeSpan DefaultControllerFinalization = TimeSpan.FromSeconds(30);
 
     /// <summary>
     /// Gets the budget for completing the consumer handshake once the run has already been canceled. It bounds
@@ -39,7 +44,21 @@ internal static class ShutdownTimeouts
     public static TimeSpan GetCanceledConsumerCompletion(IEnvironment environment)
     {
         string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS);
+        return GetConfiguredTimeout(value, DefaultCanceledConsumerCompletion);
+    }
 
+    /// <summary>
+    /// Gets the total budget for test-host controller callbacks, output reporting, and service disposal after
+    /// the child exits from an aborted run.
+    /// </summary>
+    public static TimeSpan GetControllerFinalization(IEnvironment environment)
+    {
+        string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS);
+        return GetConfiguredTimeout(value, DefaultControllerFinalization);
+    }
+
+    private static TimeSpan GetConfiguredTimeout(string? value, TimeSpan defaultTimeout)
+    {
         // The upper bound is the strictest downstream API: SemaphoreSlim.WaitAsync(TimeSpan) caps at
         // Int32.MaxValue milliseconds, which is tighter than the Task.WaitAsync / CancelAfter limit. Without it
         // a syntactically valid but absurd value ('1e300', or anything past ~24.8 days) would parse and then
@@ -54,7 +73,7 @@ internal static class ShutdownTimeouts
 
         if (!isUsable)
         {
-            return DefaultCanceledConsumerCompletion;
+            return defaultTimeout;
         }
 
         // A positive value can still degenerate into "no wait at all": anything below TimeSpan's resolution
@@ -63,6 +82,6 @@ internal static class ShutdownTimeouts
         // would make an aborted run abandon every consumer instantly rather than honoring a budget, so require
         // at least a millisecond.
         var timeout = TimeSpan.FromSeconds(seconds);
-        return timeout >= OneMillisecond ? timeout : DefaultCanceledConsumerCompletion;
+        return timeout >= OneMillisecond ? timeout : defaultTimeout;
     }
 }

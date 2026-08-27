@@ -53,7 +53,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _testHostsInformation = testHostsInformation;
         _passiveNode = passiveNode;
         _environment = environment;
-        _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetCanceledConsumerCompletion(environment);
+        _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetControllerFinalization(environment);
         _clock = clock;
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<TestHostControllersTestHost>();
