@@ -275,8 +275,10 @@ internal sealed partial class Json
             (json, properties) =>
             {
                 PropertyBag propertyBag = new();
-                string uid = json.Bind<string>(properties, JsonRpcStrings.Uid) ?? string.Empty;
-                string displayName = json.Bind<string>(properties, JsonRpcStrings.DisplayName);
+                string uid = json.Bind<string>(properties, JsonRpcStrings.Uid)
+                    ?? throw new MessageFormatException($"'{JsonRpcStrings.Uid}' field cannot be null");
+                string displayName = json.Bind<string>(properties, JsonRpcStrings.DisplayName)
+                    ?? throw new MessageFormatException($"'{JsonRpcStrings.DisplayName}' field cannot be null");
 
                 if (json.TryBind(properties, out string? locationFile, "location.file"))
                 {

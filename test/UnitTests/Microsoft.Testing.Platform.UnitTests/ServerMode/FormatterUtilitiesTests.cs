@@ -267,6 +267,8 @@ public sealed class FormatterUtilitiesTests
     [DataRow("\"tests\": [{}]")]
     [DataRow("\"tests\": [{\"uid\": 42, \"display-name\": \"Test\"}]")]
     [DataRow("\"tests\": [{\"uid\": \"test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": null, \"display-name\": \"Test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": null}]")]
     [TestMethod]
     public void DeserializeRunRequest_InvalidOptionalPropertyType_CapturesInvalidParams(string property)
     {
