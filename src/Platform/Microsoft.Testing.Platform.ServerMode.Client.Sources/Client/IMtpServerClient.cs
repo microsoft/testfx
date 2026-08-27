@@ -159,7 +159,8 @@ internal sealed class MtpServerCapabilities
         bool multiRequestSupport,
         bool vstestProviderSupport,
         bool supportsAttachments,
-        bool multiConnectionProvider)
+        bool multiConnectionProvider,
+        string? protocolVersion = null)
     {
         ServerProcessId = serverProcessId;
         ServerName = serverName;
@@ -169,6 +170,7 @@ internal sealed class MtpServerCapabilities
         VSTestProviderSupport = vstestProviderSupport;
         SupportsAttachments = supportsAttachments;
         MultiConnectionProvider = multiConnectionProvider;
+        ProtocolVersion = protocolVersion;
     }
 
     /// <summary>Gets the process id reported by the server.</summary>
@@ -179,6 +181,9 @@ internal sealed class MtpServerCapabilities
 
     /// <summary>Gets the server version.</summary>
     public string? ServerVersion { get; }
+
+    /// <summary>Gets the independently negotiated server-mode protocol version.</summary>
+    public string? ProtocolVersion { get; }
 
     /// <summary>Gets a value indicating whether the server supports discovery.</summary>
     public bool SupportsDiscovery { get; }

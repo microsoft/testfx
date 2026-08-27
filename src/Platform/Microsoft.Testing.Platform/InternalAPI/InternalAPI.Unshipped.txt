@@ -268,6 +268,26 @@ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bo
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? other) -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.init -> void
+Microsoft.Testing.Platform.ServerMode.InitializeRequestArgs.ProtocolVersions.get -> string![]?
+Microsoft.Testing.Platform.ServerMode.InitializeRequestArgs.ProtocolVersions.init -> void
+Microsoft.Testing.Platform.ServerMode.InitializeResponseArgs.ProtocolVersion.get -> string?
+Microsoft.Testing.Platform.ServerMode.InitializeResponseArgs.ProtocolVersion.init -> void
+Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions
+const Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.V1 = "1.0.0" -> string!
+static Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.Current.get -> string!
+static Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.Negotiate(System.Collections.Generic.IReadOnlyCollection<string!>? clientSupportedVersions) -> string?
+static Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.Supported.get -> System.Collections.Generic.IReadOnlyList<string!>!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ProtocolVersion = "protocolVersion" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ProtocolVersions = "protocolVersions" -> string!
+static readonly Microsoft.Testing.Platform.ServerMode.ErrorCodes.ProtocolVersionNotSupported -> int
+Microsoft.Testing.Platform.ServerMode.RequestMessage.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.RequestMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.ResponseMessage.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.ResponseMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.CancelRequestArgs.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.CancelRequestArgs.StringId.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void

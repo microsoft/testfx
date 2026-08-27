@@ -17,15 +17,21 @@ internal sealed class MtpServerClientOptions
     public string ClientName { get; set; } = "Microsoft.Testing.Platform.ServerMode.Client";
 
     /// <summary>
-    /// Gets or sets the client protocol/tool version reported to the server (<c>clientInfo.version</c>).
+    /// Gets or sets the client compatibility version reported to the server (<c>clientInfo.version</c>).
+    /// This is separate from <see cref="SupportedProtocolVersions"/>.
     /// </summary>
     public string ClientVersion { get; set; } = "1.0.0";
 
     /// <summary>
-    /// Gets or sets a value indicating whether the client advertises that it can provide a debugger
-    /// (<c>capabilities.testing.debuggerProvider</c>). When <see langword="true"/> the server may send
-    /// <c>client/attachDebugger</c> / <c>client/launchDebugger</c> requests, which the caller must answer via
-    /// a debugger callback. Defaults to <see langword="false"/>.
+    /// Gets or sets the server-mode protocol versions supported by the client. The server selects its most
+    /// preferred mutually supported version.
+    /// </summary>
+    public IReadOnlyCollection<string> SupportedProtocolVersions { get; set; } = JsonRpcProtocolVersions.Supported;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the client advertises the reserved debugger-provider
+    /// capability (<c>capabilities.testing.debuggerProvider</c>). Microsoft.Testing.Platform protocol 1.0
+    /// accepts this field for compatibility but does not currently send debugger requests.
     /// </summary>
     public bool DebuggerProvider { get; set; }
 

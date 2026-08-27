@@ -107,6 +107,7 @@
   <!-- Protocol + JSON-RPC serialization (all TFMs). Curated subset of ServerMode\JsonRpc\. -->
   <ItemGroup>
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\RpcMessages.cs" Link="Linked\ServerMode\JsonRpc\RpcMessages.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\RpcIdParser.cs" Link="Linked\ServerMode\JsonRpc\RpcIdParser.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\JsonRpcMethods.cs" Link="Linked\ServerMode\JsonRpc\JsonRpcMethods.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\ErrorCodes.cs" Link="Linked\ServerMode\JsonRpc\ErrorCodes.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\SerializerUtilities.cs" Link="Linked\ServerMode\JsonRpc\SerializerUtilities.cs" />

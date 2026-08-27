@@ -80,7 +80,11 @@ internal static partial class SerializerUtilities
         => idObj switch
         {
             int idInt => idInt,
-            string idStr => int.TryParse(idStr, out int id)
+            decimal idDecimal when idDecimal == decimal.Truncate(idDecimal)
+                && idDecimal >= int.MinValue
+                && idDecimal <= int.MaxValue => decimal.ToInt32(idDecimal),
+            string idStr => int.TryParse(idStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)
+                && idStr == id.ToString(CultureInfo.InvariantCulture)
                 ? id
                 : null,
             _ => null,

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Note: System.Text.Json is only available in .NET 6.0 and above.
@@ -7,7 +7,6 @@
 using Jsonite;
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -24,46 +23,63 @@ internal static partial class SerializerUtilities
             {
                 string method = (string)methodObj;
 
-                object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
+                bool hasId = properties.TryGetValue(JsonRpcStrings.Id, out object? idObj);
+                if (hasId && idObj is null)
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.Id}' field cannot be null");
+                }
 
-                IDictionary<string, object?> paramsObj = method != JsonRpcMethods.Exit
-                    ? GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Params)
-                    : new Dictionary<string, object?>();
-
-                int? id = idObj is null
+                int? id = !hasId
                             ? null
                             : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
+                string? stringId = idObj as string;
 
                 object? @params;
-                try
+                object? rawParams = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Params);
+                bool paramsRequired = method is JsonRpcMethods.Initialize
+                    or JsonRpcMethods.TestingDiscoverTests
+                    or JsonRpcMethods.TestingRunTests
+                    or JsonRpcMethods.CancelRequest;
+                if (paramsRequired && rawParams is not IDictionary<string, object?>)
                 {
-                    // Parse the specific methods
-                    @params = method switch
-                    {
-                        JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
-                        JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
-                        JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
-                        JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
-                        JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
-
-                        // Note: Let the server report unknown RPC request back to the client.
-                        _ => null,
-                    };
+                    @params = new InvalidRequestParamsArgs(
+                        ErrorCodes.InvalidParams,
+                        rawParams is null ? "'params' field is missing" : "'params' field has wrong type (expected Object)");
                 }
-                catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
+                else
                 {
-                    // If params can't be deserialized for a request, capture the failure so
-                    // we can later send back a properly coded JSON-RPC error using the request id.
-                    // For notifications there's no one to respond to, but we still avoid
-                    // crashing the message-handling loop by swallowing into the sentinel.
-                    // We catch the broader set of deserialization-related exceptions because the
-                    // request payload is untrusted client input and the lower-level helpers can
-                    // throw types other than MessageFormatException.
-                    @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                    IDictionary<string, object?> paramsObj = rawParams as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+                    try
+                    {
+                        // Parse the specific methods
+                        @params = method switch
+                        {
+                            JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
+                            JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
+                            JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
+                            JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
+                            JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
+
+                            // Preserve server-to-client notification params when this formatter is used by a
+                            // client or protocol test, matching the System.Text.Json path.
+                            _ => rawParams is IDictionary<string, object?> ? paramsObj : null,
+                        };
+                    }
+                    catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
+                    {
+                        // If params can't be deserialized for a request, capture the failure so
+                        // we can later send back a properly coded JSON-RPC error using the request id.
+                        // For notifications there's no one to respond to, but we still avoid
+                        // crashing the message-handling loop by swallowing into the sentinel.
+                        // We catch the broader set of deserialization-related exceptions because the
+                        // request payload is untrusted client input and the lower-level helpers can
+                        // throw types other than MessageFormatException.
+                        @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                    }
                 }
 
                 return id.HasValue
-                    ? new RequestMessage(id.Value, method, @params)
+                    ? new RequestMessage(id.Value, method, @params) { StringId = stringId }
                     : new NotificationMessage(method, @params);
             }
             else if (properties.TryGetValue(JsonRpcStrings.Error, out object? errorObj))
@@ -80,7 +96,7 @@ internal static partial class SerializerUtilities
 
                 int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-                return new ResponseMessage(id, paramsObj);
+                return new ResponseMessage(id, paramsObj) { StringId = idObj as string };
             }
 
             throw new MessageFormatException();
@@ -92,8 +108,28 @@ internal static partial class SerializerUtilities
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ClientInfo clientInfo = Deserialize<ClientInfo>(properties);
             ClientCapabilities capabilities = Deserialize<ClientCapabilities>(properties);
+            object? protocolVersionsValue = GetOptionalPropertyFromJson(properties, JsonRpcStrings.ProtocolVersions);
+            string[]? protocolVersions = null;
+            if (protocolVersionsValue is not null)
+            {
+                if (protocolVersionsValue is not ICollection<object> protocolVersionsJson)
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.ProtocolVersions}' field has wrong type (expected Array)");
+                }
 
-            return new InitializeRequestArgs(processId, clientInfo, capabilities);
+                protocolVersions = new string[protocolVersionsJson.Count];
+                int index = 0;
+                foreach (object? protocolVersion in protocolVersionsJson)
+                {
+                    protocolVersions[index++] = protocolVersion as string
+                        ?? throw new MessageFormatException($"'{JsonRpcStrings.ProtocolVersions}' entries must be strings");
+                }
+            }
+
+            return new InitializeRequestArgs(processId, clientInfo, capabilities)
+            {
+                ProtocolVersions = protocolVersions,
+            };
         });
 
         Deserializers[typeof(ClientInfo)] = new ObjectDeserializer<ClientInfo>(properties =>
@@ -120,8 +156,19 @@ internal static partial class SerializerUtilities
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ServerInfo serverInfo = Deserialize<ServerInfo>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ServerInfo));
             ServerCapabilities capabilities = Deserialize<ServerCapabilities>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities));
+            object? protocolVersionValue = GetOptionalPropertyFromJson(properties, JsonRpcStrings.ProtocolVersion);
+            string? protocolVersion = protocolVersionValue switch
+            {
+                null => null,
+                string value => value,
+                _ => throw new MessageFormatException(
+                    $"'{JsonRpcStrings.ProtocolVersion}' field has wrong type (expected String)"),
+            };
 
-            return new InitializeResponseArgs(processId, serverInfo, capabilities);
+            return new InitializeResponseArgs(processId, serverInfo, capabilities)
+            {
+                ProtocolVersion = protocolVersion,
+            };
         });
 
         Deserializers[typeof(ServerInfo)] = new ObjectDeserializer<ServerInfo>(properties =>
@@ -140,7 +187,6 @@ internal static partial class SerializerUtilities
             bool vstestProviderSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.VSTestProviderSupport);
             bool attachmentsSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.AttachmentsSupport);
             bool multiConnectionProvider = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.MultiConnectionProvider);
-
             return new ServerCapabilities(new ServerTestingCapabilities(
                 SupportsDiscovery: supportsDiscovery,
                 MultiRequestSupport: multiRequestSupport,
@@ -157,11 +203,8 @@ internal static partial class SerializerUtilities
                 throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
-            var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
-
-            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>()?.Select(obj => Deserialize<TestNode>(obj)).ToList();
-
-            string? filter = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Filter) as string;
+            ICollection<TestNode>? tests = DeserializeOptionalTestNodes(properties);
+            string? filter = GetOptionalTypedProperty<string>(properties, JsonRpcStrings.Filter);
 
             return new DiscoverRequestArgs(runId, tests, filter);
         });
@@ -174,10 +217,8 @@ internal static partial class SerializerUtilities
                 throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
-            var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
-
-            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>().Select(obj => Deserialize<TestNode>(obj)).ToList();
-            string? filter = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Filter) as string;
+            ICollection<TestNode>? tests = DeserializeOptionalTestNodes(properties);
+            string? filter = GetOptionalTypedProperty<string>(properties, JsonRpcStrings.Filter);
 
             return new RunRequestArgs(runId, tests, filter);
         });
@@ -185,37 +226,42 @@ internal static partial class SerializerUtilities
         Deserializers[typeof(TestNode)] = new ObjectDeserializer<TestNode>(
             properties =>
             {
-                string uid = string.Empty;
-                string displayName = string.Empty;
-                PropertyBag propertyBag = new();
-
-                foreach (KeyValuePair<string, object?> kvp in properties)
+                string uid = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.Uid);
+                string displayName = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.DisplayName);
+                if (RoslynString.IsNullOrWhiteSpace(uid))
                 {
-                    if (kvp.Key == JsonRpcStrings.Uid)
-                    {
-                        uid = kvp.Value as string ?? string.Empty;
-                        continue;
-                    }
-
-                    if (kvp.Key == JsonRpcStrings.DisplayName)
-                    {
-                        displayName = kvp.Value as string ?? string.Empty;
-                        continue;
-                    }
+                    throw new MessageFormatException($"'{JsonRpcStrings.Uid}' field cannot be empty or whitespace");
                 }
 
-                if (properties.TryGetValue("location.file", out object? location_file))
+                PropertyBag propertyBag = new();
+
+                if (properties.TryGetValue("location.file", out object? locationFileValue))
                 {
-                    ApplicationStateGuard.Ensure(location_file is not null);
-                    if (properties.TryGetValue("location.line-start", out object? location_lineStart) && properties.TryGetValue("location.line-end", out object? location_lineEnd))
+                    if (locationFileValue is not string locationFile)
                     {
-                        ApplicationStateGuard.Ensure(location_lineStart is not null);
-                        ApplicationStateGuard.Ensure(location_lineEnd is not null);
-                        TestFileLocationProperty testFileLocationProperty = new(
-                            (string)location_file,
-                            new LinePositionSpan(new LinePosition((int)location_lineStart, 0), new LinePosition((int)location_lineEnd, 0)));
-                        propertyBag.Add(testFileLocationProperty);
+                        throw new MessageFormatException("'location.file' field has wrong type (expected String)");
                     }
+
+                    bool hasLineStart = properties.TryGetValue("location.line-start", out object? locationLineStartValue);
+                    bool hasLineEnd = properties.TryGetValue("location.line-end", out object? locationLineEndValue);
+                    if (!hasLineStart || locationLineStartValue is not int locationLineStart
+                        || !hasLineEnd || locationLineEndValue is not int locationLineEnd)
+                    {
+                        throw new MessageFormatException(
+                            "'location.file', 'location.line-start', and 'location.line-end' fields must be specified together as strings and integers");
+                    }
+
+                    TestFileLocationProperty testFileLocationProperty = new(
+                        locationFile,
+                        new LinePositionSpan(
+                            new LinePosition(locationLineStart, 0),
+                            new LinePosition(locationLineEnd, 0)));
+                    propertyBag.Add(testFileLocationProperty);
+                }
+                else if (properties.ContainsKey("location.line-start") || properties.ContainsKey("location.line-end"))
+                {
+                    throw new MessageFormatException(
+                        "'location.file', 'location.line-start', and 'location.line-end' fields must be specified together");
                 }
 
                 return new TestNode
@@ -231,7 +277,7 @@ internal static partial class SerializerUtilities
             object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
             int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-            return new CancelRequestArgs(id);
+            return new CancelRequestArgs(id) { StringId = idObj as string };
         });
 
         Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(_ => new ExitRequestArgs());
@@ -272,7 +318,45 @@ internal static partial class SerializerUtilities
                 Id: id,
                 ErrorCode: code,
                 Message: errorMessage,
-                Data: data);
+                Data: data)
+            {
+                StringId = idObj as string,
+            };
         });
+    }
+
+    private static ICollection<TestNode>? DeserializeOptionalTestNodes(IDictionary<string, object?> properties)
+    {
+        ICollection<object>? testsJson = GetOptionalTypedProperty<ICollection<object>>(properties, JsonRpcStrings.Tests);
+        if (testsJson is null)
+        {
+            return null;
+        }
+
+        List<TestNode> tests = [];
+        foreach (object? testJson in testsJson)
+        {
+            if (testJson is not IDictionary<string, object?> testProperties)
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.Tests}' entries must be objects");
+            }
+
+            tests.Add(Deserialize<TestNode>(testProperties));
+        }
+
+        return tests;
+    }
+
+    private static T? GetOptionalTypedProperty<T>(IDictionary<string, object?> properties, string propertyName)
+        where T : class
+    {
+        object? value = GetOptionalPropertyFromJson(properties, propertyName);
+        return value switch
+        {
+            null => null,
+            T typed => typed,
+            _ => throw new MessageFormatException(
+                $"'{propertyName}' field has wrong type (expected {typeof(T).Name})"),
+        };
     }
 }
