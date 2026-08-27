@@ -7,7 +7,6 @@
 using Jsonite;
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -232,16 +231,29 @@ internal static partial class SerializerUtilities
 
                 PropertyBag propertyBag = new();
 
-                if (properties.TryGetValue("location.file", out object? location_file))
+                if (properties.TryGetValue("location.file", out object? locationFileValue))
                 {
-                    ApplicationStateGuard.Ensure(location_file is not null);
-                    if (properties.TryGetValue("location.line-start", out object? location_lineStart) && properties.TryGetValue("location.line-end", out object? location_lineEnd))
+                    if (locationFileValue is not string locationFile)
                     {
-                        ApplicationStateGuard.Ensure(location_lineStart is not null);
-                        ApplicationStateGuard.Ensure(location_lineEnd is not null);
+                        throw new MessageFormatException("'location.file' field has wrong type (expected String)");
+                    }
+
+                    bool hasLineStart = properties.TryGetValue("location.line-start", out object? locationLineStartValue);
+                    bool hasLineEnd = properties.TryGetValue("location.line-end", out object? locationLineEndValue);
+                    if (hasLineStart || hasLineEnd)
+                    {
+                        if (!hasLineStart || locationLineStartValue is not int locationLineStart
+                            || !hasLineEnd || locationLineEndValue is not int locationLineEnd)
+                        {
+                            throw new MessageFormatException(
+                                "'location.line-start' and 'location.line-end' fields must both be integers");
+                        }
+
                         TestFileLocationProperty testFileLocationProperty = new(
-                            (string)location_file,
-                            new LinePositionSpan(new LinePosition((int)location_lineStart, 0), new LinePosition((int)location_lineEnd, 0)));
+                            locationFile,
+                            new LinePositionSpan(
+                                new LinePosition(locationLineStart, 0),
+                                new LinePosition(locationLineEnd, 0)));
                         propertyBag.Add(testFileLocationProperty);
                     }
                 }

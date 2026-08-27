@@ -94,8 +94,7 @@ internal sealed partial class Json
 
     internal bool TryBind<T>(JsonElement element, out T? value, string? property = null)
     {
-        if (property is not null
-            && (!element.TryGetProperty(property, out element) || element.ValueKind == JsonValueKind.Null))
+        if (property is not null && !element.TryGetProperty(property, out element))
         {
             value = default;
             return false;

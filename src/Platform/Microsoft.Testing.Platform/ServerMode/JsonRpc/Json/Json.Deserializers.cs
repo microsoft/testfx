@@ -286,11 +286,16 @@ internal sealed partial class Json
 
                 if (json.TryBind(properties, out string? locationFile, "location.file"))
                 {
+                    if (locationFile is null)
+                    {
+                        throw new MessageFormatException("'location.file' field cannot be null");
+                    }
+
                     json.TryBind(properties, out int locationLineStart, "location.line-start");
                     json.TryBind(properties, out int locationLineEnd, "location.line-end");
 
                     TestFileLocationProperty testFileLocationProperty = new(
-                        locationFile!,
+                        locationFile,
                         new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
                     propertyBag.Add(testFileLocationProperty);
                 }
