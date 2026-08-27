@@ -152,6 +152,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                     [TestMethod]
                     public void Test1() { }
                 }
+
             }
             """;
 
@@ -317,6 +318,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                     [TestMethod]
                     public void Test1() { }
                 }
+
+                public partial class PartialTests
+                {
+                    [TestMethod]
+                    public void Test2() { }
+                }
             }
             """;
 
@@ -325,6 +332,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
         registry.Should().Contain("Type = typeof(global::Sample.PartialTests)");
+        registry.Should().Contain("Name = \"Test1\"");
+        registry.Should().Contain("Name = \"Test2\"");
         registry.Should().Contain("IsDescriptorSupported = true");
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
     }

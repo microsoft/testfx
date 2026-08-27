@@ -158,6 +158,8 @@ public partial class TypeEnumeratorTests : TestContainer
         tests.Should().OnlyContain(test => test.IsFromGeneratedDescriptor);
         tests.Select(test => test.TestMethod.Name)
             .Should().BeEquivalentTo(nameof(DescriptorCompleteTestClass.PlainTest), nameof(DescriptorCompleteTestClass.DataRowTest));
+        tests.Select(test => test.TestMethod.Name)
+            .Should().NotContain(nameof(DescriptorCompleteTestClass.FallbackOnlyTest));
     }
 
     #endregion
@@ -773,6 +775,11 @@ public class DescriptorCompleteTestClass
     [TestMethod]
     [DataRow(1)]
     public void DataRowTest(int value)
+    {
+    }
+
+    [TestMethod]
+    public void FallbackOnlyTest()
     {
     }
 }
