@@ -16,6 +16,9 @@
     <TestingPlatformCommandLineArguments Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <!-- Keep test output focused on actionable per-test results. Skipped tests remain included in summaries
+         and report files; only their terminal result blocks are suppressed. -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --show-test-results failed</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
     <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
          output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
