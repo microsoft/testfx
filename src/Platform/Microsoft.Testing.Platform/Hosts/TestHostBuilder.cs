@@ -88,7 +88,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
         // internal controller PID option, while the controller host applies the timeout only to waiting for
         // the child process. Keeping the controller application token alive lets its extensions finalize after
         // the execution deadline instead of receiving an already-canceled token.
-        if (host is not TestHostControllersTestHost
+        if (context.EarlyHost is null
+            && host is not TestHostControllersTestHost
             && !context.TestHostControllerInfo.HasTestHostController
             && context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
             && context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
