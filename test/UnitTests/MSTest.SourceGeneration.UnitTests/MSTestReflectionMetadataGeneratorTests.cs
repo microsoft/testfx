@@ -256,6 +256,54 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_UnsupportedExecutionShapesRetainLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public static void StaticTest() { }
+
+                    [TestMethod]
+                    public System.Threading.Tasks.Task SynchronousTaskTest()
+                        => System.Threading.Tasks.Task.CompletedTask;
+
+                    [TestMethod]
+                    public System.Threading.Tasks.ValueTask SynchronousValueTaskTest()
+                        => default;
+
+                    [TestMethod]
+                    public async void AsyncVoidTest()
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        foreach (string methodName in new[] { "StaticTest", "SynchronousTaskTest", "SynchronousValueTaskTest", "AsyncVoidTest" })
+        {
+            int methodIndex = registry.IndexOf($"Name = \"{methodName}\"", System.StringComparison.Ordinal);
+            methodIndex.Should().BeGreaterThan(-1);
+            int nextMethodIndex = registry.IndexOf("Name = \"", methodIndex + 1, System.StringComparison.Ordinal);
+            string methodEntry = nextMethodIndex < 0
+                ? registry[methodIndex..]
+                : registry.Substring(methodIndex, nextMethodIndex - methodIndex);
+            methodEntry.Should().Contain("IsDescriptorSupported = false");
+        }
+    }
+
+    [TestMethod]
     public void Generator_PartialTestClassRetainsLegacyDiscoveryFallback()
     {
         const string userCode = """
