@@ -129,6 +129,27 @@ steps:
       fi
 
       LINK_COUNT=$(wc -l < /tmp/gh-aw/agent/unique-links.txt)
+      SCAN_CURSOR=$(python - <<'PY'
+      from pathlib import Path
+
+      links_file = Path("/tmp/gh-aw/agent/unique-links.txt")
+      scan_file = Path("/tmp/gh-aw/agent/scan-links.txt")
+      cache_directory = Path("/tmp/gh-aw/cache-memory")
+      cursor_file = cache_directory / "link-checker-scan-cursor.txt"
+
+      links = links_file.read_text(encoding="utf-8").splitlines()
+      cursor = int(cursor_file.read_text(encoding="utf-8")) if cursor_file.is_file() else 0
+      start = cursor % len(links)
+      rotated = links[start:] + links[:start]
+
+      scan_file.write_text(
+          "".join(f"{url}\n" for url in rotated),
+          encoding="utf-8",
+      )
+      cache_directory.mkdir(parents=True, exist_ok=True)
+      print(start)
+      PY
+      )
       echo "Found $LINK_COUNT unique links" >> /tmp/gh-aw/agent/link-check-results.md
       echo "" >> /tmp/gh-aw/agent/link-check-results.md
       echo "## Confirmed Broken Links" >> /tmp/gh-aw/agent/link-check-results.md
@@ -179,7 +200,10 @@ steps:
             printf "%s\t%s\n" "$url" "$HTTP_CODE" >> /tmp/gh-aw/agent/confirmed-broken-links.txt
             ;;
         esac
-      done < /tmp/gh-aw/agent/unique-links.txt
+      done < /tmp/gh-aw/agent/scan-links.txt
+
+      NEXT_SCAN_CURSOR=$(((SCAN_CURSOR + PROCESSED_COUNT) % LINK_COUNT))
+      printf "%s\n" "$NEXT_SCAN_CURSOR" > /tmp/gh-aw/cache-memory/link-checker-scan-cursor.txt
 
       SELECTION_COUNTS=$(python - <<'PY'
       import json
@@ -296,7 +320,7 @@ Your workflow has already collected and tested all links in the previous step. U
 The link check step has already run and created a report at `/tmp/gh-aw/agent/link-check-results.md`. It contains:
 - The total number of links checked
 - A rotating subset of up to 20 confirmed broken links not already cached as unfixable
-- A count of inconclusive links that were excluded after retries
+- A count of inconclusive or deferred links; a persisted scan cursor resumes with deferred links on the next run
 
 Use bash to read the file:
 ```bash
