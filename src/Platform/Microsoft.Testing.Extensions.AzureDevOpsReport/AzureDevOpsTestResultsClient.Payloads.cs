@@ -80,22 +80,46 @@ internal sealed partial class AzureDevOpsTestResultsClient
 
                 if (submittedSequenceIds.Count == submittedSubResults.Count)
                 {
-                    for (int j = 0; j < publishedSubResults.Length; j++)
+                    bool sequenceIdsOmitted = publishedSubResults.Length == submittedSubResults.Count;
+                    for (int j = 0; sequenceIdsOmitted && j < publishedSubResults.Length; j++)
                     {
-                        PublishedTestSubResult publishedSubResult = publishedSubResults[j];
-                        if (!submittedSequenceIds.Contains(publishedSubResult.SequenceId))
-                        {
-                            continue;
-                        }
+                        sequenceIdsOmitted = publishedSubResults[j].SequenceId == 0;
+                    }
 
-                        if (publishedSubResult.Id <= 0
-                            || subResultIdsBySequenceId.ContainsKey(publishedSubResult.SequenceId))
+                    if (sequenceIdsOmitted)
+                    {
+                        // Azure DevOps' PATCH response returns only the appended sub-results, in request
+                        // order, but omits sequenceId. Correlate by position only for that exact-count shape.
+                        for (int j = 0; j < publishedSubResults.Length; j++)
                         {
-                            subResultIdsBySequenceId.Clear();
-                            break;
-                        }
+                            if (publishedSubResults[j].Id <= 0)
+                            {
+                                subResultIdsBySequenceId.Clear();
+                                break;
+                            }
 
-                        subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                            subResultIdsBySequenceId.Add(submittedSubResults[j].SequenceId, publishedSubResults[j].Id);
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 0; j < publishedSubResults.Length; j++)
+                        {
+                            PublishedTestSubResult publishedSubResult = publishedSubResults[j];
+                            if (!submittedSequenceIds.Contains(publishedSubResult.SequenceId))
+                            {
+                                continue;
+                            }
+
+                            if (publishedSubResult.Id <= 0
+                                || subResultIdsBySequenceId.ContainsKey(publishedSubResult.SequenceId))
+                            {
+                                subResultIdsBySequenceId.Clear();
+                                break;
+                            }
+
+                            subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                        }
                     }
 
                     if (subResultIdsBySequenceId.Count != submittedSubResults.Count)

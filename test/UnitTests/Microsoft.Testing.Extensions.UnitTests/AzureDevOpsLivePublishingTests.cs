@@ -3435,6 +3435,38 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_UpdateTestResults_MapsPatchResponseThatOmitsSequenceIds()
+    {
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"subResults\":[{\"id\":1002}]}]}"),
+        };
+        QueueHttpMessageHandler handler = new((_, _) => Task.FromResult(response));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult parent = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 5, "second", null, null, null)
+        {
+            Id = 777,
+            ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+            SubResults =
+            [
+                new AzureDevOpsTestSubResult(2, "Attempt# 1 - MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 5, "second", null, null, null),
+            ],
+        };
+
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await client.UpdateTestResultsWithSubResultsAsync(configuration, runId: 42, [parent], CancellationToken.None);
+
+        Assert.IsNotNull(publishedResults);
+        Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 2, out int secondSubResultId));
+        Assert.AreEqual(1002, secondSubResultId);
+    }
+
+    [TestMethod]
     public async Task AzureDevOpsTestResultsClient_UploadTestResultAttachment_TargetsTheSubResult()
     {
         FakeTask task = new();
