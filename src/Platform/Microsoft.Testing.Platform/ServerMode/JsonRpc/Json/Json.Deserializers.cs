@@ -163,6 +163,15 @@ internal sealed partial class Json
         deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) =>
         {
             json.TryArrayBind(jsonElement, out string[]? protocolVersions, JsonRpcStrings.ProtocolVersions);
+            if (protocolVersions is not null)
+            {
+                for (int i = 0; i < protocolVersions.Length; i++)
+                {
+                    protocolVersions[i] = protocolVersions[i]
+                        ?? throw new MessageFormatException($"'{JsonRpcStrings.ProtocolVersions}' entries must be strings");
+                }
+            }
+
             return new InitializeRequestArgs(
                 ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
                 ClientInfo: json.Bind<ClientInfo>(jsonElement, JsonRpcStrings.ClientInfo),

@@ -227,8 +227,12 @@ internal sealed partial class ServerTestHost
                 return;
             }
 
+            RpcInvocationState? rpcState = null;
+            bool requestRegistered = false;
             if (initializationTask is not null)
             {
+                rpcState = new RpcInvocationState();
+                requestRegistered = _clientToServerRequests.TryAdd(request.Id, rpcState);
                 bool initialized = await initializationTask.ConfigureAwait(false);
                 rejectRequest = !initialized;
             }
@@ -247,7 +251,20 @@ internal sealed partial class ServerTestHost
                 }
                 finally
                 {
-                    _requestCounter.Signal();
+                    if (requestRegistered)
+                    {
+                        var exception = new JsonRpcException(
+                            ErrorCodes.ServerNotInitialized,
+                            "The server must be initialized before this request can be processed.");
+                        CompleteRequest(
+                            ref _clientToServerRequests,
+                            request.Id,
+                            completion => completion.TrySetException(exception));
+                    }
+                    else
+                    {
+                        _requestCounter.Signal();
+                    }
                 }
 
                 return;
@@ -255,8 +272,11 @@ internal sealed partial class ServerTestHost
 
             // We enqueue the request before to "unlink" the current thread so we're sure that we
             // correctly handle the completion also after the "exit"
-            RpcInvocationState rpcState = new();
-            _clientToServerRequests.TryAdd(request.Id, rpcState);
+            rpcState ??= new RpcInvocationState();
+            if (!requestRegistered)
+            {
+                _clientToServerRequests.TryAdd(request.Id, rpcState);
+            }
 
             // Note: Yield, so that the main message reading loop can continue.
             await Task.Yield();

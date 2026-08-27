@@ -223,24 +223,9 @@ internal static partial class SerializerUtilities
         Deserializers[typeof(TestNode)] = new ObjectDeserializer<TestNode>(
             properties =>
             {
-                string uid = string.Empty;
-                string displayName = string.Empty;
+                string uid = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.Uid);
+                string displayName = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.DisplayName);
                 PropertyBag propertyBag = new();
-
-                foreach (KeyValuePair<string, object?> kvp in properties)
-                {
-                    if (kvp.Key == JsonRpcStrings.Uid)
-                    {
-                        uid = kvp.Value as string ?? string.Empty;
-                        continue;
-                    }
-
-                    if (kvp.Key == JsonRpcStrings.DisplayName)
-                    {
-                        displayName = kvp.Value as string ?? string.Empty;
-                        continue;
-                    }
-                }
 
                 if (properties.TryGetValue("location.file", out object? location_file))
                 {

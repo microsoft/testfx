@@ -197,6 +197,7 @@ public sealed class FormatterUtilitiesTests
 
     [DataRow("\"1.0.0\"")]
     [DataRow("[1]")]
+    [DataRow("[null]")]
     [TestMethod]
     public void DeserializeInitializeRequest_InvalidProtocolVersions_CapturesInvalidParams(string protocolVersions)
     {
@@ -263,6 +264,9 @@ public sealed class FormatterUtilitiesTests
     [DataRow("\"filter\": 42")]
     [DataRow("\"tests\": \"not-an-array\"")]
     [DataRow("\"tests\": [42]")]
+    [DataRow("\"tests\": [{}]")]
+    [DataRow("\"tests\": [{\"uid\": 42, \"display-name\": \"Test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\"}]")]
     [TestMethod]
     public void DeserializeRunRequest_InvalidOptionalPropertyType_CapturesInvalidParams(string property)
     {
