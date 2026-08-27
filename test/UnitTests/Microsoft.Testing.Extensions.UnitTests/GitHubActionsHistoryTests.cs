@@ -77,10 +77,14 @@ public sealed class GitHubActionsHistoryTests
             Samples = [passed, failed, skipped],
         };
 
-        IReadOnlyDictionary<string, GitHubActionsHistoryStats> statsByTest =
+        IReadOnlyDictionary<
+            (string TestId, string FullyQualifiedName, string DisplayName),
+            GitHubActionsHistoryStats> statsByTest =
             GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope());
 
-        Assert.IsTrue(statsByTest.TryGetValue("Tests.Flaky", out GitHubActionsHistoryStats stats));
+        Assert.IsTrue(statsByTest.TryGetValue(
+            ("Tests.Flaky", "Tests.Flaky", "Tests.Flaky"),
+            out GitHubActionsHistoryStats stats));
         Assert.AreEqual(1, stats.PassCount);
         Assert.AreEqual(1, stats.FailCount);
         Assert.AreEqual(2, stats.TotalCount);
@@ -140,10 +144,14 @@ public sealed class GitHubActionsHistoryTests
             ],
         };
 
-        IReadOnlyDictionary<string, GitHubActionsHistoryStats> statsByTest =
+        IReadOnlyDictionary<
+            (string TestId, string FullyQualifiedName, string DisplayName),
+            GitHubActionsHistoryStats> statsByTest =
             GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope());
 
-        Assert.IsTrue(statsByTest.TryGetValue("Tests.Flaky", out GitHubActionsHistoryStats stats));
+        Assert.IsTrue(statsByTest.TryGetValue(
+            ("Tests.Flaky", "Tests.Flaky", "Tests.Flaky"),
+            out GitHubActionsHistoryStats stats));
         Assert.AreEqual(1, stats.PassCount);
         Assert.AreEqual(0, stats.FailCount);
     }
@@ -163,7 +171,8 @@ public sealed class GitHubActionsHistoryTests
             Samples = [matching, otherFramework, otherArchitecture, otherRunner],
         };
 
-        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Flaky"];
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())[
+            ("Tests.Flaky", "Tests.Flaky", "Tests.Flaky")];
 
         Assert.AreEqual(1, stats.PassCount);
         Assert.AreEqual(0, stats.FailCount);
@@ -177,7 +186,8 @@ public sealed class GitHubActionsHistoryTests
         sample.RunnerOs = "WINDOWS";
         var snapshot = new GitHubActionsHistorySnapshot { Samples = [sample] };
 
-        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Flaky"];
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())[
+            ("Tests.Flaky", "Tests.Flaky", "Tests.Flaky")];
 
         Assert.AreEqual(1, stats.PassCount);
     }
@@ -189,10 +199,38 @@ public sealed class GitHubActionsHistoryTests
         sample.IsFlaky = true;
         var snapshot = new GitHubActionsHistorySnapshot { Samples = [sample] };
 
-        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Flaky"];
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())[
+            ("Tests.Flaky", "Tests.Flaky", "Tests.Flaky")];
 
         Assert.AreEqual(1, stats.PassCount);
         Assert.AreEqual(1, stats.FlakyCount);
+    }
+
+    [TestMethod]
+    public void AggregateStats_DoesNotMixParameterizedRowsWithSameFullyQualifiedName()
+    {
+        GitHubActionsHistorySample firstRow = CreateSample(
+            "Tests.Parameterized",
+            GitHubActionsHistoryOutcome.Passed,
+            Now);
+        firstRow.TestId = "row-1";
+        firstRow.DisplayName = "Parameterized(1)";
+        GitHubActionsHistorySample secondRow = CreateSample(
+            "Tests.Parameterized",
+            GitHubActionsHistoryOutcome.Failed,
+            Now);
+        secondRow.TestId = "row-2";
+        secondRow.DisplayName = "Parameterized(2)";
+        var snapshot = new GitHubActionsHistorySnapshot { Samples = [firstRow, secondRow] };
+
+        IReadOnlyDictionary<
+            (string TestId, string FullyQualifiedName, string DisplayName),
+            GitHubActionsHistoryStats> stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope());
+
+        Assert.AreEqual(1, stats[("row-1", "Tests.Parameterized", "Parameterized(1)")].PassCount);
+        Assert.AreEqual(0, stats[("row-1", "Tests.Parameterized", "Parameterized(1)")].FailCount);
+        Assert.AreEqual(0, stats[("row-2", "Tests.Parameterized", "Parameterized(2)")].PassCount);
+        Assert.AreEqual(1, stats[("row-2", "Tests.Parameterized", "Parameterized(2)")].FailCount);
     }
 
     [TestMethod]
@@ -213,7 +251,8 @@ public sealed class GitHubActionsHistoryTests
         ];
         var snapshot = new GitHubActionsHistorySnapshot { Samples = samples };
 
-        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())["Tests.Duration"];
+        GitHubActionsHistoryStats stats = GitHubActionsHistoryStore.AggregateStats(snapshot, CreateScope())[
+            ("Tests.Duration", "Tests.Duration", "Tests.Duration")];
 
         Assert.AreEqual(TimeSpan.FromSeconds(19), stats.P95Duration);
         Assert.AreEqual(TimeSpan.FromSeconds(20), stats.P99Duration);
@@ -524,11 +563,27 @@ public sealed class GitHubActionsHistoryTests
         string path = Path.Combine(directory, "history.json");
         try
         {
+            GitHubActionsHistorySample priorRun = CreateSample(
+                "Tests.Flaky",
+                GitHubActionsHistoryOutcome.Failed,
+                Now.AddDays(-1));
+            GitHubActionsHistorySample earlierAttempt = CreateSample(
+                "Tests.Flaky",
+                GitHubActionsHistoryOutcome.Passed,
+                Now.AddHours(-1));
+            earlierAttempt.RunId = "123";
+            earlierAttempt.RunAttempt = 1;
+            GitHubActionsHistorySample currentAttempt = CreateSample(
+                "Tests.Flaky",
+                GitHubActionsHistoryOutcome.Failed,
+                Now);
+            currentAttempt.RunId = "123";
+            currentAttempt.RunAttempt = 2;
             await GitHubActionsHistoryStore.WriteMergedAsync(
                 path,
                 historyWindowInDays: 30,
                 Now,
-                [CreateSample("Tests.Flaky", GitHubActionsHistoryOutcome.Failed, Now.AddDays(-1))],
+                [priorRun, earlierAttempt, currentAttempt],
                 CancellationToken.None);
             var environment = new Mock<IEnvironment>();
             environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
@@ -553,8 +608,13 @@ public sealed class GitHubActionsHistoryTests
 
             await service.OnTestSessionStartingAsync(Mock.Of<ITestSessionContext>());
 
-            Assert.IsTrue(service.TryGetStats("Tests.Flaky", out GitHubActionsHistoryStats stats));
+            Assert.IsTrue(service.TryGetStats(
+                "Tests.Flaky",
+                "Tests.Flaky",
+                "Tests.Flaky",
+                out GitHubActionsHistoryStats stats));
             Assert.AreEqual(1, stats.FailCount);
+            Assert.AreEqual(1, stats.PassCount);
             Assert.AreEqual(14, service.HistoryWindowInDays);
 
             await service.WriteAsync(

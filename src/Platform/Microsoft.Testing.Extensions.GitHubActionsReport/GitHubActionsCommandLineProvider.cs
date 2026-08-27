@@ -48,7 +48,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 when !(TimeSpanParser.TryParse(arguments[0], TimeSpanDefaultUnit.Seconds, out TimeSpan threshold) && threshold > TimeSpan.Zero)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidSlowTestThreshold, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsHistory
-                when arguments is not [string historyPath] || RoslynString.IsNullOrWhiteSpace(historyPath)
+                when arguments is not [string historyPath] || !IsValidHistoryPath(historyPath)
                 => ValidationResult.InvalidTask(GitHubActionsResources.InvalidHistoryPath),
             GitHubActionsCommandLineOptions.GitHubActionsHistoryWindow
                 when !int.TryParse(arguments[0], NumberStyles.None, CultureInfo.InvariantCulture, out int historyWindow)
@@ -62,6 +62,24 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                         : string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummarySection, invalidValue)),
             _ => ValidationResult.ValidTask,
         };
+
+    private static bool IsValidHistoryPath(string path)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            _ = Path.GetFullPath(path);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+    }
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => RequiresMainOption(

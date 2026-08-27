@@ -22,7 +22,11 @@ internal interface IGitHubActionsHistoryService
 
     int HistoryWindowInDays { get; }
 
-    bool TryGetStats(string testName, out GitHubActionsHistoryStats stats);
+    bool TryGetStats(
+        string testId,
+        string fullyQualifiedName,
+        string displayName,
+        out GitHubActionsHistoryStats stats);
 
     Task WriteAsync(IReadOnlyList<CiRunSummaryModule> modules, CancellationToken cancellationToken);
 }
@@ -37,7 +41,11 @@ internal sealed class DisabledGitHubActionsHistoryService : IGitHubActionsHistor
 
     public int HistoryWindowInDays => 0;
 
-    public bool TryGetStats(string testName, out GitHubActionsHistoryStats stats)
+    public bool TryGetStats(
+        string testId,
+        string fullyQualifiedName,
+        string displayName,
+        out GitHubActionsHistoryStats stats)
     {
         stats = default;
         return false;
@@ -51,14 +59,18 @@ internal sealed class GitHubActionsHistoryService :
     IGitHubActionsHistoryService,
     ITestSessionLifetimeHandler
 {
-    private static readonly IReadOnlyDictionary<string, GitHubActionsHistoryStats> EmptyStats =
-        new Dictionary<string, GitHubActionsHistoryStats>(StringComparer.Ordinal);
+    private static readonly IReadOnlyDictionary<
+        (string TestId, string FullyQualifiedName, string DisplayName),
+        GitHubActionsHistoryStats> EmptyStats =
+            new Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), GitHubActionsHistoryStats>();
 
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
     private readonly ILogger _logger;
     private readonly GitHubActionsHistoryScope _scope;
-    private IReadOnlyDictionary<string, GitHubActionsHistoryStats> _statsByTest = EmptyStats;
+    private IReadOnlyDictionary<
+        (string TestId, string FullyQualifiedName, string DisplayName),
+        GitHubActionsHistoryStats> _statsByTest = EmptyStats;
 
     public GitHubActionsHistoryService(
         ICommandLineOptions commandLine,
@@ -111,6 +123,18 @@ internal sealed class GitHubActionsHistoryService :
                 HistoryPath!,
                 _clock.UtcNow.AddDays(-HistoryWindowInDays),
                 testSessionContext.CancellationToken).ConfigureAwait(false);
+            string? currentRunId = _environment.GetEnvironmentVariable("GITHUB_RUN_ID");
+            int currentRunAttempt = GetRunAttempt(_environment);
+            if (!RoslynString.IsNullOrWhiteSpace(currentRunId))
+            {
+                snapshot.Samples =
+                [
+                    .. snapshot.Samples.Where(sample =>
+                        !string.Equals(sample.RunId, currentRunId, StringComparison.Ordinal)
+                        || sample.RunAttempt != currentRunAttempt),
+                ];
+            }
+
             Volatile.Write(ref _statsByTest, GitHubActionsHistoryStore.AggregateStats(snapshot, _scope));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -127,15 +151,23 @@ internal sealed class GitHubActionsHistoryService :
     public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
         => Task.CompletedTask;
 
-    public bool TryGetStats(string testName, out GitHubActionsHistoryStats stats)
+    public bool TryGetStats(
+        string testId,
+        string fullyQualifiedName,
+        string displayName,
+        out GitHubActionsHistoryStats stats)
     {
-        if (RoslynString.IsNullOrWhiteSpace(testName))
+        if (RoslynString.IsNullOrWhiteSpace(testId)
+            || RoslynString.IsNullOrWhiteSpace(fullyQualifiedName)
+            || RoslynString.IsNullOrWhiteSpace(displayName))
         {
             stats = default;
             return false;
         }
 
-        return Volatile.Read(ref _statsByTest).TryGetValue(testName, out stats);
+        return Volatile.Read(ref _statsByTest).TryGetValue(
+            (testId, fullyQualifiedName, displayName),
+            out stats);
     }
 
     public async Task WriteAsync(IReadOnlyList<CiRunSummaryModule> modules, CancellationToken cancellationToken)
@@ -151,14 +183,7 @@ internal sealed class GitHubActionsHistoryService :
 
         DateTimeOffset now = _clock.UtcNow;
         string runId = _environment.GetEnvironmentVariable("GITHUB_RUN_ID") ?? string.Empty;
-        int runAttempt = int.TryParse(
-            _environment.GetEnvironmentVariable("GITHUB_RUN_ATTEMPT"),
-            NumberStyles.None,
-            CultureInfo.InvariantCulture,
-            out int parsedRunAttempt)
-            && parsedRunAttempt > 0
-                ? parsedRunAttempt
-                : 1;
+        int runAttempt = GetRunAttempt(_environment);
         string commitSha = _environment.GetEnvironmentVariable("GITHUB_SHA") ?? string.Empty;
         string refName = _environment.GetEnvironmentVariable("GITHUB_REF_NAME") ?? string.Empty;
         string runnerOs = _environment.GetEnvironmentVariable("RUNNER_OS") ?? string.Empty;
@@ -210,6 +235,16 @@ internal sealed class GitHubActionsHistoryService :
             }
         }
     }
+
+    private static int GetRunAttempt(IEnvironment environment)
+        => int.TryParse(
+            environment.GetEnvironmentVariable("GITHUB_RUN_ATTEMPT"),
+            NumberStyles.None,
+            CultureInfo.InvariantCulture,
+            out int parsedRunAttempt)
+            && parsedRunAttempt > 0
+                ? parsedRunAttempt
+                : 1;
 
     private static int GetHistoryWindowInDays(ICommandLineOptions commandLine)
         => commandLine.TryGetOptionArgumentList(
@@ -335,20 +370,27 @@ internal static class GitHubActionsHistoryStore
         return snapshot;
     }
 
-    public static IReadOnlyDictionary<string, GitHubActionsHistoryStats> AggregateStats(
+    public static IReadOnlyDictionary<
+        (string TestId, string FullyQualifiedName, string DisplayName),
+        GitHubActionsHistoryStats> AggregateStats(
         GitHubActionsHistorySnapshot snapshot,
         GitHubActionsHistoryScope scope)
     {
-        var counts = new Dictionary<string, (
+        var counts = new Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), (
             int PassCount,
             int FailCount,
             int FlakyCount,
             long P95DurationTicks,
             long P99DurationTicks,
-            int DurationSampleCount)>(StringComparer.Ordinal);
-        foreach (IGrouping<string, GitHubActionsHistorySample> testGroup in snapshot.Samples
+            int DurationSampleCount)>();
+        foreach (IGrouping<
+            (string TestId, string FullyQualifiedName, string DisplayName),
+            GitHubActionsHistorySample> testGroup in snapshot.Samples
             .Where(sample => sample.IsInScope(scope))
-            .GroupBy(static sample => sample.FullyQualifiedName, StringComparer.Ordinal))
+            .GroupBy(static sample => (
+                sample.TestId,
+                sample.FullyQualifiedName,
+                sample.DisplayName)))
         {
             int passCount = 0;
             int failCount = 0;
@@ -395,8 +437,7 @@ internal static class GitHubActionsHistoryStore
                 pair.Value.FlakyCount,
                 pair.Value.P95DurationTicks,
                 pair.Value.P99DurationTicks,
-                pair.Value.DurationSampleCount),
-            StringComparer.Ordinal);
+                pair.Value.DurationSampleCount));
     }
 
     public static async Task WriteMergedAsync(

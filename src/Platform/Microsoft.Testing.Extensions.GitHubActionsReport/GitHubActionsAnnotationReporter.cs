@@ -139,7 +139,12 @@ internal sealed class GitHubActionsAnnotationReporter :
             await WriteAnnotationAsync(
                 nodeUpdateMessage.TestNode,
                 testName,
-                AppendHistoryContext(testName, failure.Value.Explanation, failure.Value.Exception),
+                AppendHistoryContext(
+                    nodeUpdateMessage.TestNode.Uid,
+                    testName,
+                    nodeUpdateMessage.TestNode.DisplayName,
+                    failure.Value.Explanation,
+                    failure.Value.Exception),
                 failure.Value.Exception,
                 cancellationToken).ConfigureAwait(false);
         }
@@ -236,9 +241,18 @@ internal sealed class GitHubActionsAnnotationReporter :
         return DisplayAnnotationLineAsync(line, cancellationToken);
     }
 
-    internal string? AppendHistoryContext(string testName, string? explanation, Exception? exception)
+    internal string? AppendHistoryContext(
+        string testId,
+        string fullyQualifiedName,
+        string displayName,
+        string? explanation,
+        Exception? exception)
     {
-        if (!_historyService.TryGetStats(testName, out GitHubActionsHistoryStats stats)
+        if (!_historyService.TryGetStats(
+                testId,
+                fullyQualifiedName,
+                displayName,
+                out GitHubActionsHistoryStats stats)
             || (stats.TotalCount == 0 && stats.DurationSampleCount == 0))
         {
             return explanation;

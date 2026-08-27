@@ -198,8 +198,8 @@
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
-        <source>The GitHub Actions test history snapshot path cannot be empty or whitespace.</source>
-        <target state="new">The GitHub Actions test history snapshot path cannot be empty or whitespace.</target>
+        <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
+        <target state="new">The GitHub Actions test history snapshot path must be a valid, non-empty path.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryWindow">

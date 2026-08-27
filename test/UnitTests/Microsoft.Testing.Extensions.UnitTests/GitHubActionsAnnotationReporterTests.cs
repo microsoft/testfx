@@ -25,7 +25,12 @@ public sealed class GitHubActionsAnnotationReporterTests
         GitHubActionsAnnotationReporter reporter = CreateReporter(
             new GitHubActionsHistoryStats(passCount: 7, failCount: 3));
 
-        string? message = reporter.AppendHistoryContext("Tests.Flaky", "boom", exception: null);
+        string? message = reporter.AppendHistoryContext(
+            "flaky-id",
+            "Tests.Flaky",
+            "Flaky",
+            "boom",
+            exception: null);
 
         Assert.AreEqual("boom Historical context: failed 3 and flaked 0 of 10 prior runs within the 14-day history window.", message);
     }
@@ -36,7 +41,12 @@ public sealed class GitHubActionsAnnotationReporterTests
         GitHubActionsAnnotationReporter reporter = CreateReporter(
             new GitHubActionsHistoryStats(passCount: 6, failCount: 0, flakyCount: 2));
 
-        string? message = reporter.AppendHistoryContext("Tests.Flaky", "boom", exception: null);
+        string? message = reporter.AppendHistoryContext(
+            "flaky-id",
+            "Tests.Flaky",
+            "Flaky",
+            "boom",
+            exception: null);
 
         Assert.AreEqual("boom Historical context: flaked 2 of 6 prior runs within the 14-day history window.", message);
     }
@@ -49,7 +59,12 @@ public sealed class GitHubActionsAnnotationReporterTests
         GitHubActionsAnnotationReporter reporter = CreateReporter(
             new GitHubActionsHistoryStats(passCount, failCount: 0));
 
-        string? message = reporter.AppendHistoryContext("Tests.Stable", "boom", exception: null);
+        string? message = reporter.AppendHistoryContext(
+            "stable-id",
+            "Tests.Stable",
+            "Stable",
+            "boom",
+            exception: null);
 
         Assert.AreEqual(expected, message);
     }
@@ -65,7 +80,12 @@ public sealed class GitHubActionsAnnotationReporterTests
                 p99DurationTicks: TimeSpan.FromSeconds(3).Ticks,
                 durationSampleCount: 20));
 
-        string? message = reporter.AppendHistoryContext("Tests.Stable", "boom", exception: null);
+        string? message = reporter.AppendHistoryContext(
+            "stable-id",
+            "Tests.Stable",
+            "Stable",
+            "boom",
+            exception: null);
 
         Assert.AreEqual(
             "boom Historical context: passed all 5 prior runs within the 14-day history window. Historical duration: p95 2.00s, p99 3.00s across 20 prior samples.",
@@ -359,7 +379,11 @@ public sealed class GitHubActionsAnnotationReporterTests
 
         public int HistoryWindowInDays { get; } = historyWindowInDays;
 
-        public bool TryGetStats(string testName, out GitHubActionsHistoryStats result)
+        public bool TryGetStats(
+            string testId,
+            string fullyQualifiedName,
+            string displayName,
+            out GitHubActionsHistoryStats result)
         {
             result = stats;
             return true;

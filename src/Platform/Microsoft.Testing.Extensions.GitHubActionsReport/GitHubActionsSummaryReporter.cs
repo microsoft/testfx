@@ -540,7 +540,11 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 expanded++;
                 TestFailureDetails? failureDetails = CaptureFailureDetails(failure);
                 if (failureDetails is not null
-                    && _historyService.TryGetStats(record.FullyQualifiedName, out GitHubActionsHistoryStats historyStats)
+                    && _historyService.TryGetStats(
+                        entry.Uid,
+                        record.FullyQualifiedName,
+                        record.DisplayName,
+                        out GitHubActionsHistoryStats historyStats)
                     && (historyStats.TotalCount > 0 || historyStats.DurationSampleCount > 0))
                 {
                     failureDetails = new TestFailureDetails(

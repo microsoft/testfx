@@ -2826,7 +2826,11 @@ public sealed class GitHubActionsSummaryReporterTests
 
         public int HistoryWindowInDays => 0;
 
-        public bool TryGetStats(string testName, out GitHubActionsHistoryStats stats)
+        public bool TryGetStats(
+            string testId,
+            string fullyQualifiedName,
+            string displayName,
+            out GitHubActionsHistoryStats stats)
         {
             stats = default;
             return false;

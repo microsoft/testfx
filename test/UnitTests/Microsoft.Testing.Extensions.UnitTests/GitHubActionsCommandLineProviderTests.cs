@@ -106,6 +106,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [TestMethod]
     [DataRow("")]
     [DataRow(" ")]
+    [DataRow("\0")]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenHistoryPathIsEmptyAsync(string value)
     {
         GitHubActionsCommandLineProvider provider = new();
