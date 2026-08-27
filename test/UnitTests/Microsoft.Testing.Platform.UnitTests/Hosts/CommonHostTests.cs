@@ -325,6 +325,20 @@ public sealed class CommonHostTests
     }
 
     [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenMessageBusIsAlreadyAbandoned_DoesNotDisableItAgain()
+    {
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.Setup(x => x.DisableAsync()).ThrowsAsync(new InvalidOperationException("disable retried"));
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(messageBus.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider, [messageBus.Object]);
+
+        messageBus.Verify(x => x.DisableAsync(), Times.Never);
+    }
+
+    [TestMethod]
     public async Task DisposeServiceProviderAsync_WhenConsumerIsStillRunning_DoesNotDisposeIt()
     {
         Mock<IDataConsumer> runningConsumer = new();
@@ -498,6 +512,9 @@ public sealed class CommonHostTests
 
         public static Task DisposeServiceProviderForTestingAsync(ServiceProvider serviceProvider)
             => DisposeServiceProviderAsync(serviceProvider);
+
+        public static Task DisposeServiceProviderForTestingAsync(ServiceProvider serviceProvider, List<object> alreadyDisposed)
+            => DisposeServiceProviderAsync(serviceProvider, alreadyDisposed: alreadyDisposed);
 
         public static Task ExecuteRequestForTestingAsync(
             ProxyOutputDevice outputDevice,

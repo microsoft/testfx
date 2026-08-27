@@ -37,7 +37,9 @@ internal abstract partial class CommonHost
         // already have disposed those consumers while their ConsumeAsync was still running.
         foreach (object service in serviceProvider.Services)
         {
-            if (service is not BaseMessageBus messageBus || (filter is not null && !filter(messageBus)))
+            if (service is not BaseMessageBus messageBus
+                || alreadyDisposed.Contains(messageBus)
+                || (filter is not null && !filter(messageBus)))
             {
                 continue;
             }
