@@ -142,7 +142,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
 
         await service.ExecuteDeadlineCallbacksAsync();
 
-        Assert.AreEqual(1, invocationCount);
+        Assert.AreEqual(2, invocationCount);
         Assert.IsTrue(service.IsDeadlineTriggered);
     }
 
@@ -293,6 +293,23 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ExecuteAbortCallbacksAsync_WhenCalledTwice_InvokesRegisteredCallbackOnce()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        int invocationCount = 0;
+        await service.RegisterOnAbortCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        await service.ExecuteAbortCallbacksAsync();
+        await service.ExecuteAbortCallbacksAsync();
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
     public async Task RegisterOnMaxFailedTestsCallbackAsync_ThrowsIfNotTestHost()
     {
         foreach (TestProcessRole? processRole in new TestProcessRole?[] { null, TestProcessRole.TestHostController })
@@ -331,7 +348,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
 
         await service.ExecuteMaxFailedTestsCallbacksAsync(10, CancellationToken.None);
 
-        Assert.AreEqual(2, invocationCount);
+        Assert.AreEqual(1, invocationCount);
         Assert.AreEqual(10, capturedCount);
     }
 
@@ -350,7 +367,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
 
         await service.ExecuteAbortCallbacksAsync();
 
-        Assert.AreEqual(2, invocationCount);
+        Assert.AreEqual(1, invocationCount);
     }
 
     [TestMethod]

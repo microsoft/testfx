@@ -119,6 +119,7 @@ internal sealed partial class TestHostControllersTestHost
                         applicationCancellationToken).ConfigureAwait(false);
                     if (!startHandlersCompleted)
                     {
+                        _lifetimeHandlersStillRunning.Add(lifetimeHandler);
                         break;
                     }
                 }
@@ -197,11 +198,17 @@ internal sealed partial class TestHostControllersTestHost
                 await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcessExitCode}").ConfigureAwait(false);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
+                    if (_lifetimeHandlersStillRunning.Contains(lifetimeHandler))
+                    {
+                        continue;
+                    }
+
                     bool finalized = await TryRunControllerExtensionAsync(
                         token => lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, token),
                         finalizationCancellationToken).ConfigureAwait(false);
                     if (!finalized)
                     {
+                        _lifetimeHandlersStillRunning.Add(lifetimeHandler);
                         _controllerFinalizationTimedOut = true;
                         break;
                     }

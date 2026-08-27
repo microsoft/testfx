@@ -11,7 +11,12 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
     private readonly CancellationTokenRegistration _abortRegistration;
 
     private readonly ConcurrentQueue<Func<int, CancellationToken, Task>> _maxFailedTestsCallbacks = new();
-    private readonly ConcurrentQueue<Func<Task>> _abortCallbacks = new();
+#if NET9_0_OR_GREATER
+    private readonly Lock _abortLock = new();
+#else
+    private readonly object _abortLock = new();
+#endif
+    private readonly List<Func<Task>> _abortCallbacks = [];
 
     // Guards the deadline state together with its callback list, so registration and the one-shot trigger
     // cannot interleave and drop a callback. A flag plus a concurrent queue is not enough: the registering
@@ -30,6 +35,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
     // Whether the callbacks have run. This is the one-shot gate and it is never cleared: once the callbacks
     // have run, a second trigger must not run them again and a late registration must be invoked on the spot.
     private bool _areDeadlineCallbacksExecuted;
+    private bool _areAbortCallbacksExecuted;
 
     // Whether the run is to be reported as stopped at the deadline.
 #pragma warning disable IDE0032 // Use auto property - synchronized access requires a backing field.
@@ -116,14 +122,21 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
 
     public async Task ExecuteAbortCallbacksAsync()
     {
-        IsAbortTriggered = true;
-
-        if (_abortCallbacks is null)
+        Func<Task>[] callbacks;
+        lock (_abortLock)
         {
-            return;
+            if (_areAbortCallbacksExecuted)
+            {
+                return;
+            }
+
+            _areAbortCallbacksExecuted = true;
+            IsAbortTriggered = true;
+            callbacks = [.. _abortCallbacks];
+            _abortCallbacks.Clear();
         }
 
-        foreach (Func<Task> callback in _abortCallbacks)
+        foreach (Func<Task> callback in callbacks)
         {
             // For now, we are fine if the callback crashed us. It shouldn't happen for our
             // current usage anyway and the APIs around this are all internal for now.
@@ -195,12 +208,16 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
 
     public async Task RegisterOnAbortCallbackAsync(Func<Task> callback)
     {
-        if (IsAbortTriggered)
+        lock (_abortLock)
         {
-            await callback().ConfigureAwait(false);
+            if (!_areAbortCallbacksExecuted)
+            {
+                _abortCallbacks.Add(callback);
+                return;
+            }
         }
 
-        _abortCallbacks.Enqueue(callback);
+        await callback().ConfigureAwait(false);
     }
 
     public async Task RegisterOnDeadlineCallbackAsync(Func<Task> callback)
