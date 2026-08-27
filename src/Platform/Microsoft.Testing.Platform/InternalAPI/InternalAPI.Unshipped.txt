@@ -1,4 +1,5 @@
 #nullable enable
+abstract Microsoft.Testing.Platform.Hosts.CommonHost.InternalRunAsync(System.Threading.CancellationToken cancellationToken, System.Collections.Generic.List<object!>! alreadyDisposed) -> System.Threading.Tasks.Task<int>!
 Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
 Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetChildren(string? parentPath) -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
 Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!
@@ -23,6 +24,7 @@ Microsoft.Testing.Platform.Helpers.IConsole.Write(System.Text.StringBuilder! val
 Microsoft.Testing.Platform.Helpers.IFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
 Microsoft.Testing.Platform.Helpers.SystemConsole.Write(System.Text.StringBuilder! value) -> void
 Microsoft.Testing.Platform.Helpers.SystemFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
+Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.DeferDisposalUntilExit() -> void
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.IsConsumerRunning.get -> bool
 Microsoft.Testing.Platform.Messages.BlockingConsumerDataProcessor.BlockingConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
@@ -43,9 +45,13 @@ override Microsoft.Testing.Platform.Messages.AsynchronousMessageBus.ConsumersSti
 override Microsoft.Testing.Platform.Messages.MessageBusProxy.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
 static Microsoft.Testing.Platform.Hosts.CommonHost.EnsureMessageBusDisabledAsync(Microsoft.Testing.Platform.Messages.BaseMessageBus! baseMessageBus, System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetCanceledConsumerCompletion(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetControllerFinalization(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
 static readonly Microsoft.Testing.Platform.Messages.ShutdownTimeouts.DefaultCanceledConsumerCompletion -> System.TimeSpan
+static readonly Microsoft.Testing.Platform.Messages.ShutdownTimeouts.DefaultControllerFinalization -> System.TimeSpan
+virtual Microsoft.Testing.Platform.Hosts.CommonHost.DisposeProcessShutdownServiceAsync(object! service) -> System.Threading.Tasks.Task!
 virtual Microsoft.Testing.Platform.Messages.BaseMessageBus.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
 *REMOVED*Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.ConsoleTestExecutionRequestFactory(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineService, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory! testExecutionFilterFactory) -> void
+*REMOVED*abstract Microsoft.Testing.Platform.Hosts.CommonHost.InternalRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 *REMOVED*Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
 *REMOVED*Microsoft.Testing.Platform.Requests.ITestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
 *REMOVED*Microsoft.Testing.Platform.Requests.ServerTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
@@ -162,6 +168,7 @@ Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.init -> void
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid) -> void
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid) -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS = "TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS" -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.AttemptNumber = 13 -> byte
 const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunStarted(string! assembly, string? targetFramework, string? architecture, string! executionId, string! instanceId, int attemptNumber) -> void

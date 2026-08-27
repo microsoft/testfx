@@ -204,10 +204,13 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostProcessInformation.ExitCode);
 #endif
 
+            string testHostExitInfo = testHostProcessInformation.ExitCode == (int)ExitCode.TestSessionAborted
+                ? $"Test host process pid: {testHostProcessInformation.PID} was terminated because the test session was aborted."
+                : $"Test host process pid: {testHostProcessInformation.PID} crashed.";
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 recoveredResults,
                 isTestHostCrashed: true,
-                testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
+                testHostCrashInfo: testHostExitInfo).ConfigureAwait(false);
             if (warning is not null)
             {
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
@@ -217,9 +220,13 @@ internal sealed class TrxProcessLifetimeHandler :
 
             // Tell the user how many records survived the crash. Without this they have to grep the TRX
             // (or the controller logs) to know whether recovery did anything useful.
-            string recoverySummary = recoveredResults.Count == 0
-                ? "Test host crashed and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
-                : $"Test host crashed; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).";
+            string recoverySummary = testHostProcessInformation.ExitCode == (int)ExitCode.TestSessionAborted
+                ? recoveredResults.Count == 0
+                    ? "Test session was aborted and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
+                    : $"Test session was aborted; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at termination time may be missing)."
+                : recoveredResults.Count == 0
+                    ? "Test host crashed and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
+                    : $"Test host crashed; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).";
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(recoverySummary), cancellationToken).ConfigureAwait(false);
 
             await _messageBus.PublishAsync(
@@ -352,7 +359,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 results.Add(enumerator.Current);
             }
 
-            await _logger.LogInformationAsync($"Recovered {results.Count} test result(s) from TRX streaming sidecar after test host crash.").ConfigureAwait(false);
+            await _logger.LogInformationAsync($"Recovered {results.Count} test result(s) from TRX streaming sidecar after test host termination.").ConfigureAwait(false);
             return results;
         }
         catch (Exception ex)

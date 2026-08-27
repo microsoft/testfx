@@ -141,7 +141,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         }
     }
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> _)
     {
         using IPlatformActivity? activity = ServiceProvider.GetPlatformOTelService()?.StartActivity("ServerTestHost");
 

@@ -633,6 +633,21 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    public void GetControllerFinalization_WhenBothOverridesAreSet_ShouldUseDedicatedValue()
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1.5");
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS))
+            .Returns("2.5");
+
+        Assert.AreEqual(TimeSpan.FromSeconds(1.5), ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+        Assert.AreEqual(TimeSpan.FromSeconds(2.5), ShutdownTimeouts.GetControllerFinalization(environmentMock.Object));
+    }
+
+    [TestMethod]
     public async Task DisableAsync_WhenConsumerThrowsTimeoutException_ShouldNotSwallowIt()
     {
         using MessageBusProxy proxy = new();
