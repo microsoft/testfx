@@ -63,7 +63,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
         Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
         Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());

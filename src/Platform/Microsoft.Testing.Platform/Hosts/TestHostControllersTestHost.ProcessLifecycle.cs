@@ -229,10 +229,10 @@ internal sealed partial class TestHostControllersTestHost
             _controllerFinalizationTimedOut = true;
         }
 
-        if (testExecutionCanceled && !applicationCancellationToken.IsCancellationRequested)
+        if (testExecutionCanceled)
         {
-            // The child owns timeout cancellation and reported an aborted exit. Report that state explicitly
-            // after controller extensions have finalized, without canceling their independent cleanup token.
+            // Report the abort after controller extensions have finalized. ExecuteAbortCallbacksAsync is
+            // one-shot and returns the same in-flight task, so this also joins application-token cancellation.
             IStopPoliciesService stopPoliciesService = ServiceProvider.GetRequiredService<IStopPoliciesService>();
             bool abortReported = await TryRunControllerExtensionAsync(
                 _ => stopPoliciesService.ExecuteAbortCallbacksAsync(),
@@ -266,7 +266,7 @@ internal sealed partial class TestHostControllersTestHost
 
         if (_controllerFinalizationTimedOut)
         {
-            ScheduleApplicationCancellation();
+            ScheduleFinalizationTimeoutWarning();
         }
 
         // Telemetry requires a valid JSON payload even when the cleanup deadline prevents extension
@@ -281,11 +281,12 @@ internal sealed partial class TestHostControllersTestHost
 
         // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
         int exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcessExitCode;
-        if (!testHostProcessExited && testExecutionCanceled)
+        if (!testHostProcessExited)
         {
             exitCode = (int)ExitCode.TestSessionAborted;
         }
-        else if (exitCode == (int)ExitCode.Success && testExecutionCanceled)
+        else if (exitCode == (int)ExitCode.Success
+            && (testExecutionCanceled || _controllerFinalizationTimedOut))
         {
             // In case of cancellation, only alter exit code if it was success.
             // If there is another exit code indicating another failure, we prefer it over the cancellation.
@@ -328,7 +329,7 @@ internal sealed partial class TestHostControllersTestHost
 
         if (_controllerFinalizationTimedOut)
         {
-            ScheduleApplicationCancellation();
+            ScheduleFinalizationTimeoutWarning();
         }
 
         // Apply controller-only coverage thresholds to the child's pre-ignore verdict, then apply the
@@ -357,18 +358,15 @@ internal sealed partial class TestHostControllersTestHost
         }
     }
 
-    private void ScheduleApplicationCancellation()
+    private void ScheduleFinalizationTimeoutWarning()
     {
-        if (Interlocked.Exchange(ref _applicationCancellationScheduled, 1) != 0)
+        if (Interlocked.Exchange(ref _finalizationTimeoutWarningScheduled, 1) != 0)
         {
             return;
         }
 
-        // The cleanup deadline has expired, so extension cancellation callbacks and logging cannot be awaited
-        // without making the deadline unbounded again. Schedule both independently and observe later faults.
-        ObserveBackgroundTask(Task.Run(
-            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel,
-            CancellationToken.None));
+        // The cleanup deadline has expired, so logging cannot be awaited without making the deadline unbounded
+        // again. Schedule it independently and observe a later provider fault.
         ObserveBackgroundTask(Task.Run(
             () => _logger.LogWarning(
                 $"Test host controller extension finalization exceeded the {_controllerExtensionFinalizationTimeout} cleanup timeout."),

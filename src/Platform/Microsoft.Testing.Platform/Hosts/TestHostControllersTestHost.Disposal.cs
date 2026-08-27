@@ -104,12 +104,10 @@ internal sealed partial class TestHostControllersTestHost
 
             if (service is BaseMessageBus messageBus)
             {
-                foreach (IDataConsumer dataConsumer in messageBus.DataConsumerServices)
+                foreach (IDataConsumer dataConsumer in messageBus.DataConsumerServices.Where(
+                    dataConsumer => !alreadyDisposed.Contains(dataConsumer)))
                 {
-                    if (!alreadyDisposed.Contains(dataConsumer))
-                    {
-                        alreadyDisposed.Add(dataConsumer);
-                    }
+                    alreadyDisposed.Add(dataConsumer);
                 }
             }
         }
@@ -120,7 +118,7 @@ internal sealed partial class TestHostControllersTestHost
         if (!await TryRunControllerCleanupAsync(() => DisposeHelper.DisposeAsync(service)).ConfigureAwait(false))
         {
             _controllerFinalizationTimedOut = true;
-            ScheduleApplicationCancellation();
+            ScheduleFinalizationTimeoutWarning();
         }
     }
 
