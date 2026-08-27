@@ -113,7 +113,7 @@ steps:
               for _, start, end in destinations:
                   masked_line[start:end] = " " * (end - start)
               links.update(
-                  match.group(0).rstrip(".,;:!?)]}")
+                  match.group(0).rstrip(".,;:!?)]")
                   for match in bare_url.finditer("".join(masked_line))
               )
 
@@ -138,7 +138,10 @@ steps:
       cursor_file = cache_directory / "link-checker-scan-cursor.txt"
 
       links = links_file.read_text(encoding="utf-8").splitlines()
-      cursor = int(cursor_file.read_text(encoding="utf-8")) if cursor_file.is_file() else 0
+      try:
+          cursor = int(cursor_file.read_text(encoding="utf-8")) if cursor_file.is_file() else 0
+      except (OSError, ValueError):
+          cursor = 0
       start = cursor % len(links)
       rotated = links[start:] + links[:start]
 
@@ -161,6 +164,7 @@ steps:
       PROCESSED_COUNT=0
       SCAN_DEADLINE=$(($(date +%s) + 2100))
       : > /tmp/gh-aw/agent/confirmed-broken-links.txt
+      : > /tmp/gh-aw/agent/processed-links.txt
 
       while IFS= read -r url; do
         if [ "$(date +%s)" -ge "$SCAN_DEADLINE" ]; then
@@ -169,6 +173,7 @@ steps:
         fi
 
         PROCESSED_COUNT=$((PROCESSED_COUNT + 1))
+        printf "%s\n" "$url" >> /tmp/gh-aw/agent/processed-links.txt
 
         for attempt in 1 2; do
           HTTP_CODE=$(curl -L -s -o /dev/null -w "%{http_code}" \
@@ -203,13 +208,15 @@ steps:
       done < /tmp/gh-aw/agent/scan-links.txt
 
       NEXT_SCAN_CURSOR=$(((SCAN_CURSOR + PROCESSED_COUNT) % LINK_COUNT))
-      printf "%s\n" "$NEXT_SCAN_CURSOR" > /tmp/gh-aw/cache-memory/link-checker-scan-cursor.txt
+      printf "%s\n" "$NEXT_SCAN_CURSOR" > /tmp/gh-aw/cache-memory/link-checker-scan-cursor.txt.tmp
+      mv /tmp/gh-aw/cache-memory/link-checker-scan-cursor.txt.tmp /tmp/gh-aw/cache-memory/link-checker-scan-cursor.txt
 
       SELECTION_COUNTS=$(python - <<'PY'
       import json
       from pathlib import Path
 
       broken_links = Path("/tmp/gh-aw/agent/confirmed-broken-links.txt")
+      processed_links = Path("/tmp/gh-aw/agent/processed-links.txt")
       report = Path("/tmp/gh-aw/agent/link-check-results.md")
       cache_directory = Path("/tmp/gh-aw/cache-memory")
       backlog_file = cache_directory / "link-checker-backlog.json"
@@ -220,6 +227,8 @@ steps:
           url, separator, status = line.rpartition("\t")
           if separator and url and status:
               current_records.append((url, status))
+
+      processed_urls = set(processed_links.read_text(encoding="utf-8").splitlines())
 
       unfixable_urls = set()
       if unfixable_file.is_file():
@@ -251,7 +260,10 @@ steps:
               ]
 
       merged = {}
-      for url, status in backlog + current_records:
+      for url, status in backlog:
+          if url not in unfixable_urls and url not in processed_urls:
+              merged[url] = status
+      for url, status in current_records:
           if url not in unfixable_urls:
               merged[url] = status
 
