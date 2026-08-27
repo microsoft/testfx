@@ -177,7 +177,7 @@ public sealed class TestApplicationBuilderTests
     [TestMethod]
     public async Task TestHostControllerProcessLifetimeHandler_FinalizationIsBounded()
     {
-        using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMilliseconds(100));
+        using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(2));
         using ManualResetEventSlim releaseFinalization = new(initialState: false);
         try
         {

@@ -135,8 +135,9 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
             IsAbortTriggered = true;
             callbacks = [.. _abortCallbacks];
             _abortCallbacks.Clear();
-            _abortCallbacksTask = ExecuteAbortCallbacksCoreAsync(callbacks);
-            return _abortCallbacksTask;
+            Task abortCallbacksTask = ExecuteAbortCallbacksCoreAsync(callbacks);
+            _abortCallbacksTask = abortCallbacksTask;
+            return abortCallbacksTask;
         }
     }
 
