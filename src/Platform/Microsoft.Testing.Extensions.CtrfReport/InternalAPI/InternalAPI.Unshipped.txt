@@ -1,6 +1,22 @@
 #nullable enable
 const Microsoft.Testing.Extensions.CtrfReport.CtrfReportGenerator.CtrfArtifactKind = "microsoft.testing.ctrf" -> string!
 virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.CapturedAttachment() -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.ContentType.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.ContentType.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Description.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Description.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Name.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Name.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Path.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Path.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Attachments.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment!>?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Attachments.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.init -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.CtrfArtifactPostProcessor() -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Description.get -> string!
