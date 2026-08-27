@@ -217,6 +217,7 @@ steps:
 
       broken_links = Path("/tmp/gh-aw/agent/confirmed-broken-links.txt")
       processed_links = Path("/tmp/gh-aw/agent/processed-links.txt")
+      current_links = Path("/tmp/gh-aw/agent/unique-links.txt")
       report = Path("/tmp/gh-aw/agent/link-check-results.md")
       cache_directory = Path("/tmp/gh-aw/cache-memory")
       backlog_file = cache_directory / "link-checker-backlog.json"
@@ -229,6 +230,8 @@ steps:
               current_records.append((url, status))
 
       processed_urls = set(processed_links.read_text(encoding="utf-8").splitlines())
+      current_urls = set(current_links.read_text(encoding="utf-8").splitlines())
+      current_broken = dict(current_records)
 
       unfixable_urls = set()
       if unfixable_file.is_file():
@@ -259,17 +262,26 @@ steps:
                   and isinstance(entry.get("status"), str)
               ]
 
-      merged = {}
+      queue = []
+      queued_urls = set()
       for url, status in backlog:
-          if url not in unfixable_urls and url not in processed_urls:
-              merged[url] = status
-      for url, status in current_records:
-          if url not in unfixable_urls:
-              merged[url] = status
+          if url in unfixable_urls or url not in current_urls:
+              continue
+          if url in processed_urls:
+              if url not in current_broken:
+                  continue
+              status = current_broken[url]
+          if url not in queued_urls:
+              queue.append((url, status))
+              queued_urls.add(url)
 
-      queue = list(merged.items())
+      for url, status in current_records:
+          if url not in unfixable_urls and url not in queued_urls:
+              queue.append((url, status))
+              queued_urls.add(url)
+
       selected = queue[:20]
-      remaining = queue[20:]
+      remaining = queue[20:] + selected
 
       with report.open("a", encoding="utf-8") as stream:
           for url, status in selected:
