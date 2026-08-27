@@ -61,6 +61,10 @@ public sealed class GitHubActionsHistoryTests
         Assert.HasCount(GitHubActionsHistoryStore.MaxSamplesPerTest, merged.Samples);
         Assert.AreEqual(Now.AddMinutes(1), merged.Samples[0].TimestampUtc);
         Assert.AreEqual(Now.AddMinutes(GitHubActionsHistoryStore.MaxSamplesPerTest), merged.Samples[^1].TimestampUtc);
+        Assert.AreSequenceEqual(
+            Enumerable.Range(1, GitHubActionsHistoryStore.MaxSamplesPerTest)
+                .Select(index => Now.AddMinutes(index)),
+            merged.Samples.Select(static sample => sample.TimestampUtc));
     }
 
     [TestMethod]

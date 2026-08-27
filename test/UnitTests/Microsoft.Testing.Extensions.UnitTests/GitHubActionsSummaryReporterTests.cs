@@ -273,7 +273,13 @@ public sealed class GitHubActionsSummaryReporterTests
             Assert.AreEqual(0, aggregate.FailedTests);
             Assert.AreEqual("Tests.Flaky", aggregate.FlakyTests.Single().FullyQualifiedName);
             Assert.HasCount(2, aggregate.Modules.Single().HistoryTests);
-            Assert.IsTrue(aggregate.Modules.Single().HistoryTests.Single(test => test.FullyQualifiedName == "Tests.Flaky").IsFlaky);
+            GitHubCiRunSummaryHistoryTest flakyHistory =
+                aggregate.Modules.Single().HistoryTests.Single(test => test.FullyQualifiedName == "Tests.Flaky");
+            Assert.IsTrue(flakyHistory.IsFlaky);
+            GitHubCiRunSummaryHistoryTest stableHistory =
+                aggregate.Modules.Single().HistoryTests.Single(test => test.FullyQualifiedName == "Tests.Stable");
+            Assert.AreEqual("passed", stableHistory.Outcome);
+            Assert.IsFalse(stableHistory.IsFlaky);
             Assert.AreEqual(TimeSpan.FromMilliseconds(300).Ticks, aggregate.Modules.Single().TestDurationTicks);
             string summary = File.ReadAllText(stepSummaryPath);
             Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
