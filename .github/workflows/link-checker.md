@@ -86,7 +86,7 @@ steps:
       if Path("README.md").is_file():
           files.append(Path("README.md"))
 
-      bare_url = re.compile(r'https?://[^\s<>"\']+')
+      bare_url = re.compile(r'https?://[^\s<>"\'`]+')
       links = set()
 
       for file in files:
@@ -212,48 +212,66 @@ steps:
       broken_links = Path("/tmp/gh-aw/agent/confirmed-broken-links.txt")
       report = Path("/tmp/gh-aw/agent/link-check-results.md")
       cache_directory = Path("/tmp/gh-aw/cache-memory")
-      cursor_file = cache_directory / "link-checker-cursor.txt"
+      backlog_file = cache_directory / "link-checker-backlog.json"
       unfixable_file = cache_directory / "unfixable_links.json"
 
-      records = []
+      current_records = []
       for line in broken_links.read_text(encoding="utf-8").splitlines():
-          url, status = line.rsplit("\t", 1)
-          records.append((url, status))
+          url, separator, status = line.rpartition("\t")
+          if separator and url and status:
+              current_records.append((url, status))
 
       unfixable_urls = set()
       if unfixable_file.is_file():
-          cache = json.loads(unfixable_file.read_text(encoding="utf-8"))
-          unfixable_urls = {
-              entry["url"]
-              for entry in cache.get("unfixable_links", [])
-          }
+          try:
+              cache = json.loads(unfixable_file.read_text(encoding="utf-8"))
+          except (json.JSONDecodeError, OSError):
+              cache = {}
+          entries = cache.get("unfixable_links", []) if isinstance(cache, dict) else []
+          if isinstance(entries, list):
+              unfixable_urls = {
+                  entry["url"]
+                  for entry in entries
+                  if isinstance(entry, dict) and isinstance(entry.get("url"), str)
+              }
 
-      actionable = [
-          (url, status)
-          for url, status in records
-          if url not in unfixable_urls
-      ]
+      backlog = []
+      if backlog_file.is_file():
+          try:
+              cached_backlog = json.loads(backlog_file.read_text(encoding="utf-8"))
+          except (json.JSONDecodeError, OSError):
+              cached_backlog = []
+          if isinstance(cached_backlog, list):
+              backlog = [
+                  (entry["url"], entry["status"])
+                  for entry in cached_backlog
+                  if isinstance(entry, dict)
+                  and isinstance(entry.get("url"), str)
+                  and isinstance(entry.get("status"), str)
+              ]
 
-      cursor = int(cursor_file.read_text(encoding="utf-8")) if cursor_file.is_file() else 0
-      if actionable:
-          start = cursor % len(actionable)
-          selected_count = min(20, len(actionable))
-          selected = [
-              actionable[(start + offset) % len(actionable)]
-              for offset in range(selected_count)
-          ]
-          next_cursor = (start + selected_count) % len(actionable)
-      else:
-          selected = []
-          next_cursor = 0
+      merged = {}
+      for url, status in backlog + current_records:
+          if url not in unfixable_urls:
+              merged[url] = status
+
+      queue = list(merged.items())
+      selected = queue[:20]
+      remaining = queue[20:]
 
       with report.open("a", encoding="utf-8") as stream:
           for url, status in selected:
               stream.write(f"❌ {url} (HTTP {status})\n")
 
       cache_directory.mkdir(parents=True, exist_ok=True)
-      cursor_file.write_text(f"{next_cursor}\n", encoding="utf-8")
-      print(len(selected), len(records) - len(actionable))
+      backlog_file.write_text(
+          json.dumps(
+              [{"url": url, "status": status} for url, status in remaining],
+              indent=2,
+          ) + "\n",
+          encoding="utf-8",
+      )
+      print(len(selected), len(unfixable_urls.intersection(url for url, _ in current_records)))
       PY
       )
       read -r SELECTED_COUNT CACHED_UNFIXABLE_COUNT <<< "$SELECTION_COUNTS"
@@ -319,7 +337,7 @@ Your workflow has already collected and tested all links in the previous step. U
 
 The link check step has already run and created a report at `/tmp/gh-aw/agent/link-check-results.md`. It contains:
 - The total number of links checked
-- A rotating subset of up to 20 confirmed broken links not already cached as unfixable
+- A FIFO batch of up to 20 confirmed broken links not already cached as unfixable
 - A count of inconclusive or deferred links; a persisted scan cursor resumes with deferred links on the next run
 
 Use bash to read the file:
@@ -352,7 +370,7 @@ The cache memory should store a JSON object with this structure:
 
 ## Step 3: Research and Fix Broken Links
 
-Process every confirmed broken link in the report that is not in the unfixable list. The deterministic precheck limits the report to 20 candidates and persists a cursor so omitted candidates rotate into later daily runs.
+Process every confirmed broken link in the report that is not in the unfixable list. The deterministic precheck limits the report to 20 candidates and persists omitted candidates in a FIFO backlog for later daily runs.
 
 For each selected broken link:
 
