@@ -84,12 +84,11 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
         BuildContext context = await SetupCommonServicesAsync(loggingState, testApplicationOptions, unhandledExceptionsHandler, createBuilderStart).ConfigureAwait(false);
         IHost host = await BuildHostAsync(context).ConfigureAwait(false);
 
-        // A restarted run has one timeout owner. The outer controller enforces the child execution deadline,
-        // while the child is identified by the internal controller PID option and does not schedule a competing
-        // application cancellation. Direct test hosts and orchestrators keep the application-level timeout.
+        // The timeout belongs exclusively to the test host. In a restarted run the controller keeps its
+        // application token alive while the child schedules the timeout, so controller extensions can finalize
+        // after the child reports an aborted run without two processes racing the same deadline.
         if (context.EarlyHost is null
-            && context.PoliciesService.ProcessRole is TestProcessRole.TestHost or TestProcessRole.TestHostOrchestrator
-            && !context.TestHostControllerInfo.HasTestHostController
+            && context.PoliciesService.ProcessRole is TestProcessRole.TestHost
             && context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
             && context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
         {

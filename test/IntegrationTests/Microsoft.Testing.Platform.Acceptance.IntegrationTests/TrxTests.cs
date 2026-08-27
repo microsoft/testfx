@@ -183,7 +183,7 @@ Out of process file artifacts produced:
             $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
             new() { ["CRASHPROCESS"] = "1" }, cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
 
         string[] trxFiles = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories);
         Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");

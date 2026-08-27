@@ -27,17 +27,8 @@ internal sealed partial class TestHostControllersTestHost
         ProxyOutputDevice outputDevice,
         ITelemetryInformation telemetryInformation,
         Stopwatch consoleRunStarted,
-        TimeSpan? executionTimeout,
         CancellationToken applicationCancellationToken)
     {
-        using CancellationTokenSource? timeoutCancellationTokenSource = executionTimeout is null
-            ? null
-            : new();
-        using CancellationTokenSource? executionCancellationTokenSource = timeoutCancellationTokenSource is null
-            ? null
-            : CancellationTokenSource.CreateLinkedTokenSource(applicationCancellationToken, timeoutCancellationTokenSource.Token);
-        CancellationToken executionCancellationToken = executionCancellationTokenSource?.Token ?? applicationCancellationToken;
-
         // Apply the ITestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync
         if (_testHostsInformation.LifetimeHandlers.Length > 0)
         {
@@ -112,10 +103,6 @@ internal sealed partial class TestHostControllersTestHost
                 throw ApplicationStateGuard.Unreachable();
             }
 
-            // The child continues independently after the PID handshake, so execution time starts now rather
-            // than after controller start callbacks. Those callbacks are advisory and must not extend --timeout.
-            timeoutCancellationTokenSource?.CancelAfter(executionTimeout!.Value);
-
             bool startHandlersCompleted = true;
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
@@ -129,7 +116,7 @@ internal sealed partial class TestHostControllersTestHost
                 {
                     startHandlersCompleted = await TryRunControllerExtensionAsync(
                         token => lifetimeHandler.OnTestHostProcessStartedAsync(partialTestHostProcessInformation, token),
-                        executionCancellationToken).ConfigureAwait(false);
+                        applicationCancellationToken).ConfigureAwait(false);
                     if (!startHandlersCompleted)
                     {
                         break;
@@ -142,12 +129,12 @@ internal sealed partial class TestHostControllersTestHost
             {
                 if (!startHandlersCompleted)
                 {
-                    throw new OperationCanceledException(executionCancellationToken);
+                    throw new OperationCanceledException(applicationCancellationToken);
                 }
 
-                await testHostProcess.WaitForExitAsync(executionCancellationToken).ConfigureAwait(false);
+                await testHostProcess.WaitForExitAsync(applicationCancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (executionCancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (applicationCancellationToken.IsCancellationRequested)
             {
                 // The run was canceled while waiting for the test host to exit. Tear the host down
                 // and wait (without cancellation) for it to fully exit, so the exit-code
@@ -185,12 +172,12 @@ internal sealed partial class TestHostControllersTestHost
             throw ApplicationStateGuard.Unreachable();
         }
 
-        bool testExecutionTimedOut = timeoutCancellationTokenSource?.IsCancellationRequested is true;
-        bool testExecutionCanceled = testExecutionTimedOut
-            || applicationCancellationToken.IsCancellationRequested;
         int testHostProcessExitCode = testHostProcess.HasExited
             ? testHostProcess.ExitCode
             : (int)ExitCode.TestSessionAborted;
+        bool testExecutionCanceled = applicationCancellationToken.IsCancellationRequested
+            || _testHostUnfilteredExitCodeReceived is (int)ExitCode.TestSessionAborted
+            || testHostProcessExitCode == (int)ExitCode.TestSessionAborted;
         int reportedTestHostExitCode = testExecutionCanceled
             ? (int)ExitCode.TestSessionAborted
             : testHostProcessExitCode;
@@ -248,10 +235,10 @@ internal sealed partial class TestHostControllersTestHost
                 $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout.").ConfigureAwait(false);
         }
 
-        if (testExecutionTimedOut && !applicationCancellationToken.IsCancellationRequested)
+        if (testExecutionCanceled && !applicationCancellationToken.IsCancellationRequested)
         {
-            // Timeout owns only test execution. Report the abort explicitly after controller extensions have
-            // finalized so output devices render an aborted verdict without canceling their cleanup token.
+            // The child owns timeout cancellation and reported an aborted exit. Report that state explicitly
+            // after controller extensions have finalized, without canceling their independent cleanup token.
             await ServiceProvider.GetRequiredService<IStopPoliciesService>().ExecuteAbortCallbacksAsync().ConfigureAwait(false);
         }
 
