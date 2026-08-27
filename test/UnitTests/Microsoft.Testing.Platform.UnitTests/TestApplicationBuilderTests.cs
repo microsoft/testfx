@@ -11,6 +11,8 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
+using Moq;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -197,6 +199,20 @@ public sealed class TestApplicationBuilderTests
         }
     }
 
+    [TestMethod]
+    public async Task TestHostControllerProcessTermination_WaitIsBounded()
+    {
+        Mock<IProcess> process = new();
+        TaskCompletionSource<bool> neverExits = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(neverExits.Task);
+        var stopwatch = Stopwatch.StartNew();
+
+        bool exited = await WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100));
+
+        Assert.IsFalse(exited);
+        Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+    }
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]
@@ -273,6 +289,16 @@ public sealed class TestApplicationBuilderTests
             ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TryRunControllerExtensionAsync.");
         return (Task<bool>?)method.Invoke(null, [finalization, cancellationToken])
             ?? throw new InvalidOperationException("TestHostControllersTestHost.TryRunControllerExtensionAsync returned null.");
+    }
+
+    private static Task<bool> WaitForExitAfterTerminationAsync(IProcess process, TimeSpan timeout)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "WaitForExitAfterTerminationAsync",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.WaitForExitAfterTerminationAsync.");
+        return (Task<bool>?)method.Invoke(null, [process, timeout])
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.WaitForExitAfterTerminationAsync returned null.");
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]

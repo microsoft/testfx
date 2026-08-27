@@ -155,12 +155,9 @@ internal sealed partial class TestHostControllersTestHost
                     await _logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
                 }
 
-                try
-                {
-                    await testHostProcess.WaitForExitAsync(CancellationToken.None)
-                        .TimeoutAfterAsync(TestHostTerminationTimeout).ConfigureAwait(false);
-                }
-                catch (TimeoutException)
+                if (!await WaitForExitAfterTerminationAsync(
+                    testHostProcess,
+                    TestHostTerminationTimeout).ConfigureAwait(false))
                 {
                     await _logger.LogWarningAsync(
                         $"Test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
@@ -337,6 +334,22 @@ internal sealed partial class TestHostControllersTestHost
         await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
 
         return (exitCode, testHostProcessInformation, extensionInformation);
+    }
+
+    private static async Task<bool> WaitForExitAfterTerminationAsync(
+        IProcess testHostProcess,
+        TimeSpan timeout)
+    {
+        try
+        {
+            await testHostProcess.WaitForExitAsync(CancellationToken.None)
+                .TimeoutAfterAsync(timeout).ConfigureAwait(false);
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 
     private void ScheduleApplicationCancellation()
