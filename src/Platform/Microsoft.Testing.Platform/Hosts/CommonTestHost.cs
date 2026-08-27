@@ -304,7 +304,5 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         return exitCode;
     }
 
-#pragma warning disable RS0051 // Internal host implementation contract; not a stable API surface.
     protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed);
-#pragma warning restore RS0051
 }
