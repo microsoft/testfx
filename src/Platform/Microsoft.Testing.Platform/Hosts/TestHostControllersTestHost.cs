@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -18,9 +19,9 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
-    private static readonly TimeSpan ControllerExtensionFinalizationTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
 
+    private readonly TimeSpan _controllerExtensionFinalizationTimeout;
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly PassiveNode? _passiveNode;
     private readonly IEnvironment _environment;
@@ -52,6 +53,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _testHostsInformation = testHostsInformation;
         _passiveNode = passiveNode;
         _environment = environment;
+        _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetCanceledConsumerCompletion(environment);
         _clock = clock;
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<TestHostControllersTestHost>();

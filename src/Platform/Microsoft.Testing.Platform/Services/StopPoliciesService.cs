@@ -124,6 +124,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
     public Task ExecuteAbortCallbacksAsync()
     {
         Func<Task>[] callbacks;
+        TaskCompletionSource<bool> completionSource;
         lock (_abortLock)
         {
             if (_abortCallbacksTask is not null)
@@ -135,22 +136,32 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
             IsAbortTriggered = true;
             callbacks = [.. _abortCallbacks];
             _abortCallbacks.Clear();
-            Task abortCallbacksTask = ExecuteAbortCallbacksCoreAsync(callbacks);
-            _abortCallbacksTask = abortCallbacksTask;
-            return abortCallbacksTask;
+            completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _abortCallbacksTask = completionSource.Task;
         }
+
+        _ = ExecuteAbortCallbacksCoreAsync(callbacks, completionSource);
+        return completionSource.Task;
     }
 
-    private static async Task ExecuteAbortCallbacksCoreAsync(Func<Task>[] callbacks)
+    private static async Task ExecuteAbortCallbacksCoreAsync(
+        Func<Task>[] callbacks,
+        TaskCompletionSource<bool> completionSource)
     {
-        // The shared task is published while the lock is held. Yield before invoking arbitrary callbacks so
-        // callback code can register other policies without running under the lock or racing task publication.
-        await Task.Yield();
-        foreach (Func<Task> callback in callbacks)
+        try
         {
-            // For now, we are fine if the callback crashed us. It shouldn't happen for our
-            // current usage anyway and the APIs around this are all internal for now.
-            await callback.Invoke().ConfigureAwait(false);
+            foreach (Func<Task> callback in callbacks)
+            {
+                // For now, we are fine if the callback crashed us. It shouldn't happen for our
+                // current usage anyway and the APIs around this are all internal for now.
+                await callback.Invoke().ConfigureAwait(false);
+            }
+
+            completionSource.TrySetResult(true);
+        }
+        catch (Exception ex)
+        {
+            completionSource.TrySetException(ex);
         }
     }
 

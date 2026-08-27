@@ -40,6 +40,33 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         Assert.AreEqual(bool.FalseString, File.ReadAllText(finalizationFile));
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_BoundsBlockingFinalizationWithoutDisposingRunningHandler(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
+        string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
+        var stopwatch = Stopwatch.StartNew();
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["BLOCK_FINALIZATION"] = "1",
+                ["FINALIZATION_STARTED_FILE"] = finalizationStartedFile,
+                ["DISPOSAL_FILE"] = disposalFile,
+                ["TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS"] = "0.5",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
+        Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
+        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
@@ -83,7 +110,7 @@ public class Startup
     }
 }
 
-public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
+public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDisposable
 {
     public string Uid => nameof(TestHostProcessLifetimeHandler);
 
@@ -112,6 +139,16 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
             System.IO.File.WriteAllText(finalizationFile, cancellationToken.IsCancellationRequested.ToString());
         }
 
+        if (Environment.GetEnvironmentVariable("FINALIZATION_STARTED_FILE") is { Length: > 0 } finalizationStartedFile)
+        {
+            System.IO.File.WriteAllText(finalizationStartedFile, string.Empty);
+        }
+
+        if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
+        {
+            Thread.Sleep(10000);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -119,6 +156,14 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
     {
         System.IO.File.WriteAllText("OnTestHostProcessStartedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        if (Environment.GetEnvironmentVariable("DISPOSAL_FILE") is { Length: > 0 } disposalFile)
+        {
+            System.IO.File.WriteAllText(disposalFile, string.Empty);
+        }
     }
 }
 
@@ -146,7 +191,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         if (Environment.GetEnvironmentVariable("BLOCK_UNTIL_TIMEOUT") == "1")
         {
-            Thread.Sleep(10000);
+            Thread.Sleep(2000);
         }
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 

@@ -185,7 +185,7 @@ internal sealed partial class TestHostControllersTestHost
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         _controllerFinalizationCancellationTokenSource = testExecutionCanceled
-            ? new(ControllerExtensionFinalizationTimeout)
+            ? new(_controllerExtensionFinalizationTimeout)
             : null;
         CancellationTokenSource? finalizationCancellationTokenSource = _controllerFinalizationCancellationTokenSource;
         CancellationToken finalizationCancellationToken = finalizationCancellationTokenSource?.Token ?? applicationCancellationToken;
@@ -353,7 +353,7 @@ internal sealed partial class TestHostControllersTestHost
             CancellationToken.None));
         ObserveBackgroundTask(Task.Run(
             () => _logger.LogWarning(
-                $"Test host controller extension finalization exceeded the {ControllerExtensionFinalizationTimeout} cleanup timeout."),
+                $"Test host controller extension finalization exceeded the {_controllerExtensionFinalizationTimeout} cleanup timeout."),
             CancellationToken.None));
     }
 
