@@ -271,7 +271,10 @@ internal sealed partial class TestHostControllersTestHost
             ScheduleApplicationCancellation();
         }
 
-        string? extensionInformation = null;
+        // Telemetry requires a valid JSON payload even when the cleanup deadline prevents extension
+        // enumeration. An empty array records that collection was intentionally skipped without re-entering
+        // abandoned extensions.
+        string? extensionInformation = telemetryInformation.IsEnabled ? "[]" : null;
         // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
         if (telemetryInformation.IsEnabled && !_controllerFinalizationTimedOut)
         {
