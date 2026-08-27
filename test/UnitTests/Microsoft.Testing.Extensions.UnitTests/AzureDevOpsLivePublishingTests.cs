@@ -3509,7 +3509,7 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         using HttpResponseMessage response = new(HttpStatusCode.OK)
         {
-            Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"subResults\":[{\"id\":1002}]}]}"),
+            Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"subResults\":[{\"id\":1001},{\"id\":1002}]}]}"),
         };
         QueueHttpMessageHandler handler = new((_, _) => Task.FromResult(response));
         using HttpClient httpClient = new(handler)
@@ -3524,6 +3524,7 @@ public sealed class AzureDevOpsLivePublishingTests
             ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
             SubResults =
             [
+                new AzureDevOpsTestSubResult(1, "Attempt# 0 - MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 5, "first", null, null, null),
                 new AzureDevOpsTestSubResult(2, "Attempt# 1 - MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 5, "second", null, null, null),
             ],
         };
@@ -3532,7 +3533,9 @@ public sealed class AzureDevOpsLivePublishingTests
             await client.UpdateTestResultsWithSubResultsAsync(configuration, runId: 42, [parent], CancellationToken.None);
 
         Assert.IsNotNull(publishedResults);
+        Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 1, out int firstSubResultId));
         Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 2, out int secondSubResultId));
+        Assert.AreEqual(1001, firstSubResultId);
         Assert.AreEqual(1002, secondSubResultId);
     }
 
