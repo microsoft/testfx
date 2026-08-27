@@ -276,7 +276,7 @@ internal sealed partial class TestHostControllersTestHost
         // abandoned extensions.
         string? extensionInformation = telemetryInformation.IsEnabled ? "[]" : null;
         // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
-        if (telemetryInformation.IsEnabled && !_controllerFinalizationTimedOut)
+        if (telemetryInformation.IsEnabled && !testExecutionCanceled)
         {
             extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider).ConfigureAwait(false);
         }
