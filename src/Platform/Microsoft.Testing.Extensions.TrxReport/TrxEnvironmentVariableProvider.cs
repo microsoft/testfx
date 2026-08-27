@@ -32,8 +32,7 @@ internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing
         => Task.FromResult(
             // TrxReportGenerator is enabled only when trx report is enabled
             _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
-            // If crash dump is not enabled we run trx in-process only
-            && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
+            && TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(_commandLineOptions));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)

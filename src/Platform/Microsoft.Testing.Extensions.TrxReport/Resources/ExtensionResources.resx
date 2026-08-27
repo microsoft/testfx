@@ -258,6 +258,22 @@ Example: 'MyReport_{tfm}.trx'.</value>
     <value>Enable generating TRX report.</value>
     <comment>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</comment>
   </data>
+  <data name="TrxModeInvalidArgument" xml:space="preserve">
+    <value>'--trx-mode' expects one of: 'out-of-process', 'in-process'</value>
+    <comment>Do not localize option name {Locked="'--trx-mode'"} or option values {Locked="'out-of-process'"}{Locked="'in-process'"}.</comment>
+  </data>
+  <data name="TrxModeOptionDescription" xml:space="preserve">
+    <value>Select TRX recovery mode: 'out-of-process' uses a surviving test-host controller and is the default when supported; 'in-process' avoids the additional process but cannot recover the report if the test host exits unexpectedly.</value>
+    <comment>Do not localize format name {Locked="TRX"} or option values {Locked="'out-of-process'"}{Locked="'in-process'"}.</comment>
+  </data>
+  <data name="TrxModeOutOfProcessNotSupported" xml:space="preserve">
+    <value>'--trx-mode out-of-process' is not supported on this platform because starting a test-host process is unavailable</value>
+    <comment>Do not localize option and value {Locked="'--trx-mode out-of-process'"}.</comment>
+  </data>
+  <data name="TrxModeRequiresTrxReport" xml:space="preserve">
+    <value>'--trx-mode' requires '--report-trx' to be enabled</value>
+    <comment>Do not localize option names {Locked="'--trx-mode'"}{Locked="'--report-trx'"}.</comment>
+  </data>
   <data name="UnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Requests of type '{0}' is not supported</value>
     <comment>{0} is the unsupported request type name.</comment>

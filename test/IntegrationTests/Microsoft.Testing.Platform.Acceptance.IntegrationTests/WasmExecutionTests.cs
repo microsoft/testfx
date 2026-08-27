@@ -87,18 +87,21 @@ public sealed class WasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
 </Project>
 
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyFramework());
+testApplicationBuilder.AddTrxReportProvider();
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 
@@ -189,7 +192,12 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
         }
 
         (int exitCode, _, _, string combined) =
-            await WasmRuntime.RunUnderWasmtimeAsync(wasmtime, appBundle, "WasmPlatformProject", TestContext.CancellationToken);
+            await WasmRuntime.RunUnderWasmtimeAsync(
+                wasmtime,
+                appBundle,
+                "WasmPlatformProject",
+                TestContext.CancellationToken,
+                "--report-trx --report-trx-filename wasi.trx");
 
         // No test fails, so the platform must exit cleanly. A PlatformNotSupportedException (the
         // single-threaded blocking-wait failure mode) would indicate a regression in the wasm
@@ -203,6 +211,18 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
         Assert.IsTrue(
             combined.Contains("succeeded: 1", StringComparison.Ordinal),
             $"Expected 1 succeeded test in the wasm run summary.{Environment.NewLine}{combined}");
+
+        Assert.HasCount(1, Directory.GetFiles(appBundle, "wasi.trx", SearchOption.AllDirectories));
+
+        (int unsupportedExitCode, _, _, string unsupportedCombined) =
+            await WasmRuntime.RunUnderWasmtimeAsync(
+                wasmtime,
+                appBundle,
+                "WasmPlatformProject",
+                TestContext.CancellationToken,
+                "--report-trx --trx-mode out-of-process");
+        Assert.AreEqual((int)ExitCode.InvalidCommandLine, unsupportedExitCode, unsupportedCombined);
+        Assert.Contains("'--trx-mode out-of-process' is not supported on this platform", unsupportedCombined);
         Assert.IsTrue(
             combined.Contains("failed: 0", StringComparison.Ordinal),
             $"Expected 0 failed tests in the wasm run summary.{Environment.NewLine}{combined}");

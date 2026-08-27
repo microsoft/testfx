@@ -38,6 +38,22 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenInProcessModeIsSpecified_TrxReportIsGenerated(string tfm)
+    {
+        string fileName = $"{Guid.NewGuid():N}.trx";
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {fileName} --trx-mode in-process",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("In process file artifacts produced:");
+        Assert.HasCount(1, Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories));
+    }
+
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Trx_WhenOutOfProcessReportHasNoSelectedTests_LifetimeHandshakeCompletes(string tfm)
@@ -180,7 +196,7 @@ Out of process file artifacts produced:
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
+            $"--report-trx --report-trx-filename {fileName}.trx",
             new() { ["CRASHPROCESS"] = "1" }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
@@ -202,7 +218,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--crashdump --report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\" --timeout 2s",
+            $"--report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\" --timeout 2s",
             new() { ["WAIT_FOR_TIMEOUT"] = "1" },
             cancellationToken: TestContext.CancellationToken);
 
@@ -231,7 +247,7 @@ Out of process file artifacts produced:
         string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
             workingDirectory: AssetFixture.TargetAssetPath,
             environmentVariables: new() { ["CRASHPROCESS"] = "1" },
             failIfReturnValueIsNotZero: false,
@@ -348,7 +364,7 @@ Out of process file artifacts produced:
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
-  In process file artifacts produced:
+  Out of process file artifacts produced:
     - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
