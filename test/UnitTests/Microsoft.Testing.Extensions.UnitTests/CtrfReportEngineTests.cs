@@ -353,10 +353,31 @@ public class CtrfReportEngineTests
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedAttachment priorAttachment = new()
+        {
+            Name = "first.log",
+            ContentType = "text/plain",
+            Path = "artifacts/first.log",
+            Description = "First attempt diagnostics",
+        };
         CapturedTestResult[] tests =
         [
-            Captured("retry", "Retrying", "failed", errorMessage: "first failure", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
-            Captured("retry", "Retrying", "passed", retryAttemptNumber: 2),
+            Captured(
+                "retry",
+                "Retrying",
+                "failed",
+                errorMessage: "first failure",
+                retryAttemptNumber: 1,
+                isSupersededRetryAttempt: true,
+                attachments: [priorAttachment]),
+            Captured(
+                "retry",
+                "Retrying",
+                "failed",
+                errorMessage: "second failure",
+                retryAttemptNumber: 2,
+                isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "passed", retryAttemptNumber: 3),
             Captured("unique", "Solo", "passed"),
         ];
 
@@ -372,12 +393,22 @@ public class CtrfReportEngineTests
 
         JsonElement retry = results.GetProperty("tests")[0];
         Assert.AreEqual("passed", retry.GetProperty("status").GetString());
-        Assert.AreEqual(1, retry.GetProperty("retries").GetInt32());
+        Assert.AreEqual(2, retry.GetProperty("retries").GetInt32());
         Assert.IsTrue(retry.GetProperty("flaky").GetBoolean());
-        JsonElement priorAttempt = Assert.ContainsSingle(retry.GetProperty("retryAttempts").EnumerateArray());
-        Assert.AreEqual(1, priorAttempt.GetProperty("attempt").GetInt32());
-        Assert.AreEqual("failed", priorAttempt.GetProperty("status").GetString());
-        Assert.AreEqual("first failure", priorAttempt.GetProperty("message").GetString());
+        JsonElement[] priorAttempts = [.. retry.GetProperty("retryAttempts").EnumerateArray()];
+        Assert.HasCount(2, priorAttempts);
+        Assert.AreSequenceEqual(
+            [1, 2],
+            priorAttempts.Select(attempt => attempt.GetProperty("attempt").GetInt32()).ToArray());
+        Assert.AreSequenceEqual(
+            ["first failure", "second failure"],
+            priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
+
+        JsonElement attachment = Assert.ContainsSingle(priorAttempts[0].GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual("first.log", attachment.GetProperty("name").GetString());
+        Assert.AreEqual("text/plain", attachment.GetProperty("contentType").GetString());
+        Assert.AreEqual("artifacts/first.log", attachment.GetProperty("path").GetString());
+        Assert.AreEqual("First attempt diagnostics", attachment.GetProperty("extra").GetProperty("description").GetString());
     }
 
     [TestMethod]
@@ -400,6 +431,31 @@ public class CtrfReportEngineTests
         Assert.DoesNotContain(
             test => test.TryGetProperty("retryAttempts", out _),
             results.GetProperty("tests").EnumerateArray());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_PreservesAmbiguousOverlappingRetrySequences()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("same", "A", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("same", "B", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("same", "B", "passed", retryAttemptNumber: 2),
+            Captured("same", "A", "passed", retryAttemptNumber: 2),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement testArray = results.GetProperty("tests");
+        Assert.AreEqual(4, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(
+            ["A", "B", "B", "A"],
+            testArray.EnumerateArray().Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.DoesNotContain(test => test.TryGetProperty("retryAttempts", out _), testArray.EnumerateArray());
     }
 
     [TestMethod]
@@ -734,7 +790,8 @@ public class CtrfReportEngineTests
         TimeSpan? duration = null,
         string? errorMessage = null,
         int? retryAttemptNumber = null,
-        bool isSupersededRetryAttempt = false)
+        bool isSupersededRetryAttempt = false,
+        IReadOnlyList<CapturedAttachment>? attachments = null)
         => new()
         {
             Uid = uid,
@@ -744,6 +801,7 @@ public class CtrfReportEngineTests
             ErrorMessage = errorMessage,
             RetryAttemptNumber = retryAttemptNumber,
             IsSupersededRetryAttempt = isSupersededRetryAttempt,
+            Attachments = attachments,
         };
 
     private static CapturedTestResult CapturedRaw(string uid, string name, string status, string rawStatus)

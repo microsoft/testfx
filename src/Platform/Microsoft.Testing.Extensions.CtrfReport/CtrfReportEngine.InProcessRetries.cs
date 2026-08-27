@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed partial class CtrfReportEngine
@@ -43,18 +45,36 @@ internal sealed partial class CtrfReportEngine
             }
 
             RetrySequence? matchingSequence = null;
+            int matchingSequenceCount = 0;
             for (int sequenceIndex = 0; sequenceIndex < candidates.Count; sequenceIndex++)
             {
                 if (candidates[sequenceIndex].NextAttemptNumber == attemptNumber)
                 {
                     matchingSequence = candidates[sequenceIndex];
-                    break;
+                    matchingSequenceCount++;
                 }
+            }
+
+            if (matchingSequenceCount != 1)
+            {
+                if (matchingSequenceCount > 1)
+                {
+                    // RetryAttemptProperty has no execution identity beyond UID and attempt
+                    // number. If several overlapping executions can accept this attempt,
+                    // collapsing would cross-wire their diagnostics, so preserve every row.
+                    _ = candidates.RemoveAll(sequence => sequence.NextAttemptNumber == attemptNumber);
+                    if (candidates.Count == 0)
+                    {
+                        openSequencesByUid.Remove(result.Uid);
+                    }
+                }
+
+                continue;
             }
 
             if (matchingSequence is null)
             {
-                continue;
+                throw ApplicationStateGuard.Unreachable();
             }
 
             matchingSequence.ResultIndices.Add(resultIndex);
