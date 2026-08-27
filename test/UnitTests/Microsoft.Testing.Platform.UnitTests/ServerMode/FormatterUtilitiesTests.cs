@@ -141,6 +141,20 @@ public sealed class FormatterUtilitiesTests
         Assert.IsNull(request.StringId);
     }
 
+    [DataRow("1.00000000000000001")]
+    [DataRow("1e-1")]
+    [DataRow("2147483648.0")]
+    [TestMethod]
+    public void RejectsNonIntegralOrOutOfRangeNumericRequestId(string serializedId)
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": {{serializedId}},
+                "method": "testing/unknown"
+            }
+            """));
+
     [TestMethod]
     public async Task NumericStringId_IsPreservedInResponsesAndErrors()
     {
@@ -172,6 +186,26 @@ public sealed class FormatterUtilitiesTests
         CancelRequestArgs args = Assert.IsInstanceOfType<CancelRequestArgs>(notification.Params);
         Assert.AreEqual(42, args.CancelRequestId);
         Assert.AreEqual("42", args.StringId);
+    }
+
+    [TestMethod]
+    public void CanDeserializeIntegralNumericCancellationId()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "method": "$/cancelRequest",
+                "params": {
+                    "id": 42.0
+                }
+            }
+            """);
+
+        NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(message);
+        CancelRequestArgs args = Assert.IsInstanceOfType<CancelRequestArgs>(notification.Params);
+        Assert.AreEqual(42, args.CancelRequestId);
+        Assert.IsNull(args.StringId);
     }
 
     [TestMethod]

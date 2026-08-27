@@ -80,9 +80,6 @@ internal static partial class SerializerUtilities
         => idObj switch
         {
             int idInt => idInt,
-            double idDouble when idDouble == Math.Truncate(idDouble)
-                && idDouble >= int.MinValue
-                && idDouble <= int.MaxValue => (int)idDouble,
             decimal idDecimal when idDecimal == decimal.Truncate(idDecimal)
                 && idDecimal >= int.MinValue
                 && idDecimal <= int.MaxValue => decimal.ToInt32(idDecimal),

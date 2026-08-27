@@ -22,13 +22,143 @@ internal sealed class FormatterUtilities
 
     internal sealed class MessageFormatter : IMessageFormatter
     {
+        private static readonly Jsonite.JsonSettings NumericTextSettings = new()
+        {
+            ParseValuesAsStrings = true,
+        };
+
         public string Id => "Jsonite";
 
         public T Deserialize<T>(string serializedUtf8Content)
-            => SerializerUtilities.Deserialize<T>((Jsonite.JsonObject)Jsonite.Json.Deserialize(serializedUtf8Content));
+        {
+            var properties = (Jsonite.JsonObject)Jsonite.Json.Deserialize(serializedUtf8Content);
+            PreserveExactRpcIds(properties, serializedUtf8Content);
+            return SerializerUtilities.Deserialize<T>(properties);
+        }
 
         public Task<string> SerializeAsync(object obj)
             => Task.FromResult(Jsonite.Json.Serialize(SerializerUtilities.Serialize(obj.GetType(), obj)));
+
+        private static void PreserveExactRpcIds(Jsonite.JsonObject properties, string serializedContent)
+        {
+            bool hasFloatingPointMessageId = properties.TryGetValue(JsonRpcStrings.Id, out object? messageId)
+                && messageId is double;
+            Jsonite.JsonObject? paramsObject = properties.TryGetValue(JsonRpcStrings.Params, out object? paramsValue)
+                ? paramsValue as Jsonite.JsonObject
+                : null;
+            bool hasFloatingPointCancellationId = properties.TryGetValue(JsonRpcStrings.Method, out object? method)
+                && method is JsonRpcMethods.CancelRequest
+                && paramsObject?.TryGetValue(JsonRpcStrings.Id, out object? cancellationId) == true
+                && cancellationId is double;
+            if (!hasFloatingPointMessageId && !hasFloatingPointCancellationId)
+            {
+                return;
+            }
+
+            var rawProperties = (Jsonite.JsonObject)Jsonite.Json.Deserialize(serializedContent, NumericTextSettings);
+            if (hasFloatingPointMessageId)
+            {
+                PreserveExactRpcId(properties, rawProperties);
+            }
+
+            if (hasFloatingPointCancellationId
+                && rawProperties[JsonRpcStrings.Params] is Jsonite.JsonObject rawParams)
+            {
+                PreserveExactRpcId(paramsObject!, rawParams);
+            }
+        }
+
+        private static void PreserveExactRpcId(Jsonite.JsonObject properties, Jsonite.JsonObject rawProperties)
+        {
+            string rawId = (string)rawProperties[JsonRpcStrings.Id]!;
+            properties[JsonRpcStrings.Id] = TryParseNumericRpcId(rawId, out int id)
+                ? id
+                : rawId;
+        }
+
+        private static bool TryParseNumericRpcId(string value, out int result)
+        {
+            int start = value[0] == '-' ? 1 : 0;
+            bool isNegative = start == 1;
+            int exponentIndex = value.IndexOf('e');
+            if (exponentIndex < 0)
+            {
+                exponentIndex = value.IndexOf('E');
+            }
+
+            string mantissa = exponentIndex < 0 ? value.Substring(start) : value.Substring(start, exponentIndex - start);
+            int decimalPointIndex = mantissa.IndexOf('.');
+            int fractionalDigits = decimalPointIndex < 0 ? 0 : mantissa.Length - decimalPointIndex - 1;
+            string digits = decimalPointIndex < 0 ? mantissa : mantissa.Remove(decimalPointIndex, 1);
+            if (digits.All(c => c == '0'))
+            {
+                result = 0;
+                return true;
+            }
+
+            int exponent = 0;
+            if (exponentIndex >= 0
+                && !int.TryParse(
+                    value.Substring(exponentIndex + 1),
+                    NumberStyles.AllowLeadingSign,
+                    CultureInfo.InvariantCulture,
+                    out exponent))
+            {
+                result = default;
+                return false;
+            }
+
+            long scale = (long)fractionalDigits - exponent;
+            if (scale > 0)
+            {
+                if (scale > digits.Length)
+                {
+                    result = default;
+                    return false;
+                }
+
+                int firstFractionalIndex = digits.Length - (int)scale;
+                for (int i = firstFractionalIndex; i < digits.Length; i++)
+                {
+                    if (digits[i] != '0')
+                    {
+                        result = default;
+                        return false;
+                    }
+                }
+
+                digits = digits.Substring(0, firstFractionalIndex);
+            }
+            else if (scale < 0)
+            {
+                long trailingZeroCount = -scale;
+                int significantDigitCount = digits.TrimStart('0').Length;
+                if (trailingZeroCount > 10 || significantDigitCount + trailingZeroCount > 10)
+                {
+                    result = default;
+                    return false;
+                }
+
+                digits += new string('0', (int)trailingZeroCount);
+            }
+
+            digits = digits.TrimStart('0');
+            if (!long.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out long magnitude))
+            {
+                result = default;
+                return false;
+            }
+
+            long signedValue = isNegative ? -magnitude : magnitude;
+            if (signedValue is < int.MinValue or > int.MaxValue)
+            {
+                result = default;
+                return false;
+            }
+
+            result = (int)signedValue;
+            return true;
+        }
     }
 #else
     internal static IMessageFormatter CreateFormatter() => new MessageFormatter();

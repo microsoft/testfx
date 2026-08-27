@@ -231,8 +231,7 @@
                   ],
                   "items": {
                     "type": "string"
-                  },
-                  "uniqueItems": true
+                  }
                 }
               },
               "additionalProperties": true

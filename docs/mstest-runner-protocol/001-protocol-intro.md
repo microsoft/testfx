@@ -265,7 +265,7 @@ interface InitializeResponse {
     },
 
     // Independently negotiated wire-protocol version.
-    protocolVersion?: string,
+    protocolVersion?: string | null,
 
     capabilities: {
         testing: {
@@ -524,6 +524,12 @@ Request:
 
 ```typescript
 interface DiscoverTestsParams {
+    // Optional explicit test selection. If omitted, all tests matching the filter are discovered.
+    tests?: TestNode[],
+
+    // Optional graph filter that narrows discovery.
+    filter?: string,
+
     runId: GUID
 }
 ```
@@ -602,6 +608,9 @@ interface RunTestsParams {
     // The set of tests selected by the user to run.
     // If not specified all tests will run.
     tests?: TestNode[],
+
+    // Optional graph filter that narrows execution.
+    filter?: string,
 
     // Token which should be specified for all update notifications.
     // This way the client can under which the update notifications should be reported.
