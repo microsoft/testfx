@@ -128,11 +128,11 @@ internal sealed class MtpServerClient : IMtpServerClient
 
         ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken).ConfigureAwait(false);
         MtpServerCapabilities capabilities = DecodeCapabilities(AsResultDictionary(response.Result));
-        if (capabilities.ProtocolVersion is { } negotiatedProtocolVersion
-            && !IsSupportedProtocolVersion(negotiatedProtocolVersion))
+        string effectiveProtocolVersion = capabilities.ProtocolVersion ?? JsonRpcProtocolVersions.V1;
+        if (!IsSupportedProtocolVersion(effectiveProtocolVersion))
         {
             throw new MtpServerClientException(
-                $"The server negotiated unsupported protocol version '{negotiatedProtocolVersion}'. "
+                $"The server negotiated unsupported protocol version '{effectiveProtocolVersion}'. "
                 + $"Supported versions: {string.Join(", ", _options.SupportedProtocolVersions)}.");
         }
 
@@ -259,7 +259,7 @@ internal sealed class MtpServerClient : IMtpServerClient
 
     private bool IsSupportedProtocolVersion(string negotiatedProtocolVersion)
         => _options.SupportedProtocolVersions.Count == 0
-            ? negotiatedProtocolVersion == JsonRpcProtocolVersions.Current
+            ? negotiatedProtocolVersion == JsonRpcProtocolVersions.V1
             : _options.SupportedProtocolVersions.Contains(negotiatedProtocolVersion, StringComparer.Ordinal);
 
     private static int? AsInt(object? value)

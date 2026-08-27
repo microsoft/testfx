@@ -29,7 +29,7 @@ internal static class JsonRpcProtocolVersions
     {
         if (clientSupportedVersions is null || clientSupportedVersions.Count == 0)
         {
-            return Current;
+            return V1;
         }
 
         IReadOnlyList<string> serverSupportedVersions = Supported;

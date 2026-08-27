@@ -60,6 +60,23 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task InitializeAsync_LegacyServerWithoutSupportedVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = ["2.0.0"],
+        });
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcProtocolVersions.V1, exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
     public async Task InitializeAsync_UnsupportedNegotiatedProtocolVersion_Throws()
     {
         using FakeMtpServer server = new();
@@ -85,7 +102,7 @@ public sealed class MtpServerClientTests
         MtpServerCapabilities capabilities = await WithTimeoutAsync(
             client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.AreEqual(JsonRpcProtocolVersions.Current, capabilities.ProtocolVersion);
+        Assert.AreEqual(JsonRpcProtocolVersions.V1, capabilities.ProtocolVersion);
     }
 
     [TestMethod]
