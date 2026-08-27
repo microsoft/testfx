@@ -331,10 +331,17 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
+        int test1Index = registry.IndexOf("Name = \"Test1\"", System.StringComparison.Ordinal);
+        int test2Index = registry.IndexOf("Name = \"Test2\"", System.StringComparison.Ordinal);
+        int propertiesIndex = registry.IndexOf("Properties = ", test2Index, System.StringComparison.Ordinal);
+        test1Index.Should().BeGreaterThan(-1);
+        test2Index.Should().BeGreaterThan(test1Index);
+        propertiesIndex.Should().BeGreaterThan(test2Index);
         registry.Should().Contain("Type = typeof(global::Sample.PartialTests)");
-        registry.Should().Contain("Name = \"Test1\"");
-        registry.Should().Contain("Name = \"Test2\"");
-        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(test1Index, test2Index - test1Index)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(test2Index, propertiesIndex - test2Index)
+            .Should().Contain("IsDescriptorSupported = true");
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
     }
 

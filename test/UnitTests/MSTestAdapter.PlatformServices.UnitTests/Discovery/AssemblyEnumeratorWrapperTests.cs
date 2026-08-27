@@ -86,6 +86,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     }
 
 #if NETCOREAPP
+    [DoNotParallelize]
     public void GetTestsShouldSelectGeneratedDescriptorsOnlyForMtp()
     {
         Type testType = typeof(GeneratedDescriptorTestClass);
