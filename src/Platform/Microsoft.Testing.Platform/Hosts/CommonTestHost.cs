@@ -159,17 +159,28 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
             activity?.Dispose();
 
             await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed, isProcessShutdown: true).ConfigureAwait(false);
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
+            if (ServiceProvider.GetService<FileLoggerProvider>() is { } fileLoggerProvider
+                && !alreadyDisposed.Contains(fileLoggerProvider))
+            {
+                await DisposeProcessShutdownServiceAsync(fileLoggerProvider).ConfigureAwait(false);
+                alreadyDisposed.Add(fileLoggerProvider);
+            }
 
             // Dispose the LoggerFactoryProxy last so that all user-registered logger providers
             // (e.g., Microsoft.Extensions.Logging providers added via the Microsoft.Testing.Extensions.Logging
             // bridge such as Serilog, Application Insights, OpenTelemetry) get a chance to flush their buffers.
             // The proxy is skipped by DisposeServiceProviderAsync for ordering reasons.
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<LoggerFactoryProxy>()).ConfigureAwait(false);
+            if (ServiceProvider.GetService<LoggerFactoryProxy>() is { } loggerFactoryProxy
+                && !alreadyDisposed.Contains(loggerFactoryProxy))
+            {
+                await DisposeProcessShutdownServiceAsync(loggerFactoryProxy).ConfigureAwait(false);
+                alreadyDisposed.Add(loggerFactoryProxy);
+            }
 
             if (PushOnlyProtocol is not null && !alreadyDisposed.Contains(PushOnlyProtocol))
             {
-                await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
+                await DisposeProcessShutdownServiceAsync(PushOnlyProtocol).ConfigureAwait(false);
+                alreadyDisposed.Add(PushOnlyProtocol);
             }
 
             // This is intentional that we are not disposing the CTS.
@@ -305,4 +316,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
     }
 
     protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed);
+
+    protected virtual Task DisposeProcessShutdownServiceAsync(object service)
+        => DisposeHelper.DisposeAsync(service);
 }

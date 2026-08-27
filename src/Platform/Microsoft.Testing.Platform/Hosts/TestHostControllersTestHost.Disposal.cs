@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
@@ -100,6 +101,26 @@ internal sealed partial class TestHostControllersTestHost
             {
                 alreadyDisposed.Add(service);
             }
+
+            if (service is BaseMessageBus messageBus)
+            {
+                foreach (IDataConsumer dataConsumer in messageBus.DataConsumerServices)
+                {
+                    if (!alreadyDisposed.Contains(dataConsumer))
+                    {
+                        alreadyDisposed.Add(dataConsumer);
+                    }
+                }
+            }
+        }
+    }
+
+    protected override async Task DisposeProcessShutdownServiceAsync(object service)
+    {
+        if (!await TryRunControllerCleanupAsync(() => DisposeHelper.DisposeAsync(service)).ConfigureAwait(false))
+        {
+            _controllerFinalizationTimedOut = true;
+            ScheduleApplicationCancellation();
         }
     }
 
