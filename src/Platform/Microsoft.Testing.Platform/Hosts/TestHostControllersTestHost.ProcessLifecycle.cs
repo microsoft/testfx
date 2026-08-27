@@ -159,6 +159,11 @@ internal sealed partial class TestHostControllersTestHost
                     testHostProcess,
                     TestHostTerminationTimeout).ConfigureAwait(false))
                 {
+                    if (testHostProcess is TestHostHandleToProcessAdapter adapter)
+                    {
+                        adapter.DeferDisposalUntilExit();
+                    }
+
                     await _logger.LogWarningAsync(
                         $"Test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
                 }

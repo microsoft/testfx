@@ -24,6 +24,7 @@ Microsoft.Testing.Platform.Helpers.IConsole.Write(System.Text.StringBuilder! val
 Microsoft.Testing.Platform.Helpers.IFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
 Microsoft.Testing.Platform.Helpers.SystemConsole.Write(System.Text.StringBuilder! value) -> void
 Microsoft.Testing.Platform.Helpers.SystemFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
+Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.DeferDisposalUntilExit() -> void
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.IsConsumerRunning.get -> bool
 Microsoft.Testing.Platform.Messages.BlockingConsumerDataProcessor.BlockingConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void

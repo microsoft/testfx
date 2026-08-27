@@ -217,6 +217,42 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public async Task TestHostControllerProcessTermination_CustomHandleDisposalWaitsForExit()
+    {
+        TaskCompletionSource<bool> exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> disposed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITestHostHandle> handle = new();
+        handle.SetupGet(x => x.HasExited).Returns(() => exited.Task.IsCompleted);
+        handle.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(exited.Task);
+        handle.Setup(x => x.Dispose()).Callback(() => disposed.TrySetResult(true));
+        var adapter = new TestHostHandleToProcessAdapter(handle.Object);
+
+        adapter.DeferDisposalUntilExit();
+        adapter.Dispose();
+
+        handle.Verify(x => x.Dispose(), Times.Never);
+
+        exited.SetResult(true);
+        await disposed.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        handle.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void TestHostControllerProcessTermination_CustomHandleDisposalIsImmediateByDefault()
+    {
+        Mock<ITestHostHandle> handle = new();
+        handle.SetupGet(x => x.HasExited).Returns(false);
+        handle.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>()))
+            .Returns((CancellationToken token) => Task.Delay(Timeout.InfiniteTimeSpan, token));
+        var adapter = new TestHostHandleToProcessAdapter(handle.Object);
+
+        adapter.Dispose();
+
+        handle.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
     public void TestHostControllerOutputFinalization_AbandonmentTracksProxyAndOriginalDevice()
     {
         Mock<IPlatformOutputDevice> originalOutputDevice = new();
