@@ -551,6 +551,7 @@ public sealed class CommandLineHandlerTests
             """
             Unknown option '--halp'
             Did you mean '--help'?
+            Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
             Command line: --halp
             """,
             result.ErrorMessage);
@@ -633,6 +634,7 @@ public sealed class CommandLineHandlerTests
             """
             Unknown option '--report-adzo'
             Did you mean '--report-azdo'?
+            Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
             Command line: --report-adzo
             """,
             result.ErrorMessage);
