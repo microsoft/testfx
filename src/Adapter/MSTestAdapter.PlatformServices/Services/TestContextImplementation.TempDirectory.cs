@@ -261,7 +261,19 @@ internal sealed partial class TestContextImplementation
             if (result != 0)
             {
                 int error = Marshal.GetLastWin32Error();
-                throw new IOException($"Could not set permissions on test temporary directory '{path}'.", new System.ComponentModel.Win32Exception(error));
+                var permissionException = new System.ComponentModel.Win32Exception(error);
+                try
+                {
+                    Directory.Delete(path);
+                }
+                catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                {
+                    throw new IOException(
+                        $"Could not set permissions on or remove test temporary directory '{path}'.",
+                        new AggregateException(permissionException, cleanupException));
+                }
+
+                throw new IOException($"Could not set permissions on test temporary directory '{path}'.", permissionException);
             }
 
             return;
