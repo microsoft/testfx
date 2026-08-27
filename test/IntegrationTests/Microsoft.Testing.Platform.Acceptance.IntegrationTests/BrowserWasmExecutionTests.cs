@@ -140,9 +140,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public sealed class UnitTest1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void PassingTest()
-        => Assert.AreEqual(4, 2 + 2);
+    {
+        string? tempDirectory = TestContext.TestTempDirectory;
+        Assert.IsNotNull(tempDirectory);
+        Assert.IsTrue(Directory.Exists(tempDirectory));
+        Assert.AreEqual(4, 2 + 2);
+    }
 
     [TestMethod]
     public void AnotherPassingTest()

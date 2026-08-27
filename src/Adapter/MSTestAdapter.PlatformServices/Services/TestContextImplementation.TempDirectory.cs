@@ -236,6 +236,14 @@ internal sealed partial class TestContextImplementation
 
     private static void CreateDirectoryWithRestrictedPermissions(string path)
     {
+#if NETCOREAPP
+        if (OperatingSystem.IsBrowser() || OperatingSystem.IsWasi())
+        {
+            Directory.CreateDirectory(path);
+            return;
+        }
+#endif
+
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             byte[] nullTerminatedUtf8Path = System.Text.Encoding.UTF8.GetBytes(path + "\0");
