@@ -33,7 +33,7 @@ internal sealed partial class TestHostBuilder
 
         if (OperatingSystem.IsBrowser())
         {
-            logger.LogWarning($"Test Host Controller connection is not supported on WebAssembly targets.");
+            await logger.LogWarningAsync($"Test Host Controller connection is not supported on WebAssembly targets.").ConfigureAwait(false);
             return null;
         }
 
