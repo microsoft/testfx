@@ -197,6 +197,16 @@
         <target state="translated">A opção '--{0}' do provedor '{1}' (UID: {2}) está usando o prefixo reservado '--internal'</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
       </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="new">Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="new">Did you mean '--{0}'?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
+      </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
         <target state="translated">O ICommandLineOptions ainda não foi criado.</target>

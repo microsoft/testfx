@@ -467,6 +467,14 @@
     <value>Unknown option '--{0}'</value>
     <comment>{0} is the unknown option name without the leading dashes.</comment>
   </data>
+  <data name="CommandLineOptionSuggestion" xml:space="preserve">
+    <value>Did you mean '--{0}'?</value>
+    <comment>{0} is the suggested option name without the leading dashes.</comment>
+  </data>
+  <data name="CommandLineOptionRequiresExtension" xml:space="preserve">
+    <value>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</comment>
+  </data>
   <data name="InvalidCommandLineArguments" xml:space="preserve">
     <value>Invalid command line arguments:</value>
   </data>
