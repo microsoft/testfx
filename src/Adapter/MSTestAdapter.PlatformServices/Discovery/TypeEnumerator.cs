@@ -94,9 +94,9 @@ internal class TypeEnumerator
         bool foundDuplicateTests = false;
         var foundTests = new HashSet<string>();
         var tests = new List<UnitTestElement>(descriptorMethods.Length);
-        HashSet<MethodInfo>? descriptorMethodSet = descriptorMethods.Length == 0
+        HashSet<MethodInfo>? descriptorMethodSet = areAllTestMethodsSupported || descriptorMethods.Length == 0
             ? null
-            : new HashSet<MethodInfo>(descriptorMethods);
+            : [.. descriptorMethods];
 
         // Instead of asking reflect helper to query the type for every method we have, we ask once for the type.
         bool classDisablesParallelization = _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(_type);
@@ -114,7 +114,7 @@ internal class TypeEnumerator
         {
             foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
             {
-                if (descriptorMethodSet?.Contains(method) == true)
+                if (descriptorMethodSet?.Contains(method) ?? false)
                 {
                     continue;
                 }
@@ -166,9 +166,19 @@ internal class TypeEnumerator
     /// <param name="method">The reflected method.</param>
     /// <param name="classDisablesParallelization">Whether the test class disables parallelization.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
+    /// <returns> Returns a UnitTestElement.</returns>
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings)
+        => GetTestFromMethod(method, classDisablesParallelization, warnings, isFromGeneratedDescriptor: false);
+
+    /// <summary>
+    /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
+    /// </summary>
+    /// <param name="method">The reflected method.</param>
+    /// <param name="classDisablesParallelization">Whether the test class disables parallelization.</param>
+    /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <param name="isFromGeneratedDescriptor">Whether native MTP discovery selected this method from generated metadata.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings, bool isFromGeneratedDescriptor = false)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings, bool isFromGeneratedDescriptor)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");

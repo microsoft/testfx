@@ -205,8 +205,8 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
                 MergeInto(typeConstructorsInvoker, provider.TypeConstructorsInvoker);
                 MergeInto(typeMethodInvokers, provider.TypeMethodInvokers);
                 MergeInto(typePropertySetters, provider.TypePropertySetters);
-                MergeInto(descriptorTestMethods, provider.DescriptorTestMethods);
-                MergeInto(descriptorCompleteTypes, provider.DescriptorCompleteTypes);
+                MergeDescriptorMethods(descriptorTestMethods, provider.DescriptorTestMethods);
+                MergeDescriptorCompleteness(descriptorCompleteTypes, provider.DescriptorTestMethods.Keys, provider.DescriptorCompleteTypes);
             }
 
             return new SourceGeneratedReflectionDataProvider
@@ -234,6 +234,46 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             foreach (KeyValuePair<TKey, TValue> kvp in source)
             {
                 target[kvp.Key] = kvp.Value;
+            }
+        }
+
+        private static void MergeDescriptorMethods(
+            Dictionary<Type, MethodInfo[]> target,
+            IReadOnlyDictionary<Type, MethodInfo[]> source)
+        {
+            foreach (KeyValuePair<Type, MethodInfo[]> kvp in source)
+            {
+                if (!target.TryGetValue(kvp.Key, out MethodInfo[]? existing))
+                {
+                    target[kvp.Key] = kvp.Value;
+                    continue;
+                }
+
+                var seen = new HashSet<MethodInfo>(existing);
+                var merged = new List<MethodInfo>(existing);
+                foreach (MethodInfo method in kvp.Value)
+                {
+                    if (seen.Add(method))
+                    {
+                        merged.Add(method);
+                    }
+                }
+
+                target[kvp.Key] = [.. merged];
+            }
+        }
+
+        private static void MergeDescriptorCompleteness(
+            Dictionary<Type, bool> target,
+            IEnumerable<Type> descriptorTypes,
+            IReadOnlyDictionary<Type, bool> source)
+        {
+            foreach (Type type in descriptorTypes)
+            {
+                bool isComplete = source.TryGetValue(type, out bool value) && value;
+                target[type] = !target.TryGetValue(type, out bool existing)
+                    ? isComplete
+                    : existing && isComplete;
             }
         }
     }

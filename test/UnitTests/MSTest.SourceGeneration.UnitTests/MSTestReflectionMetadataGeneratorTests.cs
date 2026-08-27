@@ -222,8 +222,36 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Should().Contain("IsDescriptorSupported = false");
         registry[asyncFallbackIndex..].Should().Contain("IsDescriptorSupported = false");
         registration.Should().Contain("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
+        registration.Should().Contain("areDescriptorMethodsResolved = false;");
+        registration.Should().Contain("testClass.AreGeneratedDescriptorsComplete && areDescriptorMethodsResolved");
         registration.Should().Contain("descriptorCompleteTypes.Add(type);");
         registration.Should().Contain("descriptorTestMethods, descriptorCompleteTypes.ToArray()");
+    }
+
+    [TestMethod]
+    public void Generator_PartialTestClassRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public partial class PartialTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Type = typeof(global::Sample.PartialTests)");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
     }
 
     [TestMethod]

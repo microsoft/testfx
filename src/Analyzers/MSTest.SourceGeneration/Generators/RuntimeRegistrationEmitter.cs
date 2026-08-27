@@ -133,6 +133,7 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine("Type type = testClass.Type;");
             sb.AppendLine("types[classIndex] = type;");
             sb.AppendLine("MethodInfo[]? availableMethods = null;");
+            sb.AppendLine("bool areDescriptorMethodsResolved = true;");
             using (sb.Block("if (testClass.AreAttributesComplete)"))
             {
                 sb.AppendLine("typeAttributes[type] = testClass.Attributes;");
@@ -194,6 +195,11 @@ internal static class RuntimeRegistrationEmitter
                     }
                 }
 
+                using (sb.Block("else if (testClass.SupportsGeneratedDescriptors && method.IsDescriptorSupported)"))
+                {
+                    sb.AppendLine("areDescriptorMethodsResolved = false;");
+                }
+
                 // Register the source-generated DynamicData accessors so the runtime reads dynamic data
                 // without reflecting over the declaring type (trim / Native AOT safe).
                 using (sb.Block("for (int sourceIndex = 0; sourceIndex < method.DynamicDataSources.Count; sourceIndex++)"))
@@ -209,7 +215,7 @@ internal static class RuntimeRegistrationEmitter
 
             sb.AppendLine("testMethods[type] = testMethodRoots.ToArray();");
             sb.AppendLine("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
-            using (sb.Block("if (testClass.AreGeneratedDescriptorsComplete)"))
+            using (sb.Block("if (testClass.AreGeneratedDescriptorsComplete && areDescriptorMethodsResolved)"))
             {
                 sb.AppendLine("descriptorCompleteTypes.Add(type);");
             }

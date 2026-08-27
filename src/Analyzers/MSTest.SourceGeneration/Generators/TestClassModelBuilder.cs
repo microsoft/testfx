@@ -4,6 +4,7 @@
 using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
@@ -50,6 +51,7 @@ internal static class TestClassModelBuilder
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
         ImmutableArray<string>.Builder baseTypes = ImmutableArray.CreateBuilder<string>();
         bool hasUnsupportedTestMethod = false;
+        bool hasPartialTypeInHierarchy = false;
 
         string leafFqn = typeSymbol.ToDisplayString(SymbolDisplayFormats.FullyQualified);
 
@@ -63,6 +65,7 @@ internal static class TestClassModelBuilder
              current = current.BaseType)
         {
             bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
+            hasPartialTypeInHierarchy |= IsPartial(current);
 
             // Capture each accessible, non-generic base type so the runtime registration can root
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
@@ -159,6 +162,7 @@ internal static class TestClassModelBuilder
             .ToImmutableArray();
         bool areGeneratedDescriptorsComplete = supportsGeneratedDescriptors
             && !hasUnsupportedTestMethod
+            && !hasPartialTypeInHierarchy
             && finalizedMethods.Where(static method => method.IsTestMethod).All(static method => method.IsDescriptorSupported);
 
         return new TestClassModel(
@@ -178,6 +182,10 @@ internal static class TestClassModelBuilder
             AreGeneratedDescriptorsComplete: areGeneratedDescriptorsComplete,
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
     }
+
+    private static bool IsPartial(INamedTypeSymbol type)
+        => type.DeclaringSyntaxReferences.Any(static syntaxReference =>
+            syntaxReference.GetSyntax().ChildTokens().Any(static token => token.IsKind(SyntaxKind.PartialKeyword)));
 
     private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
     {

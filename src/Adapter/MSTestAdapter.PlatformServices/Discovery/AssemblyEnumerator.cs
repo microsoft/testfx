@@ -68,9 +68,18 @@ internal class AssemblyEnumerator
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
     /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
+    /// <returns>A collection of Test Elements.</returns>
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
+        => EnumerateAssembly(assemblyFileName, mustSerialize, useGeneratedDescriptors: false);
+
+    /// <summary>
+    /// Enumerates through all types in the assembly in search of valid test methods.
+    /// </summary>
+    /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <param name="useGeneratedDescriptors">Whether native MTP discovery may consume complete source-generated descriptors.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors = false)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
