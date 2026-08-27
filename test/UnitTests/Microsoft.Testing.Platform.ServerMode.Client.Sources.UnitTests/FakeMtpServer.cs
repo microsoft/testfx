@@ -226,7 +226,7 @@ internal sealed class FakeMtpServer : IDisposable
     /// answers. Params are null because the client keeps request params as a raw dictionary and the tests only
     /// assert on the method name and the returned result.
     /// </summary>
-    public Task<ResponseMessage> SendServerRequestAsync(string method)
+    public Task<ResponseMessage> SendServerRequestAsync(string method, bool useStringId = false)
     {
         int id = Interlocked.Increment(ref _nextServerRequestId);
         var tcs = new TaskCompletionSource<ResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -235,7 +235,10 @@ internal sealed class FakeMtpServer : IDisposable
             _pendingServerRequests[id] = tcs;
         }
 
-        _ = WriteAsync(new RequestMessage(id, method, null));
+        _ = WriteAsync(new RequestMessage(id, method, null)
+        {
+            StringId = useStringId ? id.ToString(CultureInfo.InvariantCulture) : null,
+        });
         return tcs.Task;
     }
 

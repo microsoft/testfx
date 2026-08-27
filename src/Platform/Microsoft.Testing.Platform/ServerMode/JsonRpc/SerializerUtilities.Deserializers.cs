@@ -200,11 +200,8 @@ internal static partial class SerializerUtilities
                 throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
-            var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
-
-            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>()?.Select(obj => Deserialize<TestNode>(obj)).ToList();
-
-            string? filter = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Filter) as string;
+            ICollection<TestNode>? tests = DeserializeOptionalTestNodes(properties);
+            string? filter = GetOptionalTypedProperty<string>(properties, JsonRpcStrings.Filter);
 
             return new DiscoverRequestArgs(runId, tests, filter);
         });
@@ -217,10 +214,8 @@ internal static partial class SerializerUtilities
                 throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
-            var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
-
-            ICollection<TestNode>? tests = testsJson?.OfType<IDictionary<string, object?>>().Select(obj => Deserialize<TestNode>(obj)).ToList();
-            string? filter = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Filter) as string;
+            ICollection<TestNode>? tests = DeserializeOptionalTestNodes(properties);
+            string? filter = GetOptionalTypedProperty<string>(properties, JsonRpcStrings.Filter);
 
             return new RunRequestArgs(runId, tests, filter);
         });
@@ -320,5 +315,40 @@ internal static partial class SerializerUtilities
                 StringId = idObj as string,
             };
         });
+    }
+
+    private static ICollection<TestNode>? DeserializeOptionalTestNodes(IDictionary<string, object?> properties)
+    {
+        ICollection<object>? testsJson = GetOptionalTypedProperty<ICollection<object>>(properties, JsonRpcStrings.Tests);
+        if (testsJson is null)
+        {
+            return null;
+        }
+
+        List<TestNode> tests = [];
+        foreach (object? testJson in testsJson)
+        {
+            if (testJson is not IDictionary<string, object?> testProperties)
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.Tests}' entries must be objects");
+            }
+
+            tests.Add(Deserialize<TestNode>(testProperties));
+        }
+
+        return tests;
+    }
+
+    private static T? GetOptionalTypedProperty<T>(IDictionary<string, object?> properties, string propertyName)
+        where T : class
+    {
+        object? value = GetOptionalPropertyFromJson(properties, propertyName);
+        return value switch
+        {
+            null => null,
+            T typed => typed,
+            _ => throw new MessageFormatException(
+                $"'{propertyName}' field has wrong type (expected {typeof(T).Name})"),
+        };
     }
 }

@@ -258,7 +258,9 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         // Always answer so the server is never left waiting.
         try
         {
-            await WriteMessageAsync(new ResponseMessage(request.Id, result), cancellationToken).ConfigureAwait(false);
+            await WriteMessageAsync(
+                new ResponseMessage(request.Id, result) { StringId = request.StringId },
+                cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

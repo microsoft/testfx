@@ -183,29 +183,57 @@ internal sealed partial class ServerTestHost
         else
         {
             bool isInitializeRequest = request.Method == JsonRpcMethods.Initialize;
-            if (isInitializeRequest)
+            bool rejectRequest;
+            Task<bool>? initializationTask = null;
+            lock (_initializeStateLock)
             {
-                if (Interlocked.CompareExchange(ref _initializeState, Initializing, NotInitialized) != NotInitialized)
+                if (isInitializeRequest)
                 {
-                    try
+                    rejectRequest = _initializeState != NotInitialized;
+                    if (!rejectRequest)
                     {
-                        await SendErrorAsync(
-                            reqId: request.Id,
-                            errorCode: ErrorCodes.InvalidRequest,
-                            message: "The server has already received an initialize request.",
-                            data: null,
-                            cancellationToken,
-                            stringId: request.StringId).ConfigureAwait(false);
+                        _initializeState = Initializing;
+                        _initializationCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
                     }
-                    finally
+                }
+                else
+                {
+                    rejectRequest = _initializeState == NotInitialized;
+                    if (_initializeState == Initializing)
                     {
-                        _requestCounter.Signal();
+                        RoslynDebug.Assert(_initializationCompletionSource is not null);
+                        initializationTask = _initializationCompletionSource.Task;
                     }
-
-                    return;
                 }
             }
-            else if (Volatile.Read(ref _initializeState) != Initialized)
+
+            if (isInitializeRequest && rejectRequest)
+            {
+                try
+                {
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: ErrorCodes.InvalidRequest,
+                        message: "The server has already received an initialize request.",
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
+                }
+                finally
+                {
+                    _requestCounter.Signal();
+                }
+
+                return;
+            }
+
+            if (initializationTask is not null)
+            {
+                bool initialized = await initializationTask.ConfigureAwait(false);
+                rejectRequest = !initialized;
+            }
+
+            if (!isInitializeRequest && rejectRequest)
             {
                 try
                 {
@@ -245,7 +273,7 @@ internal sealed partial class ServerTestHost
                     stringId: request.StringId).ConfigureAwait(false);
                 if (isInitializeRequest)
                 {
-                    Volatile.Write(ref _initializeState, Initialized);
+                    CompleteInitialization(success: true);
                 }
 
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetResult(response));
@@ -254,7 +282,7 @@ internal sealed partial class ServerTestHost
             {
                 if (isInitializeRequest)
                 {
-                    Volatile.Write(ref _initializeState, NotInitialized);
+                    CompleteInitialization(success: false);
                 }
 
                 try
@@ -286,7 +314,7 @@ internal sealed partial class ServerTestHost
             {
                 if (isInitializeRequest)
                 {
-                    Volatile.Write(ref _initializeState, NotInitialized);
+                    CompleteInitialization(success: false);
                 }
 
                 try
@@ -313,7 +341,7 @@ internal sealed partial class ServerTestHost
             {
                 if (isInitializeRequest)
                 {
-                    Volatile.Write(ref _initializeState, NotInitialized);
+                    CompleteInitialization(success: false);
                 }
 
                 try
@@ -337,6 +365,19 @@ internal sealed partial class ServerTestHost
                 }
             }
         }
+    }
+
+    private void CompleteInitialization(bool success)
+    {
+        TaskCompletionSource<bool>? completionSource;
+        lock (_initializeStateLock)
+        {
+            _initializeState = success ? Initialized : NotInitialized;
+            completionSource = _initializationCompletionSource;
+            _initializationCompletionSource = null;
+        }
+
+        completionSource?.TrySetResult(success);
     }
 
     private async Task<bool> SendTestUpdateCompleteIfNeededAsync(

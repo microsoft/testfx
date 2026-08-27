@@ -260,6 +260,49 @@ public sealed class FormatterUtilitiesTests
         Assert.IsNull(Assert.IsInstanceOfType<NotificationMessage>(message).Params);
     }
 
+    [DataRow("\"filter\": 42")]
+    [DataRow("\"tests\": \"not-an-array\"")]
+    [DataRow("\"tests\": [42]")]
+    [TestMethod]
+    public void DeserializeRunRequest_InvalidOptionalPropertyType_CapturesInvalidParams(string property)
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "testing/runTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000001",
+                    {{property}}
+                }
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        InvalidRequestParamsArgs invalidParams = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalidParams.ErrorCode);
+    }
+
+    [TestMethod]
+    public void DeserializeError_PrimitiveData_PreservesValue()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": {
+                    "code": -32600,
+                    "message": "invalid",
+                    "data": "detail"
+                }
+            }
+            """);
+
+        Assert.AreEqual("detail", Assert.IsInstanceOfType<ErrorMessage>(message).Data);
+    }
+
     [TestMethod]
     public void DeserializeInitializeResponse_NonStringProtocolVersion_Throws()
     {

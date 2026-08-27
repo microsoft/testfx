@@ -303,6 +303,82 @@ public sealed class ServerTests
     }
 
     [TestMethod]
+    public async Task PipelinedRequestWaitsForInitializeResponse()
+    {
+        using var server = TcpServer.Create();
+
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter
+        {
+            DiscoveryAction = context =>
+            {
+                context.Complete();
+                return Task.CompletedTask;
+            },
+        });
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = Task.Run(testApplication.RunAsync);
+
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
+        using NetworkStream stream = client.GetStream();
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
+            client,
+            clientToServerStream: client.GetStream(),
+            serverToClientStream: client.GetStream(),
+            FormatterUtilities.CreateFormatter());
+
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": false
+                        }
+                    }
+                }
+            }
+            """);
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000002"
+                }
+            }
+            """);
+
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 1 },
+            "Wait initialize response",
+            timeout.Token);
+        RpcMessage? discoveryResponse = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 2 } or ErrorMessage { Id: 2 },
+            "Wait pipelined discovery response",
+            timeout.Token);
+        Assert.IsInstanceOfType<ResponseMessage>(discoveryResponse);
+
+        await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
+        Assert.AreEqual(0, await serverTask);
+    }
+
+    [TestMethod]
     public async Task RunRequestWithEmptyTests_PreservesEmptyUidSelection()
     {
         using var server = TcpServer.Create();

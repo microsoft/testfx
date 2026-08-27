@@ -39,6 +39,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     // We start by one so we can wait all other requests
     private readonly CountdownEvent _requestCounter = new(1);
     private readonly IClock _clock;
+    private readonly object _initializeStateLock = new();
 
     // In-flight requests from the client to the server.
     // The client can cancel these requests at any time.
@@ -52,6 +53,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
     private IClientInfo? _clientInfoService;
+    private TaskCompletionSource<bool>? _initializationCompletionSource;
     private int _initializeState;
 
     public ServerTestHost(

@@ -554,6 +554,18 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task ServerInitiatedRequest_NumericStringId_PreservesResponseIdRepresentation()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        ResponseMessage response = await WithTimeoutAsync(
+            server.SendServerRequestAsync(ClientAttachDebuggerMethod, useStringId: true)).ConfigureAwait(false);
+
+        Assert.AreEqual(response.Id.ToString(CultureInfo.InvariantCulture), response.StringId);
+    }
+
+    [TestMethod]
     public async Task ServerInitiatedRequest_WithHandler_InvokesHandler()
     {
         using FakeMtpServer server = new();

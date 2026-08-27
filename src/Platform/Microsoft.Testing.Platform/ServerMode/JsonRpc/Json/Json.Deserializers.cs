@@ -307,7 +307,10 @@ internal sealed partial class Json
               int code = json.Bind<int>(error, JsonRpcStrings.Code);
               string message = json.Bind<string>(error, JsonRpcStrings.Message);
 
-              if (json.TryBind(error, out IDictionary<string, object?>? data, JsonRpcStrings.Data) && data?.Count == 0)
+              object? data = error.TryGetProperty(JsonRpcStrings.Data, out JsonElement dataElement)
+                  ? ReadUntypedValue(json, dataElement)
+                  : null;
+              if (data is IDictionary<string, object?> { Count: 0 })
               {
                   data = null;
               }
@@ -370,6 +373,19 @@ internal sealed partial class Json
         return element.GetDouble();
     }
 #pragma warning restore IDE0046 // Convert to conditional expression
+
+    private static object? ReadUntypedValue(Json json, JsonElement element)
+        => element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => ReadNumber(element),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Object => json.Bind<IDictionary<string, object?>>(element),
+            JsonValueKind.Array => json.Bind<object[]>(element),
+            JsonValueKind.Null => null,
+            _ => throw new MessageFormatException($"Unsupported JSON value kind '{element.ValueKind}'"),
+        };
 
     private static bool TryGetRpcId(JsonElement jsonElement, out int id, out string? stringId)
     {
