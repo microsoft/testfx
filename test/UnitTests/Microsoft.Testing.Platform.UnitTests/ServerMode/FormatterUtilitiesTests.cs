@@ -121,6 +121,26 @@ public sealed class FormatterUtilitiesTests
         Assert.AreEqual("42", request.StringId);
     }
 
+    [DataRow("1.0", 1)]
+    [DataRow("1e0", 1)]
+    [DataRow("-2.000", -2)]
+    [TestMethod]
+    public void CanDeserializeIntegralNumericRequestId(string serializedId, int expectedId)
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": {{serializedId}},
+                "method": "testing/unknown"
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        Assert.AreEqual(expectedId, request.Id);
+        Assert.IsNull(request.StringId);
+    }
+
     [TestMethod]
     public async Task NumericStringId_IsPreservedInResponsesAndErrors()
     {

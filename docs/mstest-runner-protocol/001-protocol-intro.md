@@ -569,7 +569,8 @@ Notifications:
   - method: `testing/testUpdates/tests`
   - params: `TestUpdateNotificationParams` where `params.changes == null`.
   - The server sends this terminal notification before the final success or error response for requests
-    that reached execution. Requests rejected by lifecycle checks and requests whose params could not be
+    whose discovery/run params were successfully deserialized, including requests canceled while queued
+    during initialization. Requests rejected by lifecycle checks and requests whose params could not be
     deserialized receive only the error response.
 
 Response:
