@@ -97,8 +97,7 @@ internal sealed class TrxProcessLifetimeHandler :
         => Task.FromResult(
            // TrxReportGenerator is enabled only when trx report is enabled
            _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
-           // If crash dump is not enabled we run trx in-process only
-           && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
+           && TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(_commandLineOptions));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
@@ -106,7 +105,7 @@ internal sealed class TrxProcessLifetimeHandler :
         // IsEnabledAsync will only return true if we are out of process.
         // If we are not out of process, then we are disabled. Hence, this won't be called.
         // The extra check is to let the platform compatibility analyzer know that we are not running in browser.
-        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions))
+        if (!TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(_commandLineOptions))
         {
             throw ApplicationStateGuard.Unreachable();
         }
@@ -117,7 +116,10 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
-    [UnsupportedOSPlatform("BROWSER")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     private void BeforeTestHostProcessStartCore(CancellationToken cancellationToken)
     {
         _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
@@ -392,7 +394,7 @@ internal sealed class TrxProcessLifetimeHandler :
 
     public void Dispose()
     {
-        if (TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions))
+        if (TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(_commandLineOptions))
         {
             _singleConnectionNamedPipeServer?.Dispose();
         }

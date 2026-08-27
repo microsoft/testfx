@@ -4,7 +4,6 @@
 using System.IO.Pipes;
 using System.Reflection;
 
-using Microsoft.Testing.Extensions.CrashDump;
 using Microsoft.Testing.Extensions.TrxReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
@@ -30,7 +29,6 @@ public sealed class TrxProcessLifetimeHandlerTests
     {
         var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
         {
-            [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
             [TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
         });
         Mock<IEnvironment> environment = new();

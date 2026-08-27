@@ -102,6 +102,26 @@
         <target state="translated">Объединенный отчет TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
+      <trans-unit id="TrxModeInvalidArgument">
+        <source>'--trx-mode' expects one of: 'out-of-process', 'in-process'</source>
+        <target state="new">'--trx-mode' expects one of: 'out-of-process', 'in-process'</target>
+        <note>Do not localize option name {Locked="'--trx-mode'"} or option values {Locked="'out-of-process'"}{Locked="'in-process'"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxModeOptionDescription">
+        <source>Select TRX recovery mode: 'out-of-process' uses a surviving test-host controller and is the default when supported; 'in-process' avoids the additional process but cannot recover the report if the test host exits unexpectedly.</source>
+        <target state="new">Select TRX recovery mode: 'out-of-process' uses a surviving test-host controller and is the default when supported; 'in-process' avoids the additional process but cannot recover the report if the test host exits unexpectedly.</target>
+        <note>Do not localize format name {Locked="TRX"} or option values {Locked="'out-of-process'"}{Locked="'in-process'"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxModeOutOfProcessNotSupported">
+        <source>'--trx-mode out-of-process' is not supported on this platform because starting a test-host process is unavailable</source>
+        <target state="new">'--trx-mode out-of-process' is not supported on this platform because starting a test-host process is unavailable</target>
+        <note>Do not localize option and value {Locked="'--trx-mode out-of-process'"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxModeRequiresTrxReport">
+        <source>'--trx-mode' requires '--report-trx' to be enabled</source>
+        <target state="new">'--trx-mode' requires '--report-trx' to be enabled</target>
+        <note>Do not localize option names {Locked="'--trx-mode'"}{Locked="'--report-trx'"}.</note>
+      </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
         <target state="translated">Тестовый сеанс</target>

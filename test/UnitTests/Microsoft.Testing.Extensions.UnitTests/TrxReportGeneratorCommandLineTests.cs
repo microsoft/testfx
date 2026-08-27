@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
@@ -102,6 +103,83 @@ public sealed class TrxReportGeneratorCommandLineTests
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, []).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxReportFileNameMustNotBeEmpty, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(TrxReportGeneratorCommandLine.InProcessMode)]
+    [DataRow(TrxReportGeneratorCommandLine.OutOfProcessMode)]
+    public async Task IsValid_If_TrxMode_Is_Supported(string mode)
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxModeOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [mode]).ConfigureAwait(false);
+
+        Assert.AreEqual(
+            mode == TrxReportGeneratorCommandLine.InProcessMode || TrxModeHelpers.IsTestHostControllerSupported,
+            validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("controller")]
+    public async Task IsInvalid_If_TrxMode_Is_Unknown(string mode)
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxModeOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [mode]).ConfigureAwait(false);
+
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxModeInvalidArgument, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_TrxMode_Is_Set_Without_TrxReport()
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TrxReportGeneratorCommandLine.TrxModeOptionName] = [TrxReportGeneratorCommandLine.InProcessMode],
+        });
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(options).ConfigureAwait(false);
+
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxModeRequiresTrxReport, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void OutOfProcessTrxGeneration_RequiresControllerPresence()
+    {
+        var withoutController = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
+        });
+        var withController = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
+            [PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["42"],
+        });
+
+        Assert.IsFalse(TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(withoutController));
+        Assert.AreEqual(
+            TrxModeHelpers.IsTestHostControllerSupported,
+            TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(withController));
+    }
+
+    [TestMethod]
+    public void InProcessTrxMode_DisablesControllerBackedRecovery()
+    {
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
+            [TrxReportGeneratorCommandLine.TrxModeOptionName] = [TrxReportGeneratorCommandLine.InProcessMode],
+            [PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["42"],
+        });
+
+        Assert.IsFalse(TrxModeHelpers.ShouldUseControllerBackedTrxGeneration(options));
+        Assert.IsFalse(TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(options));
     }
 
     [TestMethod]

@@ -42,10 +42,10 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     <c>AtLeastOneTestFailed</c>.
 ///   </item>
 ///   <item>
-///     <see cref="BrowserWasmExecution_TrxReport_RunsWithoutPlatformNotSupported"/> runs the same MSTest
-///     project with <c>--report-trx</c>, guarding the inline TRX streaming store that replaces the
-///     dedicated writer thread and the blocking queue on single-threaded WebAssembly runtimes, and
-///     asserts the generated TRX artifact is reported in Node output.
+///     <see cref="BrowserWasmExecution_TrxReport_DefaultsInProcessAndRejectsOutOfProcess"/> runs the same
+///     MSTest project with <c>--report-trx</c>, guarding the inline TRX fallback on single-threaded
+///     WebAssembly runtimes, and verifies that explicitly requesting controller-backed recovery is
+///     rejected with a clear command-line error.
 ///   </item>
 ///   <item>
 ///     <see cref="BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint"/>
@@ -1022,7 +1022,7 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     }
 
     [TestMethod]
-    public async Task BrowserWasmExecution_TrxReport_RunsWithoutPlatformNotSupported()
+    public async Task BrowserWasmExecution_TrxReport_DefaultsInProcessAndRejectsOutOfProcess()
     {
         // --report-trx used to crash mid-run on browser-wasm: the TRX streaming store handed its writer
         // to ITask.RunLongRunning (a dedicated thread) and drained a BlockingCollection<T>, both
@@ -1063,6 +1063,11 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             (int)ExitCode.AtLeastOneTestFailed,
             exitCode,
             $"Expected exit code {(int)ExitCode.AtLeastOneTestFailed} (AtLeastOneTestFailed) with --report-trx enabled.{Environment.NewLine}{combined}");
+
+        (int unsupportedExitCode, _, _, string unsupportedCombined) = await PublishAndRunUnderNodeAsync(
+            generator, node, "--report-trx --trx-mode out-of-process");
+        Assert.AreEqual((int)ExitCode.InvalidCommandLine, unsupportedExitCode, unsupportedCombined);
+        Assert.Contains("'--trx-mode out-of-process' is not supported on this platform", unsupportedCombined);
     }
 
     [TestMethod]
