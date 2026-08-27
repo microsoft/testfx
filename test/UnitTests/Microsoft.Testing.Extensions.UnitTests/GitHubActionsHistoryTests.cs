@@ -541,6 +541,35 @@ public sealed class GitHubActionsHistoryTests
     }
 
     [TestMethod]
+    public async Task WriteMergedAsync_ReplacesSnapshotContainingNullScopeFieldsAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-null-scope-history-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "history.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(
+                path,
+                $$"""{"schemaVersion":1,"samples":[{"runAttempt":1,"timestampUtc":"{{Now:O}}","assemblyName":"Tests","targetFramework":"net8.0","architecture":null,"runnerOs":null,"testId":"Tests.Old","fullyQualifiedName":"Tests.Old","displayName":"Tests.Old","outcome":"passed","durationTicks":1,"isFlaky":false}]}""");
+
+            await GitHubActionsHistoryStore.WriteMergedAsync(
+                path,
+                historyWindowInDays: 30,
+                Now,
+                [CreateSample("Tests.Current", GitHubActionsHistoryOutcome.Passed, Now)],
+                CancellationToken.None);
+
+            GitHubActionsHistorySnapshot snapshot =
+                await GitHubActionsHistoryStore.ReadAsync(path, Now.AddDays(-30), CancellationToken.None);
+            Assert.AreEqual("Tests.Current", snapshot.Samples.Single().FullyQualifiedName);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task WriteMergedAsync_PreservesPriorSnapshotWhenNewSnapshotExceedsByteLimitAsync()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"github-write-limit-history-{Guid.NewGuid():N}");

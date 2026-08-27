@@ -537,6 +537,10 @@ internal static class GitHubActionsHistoryStore
             || snapshot.Samples.Length > MaxTotalSamples
             || snapshot.Samples.Any(static sample =>
                 sample is null
+                || RoslynString.IsNullOrWhiteSpace(sample.AssemblyName)
+                || RoslynString.IsNullOrWhiteSpace(sample.TargetFramework)
+                || RoslynString.IsNullOrWhiteSpace(sample.Architecture)
+                || RoslynString.IsNullOrWhiteSpace(sample.RunnerOs)
                 || RoslynString.IsNullOrWhiteSpace(sample.TestId)
                 || RoslynString.IsNullOrWhiteSpace(sample.FullyQualifiedName)
                 || RoslynString.IsNullOrWhiteSpace(sample.DisplayName)
