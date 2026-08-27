@@ -15,7 +15,7 @@ internal sealed partial class Json
         serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request =>
         [
             (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Id, request.Id),
+                 (JsonRpcStrings.Id, request.StringId ?? (object)request.Id),
                  (JsonRpcStrings.Method, request.Method),
                  (JsonRpcStrings.Params, request.Params)
         ]);
@@ -23,7 +23,7 @@ internal sealed partial class Json
         serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response =>
         [
             (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Id, response.Id),
+                 (JsonRpcStrings.Id, response.StringId ?? (object)response.Id),
                  (JsonRpcStrings.Result, response.Result)
         ]);
 
@@ -46,7 +46,7 @@ internal sealed partial class Json
             return
             [
                 (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Id, error.Id),
+                 (JsonRpcStrings.Id, error.StringId ?? (object)error.Id),
                  (JsonRpcStrings.Error, errorMsg)
             ];
         });

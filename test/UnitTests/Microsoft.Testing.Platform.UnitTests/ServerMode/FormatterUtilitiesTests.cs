@@ -116,7 +116,22 @@ public sealed class FormatterUtilitiesTests
             }
             """);
 
-        Assert.AreEqual(42, Assert.IsInstanceOfType<RequestMessage>(message).Id);
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        Assert.AreEqual(42, request.Id);
+        Assert.AreEqual("42", request.StringId);
+    }
+
+    [TestMethod]
+    public async Task NumericStringId_IsPreservedInResponsesAndErrors()
+    {
+        ResponseMessage response = new(42, Result: null) { StringId = "42" };
+        ErrorMessage error = new(42, ErrorCodes.InvalidRequest, "invalid", Data: null) { StringId = "42" };
+
+        string serializedResponse = (await _formatter.SerializeAsync(response)).Replace(" ", string.Empty);
+        string serializedError = (await _formatter.SerializeAsync(error)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"id\":\"42\"", serializedResponse);
+        Assert.Contains("\"id\":\"42\"", serializedError);
     }
 
     [TestMethod]

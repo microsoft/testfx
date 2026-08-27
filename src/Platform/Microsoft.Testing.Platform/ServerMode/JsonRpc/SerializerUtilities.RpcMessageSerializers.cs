@@ -19,7 +19,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = req.Id,
+                [JsonRpcStrings.Id] = req.StringId ?? (object)req.Id,
                 [JsonRpcStrings.Method] = req.Method,
                 [JsonRpcStrings.Params] = req.Params is null ? null : SerializeObject(req.Params),
             };
@@ -32,7 +32,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = res.Id,
+                [JsonRpcStrings.Id] = res.StringId ?? (object)res.Id,
                 [JsonRpcStrings.Result] = res.Result is null ? null : SerializeObject(res.Result),
             };
 
@@ -56,7 +56,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = error.Id,
+                [JsonRpcStrings.Id] = error.StringId ?? (object)error.Id,
                 [JsonRpcStrings.Error] = new Dictionary<string, object?>
                 {
                     [JsonRpcStrings.Code] = error.ErrorCode,

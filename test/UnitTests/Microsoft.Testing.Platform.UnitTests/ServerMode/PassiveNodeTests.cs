@@ -16,13 +16,15 @@ public sealed class PassiveNodeTests
     [TestMethod]
     public async Task ConnectAsync_NegotiatesSupportedProtocolVersion()
     {
-        TestMessageHandler handler = new(CreateInitializeRequest([JsonRpcProtocolVersions.Current]));
+        RequestMessage request = CreateInitializeRequest([JsonRpcProtocolVersions.Current]) with { StringId = "1" };
+        TestMessageHandler handler = new(request);
         using PassiveNode node = CreatePassiveNode(handler);
 
         Assert.IsTrue(await node.ConnectAsync());
 
         ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(handler.WrittenMessage);
         InitializeResponseArgs result = Assert.IsInstanceOfType<InitializeResponseArgs>(response.Result);
+        Assert.AreEqual("1", response.StringId);
         Assert.AreEqual(JsonRpcProtocolVersions.Current, result.ProtocolVersion);
     }
 

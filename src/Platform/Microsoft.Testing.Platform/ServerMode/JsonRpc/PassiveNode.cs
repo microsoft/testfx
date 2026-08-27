@@ -66,7 +66,8 @@ internal sealed class PassiveNode : IDisposable
                 requestMessage.Id,
                 ErrorCodes.InvalidParams,
                 "The initialize request params are invalid.",
-                _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                _testApplicationCancellationTokenSource.CancellationToken,
+                requestMessage.StringId).ConfigureAwait(false);
             return false;
         }
 
@@ -77,7 +78,8 @@ internal sealed class PassiveNode : IDisposable
                 requestMessage.Id,
                 ErrorCodes.ProtocolVersionNotSupported,
                 $"None of the client's protocol versions are supported. Server versions: {string.Join(", ", JsonRpcProtocolVersions.Supported)}.",
-                _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                _testApplicationCancellationTokenSource.CancellationToken,
+                requestMessage.StringId).ConfigureAwait(false);
             return false;
         }
 
@@ -97,26 +99,39 @@ internal sealed class PassiveNode : IDisposable
             ProtocolVersion = negotiatedProtocolVersion,
         };
 
-        await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        await SendResponseAsync(
+            requestMessage.Id,
+            responseObject,
+            _testApplicationCancellationTokenSource.CancellationToken,
+            requestMessage.StringId).ConfigureAwait(false);
         return true;
     }
 
-    private async Task SendErrorAsync(int reqId, int errorCode, string message, CancellationToken cancellationToken)
+    private async Task SendErrorAsync(
+        int reqId,
+        int errorCode,
+        string message,
+        CancellationToken cancellationToken,
+        string? stringId)
     {
         AssertInitialized();
 
-        ErrorMessage error = new(reqId, errorCode, message, Data: null);
+        ErrorMessage error = new(reqId, errorCode, message, Data: null) { StringId = stringId };
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
             await _messageHandler.WriteRequestAsync(error, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    private async Task SendResponseAsync(int reqId, object result, CancellationToken cancellationToken)
+    private async Task SendResponseAsync(
+        int reqId,
+        object result,
+        CancellationToken cancellationToken,
+        string? stringId)
     {
         AssertInitialized();
 
-        ResponseMessage response = new(reqId, result);
+        ResponseMessage response = new(reqId, result) { StringId = stringId };
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
             await _messageHandler.WriteRequestAsync(response, cancellationToken).ConfigureAwait(false);

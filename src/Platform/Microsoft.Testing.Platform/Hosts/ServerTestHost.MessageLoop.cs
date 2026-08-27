@@ -166,7 +166,13 @@ internal sealed partial class ServerTestHost
         {
             try
             {
-                await SendErrorAsync(reqId: request.Id, errorCode: ErrorCodes.InvalidRequest, message: "Server is closing", data: null, cancellationToken).ConfigureAwait(false);
+                await SendErrorAsync(
+                    reqId: request.Id,
+                    errorCode: ErrorCodes.InvalidRequest,
+                    message: "Server is closing",
+                    data: null,
+                    cancellationToken,
+                    stringId: request.StringId).ConfigureAwait(false);
             }
             finally
             {
@@ -188,7 +194,8 @@ internal sealed partial class ServerTestHost
                             errorCode: ErrorCodes.InvalidRequest,
                             message: "The server has already received an initialize request.",
                             data: null,
-                            cancellationToken).ConfigureAwait(false);
+                            cancellationToken,
+                            stringId: request.StringId).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -207,7 +214,8 @@ internal sealed partial class ServerTestHost
                         errorCode: ErrorCodes.ServerNotInitialized,
                         message: "The server must be initialized before this request can be processed.",
                         data: null,
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -230,12 +238,16 @@ internal sealed partial class ServerTestHost
             {
                 object response = await HandleRequestCoreAsync(request, rpcState, cancellationToken).ConfigureAwait(false);
                 testUpdateCompletionSent = await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken).ConfigureAwait(false);
+                await SendResponseAsync(
+                    reqId: request.Id,
+                    result: response,
+                    cancellationToken,
+                    stringId: request.StringId).ConfigureAwait(false);
                 if (isInitializeRequest)
                 {
                     Volatile.Write(ref _initializeState, Initialized);
                 }
 
-                await SendResponseAsync(reqId: request.Id, result: response, cancellationToken).ConfigureAwait(false);
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetResult(response));
             }
             catch (OperationCanceledException e)
@@ -257,7 +269,13 @@ internal sealed partial class ServerTestHost
                         ? (string.Empty, ErrorCodes.RequestCanceled)
                         : (e.ToString(), ErrorCodes.RequestCanceled);
 
-                    await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, cancellationToken).ConfigureAwait(false);
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: errorCode,
+                        message: errorMessage,
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -278,7 +296,13 @@ internal sealed partial class ServerTestHost
                         await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
                     }
 
-                    await SendErrorAsync(reqId: request.Id, errorCode: e.ErrorCode, message: e.Message, data: null, cancellationToken).ConfigureAwait(false);
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: e.ErrorCode,
+                        message: e.Message,
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -299,7 +323,13 @@ internal sealed partial class ServerTestHost
                         await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
                     }
 
-                    await SendErrorAsync(reqId: request.Id, errorCode: ErrorCodes.InternalError, message: e.ToString(), data: null, cancellationToken).ConfigureAwait(false);
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: ErrorCodes.InternalError,
+                        message: e.ToString(),
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
                 }
                 finally
                 {

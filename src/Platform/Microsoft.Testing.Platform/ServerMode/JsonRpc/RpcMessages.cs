@@ -12,7 +12,10 @@ internal abstract record RpcMessage;
 /// A request is a message for which the server should return a corresponding
 /// <see cref="ErrorMessage"/> or <see cref="ResponseMessage"/>.
 /// </summary>
-internal sealed record RequestMessage(int Id, string Method, object? Params) : RpcMessage;
+internal sealed record RequestMessage(int Id, string Method, object? Params) : RpcMessage
+{
+    public string? StringId { get; init; }
+}
 
 /// <summary>
 /// A notification message is a message that notifies the server of an event.
@@ -24,7 +27,10 @@ internal sealed record NotificationMessage(string Method, object? Params) : RpcM
 /// <summary>
 /// An error message is sent if some exception was thrown when processing the request.
 /// </summary>
-internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, object? Data) : RpcMessage;
+internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, object? Data) : RpcMessage
+{
+    public string? StringId { get; init; }
+}
 
 /// <summary>
 /// An response message is sent if a request is handled successfully.
@@ -33,7 +39,10 @@ internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, objec
 /// If the RPC handler returns a <see cref="Task"/> the <paramref name="Result"/>
 /// will be returned as <c>null</c>.
 /// </remarks>
-internal sealed record ResponseMessage(int Id, object? Result) : RpcMessage;
+internal sealed record ResponseMessage(int Id, object? Result) : RpcMessage
+{
+    public string? StringId { get; init; }
+}
 
 internal sealed record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities)
 {

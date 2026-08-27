@@ -146,7 +146,7 @@ internal static partial class SerializerUtilities
                     : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
                 return id.HasValue
-                    ? new RequestMessage(id.Value, method, @params)
+                    ? new RequestMessage(id.Value, method, @params) { StringId = idObj as string }
                     : new NotificationMessage(method, @params);
             }
             else if (properties.TryGetValue(JsonRpcStrings.Error, out _))
@@ -159,7 +159,7 @@ internal static partial class SerializerUtilities
                 var result = resultObj as IDictionary<string, object?>;
                 int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-                return new ResponseMessage(id, result);
+                return new ResponseMessage(id, result) { StringId = idObj as string };
             }
 
             throw new MessageFormatException();

@@ -247,7 +247,7 @@ public sealed class ServerTests
             """
             {
                 "jsonrpc": "2.0",
-                "id": 4,
+                "id": "4",
                 "method": "testing/unknown",
                 "params": {}
             }
@@ -259,6 +259,7 @@ public sealed class ServerTests
             "Wait method-not-found error",
             timeout.Token))!;
         Assert.AreEqual(ErrorCodes.MethodNotFound, methodNotFoundError.ErrorCode);
+        Assert.AreEqual("4", methodNotFoundError.StringId);
 
         await WriteMessageAsync(
             writer,

@@ -90,7 +90,7 @@ internal sealed partial class Json
 
             if (json.TryBind(jsonElement, out string? method, JsonRpcStrings.Method))
             {
-                bool hasId = TryGetRpcId(jsonElement, out int id);
+                bool hasId = TryGetRpcId(jsonElement, out int id, out string? stringId);
 
                 object? @params = null;
                 if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
@@ -140,7 +140,7 @@ internal sealed partial class Json
                 }
 
                 return hasId
-                    ? new RequestMessage(id, method!, @params)
+                    ? new RequestMessage(id, method!, @params) { StringId = stringId }
                     : new NotificationMessage(method!, @params);
             }
 
@@ -149,12 +149,12 @@ internal sealed partial class Json
                 // Note: Because the result message does not contain the original method name,
                 //       it's not possible for us to do a typed deserialization.
                 //       The best option we've got is to return a generic property bag.
-                int id = BindRpcId(jsonElement);
+                int id = BindRpcId(jsonElement, out string? stringId);
 
                 IDictionary<string, object?>? result = element.ValueKind == JsonValueKind.Null ? null :
                     json.Bind<IDictionary<string, object?>>(jsonElement, JsonRpcStrings.Result);
 
-                return new ResponseMessage(id, result);
+                return new ResponseMessage(id, result) { StringId = stringId };
             }
 
             return json.TryBind(jsonElement, out ErrorMessage? errorMessage) ? errorMessage! : throw new MessageFormatException();
@@ -289,7 +289,7 @@ internal sealed partial class Json
             });
 
         deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
-          (json, jsonElement) => TryGetRpcId(jsonElement, out int id)
+          (json, jsonElement) => TryGetRpcId(jsonElement, out int id, out _)
               ? new CancelRequestArgs(id)
               : throw new MessageFormatException("id field is missing"));
 
@@ -301,7 +301,7 @@ internal sealed partial class Json
           {
               ValidateJsonRpcHeader(json, jsonElement);
 
-              int id = BindRpcId(jsonElement);
+              int id = BindRpcId(jsonElement, out string? stringId);
               JsonElement error = jsonElement.GetProperty(JsonRpcStrings.Error);
 
               int code = json.Bind<int>(error, JsonRpcStrings.Code);
@@ -316,7 +316,10 @@ internal sealed partial class Json
                   Id: id,
                   ErrorCode: code,
                   Message: message ?? string.Empty,
-                  Data: data);
+                  Data: data)
+              {
+                  StringId = stringId,
+              };
           });
     }
 
@@ -368,23 +371,31 @@ internal sealed partial class Json
     }
 #pragma warning restore IDE0046 // Convert to conditional expression
 
-    private static bool TryGetRpcId(JsonElement jsonElement, out int id)
+    private static bool TryGetRpcId(JsonElement jsonElement, out int id, out string? stringId)
     {
         if (!jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement)
             || idElement.ValueKind == JsonValueKind.Null)
         {
             id = default;
+            stringId = null;
             return false;
         }
 
+        stringId = idElement.ValueKind == JsonValueKind.String ? idElement.GetString() : null;
         id = ReadRpcId(idElement);
         return true;
     }
 
-    private static int BindRpcId(JsonElement jsonElement)
+    private static int BindRpcId(JsonElement jsonElement, out string? stringId)
         => jsonElement.TryGetProperty(JsonRpcStrings.Id, out JsonElement idElement)
-            ? ReadRpcId(idElement)
+            ? ReadRpcIdAndCaptureString(idElement, out stringId)
             : throw new MessageFormatException($"'{JsonRpcStrings.Id}' field is missing");
+
+    private static int ReadRpcIdAndCaptureString(JsonElement idElement, out string? stringId)
+    {
+        stringId = idElement.ValueKind == JsonValueKind.String ? idElement.GetString() : null;
+        return ReadRpcId(idElement);
+    }
 
     private static int ReadRpcId(JsonElement idElement)
         => idElement.ValueKind switch
