@@ -73,9 +73,14 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         if (context.Mode == ArtifactPostProcessingMode.RetryAttempts && context.RunSummary is null)
         {
+            CiRunSummaryAggregate historyAggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+            await _historyService.WriteAsync(
+                [CreateRetryHistoryModule(historyAggregate.Modules)],
+                cancellationToken).ConfigureAwait(false);
+
             // Retry inputs overlap, so summing their per-attempt fragments would publish plausible but incorrect
-            // logical totals. Leave the artifacts untouched when the orchestrator cannot supply an authoritative
-            // passed/failed/skipped split.
+            // logical totals. Persist only the mergeable per-test history, then leave the summary artifacts
+            // untouched when the orchestrator cannot supply an authoritative passed/failed/skipped split.
             return null;
         }
 
@@ -273,6 +278,24 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             Coverage = aggregate.Coverage,
             GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(
                 GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules)),
+        };
+    }
+
+    private static CiRunSummaryModule CreateRetryHistoryModule(IReadOnlyList<CiRunSummaryModule> modules)
+    {
+        CiRunSummaryModule first = modules[0];
+        CiRunSummaryModule last = modules[^1];
+        return new CiRunSummaryModule
+        {
+            AssemblyName = first.AssemblyName,
+            ModulePath = first.ModulePath,
+            TargetFramework = first.TargetFramework,
+            Architecture = first.Architecture,
+            ExecutionId = first.ExecutionId,
+            SessionUid = last.SessionUid,
+            GitHubActionsHistoryPath = GetConsistentHistoryPath(modules),
+            GitHubActionsHistoryWindowInDays = GetConsistentHistoryWindow(modules),
+            HistoryTests = MergeRetryHistoryTests(modules),
         };
     }
 

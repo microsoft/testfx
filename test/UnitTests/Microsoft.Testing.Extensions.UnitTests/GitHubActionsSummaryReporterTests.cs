@@ -249,6 +249,9 @@ public sealed class GitHubActionsSummaryReporterTests
         try
         {
             GitHubCiRunSummaryModule module = CreateRetryModule("session-1", attempt: 1, passed: 1, failed: 1);
+            module.GitHubActionsHistoryPath = Path.Combine(directory, "history.json");
+            module.GitHubActionsHistoryWindowInDays = 30;
+            module.HistoryTests = [CreateHistoryTest("skipped", "Tests.Skipped", "skipped")];
             string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
                 directory,
                 GitHubSummaryPostProcessor.Provider,
@@ -257,12 +260,14 @@ public sealed class GitHubActionsSummaryReporterTests
             string stepSummaryPath = Path.Combine(directory, "step-summary.md");
             var environment = new Mock<IEnvironment>();
             environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            var history = new CapturingHistoryService();
             GitHubSummaryPostProcessor processor = new(
                 new TestCommandLineOptions([]),
                 environment.Object,
                 new SystemFileSystem(),
                 Mock.Of<ILoggerFactory>(),
-                static () => false);
+                static () => false,
+                history);
 
             ProcessedArtifact? output = await processor.ProcessAsync(
                 [new InputArtifact(fragmentPath, GitHubSummaryPostProcessor.FragmentArtifactKind, null, null, null, "1")],
@@ -274,6 +279,9 @@ public sealed class GitHubActionsSummaryReporterTests
 
             Assert.IsNull(output);
             Assert.IsFalse(File.Exists(stepSummaryPath));
+            GitHubCiRunSummaryModule persisted = history.Writes.Single().Single();
+            Assert.AreEqual(module.GitHubActionsHistoryPath, persisted.GitHubActionsHistoryPath);
+            Assert.AreEqual("Tests.Skipped", persisted.HistoryTests.Single().FullyQualifiedName);
         }
         finally
         {
