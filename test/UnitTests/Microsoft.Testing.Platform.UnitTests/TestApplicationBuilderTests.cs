@@ -267,9 +267,12 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
-    public void TestHostControllerFinalization_LateCancellationUsesSharedBoundedTokenSource()
+    public void TestHostControllerFinalization_LateCancellationArmsSharedBoundedTokenSource()
     {
         Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS))
+            .Returns("0.1");
         Mock<ILoggerFactory> loggerFactory = new();
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
         using var host = new TestHostControllersTestHost(
@@ -283,8 +286,58 @@ public sealed class TestApplicationBuilderTests
         CancellationTokenSource first = EnsureControllerFinalizationCancellationTokenSource(host);
         CancellationTokenSource second = EnsureControllerFinalizationCancellationTokenSource(host);
 
+        Assert.IsFalse(first.Token.WaitHandle.WaitOne(TimeSpan.FromMilliseconds(500)));
+
+        ArmControllerFinalizationTimeout(host);
+
         Assert.AreSame(first, second);
-        Assert.IsFalse(first.IsCancellationRequested);
+        Assert.IsTrue(first.Token.WaitHandle.WaitOne(TimeoutHelper.DefaultHangTimeSpanTimeout));
+    }
+
+    [TestMethod]
+    public async Task TestHostControllerFinalization_CancellationDuringCleanupArmsStableToken()
+    {
+        Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS))
+            .Returns("0.1");
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        using var host = new TestHostControllersTestHost(
+            new([], [], [], testHostLauncher: null, requireProcessRestart: false),
+            new(),
+            passiveNode: null,
+            environment.Object,
+            loggerFactory.Object,
+            Mock.Of<IClock>());
+        using CancellationTokenSource applicationCancellationTokenSource = new();
+        TaskCompletionSource<bool> cleanupStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseCleanup = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        EnsureControllerFinalizationCancellationTokenSource(host);
+        RegisterControllerFinalizationTransition(host, applicationCancellationTokenSource.Token);
+
+        try
+        {
+            Task<bool> cleanup = TryRunControllerCleanupAsync(
+                host,
+                () =>
+                {
+                    cleanupStarted.TrySetResult(true);
+                    return releaseCleanup.Task;
+                });
+            await cleanupStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+#pragma warning disable VSTHRD103 // CancelAsync is unavailable on net462, which this project also targets.
+            applicationCancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103
+
+            await cleanup.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            Assert.IsFalse(await cleanup);
+        }
+        finally
+        {
+            releaseCleanup.TrySetResult(true);
+        }
     }
 
     [DataRow(true)]
@@ -392,6 +445,34 @@ public sealed class TestApplicationBuilderTests
             ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.EnsureControllerFinalizationCancellationTokenSource.");
         return (CancellationTokenSource?)method.Invoke(host, null)
             ?? throw new InvalidOperationException("TestHostControllersTestHost.EnsureControllerFinalizationCancellationTokenSource returned null.");
+    }
+
+    private static void ArmControllerFinalizationTimeout(TestHostControllersTestHost host)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "ArmControllerFinalizationTimeout",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.ArmControllerFinalizationTimeout.");
+        method.Invoke(host, null);
+    }
+
+    private static void RegisterControllerFinalizationTransition(TestHostControllersTestHost host, CancellationToken applicationCancellationToken)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "RegisterControllerFinalizationTransition",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.RegisterControllerFinalizationTransition.");
+        method.Invoke(host, [applicationCancellationToken]);
+    }
+
+    private static Task<bool> TryRunControllerCleanupAsync(TestHostControllersTestHost host, Func<Task> cleanup)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "TryRunControllerCleanupAsync",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TryRunControllerCleanupAsync.");
+        return (Task<bool>?)method.Invoke(host, [cleanup])
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.TryRunControllerCleanupAsync returned null.");
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]

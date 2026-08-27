@@ -187,17 +187,15 @@ internal sealed partial class TestHostControllersTestHost
             : testHostProcessExitCode;
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
-        using CancellationTokenRegistration finalizationTransitionRegistration = applicationCancellationToken.Register(
-            static state => ((TestHostControllersTestHost)state!).EnsureControllerFinalizationCancellationTokenSource(),
-            this);
+        CancellationTokenSource finalizationCancellationTokenSource = EnsureControllerFinalizationCancellationTokenSource();
+        RegisterControllerFinalizationTransition(applicationCancellationToken);
         testExecutionCanceled |= applicationCancellationToken.IsCancellationRequested;
         if (testExecutionCanceled)
         {
-            EnsureControllerFinalizationCancellationTokenSource();
+            ArmControllerFinalizationTimeout();
         }
 
-        CancellationTokenSource? finalizationCancellationTokenSource = _controllerFinalizationCancellationTokenSource;
-        CancellationToken finalizationCancellationToken = finalizationCancellationTokenSource?.Token ?? applicationCancellationToken;
+        CancellationToken finalizationCancellationToken = finalizationCancellationTokenSource.Token;
         bool abortCallbacksJoined = false;
 
         void TransitionToBoundedFinalizationIfCanceled()
@@ -208,11 +206,7 @@ internal sealed partial class TestHostControllersTestHost
             }
 
             testExecutionCanceled = true;
-            finalizationCancellationTokenSource = _controllerFinalizationCancellationTokenSource;
-            if (finalizationCancellationTokenSource is not null)
-            {
-                finalizationCancellationToken = finalizationCancellationTokenSource.Token;
-            }
+            ArmControllerFinalizationTimeout();
         }
 
         async Task JoinAbortCallbacksIfCanceledAsync()
@@ -383,7 +377,7 @@ internal sealed partial class TestHostControllersTestHost
 
     private CancellationTokenSource EnsureControllerFinalizationCancellationTokenSource()
     {
-        var candidate = new CancellationTokenSource(_controllerExtensionFinalizationTimeout);
+        var candidate = new CancellationTokenSource();
         CancellationTokenSource? existing =
             Interlocked.CompareExchange(ref _controllerFinalizationCancellationTokenSource, candidate, null);
         if (existing is null)
@@ -394,6 +388,19 @@ internal sealed partial class TestHostControllersTestHost
         candidate.Dispose();
         return existing;
     }
+
+    private void ArmControllerFinalizationTimeout()
+    {
+        if (Interlocked.Exchange(ref _controllerFinalizationTimeoutArmed, 1) == 0)
+        {
+            EnsureControllerFinalizationCancellationTokenSource().CancelAfter(_controllerExtensionFinalizationTimeout);
+        }
+    }
+
+    private void RegisterControllerFinalizationTransition(CancellationToken applicationCancellationToken)
+        => _controllerFinalizationTransitionRegistration = applicationCancellationToken.Register(
+            static state => ((TestHostControllersTestHost)state!).ArmControllerFinalizationTimeout(),
+            this);
 
     private static void MarkOutputDeviceStillRunning(List<object> servicesStillRunning, ProxyOutputDevice outputDevice)
     {

@@ -44,6 +44,8 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     private int? _testHostPID;
     private bool _controllerFinalizationTimedOut;
     private CancellationTokenSource? _controllerFinalizationCancellationTokenSource;
+    private CancellationTokenRegistration _controllerFinalizationTransitionRegistration;
+    private int _controllerFinalizationTimeoutArmed;
     private int _finalizationTimeoutWarningScheduled;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,

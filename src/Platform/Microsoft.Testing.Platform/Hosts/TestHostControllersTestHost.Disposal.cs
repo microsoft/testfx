@@ -124,6 +124,7 @@ internal sealed partial class TestHostControllersTestHost
 
     public void Dispose()
     {
+        _controllerFinalizationTransitionRegistration.Dispose();
         if (!_controllerFinalizationTimedOut)
         {
             _controllerFinalizationCancellationTokenSource?.Dispose();
