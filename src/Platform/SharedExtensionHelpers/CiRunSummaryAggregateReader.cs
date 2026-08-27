@@ -15,6 +15,7 @@ internal static partial class CiRunSummaryAggregation
     // Additive fields such as coverage and flaky tests keep the same schema version so newer and older
     // extension versions can still aggregate each other's fragments in mixed-version test runs.
     private const int SchemaVersion = 1;
+    private const int MaxHistoryTests = 10_000;
 
     public static CiRunSummaryAggregate ReadAndAggregate(
         IReadOnlyList<InputArtifact> inputs,
@@ -23,6 +24,7 @@ internal static partial class CiRunSummaryAggregation
     {
         var modules = new List<CiRunSummaryModule>(inputs.Count);
         var identities = new HashSet<string>(StringComparer.Ordinal);
+        int remainingHistoryTests = MaxHistoryTests;
         foreach (InputArtifact input in inputs)
         {
             CiRunSummaryFragment? fragment;
@@ -40,6 +42,15 @@ internal static partial class CiRunSummaryAggregation
             }
 
             ValidateModule(fragment.Module, input, context.Mode);
+            if (fragment.Module.HistoryTests.Length > remainingHistoryTests)
+            {
+                fragment.Module.HistoryTests =
+                [
+                    .. fragment.Module.HistoryTests.Take(remainingHistoryTests),
+                ];
+            }
+
+            remainingHistoryTests -= fragment.Module.HistoryTests.Length;
             string identity = GetModuleIdentity(fragment.Module);
             if (!identities.Add(identity))
             {
@@ -104,10 +115,15 @@ internal static partial class CiRunSummaryAggregation
             || module.FailedTests < 0
             || module.SkippedTests < 0
             || module.TestDurationTicks < 0
+            || (module.GitHubActionsHistoryPath is not null
+                && (RoslynString.IsNullOrWhiteSpace(module.GitHubActionsHistoryPath)
+                    || module.GitHubActionsHistoryWindowInDays is < 1 or > 90))
             || checked(module.PassedTests + module.FailedTests + module.SkippedTests) != module.TotalTests
             || module.Failures is null
             || module.FlakyTests is null
             || module.SlowestTests is null
+            || module.HistoryTests is null
+            || module.HistoryTests.Length > MaxHistoryTests
             || module.TopFailingClasses is null
             || module.Coverage is null
             || module.Coverage.Metrics is null
@@ -115,6 +131,12 @@ internal static partial class CiRunSummaryAggregation
             || module.Failures.Any(test => !IsValidTest(test))
             || module.FlakyTests.Any(test => !IsValidTest(test))
             || module.SlowestTests.Any(test => !IsValidTest(test))
+            || module.HistoryTests.Any(static test =>
+                RoslynString.IsNullOrWhiteSpace(test.TestId)
+                || RoslynString.IsNullOrWhiteSpace(test.DisplayName)
+                || RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
+                || test.Outcome is not ("passed" or "failed" or "skipped")
+                || test.DurationTicks < 0)
             || module.TopFailingClasses.Any(item => RoslynString.IsNullOrWhiteSpace(item.ClassName) || item.FailureCount <= 0)
             || module.Coverage.Metrics.Any(metric =>
                 RoslynString.IsNullOrWhiteSpace(metric.ProducerId)

@@ -28,6 +28,14 @@ internal sealed class CiRunSummaryModule
 
     public bool WriteOnFailureOnly { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? GitHubActionsStepSummaryEnabled { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? GitHubActionsHistoryPath { get; set; }
+
+    public int GitHubActionsHistoryWindowInDays { get; set; }
+
     public int AttemptNumber { get; set; }
 
     public int ExitCode { get; set; }
@@ -47,6 +55,8 @@ internal sealed class CiRunSummaryModule
     public CiRunSummaryTest[] FlakyTests { get; set; } = [];
 
     public CiRunSummaryTest[] SlowestTests { get; set; } = [];
+
+    public CiRunSummaryHistoryTest[] HistoryTests { get; set; } = [];
 
     public CiRunSummaryFailingClass[] TopFailingClasses { get; set; } = [];
 
@@ -82,6 +92,21 @@ internal sealed class CiRunSummaryTest
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LineNumber { get; set; }
+}
+
+internal sealed class CiRunSummaryHistoryTest
+{
+    public string TestId { get; set; } = string.Empty;
+
+    public string DisplayName { get; set; } = string.Empty;
+
+    public string FullyQualifiedName { get; set; } = string.Empty;
+
+    public string Outcome { get; set; } = string.Empty;
+
+    public long DurationTicks { get; set; }
+
+    public bool IsFlaky { get; set; }
 }
 
 internal sealed class CiRunSummaryFailingClass

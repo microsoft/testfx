@@ -38,11 +38,14 @@ internal sealed class GitHubActionsAnnotationReporter :
     ITestSessionLifetimeHandler,
     IOutputDeviceDataProducer
 {
+    private const int MinSamplesForRegressionContext = 5;
+
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDisplay;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger _logger;
+    private readonly IGitHubActionsHistoryService _historyService;
     private readonly bool _isEnabled;
 
     public GitHubActionsAnnotationReporter(
@@ -51,13 +54,15 @@ internal sealed class GitHubActionsAnnotationReporter :
         IFileSystem fileSystem,
         IOutputDevice outputDisplay,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IGitHubActionsHistoryService? historyService = null)
     {
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<GitHubActionsAnnotationReporter>();
+        _historyService = historyService ?? DisabledGitHubActionsHistoryService.Instance;
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLine, environment, GitHubActionsCommandLineOptions.GitHubActionsAnnotations);
     }
 
@@ -130,7 +135,18 @@ internal sealed class GitHubActionsAnnotationReporter :
                 return;
             }
 
-            await WriteAnnotationAsync(nodeUpdateMessage.TestNode, GetTestName(nodeUpdateMessage.TestNode), failure.Value.Explanation, failure.Value.Exception, cancellationToken).ConfigureAwait(false);
+            string testName = GetTestName(nodeUpdateMessage.TestNode);
+            await WriteAnnotationAsync(
+                nodeUpdateMessage.TestNode,
+                testName,
+                AppendHistoryContext(
+                    nodeUpdateMessage.TestNode.Uid,
+                    testName,
+                    nodeUpdateMessage.TestNode.DisplayName,
+                    failure.Value.Explanation,
+                    failure.Value.Exception),
+                failure.Value.Exception,
+                cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -224,6 +240,68 @@ internal sealed class GitHubActionsAnnotationReporter :
 
         return DisplayAnnotationLineAsync(line, cancellationToken);
     }
+
+    internal string? AppendHistoryContext(
+        string testId,
+        string fullyQualifiedName,
+        string displayName,
+        string? explanation,
+        Exception? exception)
+    {
+        if (!_historyService.TryGetStats(
+                testId,
+                fullyQualifiedName,
+                displayName,
+                out GitHubActionsHistoryStats stats)
+            || (stats.TotalCount == 0 && stats.DurationSampleCount == 0))
+        {
+            return explanation;
+        }
+
+        string failure = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
+        return FormatHistoryContext(failure, stats, _historyService.HistoryWindowInDays);
+    }
+
+    internal static string FormatHistoryContext(
+        string failure,
+        GitHubActionsHistoryStats stats,
+        int historyWindowInDays)
+    {
+        string outcomeContext = stats.FailCount > 0
+            ? string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.HistoryFailureContext,
+                stats.FailCount,
+                stats.FlakyCount,
+                stats.TotalCount,
+                historyWindowInDays)
+            : stats.FlakyCount > 0
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.HistoryFlakyContext,
+                    stats.FlakyCount,
+                    stats.TotalCount,
+                    historyWindowInDays)
+                : stats.TotalCount >= MinSamplesForRegressionContext
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.HistoryRegressionContext,
+                    stats.TotalCount,
+                    historyWindowInDays)
+                : string.Empty;
+        string durationContext = stats.DurationSampleCount == 0
+            ? string.Empty
+            : string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.HistoryDurationContext,
+                FormatDuration(stats.P95Duration),
+                FormatDuration(stats.P99Duration),
+                stats.DurationSampleCount);
+        return string.Join(" ", new[] { failure, outcomeContext, durationContext }.Where(static value => value.Length > 0));
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1}s", "{0}h {1}m {2}s");
 
     internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger, bool skipAssertionFrames, GitHubActionsSourceLocation? declaredLocation = null)
     {
