@@ -1,9 +1,10 @@
 name: Perf timing nightly
 
-# Perf timing collection and non-blocking regression detection for
+# Performance collection and non-blocking regression detection for
 # microsoft/testfx#9312 and microsoft/testfx#10549. Runs on both Windows and
 # Linux, but uses Linux results for the rolling baseline because hosted Linux
-# runners tend to have more consistent timing.
+# runners tend to have more consistent timing. Allocation microbenchmarks are
+# collected on Linux without gating pull requests.
 
 on:
   schedule:
@@ -23,7 +24,7 @@ jobs:
   collect-windows:
     name: Collect PlainProcess timing (Windows)
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,6 +36,7 @@ jobs:
       - name: Run PlainProcess timing pipeline
         shell: pwsh
         env:
+          MSTEST_PERFORMANCE_SKIP_ARCHIVE: '1'
           Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup: '0'
         run: |
           $startTime = (Get-Date).ToUniversalTime().AddMinutes(-5).ToString("O")
@@ -42,6 +44,7 @@ jobs:
           & "$env:GITHUB_WORKSPACE\.dotnet\dotnet.exe" run --project test\Performance\MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
 
       - name: Stage Result.json files
+        if: ${{ always() }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -49,7 +52,7 @@ jobs:
           New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
 
           $startTime = [DateTimeOffset]::Parse($env:PERF_TIMING_STARTED).UtcDateTime
-          $resultRoot = Join-Path $env:GITHUB_WORKSPACE "artifacts\tmp\Release\testsuite"
+          $resultRoot = Join-Path $env:GITHUB_WORKSPACE "Results"
           $results = @(
             Get-ChildItem -Path $resultRoot -Filter Result.json -Recurse -File -ErrorAction SilentlyContinue |
               Where-Object { $_.LastWriteTimeUtc -ge $startTime }
@@ -68,6 +71,7 @@ jobs:
           }
 
       - name: Upload Result.json
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: perf-timing-result-json-windows
@@ -78,7 +82,7 @@ jobs:
   collect-linux:
     name: Collect PlainProcess timing (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -89,19 +93,26 @@ jobs:
       - name: Mark timing start
         run: touch "$RUNNER_TEMP/perf_timing_start"
 
+      - name: Install NativeAOT prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes clang zlib1g-dev
+
       - name: Run PlainProcess timing pipeline
         env:
+          MSTEST_PERFORMANCE_SKIP_ARCHIVE: '1'
           Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup: '0'
         run: |
           "$GITHUB_WORKSPACE/.dotnet/dotnet" run --project test/Performance/MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
 
       - name: Stage Result.json files
+        if: ${{ always() }}
         run: |
           set -euo pipefail
           STAGING_DIR="$GITHUB_WORKSPACE/artifacts/perf-results"
           mkdir -p "$STAGING_DIR"
 
-          RESULT_ROOT="$GITHUB_WORKSPACE/artifacts/tmp/Release/testsuite"
+          RESULT_ROOT="$GITHUB_WORKSPACE/Results"
           mapfile -d '' -t RESULTS < <(find "$RESULT_ROOT" -name "Result.json" -type f -newer "$RUNNER_TEMP/perf_timing_start" -print0 2>/dev/null)
 
           if [ "${#RESULTS[@]}" -eq 0 ]; then
@@ -118,6 +129,7 @@ jobs:
           done
 
       - name: Upload Result.json
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: perf-timing-result-json-linux
@@ -199,5 +211,23 @@ jobs:
         with:
           name: perf-timing-baseline-linux
           path: artifacts/perf-baseline/
+
+      - name: Run allocation microbenchmarks
+        if: ${{ always() }}
+        run: |
+          "$GITHUB_WORKSPACE/.dotnet/dotnet" run \
+            --project test/Performance/MSTest.Performance.Benchmarks \
+            -c Release -- \
+            --filter "*" \
+            --buildTimeout 600 \
+            --generateBinLog \
+            --artifacts "$GITHUB_WORKSPACE/artifacts/perf-microbenchmarks"
+
+      - name: Upload allocation microbenchmarks
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-microbenchmarks-linux
+          path: artifacts/perf-microbenchmarks/
           if-no-files-found: error
           retention-days: 90

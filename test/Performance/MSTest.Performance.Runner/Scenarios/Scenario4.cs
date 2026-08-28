@@ -148,7 +148,13 @@ internal class Scenario4 : IStep<NoInputOutput, SingleProject>
             addPublicFeeds: true);
 
         context.AddDisposable(generator);
-        return new SingleProject([_tfm], generator, nameof(Scenario4));
+        return new SingleProject(
+            [_tfm],
+            generator,
+            nameof(Scenario4),
+            TestPlatform.Mtp,
+            MSTestSourceGenerationMode.Disabled,
+            _numberOfClass * _methodsPerClass);
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)

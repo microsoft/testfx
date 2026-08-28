@@ -44,14 +44,47 @@ def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]]
         if not isinstance(report, dict):
             raise ValueError(f"{result_file} does not contain a named performance report")
 
-        pipeline_name = report.get("PipelineName")
-        measurements = report.get("Measurements")
+        pipeline_name = report.get("Pipeline")
+        if pipeline_name is None:
+            pipeline_name = report.get("PipelineName")
         if not isinstance(pipeline_name, str) or not pipeline_name:
-            raise ValueError(f"{result_file} has no PipelineName")
+            raise ValueError(f"{result_file} has no pipeline name")
         if pipeline_name in pipelines:
             raise ValueError(f"Duplicate performance report for {pipeline_name}")
+
+        summary = report.get("Summary")
+        if isinstance(summary, dict):
+            elapsed_milliseconds = summary.get("MedianElapsedMilliseconds")
+            processor_milliseconds = summary.get("MedianProcessorMilliseconds")
+            processor_count = report.get("ProcessorCount")
+            if (
+                not isinstance(elapsed_milliseconds, (int, float))
+                or isinstance(elapsed_milliseconds, bool)
+                or not math.isfinite(elapsed_milliseconds)
+                or elapsed_milliseconds <= 0
+            ):
+                raise ValueError(f"{result_file} has an invalid elapsed-time median")
+            if not isinstance(processor_count, int) or processor_count <= 0:
+                raise ValueError(f"{result_file} has an invalid processor count")
+
+            metrics = {"elapsedTimeSeconds": elapsed_milliseconds / 1000}
+            if processor_milliseconds is not None:
+                if (
+                    not isinstance(processor_milliseconds, (int, float))
+                    or isinstance(processor_milliseconds, bool)
+                    or not math.isfinite(processor_milliseconds)
+                    or processor_milliseconds <= 0
+                ):
+                    raise ValueError(f"{result_file} has an invalid CPU-time median")
+                metrics["totalProcessorTimeSeconds"] = processor_milliseconds / 1000
+
+            processor_counts.add(processor_count)
+            pipelines[pipeline_name] = metrics
+            continue
+
+        measurements = report.get("Measurements")
         if not isinstance(measurements, list) or not measurements:
-            raise ValueError(f"{result_file} has no Measurements")
+            raise ValueError(f"{result_file} has neither Summary nor Measurements")
 
         elapsed_times: list[float] = []
         processor_times: list[float] = []
@@ -114,10 +147,7 @@ def load_baseline(path: Path) -> list[dict]:
                     raise ValueError(
                         f"Baseline metrics for {pipeline_name} must be an object"
                     )
-                for metric_name in (
-                    "elapsedTimeSeconds",
-                    "totalProcessorTimeSeconds",
-                ):
+                for metric_name in ("elapsedTimeSeconds",):
                     metric = metrics.get(metric_name)
                     if (
                         not isinstance(metric, (int, float))
@@ -128,6 +158,17 @@ def load_baseline(path: Path) -> list[dict]:
                         raise ValueError(
                             f"Baseline metric {pipeline_name}.{metric_name} is invalid"
                         )
+                processor_time = metrics.get("totalProcessorTimeSeconds")
+                if processor_time is not None and (
+                    not isinstance(processor_time, (int, float))
+                    or isinstance(processor_time, bool)
+                    or not math.isfinite(processor_time)
+                    or processor_time <= 0
+                ):
+                    raise ValueError(
+                        f"Baseline metric {pipeline_name}.totalProcessorTimeSeconds "
+                        "is invalid"
+                    )
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
         message = f"Ignoring invalid baseline {path}: {error}"
         escaped = (
@@ -185,10 +226,15 @@ def build_summary(
         elapsed_values = metric_baseline(
             runs, pipeline_name, "elapsedTimeSeconds", processor_count
         )
-        processor_values = metric_baseline(
-            runs, pipeline_name, "totalProcessorTimeSeconds", processor_count
+        current_processor_time = current.get("totalProcessorTimeSeconds")
+        processor_values = (
+            metric_baseline(
+                runs, pipeline_name, "totalProcessorTimeSeconds", processor_count
+            )
+            if current_processor_time is not None
+            else []
         )
-        baseline_count = min(len(elapsed_values), len(processor_values))
+        baseline_count = len(elapsed_values)
 
         if baseline_count < minimum_baseline_runs:
             elapsed_baseline = None
@@ -198,17 +244,27 @@ def build_summary(
             status = f"Collecting baseline ({baseline_count}/{minimum_baseline_runs})"
         else:
             elapsed_baseline = statistics.median(elapsed_values)
-            processor_baseline = statistics.median(processor_values)
             elapsed_change = (
                 current["elapsedTimeSeconds"] / elapsed_baseline - 1
             ) * 100
-            processor_change = (
-                current["totalProcessorTimeSeconds"] / processor_baseline - 1
-            ) * 100
+            if (
+                current_processor_time is not None
+                and len(processor_values) >= minimum_baseline_runs
+            ):
+                processor_baseline = statistics.median(processor_values)
+                processor_change = (
+                    current_processor_time / processor_baseline - 1
+                ) * 100
+            else:
+                processor_baseline = None
+                processor_change = None
             regressed_metrics = []
             if elapsed_change > threshold_percent:
                 regressed_metrics.append(f"wall clock {elapsed_change:+.1f}%")
-            if processor_change > threshold_percent:
+            if (
+                processor_change is not None
+                and processor_change > threshold_percent
+            ):
                 regressed_metrics.append(f"CPU time {processor_change:+.1f}%")
 
             if regressed_metrics:
@@ -222,7 +278,7 @@ def build_summary(
             f"| {format_seconds(current['elapsedTimeSeconds'])} "
             f"| {format_seconds(elapsed_baseline)} "
             f"| {format_change(elapsed_change)} "
-            f"| {format_seconds(current['totalProcessorTimeSeconds'])} "
+            f"| {format_seconds(current_processor_time)} "
             f"| {format_seconds(processor_baseline)} "
             f"| {format_change(processor_change)} "
             f"| {status} |"

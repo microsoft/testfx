@@ -216,6 +216,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Performance.Benchmarks" Key="$(VsPublicKey)" />
 
     <!-- UseParallelizeAttributeAnalyzerTests need to conditionally include adapter. So it needs typeof(...).Assembly -->
     <!-- We are making everything in adapter as internal. -->
