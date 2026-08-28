@@ -41,7 +41,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
             if (_logger.IsEnabled(LogLevel.Warning))
             {
-                _logger.LogWarning(AzureDevOpsResources.SummaryRequiresTfBuildWarning);
+                await _logger.LogWarningAsync(AzureDevOpsResources.SummaryRequiresTfBuildWarning).ConfigureAwait(false);
             }
 
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(AzureDevOpsResources.SummaryRequiresTfBuildWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
@@ -169,7 +169,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
             {
                 if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogTrace("Could not resolve Azure DevOps summary path.");
+                    await _logger.LogTraceAsync("Could not resolve Azure DevOps summary path.").ConfigureAwait(false);
                 }
 
                 return;
@@ -192,7 +192,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
                 string warning = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SummaryWriteFailedWarning, path, ex.Message);
                 if (_logger.IsEnabled(LogLevel.Warning))
                 {
-                    _logger.LogWarning(warning);
+                    await _logger.LogWarningAsync(warning).ConfigureAwait(false);
                 }
 
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);

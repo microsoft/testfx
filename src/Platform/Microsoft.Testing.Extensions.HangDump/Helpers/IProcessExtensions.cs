@@ -43,7 +43,7 @@ internal static class IProcessExtensions
             }
             catch (Exception e)
             {
-                logger.LogError($"Failed to get parent for process {c.Id} - {c.ProcessName}", e);
+                await logger.LogErrorAsync($"Failed to get parent for process {c.Id} - {c.ProcessName}", e).ConfigureAwait(false);
                 await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, c.Id, c.ProcessName, e)), cancellationToken).ConfigureAwait(false);
             }
         }
@@ -152,7 +152,7 @@ internal static class IProcessExtensions
 
         if (!RoslynString.IsNullOrWhiteSpace(e))
         {
-            logger.LogError($"Error getting parent of process {process.Id} - {process.ProcessName}, {e}.");
+            await logger.LogErrorAsync($"Error getting parent of process {process.Id} - {process.ProcessName}, {e}.").ConfigureAwait(false);
             await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, process.Id, process.ProcessName, e)), cancellationToken).ConfigureAwait(false);
         }
 

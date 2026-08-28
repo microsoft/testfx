@@ -199,11 +199,11 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 // Both renderings were refused, so this run contributed nothing to the job summary. Saying so is
                 // the whole point of the refusal: the alternative is a summary that is silently missing a
                 // section, indistinguishable from a run that produced none.
-                logger.LogWarning(string.Format(
+                await logger.LogWarningAsync(string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.StepSummaryLimitExceededWarning,
                     (writer.GetSummaryLength() ?? 0).ToString(CultureInfo.InvariantCulture),
-                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture)));
+                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture))).ConfigureAwait(false);
             }
         }
 
@@ -381,7 +381,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         {
             if (logger.IsEnabled(LogLevel.Warning))
             {
-                logger.LogWarning(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, writer.Path, ex.Message));
+                await logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, writer.Path, ex.Message)).ConfigureAwait(false);
             }
 
             return null;

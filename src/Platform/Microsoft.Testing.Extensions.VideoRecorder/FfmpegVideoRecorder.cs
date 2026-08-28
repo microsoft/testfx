@@ -240,7 +240,14 @@ internal sealed partial class FfmpegVideoRecorder : IVideoRecorder
                 builder.Append("file '").Append(segment.Path.Replace("'", @"'\''")).AppendLine("'");
             }
 
-            File.WriteAllText(listPath, builder.ToString());
+#if NET
+            await File.WriteAllTextAsync(listPath, builder.ToString(), cancellationToken).ConfigureAwait(false);
+#else
+            using (var listWriter = new StreamWriter(new FileStream(listPath, FileMode.Create, FileAccess.Write, FileShare.Read, bufferSize: 4096, useAsync: true)))
+            {
+                await listWriter.WriteAsync(builder.ToString()).ConfigureAwait(false);
+            }
+#endif
 
             var arguments = new StringBuilder();
             arguments.Append("-y -f concat -safe 0 -i \"").Append(listPath).Append('"');

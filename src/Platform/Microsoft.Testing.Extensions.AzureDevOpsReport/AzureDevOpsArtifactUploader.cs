@@ -112,7 +112,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
 
             if (_logger.IsEnabled(LogLevel.Warning))
             {
-                _logger.LogWarning(AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning);
+                await _logger.LogWarningAsync(AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning).ConfigureAwait(false);
             }
 
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning), testSessionContext.CancellationToken).ConfigureAwait(false);

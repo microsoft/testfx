@@ -226,7 +226,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             if (_traceEnabled)
             {
-                _logger.LogTrace($"Activity signal received by the test host '{_clock.UtcNow}'");
+                await _logger.LogTraceAsync($"Activity signal received by the test host '{_clock.UtcNow}'").ConfigureAwait(false);
             }
 
             _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
@@ -400,7 +400,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {
-            _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
+            await _logger.LogDebugAsync($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')").ConfigureAwait(false);
         }
 
         foreach (string dumpFile in _dumpFiles)
@@ -875,7 +875,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // Skip creating the dump if the option is set to none, and just kill the process.
             if (dumpType.HasValue)
             {
-                diagnosticsClient.WriteDump(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false);
+                await diagnosticsClient.WriteDumpAsync(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false, cancellationToken).ConfigureAwait(false);
                 _dumpFiles.Enqueue(dumpFileNames.ArtifactDumpFileName);
             }
         }
