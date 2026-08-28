@@ -113,31 +113,43 @@ internal static class RetryTestHostRunner
         {
             using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
             using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-            using var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token);
 
             await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
-            try
+            Task waitForConnectionTask = retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken.Token);
+            var processExitedTask = Task.Delay(Timeout.InfiniteTimeSpan, processExitedCancellationToken.Token);
+            Task completedTask = await Task.WhenAny(waitForConnectionTask, processExitedTask).ConfigureAwait(false);
+
+            // A launcher can return an already-exited handle after the child successfully connected. Prefer
+            // that completed connection over the exit notification so the attempt results are still consumed.
+            if (completedTask != waitForConnectionTask && !waitForConnectionTask.IsCompleted)
+            {
+                // ConnectAsync on the client can complete just before the server-side completion is scheduled.
+                // Give that already-established connection a brief chance to win over the exit notification.
+                Task connectionOrGracePeriod = await Task.WhenAny(
+                    waitForConnectionTask,
+                    Task.Delay(TimeSpan.FromSeconds(1), linkedToken.Token)).ConfigureAwait(false);
+                linkedToken.Token.ThrowIfCancellationRequested();
+                completedTask = connectionOrGracePeriod;
+            }
+
+            if (completedTask == waitForConnectionTask || waitForConnectionTask.IsCompleted)
             {
 #if NETCOREAPP
-                await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).ConfigureAwait(false);
+                await waitForConnectionTask.ConfigureAwait(false);
 #else
-                // We don't know why but if the cancellation is called quickly in `testHostProcess.Exited`: `processExitedCancellationToken.Cancel();` for netfx we stuck sometime here, like if
-                // the token we pass to the named pipe is not "correctly" verified inside the pipe implementation self.
-                // We fallback with our custom agnostic cancellation mechanism in that case.
-                // We see it happen only in .NET FX and not in .NET Core so for now we don't do it for core.
-                await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token).ConfigureAwait(false);
+                await waitForConnectionTask.WithCancellationAsync(linkedToken.Token).ConfigureAwait(false);
 #endif
             }
-            catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
+            else
             {
                 await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = true };
             }
-            catch (OperationCanceledException)
-            {
-                await TerminateAndWaitForExitAsync(testHostProcess, logger).ConfigureAwait(false);
-                throw;
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            await TerminateAndWaitForExitAsync(testHostProcess, logger).ConfigureAwait(false);
+            throw;
         }
         finally
         {
