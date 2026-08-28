@@ -71,6 +71,7 @@ internal sealed record TestMethodModel(
     bool ReturnsValueTask,
     bool ReturnsVoid,
     bool IsTestMethod,
+    bool IsDescriptorSupported,
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
     bool AreAttributesComplete,
@@ -106,4 +107,6 @@ internal sealed record TestClassModel(
     EquatableArray<TestPropertyModel> Properties,
     EquatableArray<AttributeApplicationModel> Attributes,
     bool AreAttributesComplete,
+    bool SupportsGeneratedDescriptors,
+    bool AreGeneratedDescriptorsComplete,
     EquatableArray<string> BaseTypeFullyQualifiedNames);

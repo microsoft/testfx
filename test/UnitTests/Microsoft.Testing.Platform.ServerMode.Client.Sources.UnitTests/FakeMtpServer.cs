@@ -69,7 +69,10 @@ internal sealed class FakeMtpServer : IDisposable
                 MultiRequestSupport: true,
                 VSTestProviderSupport: false,
                 SupportsAttachments: true,
-                MultiConnectionProvider: false)));
+                MultiConnectionProvider: false)))
+        {
+            ProtocolVersion = JsonRpcProtocolVersions.Current,
+        };
 
         _ = Task.Run(AcceptAndServeAsync);
     }
@@ -79,6 +82,9 @@ internal sealed class FakeMtpServer : IDisposable
 
     /// <summary>Gets or sets the response returned for an <c>initialize</c> request.</summary>
     public InitializeResponseArgs InitializeResponse { get; set; }
+
+    /// <summary>Gets or sets a raw response override for malformed-response tests.</summary>
+    public object? InitializeResponseOverride { get; set; }
 
     /// <summary>Gets or sets the response returned for a <c>testing/runTests</c> request.</summary>
     public RunResponseArgs RunResponse { get; set; } = new RunResponseArgs([]);
@@ -220,7 +226,7 @@ internal sealed class FakeMtpServer : IDisposable
     /// answers. Params are null because the client keeps request params as a raw dictionary and the tests only
     /// assert on the method name and the returned result.
     /// </summary>
-    public Task<ResponseMessage> SendServerRequestAsync(string method)
+    public Task<ResponseMessage> SendServerRequestAsync(string method, bool useStringId = false)
     {
         int id = Interlocked.Increment(ref _nextServerRequestId);
         var tcs = new TaskCompletionSource<ResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -229,9 +235,42 @@ internal sealed class FakeMtpServer : IDisposable
             _pendingServerRequests[id] = tcs;
         }
 
-        _ = WriteAsync(new RequestMessage(id, method, null));
+        _ = WriteAsync(new RequestMessage(id, method, null)
+        {
+            StringId = useStringId ? id.ToString(CultureInfo.InvariantCulture) : null,
+        });
         return tcs.Task;
     }
+
+    /// <summary>Waits for and returns a client request with the given method.</summary>
+    public async Task<RequestMessage> WaitForRequestAsync(string method, TimeSpan timeout)
+    {
+        DateTime deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            lock (_receivedRequestsLock)
+            {
+                foreach (RequestMessage request in _receivedRequests)
+                {
+                    if (request.Method == method)
+                    {
+                        return request;
+                    }
+                }
+            }
+
+            await Task.Delay(15).ConfigureAwait(false);
+        }
+
+        throw new TimeoutException($"Timed out waiting for a '{method}' request from the client.");
+    }
+
+    /// <summary>Sends the configured run response using the request's numeric or numeric-string ID form.</summary>
+    public Task SendRunResponseAsync(RequestMessage request, bool useStringId)
+        => WriteAsync(new ResponseMessage(request.Id, RunResponse)
+        {
+            StringId = useStringId ? request.Id.ToString(CultureInfo.InvariantCulture) : null,
+        });
 
     /// <summary>
     /// Writes a raw, pre-framed body to the client so a test can inject a malformed message. The
@@ -424,7 +463,7 @@ internal sealed class FakeMtpServer : IDisposable
         object? result;
         if (request.Method == JsonRpcMethods.Initialize)
         {
-            result = InitializeResponse;
+            result = InitializeResponseOverride ?? InitializeResponse;
         }
         else if (request.Method == JsonRpcMethods.TestingDiscoverTests)
         {

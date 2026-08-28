@@ -10,6 +10,105 @@ namespace Microsoft.Testing.Platform.CommandLine;
 
 internal static partial class CommandLineOptionsValidator
 {
+    // Keep in sync with public command-line providers that are automatically registered by the listed packages.
+    // Packages without public options, options requiring explicit framework registration, and hidden internal options
+    // are intentionally omitted.
+    private static readonly Dictionary<string, string[]> KnownExtensionOptionsByPackage = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Microsoft.Testing.Extensions.AzureDevOpsReport"] =
+        [
+            "publish-azdo-run-name",
+            "publish-azdo-test-results",
+            "report-azdo",
+            "report-azdo-annotations",
+            "report-azdo-demote-known-flaky",
+            "report-azdo-flaky-history",
+            "report-azdo-groups",
+            "report-azdo-quarantine-file",
+            "report-azdo-severity",
+            "report-azdo-slow-test-history",
+            "report-azdo-slow-test-history-min-sample",
+            "report-azdo-slow-test-history-multiplier",
+            "report-azdo-stackframe-filter",
+            "report-azdo-summary",
+            "report-azdo-upload-artifact-exclude",
+            "report-azdo-upload-artifact-include",
+            "report-azdo-upload-artifact-name",
+            "report-azdo-upload-artifacts",
+        ],
+        ["Microsoft.Testing.Extensions.CodeCoverage"] =
+        [
+            "coverage",
+            "coverage-output",
+            "coverage-output-format",
+            "coverage-settings",
+        ],
+        ["Microsoft.Testing.Extensions.CrashDump"] =
+        [
+            "crash-report",
+            "crash-report-if-supported",
+            "crash-sequence",
+            "crashdump",
+            "crashdump-filename",
+            "crashdump-type",
+        ],
+        ["Microsoft.Testing.Extensions.CtrfReport"] =
+        [
+            "report-ctrf",
+            "report-ctrf-filename",
+        ],
+        ["Microsoft.Testing.Extensions.GitHubActionsReport"] =
+        [
+            "report-gh",
+            "report-gh-annotations",
+            "report-gh-failure-details",
+            "report-gh-groups",
+            "report-gh-slow-test-notices",
+            "report-gh-slow-test-threshold",
+            "report-gh-step-summary",
+            "report-gh-step-summary-sections",
+        ],
+        ["Microsoft.Testing.Extensions.HangDump"] =
+        [
+            "hangdump",
+            "hangdump-filename",
+            "hangdump-timeout",
+            "hangdump-type",
+            "hangdump-type-if-supported",
+        ],
+        ["Microsoft.Testing.Extensions.HtmlReport"] =
+        [
+            "report-html",
+            "report-html-filename",
+        ],
+        ["Microsoft.Testing.Extensions.JUnitReport"] =
+        [
+            "report-junit",
+            "report-junit-filename",
+        ],
+        ["Microsoft.Testing.Extensions.Retry"] =
+        [
+            "retry-failed-tests",
+            "retry-failed-tests-delay",
+            "retry-failed-tests-max-percentage",
+            "retry-failed-tests-max-tests",
+        ],
+        ["Microsoft.Testing.Extensions.TrxReport"] =
+        [
+            "report-trx",
+            "report-trx-filename",
+        ],
+        ["Microsoft.Testing.Extensions.VideoRecorder"] =
+        [
+            "capture-video",
+            "capture-video-args",
+            "capture-video-chapters",
+            "capture-video-granularity",
+            "capture-video-max-duration",
+            "capture-video-source",
+        ],
+    };
+
     private static ValidationResult ValidateNoUnknownOptions(
         CommandLineParseResult parseResult,
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
@@ -21,11 +120,17 @@ internal static partial class CommandLineOptionsValidator
         // parsing is already case-sensitive but a case-insensitive lookup is a strict superset and
         // does not change CLI behavior.
         var validOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var visibleOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool includeKnownExtensionOptions = !parseResult.HasTool;
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
             {
                 validOptionNames.Add(option.Name);
+                if (!option.IsHidden)
+                {
+                    visibleOptionNames.Add(option.Name);
+                }
             }
         }
 
@@ -34,6 +139,10 @@ internal static partial class CommandLineOptionsValidator
             foreach (CommandLineOption option in provider.Value)
             {
                 validOptionNames.Add(option.Name);
+                if (!option.IsHidden)
+                {
+                    visibleOptionNames.Add(option.Name);
+                }
             }
         }
 
@@ -43,7 +152,7 @@ internal static partial class CommandLineOptionsValidator
             if (!validOptionNames.Contains(optionRecord.Name))
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Name));
+                AppendUnknownOptionError(stringBuilder, optionRecord.Name, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
             }
         }
 
@@ -58,7 +167,9 @@ internal static partial class CommandLineOptionsValidator
                 if (!validOptionNames.Contains(entry.OptionName))
                 {
                     stringBuilder ??= new();
-                    string innerError = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, entry.OptionName);
+                    StringBuilder innerErrorBuilder = new();
+                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
+                    string innerError = innerErrorBuilder.ToTrimmedString();
                     stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
                 }
             }
@@ -72,6 +183,136 @@ internal static partial class CommandLineOptionsValidator
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
+    }
+
+    private static void AppendUnknownOptionError(
+        StringBuilder stringBuilder,
+        string unknownOptionName,
+        HashSet<string> validOptionNames,
+        HashSet<string> visibleOptionNames,
+        bool includeKnownExtensionOptions)
+    {
+        stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, unknownOptionName));
+
+        if (includeKnownExtensionOptions
+            && GetKnownExtensionPackage(unknownOptionName) is { } packageName)
+        {
+            AppendMissingExtensionSuggestion(stringBuilder, unknownOptionName, packageName);
+            return;
+        }
+
+        IEnumerable<string> candidateOptionNames = includeKnownExtensionOptions
+            ? visibleOptionNames.Concat(KnownExtensionOptionsByPackage.Values.SelectMany(static optionNames => optionNames))
+            : visibleOptionNames;
+        string? suggestedOptionName = FindSuggestedOption(
+            unknownOptionName,
+            candidateOptionNames);
+        if (suggestedOptionName is null)
+        {
+            return;
+        }
+
+        stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionSuggestion, suggestedOptionName));
+
+        if (includeKnownExtensionOptions
+            && GetKnownExtensionPackage(suggestedOptionName) is { } suggestedPackageName
+            && !validOptionNames.Contains(suggestedOptionName))
+        {
+            AppendMissingExtensionSuggestion(stringBuilder, suggestedOptionName, suggestedPackageName);
+        }
+    }
+
+    private static void AppendMissingExtensionSuggestion(StringBuilder stringBuilder, string optionName, string packageName)
+        => stringBuilder.AppendLine(string.Format(
+            CultureInfo.InvariantCulture,
+            PlatformResources.CommandLineOptionRequiresExtension,
+            optionName,
+            packageName));
+
+    private static string? GetKnownExtensionPackage(string optionName)
+    {
+        foreach (KeyValuePair<string, string[]> extensionOptions in KnownExtensionOptionsByPackage)
+        {
+            if (extensionOptions.Value.Contains(optionName, StringComparer.OrdinalIgnoreCase))
+            {
+                return extensionOptions.Key;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? FindSuggestedOption(string unknownOptionName, IEnumerable<string> candidateOptionNames)
+    {
+        int maximumDistance = unknownOptionName.Length switch
+        {
+            <= 4 => 1,
+            <= 12 => 2,
+            _ => 3,
+        };
+
+        string? bestCandidate = null;
+        int bestDistance = maximumDistance + 1;
+        bool hasAmbiguousBestCandidate = false;
+
+        foreach (string candidateOptionName in candidateOptionNames.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (Math.Abs(candidateOptionName.Length - unknownOptionName.Length) > maximumDistance)
+            {
+                continue;
+            }
+
+            int distance = CalculateEditDistance(unknownOptionName, candidateOptionName);
+            if (distance < bestDistance)
+            {
+                bestCandidate = candidateOptionName;
+                bestDistance = distance;
+                hasAmbiguousBestCandidate = false;
+            }
+            else if (distance == bestDistance)
+            {
+                hasAmbiguousBestCandidate = true;
+            }
+        }
+
+        return bestDistance <= maximumDistance && !hasAmbiguousBestCandidate
+            ? bestCandidate
+            : null;
+    }
+
+    private static int CalculateEditDistance(string source, string target)
+    {
+        int[,] distances = new int[source.Length + 1, target.Length + 1];
+        for (int i = 0; i <= source.Length; i++)
+        {
+            distances[i, 0] = i;
+        }
+
+        for (int j = 0; j <= target.Length; j++)
+        {
+            distances[0, j] = j;
+        }
+
+        for (int i = 1; i <= source.Length; i++)
+        {
+            for (int j = 1; j <= target.Length; j++)
+            {
+                int substitutionCost = char.ToUpperInvariant(source[i - 1]) == char.ToUpperInvariant(target[j - 1]) ? 0 : 1;
+                distances[i, j] = Math.Min(
+                    Math.Min(distances[i - 1, j] + 1, distances[i, j - 1] + 1),
+                    distances[i - 1, j - 1] + substitutionCost);
+
+                if (i > 1
+                    && j > 1
+                    && char.ToUpperInvariant(source[i - 1]) == char.ToUpperInvariant(target[j - 2])
+                    && char.ToUpperInvariant(source[i - 2]) == char.ToUpperInvariant(target[j - 1]))
+                {
+                    distances[i, j] = Math.Min(distances[i, j], distances[i - 2, j - 2] + 1);
+                }
+            }
+        }
+
+        return distances[source.Length, target.Length];
     }
 
     private static ValidationResult ValidateNoBootstrapOnlyOptionsInJson(

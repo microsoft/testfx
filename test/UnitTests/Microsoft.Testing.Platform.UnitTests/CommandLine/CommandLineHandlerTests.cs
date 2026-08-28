@@ -358,6 +358,30 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("--report-trx")]
+    [DataRow("--report-txr")]
+    public async Task ParseAndValidateAsync_KnownExtensionOptionInToolMode_DoesNotSuggestPackageOrOption(string option)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["tool", option], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("report-trx"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            providers,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Unknown option '{option}'", result.ErrorMessage);
+        Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+        Assert.DoesNotContain("Microsoft.Testing.Extensions.TrxReport", result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_UnknownJsonOptionForSelectedTool_ReturnsInvalid()
     {
         CommandLineParseResult parseResult = CommandLineParser.Parse(["tool"], new SystemEnvironment());
@@ -533,6 +557,200 @@ public sealed class CommandLineHandlerTests
             Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
             Command line: --x
             """, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_UnknownOptionWithCloseRegisteredOption_SuggestsOption()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["--halp"], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            """
+            Unknown option '--halp'
+            Did you mean '--help'?
+            Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
+            Command line: --halp
+            """,
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("abcdefgh", "abczefgx", true)]
+    [DataRow("abcdefgh", "abczefxy", false)]
+    [DataRow("abcdefghijklmn", "abczefghijklxy", true)]
+    [DataRow("abcdefghijklmn", "abczefghijkwxy", false)]
+    public async Task ParseAndValidateAsync_UnknownOption_RespectsSuggestionDistanceThresholds(
+        string registeredOptionName,
+        string unknownOptionName,
+        bool shouldSuggest)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([$"--{unknownOptionName}"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration(registeredOptionName),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Unknown option '--{unknownOptionName}'", result.ErrorMessage);
+        if (shouldSuggest)
+        {
+            Assert.Contains($"Did you mean '--{registeredOptionName}'?", result.ErrorMessage);
+        }
+        else
+        {
+            Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+        }
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_UnknownOptionWithAmbiguousMatches_DoesNotSuggestOption()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["--ad"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("ab"),
+            new ExtensionCommandLineProviderMockValidConfiguration("ac"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--ad'", result.ErrorMessage);
+        Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_UnknownOptionWithCloseHiddenOption_DoesNotSuggestOption()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["--hiddden"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("hidden", isHidden: true),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--hiddden'", result.ErrorMessage);
+        Assert.DoesNotContain("Did you mean", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("--report-azdo", "Microsoft.Testing.Extensions.AzureDevOpsReport")]
+    [DataRow("--coverage-output-format", "Microsoft.Testing.Extensions.CodeCoverage")]
+    [DataRow("--crashdump-type", "Microsoft.Testing.Extensions.CrashDump")]
+    [DataRow("--report-ctrf", "Microsoft.Testing.Extensions.CtrfReport")]
+    [DataRow("--report-gh", "Microsoft.Testing.Extensions.GitHubActionsReport")]
+    [DataRow("--hangdump-timeout", "Microsoft.Testing.Extensions.HangDump")]
+    [DataRow("--report-html", "Microsoft.Testing.Extensions.HtmlReport")]
+    [DataRow("--report-junit", "Microsoft.Testing.Extensions.JUnitReport")]
+    [DataRow("--retry-failed-tests", "Microsoft.Testing.Extensions.Retry")]
+    [DataRow("--report-trx", "Microsoft.Testing.Extensions.TrxReport")]
+    [DataRow("--capture-video", "Microsoft.Testing.Extensions.VideoRecorder")]
+    public async Task ParseAndValidateAsync_KnownExtensionOptionWithoutExtension_SuggestsPackage(string option, string packageName)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([option], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Unknown option '{option}'", result.ErrorMessage);
+        Assert.Contains($"Option '{option}' is provided by the '{packageName}' extension. Add a package reference to use it.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("--report-adzo", "--report-azdo", "Microsoft.Testing.Extensions.AzureDevOpsReport")]
+    [DataRow("--coverge", "--coverage", "Microsoft.Testing.Extensions.CodeCoverage")]
+    [DataRow("--report-htlm", "--report-html", "Microsoft.Testing.Extensions.HtmlReport")]
+    public async Task ParseAndValidateAsync_MisspelledKnownExtensionOption_SuggestsOptionAndPackage(
+        string option,
+        string suggestedOption,
+        string packageName)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([option], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Unknown option '{option}'", result.ErrorMessage);
+        Assert.Contains($"Did you mean '{suggestedOption}'?", result.ErrorMessage);
+        Assert.Contains($"Option '{suggestedOption}' is provided by the '{packageName}' extension. Add a package reference to use it.", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_MisspelledRegisteredExtensionOption_DoesNotSuggestPackage()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["--report-adzo"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("report-azdo"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            """
+            Unknown option '--report-adzo'
+            Did you mean '--report-azdo'?
+            Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
+            Command line: --report-adzo
+            """,
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_MisspelledJsonOption_SuggestsRegisteredOption()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>(),
+            [new JsonCommandLineOptionEntry("halp", [], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(
+            """
+            In testconfig.json under 'commandLineOptions': Unknown option '--halp'
+            Did you mean '--help'?
+            """,
+            result.ErrorMessage);
     }
 
     [TestMethod]
@@ -843,7 +1061,7 @@ public sealed class CommandLineHandlerTests
     }
 #pragma warning restore TPEXP
 
-    private sealed class ExtensionCommandLineProviderMockValidConfiguration(string optionName) : ICommandLineOptionsProvider
+    private sealed class ExtensionCommandLineProviderMockValidConfiguration(string optionName, bool isHidden = false) : ICommandLineOptionsProvider
     {
         public string Uid => nameof(ExtensionCommandLineProviderMockValidConfiguration);
 
@@ -856,7 +1074,7 @@ public sealed class CommandLineHandlerTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
         public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)];
+            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden)];
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
             => ValidationResult.ValidTask;

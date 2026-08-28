@@ -20,6 +20,81 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")));
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_FinalizesProcessLifetimeHandlerWithUncanceledToken(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string finalizationFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.txt");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["FINALIZATION_FILE"] = finalizationFile,
+                ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.AreEqual(bool.FalseString, File.ReadAllText(finalizationFile));
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_BoundsBlockingFinalizationWithoutDisposingRunningHandler(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
+        string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
+        var stopwatch = Stopwatch.StartNew();
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["BLOCK_FINALIZATION"] = "1",
+                ["FINALIZATION_STARTED_FILE"] = finalizationStartedFile,
+                ["DISPOSAL_FILE"] = disposalFile,
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
+                ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
+        Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
+        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_BoundsBlockingDisposalWithoutRetryingIt(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
+        var stopwatch = Stopwatch.StartNew();
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["BLOCK_DISPOSAL"] = "1",
+                ["DISPOSAL_ATTEMPTS_FILE"] = disposalAttemptsFile,
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
+                ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.IsTrue(File.Exists(disposalAttemptsFile), testHostResult.ToString());
+        Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
+        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
@@ -63,7 +138,7 @@ public class Startup
     }
 }
 
-public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
+public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDisposable
 {
     public string Uid => nameof(TestHostProcessLifetimeHandler);
 
@@ -75,7 +150,11 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("BeforeTestHostProcessStartAsync.txt", "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
+        if (Environment.GetEnvironmentVariable("SKIP_FIXED_LIFECYCLE_FILES") != "1")
+        {
+            System.IO.File.WriteAllText("BeforeTestHostProcessStartAsync.txt", "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
+        }
+
         return Task.CompletedTask;
     }
 
@@ -86,14 +165,55 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
 
     public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("OnTestHostProcessExitedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
+        if (Environment.GetEnvironmentVariable("SKIP_FIXED_LIFECYCLE_FILES") != "1")
+        {
+            System.IO.File.WriteAllText("OnTestHostProcessExitedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
+        }
+
+        if (Environment.GetEnvironmentVariable("FINALIZATION_FILE") is { Length: > 0 } finalizationFile)
+        {
+            System.IO.File.WriteAllText(finalizationFile, cancellationToken.IsCancellationRequested.ToString());
+        }
+
+        if (Environment.GetEnvironmentVariable("FINALIZATION_STARTED_FILE") is { Length: > 0 } finalizationStartedFile)
+        {
+            System.IO.File.WriteAllText(finalizationStartedFile, string.Empty);
+        }
+
+        if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
+        {
+            Thread.Sleep(10000);
+        }
+
         return Task.CompletedTask;
     }
 
     public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("OnTestHostProcessStartedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
+        if (Environment.GetEnvironmentVariable("SKIP_FIXED_LIFECYCLE_FILES") != "1")
+        {
+            System.IO.File.WriteAllText("OnTestHostProcessStartedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
+        }
+
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        if (Environment.GetEnvironmentVariable("DISPOSAL_ATTEMPTS_FILE") is { Length: > 0 } disposalAttemptsFile)
+        {
+            System.IO.File.AppendAllText(disposalAttemptsFile, "Dispose" + Environment.NewLine);
+        }
+
+        if (Environment.GetEnvironmentVariable("DISPOSAL_FILE") is { Length: > 0 } disposalFile)
+        {
+            System.IO.File.WriteAllText(disposalFile, string.Empty);
+        }
+
+        if (Environment.GetEnvironmentVariable("BLOCK_DISPOSAL") == "1")
+        {
+            Thread.Sleep(10000);
+        }
     }
 }
 
@@ -119,6 +239,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        if (Environment.GetEnvironmentVariable("BLOCK_UNTIL_TIMEOUT") == "1")
+        {
+            Thread.Sleep(2000);
+        }
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
         {
             Uid = "Test1",

@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -72,6 +73,96 @@ public partial class TypeEnumeratorTests : TestContainer
 
         tests.Should().NotBeNull();
         tests.Should().HaveCount(0);
+    }
+
+    public void EnumerateShouldUseCompleteGeneratedDescriptorsWithoutLegacyMethodValidation()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false);
+        MethodInfo method = typeof(DescriptorTestClass).GetMethod(nameof(DescriptorTestClass.PlainTest))!;
+        SetGeneratedDescriptorOperations(
+            typeof(DescriptorTestClass),
+            [method],
+            areAllTestMethodsSupported: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DescriptorTestClass), Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings, useGeneratedDescriptors: true);
+
+        tests.Should().ContainSingle();
+        tests[0].TestMethod.MethodInfo.Should().BeSameAs(method);
+        tests[0].IsFromGeneratedDescriptor.Should().BeTrue();
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
+    }
+
+    public void EnumerateShouldFallBackPerMethodWhenGeneratedDescriptorsAreIncomplete()
+    {
+        _mockTypeValidator.Setup(validator => validator.IsValidTestClass(It.IsAny<Type>(), It.IsAny<List<string>>()))
+            .Returns(true);
+        _mockTestMethodValidator.Setup(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()))
+            .Returns((MethodInfo method, Type _, ICollection<string> _) => method.Name == nameof(DescriptorTestClass.FallbackTest));
+        MethodInfo descriptorMethod = typeof(DescriptorTestClass).GetMethod(nameof(DescriptorTestClass.PlainTest))!;
+        SetGeneratedDescriptorOperations(
+            typeof(DescriptorTestClass),
+            [descriptorMethod],
+            areAllTestMethodsSupported: false);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DescriptorTestClass), Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings, useGeneratedDescriptors: true);
+
+        tests.Should().HaveCount(2);
+        tests.Single(test => test.TestMethod.Name == nameof(DescriptorTestClass.PlainTest))
+            .IsFromGeneratedDescriptor.Should().BeTrue();
+        tests.Single(test => test.TestMethod.Name == nameof(DescriptorTestClass.FallbackTest))
+            .IsFromGeneratedDescriptor.Should().BeFalse();
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(descriptorMethod, It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
+    }
+
+    public void EnumerateShouldIgnoreGeneratedDescriptorsOutsideNativeMtp()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        MethodInfo descriptorMethod = typeof(DescriptorTestClass).GetMethod(nameof(DescriptorTestClass.PlainTest))!;
+        SetGeneratedDescriptorOperations(
+            typeof(DescriptorTestClass),
+            [descriptorMethod],
+            areAllTestMethodsSupported: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DescriptorTestClass), Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
+
+        tests.Should().NotBeEmpty();
+        tests.Should().OnlyContain(test => !test.IsFromGeneratedDescriptor);
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(descriptorMethod, It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Once);
+    }
+
+    public void EnumerateShouldSelectPlainAndDataRowDescriptorsWhenComplete()
+    {
+        Type type = typeof(DescriptorCompleteTestClass);
+        MethodInfo[] methods =
+        [
+            type.GetMethod(nameof(DescriptorCompleteTestClass.PlainTest))!,
+            type.GetMethod(nameof(DescriptorCompleteTestClass.DataRowTest))!,
+        ];
+        SetGeneratedDescriptorOperations(type, methods, areAllTestMethodsSupported: true);
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(type, Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings, useGeneratedDescriptors: true);
+
+        tests.Should().HaveCount(2);
+        tests.Should().OnlyContain(test => test.IsFromGeneratedDescriptor);
+        tests.Select(test => test.TestMethod.Name)
+            .Should().BeEquivalentTo(nameof(DescriptorCompleteTestClass.PlainTest), nameof(DescriptorCompleteTestClass.DataRowTest));
+        tests.Select(test => test.TestMethod.Name)
+            .Should().NotContain(nameof(DescriptorCompleteTestClass.FallbackOnlyTest));
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
     }
 
     #endregion
@@ -592,6 +683,27 @@ public partial class TypeEnumeratorTests : TestContainer
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object);
 
+    private void SetGeneratedDescriptorOperations(Type type, MethodInfo[] descriptorMethods, bool areAllTestMethodsSupported)
+    {
+        Attribute[] typeAttributes = type.GetCustomAttributes(inherit: true).OfType<Attribute>().ToArray();
+        var methodAttributes = new Dictionary<MethodInfo, Attribute[]>();
+        foreach (MethodInfo method in type.GetMethods())
+        {
+            methodAttributes[method] = method.GetCustomAttributes(inherit: true).OfType<Attribute>().ToArray();
+        }
+
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            TypeAttributes = new Dictionary<Type, Attribute[]> { [type] = typeAttributes },
+            TypeMethodAttributes = methodAttributes,
+            DescriptorTestMethods = new Dictionary<Type, MethodInfo[]> { [type] = descriptorMethods },
+            DescriptorCompleteTypes = areAllTestMethodsSupported
+                ? new Dictionary<Type, bool> { [type] = true }
+                : [],
+        };
+        _testablePlatformServiceProvider.SetReflectionOperations(new SourceGeneratedReflectionOperations(provider));
+    }
+
     #endregion
 }
 
@@ -636,6 +748,41 @@ public class DummySecondHidingTestClass : DummyOverridingTestClass
     }
 
     public new void DerivedTestMethod()
+    {
+    }
+}
+
+[TestClass]
+public class DescriptorTestClass
+{
+    [TestMethod]
+    public void PlainTest()
+    {
+    }
+
+    [TestMethod]
+    [TestCategory("fallback")]
+    public void FallbackTest()
+    {
+    }
+}
+
+[TestClass]
+public class DescriptorCompleteTestClass
+{
+    [TestMethod]
+    public void PlainTest()
+    {
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    public void DataRowTest(int value)
+    {
+    }
+
+    [TestMethod]
+    public void FallbackOnlyTest()
     {
     }
 }

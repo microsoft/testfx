@@ -587,12 +587,13 @@ Rules for the table:
   already got an inline suggestion in Step 4 — the table is the at-a-glance
   view and must stand on its own.
 
-**Important**: Emit **only one** `add-comment` call. The workflow is
-configured with `hide-older-comments: true`, so re-runs will replace any
-earlier review comment automatically — do not append additional comments.
-The inline `create_pull_request_review_comment` calls from Step 4 are
-separate and are **not** covered by `hide-older-comments`, which is why
-Step 4 requires you to check for an existing equivalent comment first.
+**Important**: Emit **only one** `add-comment` call per run. The command
+workflow hides earlier scorecards automatically; the automatic PR workflow
+keeps them visible so a transient comment-minimization failure cannot fail an
+otherwise successful review. The inline
+`create_pull_request_review_comment` calls from Step 4 are separate and are
+not covered by scorecard cleanup, which is why Step 4 requires you to check
+for an existing equivalent comment first.
 
 #### Fallback: no test methods found
 

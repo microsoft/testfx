@@ -17,7 +17,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     IEnvironment environment,
     IFileSystem fileSystem,
     ILoggerFactory loggerFactory,
-    Func<bool> downstreamRequiredPostProcessingSupported)
+    Func<bool> downstreamRequiredPostProcessingSupported,
+    IGitHubActionsHistoryService? historyService = null)
     : IArtifactPostProcessorRequiresPostProcessing
 {
     internal const string FragmentArtifactKind = "microsoft.testing.github-actions-summary-fragment";
@@ -35,7 +36,11 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     private static readonly TimeSpan StepSummaryRetryDelay = TimeSpan.FromMilliseconds(50);
     private readonly bool _isEnabled =
         GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary)
+        || (historyService?.IsEnabled ?? false)
         || commandLineOptions.IsOptionSet(ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName);
+
+    private readonly IGitHubActionsHistoryService _historyService =
+        historyService ?? DisabledGitHubActionsHistoryService.Instance;
 
     private readonly bool _includeFailureDetails =
         GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
@@ -68,13 +73,41 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         if (context.Mode == ArtifactPostProcessingMode.RetryAttempts && context.RunSummary is null)
         {
+            CiRunSummaryAggregate historyAggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+            await _historyService.WriteAsync(
+                [CreateRetryHistoryModule(historyAggregate.Modules)],
+                cancellationToken).ConfigureAwait(false);
+
             // Retry inputs overlap, so summing their per-attempt fragments would publish plausible but incorrect
-            // logical totals. Leave the artifacts untouched when the orchestrator cannot supply an authoritative
-            // passed/failed/skipped split.
+            // logical totals. Persist only the mergeable per-test history, then leave the summary artifacts
+            // untouched when the orchestrator cannot supply an authoritative passed/failed/skipped split.
             return null;
         }
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
+        bool downstreamPostProcessingWillPublishSummary =
+            context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            && downstreamRequiredPostProcessingSupported();
+        CiRunSummaryModule? retryMergedModule = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? CreateRetryMergedModule(aggregate)
+            : null;
+        if (context.Mode == ArtifactPostProcessingMode.TestModules)
+        {
+            await _historyService.WriteAsync(aggregate.Modules, cancellationToken).ConfigureAwait(false);
+        }
+        else if (!downstreamPostProcessingWillPublishSummary)
+        {
+            await _historyService.WriteAsync([retryMergedModule!], cancellationToken).ConfigureAwait(false);
+        }
+
+        bool summaryEnabled = aggregate.Modules.Any(static module => module.GitHubActionsStepSummaryEnabled is not false);
+        if (!summaryEnabled)
+        {
+            return downstreamPostProcessingWillPublishSummary
+                ? await CreateOutputArtifactAsync(aggregate, outputDirectory, summaryOutputPath: null, retryMergedModule).ConfigureAwait(false)
+                : null;
+        }
+
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
         string? outputPath = context.Mode == ArtifactPostProcessingMode.RetryAttempts
             ? null
@@ -91,9 +124,6 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             || (aggregate.ExitCode is int exitCode
                 ? GitHubActionsExitCode.IndicatesFailure(exitCode)
                 : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
-        bool downstreamPostProcessingWillPublishSummary =
-            context.Mode == ArtifactPostProcessingMode.RetryAttempts
-            && downstreamRequiredPostProcessingSupported();
         StepSummaryWriter? writer = downstreamPostProcessingWillPublishSummary
             || RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
             || (writeOnFailureOnly && !runFailed)
@@ -111,7 +141,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         if (writer is null)
         {
-            return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath).ConfigureAwait(false);
+            return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath, retryMergedModule).ConfigureAwait(false);
         }
 
         // Bounding the summary rendering against its own size alone would be useless: it is appended to a file
@@ -177,22 +207,22 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             }
         }
 
-        return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath).ConfigureAwait(false);
+        return await CreateOutputArtifactAsync(aggregate, outputDirectory, outputPath, retryMergedModule).ConfigureAwait(false);
     }
 
     private static async Task<ProcessedArtifact> CreateOutputArtifactAsync(
         CiRunSummaryAggregate aggregate,
         string outputDirectory,
-        string? summaryOutputPath)
+        string? summaryOutputPath,
+        CiRunSummaryModule? retryMergedModule)
     {
         if (aggregate.Context.Mode == ArtifactPostProcessingMode.RetryAttempts)
         {
-            CiRunSummaryModule mergedModule = CreateRetryMergedModule(aggregate);
             string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                 outputDirectory,
                 Provider,
                 ProviderSlug,
-                mergedModule).ConfigureAwait(false);
+                retryMergedModule!).ConfigureAwait(false);
             return new ProcessedArtifact(
                 fragmentPath,
                 FragmentArtifactKind,
@@ -221,6 +251,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             SessionUid = last.SessionUid,
             RequestedOutputPath = first.RequestedOutputPath,
             WriteOnFailureOnly = aggregate.Modules.All(static module => module.WriteOnFailureOnly),
+            GitHubActionsStepSummaryEnabled = aggregate.Modules.Any(static module => module.GitHubActionsStepSummaryEnabled is not false),
+            GitHubActionsHistoryPath = GetConsistentHistoryPath(aggregate.Modules),
+            GitHubActionsHistoryWindowInDays = GetConsistentHistoryWindow(aggregate.Modules),
             AttemptNumber = 1,
             ExitCode = aggregate.ExitCode ?? last.ExitCode,
             TotalTests = aggregate.TotalTests,
@@ -240,11 +273,91 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                     .ThenBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
                     .Take(MaxSlowestTests),
             ],
+            HistoryTests = MergeRetryHistoryTests(aggregate.Modules),
             TopFailingClasses = last.TopFailingClasses,
             Coverage = aggregate.Coverage,
             GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(
                 GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules)),
         };
+    }
+
+    private static CiRunSummaryModule CreateRetryHistoryModule(IReadOnlyList<CiRunSummaryModule> modules)
+    {
+        CiRunSummaryModule first = modules[0];
+        CiRunSummaryModule last = modules[^1];
+        return new CiRunSummaryModule
+        {
+            AssemblyName = first.AssemblyName,
+            ModulePath = first.ModulePath,
+            TargetFramework = first.TargetFramework,
+            Architecture = first.Architecture,
+            ExecutionId = first.ExecutionId,
+            SessionUid = last.SessionUid,
+            GitHubActionsHistoryPath = GetConsistentHistoryPath(modules),
+            GitHubActionsHistoryWindowInDays = GetConsistentHistoryWindow(modules),
+            HistoryTests = MergeRetryHistoryTests(modules),
+        };
+    }
+
+    private static string? GetConsistentHistoryPath(IReadOnlyList<CiRunSummaryModule> modules)
+    {
+        string[] paths =
+        [
+            .. modules
+                .Select(static module => module.GitHubActionsHistoryPath)
+                .OfType<string>()
+                .Distinct(StringComparer.Ordinal),
+        ];
+        return paths is [string path] ? path : null;
+    }
+
+    private static int GetConsistentHistoryWindow(IReadOnlyList<CiRunSummaryModule> modules)
+        => modules
+            .Where(static module => module.GitHubActionsHistoryPath is not null)
+            .Select(static module => module.GitHubActionsHistoryWindowInDays)
+            .DefaultIfEmpty()
+            .Max();
+
+    private static CiRunSummaryHistoryTest[] MergeRetryHistoryTests(IReadOnlyList<CiRunSummaryModule> modules)
+    {
+        var latestByTest = new Dictionary<(string TestId, string FullyQualifiedName, string DisplayName), CiRunSummaryHistoryTest>();
+        var previouslyFailed = new HashSet<(string TestId, string FullyQualifiedName, string DisplayName)>();
+        foreach (CiRunSummaryModule module in modules.OrderBy(static module => module.AttemptNumber))
+        {
+            foreach (CiRunSummaryHistoryTest test in module.HistoryTests)
+            {
+                (string TestId, string FullyQualifiedName, string DisplayName) identity =
+                    (test.TestId, test.FullyQualifiedName, test.DisplayName);
+                if (latestByTest.Count >= GitHubActionsHistoryStore.MaxTotalSamples && !latestByTest.ContainsKey(identity))
+                {
+                    continue;
+                }
+
+                bool recovered = test.Outcome == GitHubActionsHistoryOutcome.Passed && previouslyFailed.Contains(identity);
+                latestByTest[identity] = new CiRunSummaryHistoryTest
+                {
+                    TestId = test.TestId,
+                    DisplayName = test.DisplayName,
+                    FullyQualifiedName = test.FullyQualifiedName,
+                    Outcome = test.Outcome,
+                    DurationTicks = test.DurationTicks,
+                    IsFlaky = test.IsFlaky || recovered,
+                };
+
+                if (test.Outcome == GitHubActionsHistoryOutcome.Failed)
+                {
+                    previouslyFailed.Add(identity);
+                }
+            }
+        }
+
+        return
+        [
+            .. latestByTest.Values
+                .OrderBy(static test => test.FullyQualifiedName, StringComparer.Ordinal)
+                .ThenBy(static test => test.DisplayName, StringComparer.Ordinal)
+                .ThenBy(static test => test.TestId, StringComparer.Ordinal),
+        ];
     }
 
     private static async Task<bool?> TryUpsertStepSummaryAsync(

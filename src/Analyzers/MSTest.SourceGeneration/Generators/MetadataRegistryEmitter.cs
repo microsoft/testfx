@@ -48,6 +48,8 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("public bool AreAttributesComplete { get; set; }");
+                sb.AppendLine("public bool SupportsGeneratedDescriptors { get; set; }");
+                sb.AppendLine("public bool AreGeneratedDescriptorsComplete { get; set; }");
                 sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
@@ -64,6 +66,7 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public bool ReturnsTask { get; set; }");
                 sb.AppendLine("public bool ReturnsValueTask { get; set; }");
                 sb.AppendLine("public bool ReturnsVoid { get; set; }");
+                sb.AppendLine("public bool IsDescriptorSupported { get; set; }");
                 sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("public bool AreAttributesComplete { get; set; }");
@@ -192,6 +195,8 @@ internal static class MetadataRegistryEmitter
             EmitAttributesProperty(sb, "Attributes", model.Attributes);
             sb.AppendLine(",");
             sb.AppendLine($"AreAttributesComplete = {Bool(model.AreAttributesComplete)},");
+            sb.AppendLine($"SupportsGeneratedDescriptors = {Bool(model.SupportsGeneratedDescriptors)},");
+            sb.AppendLine($"AreGeneratedDescriptorsComplete = {Bool(model.AreGeneratedDescriptorsComplete)},");
 
             EmitConstructors(sb, fqn, model);
             sb.AppendLine(",");
@@ -250,6 +255,7 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine($"ReturnsTask = {Bool(method.ReturnsTask)},");
                     sb.AppendLine($"ReturnsValueTask = {Bool(method.ReturnsValueTask)},");
                     sb.AppendLine($"ReturnsVoid = {Bool(method.ReturnsVoid)},");
+                    sb.AppendLine($"IsDescriptorSupported = {Bool(method.IsDescriptorSupported)},");
                     EmitParameterTypes(sb, method.Parameters);
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);

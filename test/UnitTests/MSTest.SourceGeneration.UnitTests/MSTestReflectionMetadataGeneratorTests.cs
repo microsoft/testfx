@@ -111,6 +111,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> descriptorTestMethods, System.Type[] descriptorCompleteTypes) { }
             }
         }
         """;
@@ -151,6 +152,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                     [TestMethod]
                     public void Test1() { }
                 }
+
             }
             """;
 
@@ -164,6 +166,264 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("Type = typeof(global::Sample.MyTests)");
         registry.Should().Contain("Name = \"Test1\"");
         registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return Task.CompletedTask; },");
+        registry.Should().Contain("SupportsGeneratedDescriptors = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("IsDescriptorSupported = true");
+    }
+
+    [TestMethod]
+    public void Generator_DeclaresDescriptorSupportOnlyForBoundedSynchronousSubset()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    public void Supported(int value) { }
+
+                    [TestMethod]
+                    [TestCategory("fallback")]
+                    public void AttributeFallback() { }
+
+                    [TestMethod]
+                    public async System.Threading.Tasks.Task AsyncFallback()
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        string registration = result.GeneratedSources
+            .Single(source => source.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        int supportedIndex = registry.IndexOf("Name = \"Supported\"", System.StringComparison.Ordinal);
+        int attributeFallbackIndex = registry.IndexOf("Name = \"AttributeFallback\"", System.StringComparison.Ordinal);
+        int asyncFallbackIndex = registry.IndexOf("Name = \"AsyncFallback\"", System.StringComparison.Ordinal);
+        supportedIndex.Should().BeGreaterThan(-1);
+        attributeFallbackIndex.Should().BeGreaterThan(supportedIndex);
+        asyncFallbackIndex.Should().BeGreaterThan(attributeFallbackIndex);
+        registry.Substring(supportedIndex, attributeFallbackIndex - supportedIndex)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(attributeFallbackIndex, asyncFallbackIndex - attributeFallbackIndex)
+            .Should().Contain("IsDescriptorSupported = false");
+        registry[asyncFallbackIndex..].Should().Contain("IsDescriptorSupported = false");
+        registration.Should().Contain("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
+        registration.Should().Contain("areDescriptorMethodsResolved = false;");
+        registration.Should().Contain("testClass.AreGeneratedDescriptorsComplete && areDescriptorMethodsResolved");
+        registration.Should().Contain("descriptorCompleteTypes.Add(type);");
+        registration.Should().Contain("descriptorTestMethods, descriptorCompleteTypes.ToArray()");
+    }
+
+    [TestMethod]
+    public void Generator_InaccessibleTestMethodRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Supported() { }
+
+                    [TestMethod]
+                    private void InaccessibleFallback() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Supported\"");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("Name = \"InaccessibleFallback\"");
+    }
+
+    [TestMethod]
+    public void Generator_UnsupportedExecutionShapesRetainLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public static void StaticTest() { }
+
+                    [TestMethod]
+                    public System.Threading.Tasks.Task SynchronousTaskTest()
+                        => System.Threading.Tasks.Task.CompletedTask;
+
+                    [TestMethod]
+                    public System.Threading.Tasks.ValueTask SynchronousValueTaskTest()
+                        => default;
+
+                    [TestMethod]
+                    public async void AsyncVoidTest()
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        foreach (string methodName in new[] { "StaticTest", "SynchronousTaskTest", "SynchronousValueTaskTest", "AsyncVoidTest" })
+        {
+            int methodIndex = registry.IndexOf($"Name = \"{methodName}\"", System.StringComparison.Ordinal);
+            methodIndex.Should().BeGreaterThan(-1);
+            int nextMethodIndex = registry.IndexOf("Name = \"", methodIndex + 1, System.StringComparison.Ordinal);
+            string methodEntry = nextMethodIndex < 0
+                ? registry[methodIndex..]
+                : registry.Substring(methodIndex, nextMethodIndex - methodIndex);
+            methodEntry.Should().Contain("IsDescriptorSupported = false");
+        }
+    }
+
+    [TestMethod]
+    public void Generator_PartialTestClassRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public partial class PartialTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+
+                public partial class PartialTests
+                {
+                    [TestMethod]
+                    public void Test2() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int test1Index = registry.IndexOf("Name = \"Test1\"", System.StringComparison.Ordinal);
+        int test2Index = registry.IndexOf("Name = \"Test2\"", System.StringComparison.Ordinal);
+        int propertiesIndex = registry.IndexOf("Properties = ", test2Index, System.StringComparison.Ordinal);
+        test1Index.Should().BeGreaterThan(-1);
+        test2Index.Should().BeGreaterThan(test1Index);
+        propertiesIndex.Should().BeGreaterThan(test2Index);
+        registry.Should().Contain("Type = typeof(global::Sample.PartialTests)");
+        registry.Substring(test1Index, test2Index - test1Index)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(test2Index, propertiesIndex - test2Index)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_InheritedCustomTestMethodOverrideRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, Inherited = true)]
+                public sealed class InheritedTestMethodAttribute : TestMethodAttribute
+                {
+                }
+
+                public class BaseTests
+                {
+                    [InheritedTestMethod]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+
+                    [TestMethod]
+                    public void Supported() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int runIndex = registry.IndexOf("Name = \"Run\"", System.StringComparison.Ordinal);
+        int supportedIndex = registry.IndexOf("Name = \"Supported\"", runIndex, System.StringComparison.Ordinal);
+        runIndex.Should().BeGreaterThan(-1);
+        supportedIndex.Should().BeGreaterThan(runIndex);
+        string runEntry = registry.Substring(runIndex, supportedIndex - runIndex);
+        runEntry.Should().Contain("IsTestMethod = true");
+        runEntry.Should().Contain("IsDescriptorSupported = false");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_TestMethodAccessorRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class AccessorTests
+                {
+                    public int Value
+                    {
+                        get => 0;
+
+                        [TestMethod]
+                        [DataRow(1)]
+                        set { }
+                    }
+
+                    [TestMethod]
+                    public void Supported() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Supported\"");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("Name = \"set_Value\"");
     }
 
     [TestMethod]
@@ -2420,7 +2680,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("methodInvokers[methodInfo] = method.Invoke;");
         registration.Should().Contain("constructorInvokers[type] = constructors;");
         registration.Should().Contain("propertySetters[propertyInfo] = property.Set;");
-        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
 
         // Only [TestMethod]-annotated methods become test roots; the registry's IsTestMethod flag
         // drives that filtering at module-load time.
@@ -3131,7 +3391,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         resolvedGuard.Should().BeGreaterThan(-1);
         completenessGuard.Should().BeGreaterThan(resolvedGuard);
         assignment.Should().BeGreaterThan(completenessGuard);
-        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
         outputCompilation.GetDiagnostics()
             .Where(d => d.Severity >= DiagnosticSeverity.Warning
                 && d.Location.SourceTree?.FilePath.EndsWith(".g.cs", System.StringComparison.Ordinal) is true)

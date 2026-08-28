@@ -18,15 +18,6 @@ internal sealed partial class ServerTestHost
 {
     private async Task<object> HandleRequestCoreAsync(RequestMessage message, RpcInvocationState rpcInvocationState, CancellationToken cancellationToken)
     {
-        var perRequestServiceProvider = (ServiceProvider)ServiceProvider.Clone();
-
-        // Add custom linked ITestApplicationCooperativeLifetimeService cancellation token source
-        perRequestServiceProvider.AddService(new PerRequestTestSessionContext(
-            rpcInvocationState.CancellationToken,
-            cancellationToken));
-
-        perRequestServiceProvider.AddService(new TestHostTestFrameworkInvoker(perRequestServiceProvider));
-
         AssertInitialized();
 
         await _logger.LogDebugAsync($"Received {message.Method} request").ConfigureAwait(false);
@@ -37,14 +28,20 @@ internal sealed partial class ServerTestHost
                 throw new JsonRpcException(invalidParams.ErrorCode, invalidParams.ErrorMessage);
 
             case (JsonRpcMethods.Initialize, InitializeRequestArgs args):
+                string negotiatedProtocolVersion = JsonRpcProtocolVersions.Negotiate(args.ProtocolVersions)
+                    ?? throw new JsonRpcException(
+                        ErrorCodes.ProtocolVersionNotSupported,
+                        $"None of the client's protocol versions are supported. Server versions: {string.Join(", ", JsonRpcProtocolVersions.Supported)}.");
+
                 _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
                 _clientInfoService = new ClientInfoService(args.ClientInfo.Name, args.ClientInfo.Version, new ClientCapabilitiesService(args.Capabilities.IsStateful));
-                await _logger.LogDebugAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}").ConfigureAwait(false);
+                await _logger.LogDebugAsync(
+                    $"Connection established with '{_client.Id}' version '{_client.Version}', protocol version '{negotiatedProtocolVersion}'").ConfigureAwait(false);
 
                 INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
                 return new InitializeResponseArgs(
                     ProcessId: ServiceProvider.GetEnvironment().ProcessId,
-                    ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
+                    ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
                     Capabilities: new ServerCapabilities(
                         new ServerTestingCapabilities(
                             SupportsDiscovery: true,
@@ -52,21 +49,37 @@ internal sealed partial class ServerTestHost
                             MultiRequestSupport: false,
                             VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
                             SupportsAttachments: true,
-                            MultiConnectionProvider: false)));
+                            MultiConnectionProvider: false)))
+                {
+                    ProtocolVersion = negotiatedProtocolVersion,
+                };
 
             case (JsonRpcMethods.TestingDiscoverTests, DiscoverRequestArgs args):
-                return await ExecuteRequestAsync(args, JsonRpcMethods.TestingDiscoverTests, perRequestServiceProvider, cancellationToken).ConfigureAwait(false);
+                return await ExecuteRequestAsync(args, JsonRpcMethods.TestingDiscoverTests, rpcInvocationState, cancellationToken).ConfigureAwait(false);
 
             case (JsonRpcMethods.TestingRunTests, RunRequestArgs args):
-                return await ExecuteRequestAsync(args, JsonRpcMethods.TestingRunTests, perRequestServiceProvider, cancellationToken).ConfigureAwait(false);
+                return await ExecuteRequestAsync(args, JsonRpcMethods.TestingRunTests, rpcInvocationState, cancellationToken).ConfigureAwait(false);
 
             default:
-                throw new NotImplementedException();
+                throw new JsonRpcException(ErrorCodes.MethodNotFound, $"The method '{message.Method}' is not supported.");
         }
     }
 
-    private async Task<ResponseArgsBase> ExecuteRequestAsync(RequestArgsBase args, string method, ServiceProvider perRequestServiceProvider, CancellationToken cancellationToken)
+    private async Task<ResponseArgsBase> ExecuteRequestAsync(
+        RequestArgsBase args,
+        string method,
+        RpcInvocationState rpcInvocationState,
+        CancellationToken cancellationToken)
     {
+        var perRequestServiceProvider = (ServiceProvider)ServiceProvider.Clone();
+
+        // Add custom linked ITestApplicationCooperativeLifetimeService cancellation token source
+        perRequestServiceProvider.AddService(new PerRequestTestSessionContext(
+            rpcInvocationState.CancellationToken,
+            cancellationToken));
+
+        perRequestServiceProvider.AddService(new TestHostTestFrameworkInvoker(perRequestServiceProvider));
+
         DateTimeOffset requestStart = _clock.UtcNow;
 
         // Avoid allocating request-scoped services that register cancellation callbacks when the request
@@ -188,7 +201,6 @@ internal sealed partial class ServerTestHost
             // catch and propagated as correct json rpc error
             perRequestTestSessionContext.CancellationToken.ThrowIfCancellationRequested();
 
-            await SendTestUpdateCompleteAsync(args.RunId, cancellationToken).ConfigureAwait(false);
             requestExecuteStop = _clock.UtcNow;
         }
         finally

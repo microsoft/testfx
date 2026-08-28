@@ -27,9 +27,9 @@ internal static class TestMemberValidationHelper
             or Accessibility.Internal
             or Accessibility.ProtectedOrInternal;
 
-    internal static bool IsTestMethodAttributePresent(IMethodSymbol method)
+    internal static bool IsTestMethodAttributePresent(ImmutableArray<AttributeData> attributes)
     {
-        foreach (AttributeData attribute in method.GetAttributes())
+        foreach (AttributeData attribute in attributes)
         {
             for (INamedTypeSymbol? attributeClass = attribute.AttributeClass;
                  attributeClass is not null;

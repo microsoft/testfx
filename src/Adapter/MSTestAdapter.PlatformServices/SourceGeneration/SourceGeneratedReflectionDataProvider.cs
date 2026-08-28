@@ -120,6 +120,18 @@ internal class SourceGeneratedReflectionDataProvider
     public IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> TypeMethodInvokers { get; init; } = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();
 
     /// <summary>
+    /// Gets test methods whose generated metadata is complete enough for descriptor-native discovery.
+    /// The runtime still uses the existing <see cref="MethodInfo"/>-based lifecycle after discovery.
+    /// </summary>
+    public IReadOnlyDictionary<Type, MethodInfo[]> DescriptorTestMethods { get; init; } = new Dictionary<Type, MethodInfo[]>();
+
+    /// <summary>
+    /// Gets whether <see cref="DescriptorTestMethods"/> represents every test method for each
+    /// registered type. A <see langword="false"/> value requires a legacy scan for unsupported methods.
+    /// </summary>
+    public IReadOnlyDictionary<Type, bool> DescriptorCompleteTypes { get; init; } = new Dictionary<Type, bool>();
+
+    /// <summary>
     /// Gets the delegate-based property setters, keyed by the <see cref="PropertyInfo"/> the
     /// adapter holds (today: the <c>TestContext</c> property). Each delegate assigns the value
     /// directly instead of calling <see cref="PropertyInfo.SetValue(object, object)"/>.

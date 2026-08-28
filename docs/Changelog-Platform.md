@@ -33,6 +33,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Aggregate GitHub Actions and Azure DevOps Markdown summaries across all modules in a `dotnet test` invocation while retaining deterministic per-assembly details and authoritative run totals, duration and exit verdict, by @Evangelink in [#10530](https://github.com/microsoft/testfx/pull/10530)
 * Add provider-neutral code-coverage counts, percentages, threshold results and partial-coverage indicators to aggregated GitHub Actions and Azure DevOps summaries, by @Evangelink in [#10693](https://github.com/microsoft/testfx/pull/10693)
 * Add `on-failure` support to `--report-gh-step-summary` and add `--report-gh-step-summary-sections` for selecting `test-results`, `slow-tests`, `coverage` or `all`, by @Evangelink in [#10695](https://github.com/microsoft/testfx/pull/10695) and [#10697](https://github.com/microsoft/testfx/pull/10697)
+* Add bounded GitHub Actions test-history snapshots through `--report-gh-history`, including historical failure context, retry-aware results, and workflow-managed artifact persistence in [#10770](https://github.com/microsoft/testfx/issues/10770)
 * Add `IConfigurationRoot`, `IConfigurationSection` and `IHierarchicalConfigurationProvider` so extensions can consume merged nested configuration without reparsing source-specific JSON, by @Evangelink in [#10699](https://github.com/microsoft/testfx/pull/10699)
 
 ### Changed
@@ -983,7 +984,7 @@ See full log [of v3.7.0...v3.7.1](https://github.com/microsoft/testfx/compare/v3
 
 ## <a name="1.5.0" />[1.5.0] - 2024-12-20
 
-See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/v1.4.3...v1.5.0)
+See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/a6b6696371...378afeba899)
 
 ### Added
 

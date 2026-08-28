@@ -94,4 +94,11 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
         MockReflectionOperations = mock;
         _reflectionOperationsWrapper = MockableReflectionOperations.Create(mock);
     }
+
+    public void SetReflectionOperations(IReflectionOperations reflectionOperations)
+    {
+        MockReflectionOperations = null!;
+        _reflectionOperationsWrapper = null;
+        ReflectionOperations = reflectionOperations;
+    }
 }

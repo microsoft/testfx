@@ -4,6 +4,7 @@
 using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
@@ -28,6 +29,9 @@ internal static class TestClassModelBuilder
 {
     private const string AsyncStateMachineAttributeName = "global::System.Runtime.CompilerServices.AsyncStateMachineAttribute";
     private const string DebuggerStepThroughAttributeName = "global::System.Diagnostics.DebuggerStepThroughAttribute";
+    private const string TestClassAttributeName = "global::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
+    private const string TestMethodAttributeName = "global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute";
+    private const string DataRowAttributeName = "global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute";
 
     public static TestClassModel Build(INamedTypeSymbol typeSymbol, List<DiagnosticInfo> diagnostics)
     {
@@ -46,6 +50,8 @@ internal static class TestClassModelBuilder
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
         ImmutableArray<string>.Builder baseTypes = ImmutableArray.CreateBuilder<string>();
+        bool hasUnsupportedTestMethod = false;
+        bool hasPartialTypeInHierarchy = false;
 
         string leafFqn = typeSymbol.ToDisplayString(SymbolDisplayFormats.FullyQualified);
 
@@ -59,6 +65,7 @@ internal static class TestClassModelBuilder
              current = current.BaseType)
         {
             bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
+            hasPartialTypeInHierarchy |= IsPartial(current);
 
             // Capture each accessible, non-generic base type so the runtime registration can root
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
@@ -73,10 +80,19 @@ internal static class TestClassModelBuilder
             {
                 switch (member)
                 {
-                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                        when TestMemberValidationHelper.IsAccessibleFromConsumer(method):
+                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
+                        bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
+                        if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method))
+                        {
+                            hasUnsupportedTestMethod |= isTestMethod;
+                            break;
+                        }
+
                         if (TestMemberValidationHelper.TryReportUnsupportedMethod(method, leafFqn, diagnostics))
                         {
+                            hasUnsupportedTestMethod |= isTestMethod;
+
                             // Skip generic / by-ref methods entirely so the emitter does not produce
                             // code that references unbound type parameters or ref/in/out arguments.
                             break;
@@ -85,15 +101,18 @@ internal static class TestClassModelBuilder
                         string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
-                            TestMethodModel model = BuildMethod(method, consumingAssembly);
+                            TestMethodModel model = BuildMethod(method, consumingAssembly, inheritedAttributes, isTestMethod);
                             methodsByKey[key] = model;
                             methods.Add(model);
                         }
 
                         break;
-                    case IPropertySymbol property
-                        when !property.IsIndexer && TestMemberValidationHelper.IsAccessibleFromConsumer(property):
-                        if (!propertiesByName.ContainsKey(property.Name))
+                    case IPropertySymbol property:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
+                            || HasTestMethodAttribute(property.SetMethod);
+                        if (!property.IsIndexer
+                            && TestMemberValidationHelper.IsAccessibleFromConsumer(property)
+                            && !propertiesByName.ContainsKey(property.Name))
                         {
                             TestPropertyModel model = BuildProperty(property, consumingAssembly);
                             propertiesByName[property.Name] = model;
@@ -121,6 +140,14 @@ internal static class TestClassModelBuilder
 
                         ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
                         break;
+                    case IEventSymbol eventSymbol:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(eventSymbol.AddMethod)
+                            || HasTestMethodAttribute(eventSymbol.RemoveMethod)
+                            || HasTestMethodAttribute(eventSymbol.RaiseMethod);
+                        break;
+                    case IMethodSymbol method:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(method);
+                        break;
                 }
             }
         }
@@ -129,6 +156,27 @@ internal static class TestClassModelBuilder
             AttributeMaterializationHelper.BuildAttributesWithCompleteness(
                 AttributeMaterializationHelper.CollectInheritedAttributes(typeSymbol),
                 consumingAssembly);
+        bool supportsGeneratedDescriptors = classAttributes.IsComplete
+            && classAttributes.Attributes.Length == 1
+            && classAttributes.Attributes[0].FullyQualifiedAttributeType == TestClassAttributeName;
+
+        var duplicateTestMethodNames = new HashSet<string>(
+            methods
+                .Where(static method => method.IsTestMethod)
+                .GroupBy(static method => method.Name, StringComparer.Ordinal)
+                .Where(static group => group.Count() > 1)
+                .Select(static group => group.Key),
+            StringComparer.Ordinal);
+
+        var finalizedMethods = methods
+            .Select(method => duplicateTestMethodNames.Contains(method.Name)
+                ? method with { IsDescriptorSupported = false }
+                : method)
+            .ToImmutableArray();
+        bool areGeneratedDescriptorsComplete = supportsGeneratedDescriptors
+            && !hasUnsupportedTestMethod
+            && !hasPartialTypeInHierarchy
+            && finalizedMethods.Where(static method => method.IsTestMethod).All(static method => method.IsDescriptorSupported);
 
         return new TestClassModel(
             FullyQualifiedTypeName: leafFqn,
@@ -139,14 +187,28 @@ internal static class TestClassModelBuilder
             IsAbstract: typeSymbol.IsAbstract,
             IsStatic: typeSymbol.IsStatic,
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
-            Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
+            Methods: new EquatableArray<TestMethodModel>(finalizedMethods),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
             Attributes: classAttributes.Attributes,
             AreAttributesComplete: classAttributes.IsComplete,
+            SupportsGeneratedDescriptors: supportsGeneratedDescriptors,
+            AreGeneratedDescriptorsComplete: areGeneratedDescriptorsComplete,
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
     }
 
-    private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
+    private static bool IsPartial(INamedTypeSymbol type)
+        => type.DeclaringSyntaxReferences.Any(static syntaxReference =>
+            syntaxReference.GetSyntax().ChildTokens().Any(static token => token.IsKind(SyntaxKind.PartialKeyword)));
+
+    private static bool HasTestMethodAttribute(IMethodSymbol? method)
+        => method is not null
+        && TestMemberValidationHelper.IsTestMethodAttributePresent(AttributeMaterializationHelper.CollectInheritedAttributes(method));
+
+    private static TestMethodModel BuildMethod(
+        IMethodSymbol method,
+        IAssemblySymbol consumingAssembly,
+        ImmutableArray<AttributeData> inheritedAttributes,
+        bool isTestMethod)
     {
         ITypeSymbol returnType = method.ReturnType;
         string returnTypeFqn = returnType.ToDisplayString(SymbolDisplayFormats.FullyQualified);
@@ -159,12 +221,19 @@ internal static class TestClassModelBuilder
             || returnTypeFqn.StartsWith("global::System.Threading.Tasks.ValueTask<", System.StringComparison.Ordinal);
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
-        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
         ImmutableArray<AttributeData> attributesToMaterialize = method.IsAsync
             ? inheritedAttributes.Where(static attribute => !IsCompilerSpecialAsyncAttribute(attribute)).ToImmutableArray()
             : inheritedAttributes;
         AttributeMaterializationHelper.AttributeMaterializationResult methodAttributes =
             AttributeMaterializationHelper.BuildAttributesWithCompleteness(attributesToMaterialize, consumingAssembly);
+        bool isDescriptorSupported = isTestMethod
+            && methodAttributes.IsComplete
+            && method.DeclaredAccessibility == Accessibility.Public
+            && !method.IsStatic
+            && !method.IsAbstract
+            && !method.IsAsync
+            && returnsVoid
+            && HasOnlyDescriptorSupportedAttributes(methodAttributes.Attributes);
 
         return new TestMethodModel(
             Name: method.Name,
@@ -173,11 +242,34 @@ internal static class TestClassModelBuilder
             ReturnsTask: returnsTask,
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
-            IsTestMethod: TestMemberValidationHelper.IsTestMethodAttributePresent(method),
+            IsTestMethod: isTestMethod,
+            IsDescriptorSupported: isDescriptorSupported,
             Parameters: BuildParameters(method),
             Attributes: methodAttributes.Attributes,
             AreAttributesComplete: methodAttributes.IsComplete,
             DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
+    }
+
+    private static bool HasOnlyDescriptorSupportedAttributes(EquatableArray<AttributeApplicationModel> attributes)
+    {
+        int testMethodAttributeCount = 0;
+        foreach (AttributeApplicationModel attribute in attributes)
+        {
+            switch (attribute.FullyQualifiedAttributeType)
+            {
+                case TestMethodAttributeName:
+                    testMethodAttributeCount++;
+                    break;
+
+                case DataRowAttributeName:
+                    break;
+
+                default:
+                    return false;
+            }
+        }
+
+        return testMethodAttributeCount == 1;
     }
 
     private static bool IsCompilerSpecialAsyncAttribute(AttributeData attribute)
