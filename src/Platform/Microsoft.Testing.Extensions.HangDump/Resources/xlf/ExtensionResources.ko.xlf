@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="HangDumpDeadlineApproaching">
         <source>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</source>
-        <target state="new">CI deadline approaching: taking a hang dump before the run is hard-cancelled.</target>
+        <target state="translated">CI 기한이 임박했습니다. 실행이 강제로 취소되기 전에 중단 덤프를 수집합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
