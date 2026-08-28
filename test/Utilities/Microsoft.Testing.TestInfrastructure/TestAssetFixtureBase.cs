@@ -223,6 +223,21 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
         if (exitCode == 0)
         {
+            if (cacheVariant == "Reflection")
+            {
+                // The cache provider's build assets are recorded in project.assets.json during the
+                // cache-enabled restore. Nested `dotnet test --no-build` commands would otherwise
+                // load ProjectCachePlugin without graph/file-access settings and fail while computing
+                // run arguments. Rewrite only the normal restore state without the cache references;
+                // compiled bin outputs remain unchanged and source-gen uses its isolated obj folder.
+                await DotnetCli.RunAsync(
+                    $"restore \"{projectPath}\"",
+                    environmentVariables: new() { ["NUGET_PACKAGES"] = environmentVariables["NUGET_PACKAGES"] },
+                    warnAsError: false,
+                    callerMemberName: $"{binlogBaseFileName}_PrepareExecution",
+                    cancellationToken: cancellationToken);
+            }
+
             return new DotnetMuxerResult(
                 commandLine,
                 exitCode,
