@@ -22,7 +22,6 @@ internal sealed partial class HangDumpProcessLifetimeHandler
     {
         ITestHostProcessInformation testHostProcessInformation =
             _testHostProcessInformation ?? throw ApplicationStateGuard.Unreachable();
-        ApplicationStateGuard.Ensure(_dumpType is not null);
 
         string processId = process.Id.ToString(CultureInfo.InvariantCulture);
         Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(process.Name, processId, _clock.UtcNow);
