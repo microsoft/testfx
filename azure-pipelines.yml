@@ -168,6 +168,7 @@ stages:
           "-NoProfile",
           "-File", "./eng/common/msbuild.ps1",
           "-prepareMachine",
+          "-msbuildMultiThreaded:`$false",
           "-warnAsError:`$false",
           "./TestFx.slnx",
           "/restore",
@@ -452,7 +453,10 @@ stages:
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
         # MSBuildCache requires a direct static graph build; Arcade's outer Build.proj discovers its projects too late
-        # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
+        # for the project-cache plugin. This experimental consumer uses MSBuild's in-process multithreaded mode but
+        # deliberately does not enable Detours file-access reporting: access attribution assumes one active project
+        # per process and is only safe on the process-based trusted seed above. Keep the regular Arcade build below as
+        # the correctness fallback while the required MSBuild fixes from dotnet/msbuild#14824 and #14826 are unreleased.
         #
         # This step reports one of three outcomes, and the fallback below keys off it:
         #   succeeded              - the cache supplied the outputs, the Arcade 'Build' step is skipped.
@@ -485,12 +489,12 @@ stages:
               "-NoProfile",
               "-File", "./eng/common/msbuild.ps1",
               "-prepareMachine",
+              "-msbuildMultiThreaded:`$true",
               "-warnAsError:`$false",
               "./TestFx.slnx",
               "/restore",
               "/graph",
               "/m",
-              "/reportfileaccesses",
               "/nr:false",
               "/t:Build",
               "/v:minimal",

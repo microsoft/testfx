@@ -86,7 +86,7 @@ For more information about all the different options available, supply the argum
 
 ### MSBuildCache
 
-The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache). The cache-aware build uses Arcade's `eng/common/msbuild.ps1` launcher to invoke the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. PR builds consume the immutable Azure Pipeline cache read-only, and fork PRs skip this step because they do not receive the required token scope.
+The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache). The cache-aware build uses Arcade's `eng/common/msbuild.ps1` launcher to invoke the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. Trusted `main` builds populate the immutable Azure Pipeline cache with process-based MSBuild and Detours file-access reporting. PR builds consume that cache read-only with MSBuild's experimental in-process multithreaded mode and without file-access reporting. Fork PRs skip the cache step because they do not receive the required token scope.
 
 The cache steps have three outcomes:
 
@@ -95,6 +95,18 @@ The cache steps have three outcomes:
 - **The cache build or the preparation phase fails for any other reason.** The pipeline preserves the cache diagnostics, removes partial outputs, and runs the regular Arcade build as a fallback. This covers anything MSBuildCache itself reports (plugin, cache, or file-access problems, including its duplicate-output diagnostic), `NU*` restore failures, engine crashes and OOM (`MSB4166`, `MSB0001`, `MSB1025`, `MSB4017`), `MSB4260` project references that cannot be resolved with a static graph (a `/graph` limitation the fallback does not have), transient file locks (`MSB3021`, `MSB3027`), an unexpected failure of the wrapper script itself, and any failure that never reached MSBuild's error summary. The cache step stays green in this case: marking it `SucceededWithIssues` would make the job `PartiallySucceeded`, which Azure Repos build-validation policies treat as a failure even when the fallback build then succeeds.
 
 Every merge to `main` that touches product build inputs runs a dedicated, batched seed stage for both Debug and Release. This is required: the cache fingerprints project inputs, so entries become stale whenever shared build inputs such as `global.json`, `eng/Versions.props`, or Arcade change. This stage is the only remote cache publisher; PR, manual, and nightly canary builds consume the cache read-only so they cannot race to publish immutable entries. Debug and Release use separate cache universes because configuration-independent projects can otherwise race while the two configurations publish in parallel.
+
+Cache population and multithreaded cache consumption intentionally use different command lines:
+
+```powershell
+# Trusted main population: process nodes provide unambiguous Detours attribution.
+eng\common\msbuild.ps1 -msbuildMultiThreaded:$false -warnAsError:$false TestFx.slnx /restore /graph /m /reportfileaccesses /t:Build /p:Configuration=<Debug|Release> /p:MSBuildCachePackageEnabled=true /p:MSBuildCacheEnabled=true /p:MSBuildCacheRemoteCacheIsReadOnly=false
+
+# PR consumption: thread nodes perform lookup/materialization only and never receive write permission.
+eng\common\msbuild.ps1 -msbuildMultiThreaded:$true -warnAsError:$false TestFx.slnx /restore /graph /m /t:Build /p:Configuration=<Debug|Release> /p:MSBuildCachePackageEnabled=true /p:MSBuildCacheEnabled=true /p:MSBuildCacheRemoteCacheIsReadOnly=true
+```
+
+The consumer requires MSBuild fixes that are not present in the currently pinned toolchain. [dotnet/msbuild#14824](https://github.com/dotnet/msbuild/issues/14824) fixes `FileAccessData` struct deserialization from sidecar task hosts, and [dotnet/msbuild#14826](https://github.com/dotnet/msbuild/issues/14826) propagates and gates task-host reporting when `/reportfileaccesses` is absent. Until a toolchain containing both fixes is pinned, `Microsoft.MSBuildCache.SharedCompilation` can still exercise the broken task-host path and the cache step is expected to fall back to the regular Arcade build. [dotnet/msbuild#14825](https://github.com/dotnet/msbuild/issues/14825) tracks the fundamental incompatibility between in-process multithreading and Detours reporting; the short-term MSBuild change only replaces the internal scheduler failure with an actionable rejection, so population must remain process-based.
 
 The cache's detached-process exclusions use fully rooted paths (for example, `$(WinDir)\**`). A drive-relative pattern such as `\Windows\**` does not match the absolute file-access paths reported by MSBuild and causes otherwise successful cache builds to fail after compilation. Cache builds also pass `-warnAsError:$false` to Arcade's launcher because MSBuildCache intentionally warns about allowlisted detached telemetry accesses. The fallback Arcade build still treats warnings as errors.
 
