@@ -122,29 +122,8 @@ internal static partial class CommandLineOptionsValidator
         var validOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var visibleOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         bool includeKnownExtensionOptions = !parseResult.HasTool;
-        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
-        {
-            foreach (CommandLineOption option in provider.Value)
-            {
-                validOptionNames.Add(option.Name);
-                if (!option.IsHidden)
-                {
-                    visibleOptionNames.Add(option.Name);
-                }
-            }
-        }
-
-        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
-        {
-            foreach (CommandLineOption option in provider.Value)
-            {
-                validOptionNames.Add(option.Name);
-                if (!option.IsHidden)
-                {
-                    visibleOptionNames.Add(option.Name);
-                }
-            }
-        }
+        CollectOptionNames(extensionOptionsByProvider, validOptionNames, visibleOptionNames);
+        CollectOptionNames(systemOptionsByProvider, validOptionNames, visibleOptionNames);
 
         StringBuilder? stringBuilder = null;
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
@@ -183,6 +162,24 @@ internal static partial class CommandLineOptionsValidator
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
+    }
+
+    private static void CollectOptionNames(
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> optionsByProvider,
+        HashSet<string> validOptionNames,
+        HashSet<string> visibleOptionNames)
+    {
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in optionsByProvider)
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                validOptionNames.Add(option.Name);
+                if (!option.IsHidden)
+                {
+                    visibleOptionNames.Add(option.Name);
+                }
+            }
+        }
     }
 
     private static void AppendUnknownOptionError(
