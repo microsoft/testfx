@@ -85,9 +85,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// </summary>
     internal const string PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION";
 
-    // The handoff is an explicit allowlist: controller connect-back values, TRX/HangDump pipe endpoints,
-    // and Retry attempt/run correlation. These contain no user-provided data (unlike broader
-    // TESTINGPLATFORM_* values such as inline runsettings, which can carry secrets).
+    // The handoff is an explicit allowlist of protocol metadata: controller connect-back values,
+    // TRX/HangDump pipe endpoints, and Retry attempt/run correlation. Some correlation values may be
+    // supplied by CI or the user, but arbitrary environment values remain excluded because broader
+    // TESTINGPLATFORM_* values such as inline runsettings can carry secrets.
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
     private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     private const string LogicalRunIdEnvironmentVariableName = "TESTINGPLATFORM_LOGICAL_RUN_ID";
@@ -379,9 +380,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 #endif
 
-    // Selects the controller connect-back variables and the retry attempt marker from the
-    // platform-prepared environment. These are the values an AUMID-activated host needs and would not
-    // otherwise inherit; unrelated TESTINGPLATFORM_* values can contain user data and remain excluded.
+    // Selects the controller connect-back values, TRX/HangDump endpoints, and Retry attempt/run
+    // correlation metadata that an AUMID-activated host would not otherwise inherit. Unrelated
+    // environment values remain excluded because they can contain user data or secrets.
     internal static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
     {
         foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
