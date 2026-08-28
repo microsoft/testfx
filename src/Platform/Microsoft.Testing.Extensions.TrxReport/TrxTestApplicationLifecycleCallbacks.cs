@@ -14,6 +14,7 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
+    [UnsupportedOSPlatformGuard("android")]
     [UnsupportedOSPlatformGuard("browser")]
     [UnsupportedOSPlatformGuard("ios")]
     [UnsupportedOSPlatformGuard("tvos")]

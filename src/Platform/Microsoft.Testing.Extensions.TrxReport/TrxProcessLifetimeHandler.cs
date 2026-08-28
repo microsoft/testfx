@@ -118,6 +118,7 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
+    [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]

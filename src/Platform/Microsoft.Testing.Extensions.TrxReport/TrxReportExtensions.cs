@@ -76,6 +76,7 @@ public static class TrxReportExtensions
         artifactPostProcessingBuilder.Tools.AddTool(serviceProvider => toolTrxMergeFactory.CreateTool(serviceProvider.GetCommandLineOptions()));
     }
 
+    [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
