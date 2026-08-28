@@ -151,7 +151,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
                 ["TRXNAMEDPIPENAME"] = @"LOCAL\trx-pipe",
                 ["TESTINGPLATFORM_HANGDUMP_PIPENAME"] = @"LOCAL\hangdump-pipe",
                 ["TESTINGPLATFORM_TRX_TESTRUN_ID"] = "trx-run",
-                ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = "logical-run",
+                ["testingplatform_logical_run_id"] = "logical-run",
                 ["TESTINGPLATFORM_TESTCONFIGURATION"] = "secret",
             },
             workingDirectory: null);
@@ -164,7 +164,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual(@"LOCAL\trx-pipe", environment["TRXNAMEDPIPENAME"]);
         Assert.AreEqual(@"LOCAL\hangdump-pipe", environment["TESTINGPLATFORM_HANGDUMP_PIPENAME"]);
         Assert.AreEqual("trx-run", environment["TESTINGPLATFORM_TRX_TESTRUN_ID"]);
-        Assert.AreEqual("logical-run", environment["TESTINGPLATFORM_LOGICAL_RUN_ID"]);
+        Assert.AreEqual("logical-run", environment["testingplatform_logical_run_id"]);
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
     }
 }

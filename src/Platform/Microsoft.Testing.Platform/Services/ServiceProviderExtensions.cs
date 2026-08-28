@@ -198,7 +198,7 @@ public static class ServiceProviderExtensions
                 NamedPipeServerSecurity.AllApplicationPackagesSid));
         }
 
-        await logger.LogDebugAsync($"'{testHostLauncher.Uid}' authorized the following security identity/identities on the test host controller connection: {string.Join(", ", securityIdentities)}").ConfigureAwait(false);
+        await logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested the following validated security identity/identities for controller-side connections: {string.Join(", ", securityIdentities)}").ConfigureAwait(false);
         ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = securityIdentities;
         return securityIdentities;
     }

@@ -387,12 +387,12 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     {
         foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
         {
-            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.Ordinal)
-                || environmentVariable.Key is RetryAttemptEnvironmentVariableName
-                    or LogicalRunIdEnvironmentVariableName
-                    or TrxTestRunIdEnvironmentVariableName
-                    or TrxPipeEnvironmentVariableName
-                    or HangDumpPipeEnvironmentVariableName)
+            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, RetryAttemptEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, LogicalRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, TrxTestRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, HangDumpPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
             {
                 yield return environmentVariable;
             }
