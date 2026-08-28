@@ -177,3 +177,11 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Task 7: Monthly Activity issue #10381 (August 2026) still open and current - updated with this run's entry.
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-08-28 Notes
+- Task 2: dispatched explore-agent scan of Platform Services/Helpers/Capabilities, Adapter reflection, Assert.Fail/Inconclusive/ThrowsExactly/ReplaceNulls, Analyzers Helpers - all confirmed cold/startup/one-shot paths or already optimized (ReflectionOperations caching, ArtifactNamingService compiled regex). No new hot-path findings.
+- Task 4: no open PRs with "[perf-improver]" title prefix (search_pull_requests 0 results).
+- Task 5: no open performance-labeled issues found (search_issues label:performance is:open 0 results).
+- Task 7: Monthly Activity issue #10381 (August 2026) still open and current - updated with this run's entry. Reviewed comments - old, already reflected in backlog as won't-fix (DotnetTestHttpClient, OpenTelemetryResultHandler).
+- Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
+- Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
