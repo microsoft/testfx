@@ -150,17 +150,21 @@ public sealed class PackagedAppConnectBackHandshakeTests
                 ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2",
                 ["TRXNAMEDPIPENAME"] = @"LOCAL\trx-pipe",
                 ["TESTINGPLATFORM_HANGDUMP_PIPENAME"] = @"LOCAL\hangdump-pipe",
+                ["TESTINGPLATFORM_TRX_TESTRUN_ID"] = "trx-run",
+                ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = "logical-run",
                 ["TESTINGPLATFORM_TESTCONFIGURATION"] = "secret",
             },
             workingDirectory: null);
 
         var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
 
-        Assert.HasCount(4, environment);
+        Assert.HasCount(6, environment);
         Assert.AreEqual("controller-pipe", environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"]);
         Assert.AreEqual("2", environment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
         Assert.AreEqual(@"LOCAL\trx-pipe", environment["TRXNAMEDPIPENAME"]);
         Assert.AreEqual(@"LOCAL\hangdump-pipe", environment["TESTINGPLATFORM_HANGDUMP_PIPENAME"]);
+        Assert.AreEqual("trx-run", environment["TESTINGPLATFORM_TRX_TESTRUN_ID"]);
+        Assert.AreEqual("logical-run", environment["TESTINGPLATFORM_LOGICAL_RUN_ID"]);
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
     }
 }

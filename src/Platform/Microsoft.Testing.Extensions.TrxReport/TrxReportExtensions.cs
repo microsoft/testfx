@@ -92,7 +92,7 @@ public static class TrxReportExtensions
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
                 ILoggerFactory loggerFactory = serviceProvider.GetLoggerFactory();
-                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{endpoint.PipeName}");
+                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{endpoint.PipeName}'");
                 return new TrxProcessLifetimeHandler(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
@@ -111,7 +111,7 @@ public static class TrxReportExtensions
         builder.TestHostControllers.AddProcessLifetimeHandler(compositeLifeTimeHandler);
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider =>
         {
-            serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{endpoint.PipeName}");
+            serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{endpoint.PipeName}'");
             return new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), endpoint);
         });
     }
