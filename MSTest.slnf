@@ -26,6 +26,7 @@
       "test\\IntegrationTests\\TestAssets\\SampleProjectForAssemblyResolution\\SampleProjectForAssemblyResolution.csproj",
       "test\\IntegrationTests\\TestAssets\\TestIdProject.DefaultStrategy\\TestIdProject.DefaultStrategy.csproj",
       "test\\IntegrationTests\\TestAssets\\TestProject\\TestProjectForDiscovery.csproj",
+      "test\\Performance\\MSTest.Performance.Benchmarks\\MSTest.Performance.Benchmarks.csproj",
       "test\\Performance\\MSTest.Performance.Runner\\MSTest.Performance.Runner.csproj",
       "test\\UnitTests\\MSTest.Analyzers.UnitTests\\MSTest.Analyzers.UnitTests.csproj",
       "test\\UnitTests\\MSTestAdapter.PlatformServices.UnitTests\\MSTestAdapter.PlatformServices.UnitTests.csproj",

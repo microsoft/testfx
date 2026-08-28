@@ -2,68 +2,59 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
-using System.Text.Json;
+
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Performance.Runner.Steps;
 
 internal class PlainProcess : IStep<BuildArtifact, Files>
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     private readonly string _reportFileName;
     private readonly int _numberOfRun;
+    private readonly int _warmupCount;
     private readonly string _argument;
     private readonly CompressionLevel _compressionLevel;
 
     public string Description => "run plain Process.Start";
 
-    public PlainProcess(string reportFileName, int numberOfRun = 3, string argument = "", CompressionLevel compressionLevel = CompressionLevel.Fastest)
+    public PlainProcess(string reportFileName, int numberOfRun = 5, int warmupCount = 1, string argument = "", CompressionLevel compressionLevel = CompressionLevel.Fastest)
     {
         _reportFileName = reportFileName;
         _numberOfRun = numberOfRun;
+        _warmupCount = warmupCount;
         _argument = argument;
         _compressionLevel = compressionLevel;
     }
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        TestHost testHost = payload.TestHost
+            ?? throw new InvalidOperationException("A standalone process benchmark requires an MTP executable test host.");
+
         ProcessStartInfo processStartInfo =
-           new(payload.TestHost.FullName, _argument)
+           new(testHost.FullName, $"--no-ansi --progress off {_argument}".Trim())
            {
                UseShellExecute = false,
                RedirectStandardOutput = true,
                RedirectStandardError = true,
-               RedirectStandardInput = true,
+               WorkingDirectory = testHost.DirectoryName,
            };
 
-        Console.WriteLine($"Process command: '{processStartInfo.FileName} {processStartInfo.Arguments.Trim()}' for {_numberOfRun} times");
+        ProcessBenchmarkRunner.ConfigureEnvironment(processStartInfo);
+        await ProcessBenchmarkRunner.RunAsync(
+            processStartInfo,
+            payload,
+            context,
+            executionKind: "MTP standalone",
+            processResourceScope: "test host",
+            captureProcessResources: true,
+            numberOfRuns: _numberOfRun,
+            warmupCount: _warmupCount);
 
-        List<object> results = [];
-        for (int i = 0; i < _numberOfRun; i++)
+        if (string.Equals(Environment.GetEnvironmentVariable("MSTEST_PERFORMANCE_SKIP_ARCHIVE"), "1", StringComparison.Ordinal))
         {
-            long startTimestamp = Stopwatch.GetTimestamp();
-            using Process process = Process.Start(processStartInfo)!;
-            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
-            var result = new
-            {
-                ElapsedTime = Stopwatch.GetElapsedTime(startTimestamp),
-                TotalProcessorTime = totalProcessorTime,
-                Environment.ProcessorCount,
-                GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
-            };
-
-            results.Add(result);
+            return new Files([payload.ResultFilePath]);
         }
-
-        var report = new
-        {
-            PipelineName = (string)context.Properties["PipelineName"],
-            Measurements = results,
-        };
-
-        await File.WriteAllTextAsync(
-            Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"),
-            JsonSerializer.Serialize(report, JsonOptions));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
