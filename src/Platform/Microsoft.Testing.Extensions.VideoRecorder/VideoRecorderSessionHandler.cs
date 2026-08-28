@@ -55,6 +55,10 @@ internal sealed partial class VideoRecorderSessionHandler :
     private readonly List<TestRecord> _testRecords = [];
     private readonly Dictionary<string, DateTimeOffset> _inFlight = [];
 
+    // Incrementally maintained alongside _testRecords so TryPruneOldSegments (invoked on every
+    // test completion) doesn't have to re-filter the whole accumulated _testRecords list each time.
+    private readonly List<double> _failedWindows = [];
+
     private SessionUid? _sessionUid;
     private bool _anyTestFailed;
     private int _bufferDropWarned;
