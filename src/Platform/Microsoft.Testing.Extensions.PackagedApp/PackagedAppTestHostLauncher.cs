@@ -91,7 +91,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     // contain no user-provided data (unlike broader TESTINGPLATFORM_* variables such as inline
     // runsettings, which can carry secrets), and they are read after this extension's builder hook runs.
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
+    private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
+    private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
 
     private readonly string _testApplicationDirectory;
     private readonly Func<string, string?> _getEnvironmentVariable;
@@ -390,7 +392,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
         {
             if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.Ordinal)
-                || environmentVariable.Key == RetryAttemptEnvironmentVariableName)
+                || environmentVariable.Key is RetryAttemptEnvironmentVariableName
+                    or TrxPipeEnvironmentVariableName
+                    or HangDumpPipeEnvironmentVariableName)
             {
                 yield return environmentVariable;
             }
@@ -422,6 +426,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         {
             startInfo.Environment[environmentVariable.Key] = environmentVariable.Value;
         }
+
+        // The deployed child is the retry attempt itself. Prevent it from enabling this launcher again and
+        // recursively creating another controller/deployment layer when the parent was opted in with "always".
+        startInfo.Environment[LauncherModeEnvironmentVariable] = NeverMode;
 
         Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");

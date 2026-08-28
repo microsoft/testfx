@@ -61,12 +61,14 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string markerPath = Path.Combine(testHost.DirectoryName, "retry-deployment-basedir.txt");
+        string launcherModeMarkerPath = Path.Combine(testHost.DirectoryName, "retry-launcher-mode.txt");
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--retry-failed-tests 1",
             environmentVariables: new Dictionary<string, string?>
             {
                 ["PACKAGEDAPP_BASEDIR_MARKER"] = markerPath,
+                ["PACKAGEDAPP_LAUNCHER_MODE_MARKER"] = launcherModeMarkerPath,
                 [LauncherModeEnvironmentVariable] = "always",
             },
             cancellationToken: TestContext.CancellationToken);
@@ -77,6 +79,10 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
             NormalizeDirectory(testHost.DirectoryName),
             ReadMarkedDirectory(markerPath),
             "The retry orchestrator must delegate the attempt to the packaged-app launcher.");
+        Assert.AreEqual(
+            "never",
+            File.ReadAllText(launcherModeMarkerPath),
+            "The deployed retry child must not recursively enable the packaged-app launcher.");
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -155,6 +161,13 @@ public class Startup
         if (!string.IsNullOrEmpty(markerPath))
         {
             System.IO.File.WriteAllText(markerPath, AppContext.BaseDirectory);
+        }
+        string? launcherModeMarkerPath = Environment.GetEnvironmentVariable("PACKAGEDAPP_LAUNCHER_MODE_MARKER");
+        if (!string.IsNullOrEmpty(launcherModeMarkerPath))
+        {
+            System.IO.File.WriteAllText(
+                launcherModeMarkerPath,
+                Environment.GetEnvironmentVariable("TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER") ?? string.Empty);
         }
 
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
