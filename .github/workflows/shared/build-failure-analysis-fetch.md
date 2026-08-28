@@ -531,7 +531,7 @@ jobs:
           # was never established. Probe for the `records` array first and
           # report an explicit unknown when it isn't there.
           timeline_ok=0
-          if printf '%s' "${timeline_json}" | jq -e 'type == "object" and has("records")' >/dev/null 2>&1; then
+          if printf '%s' "${timeline_json}" | jq -e 'type == "object" and (.records | type == "array")' >/dev/null 2>&1; then
             timeline_ok=1
           fi
           if [ "${timeline_ok}" -eq 1 ]; then
@@ -597,6 +597,9 @@ jobs:
           # pre-created symlink, or a second job on the same runner, away from being
           # someone else's file.
           ZIP_TMP=$(mktemp) || { echo "::warning::Could not create a temporary file for downloads."; emit_none; }
+          # A private extraction directory, for the same reason as ZIP_TMP: a fixed
+          # path is another job's directory on a runner we do not have to ourselves.
+          AX_DIR=$(mktemp -d) || { echo "::warning::Could not create a temporary directory for extraction."; emit_none; }
           # Bound the work before starting: a pipeline change (or repeated leg
           # retries) could grow the matched set well past today's count. Refuse
           # rather than process a prefix of the list, because a partial view is
@@ -622,10 +625,11 @@ jobs:
             ai=$((ai + 1))
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
             [ -z "${url}" ] && { echo "::warning::No download URL for ${name}."; continue; }
-            rm -rf /tmp/ax "${ZIP_TMP}"
-            mkdir -p /tmp/ax
+            find "${AX_DIR:?}" -mindepth 1 -delete
+            : > "${ZIP_TMP}"
             # Hard-cap the bytes written to disk regardless of Content-Length:
-            # stream through `head -c` (cap + 1) and bound total time. This
+            # `ulimit -f` bounds what this subshell may write, and the size check
+            # below is authoritative. Total time is bounded too. This
             # closes the gap where `curl --max-filesize` alone would let a
             # length-less response write unbounded data before any post-check.
             #
@@ -662,18 +666,27 @@ jobs:
             # Content-Length; the size check below is authoritative. The block count is
             # rounded UP so any positive ZIP_CAP still buys at least one block. SIGXFSZ
             # is ignored so hitting the cap is an ordinary write error.
-            rm -f "${ZIP_TMP}"
             (
-              ulimit -f $(( (ZIP_CAP + 511) / 512 ))
+              # Fail the leg rather than the backstop: if the shell will not apply
+              # the limit, downloading anyway would leave a response with no usable
+              # Content-Length free to fill the disk before the size check below runs.
+              ulimit -f $(( (ZIP_CAP + 511) / 512 )) || exit 1
               trap '' XFSZ
               timeout "${TIME_LEFT}" curl -sSL --fail --retry 3 --retry-delay 2 \
                 --connect-timeout 15 --max-time "${ATTEMPT_SECONDS}" \
                 --retry-max-time "${TIME_LEFT}" -o "${ZIP_TMP}" "${url}"
             ) 2>/dev/null
+            curl_rc=$?
             ZIP_BYTES=$(stat -c%s "${ZIP_TMP}" 2>/dev/null || echo 0)
             # Charge the budget with the bytes that actually crossed the wire,
             # including those of an artifact that is about to be skipped.
             TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
+            # A timed-out, killed or size-limited transfer can still leave a file that
+            # happens to parse as a ZIP; without this the leg would be accepted from a
+            # truncated download. Skipping fails closed via the completeness check.
+            if [ "${curl_rc}" -ne 0 ]; then
+              echo "::warning::Skipping ${name}: download failed or was truncated (curl exit ${curl_rc})."; continue
+            fi
             if [ "${ZIP_BYTES}" -eq 0 ]; then
               echo "::warning::Skipping ${name}: empty or failed download."; continue
             fi
@@ -718,12 +731,12 @@ jobs:
             # the reader chasing a corrupt-archive theory that isn't there. Any
             # other non-zero exit (corrupt archive, timeout) is a real failure.
             #
-            # Both cases `continue`, so nothing was written to /tmp/ax and the
+            # Both cases `continue`, so nothing was written to "${AX_DIR}" and the
             # uncompressed budget below is left untouched. Charging it for an
             # archive that extracted nothing would let one large binlog-free
             # artifact push a genuinely useful later leg past MAX_TOTAL_BYTES.
             uz=0
-            timeout 120 unzip -o "${ZIP_TMP}" '*.binlog' -d /tmp/ax >/dev/null 2>&1 || uz=$?
+            timeout 120 unzip -o "${ZIP_TMP}" '*.binlog' -d "${AX_DIR}" >/dev/null 2>&1 || uz=$?
             if [ "${uz}" -eq 11 ]; then
               echo "::warning::${name}: published logs contain no binlog; nothing to analyse from this leg."; continue
             fi
@@ -754,10 +767,11 @@ jobs:
               else
                 echo "::warning::Failed to stage ${bl}; skipping."
               fi
-            done < <(find /tmp/ax -type f -name '*.binlog')
+            done < <(find "${AX_DIR}" -type f -name '*.binlog')
             # This leg produced at least one usable binlog.
             [ "${leg_staged}" -eq 1 ] && staged_legs=$((staged_legs + 1))
           done
+          rm -rf "${AX_DIR:?}" "${ZIP_TMP}"
           echo "Extracted ${count} binlog(s) from ${staged_legs}/${#names[@]} legs into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
           [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
