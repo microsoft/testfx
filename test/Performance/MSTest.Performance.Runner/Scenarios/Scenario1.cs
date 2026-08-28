@@ -146,7 +146,7 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
 
         context.AddDisposable(generator);
         return new SingleProject(
-            ["net9.0"],
+            [_tfm],
             generator,
             nameof(Scenario1),
             _testPlatform,

@@ -48,6 +48,12 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        if (_buildConfiguration != payload.BuildConfiguration)
+        {
+            throw new InvalidOperationException(
+                $"The dotnet test configuration '{_buildConfiguration}' must match the built configuration '{payload.BuildConfiguration}'.");
+        }
+
         string root = RootFinder.Find();
         string dotnet = Path.Combine(root, ".dotnet", $"dotnet{Constants.ExecutableExtension}");
         string projectDir = payload.TestAsset.TargetAssetPath;

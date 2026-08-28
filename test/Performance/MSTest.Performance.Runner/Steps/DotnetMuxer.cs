@@ -28,21 +28,24 @@ internal class DotnetMuxer : IStep<SingleProject, BuildArtifact>
             ? TestHost.LocateFrom(payload.TestAsset.TargetAssetPath, payload.AssetName, payload.Tfms.Single(), buildConfiguration: _buildConfiguration)
             : null;
 
-        return new BuildArtifact(testHost, payload);
+        return new BuildArtifact(testHost, payload, _buildConfiguration);
     }
 }
 
 internal class BuildArtifact : IPayload
 {
-    public BuildArtifact(TestHost? testHost, SingleProject project)
+    public BuildArtifact(TestHost? testHost, SingleProject project, BuildConfiguration buildConfiguration)
     {
         TestHost = testHost;
         Project = project;
+        BuildConfiguration = buildConfiguration;
     }
 
     public TestHost? TestHost { get; }
 
     public SingleProject Project { get; }
+
+    public BuildConfiguration BuildConfiguration { get; }
 
     public TestAsset TestAsset => Project.TestAsset;
 

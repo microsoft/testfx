@@ -23,7 +23,8 @@ Build the repository packages before running the generated test assets:
 Each pipeline performs one warmup and five measured runs. A run is accepted only
 when the process exits successfully and reports the expected number of passing
 tests. `Result.json` contains every sample plus median and interquartile timing,
-CPU time, peak working set, runtime and machine metadata.
+CPU time, peak working set, target framework, build configuration, runner
+runtime, CI image, and machine metadata.
 
 CPU and peak-working-set values are reported only for standalone test-host
 processes. They are `null` for `dotnet test`, because those values would describe
@@ -38,9 +39,10 @@ The scenario matrix covers:
 - plain, data-driven, per-test lifecycle, and per-class lifecycle workloads;
 - method-level and class-level parallel execution.
 
-Compare results only when the OS, architecture, processor count, runtime,
-configuration, worker count, and scenario all match. Prefer median and
-interquartile range over a single elapsed-time sample.
+Compare results only when the OS and CI image, architecture, processor count,
+runner runtime, target framework, configuration, worker count, and scenario all
+match. The rolling baseline enforces these environment dimensions. Prefer
+median and interquartile range over a single elapsed-time sample.
 
 Set `MSTEST_PERFORMANCE_SKIP_ARCHIVE=1` to keep only the stable
 `Results/<pipeline>/Result.json` outputs and skip compression of generated test

@@ -34,7 +34,7 @@ internal sealed class DotnetPublisher : IStep<SingleProject, BuildArtifact>
             Verb.publish,
             BuildConfiguration.Release);
 
-        return new BuildArtifact(testHost, payload);
+        return new BuildArtifact(testHost, payload, BuildConfiguration.Release);
     }
 
     private static void EnsureVsWhereOnPath()

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 TIME_PATTERN = re.compile(
     r"^(?:(?P<days>\d+)\.)?(?P<hours>\d{2}):(?P<minutes>\d{2}):"
     r"(?P<seconds>\d{2})(?:\.(?P<fraction>\d{1,7}))?$"
@@ -32,9 +32,11 @@ def parse_duration(value: str) -> float:
     return days * 86400 + hours * 3600 + minutes * 60 + seconds + ticks / 10_000_000
 
 
-def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]], int]:
+def load_current_results(
+    current_dir: Path,
+) -> tuple[dict[str, dict[str, float]], dict[str, object]]:
     pipelines: dict[str, dict[str, float]] = {}
-    processor_counts: set[int] = set()
+    environment: dict[str, object] | None = None
     result_files = sorted(current_dir.rglob("Result.json"))
     if not result_files:
         raise ValueError(f"No Result.json files found under {current_dir}")
@@ -56,7 +58,6 @@ def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]]
         if isinstance(summary, dict):
             elapsed_milliseconds = summary.get("MedianElapsedMilliseconds")
             processor_milliseconds = summary.get("MedianProcessorMilliseconds")
-            processor_count = report.get("ProcessorCount")
             if (
                 not isinstance(elapsed_milliseconds, (int, float))
                 or isinstance(elapsed_milliseconds, bool)
@@ -64,9 +65,6 @@ def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]]
                 or elapsed_milliseconds <= 0
             ):
                 raise ValueError(f"{result_file} has an invalid elapsed-time median")
-            if not isinstance(processor_count, int) or processor_count <= 0:
-                raise ValueError(f"{result_file} has an invalid processor count")
-
             metrics = {"elapsedTimeSeconds": elapsed_milliseconds / 1000}
             if processor_milliseconds is not None:
                 if (
@@ -78,7 +76,24 @@ def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]]
                     raise ValueError(f"{result_file} has an invalid CPU-time median")
                 metrics["totalProcessorTimeSeconds"] = processor_milliseconds / 1000
 
-            processor_counts.add(processor_count)
+            report_environment = {
+                "operatingSystem": report.get("OperatingSystem"),
+                "processArchitecture": report.get("ProcessArchitecture"),
+                "processorCount": report.get("ProcessorCount"),
+                "runnerRuntimeVersion": report.get("RunnerRuntimeVersion"),
+                "targetFramework": report.get("TargetFramework"),
+                "configuration": report.get("Configuration"),
+                "ciImage": report.get("CiImage"),
+                "ciImageVersion": report.get("CiImageVersion"),
+            }
+            validate_environment(report_environment, str(result_file))
+            if environment is None:
+                environment = report_environment
+            elif environment != report_environment:
+                raise ValueError(
+                    f"{result_file} environment does not match the other current results"
+                )
+
             pipelines[pipeline_name] = metrics
             continue
 
@@ -88,25 +103,68 @@ def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]]
 
         elapsed_times: list[float] = []
         processor_times: list[float] = []
+        legacy_processor_counts: set[int] = set()
         for measurement in measurements:
             if not isinstance(measurement, dict):
                 raise ValueError(f"{result_file} contains an invalid measurement")
 
             elapsed_times.append(parse_duration(measurement["ElapsedTime"]))
             processor_times.append(parse_duration(measurement["TotalProcessorTime"]))
-            processor_counts.add(int(measurement["ProcessorCount"]))
+            legacy_processor_counts.add(int(measurement["ProcessorCount"]))
+
+        if len(legacy_processor_counts) != 1:
+            raise ValueError(
+                f"{result_file} contains multiple processor counts: "
+                f"{sorted(legacy_processor_counts)}"
+            )
+        report_environment = {
+            "operatingSystem": "unknown",
+            "processArchitecture": "unknown",
+            "processorCount": legacy_processor_counts.pop(),
+            "runnerRuntimeVersion": "unknown",
+            "targetFramework": "unknown",
+            "configuration": "unknown",
+            "ciImage": None,
+            "ciImageVersion": None,
+        }
+        if environment is None:
+            environment = report_environment
+        elif environment != report_environment:
+            raise ValueError(
+                f"{result_file} environment does not match the other current results"
+            )
 
         pipelines[pipeline_name] = {
             "elapsedTimeSeconds": statistics.median(elapsed_times),
             "totalProcessorTimeSeconds": statistics.median(processor_times),
         }
 
-    if len(processor_counts) != 1:
-        raise ValueError(
-            f"Expected one processor count across current results, found {sorted(processor_counts)}"
-        )
+    if environment is None:
+        raise ValueError(f"No usable Result.json files found under {current_dir}")
 
-    return pipelines, processor_counts.pop()
+    return pipelines, environment
+
+
+def validate_environment(environment: dict[str, object], source: str) -> None:
+    processor_count = environment.get("processorCount")
+    if not isinstance(processor_count, int) or processor_count <= 0:
+        raise ValueError(f"{source} has an invalid processor count")
+
+    for field in (
+        "operatingSystem",
+        "processArchitecture",
+        "runnerRuntimeVersion",
+        "targetFramework",
+        "configuration",
+    ):
+        value = environment.get(field)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{source} has an invalid {field}")
+
+    for field in ("ciImage", "ciImageVersion"):
+        value = environment.get(field)
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(f"{source} has an invalid {field}")
 
 
 def load_baseline(path: Path) -> list[dict]:
@@ -129,11 +187,10 @@ def load_baseline(path: Path) -> list[dict]:
             if not isinstance(run, dict):
                 raise ValueError(f"Baseline run {run_index} must be an object")
 
-            processor_count = run.get("processorCount")
-            if not isinstance(processor_count, int) or processor_count <= 0:
-                raise ValueError(
-                    f"Baseline run {run_index} has an invalid processor count"
-                )
+            environment = run.get("environment")
+            if not isinstance(environment, dict):
+                raise ValueError(f"Baseline run {run_index} has no environment")
+            validate_environment(environment, f"Baseline run {run_index}")
 
             pipelines = run.get("pipelines")
             if not isinstance(pipelines, dict):
@@ -181,11 +238,14 @@ def load_baseline(path: Path) -> list[dict]:
 
 
 def metric_baseline(
-    runs: list[dict], pipeline_name: str, metric_name: str, processor_count: int
+    runs: list[dict],
+    pipeline_name: str,
+    metric_name: str,
+    environment: dict[str, object],
 ) -> list[float]:
     values = []
     for run in runs:
-        if run.get("processorCount") != processor_count:
+        if run.get("environment") != environment:
             continue
 
         pipeline = run.get("pipelines", {}).get(pipeline_name)
@@ -206,7 +266,7 @@ def format_change(value: float | None) -> str:
 def build_summary(
     pipelines: dict[str, dict[str, float]],
     runs: list[dict],
-    processor_count: int,
+    environment: dict[str, object],
     threshold_percent: float,
     minimum_baseline_runs: int,
 ) -> tuple[str, list[str]]:
@@ -214,7 +274,11 @@ def build_summary(
         "## PlainProcess performance regression report",
         "",
         f"Rolling baseline threshold: **>{threshold_percent:g}%**; "
-        f"runner processor count: **{processor_count}**.",
+        f"environment: **{environment['operatingSystem']} / "
+        f"{environment['processArchitecture']} / "
+        f"{environment['processorCount']} processors / "
+        f"{environment['targetFramework']} / "
+        f"{environment['configuration']}**.",
         "",
         "| Pipeline | Wall clock | Baseline | Change | CPU time | Baseline | Change | Status |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
@@ -224,12 +288,12 @@ def build_summary(
     for pipeline_name in sorted(pipelines):
         current = pipelines[pipeline_name]
         elapsed_values = metric_baseline(
-            runs, pipeline_name, "elapsedTimeSeconds", processor_count
+            runs, pipeline_name, "elapsedTimeSeconds", environment
         )
         current_processor_time = current.get("totalProcessorTimeSeconds")
         processor_values = (
             metric_baseline(
-                runs, pipeline_name, "totalProcessorTimeSeconds", processor_count
+                runs, pipeline_name, "totalProcessorTimeSeconds", environment
             )
             if current_processor_time is not None
             else []
@@ -297,7 +361,7 @@ def write_updated_baseline(
     prior_runs: list[dict],
     run_id: str,
     created_at: str,
-    processor_count: int,
+    environment: dict[str, object],
     pipelines: dict[str, dict[str, float]],
     window_size: int,
 ) -> None:
@@ -306,7 +370,7 @@ def write_updated_baseline(
         {
             "runId": run_id,
             "createdAt": created_at,
-            "processorCount": processor_count,
+            "environment": environment,
             "pipelines": pipelines,
         }
     )
@@ -340,7 +404,7 @@ def main() -> int:
     if args.window_size < args.minimum_baseline_runs:
         parser.error("--window-size must be at least --minimum-baseline-runs")
 
-    pipelines, processor_count = load_current_results(args.current_dir)
+    pipelines, environment = load_current_results(args.current_dir)
     prior_runs = [
         run
         for run in load_baseline(args.baseline)
@@ -349,7 +413,7 @@ def main() -> int:
     summary, regressions = build_summary(
         pipelines,
         prior_runs,
-        processor_count,
+        environment,
         args.threshold_percent,
         args.minimum_baseline_runs,
     )
@@ -360,7 +424,7 @@ def main() -> int:
         prior_runs,
         args.run_id,
         args.created_at,
-        processor_count,
+        environment,
         pipelines,
         args.window_size,
     )
