@@ -307,7 +307,8 @@ stages:
   condition: and(succeeded(), not(and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
   jobs:
 
-  # Lightweight job that classifies the PR diff into product, samples, and XML-documentation-only
+  # Lightweight job that classifies the PR diff into product, samples, infrastructure-only,
+  # and XML-documentation-only
   # scopes and exposes them as output variables. Downstream jobs use them to skip work that
   # the diff does not touch (so e.g. a samples-only Dependabot PR does not spin up
   # the full Windows/Linux/macOS product matrix, and a product-only PR does not run
@@ -315,10 +316,10 @@ stages:
   #
   # Fail-safe behaviour:
   #   - Non-PR triggers (manual queue, scheduled, etc.) leave SYSTEM_PULLREQUEST_TARGETBRANCH
-  #     empty, so we emit "true" for both change flags and "false" for XML-documentation-only.
+  #     empty, so we emit "true" for both change flags and "false" for the optimized scopes.
   #   - If the diff is empty (e.g. force-push to the same SHA), we also run everything.
-  #   - Downstream conditions treat missing product/sample outputs as changed and a missing
-  #     XML-documentation-only output as false, so classification uncertainty runs full validation.
+  #   - Downstream conditions treat missing product/sample outputs as changed and missing
+  #     optimized-scope outputs as false, so classification uncertainty runs full validation.
   - job: DetectChanges
     displayName: Detect changed paths
     pool:
@@ -337,11 +338,12 @@ stages:
         # ADO exposes the target branch as a full ref (e.g. "refs/heads/main"); strip the
         # "refs/heads/" prefix so it can be combined with the "origin/" remote-tracking prefix.
         target="${target#refs/heads/}"
+        hasProduct=true
+        hasSamples=true
+        infrastructureOnly=false
+        xmlDocsOnly=false
         if [[ -z "${target}" ]]; then
           echo "Not a PR build (SYSTEM_PULLREQUEST_TARGETBRANCH is empty); running all jobs."
-          hasProduct=true
-          hasSamples=true
-          xmlDocsOnly=false
         else
           echo "PR target branch: ${target}"
           git fetch --no-tags --depth=200 origin "${target}" 2>/dev/null \
@@ -354,30 +356,37 @@ stages:
 
           if [[ -z "${files}" ]]; then
             echo "No files changed in diff; running all jobs."
-            hasProduct=true
-            hasSamples=true
-            xmlDocsOnly=false
           else
-            # A file is a "samples-affecting" change if it lives under samples/** or it is
-            # one of the eng/ scripts that drives the samples build (build-samples.ps1).
-            # Everything else is treated as a product change.
-            samples_pattern='^(samples/|eng/build-samples\.ps1$)'
-            if echo "${files}" | grep -Eqv "${samples_pattern}"; then
-              hasProduct=true
+            # Never let a PR classify itself with code from its own branch. The trusted target-branch
+            # classifier contains a narrow infrastructure allowlist; missing, broken, unknown, and empty
+            # classifications all retain the full-validation defaults above.
+            buildClassifier="${AGENT_TEMPDIRECTORY}/classify-build-change.ps1"
+            classificationSucceeded=false
+            if ! git show "origin/${target}:eng/classify-build-change.ps1" > "${buildClassifier}"; then
+              echo "##vso[task.logissue type=warning]The trusted target branch does not contain the build change classifier; using full validation."
+            elif ! pwsh -NoProfile -File "${buildClassifier}" -SelfTest; then
+              echo "##vso[task.logissue type=warning]The trusted build change classifier failed its self-tests; using full validation."
+            elif ! classification="$(pwsh -NoProfile -File "${buildClassifier}" -Base "${base}" -Head HEAD -Repository "${BUILD_SOURCESDIRECTORY}")"; then
+              echo "##vso[task.logissue type=warning]Build change classification did not run; using full validation."
             else
-              hasProduct=false
-            fi
-            if echo "${files}" | grep -Eq "${samples_pattern}"; then
-              hasSamples=true
-            else
-              hasSamples=false
+              classification_pattern='^hasProductChanges=(true|false);hasSamplesChanges=(true|false);infrastructureOnly=(true|false)$'
+              if [[ "${classification}" =~ ${classification_pattern} ]]; then
+                hasProduct="${BASH_REMATCH[1]}"
+                hasSamples="${BASH_REMATCH[2]}"
+                infrastructureOnly="${BASH_REMATCH[3]}"
+                classificationSucceeded=true
+              else
+                echo "##vso[task.logissue type=warning]Build change classification returned an unexpected value; using full validation."
+              fi
             fi
 
             # Never let a PR classify itself with code from its own branch. Extract the classifier from the
             # trusted target branch and fail closed when it is missing, broken, or returns an unexpected value.
             classifier="${AGENT_TEMPDIRECTORY}/classify-xml-doc-change.ps1"
             xmlDocsOnly=false
-            if ! git show "origin/${target}:eng/classify-xml-doc-change.ps1" > "${classifier}"; then
+            if [[ "${classificationSucceeded}" != "true" ]]; then
+              echo "Skipping XML documentation classification because build change classification was not trusted."
+            elif ! git show "origin/${target}:eng/classify-xml-doc-change.ps1" > "${classifier}"; then
               echo "##vso[task.logissue type=warning]The trusted target branch does not contain the XML documentation classifier; using full validation."
             elif ! pwsh -NoProfile -File "${classifier}" -SelfTest; then
               echo "##vso[task.logissue type=warning]The trusted XML documentation classifier failed its self-tests; using full validation."
@@ -394,9 +403,11 @@ stages:
 
         echo "hasProductChanges=${hasProduct}"
         echo "hasSamplesChanges=${hasSamples}"
+        echo "infrastructureOnly=${infrastructureOnly}"
         echo "xmlDocsOnly=${xmlDocsOnly}"
         echo "##vso[task.setvariable variable=hasProductChanges;isOutput=true]${hasProduct}"
         echo "##vso[task.setvariable variable=hasSamplesChanges;isOutput=true]${hasSamples}"
+        echo "##vso[task.setvariable variable=infrastructureOnly;isOutput=true]${infrastructureOnly}"
         echo "##vso[task.setvariable variable=xmlDocsOnly;isOutput=true]${xmlDocsOnly}"
       name: detect
       displayName: Classify changed files
@@ -417,9 +428,10 @@ stages:
       jobs:
       - job: Windows
         dependsOn: DetectChanges
-        # Release normally runs full validation and coverage for every PR, but XML-documentation-only PRs use
-        # it only for compiler and package validation. Debug remains skippable for samples-only and XML-doc-only PRs.
-        condition: and(succeededOrFailed(), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
+        # Release normally runs full validation and coverage for every non-infrastructure PR, but
+        # XML-documentation-only PRs use it only for compiler and package validation. Debug remains
+        # skippable for samples-only and XML-doc-only PRs.
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
         # A completely cold acceptance cache builds every generated fixture. Keep enough headroom
         # for that bootstrap path; warm PR runs remain substantially faster and the test command
         # retains its existing failure semantics.

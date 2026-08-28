@@ -35,7 +35,7 @@ internal sealed class ConsoleTestHost(
 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> _)
     {
         var consoleRunStarted = Stopwatch.StartNew();
         DateTimeOffset consoleRunStart = _clock.UtcNow;

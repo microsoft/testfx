@@ -35,12 +35,108 @@ public sealed class MtpServerClientTests
         Assert.AreEqual(4242, capabilities.ServerProcessId);
         Assert.AreEqual("FakeMtpServer", capabilities.ServerName);
         Assert.AreEqual("1.2.3", capabilities.ServerVersion);
+        Assert.AreEqual(JsonRpcProtocolVersions.Current, capabilities.ProtocolVersion);
         Assert.IsTrue(capabilities.SupportsDiscovery);
         Assert.IsTrue(capabilities.MultiRequestSupport);
         Assert.IsFalse(capabilities.VSTestProviderSupport);
         Assert.IsTrue(capabilities.SupportsAttachments);
         Assert.IsFalse(capabilities.MultiConnectionProvider);
         Assert.AreSame(capabilities, client.Capabilities);
+
+        InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreSequenceEqual(JsonRpcProtocolVersions.Supported, initializeArgs.ProtocolVersions);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_LegacyServerWithoutProtocolVersion_Succeeds()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.IsNull(capabilities.ProtocolVersion);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_LegacyServerWithoutSupportedVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = ["2.0.0"],
+        });
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcProtocolVersions.V1, exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_UnsupportedNegotiatedProtocolVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = "2.0.0" };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains("2.0.0", exception.Message);
+        Assert.IsNull(client.Capabilities);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_EmptySupportedVersions_AcceptsLegacyVersion()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            SupportedProtocolVersions = [],
+        });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(
+            client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(JsonRpcProtocolVersions.V1, capabilities.ProtocolVersion);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_NonStringProtocolVersion_Throws()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponseOverride = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.ProcessId] = 4242,
+            [JsonRpcStrings.ServerInfo] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Name] = "FakeMtpServer",
+                [JsonRpcStrings.Version] = "1.2.3",
+            },
+            [JsonRpcStrings.Capabilities] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = new Dictionary<string, object?>
+                {
+                    [JsonRpcStrings.SupportsDiscovery] = true,
+                    [JsonRpcStrings.MultiRequestSupport] = true,
+                    [JsonRpcStrings.VSTestProviderSupport] = false,
+                    [JsonRpcStrings.AttachmentsSupport] = true,
+                    [JsonRpcStrings.MultiConnectionProvider] = false,
+                },
+            },
+            [JsonRpcStrings.ProtocolVersion] = 1,
+        };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
+            () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.Contains(JsonRpcStrings.ProtocolVersion, exception.Message);
+        Assert.IsNull(client.Capabilities);
     }
 
     [TestMethod]
@@ -415,6 +511,25 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task RunTestsAsync_NumericStringResponseId_DoesNotCompleteNumericRequest()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        RequestMessage request = await server.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout).ConfigureAwait(false);
+        Task<MtpLogEventArgs> responseProcessed = WaitForEventAsync<MtpLogEventArgs>(handler => client.LogReceived += handler);
+
+        await server.SendRunResponseAsync(request, useStringId: true).ConfigureAwait(false);
+        await server.SendLogAsync("response barrier").ConfigureAwait(false);
+        _ = await WithTimeoutAsync(responseProcessed).ConfigureAwait(false);
+        Assert.IsFalse(runTask.IsCompleted);
+
+        await server.SendRunResponseAsync(request, useStringId: false).ConfigureAwait(false);
+        _ = await WithTimeoutAsync(runTask).ConfigureAwait(false);
+    }
+
+    [TestMethod]
     public async Task ReadLoop_MalformedFrame_FailsPendingRequestWithClientException()
     {
         using FakeMtpServer server = new() { WithholdRunResponse = true };
@@ -455,6 +570,18 @@ public sealed class MtpServerClientTests
         ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
 
         Assert.IsNull(response.Result);
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_NumericStringId_PreservesResponseIdRepresentation()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        ResponseMessage response = await WithTimeoutAsync(
+            server.SendServerRequestAsync(ClientAttachDebuggerMethod, useStringId: true)).ConfigureAwait(false);
+
+        Assert.AreEqual(response.Id.ToString(CultureInfo.InvariantCulture), response.StringId);
     }
 
     [TestMethod]

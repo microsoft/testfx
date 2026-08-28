@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 15
+    labels:
+      - dependencies
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
@@ -16,6 +18,8 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    labels:
+      - dependencies
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
@@ -27,6 +31,8 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
+    labels:
+      - dependencies
     ignore:
       - dependency-name: '*'
         update-types:
@@ -36,6 +42,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    labels:
+      - dependencies
     ignore:
       # The github/gh-aw-actions/* and github/gh-aw/actions/setup actions are
       # pinned by `gh aw compile` and

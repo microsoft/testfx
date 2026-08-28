@@ -105,6 +105,297 @@ public sealed class FormatterUtilitiesTests
     }
 
     [TestMethod]
+    public void CanDeserializeNumericStringRequestId()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": "42",
+                "method": "testing/unknown"
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        Assert.AreEqual(42, request.Id);
+        Assert.AreEqual("42", request.StringId);
+    }
+
+    [DataRow("1.0", 1)]
+    [DataRow("1e0", 1)]
+    [DataRow("-2.000", -2)]
+    [TestMethod]
+    public void CanDeserializeIntegralNumericRequestId(string serializedId, int expectedId)
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": {{serializedId}},
+                "method": "testing/unknown"
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        Assert.AreEqual(expectedId, request.Id);
+        Assert.IsNull(request.StringId);
+    }
+
+    [DataRow("1.00000000000000001")]
+    [DataRow("1.0000000000000000000000000000001")]
+    [DataRow("1e-1")]
+    [DataRow("2147483648.0")]
+    [TestMethod]
+    public void RejectsNonIntegralOrOutOfRangeNumericRequestId(string serializedId)
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": {{serializedId}},
+                "method": "testing/unknown"
+            }
+            """));
+
+    [TestMethod]
+    public async Task NumericStringId_IsPreservedInResponsesAndErrors()
+    {
+        ResponseMessage response = new(42, Result: null) { StringId = "42" };
+        ErrorMessage error = new(42, ErrorCodes.InvalidRequest, "invalid", Data: null) { StringId = "42" };
+
+        string serializedResponse = (await _formatter.SerializeAsync(response)).Replace(" ", string.Empty);
+        string serializedError = (await _formatter.SerializeAsync(error)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"id\":\"42\"", serializedResponse);
+        Assert.Contains("\"id\":\"42\"", serializedError);
+    }
+
+    [TestMethod]
+    public void CanDeserializeNumericStringCancellationId()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "method": "$/cancelRequest",
+                "params": {
+                    "id": "42"
+                }
+            }
+            """);
+
+        NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(message);
+        CancelRequestArgs args = Assert.IsInstanceOfType<CancelRequestArgs>(notification.Params);
+        Assert.AreEqual(42, args.CancelRequestId);
+        Assert.AreEqual("42", args.StringId);
+    }
+
+    [TestMethod]
+    public void CanDeserializeIntegralNumericCancellationId()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "method": "$/cancelRequest",
+                "params": {
+                    "id": 42.0
+                }
+            }
+            """);
+
+        NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(message);
+        CancelRequestArgs args = Assert.IsInstanceOfType<CancelRequestArgs>(notification.Params);
+        Assert.AreEqual(42, args.CancelRequestId);
+        Assert.IsNull(args.StringId);
+    }
+
+    [TestMethod]
+    public void NullRequestId_IsRejected()
+        => Assert.ThrowsExactly<MessageFormatException>(() => Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": null,
+                "method": "testing/unknown"
+            }
+            """));
+
+    [TestMethod]
+    public void DeserializeInitializeRequest_NullProtocolVersions_UsesLegacyNegotiation()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "test-client", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": false
+                        }
+                    },
+                    "protocolVersions": null
+                }
+            }
+            """);
+
+        InitializeRequestArgs request = Assert.IsInstanceOfType<RequestMessage>(message).Params
+            as InitializeRequestArgs
+            ?? throw new InvalidOperationException("Expected typed initialize request arguments.");
+        Assert.IsNull(request.ProtocolVersions);
+    }
+
+    [DataRow("\"1.0.0\"")]
+    [DataRow("[1]")]
+    [DataRow("[null]")]
+    [TestMethod]
+    public void DeserializeInitializeRequest_InvalidProtocolVersions_CapturesInvalidParams(string protocolVersions)
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "test-client", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": false
+                        }
+                    },
+                    "protocolVersions": {{protocolVersions}}
+                }
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        InvalidRequestParamsArgs invalidParams = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalidParams.ErrorCode);
+    }
+
+    [DataRow(JsonRpcMethods.Initialize)]
+    [DataRow(JsonRpcMethods.TestingDiscoverTests)]
+    [DataRow(JsonRpcMethods.TestingRunTests)]
+    [DataRow(JsonRpcMethods.CancelRequest)]
+    [TestMethod]
+    public void DeserializeKnownRequest_MissingParams_CapturesInvalidParams(string method)
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "{{method}}"
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        InvalidRequestParamsArgs invalidParams = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalidParams.ErrorCode);
+    }
+
+    [TestMethod]
+    public void DeserializeUnknownNotification_NonObjectParams_DropsParams()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "method": "testing/unknown",
+                "params": "not-an-object"
+            }
+            """);
+
+        Assert.IsNull(Assert.IsInstanceOfType<NotificationMessage>(message).Params);
+    }
+
+    [DataRow("\"filter\": 42")]
+    [DataRow("\"tests\": \"not-an-array\"")]
+    [DataRow("\"tests\": [42]")]
+    [DataRow("\"tests\": [{}]")]
+    [DataRow("\"tests\": [{\"uid\": 42, \"display-name\": \"Test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": null, \"display-name\": \"Test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": null}]")]
+    [DataRow("\"tests\": [{\"uid\": \"\", \"display-name\": \"Test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"   \", \"display-name\": \"Test\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": \"Test\", \"location.file\": null}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": \"Test\", \"location.file\": \"file\", \"location.line-start\": null, \"location.line-end\": 2}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": \"Test\", \"location.file\": \"file\"}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": \"Test\", \"location.file\": \"file\", \"location.line-start\": 1}]")]
+    [DataRow("\"tests\": [{\"uid\": \"test\", \"display-name\": \"Test\", \"location.line-start\": 1, \"location.line-end\": 2}]")]
+    [TestMethod]
+    public void DeserializeRunRequest_InvalidOptionalPropertyType_CapturesInvalidParams(string property)
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "testing/runTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000001",
+                    {{property}}
+                }
+            }
+            """);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        InvalidRequestParamsArgs invalidParams = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalidParams.ErrorCode);
+    }
+
+    [TestMethod]
+    public void DeserializeError_PrimitiveData_PreservesValue()
+    {
+        RpcMessage message = Deserialize<RpcMessage>(
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": {
+                    "code": -32600,
+                    "message": "invalid",
+                    "data": "detail"
+                }
+            }
+            """);
+
+        Assert.AreEqual("detail", Assert.IsInstanceOfType<ErrorMessage>(message).Data);
+    }
+
+    [TestMethod]
+    public void DeserializeInitializeResponse_NonStringProtocolVersion_Throws()
+    {
+        const string Json = """
+            {
+                "processId": 1,
+                "serverInfo": {
+                    "name": "server",
+                    "version": "1.2.3"
+                },
+                "capabilities": {
+                    "testing": {
+                        "supportsDiscovery": true,
+                        "experimental_multiRequestSupport": false,
+                        "vstestProvider": false,
+                        "attachmentsSupport": true,
+                        "multipleConnectionProvider": false
+                    }
+                },
+                "protocolVersion": 1
+            }
+            """;
+
+        Assert.Throws<MessageFormatException>(() => Deserialize<InitializeResponseArgs>(Json));
+    }
+
+    [TestMethod]
     public async Task Serialize_TestNodeWithRetryAttempt_EmitsRetryProperties()
     {
         // An unhandled property falls through the serializer's type chain and is silently dropped, which would
@@ -141,6 +432,18 @@ public sealed class FormatterUtilitiesTests
 
         Assert.Contains("\"retry.attempt\":1", serialized, serialized);
         Assert.Contains("\"retry.is-superseded\":true", serialized, serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestsAttachmentsWithoutRunId_PreservesLegacyShape()
+    {
+        TestsAttachments attachments = new([new RunTestAttachment("uri", "producer", "type", "name", null)]);
+
+        string serialized = (await _formatter.SerializeAsync(attachments)).Replace(" ", string.Empty);
+
+        Assert.AreEqual(
+            """{"attachments":[{"uri":"uri","producer":"producer","type":"type","display-name":"name","description":null}]}""",
+            serialized);
     }
 
     [DynamicData(nameof(SerializerTypesForDynamicData), DynamicDataDisplayName = nameof(FormatSerializerTypes))]
@@ -460,13 +763,13 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(ServerTestingCapabilities))
         {
-            Assert.AreEqual("""{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":true}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":false}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
         if (type == typeof(ServerCapabilities))
         {
-            Assert.AreEqual("""{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":true}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":false}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -478,7 +781,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(InitializeResponseArgs))
         {
-            Assert.AreEqual("""{"processId":1,"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"processId":1,"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":false}},"protocolVersion":"1.0.0"}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -638,7 +941,13 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(InitializeResponseArgs))
         {
-            return new InitializeResponseArgs(1, new ServerInfo("ServerInfoName", "Version"), new ServerCapabilities(new ServerTestingCapabilities(true, true, true, true, true)));
+            return new InitializeResponseArgs(
+                1,
+                new ServerInfo("ServerInfoName", "Version"),
+                new ServerCapabilities(new ServerTestingCapabilities(true, true, true, true, true)))
+            {
+                ProtocolVersion = JsonRpcProtocolVersions.Current,
+            };
         }
 
         if (type == typeof(ErrorMessage))

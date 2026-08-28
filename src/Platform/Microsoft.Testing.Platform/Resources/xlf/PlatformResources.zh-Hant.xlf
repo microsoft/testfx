@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
         <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
-        <target state="new">Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</target>
+        <target state="translated">已設定環境變數 '{0}'，但測試架構不支援 '{1}'。平台無法在期限前停止測試執行。</target>
         <note>{0} is the environment variable name. {1} is the capability interface name.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineDescription">
         <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
-        <target state="new">Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</target>
+        <target state="translated">可在 CI 強制設定的期限前不久優雅地停止測試執行，以便完成報告的延伸模組。</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
         <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
-        <target state="new">Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</target>
+        <target state="translated">環境變數 '{0}' 已設為 '{1}'，但這不是有效的絕對 ISO 8601 時點。已停用期限感知取消。</target>
         <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
         <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
-        <target state="new">Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</target>
+        <target state="translated">期限傾印邊界 ({0}) 大於或等於停止邊界 ({1})。當機傾印可能會在優雅停止前開始。</target>
         <note>{0} is the dump margin. {1} is the stop margin.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineMessage">
         <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
-        <target state="new">Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</target>
+        <target state="translated">期限即將到達: 優雅地停止測試執行，以便在 CI 強制取消前完成報告。</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
@@ -221,6 +221,16 @@
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 使用保留的前置詞 '--internal'</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="new">Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="new">Did you mean '--{0}'?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>

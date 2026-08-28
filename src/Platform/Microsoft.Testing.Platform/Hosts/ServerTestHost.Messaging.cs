@@ -9,10 +9,16 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost
 {
-    private async Task SendErrorAsync(int reqId, int errorCode, string message, object? data, CancellationToken cancellationToken)
+    private async Task SendErrorAsync(
+        int reqId,
+        int errorCode,
+        string message,
+        object? data,
+        CancellationToken cancellationToken,
+        string? stringId = null)
     {
         AssertInitialized();
-        ErrorMessage error = new(reqId, errorCode, message, data);
+        ErrorMessage error = new(reqId, errorCode, message, data) { StringId = stringId };
 
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -20,10 +26,14 @@ internal sealed partial class ServerTestHost
         }
     }
 
-    private async Task SendResponseAsync(int reqId, object result, CancellationToken cancellationToken)
+    private async Task SendResponseAsync(
+        int reqId,
+        object result,
+        CancellationToken cancellationToken,
+        string? stringId = null)
     {
         AssertInitialized();
-        ResponseMessage response = new(reqId, result);
+        ResponseMessage response = new(reqId, result) { StringId = stringId };
 
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -91,13 +101,21 @@ internal sealed partial class ServerTestHost
         => _ = Task.Run(() => TryLogAsync(logLevel, message));
 
     internal Task SendTestUpdateCompleteAsync(Guid runId, CancellationToken cancellationToken)
-        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null), cancellationToken);
+        => SendTestUpdateCompleteAsync(runId, cancellationToken, bestEffort: false);
+
+    private Task SendTestUpdateCompleteAsync(Guid runId, CancellationToken cancellationToken, bool bestEffort)
+        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null), cancellationToken, bestEffort);
 
     public Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update, CancellationToken cancellationToken)
+        => SendTestUpdateAsync(update, cancellationToken, bestEffort: false);
+
+    private Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update, CancellationToken cancellationToken, bool bestEffort)
         => SendMessageAsync(
             method: JsonRpcMethods.TestingTestUpdatesTests,
             @params: update,
-            cancellationToken);
+            cancellationToken,
+            checkServerExit: bestEffort,
+            rethrowException: !bestEffort);
 
     public Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args, CancellationToken cancellationToken)
         => SendMessageAsync(

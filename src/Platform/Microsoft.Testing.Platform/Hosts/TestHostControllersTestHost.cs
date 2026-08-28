@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -18,6 +19,9 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
+    private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
+
+    private readonly TimeSpan _controllerExtensionFinalizationTimeout;
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly PassiveNode? _passiveNode;
     private readonly IEnvironment _environment;
@@ -25,6 +29,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
+    private readonly List<object> _servicesStillRunning = [];
 
     // This flag means that the testhost was able to correctly complete in the child process.
     // But it doesn't mean we will exit successfully.
@@ -37,6 +42,11 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     private int? _testHostUnfilteredExitCodeReceived;
 
     private int? _testHostPID;
+    private bool _controllerFinalizationTimedOut;
+    private CancellationTokenSource? _controllerFinalizationCancellationTokenSource;
+    private CancellationTokenRegistration _controllerFinalizationTransitionRegistration;
+    private int _controllerFinalizationTimeoutArmed;
+    private int _finalizationTimeoutWarningScheduled;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
@@ -45,6 +55,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _testHostsInformation = testHostsInformation;
         _passiveNode = passiveNode;
         _environment = environment;
+        _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetControllerFinalization(environment);
         _clock = clock;
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<TestHostControllersTestHost>();
@@ -62,11 +73,10 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed)
     {
         int exitCode;
         TestHostProcessInformation testHostProcessInformation;
-
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
         IEnvironment environment = ServiceProvider.GetEnvironment();
@@ -131,7 +141,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
             finally
             {
                 // Service disposal must still run if closing the connection reports a failure.
-                await DisposeServicesAsync().ConfigureAwait(false);
+                await DisposeServicesAsync(alreadyDisposed).ConfigureAwait(false);
             }
         }
 

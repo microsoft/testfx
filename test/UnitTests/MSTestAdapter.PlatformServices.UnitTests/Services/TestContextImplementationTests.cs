@@ -834,6 +834,10 @@ public class TestContextImplementationTests : TestContainer
             Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
             tempDirectory!.Length.Should().BeLessThanOrEqualTo(260 - 80);
         }
+        else
+        {
+            Path.GetDirectoryName(tempDirectory).Should().Be(deepResults);
+        }
 
         _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
         _testContextImplementation.Dispose();

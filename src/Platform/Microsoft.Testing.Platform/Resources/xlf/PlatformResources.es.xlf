@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
         <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
-        <target state="new">Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</target>
+        <target state="translated">La variable de entorno "{0}" está establecida, pero el marco de pruebas no admite "{1}". La plataforma no puede detener la serie de pruebas antes de la fecha límite.</target>
         <note>{0} is the environment variable name. {1} is the capability interface name.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineDescription">
         <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
-        <target state="new">Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</target>
+        <target state="translated">Extensión que detiene correctamente la serie de pruebas poco antes de una fecha límite impuesta por CI para que se puedan finalizar los informes.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
         <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
-        <target state="new">Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</target>
+        <target state="translated">La variable de entorno "{0}" está establecida en "{1}", pero no es un instante ISO 8601 absoluto válido. La cancelación compatible con la fecha límite está deshabilitada.</target>
         <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
         <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
-        <target state="new">Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</target>
+        <target state="translated">El margen de volcado de fecha límite ({0}) es mayor o igual que el margen de detención ({1}). Es posible que el volcado de memoria se inicie antes de la detención correcta.</target>
         <note>{0} is the dump margin. {1} is the stop margin.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineMessage">
         <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
-        <target state="new">Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</target>
+        <target state="translated">Fecha límite inminente: se detiene la ejecución de pruebas de forma ordenada para que los informes se puedan finalizar antes de la cancelación forzosa de CI.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
@@ -221,6 +221,16 @@
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">La opción “--{0}” del proveedor “{1}” (UID: {2}) usa el prefijo reservado “--internal”</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="new">Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="new">Did you mean '--{0}'?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>

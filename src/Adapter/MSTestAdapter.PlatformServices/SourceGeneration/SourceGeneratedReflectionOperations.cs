@@ -235,6 +235,13 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             : null;
     }
 
+    public bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        areAllTestMethodsSupported = data.DescriptorCompleteTypes.TryGetValue(type, out bool isComplete) && isComplete;
+        return data.DescriptorTestMethods.TryGetValue(type, out methods);
+    }
+
     public Func<object?, object?[]?, object?>? GetTestMethodInvoker(MethodInfo method)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();

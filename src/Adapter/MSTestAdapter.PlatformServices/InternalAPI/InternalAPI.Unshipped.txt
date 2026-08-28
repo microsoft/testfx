@@ -103,6 +103,17 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Non
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Result = 1 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.CancellationToken.get -> System.Threading.CancellationToken
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerator.EnumerateAssembly(string! assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerationResult!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.TypeEnumerator.GetTestFromMethod(System.Reflection.MethodInfo! method, bool classDisablesParallelization, System.Collections.Generic.ICollection<string!>! warnings, bool isFromGeneratedDescriptor) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.IsFromGeneratedDescriptor.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.IsFromGeneratedDescriptor.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IReflectionOperations.TryGetTestMethodDescriptors(System.Type! type, out System.Reflection.MethodInfo![]? methods, out bool areAllTestMethodsSupported) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ReflectionOperations.TryGetTestMethodDescriptors(System.Type! type, out System.Reflection.MethodInfo![]? methods, out bool areAllTestMethodsSupported) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorCompleteTypes.get -> System.Collections.Generic.IReadOnlyDictionary<System.Type!, bool>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorCompleteTypes.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorTestMethods.get -> System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Reflection.MethodInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorTestMethods.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations.TryGetTestMethodDescriptors(System.Type! type, out System.Reflection.MethodInfo![]? methods, out bool areAllTestMethodsSupported) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.get -> System.Reflection.Assembly?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardErrorBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardOutputBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
@@ -136,3 +147,4 @@ static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helper
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetLiveOutputWriterForTesting(System.IO.TextWriter! liveOutputWriter) -> System.IDisposable!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TypeCache.IsTestFilterProviderMarkerType(System.Type? attributeType) -> bool
+virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.TypeEnumerator.Enumerate(System.Collections.Generic.List<string!>! warnings, bool useGeneratedDescriptors) -> System.Collections.Generic.List<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?

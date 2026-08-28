@@ -5,8 +5,10 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -83,6 +85,50 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         tests.Any(t => t.TestMethod.Name == "ValidTestMethod").Should().BeTrue();
     }
 
+#if NETCOREAPP
+    [DoNotParallelize]
+    public void GetTestsShouldSelectGeneratedDescriptorsOnlyForMtp()
+    {
+        Type testType = typeof(GeneratedDescriptorTestClass);
+        MethodInfo method = testType.GetMethod(nameof(GeneratedDescriptorTestClass.GeneratedDescriptorTestMethod))!;
+        string assemblyPath = Assembly.GetExecutingAssembly().Location;
+        _mockTestSourceHandler
+            .Setup(handler => handler.IsAssemblyReferenced(It.IsAny<AssemblyName>(), assemblyPath))
+            .Returns(true);
+
+        PlatformServiceProvider.Instance = null;
+        try
+        {
+            ReflectionMetadataHook.Register(
+                Assembly.GetExecutingAssembly(),
+                [testType],
+                new Dictionary<Type, MethodInfo[]> { [testType] = [method] },
+                new Dictionary<Type, Attribute[]> { [testType] = [new TestClassAttribute()] },
+                [],
+                new Dictionary<MethodInfo, Attribute[]> { [method] = [new TestMethodAttribute()] },
+                new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(),
+                new Dictionary<Type, ConstructorInvokerInfo[]>(),
+                new Dictionary<PropertyInfo, Action<object?, object?>>(),
+                new Dictionary<Type, MethodInfo[]> { [testType] = [method] },
+                [testType]);
+
+            UnitTestElement mtpTest = AssemblyEnumeratorWrapper
+                .GetTests(assemblyPath, null, _mockTestSourceHandler.Object, isMTP: true, out _)!
+                .Single(test => test.TestMethod.MethodInfo == method);
+            UnitTestElement vstestTest = AssemblyEnumeratorWrapper
+                .GetTests(assemblyPath, null, _mockTestSourceHandler.Object, isMTP: false, out _)!
+                .Single(test => test.TestMethod.MethodInfo == method);
+
+            mtpTest.IsFromGeneratedDescriptor.Should().BeTrue();
+            vstestTest.IsFromGeneratedDescriptor.Should().BeFalse();
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
+        }
+    }
+#endif
+
     public void GetTestsShouldCreateAnIsolatedInstanceOfAssemblyEnumerator()
     {
         string assemblyName = Assembly.GetExecutingAssembly().FullName!;
@@ -143,6 +189,15 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // This is just a dummy method for test validation.
         [TestMethod]
         public void ValidTestMethod()
+        {
+        }
+    }
+
+    [TestClass]
+    public class GeneratedDescriptorTestClass
+    {
+        [TestMethod]
+        public void GeneratedDescriptorTestMethod()
         {
         }
     }
