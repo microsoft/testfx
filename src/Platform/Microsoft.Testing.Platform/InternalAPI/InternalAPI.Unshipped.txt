@@ -199,6 +199,7 @@ Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.PipeName.
 Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.PipeName.set -> void
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.BuildTestHostLauncherAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher?>!
 Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostControllerConnectionAuthorizationConsumer
+static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler!>! lifetimeHandlers, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider!>! environmentVariableProviders, Microsoft.Testing.Platform.TestHostControllers.EnvironmentVariables! environmentVariables, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.StopPoliciesService.IsDeadlineTriggered.get -> bool
 Microsoft.Testing.Platform.Services.StopPoliciesService.RegisterDeadlineStopFallback(System.Func<System.Threading.Tasks.Task<bool>!>! callback) -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.Dispose() -> void
