@@ -98,6 +98,15 @@ internal static class RetryTestHostRunner
         };
 
         testHostProcess.Exited += exitedHandler;
+        if (testHostProcess.HasExited)
+        {
+#if NET8_0_OR_GREATER
+            await processExitedCancellationToken.CancelAsync().ConfigureAwait(false);
+#else
+            processExitedCancellationToken.Cancel();
+#endif
+        }
+
         try
         {
             using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);

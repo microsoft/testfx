@@ -100,6 +100,51 @@ public class RetryTests
     }
 
     [TestMethod]
+    public async Task RunAttemptAsync_AlreadyExitedCustomHandle_DoesNotWaitForPipeTimeout()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(cancellationTokenSource.Object);
+        serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
+        serviceProvider.AddService(new AlreadyExitedTestHostLauncher(exitCode: 7));
+        Mock<IOutputDevice> outputDevice = new();
+        outputDevice.Setup(x => x.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+
+        RetryTestHostRunner.AttemptResult result = await RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            outputDevice.Object,
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            [],
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            CancellationToken.None);
+
+        Assert.AreEqual(7, result.ExitCode);
+        Assert.IsTrue(result.ExitedBeforeConnect);
+        outputDevice.Verify(
+            x => x.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
     public void SnapshotAttemptArtifacts_CopiesExternalArtifactAndPreservesDestination()
     {
         string retryRoot = Path.GetFullPath(Path.Combine("TR", "Retries", "abcde"));
@@ -1011,5 +1056,40 @@ public class RetryTests
         }
 
         public void Dispose() => pipeClient.Dispose();
+    }
+
+    private sealed class AlreadyExitedTestHostLauncher(int exitCode) : ITestHostLauncher
+    {
+        public string Uid => nameof(AlreadyExitedTestHostLauncher);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(AlreadyExitedTestHostLauncher);
+
+        public string Description => nameof(AlreadyExitedTestHostLauncher);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
+            => Task.FromResult<ITestHostHandle>(new AlreadyExitedTestHostHandle(exitCode));
+    }
+
+    private sealed class AlreadyExitedTestHostHandle(int exitCode) : ITestHostHandle
+    {
+        public string Identifier => nameof(AlreadyExitedTestHostHandle);
+
+        public int ExitCode => exitCode;
+
+        public bool HasExited => true;
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public void Terminate()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
     }
 }
