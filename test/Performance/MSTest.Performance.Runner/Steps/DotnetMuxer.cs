@@ -47,4 +47,7 @@ internal class BuildArtifact : IPayload
     public TestAsset TestAsset => Project.TestAsset;
 
     public string ResultFilePath => Path.Combine(Project.TestAsset.TargetAssetPath, "Result.json");
+
+    public TestHost GetRequiredTestHost()
+        => TestHost ?? throw new InvalidOperationException($"Pipeline '{Project.AssetName}' requires an executable MTP test host.");
 }

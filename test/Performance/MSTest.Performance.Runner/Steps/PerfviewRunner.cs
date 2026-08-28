@@ -3,6 +3,8 @@
 
 using System.IO.Compression;
 
+using Microsoft.Testing.TestInfrastructure;
+
 namespace MSTest.Performance.Runner.Steps;
 
 internal class PerfviewRunner : IStep<BuildArtifact, Files>
@@ -25,6 +27,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        TestHost testHost = payload.GetRequiredTestHost();
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Console.WriteLine("Skip run, not supported in Windows");
@@ -33,8 +36,8 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
 
         await PerfviewExecutable();
         StringBuilder commandLine = new();
-        commandLine.Append(CultureInfo.InvariantCulture, $" \"/DataFile:{Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "DataFile.etl")}\" /AcceptEULA /NoGui {_argument} ");
-        commandLine.Append(CultureInfo.InvariantCulture, $"run \"{payload.TestHost.FullName}\" ");
+        commandLine.Append(CultureInfo.InvariantCulture, $" \"/DataFile:{Path.Combine(Path.GetDirectoryName(testHost.FullName)!, "DataFile.etl")}\" /AcceptEULA /NoGui {_argument} ");
+        commandLine.Append(CultureInfo.InvariantCulture, $"run \"{testHost.FullName}\" ");
 
         ProcessStartInfo processStartInfo =
         new(await PerfviewExecutable(), commandLine.ToString())
@@ -89,7 +92,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
         }
         else
         {
-            string reportDirectory = Path.GetDirectoryName(payload.TestHost.FullName)!;
+            string reportDirectory = Path.GetDirectoryName(testHost.FullName)!;
             string dataFileDirectory = Path.Combine(reportDirectory, "DataFile");
             Directory.CreateDirectory(dataFileDirectory);
             foreach (string item in Directory.GetFiles(reportDirectory, "DataFile.*"))
