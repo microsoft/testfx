@@ -23,8 +23,8 @@ Build the repository packages before running the generated test assets:
 Each pipeline performs one warmup and five measured runs. A run is accepted only
 when the process exits successfully and reports the expected number of passing
 tests. `Result.json` contains every sample plus median and interquartile timing,
-CPU time, peak working set, target framework, build configuration, runner
-runtime, CI image, and machine metadata.
+CPU time, peak working set, target framework, build configuration, effective
+worker count, runner runtime, CI image, and machine metadata.
 
 CPU and peak-working-set values are reported only for standalone test-host
 processes. They are `null` for `dotnet test`, because those values would describe

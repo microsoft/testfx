@@ -151,7 +151,8 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
             nameof(Scenario1),
             _testPlatform,
             _sourceGenerationMode,
-            _numberOfClass * _methodsPerClass);
+            _numberOfClass * _methodsPerClass,
+            _workers == 0 ? Environment.ProcessorCount : _workers);
     }
 
     private string GetSourceGenerationProperties()
@@ -233,7 +234,8 @@ internal class SingleProject : IPayload
         string assetName,
         TestPlatform testPlatform,
         MSTestSourceGenerationMode sourceGenerationMode,
-        int expectedTestCount)
+        int expectedTestCount,
+        int workerCount)
     {
         Tfms = tfms;
         TestAsset = testAsset;
@@ -241,6 +243,7 @@ internal class SingleProject : IPayload
         TestPlatform = testPlatform;
         SourceGenerationMode = sourceGenerationMode;
         ExpectedTestCount = expectedTestCount;
+        WorkerCount = workerCount;
     }
 
     public string[] Tfms { get; }
@@ -254,4 +257,6 @@ internal class SingleProject : IPayload
     public MSTestSourceGenerationMode SourceGenerationMode { get; }
 
     public int ExpectedTestCount { get; }
+
+    public int WorkerCount { get; }
 }

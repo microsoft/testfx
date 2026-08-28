@@ -118,7 +118,7 @@ internal static class ProcessBenchmarkRunner
             : [];
         string pipeline = (string)context.Properties["PipelineName"];
         var report = new ProcessBenchmarkReport(
-            SchemaVersion: 2,
+            SchemaVersion: 3,
             Pipeline: pipeline,
             Scenario: payload.Project.AssetName,
             ExecutionKind: executionKind,
@@ -129,6 +129,7 @@ internal static class ProcessBenchmarkRunner
             Configuration: payload.BuildConfiguration.ToString(),
             Command: $"{processStartInfo.FileName} {processStartInfo.Arguments.Trim()}",
             ExpectedTestCount: payload.Project.ExpectedTestCount,
+            WorkerCount: payload.Project.WorkerCount,
             RunnerRuntimeVersion: Environment.Version.ToString(),
             OperatingSystem: RuntimeInformation.OSDescription,
             ProcessArchitecture: RuntimeInformation.ProcessArchitecture.ToString(),
@@ -231,6 +232,7 @@ internal static class ProcessBenchmarkRunner
         string Configuration,
         string Command,
         int ExpectedTestCount,
+        int WorkerCount,
         string RunnerRuntimeVersion,
         string OperatingSystem,
         string ProcessArchitecture,

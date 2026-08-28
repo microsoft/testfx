@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 TIME_PATTERN = re.compile(
     r"^(?:(?P<days>\d+)\.)?(?P<hours>\d{2}):(?P<minutes>\d{2}):"
     r"(?P<seconds>\d{2})(?:\.(?P<fraction>\d{1,7}))?$"
@@ -80,6 +80,7 @@ def load_current_results(
                 "operatingSystem": report.get("OperatingSystem"),
                 "processArchitecture": report.get("ProcessArchitecture"),
                 "processorCount": report.get("ProcessorCount"),
+                "workerCount": report.get("WorkerCount"),
                 "runnerRuntimeVersion": report.get("RunnerRuntimeVersion"),
                 "targetFramework": report.get("TargetFramework"),
                 "configuration": report.get("Configuration"),
@@ -117,10 +118,12 @@ def load_current_results(
                 f"{result_file} contains multiple processor counts: "
                 f"{sorted(legacy_processor_counts)}"
             )
+        legacy_processor_count = legacy_processor_counts.pop()
         report_environment = {
             "operatingSystem": "unknown",
             "processArchitecture": "unknown",
-            "processorCount": legacy_processor_counts.pop(),
+            "processorCount": legacy_processor_count,
+            "workerCount": legacy_processor_count,
             "runnerRuntimeVersion": "unknown",
             "targetFramework": "unknown",
             "configuration": "unknown",
@@ -149,6 +152,9 @@ def validate_environment(environment: dict[str, object], source: str) -> None:
     processor_count = environment.get("processorCount")
     if not isinstance(processor_count, int) or processor_count <= 0:
         raise ValueError(f"{source} has an invalid processor count")
+    worker_count = environment.get("workerCount")
+    if not isinstance(worker_count, int) or worker_count <= 0:
+        raise ValueError(f"{source} has an invalid worker count")
 
     for field in (
         "operatingSystem",
@@ -277,6 +283,7 @@ def build_summary(
         f"environment: **{environment['operatingSystem']} / "
         f"{environment['processArchitecture']} / "
         f"{environment['processorCount']} processors / "
+        f"{environment['workerCount']} workers / "
         f"{environment['targetFramework']} / "
         f"{environment['configuration']}**.",
         "",

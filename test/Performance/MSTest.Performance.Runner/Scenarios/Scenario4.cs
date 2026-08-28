@@ -154,7 +154,8 @@ internal class Scenario4 : IStep<NoInputOutput, SingleProject>
             nameof(Scenario4),
             TestPlatform.Mtp,
             MSTestSourceGenerationMode.Disabled,
-            _numberOfClass * _methodsPerClass);
+            _numberOfClass * _methodsPerClass,
+            _workers == 0 ? Environment.ProcessorCount : _workers);
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
