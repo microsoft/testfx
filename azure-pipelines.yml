@@ -128,7 +128,9 @@ stages:
   jobs:
   - job: Windows
     displayName: Windows
-    timeoutInMinutes: 90
+    # The Release writer must survive the same completely cold generated-fixture builds as
+    # validation; otherwise broad invalidations can time out before publishing remote entries.
+    timeoutInMinutes: 120
     pool:
       name: NetCore-Public
       demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
