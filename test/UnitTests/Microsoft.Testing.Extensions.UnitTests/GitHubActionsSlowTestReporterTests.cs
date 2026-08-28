@@ -96,6 +96,25 @@ public sealed class GitHubActionsSlowTestReporterTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_KeepsTrackingAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            null!,
+            CreateMessage("u1", "Ns.T1", new FailedTestNodeStateProperty(), retryAttempt: new RetryAttemptProperty(1, isSuperseded: true)),
+            CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("Ns.T1 still running after", outputDevice.Lines[0]);
+    }
+
+    [TestMethod]
     public async Task ScanOnce_WhenDisabled_DoesNotEmitAsync()
     {
         CapturingOutputDevice outputDevice = new();
@@ -211,11 +230,20 @@ public sealed class GitHubActionsSlowTestReporterTests
             new StubLoggerFactory());
     }
 
-    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, IProperty property, string? displayName = null)
+    private static TestNodeUpdateMessage CreateMessage(
+        string uid,
+        string fullyQualifiedName,
+        IProperty property,
+        string? displayName = null,
+        RetryAttemptProperty? retryAttempt = null)
     {
         PropertyBag propertyBag = new();
         propertyBag.Add(property);
         propertyBag.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", fullyQualifiedName));
+        if (retryAttempt is not null)
+        {
+            propertyBag.Add(retryAttempt);
+        }
 
         return new TestNodeUpdateMessage(new SessionUid("session"), new TestNode
         {
