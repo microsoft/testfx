@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security.Cryptography;
+
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
@@ -33,6 +35,7 @@ internal static class PackagedAppConnectBackHandshake
     // because PlatformCommandLineProvider.TestHostControllerPIDOptionKey is internal to the platform
     // assembly; the two ship and version together in this repo.
     private const string TestHostControllerPidOptionKey = "internal-testhostcontroller-pid";
+    private const string RetryPipeNameOptionKey = "internal-retry-pipename";
 
     // Marker prefixes distinguishing a null value from a (possibly empty) string value on each line,
     // so an empty string round-trips as an empty string rather than as null.
@@ -77,10 +80,33 @@ internal static class PackagedAppConnectBackHandshake
     /// test host waiting on a controller connect-back).
     /// </summary>
     public static string? TryGetTestHostControllerPid(IReadOnlyList<string> arguments)
+        => TryGetOptionValue(arguments, TestHostControllerPidOptionKey);
+
+    /// <summary>
+    /// Returns the stable identifier used to exchange environment variables for an activated host.
+    /// Controller-host runs use the controller PID; retry-orchestrated runs use a hash of their unique pipe name.
+    /// </summary>
+    public static string? TryGetHandshakeId(IReadOnlyList<string> arguments)
+    {
+        if (TryGetTestHostControllerPid(arguments) is { } testHostControllerPid)
+        {
+            return testHostControllerPid;
+        }
+
+        if (TryGetOptionValue(arguments, RetryPipeNameOptionKey) is not { } retryPipeName)
+        {
+            return null;
+        }
+
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(retryPipeName));
+        return $"retry-{Convert.ToHexString(hash)}";
+    }
+
+    private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string optionKey)
     {
         for (int i = 0; i < arguments.Count - 1; i++)
         {
-            if (string.Equals(arguments[i], $"--{TestHostControllerPidOptionKey}", StringComparison.Ordinal))
+            if (string.Equals(arguments[i], $"--{optionKey}", StringComparison.Ordinal))
             {
                 return arguments[i + 1];
             }

@@ -85,14 +85,13 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// </summary>
     internal const string PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION";
 
-#if PACKAGEDAPP_WINRT
     // The prefix of the environment variables the platform uses for the controller-to-host connect-back
     // (pipe name, correlation id, parent PID, start time, skip-extension flag). Only these are handed off
     // to the activated packaged host: they are exactly what the host needs to reach its controller, they
     // contain no user-provided data (unlike broader TESTINGPLATFORM_* variables such as inline
     // runsettings, which can carry secrets), and they are read after this extension's builder hook runs.
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
-#endif
+    private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
 
     private readonly string _testApplicationDirectory;
     private readonly Func<string, string?> _getEnvironmentVariable;
@@ -320,15 +319,17 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // builder hook runs cannot be reproduced from here anyway. The activated host applies them
         // in-process before the platform's environment-variable-based connect-back runs (see
         // PackagedAppConnectBackReader).
-        string? testHostControllerPid = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments);
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(context.Arguments);
         string? handshakePath = null;
         string? activationPayloadPath = null;
         try
         {
-            if (testHostControllerPid is not null)
+            if (handshakeId is not null)
             {
-                handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, testHostControllerPid);
-                PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
+                handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, handshakeId);
+                PackagedAppConnectBackHandshake.Write(
+                    handshakePath,
+                    GetConnectBackEnvironment(context).Append(new(LauncherModeEnvironmentVariable, NeverMode)));
             }
 
             PackagedAppActivationData activationData = CreateActivationArguments(
@@ -361,19 +362,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
     }
 
-    // Selects the controller-to-host connect-back variables (see ConnectBackEnvironmentVariablePrefix)
-    // from the platform-prepared environment. These are the variables an AUMID-activated host needs to
-    // reach its controller and that it would not otherwise inherit.
-    private static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
-    {
-        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
-        {
-            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.Ordinal))
-            {
-                yield return environmentVariable;
-            }
-        }
-    }
 #else
     private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
     {
@@ -393,6 +381,21 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 manifestPath));
     }
 #endif
+
+    // Selects the controller connect-back variables and the retry attempt marker from the
+    // platform-prepared environment. These are the values an AUMID-activated host needs and would not
+    // otherwise inherit; unrelated TESTINGPLATFORM_* values can contain user data and remain excluded.
+    internal static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
+    {
+        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
+        {
+            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.Ordinal)
+                || environmentVariable.Key == RetryAttemptEnvironmentVariableName)
+            {
+                yield return environmentVariable;
+            }
+        }
+    }
 
     private static ITestHostHandle LaunchLooseLayout(TestHostLaunchContext context, string sourceDirectory, CancellationToken cancellationToken)
     {

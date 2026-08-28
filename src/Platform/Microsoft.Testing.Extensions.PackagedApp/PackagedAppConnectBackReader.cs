@@ -63,10 +63,10 @@ internal static class PackagedAppConnectBackReader
         Func<string?> getPackageLocalStateDirectory,
         Action<string, string?> setEnvironmentVariable)
     {
-        // Only the spawned test host leg carries the test host controller PID option; the controller
-        // process does not, so it never consumes a handshake.
-        string? testHostControllerPid = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(commandLineArguments);
-        if (testHostControllerPid is null)
+        // Controller-host and retry-orchestrated children both carry a unique handshake identifier in
+        // their command line. The parent process carries neither and never consumes a handshake.
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(commandLineArguments);
+        if (handshakeId is null)
         {
             return;
         }
@@ -95,11 +95,11 @@ internal static class PackagedAppConnectBackReader
         // package-aware ApplicationData.Current.LocalFolder is the correct, unredirected
         // %LOCALAPPDATA%\Packages\{PFN}\LocalState the (unpackaged) launcher wrote to;
         // Environment.SpecialFolder.LocalApplicationData is redirected here and would not find the file.
-        string fileName = PackagedAppConnectBackHandshake.GetHandshakeFileName(testHostControllerPid);
+        string fileName = PackagedAppConnectBackHandshake.GetHandshakeFileName(handshakeId);
         string? localStateDirectory = getPackageLocalStateDirectory();
         string handshakePath = localStateDirectory is not null
             ? Path.Combine(localStateDirectory, fileName)
-            : PackagedAppConnectBackHandshake.GetHandshakeFilePath(packageFamilyName, testHostControllerPid);
+            : PackagedAppConnectBackHandshake.GetHandshakeFilePath(packageFamilyName, handshakeId);
 
         IReadOnlyDictionary<string, string?>? environment = PackagedAppConnectBackHandshake.ReadAndDelete(handshakePath);
         if (environment is null)
