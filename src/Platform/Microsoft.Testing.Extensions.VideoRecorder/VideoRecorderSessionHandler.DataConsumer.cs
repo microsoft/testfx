@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
@@ -81,9 +82,15 @@ internal sealed partial class VideoRecorderSessionHandler
             if (isFailure)
             {
                 _anyTestFailed = true;
-                DateTimeOffset recordingStart = _recorder.RecordingStartUtc ?? start;
-                _failedWindows.Add((start - recordingStart).TotalSeconds);
-                _failedWindows.Add((end - recordingStart).TotalSeconds);
+                DateTimeOffset? recordingStart = _recorder.RecordingStartUtc;
+                RoslynDebug.Assert(recordingStart is not null, "Recording must start before test updates are consumed.");
+                if (recordingStart is not null)
+                {
+                    _failedWindows = new FailedWindow(
+                        (start - recordingStart.Value).TotalSeconds,
+                        (end - recordingStart.Value).TotalSeconds,
+                        _failedWindows);
+                }
             }
         }
 

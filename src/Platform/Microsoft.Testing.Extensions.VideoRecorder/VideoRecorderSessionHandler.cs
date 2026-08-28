@@ -55,9 +55,8 @@ internal sealed partial class VideoRecorderSessionHandler :
     private readonly List<TestRecord> _testRecords = [];
     private readonly Dictionary<string, DateTimeOffset> _inFlight = [];
 
-    // Incrementally maintained alongside _testRecords so TryPruneOldSegments (invoked on every
-    // test completion) doesn't have to re-filter the whole accumulated _testRecords list each time.
-    private readonly List<double> _failedWindows = [];
+    // A persistent stack keeps both failure insertion and pruning snapshots O(1).
+    private FailedWindow? _failedWindows;
 
     private SessionUid? _sessionUid;
     private bool _anyTestFailed;
@@ -185,5 +184,21 @@ internal sealed partial class VideoRecorderSessionHandler :
         {
             DeleteDirectoryQuietly(_recorder.SegmentDirectory);
         }
+    }
+
+    private sealed class FailedWindow
+    {
+        public FailedWindow(double startSeconds, double endSeconds, FailedWindow? next)
+        {
+            StartSeconds = startSeconds;
+            EndSeconds = endSeconds;
+            Next = next;
+        }
+
+        public double StartSeconds { get; }
+
+        public double EndSeconds { get; }
+
+        public FailedWindow? Next { get; }
     }
 }

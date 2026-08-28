@@ -21,6 +21,14 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class VideoRecorderSessionHandlerSegmentPruningTests
 {
+    private static readonly Type FailedWindowType =
+        typeof(VideoRecorderSessionHandler).GetNestedType("FailedWindow", BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Could not resolve FailedWindow.");
+
+    private static readonly ConstructorInfo FailedWindowConstructor =
+        FailedWindowType.GetConstructor([typeof(double), typeof(double), FailedWindowType])
+        ?? throw new InvalidOperationException("Could not resolve the FailedWindow constructor.");
+
     private static readonly MethodInfo OverlapsAnyFailedWindowMethod =
         typeof(VideoRecorderSessionHandler).GetMethod(
             "OverlapsAnyFailedWindow",
@@ -38,8 +46,13 @@ public sealed class VideoRecorderSessionHandlerSegmentPruningTests
     public void OverlapsAnyFailedWindow_WindowsAndSegment_ReturnsExpectedResult(double[] failedWindows, bool expected)
     {
         var segment = new VideoSegment("segment.mp4", 10, 20);
+        object? failedWindow = null;
+        for (int i = 0; i + 1 < failedWindows.Length; i += 2)
+        {
+            failedWindow = FailedWindowConstructor.Invoke([failedWindows[i], failedWindows[i + 1], failedWindow]);
+        }
 
-        bool actual = (bool)OverlapsAnyFailedWindowMethod.Invoke(null, [segment, failedWindows])!;
+        bool actual = (bool)OverlapsAnyFailedWindowMethod.Invoke(null, [segment, failedWindow])!;
 
         Assert.AreEqual(expected, actual);
     }
