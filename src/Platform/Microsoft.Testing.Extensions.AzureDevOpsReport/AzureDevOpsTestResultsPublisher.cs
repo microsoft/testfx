@@ -420,6 +420,25 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         public int NextAttemptNumber { get; set; } = 2;
     }
 
+    private void DrainIncompleteInProcessRetrySequences()
+    {
+        lock (_inProcessRetryAttemptsLock)
+        {
+            foreach (List<InProcessRetrySequence> sequences in _inProcessRetrySequences.Values)
+            {
+                foreach (InProcessRetrySequence sequence in sequences)
+                {
+                    foreach (AzureDevOpsTestCaseResultWithAttachments attempt in sequence.Attempts)
+                    {
+                        _pendingResults.Enqueue(attempt);
+                    }
+                }
+            }
+
+            _inProcessRetrySequences.Clear();
+        }
+    }
+
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         if (_publishConfiguration is null || _coordinatedRun is null || CurrentRunId is null || _runIdCoordinator is null)
@@ -448,6 +467,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 // Cancellation — expected and fine.
             }
         }
+
+        // If cancellation or a framework failure stopped result delivery before the final retry attempt,
+        // preserve every execution already received. Publishing them independently is safer than guessing
+        // an outcome that never arrived, and moving them into the normal queue also includes them in the
+        // unpublished-result warning when cancellation prevents the forced flush.
+        DrainIncompleteInProcessRetrySequences();
 
         try
         {

@@ -2110,6 +2110,78 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task InProcessRetry_IncompleteSequencePublishesExecutedAttemptAtSessionEnd()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([123]);
+        };
+
+        TestNode failedAttempt = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            RetryTestStartTime);
+        failedAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true));
+        failedAttempt.Properties.Add(new StandardOutputProperty("failed attempt output"));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(failedAttempt), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestCaseResult result = Assert.ContainsSingle(created);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, result.Outcome);
+        Assert.IsNull(result.SubResults);
+        Assert.ContainsSingle(client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual(123, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
+        Assert.IsNull(client.UploadTestResultAttachmentCalls[0].TestSubResultId);
+        Assert.AreEqual("failed attempt output", client.UploadTestResultAttachmentCalls[0].Attachment.InlineContent);
+    }
+
+    [TestMethod]
+    public async Task InProcessRetry_CanceledIncompleteSequenceIsCountedAsUnpublished()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            outputDevice: outputDevice);
+        TestNode failedAttempt = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            RetryTestStartTime);
+        failedAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(failedAttempt), CancellationToken.None);
+
+        using var cancellationTokenSource = new CancellationTokenSource();
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+        cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(cancellationTokenSource.Token));
+
+        Assert.IsEmpty(client.UpdateTestResultsCalls);
+        string expectedWarning = string.Format(
+            CultureInfo.InvariantCulture,
+            AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped,
+            1);
+        Assert.Contains(expectedWarning, outputDevice.Warnings);
+    }
+
+    [TestMethod]
     public async Task RetryAttempt_UpdatesTheResultTheEarlierAttemptCreatedInsteadOfAddingAnother()
     {
         using TestDirectory directory = CreateTestDirectory();
