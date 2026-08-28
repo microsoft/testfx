@@ -6,8 +6,8 @@ using System.Security.Cryptography;
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// The out-of-band hand-off that lets a packaged (MSIX) test host receive the controller-to-host
-/// connect-back environment variables that a plain <c>Process.Start</c> would have inherited.
+/// The out-of-band hand-off that lets a packaged (MSIX) test host receive the controller and retry
+/// environment variables that a plain <c>Process.Start</c> would have inherited.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -23,9 +23,9 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// <see cref="TestingPlatformBuilderHook"/>.
 /// </para>
 /// <para>
-/// The file is named with the test host controller PID (the value the platform passes on the command
-/// line as <c>--internal-testhostcontroller-pid</c>) so that concurrent runs of the same package do
-/// not collide, and it is deleted by the host as soon as it has been consumed.
+/// The file is named with a stable handshake ID so concurrent runs of the same package do not collide.
+/// Controller-host runs use the controller PID; retry runs use a hash of their unique pipe name. The
+/// host deletes the file as soon as it has been consumed.
 /// </para>
 /// </remarks>
 internal static class PackagedAppConnectBackHandshake
@@ -58,21 +58,20 @@ internal static class PackagedAppConnectBackHandshake
             "LocalState");
 
     /// <summary>
-    /// Returns the file name (without directory) of the handshake file for a given test host controller
-    /// PID. The directory differs between the two sides (see <see cref="GetHandshakeFilePath"/> and the
-    /// activated host, which resolves its own package LocalState), but the file name is shared.
+    /// Returns the file name (without directory) for a handshake ID. The directory differs between the
+    /// two sides (see <see cref="GetHandshakeFilePath"/> and the activated host, which resolves its own
+    /// package LocalState), but the file name is shared.
     /// </summary>
-    public static string GetHandshakeFileName(string testHostControllerPid)
-        => $"mtp-testhostcontroller-{testHostControllerPid}.handshake";
+    public static string GetHandshakeFileName(string handshakeId)
+        => $"mtp-testhostcontroller-{handshakeId}.handshake";
 
     /// <summary>
-    /// Returns the full path of the handshake file for a given package family name and test host
-    /// controller PID.
+    /// Returns the full path of the handshake file for a package family name and handshake ID.
     /// </summary>
-    public static string GetHandshakeFilePath(string packageFamilyName, string testHostControllerPid)
+    public static string GetHandshakeFilePath(string packageFamilyName, string handshakeId)
         => Path.Combine(
             GetHandshakeDirectory(packageFamilyName),
-            GetHandshakeFileName(testHostControllerPid));
+            GetHandshakeFileName(handshakeId));
 
     /// <summary>
     /// Extracts the value of the <c>--internal-testhostcontroller-pid</c> option from a command line,

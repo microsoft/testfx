@@ -33,8 +33,8 @@ static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.R
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeletePayload(string? payloadPath) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeleteStalePayloads(string! localStateDirectory, System.DateTime utcNow) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
-static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! testHostControllerPid) -> string!
-static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! handshakeId) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! handshakeId) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.ReadAndDelete(string! filePath) -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryDelete(string! filePath) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetHandshakeId(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
