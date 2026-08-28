@@ -31,14 +31,16 @@ public sealed class TrxModeHelpersTests
         // Once the platform has actually placed this process under a controller (the PID option is
         // present), whether TRX recovers out-of-process should track platform support alone: the child
         // no longer needs to know which extension (TRX, HangDump, --timeout, ...) caused the isolation.
+        // This test always runs on a platform that supports test-host controllers (Windows/Linux/macOS),
+        // so assert the fixed expected value rather than comparing against IsTestHostControllerSupported
+        // itself, which would make the assertion self-referential and unable to catch a regression that
+        // breaks both sides identically.
         var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
         {
             [TrxReport.Abstractions.TrxReportGeneratorCommandLine.TrxReportOptionName] = [],
             [PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["42"],
         });
 
-        Assert.AreEqual(
-            TrxModeHelpers.IsTestHostControllerSupported,
-            TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions));
+        Assert.IsTrue(TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptions));
     }
 }
