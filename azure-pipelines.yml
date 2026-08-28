@@ -670,8 +670,8 @@ stages:
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
-        # Fallback build. Skipped when the MSBuildCache steps above already produced, signed and packed the
-        # outputs; also skipped when they failed with build errors, because this step would only reproduce them.
+        # Authoritative fallback build. It is skipped only when the cache graph and any required sign/pack work
+        # succeed; every cache-path failure runs this process-based build.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
