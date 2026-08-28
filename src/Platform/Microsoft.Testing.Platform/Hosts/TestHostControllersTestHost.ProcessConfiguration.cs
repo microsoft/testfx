@@ -118,6 +118,13 @@ internal sealed partial class TestHostControllersTestHost
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 
+        // Create controller-side extension connections before their environment-variable providers publish
+        // the effective pipe names to the test host.
+        foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+        {
+            await lifetimeHandler.BeforeTestHostProcessStartAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         // Apply the ITestHostEnvironmentVariableProvider
         if (_testHostsInformation.EnvironmentVariableProviders.Length > 0)
         {

@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 using Moq;
 
@@ -23,6 +24,35 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class RetryTests
 {
+    private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainer pipe authorization is Windows-only.")]
+    public void RetryPipeServer_UsesControllerAuthorizedSecurityIdentities()
+    {
+        ServiceProvider serviceProvider = new()
+        {
+            TestHostControllerAuthorizedSecurityIdentities = [ContosoPackageSid],
+        };
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(cancellationTokenSource.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        serviceProvider.AddService(new Mock<IFileSystem>().Object);
+
+        var orchestrator = new RetryOrchestrator(serviceProvider);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+
+        Assert.IsInstanceOfType<ITestHostControllerConnectionAuthorizationConsumer>(orchestrator);
+        Assert.IsTrue(server.PipeName.StartsWith(@"LOCAL\", StringComparison.OrdinalIgnoreCase));
+    }
+
     [TestMethod]
     public void SnapshotAttemptArtifacts_CopiesExternalArtifactAndPreservesDestination()
     {

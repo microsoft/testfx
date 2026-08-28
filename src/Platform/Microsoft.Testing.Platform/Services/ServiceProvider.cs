@@ -17,6 +17,8 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     internal IReadOnlyCollection<object> Services => _services;
 
+    internal IReadOnlyList<string>? TestHostControllerAuthorizedSecurityIdentities { get; set; }
+
     public bool AllowTestAdapterFrameworkRegistration { get; set; }
 
 #pragma warning disable CS0618 // Type or member is obsolete
