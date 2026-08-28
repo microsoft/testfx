@@ -16,12 +16,14 @@ public static class AcceptanceFixture
         s_directoryToCleanup = Path.Combine(TempDirectory.TestSuiteDirectory, RandomId.Next());
 
         // Ensure all integration tests restore packages in a centralized place other than the NuGet cache.
-        // The centralized place also changes between runs (RandomId.Next()) so that re-packaging locally works as expected.
-        // So, when running Build.cmd -pack, running test, running Build.cmd -pack again, and running test again, the latest
-        // packages should be picked.
-        // If we restore to the same place (whether or not it is the machine-wide cache), NuGet will consider restore up-to-date and
-        // will use stale packages.
-        string nugetCache = Path.Combine(s_directoryToCleanup, ".packages");
+        // Local runs keep changing this location so rebuilding same-version development packages cannot
+        // reuse stale contents. Cached CI fixture builds need one stable package root for portable cache
+        // fingerprints, and nested acceptance commands must use that same populated root.
+        string? acceptanceCacheRoot = Environment.GetEnvironmentVariable("TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT");
+        string nugetCache = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TF_BUILD"))
+            && !string.IsNullOrEmpty(acceptanceCacheRoot)
+                ? Path.Combine(acceptanceCacheRoot, "NuGetPackages")
+                : Path.Combine(s_directoryToCleanup, ".packages");
         Directory.CreateDirectory(nugetCache);
         Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetCache);
     }
