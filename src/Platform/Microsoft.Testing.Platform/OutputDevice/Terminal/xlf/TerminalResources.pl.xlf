@@ -386,13 +386,13 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="new">Preset the per-test result blocks shown in the terminal.
-Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
+        <target state="translated">Wstępnie ustawiono bloki wyników dla poszczególnych testów wyświetlane w terminalu.
+Prawidłowe wartości to 'Minimal', 'Normal', or 'Detailed'. Wartość domyślna to 'Normal'. Aby precyzyjnie wybrać wyniki, użyj opcji '--show-test-results'.</target>
         <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</target>
+        <target state="translated">--output oczekuje jednego parametru o wartości 'Minimal', 'Normal', or 'Detailed'.</target>
         <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
@@ -471,26 +471,26 @@ Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyśln
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="new">--show-test-results value 'all' or 'none' cannot be combined with any other value.</target>
+        <target state="translated">Wartości --show-test-results: wartości 'all' lub 'none' nie można łączyć z żadną inną wartością.</target>
         <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
-Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</target>
+        <target state="translated">Określa, które wyniki testów powodują wyświetlenie w terminalu bloku wyników dla danego testu (wraz z informacjami szczegółowymi, śladem stosu i przechwyconym wyjściem).
+Dopuszczalne wartości to 'passed', 'failed' (obejmuje to również testy zakończone błędem, przekroczeniem limitu czasu i anulowane), 'skipped', 'all', and 'none'. Wiele wartości można połączyć, tworząc listę rozdzieloną przecinkami lub spacjami, albo poprzez powtórzenie opcji; wartości 'all' i 'none' nie można łączyć z żadną inną wartością.
+Domyślną wartością jest 'failed', gdy opcja '--output' ma wartość 'Minimal', 'failed' i 'skipped', gdy ma wartość 'Normal' lub została pominięta; oraz 'all', gdy ma wartość 'Detailed'. Jawny element '--show-test-results' zawsze ma pierwszeństwo przed opcją '--output', niezależnie od kolejności, w jakiej został przekazany.</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">Parametr --show-test-results wymaga podania co najmniej jednej wartości spośród: 'passed', 'failed', 'skipped', 'all', lub 'none'.</target>
         <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">Parametr --show-test-results oczekuje jednej lub więcej wartości oddzielonych przecinkami lub spacjami, spośród następujących: 'passed', 'failed', 'skipped', 'all', lub 'none'.</target>
         <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

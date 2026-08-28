@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
         <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
-        <target state="new">Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</target>
+        <target state="translated">La variabile di ambiente '{0}' è impostata, ma il framework di test non supporta '{1}'. La piattaforma non può arrestare l'esecuzione dei test prima della scadenza.</target>
         <note>{0} is the environment variable name. {1} is the capability interface name.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineDescription">
         <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
-        <target state="new">Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</target>
+        <target state="translated">Estensione che arresta normalmente l'esecuzione dei test poco prima di una scadenza imposta dall'integrazione continua, per consentire la finalizzazione dei report.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
         <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
-        <target state="new">Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</target>
+        <target state="translated">La variabile di ambiente '{0}' è impostata su '{1}', ma non è un istante ISO 8601 assoluto valido. L'annullamento in base alla scadenza è disabilitato.</target>
         <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
         <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
-        <target state="new">Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</target>
+        <target state="translated">Il margine di dump della scadenza ({0}) è maggiore o uguale al margine di arresto ({1}). Il dump di blocco può iniziare prima dell'arresto normale.</target>
         <note>{0} is the dump margin. {1} is the stop margin.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineMessage">
         <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
-        <target state="new">Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</target>
+        <target state="translated">Scadenza imminente: arresto normale dell'esecuzione dei test per consentire la finalizzazione dei report prima dell'annullamento definitivo dell'integrazione continua.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
