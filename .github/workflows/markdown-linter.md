@@ -15,6 +15,21 @@ safe-outputs:
   # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
   # result JSON that gh-aw cannot parse (#10711). Same fix as #10684.
   threat-detection:
+    steps:
+    - name: Install ripgrep from Ubuntu repositories
+      run: |
+        if command -v rg >/dev/null 2>&1; then
+          exit 0
+        fi
+
+        ubuntu_sources=sources.list.d/ubuntu.sources
+        if [ ! -f "/etc/apt/$ubuntu_sources" ]; then
+          ubuntu_sources=sources.list
+        fi
+
+        # Ignore unrelated third-party feeds, which can fail transiently and block agent setup (#10822).
+        sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- update -qq
+        sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- install -y -qq ripgrep
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
       is trusted redaction metadata added by gh-aw. A safe-output JSON envelope or
@@ -41,6 +56,20 @@ safe-outputs:
   noop:
     report-as-issue: false
 steps:
+- name: Install ripgrep from Ubuntu repositories
+  run: |
+    if command -v rg >/dev/null 2>&1; then
+      exit 0
+    fi
+
+    ubuntu_sources=sources.list.d/ubuntu.sources
+    if [ ! -f "/etc/apt/$ubuntu_sources" ]; then
+      ubuntu_sources=sources.list
+    fi
+
+    # Ignore unrelated third-party feeds, which can fail transiently and block agent setup (#10822).
+    sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- update -qq
+    sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- install -y -qq ripgrep
 - name: Download markdownlint log
   uses: actions/download-artifact@v8.0.1
   with:
