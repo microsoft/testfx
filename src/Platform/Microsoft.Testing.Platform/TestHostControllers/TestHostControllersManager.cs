@@ -170,7 +170,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             requireProcessRestart);
     }
 
-    private async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)
+    internal async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)
     {
         List<ITestHostLauncher> launchers = [];
         await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_testHostLauncherFactories, serviceProvider, launchers, registerInServiceProvider: true).ConfigureAwait(false);

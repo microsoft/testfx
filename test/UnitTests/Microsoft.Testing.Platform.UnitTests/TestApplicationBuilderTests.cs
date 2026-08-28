@@ -22,6 +22,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TestApplicationBuilderTests
 {
+    private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+
     private readonly ServiceProvider _serviceProvider = new();
 
     public TestApplicationBuilderTests()
@@ -374,6 +376,26 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainer pipe authorization is Windows-only.")]
+    public async Task TestHostLauncher_AuthorizationConsumerResolvesAndStoresIdentity()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+        TestHostLauncher launcher = new("launcher");
+        testHostControllerManager.AddTestHostLauncher(_ => launcher);
+
+        ITestHostLauncher? builtLauncher = await testHostControllerManager.BuildTestHostLauncherAsync(_serviceProvider);
+        IReadOnlyList<string>? authorizedSecurityIdentities =
+            await _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                builtLauncher,
+                "testhost.exe",
+                new NopLogger(),
+                CancellationToken.None);
+
+        Assert.AreSequenceEqual([ContosoPackageSid], authorizedSecurityIdentities);
+        Assert.AreSame(authorizedSecurityIdentities, _serviceProvider.TestHostControllerAuthorizedSecurityIdentities);
+    }
+
+    [TestMethod]
     public async Task TestHostLauncher_MultipleRegistered_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();
@@ -560,7 +582,7 @@ public sealed class TestApplicationBuilderTests
     }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
-    private sealed class TestHostLauncher : ITestHostLauncher
+    private sealed class TestHostLauncher : ITestHostLauncher, ITestHostControllerConnectionAuthorizer
     {
         public TestHostLauncher(string id) => Uid = id;
 
@@ -575,6 +597,9 @@ public sealed class TestApplicationBuilderTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
         public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+        public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(string testHostFileName, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<string>>([ContosoPackageSid]);
     }
 #pragma warning restore TPEXP
 

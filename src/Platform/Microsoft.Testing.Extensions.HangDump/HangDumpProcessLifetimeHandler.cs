@@ -15,6 +15,8 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -36,7 +38,8 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     private readonly IConfiguration _configuration;
     private readonly IProcessHandler _processHandler;
     private readonly IClock _clock;
-    private readonly PipeNameDescription _pipeNameDescription;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly NamedPipeServerEndpoint _endpoint;
     private readonly bool _traceEnabled;
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
     private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
@@ -84,7 +87,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     private CancellationTokenSource? _handshakeCancellationTokenSource;
 
     public HangDumpProcessLifetimeHandler(
-        PipeNameDescription pipeNameDescription,
+        NamedPipeServerEndpoint endpoint,
         IMessageBus messageBus,
         IOutputDevice outputDevice,
         ICommandLineOptions commandLineOptions,
@@ -93,11 +96,12 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
         IProcessHandler processHandler,
-        IClock clock)
+        IClock clock,
+        IServiceProvider serviceProvider)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
-        _pipeNameDescription = pipeNameDescription;
+        _endpoint = endpoint;
         _messageBus = messageBus;
         _outputDisplay = new OutputDeviceWriter(outputDevice, this);
         _commandLineOptions = commandLineOptions;
@@ -106,6 +110,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         _configuration = configuration;
         _processHandler = processHandler;
         _clock = clock;
+        _serviceProvider = serviceProvider;
     }
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
@@ -163,7 +168,16 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
             await _logger.LogInformationAsync($"Hang dump deadline setup {_deadlineDumpAt:o}.").ConfigureAwait(false);
         }
 
-        _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
+        _singleConnectionNamedPipeServer = new(
+            new PipeNameDescription(_endpoint.PipeName),
+            CallbackAsync,
+            _environment,
+            _logger,
+            _task,
+            maxNumberOfServerInstances: 1,
+            _serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities(),
+            cancellationToken);
+        _endpoint.PipeName = _singleConnectionNamedPipeServer.PipeName.Name;
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));

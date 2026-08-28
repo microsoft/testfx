@@ -4,6 +4,7 @@
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -13,8 +14,8 @@ internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing
 
     private readonly ICommandLineOptions _commandLineOptions;
 
-    public TrxEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, string pipeName)
-        : base(pipeName, TRXNAMEDPIPENAME)
+    public TrxEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, NamedPipeServerEndpoint endpoint)
+        : base(endpoint, TRXNAMEDPIPENAME)
     {
         _commandLineOptions = commandLineOptions;
     }

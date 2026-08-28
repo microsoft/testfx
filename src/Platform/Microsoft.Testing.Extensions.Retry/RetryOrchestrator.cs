@@ -13,11 +13,12 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
-internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer
+internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer, ITestHostControllerConnectionAuthorizationConsumer
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;

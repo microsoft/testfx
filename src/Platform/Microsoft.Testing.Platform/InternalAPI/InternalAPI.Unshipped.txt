@@ -189,6 +189,17 @@ Microsoft.Testing.Platform.Services.IStopPoliciesService.TryExecuteDeadlineStopF
 Microsoft.Testing.Platform.Services.StopPoliciesService.IsTestExecutionCompleted.get -> bool
 Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionStarting() -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionCompleted() -> void
+Microsoft.Testing.Platform.Services.ServiceProvider.TestHostControllerAuthorizedSecurityIdentities.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Microsoft.Testing.Platform.Services.ServiceProvider.TestHostControllerAuthorizedSecurityIdentities.set -> void
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetTestHostControllerAuthorizedSecurityIdentities(this System.IServiceProvider! serviceProvider) -> System.Collections.Generic.IReadOnlyList<string!>?
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(this System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher? testHostLauncher, string! testHostFileName, Microsoft.Testing.Platform.Logging.ILogger! logger, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>?>!
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.NamedPipeServerEndpoint(string! pipeName) -> void
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.PipeName.get -> string!
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.PipeName.set -> void
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.BuildTestHostLauncherAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher?>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostControllerConnectionAuthorizationConsumer
+static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler!>! lifetimeHandlers, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider!>! environmentVariableProviders, Microsoft.Testing.Platform.TestHostControllers.EnvironmentVariables! environmentVariables, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.StopPoliciesService.IsDeadlineTriggered.get -> bool
 Microsoft.Testing.Platform.Services.StopPoliciesService.RegisterDeadlineStopFallback(System.Func<System.Threading.Tasks.Task<bool>!>! callback) -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.Dispose() -> void

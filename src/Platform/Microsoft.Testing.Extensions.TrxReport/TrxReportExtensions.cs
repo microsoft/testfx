@@ -88,12 +88,12 @@ public static class TrxReportExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment()));
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        var endpoint = new NamedPipeServerEndpoint(NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N")).Name);
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
                 ILoggerFactory loggerFactory = serviceProvider.GetLoggerFactory();
-                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
+                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{endpoint.PipeName}'");
                 return new TrxProcessLifetimeHandler(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
@@ -105,14 +105,15 @@ public static class TrxReportExtensions
                     serviceProvider.GetSystemClock(),
                     serviceProvider.GetTask(),
                     serviceProvider.GetOutputDevice(),
-                    pipeNameDescription);
+                    serviceProvider,
+                    endpoint);
             });
         ((TestHostControllersManager)builder.TestHostControllers).AddDataConsumer(compositeLifeTimeHandler);
         builder.TestHostControllers.AddProcessLifetimeHandler(compositeLifeTimeHandler);
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider =>
         {
-            serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
-            return new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name);
+            serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{endpoint.PipeName}'");
+            return new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), endpoint);
         });
     }
 }

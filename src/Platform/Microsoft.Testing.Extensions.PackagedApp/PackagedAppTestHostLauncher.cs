@@ -85,14 +85,16 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// </summary>
     internal const string PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION";
 
-#if PACKAGEDAPP_WINRT
-    // The prefix of the environment variables the platform uses for the controller-to-host connect-back
-    // (pipe name, correlation id, parent PID, start time, skip-extension flag). Only these are handed off
-    // to the activated packaged host: they are exactly what the host needs to reach its controller, they
-    // contain no user-provided data (unlike broader TESTINGPLATFORM_* variables such as inline
-    // runsettings, which can carry secrets), and they are read after this extension's builder hook runs.
+    // The handoff is an explicit allowlist of protocol metadata: controller connect-back values,
+    // TRX/HangDump pipe endpoints, and Retry attempt/run correlation. Some correlation values may be
+    // supplied by CI or the user, but arbitrary environment values remain excluded because broader
+    // TESTINGPLATFORM_* values such as inline runsettings can carry secrets.
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
-#endif
+    private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
+    private const string LogicalRunIdEnvironmentVariableName = "TESTINGPLATFORM_LOGICAL_RUN_ID";
+    private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
+    private const string TrxTestRunIdEnvironmentVariableName = "TESTINGPLATFORM_TRX_TESTRUN_ID";
+    private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
 
     private readonly string _testApplicationDirectory;
     private readonly Func<string, string?> _getEnvironmentVariable;
@@ -311,24 +313,21 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // controller first would give it the controller's ACL and make it unreadable by the activated app.
         await PackageDeployer.RegisterAsync(manifestPath, cancellationToken).ConfigureAwait(false);
 
-        // Hand off the controller-to-host connect-back environment variables through the package's
-        // LocalState, keyed by the test host controller PID so concurrent runs of the same package do not
-        // collide. An AUMID-activated process is created by the Windows activation infrastructure and does
-        // not inherit the controller's environment, so these variables must be reproduced out-of-band. The
-        // hand-off is deliberately limited to the platform connect-back variables (not the full prepared
-        // environment): they carry no user secrets, and environment consumed before this extension's
-        // builder hook runs cannot be reproduced from here anyway. The activated host applies them
-        // in-process before the platform's environment-variable-based connect-back runs (see
-        // PackagedAppConnectBackReader).
-        string? testHostControllerPid = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments);
+        // Hand off the explicit safe environment allowlist through package LocalState. Controller-host runs
+        // key the file by controller PID; retry runs key it by a hash of their unique pipe name. An
+        // AUMID-activated process does not inherit the controller's environment, so the activated host
+        // applies these values before platform and extension connect-back initialization.
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(context.Arguments);
         string? handshakePath = null;
         string? activationPayloadPath = null;
         try
         {
-            if (testHostControllerPid is not null)
+            if (handshakeId is not null)
             {
-                handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, testHostControllerPid);
-                PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
+                handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, handshakeId);
+                PackagedAppConnectBackHandshake.Write(
+                    handshakePath,
+                    GetConnectBackEnvironment(context).Append(new(LauncherModeEnvironmentVariable, NeverMode)));
             }
 
             PackagedAppActivationData activationData = CreateActivationArguments(
@@ -361,19 +360,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
     }
 
-    // Selects the controller-to-host connect-back variables (see ConnectBackEnvironmentVariablePrefix)
-    // from the platform-prepared environment. These are the variables an AUMID-activated host needs to
-    // reach its controller and that it would not otherwise inherit.
-    private static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
-    {
-        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
-        {
-            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.Ordinal))
-            {
-                yield return environmentVariable;
-            }
-        }
-    }
 #else
     private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
     {
@@ -393,6 +379,25 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 manifestPath));
     }
 #endif
+
+    // Selects the controller connect-back values, TRX/HangDump endpoints, and Retry attempt/run
+    // correlation metadata that an AUMID-activated host would not otherwise inherit. Unrelated
+    // environment values remain excluded because they can contain user data or secrets.
+    internal static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
+    {
+        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
+        {
+            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, RetryAttemptEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, LogicalRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, TrxTestRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, HangDumpPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return environmentVariable;
+            }
+        }
+    }
 
     private static ITestHostHandle LaunchLooseLayout(TestHostLaunchContext context, string sourceDirectory, CancellationToken cancellationToken)
     {
@@ -419,6 +424,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         {
             startInfo.Environment[environmentVariable.Key] = environmentVariable.Value;
         }
+
+        // The deployed child is the retry attempt itself. Prevent it from enabling this launcher again and
+        // recursively creating another controller/deployment layer when the parent was opted in with "always".
+        startInfo.Environment[LauncherModeEnvironmentVariable] = NeverMode;
 
         Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");

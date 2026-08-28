@@ -29,15 +29,6 @@ internal sealed partial class TestHostControllersTestHost
         Stopwatch consoleRunStarted,
         CancellationToken applicationCancellationToken)
     {
-        // Apply the ITestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync
-        if (_testHostsInformation.LifetimeHandlers.Length > 0)
-        {
-            foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
-            {
-                await lifetimeHandler.BeforeTestHostProcessStartAsync(applicationCancellationToken).ConfigureAwait(false);
-            }
-        }
-
         // Launch the test host process
         string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);

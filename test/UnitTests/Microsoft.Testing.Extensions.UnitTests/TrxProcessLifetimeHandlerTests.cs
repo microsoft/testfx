@@ -14,6 +14,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 using Moq;
 
@@ -22,10 +23,46 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class TrxProcessLifetimeHandlerTests
 {
+    private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
     public async Task BeforeTestHostProcessStartAsync_CreatesPipeBeforeSchedulingConnectionWait()
+    {
+        (TrxProcessLifetimeHandler handler, NamedPipeServerEndpoint endpoint, _, DeferredTask task) = CreateHandler();
+        using (handler)
+        {
+            await handler.BeforeTestHostProcessStartAsync(TestContext.CancellationToken);
+
+            Assert.IsNotNull(task.DeferredFunction);
+            using var client = new NamedPipeClientStream(".", endpoint.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            await client.ConnectAsync(timeout: 5_000, TestContext.CancellationToken);
+            Assert.IsTrue(client.IsConnected);
+        }
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainer pipe authorization is Windows-only.")]
+    public async Task BeforeTestHostProcessStartAsync_UsesRuntimeAuthorizationAndPublishesEffectivePipeName()
+    {
+        (TrxProcessLifetimeHandler handler, NamedPipeServerEndpoint endpoint, ServiceProvider serviceProvider, DeferredTask task) = CreateHandler();
+        using (handler)
+        {
+            serviceProvider.TestHostControllerAuthorizedSecurityIdentities = [ContosoPackageSid];
+
+            await handler.BeforeTestHostProcessStartAsync(TestContext.CancellationToken);
+
+            Assert.IsTrue(endpoint.PipeName.StartsWith(@"LOCAL\", StringComparison.OrdinalIgnoreCase));
+            Assert.IsNotNull(task.DeferredFunction);
+
+            using var client = new NamedPipeClientStream(".", endpoint.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            await client.ConnectAsync(timeout: 5_000, TestContext.CancellationToken);
+            Assert.IsTrue(client.IsConnected);
+        }
+    }
+
+    private static (TrxProcessLifetimeHandler Handler, NamedPipeServerEndpoint Endpoint, ServiceProvider ServiceProvider, DeferredTask Task) CreateHandler()
     {
         var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
         {
@@ -41,9 +78,12 @@ public sealed class TrxProcessLifetimeHandlerTests
         Type namedPipeServerType = trxAssembly.GetType("Microsoft.Testing.Platform.IPC.NamedPipeServer", throwOnError: true)!;
         MethodInfo getPipeName = namedPipeServerType.GetMethod("GetPipeName", [typeof(string)])!;
         object pipeName = getPipeName.Invoke(null, [Guid.NewGuid().ToString("N")])!;
+        string pipeNameValue = (string)pipeName.GetType().GetProperty("Name")!.GetValue(pipeName)!;
+        var endpoint = new NamedPipeServerEndpoint(pipeNameValue);
+        ServiceProvider serviceProvider = new();
         ConstructorInfo constructor = typeof(TrxProcessLifetimeHandler).GetConstructors().Single();
 
-        using var handler = (TrxProcessLifetimeHandler)constructor.Invoke([
+        var handler = (TrxProcessLifetimeHandler)constructor.Invoke([
             commandLineOptions,
             environment.Object,
             loggerFactory.Object,
@@ -54,16 +94,11 @@ public sealed class TrxProcessLifetimeHandlerTests
             clock.Object,
             task,
             new Mock<IOutputDevice>().Object,
-            pipeName,
+            serviceProvider,
+            endpoint,
         ]);
 
-        await handler.BeforeTestHostProcessStartAsync(TestContext.CancellationToken);
-
-        Assert.IsNotNull(task.DeferredFunction);
-        string pipeNameValue = (string)pipeName.GetType().GetProperty("Name")!.GetValue(pipeName)!;
-        using var client = new NamedPipeClientStream(".", pipeNameValue, PipeDirection.InOut, PipeOptions.Asynchronous);
-        await client.ConnectAsync(timeout: 5_000, TestContext.CancellationToken);
-        Assert.IsTrue(client.IsConnected);
+        return (handler, endpoint, serviceProvider, task);
     }
 
     private sealed class DeferredTask : ITask

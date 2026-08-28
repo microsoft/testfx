@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 /// <summary>
 /// Implemented by an <see cref="ITestHostLauncher"/> that starts the test host under an operating-system
-/// security identity of its own, to authorize that identity on the controller-to-host connection.
+/// security identity of its own, to authorize that identity on controller-side connections.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,11 +20,12 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// be allowed through.
 /// </para>
 /// <para>
-/// The connection is established before the launcher runs (it has to be listening before the host is
-/// started), so a launcher that needs this cannot supply the identity from
-/// <see cref="ITestHostLauncher.LaunchTestHostAsync"/>. The platform instead calls this interface just
-/// before creating the connection, which is why it is a separate interface an
-/// <see cref="ITestHostLauncher"/> opts into rather than a member of that interface.
+/// Controller-side connections must listen before the launcher runs, so a launcher cannot supply the
+/// identity from <see cref="ITestHostLauncher.LaunchTestHostAsync"/>. The platform resolves this interface
+/// once before creating those connections, either in controller mode or for an orchestrator such as Retry,
+/// and reuses the validated result for the platform connection and controller-side extension pipes. This is
+/// why authorization is a separate interface an <see cref="ITestHostLauncher"/> opts into rather than a
+/// member of that interface.
 /// </para>
 /// <para>
 /// <strong>Security.</strong> The platform does not grant whatever it is handed. It validates every value
@@ -44,8 +45,8 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 public interface ITestHostControllerConnectionAuthorizer
 {
     /// <summary>
-    /// Returns the operating-system security identities that must be able to reach the controller-to-host
-    /// connection in addition to the current user.
+    /// Returns the operating-system security identities that must be able to reach controller-side
+    /// connections in addition to the current user.
     /// </summary>
     /// <remarks>
     /// On Windows an identity is a security identifier (SID) in SDDL string form, and only the SID of a
