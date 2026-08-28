@@ -71,6 +71,9 @@ variables:
     value: true
   - name: VSO_DEDUP_REDIRECT_TIMEOUT_IN_SEC
     value: 5
+  # Pinned prototype containing dotnet/msbuild#14824, #14825, and #14826.
+  - name: _PatchedMSBuildCommit
+    value: 16e184d749654ec43bf92c67ae4a9bcca2225401
   # Microsoft.Testing.Platform report/dump arguments for the Windows Debug unit-test command that uses
   # --test-modules. That mode bypasses test/Directory.Build.targets, so the command must restore these options
   # explicitly. The full Release runs evaluate the test projects and receive the same options from that targets file.
@@ -146,6 +149,8 @@ stages:
 
     - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+    - template: /eng/pipelines/steps/build-patched-msbuild.yml
+
     # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
     # soon as main changes to avoid forcing the entire 204-node graph to miss.
     - pwsh: |
@@ -209,7 +214,10 @@ stages:
         Write-Host "##vso[task.logissue type=warning]Seeding MSBuildCache failed with exit code $exitCode; continuing with the regular Arcade build."
         exit 0
       displayName: Seed $(_BuildConfig) project cache
+      condition: eq(variables['PatchedMSBuildAvailable'], 'true')
       env:
+        _BuildToolPath: $(PatchedMSBuildPath)
+        MSBUILD_EXE_PATH: $(PatchedMSBuildPath)
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         # MSBuildCache reads NUGET_PACKAGES to build its path normalizer, and every restored package file is a
         # fingerprinted input. The seeding and the consuming builds must therefore agree on this folder or every
@@ -452,6 +460,10 @@ stages:
 
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+        - template: /eng/pipelines/steps/build-patched-msbuild.yml
+          parameters:
+            condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
+
         # MSBuildCache requires a direct static graph build; Arcade's outer Build.proj discovers its projects too late
         # for the project-cache plugin. This experimental consumer uses MSBuild's in-process multithreaded mode but
         # deliberately does not enable Detours file-access reporting: access attribution assumes one active project
@@ -525,8 +537,10 @@ stages:
             Write-Host "##vso[task.logissue type=warning]The experimental multithreaded MSBuildCache build failed with exit code $exitCode; continuing with the authoritative process-based Arcade build."
             exit 0
           displayName: Build solution graph with MSBuildCache
-          condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
+          condition: and(succeeded(), eq(variables['PatchedMSBuildAvailable'], 'true'), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
           env:
+            _BuildToolPath: $(PatchedMSBuildPath)
+            MSBUILD_EXE_PATH: $(PatchedMSBuildPath)
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             # Must match the seeding stage exactly. MSBuildCache normalizes observed input paths against
             # NUGET_PACKAGES, and every restored package file is a fingerprinted input, so a different package
