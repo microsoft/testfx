@@ -34,6 +34,26 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
     }
 
+    private async Task UploadPendingResultAttachmentsAsync(CancellationToken cancellationToken)
+    {
+        while (_pendingResultAttachments.TryDequeue(out (int TestCaseResultId, AzureDevOpsTestResultAttachment Attachment) pending))
+        {
+            try
+            {
+                await UploadAttachmentsForResultAsync(
+                    pending.TestCaseResultId,
+                    testSubResultId: null,
+                    [pending.Attachment],
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+            {
+                Interlocked.Increment(ref _failedAttachmentCount);
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+            }
+        }
+    }
+
     private async Task UploadResultAttachmentsAsync(int testCaseResultId, int? testSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
     {
         if (_publishConfiguration is null || CurrentRunId is null || attachments.Count == 0)
@@ -299,38 +319,39 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // Record the whole accepted batch before any cancellable attachment upload. Azure DevOps accepted
         // every result in one operation, so the map must describe all of them even if cancellation
         // interrupts the best-effort attachment phase.
-        List<(int ResultId, AzureDevOpsTestCaseResultWithAttachments Attempt)> firstAttemptSeeds = [];
+        List<(int ResultId, AzureDevOpsTestCaseResultWithAttachments Parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> Attempts)> initialAttemptSeeds = [];
         for (int i = 0; i < batch.Count; i++)
         {
+            IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> attempts = GetAttempts(batch[i]);
+            AzureDevOpsTestCaseResult[] attemptResults = [.. attempts.Select(static attempt => attempt.Result)];
+
             // Folded data-driven rows share one uid. A failure in any row retries the whole uid, including
             // rows that passed or were skipped, so every row must retain its own result id and history.
             if (_resultIdStore is not null)
             {
-                _resultIdStore.RecordCreated(batch[i].Result, publishedResults[i].Id);
+                _resultIdStore.RecordCreated(batch[i].Result, publishedResults[i].Id, attemptResults);
                 _claimedResultIds.Add(publishedResults[i].Id);
             }
 
-            if (batch[i].Attachments.Count > 0)
+            bool hasAttachments = attempts.Any(static attempt => attempt.Attachments.Count > 0);
+            if (attempts.Count > 1 || (_resultIdStore is not null && hasAttachments))
             {
-                if (_resultIdStore is not null)
-                {
-                    firstAttemptSeeds.Add((publishedResults[i].Id, batch[i]));
-                }
-                else
-                {
-                    deferredAttachments.Add((
-                        publishedResults[i].Id,
-                        TestSubResultId: null,
-                        batch[i].Attachments));
-                }
+                initialAttemptSeeds.Add((publishedResults[i].Id, batch[i], attempts));
+            }
+            else if (hasAttachments)
+            {
+                deferredAttachments.Add((
+                    publishedResults[i].Id,
+                    TestSubResultId: null,
+                    batch[i].Attachments));
             }
         }
 
-        if (firstAttemptSeeds.Count > 0)
+        if (initialAttemptSeeds.Count > 0)
         {
             try
             {
-                await SeedFirstAttemptsAsync(firstAttemptSeeds, deferredAttachments, cancellationToken).ConfigureAwait(false);
+                await SeedInitialAttemptsAsync(initialAttemptSeeds, deferredAttachments, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException ex)
             {
@@ -351,19 +372,23 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     /// appending each attempt exactly once also prevents a later PATCH from replacing the sub-result that owns
     /// the attachment.
     /// </remarks>
-    private async Task SeedFirstAttemptsAsync(
-        List<(int ResultId, AzureDevOpsTestCaseResultWithAttachments Attempt)> seeds,
+    private async Task SeedInitialAttemptsAsync(
+        List<(int ResultId, AzureDevOpsTestCaseResultWithAttachments Parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> Attempts)> seeds,
         List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
         CancellationToken cancellationToken)
     {
         var parents = new AzureDevOpsTestCaseResult[seeds.Count];
         for (int i = 0; i < seeds.Count; i++)
         {
-            parents[i] = seeds[i].Attempt.Result with
+            AzureDevOpsTestCaseResult[] attemptResults = [.. seeds[i].Attempts.Select(static attempt => attempt.Result)];
+            parents[i] = seeds[i].Parent.Result with
             {
                 Id = seeds[i].ResultId,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-                SubResults = [AzureDevOpsResultIdStore.CreateFirstAttempt(seeds[i].Attempt.Result)],
+                SubResults = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1),
+                DurationInMs = AzureDevOpsResultIdStore.SumResultDurations(attemptResults),
+                StartedDate = AzureDevOpsResultIdStore.GetEarliestStartedDate(attemptResults),
+                CompletedDate = AzureDevOpsResultIdStore.GetLatestCompletedDate(attemptResults),
             };
         }
 
@@ -386,23 +411,41 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         {
             // The parent POST already succeeded, but the PATCH may have reached Azure DevOps. Forget the
             // mapping before propagating cancellation or falling back so a later attempt cannot replay an
-            // uncertain first sub-result and duplicate sequence 1.
-            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments attempt) in seeds)
+            // uncertain first sub-result and duplicate sequence 1. The POST contained only the final
+            // outcome, so preserve earlier in-process executions as independent results rather than losing
+            // their outcomes and diagnostics.
+            List<AzureDevOpsTestCaseResultWithAttachments> previousAttempts = [];
+            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
             {
-                if (_resultIdStore!.TryGet(attempt.Result) is { } published)
+                if (_resultIdStore?.TryGet(parent.Result) is { } published)
                 {
                     _resultIdStore.Forget(published);
                 }
+
+                previousAttempts.AddRange(parent.PreviousAttempts);
+            }
+
+            if (previousAttempts.Count > 0)
+            {
+                RequeueUnsafe(previousAttempts);
             }
 
             if (ex is OperationCanceledException)
             {
+                foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
+                {
+                    foreach (AzureDevOpsTestResultAttachment attachment in parent.Attachments)
+                    {
+                        _pendingResultAttachments.Enqueue((resultId, attachment));
+                    }
+                }
+
                 throw;
             }
 
-            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments attempt) in seeds)
+            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
             {
-                deferredAttachments.Add((resultId, TestSubResultId: null, attempt.Attachments));
+                deferredAttachments.Add((resultId, TestSubResultId: null, parent.Attachments));
             }
 
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
@@ -411,19 +454,26 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         for (int i = 0; i < seeds.Count; i++)
         {
-            _resultIdStore!.RecordPublishedSubResults(
-                seeds[i].Attempt.Result,
+            int lastSequenceId = parents[i].SubResults![^1].SequenceId;
+            _resultIdStore?.RecordPublishedSubResults(
+                seeds[i].Parent.Result,
                 seeds[i].ResultId,
-                lastPublishedSubResultSequenceId: 1);
+                lastSequenceId);
 
-            int? testSubResultId = publishedResults is not null
-                && publishedResults[i].TryGetSubResultId(sequenceId: 1, out int resolvedSubResultId)
-                    ? resolvedSubResultId
-                    : null;
-            deferredAttachments.Add((
-                seeds[i].ResultId,
-                testSubResultId,
-                seeds[i].Attempt.Attachments));
+            int firstSequenceId = lastSequenceId - seeds[i].Attempts.Count + 1;
+            for (int attemptIndex = 0; attemptIndex < seeds[i].Attempts.Count; attemptIndex++)
+            {
+                AzureDevOpsTestCaseResultWithAttachments attempt = seeds[i].Attempts[attemptIndex];
+                int sequenceId = firstSequenceId + attemptIndex;
+                int? testSubResultId = publishedResults is not null
+                    && publishedResults[i].TryGetSubResultId(sequenceId, out int resolvedSubResultId)
+                        ? resolvedSubResultId
+                        : null;
+                deferredAttachments.Add((
+                    seeds[i].ResultId,
+                    testSubResultId,
+                    attempt.Attachments));
+            }
         }
     }
 
@@ -449,15 +499,19 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         long?[] totalDurations = new long?[updates.Count];
         var startedDates = new DateTimeOffset?[updates.Count];
         var completedDates = new DateTimeOffset?[updates.Count];
+        var newAttempts = new IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments>[updates.Count];
         for (int i = 0; i < updates.Count; i++)
         {
+            newAttempts[i] = GetAttempts(updates[i].Attempt);
+            AzureDevOpsTestCaseResult[] newAttemptResults = [.. newAttempts[i].Select(static attempt => attempt.Result)];
+
             // Built but not recorded yet: the map may only advance once Azure DevOps has accepted the
             // update, otherwise retrying a failed update would list the same execution twice.
-            attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, updates[i].Attempt.Result);
+            attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, newAttemptResults);
             appendedAttempts[i] = [.. attemptHistories[i].Where(attempt => attempt.SequenceId > updates[i].Published.LastPublishedSubResultSequenceId)];
-            totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, updates[i].Attempt.Result);
-            startedDates[i] = Min(updates[i].Published.StartedDate, updates[i].Attempt.Result.StartedDate);
-            completedDates[i] = Max(updates[i].Published.CompletedDate, updates[i].Attempt.Result.CompletedDate);
+            totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, newAttemptResults);
+            startedDates[i] = Min(updates[i].Published.StartedDate, AzureDevOpsResultIdStore.GetEarliestStartedDate(newAttemptResults));
+            completedDates[i] = Max(updates[i].Published.CompletedDate, AzureDevOpsResultIdStore.GetLatestCompletedDate(newAttemptResults));
             parents[i] = updates[i].Attempt.Result with
             {
                 Id = updates[i].Published.Id,
@@ -512,23 +566,31 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         for (int i = 0; i < updates.Count; i++)
         {
-            if (updates[i].Attempt.Attachments.Count > 0)
+            int lastSequenceId = attemptHistories[i][^1].SequenceId;
+            int firstSequenceId = lastSequenceId - newAttempts[i].Count + 1;
+            for (int attemptIndex = 0; attemptIndex < newAttempts[i].Count; attemptIndex++)
             {
-                int sequenceId = attemptHistories[i][^1].SequenceId;
+                AzureDevOpsTestCaseResultWithAttachments attempt = newAttempts[i][attemptIndex];
+                if (attempt.Attachments.Count == 0)
+                {
+                    continue;
+                }
+
+                int sequenceId = firstSequenceId + attemptIndex;
                 if (publishedResults is null
                     || !publishedResults[i].TryGetSubResultId(sequenceId, out int testSubResultId))
                 {
                     deferredAttachments.Add((
                         updates[i].Published.Id,
                         TestSubResultId: null,
-                        updates[i].Attempt.Attachments));
+                        attempt.Attachments));
                     continue;
                 }
 
                 deferredAttachments.Add((
                     updates[i].Published.Id,
                     testSubResultId,
-                    updates[i].Attempt.Attachments));
+                    attempt.Attachments));
             }
         }
 
@@ -599,7 +661,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     {
         for (int i = 0; i < batch.Count; i++)
         {
-            if (batch[i].Attachments.Count > 0)
+            if (GetAttempts(batch[i]).Any(static attempt => attempt.Attachments.Count > 0))
             {
                 return true;
             }
@@ -613,11 +675,17 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         int count = 0;
         for (int i = 0; i < batch.Count; i++)
         {
-            count += batch[i].Attachments.Count;
+            foreach (AzureDevOpsTestCaseResultWithAttachments attempt in GetAttempts(batch[i]))
+            {
+                count += attempt.Attachments.Count;
+            }
         }
 
         return count;
     }
+
+    private static IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> GetAttempts(AzureDevOpsTestCaseResultWithAttachments result)
+        => result.PreviousAttempts.Count == 0 ? [result] : [.. result.PreviousAttempts, result];
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
         : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);
