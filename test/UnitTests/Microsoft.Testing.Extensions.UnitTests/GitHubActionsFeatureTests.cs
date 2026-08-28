@@ -75,7 +75,10 @@ public sealed class GitHubActionsFeatureTests
     [DataRow("off")]
     [DataRow("OFF")]
     [DataRow("OfF")]
-    public void IsKnobEnabled_ReturnsFalse_WhenKnobIsOffRegardlessOfCasing(string value)
+    [DataRow("false")]
+    [DataRow("disable")]
+    [DataRow("0")]
+    public void IsKnobEnabled_ReturnsFalse_WhenKnobValueDisablesFeature(string value)
     {
         TestCommandLineOptions options = CreateOptions(
             knobOptionName: GitHubActionsCommandLineOptions.GitHubActionsGroups,
