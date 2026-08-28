@@ -391,13 +391,23 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         {
             // The parent POST already succeeded, but the PATCH may have reached Azure DevOps. Forget the
             // mapping before propagating cancellation or falling back so a later attempt cannot replay an
-            // uncertain first sub-result and duplicate sequence 1.
+            // uncertain first sub-result and duplicate sequence 1. The POST contained only the final
+            // outcome, so preserve earlier in-process executions as independent results rather than losing
+            // their outcomes and diagnostics.
+            List<AzureDevOpsTestCaseResultWithAttachments> previousAttempts = [];
             foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
             {
                 if (_resultIdStore?.TryGet(parent.Result) is { } published)
                 {
                     _resultIdStore.Forget(published);
                 }
+
+                previousAttempts.AddRange(parent.PreviousAttempts);
+            }
+
+            if (previousAttempts.Count > 0)
+            {
+                RequeueUnsafe(previousAttempts);
             }
 
             if (ex is OperationCanceledException)
@@ -405,12 +415,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 throw;
             }
 
-            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments _, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> attempts) in seeds)
+            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
             {
-                foreach (AzureDevOpsTestCaseResultWithAttachments attempt in attempts)
-                {
-                    deferredAttachments.Add((resultId, TestSubResultId: null, attempt.Attachments));
-                }
+                deferredAttachments.Add((resultId, TestSubResultId: null, parent.Attachments));
             }
 
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
