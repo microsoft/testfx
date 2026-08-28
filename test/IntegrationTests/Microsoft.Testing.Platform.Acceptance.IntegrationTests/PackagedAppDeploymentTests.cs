@@ -56,6 +56,31 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps (UWP/WinUI) are a Windows-only scenario.")]
+    public async Task PackagedAppDeployment_WithRetry_UsesLauncherForAttempt(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string markerPath = Path.Combine(testHost.DirectoryName, "retry-deployment-basedir.txt");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--retry-failed-tests 1",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["PACKAGEDAPP_BASEDIR_MARKER"] = markerPath,
+                [LauncherModeEnvironmentVariable] = "always",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(markerPath), $"Expected the retried host to write its base directory to '{markerPath}'.");
+        Assert.AreNotEqual(
+            NormalizeDirectory(testHost.DirectoryName),
+            ReadMarkedDirectory(markerPath),
+            "The retry orchestrator must delegate the attempt to the packaged-app launcher.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "The launcher is only ever enabled on Windows, so there is nothing to opt out of elsewhere.")]
     public async Task PackagedAppDeployment_WithNonPackagedLayoutAndNoOptIn_RunsInPlace(string currentTfm)
     {
@@ -101,6 +126,7 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingExtensionsPackagedAppVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingExtensionsRetryVersion$" />
   </ItemGroup>
 </Project>
 
@@ -134,6 +160,7 @@ public class Startup
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         testApplicationBuilder.AddPackagedAppDeployment();
+        testApplicationBuilder.AddRetryProvider();
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         return await app.RunAsync();
     }
@@ -179,7 +206,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.Net)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsPackagedAppVersion$", MicrosoftTestingExtensionsPackagedAppVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsPackagedAppVersion$", MicrosoftTestingExtensionsPackagedAppVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsRetryVersion$", MicrosoftTestingExtensionsRetryVersion));
     }
 
     public TestContext TestContext { get; set; }

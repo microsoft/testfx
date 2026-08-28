@@ -2,7 +2,9 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -69,8 +71,11 @@ internal static class RetryTestHostRunner
             attemptCount.ToString(CultureInfo.InvariantCulture);
 
         await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
-        using IProcess testHostProcess = serviceProvider.GetProcessHandler().Start(processStartInfo)
-            ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
+        ITestHostLauncher? testHostLauncher = serviceProvider.GetServiceInternal<ITestHostLauncher>();
+        using IProcess testHostProcess = testHostLauncher is null
+            ? serviceProvider.GetProcessHandler().Start(processStartInfo)
+                ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName))
+            : await LaunchUsingCustomLauncherAsync(testHostLauncher, processStartInfo, finalArguments, logger, cancellationToken).ConfigureAwait(false);
 
         using var processExitedCancellationToken = new CancellationTokenSource();
         EventHandler exitedHandler = (sender, e) =>
@@ -126,5 +131,29 @@ internal static class RetryTestHostRunner
         await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
         return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = false };
+    }
+
+    private static async Task<IProcess> LaunchUsingCustomLauncherAsync(
+        ITestHostLauncher testHostLauncher,
+        ProcessStartInfo processStartInfo,
+        IReadOnlyList<string> arguments,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+#pragma warning disable IDE0028 // Collection initialization can be simplified — populated from a runtime loop.
+        Dictionary<string, string?> environmentVariables = new(StringComparer.Ordinal);
+#pragma warning restore IDE0028
+        foreach (string key in processStartInfo.EnvironmentVariables.Keys)
+        {
+            environmentVariables[key] = processStartInfo.EnvironmentVariables[key];
+        }
+
+        string? workingDirectory = RoslynString.IsNullOrEmpty(processStartInfo.WorkingDirectory) ? null : processStartInfo.WorkingDirectory;
+        TestHostLaunchContext context = new(processStartInfo.FileName, arguments, environmentVariables, workingDirectory);
+
+        await logger.LogDebugAsync($"Delegating retry test host launch to '{testHostLauncher.DisplayName}' (UID: {testHostLauncher.Uid})").ConfigureAwait(false);
+        ITestHostHandle handle = await testHostLauncher.LaunchTestHostAsync(context, cancellationToken).ConfigureAwait(false);
+        await logger.LogDebugAsync($"Retry test host launched by '{testHostLauncher.Uid}' (Identifier: '{handle.Identifier ?? "<none>"}')").ConfigureAwait(false);
+        return new TestHostHandleToProcessAdapter(handle);
     }
 }
