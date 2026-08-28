@@ -210,13 +210,16 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         // fingerprint. Cache builds use an isolated package root outside the checkout instead; package
         // contents remain fingerprinted and the cache normalizes this root across agents.
         environmentVariables["NUGET_PACKAGES"] = Path.Combine(cacheConfiguration.CacheRoot, "NuGetPackages");
-        using DotnetCli.CommandSlot commandSlot = await DotnetCli.AcquireCommandSlotAsync(cancellationToken);
-        int exitCode = await cacheBuild.RunAsyncAndReturnExitCodeAsync(
-            commandLine,
-            environmentVariables,
-            workingDirectory: testAsset.TargetAssetPath,
-            cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
-            cancellationToken: cancellationToken);
+        int exitCode;
+        {
+            using DotnetCli.CommandSlot commandSlot = await DotnetCli.AcquireCommandSlotAsync(cancellationToken);
+            exitCode = await cacheBuild.RunAsyncAndReturnExitCodeAsync(
+                commandLine,
+                environmentVariables,
+                workingDirectory: testAsset.TargetAssetPath,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+                cancellationToken: cancellationToken);
+        }
 
         if (exitCode == 0)
         {
