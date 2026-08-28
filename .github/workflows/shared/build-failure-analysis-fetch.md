@@ -196,9 +196,19 @@ jobs:
           # Returns non-zero rather than calling emit_none directly, because a
           # call inside a command substitution would only exit the subshell.
           ado_get() {
-            local what="$1" url="$2" rc
-            ADO_DOC=$(curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 "${url}")
+            local what="$1" url="$2" rc tmp=/tmp/ado-response.json
+            # Write to a file rather than capturing stdout: `curl --retry` can only
+            # rewind seekable output, and command-substitution stdout is a pipe. A
+            # retry after a partial or error body would append to it, so a *successful*
+            # retry would yield two concatenated documents, `jq` would reject them, and
+            # the run would be reported as a data-resolution failure. With `-o` curl
+            # truncates the file before each attempt, so only the last response
+            # survives.
+            rm -f "${tmp}"
+            timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o "${tmp}" "${url}"
             rc=$?
+            ADO_DOC=$(cat "${tmp}" 2>/dev/null)
+            rm -f "${tmp}"
             if [ "${rc}" -ne 0 ] || [ -z "${ADO_DOC}" ]; then
               echo "::warning::Could not fetch the ${what} from Azure DevOps (curl exit ${rc}); treating as a data-resolution failure."
               return 1
@@ -497,7 +507,15 @@ jobs:
           #
           # `canceled` and `abandoned` legs count alongside `failed`: they also
           # finish without logs, and are a real gap in the artifact set.
-          timeline_json=$(curl -sSL --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true)
+          # Write to a file, not a command substitution: `curl --retry` can only rewind
+          # seekable output, so a retry would append to whatever a failed attempt had
+          # already emitted and a *successful* retry would yield two concatenated
+          # documents. That parses as neither, so a recoverable blip would look like an
+          # unreadable timeline and needlessly disable the analysis below.
+          rm -f /tmp/timeline.json
+          timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o /tmp/timeline.json "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true
+          timeline_json=$(cat /tmp/timeline.json 2>/dev/null)
+          rm -f /tmp/timeline.json
           MISSING_LEGS=""
           # An unreadable timeline must not look like a complete build. A failed
           # request, a non-JSON error page and an ADO error document all left
@@ -625,7 +643,23 @@ jobs:
             # around the whole invocation is what makes the deadline real rather than a
             # scheduling hint; a killed transfer is treated like any other failed one and
             # the leg is reported as missing, which fails closed.
-            timeout "${TIME_LEFT}" curl -sSL --retry 3 --connect-timeout 15 --max-time "${ATTEMPT_SECONDS}" --retry-max-time "${TIME_LEFT}" "${url}" 2>/dev/null | head -c $((ZIP_CAP + 1)) > /tmp/a.zip || true
+            # Download to a file, never a pipe: curl can only rewind seekable output, so
+            # through a pipe a retried body is *appended* and a 503 error page followed
+            # by a successful retry yields a corrupt `<error page><zip>` that can still
+            # pass the size guards, only to make `unzip` return warning status 1 later
+            # and drop the leg. `--fail` additionally keeps HTTP error bodies out of the
+            # file. `ulimit -f` is the disk backstop for responses that declare no
+            # Content-Length; the size check below is authoritative. The block count is
+            # rounded UP so any positive ZIP_CAP still buys at least one block. SIGXFSZ
+            # is ignored so hitting the cap is an ordinary write error.
+            rm -f /tmp/a.zip
+            (
+              ulimit -f $(( (ZIP_CAP + 511) / 512 ))
+              trap '' XFSZ
+              timeout "${TIME_LEFT}" curl -sSL --fail --retry 3 --retry-delay 2 \
+                --connect-timeout 15 --max-time "${ATTEMPT_SECONDS}" \
+                --retry-max-time "${TIME_LEFT}" -o /tmp/a.zip "${url}"
+            ) 2>/dev/null
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
             # Charge the budget with the bytes that actually crossed the wire,
             # including those of an artifact that is about to be skipped.
