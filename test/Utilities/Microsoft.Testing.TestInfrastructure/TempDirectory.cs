@@ -325,6 +325,12 @@ public class TempDirectory : IDisposable
             {
                 Thread.Sleep(100);
             }
+            catch (IOException ex)
+            {
+                throw new TimeoutException(
+                    $"Timed out waiting for exclusive access to stable test directory '{stableDirectoryName}'.",
+                    ex);
+            }
         }
     }
 
