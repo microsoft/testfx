@@ -20,8 +20,7 @@ public static class AcceptanceFixture
         // reuse stale contents. Cached CI fixture builds need one stable package root for portable cache
         // fingerprints, and nested acceptance commands must use that same populated root.
         string? acceptanceCacheRoot = Environment.GetEnvironmentVariable("TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT");
-        string nugetCache = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TF_BUILD"))
-            && !string.IsNullOrEmpty(acceptanceCacheRoot)
+        string nugetCache = !string.IsNullOrEmpty(acceptanceCacheRoot)
                 ? Path.Combine(acceptanceCacheRoot, "NuGetPackages")
                 : Path.Combine(s_directoryToCleanup, ".packages");
         Directory.CreateDirectory(nugetCache);
