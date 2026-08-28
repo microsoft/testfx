@@ -587,9 +587,9 @@ jobs:
           # `timeout-minutes`. Give the loop a wall-clock deadline and derive every
           # transfer's budget from what is left of it, so no combination of slow
           # artifacts and retries can take the job down before the controlled no-op.
-          DOWNLOAD_BUDGET=420           # 7 minutes for all artifact transfers
+          FETCH_BUDGET=420           # 7 minutes for all artifact transfers
           MAX_ATTEMPT_SECONDS=120       # per attempt; the full set really takes ~30s
-          DOWNLOAD_DEADLINE=$(( $(date +%s) + DOWNLOAD_BUDGET ))
+          FETCH_DEADLINE=$(( $(date +%s) + FETCH_BUDGET ))
           MAX_ARTIFACTS=40              # cap only; the real count is path-dependent
           TOTAL_BYTES=0
           TOTAL_ZIP_BYTES=0
@@ -646,9 +646,9 @@ jobs:
             fi
             # Bound this transfer by the time left as well, and never start one with
             # no time to finish in.
-            TIME_LEFT=$(( DOWNLOAD_DEADLINE - $(date +%s) ))
+            TIME_LEFT=$(( FETCH_DEADLINE - $(date +%s) ))
             if [ "${TIME_LEFT}" -le 0 ]; then
-              echo "::warning::Download time budget ${DOWNLOAD_BUDGET}s exhausted before ${name}; stopping downloads."; break
+              echo "::warning::Download time budget ${FETCH_BUDGET}s exhausted before ${name}; stopping downloads."; break
             fi
             ATTEMPT_SECONDS="${MAX_ATTEMPT_SECONDS}"
             [ "${TIME_LEFT}" -lt "${ATTEMPT_SECONDS}" ] && ATTEMPT_SECONDS="${TIME_LEFT}"
@@ -670,7 +670,7 @@ jobs:
               # Fail the leg rather than the backstop: if the shell will not apply
               # the limit, downloading anyway would leave a response with no usable
               # Content-Length free to fill the disk before the size check below runs.
-              ulimit -f $(( (ZIP_CAP + 511) / 512 )) || exit 1
+              ulimit -f $(( (ZIP_CAP + 1023) / 1024 )) || exit 1
               trap '' XFSZ
               timeout "${TIME_LEFT}" curl -sSL --fail --retry 3 --retry-delay 2 \
                 --connect-timeout 15 --max-time "${ATTEMPT_SECONDS}" \
@@ -681,7 +681,7 @@ jobs:
             # Charge the budget with the bytes retained on disk, including those of an
             # artifact about to be skipped. This is a disk and extraction budget, not a
             # meter of network egress: `-o` truncates before each retry, so failed
-            # attempts are not counted here. What bounds those is DOWNLOAD_DEADLINE via
+            # attempts are not counted here. What bounds those is FETCH_DEADLINE via
             # the `timeout` wrapper, plus `ulimit -f`, which caps every individual
             # attempt at ZIP_CAP.
             TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
@@ -740,7 +740,16 @@ jobs:
             # archive that extracted nothing would let one large binlog-free
             # artifact push a genuinely useful later leg past MAX_TOTAL_BYTES.
             uz=0
-            timeout 120 unzip -o "${ZIP_TMP}" '*.binlog' -d "${AX_DIR}" >/dev/null 2>&1 || uz=$?
+            # Extraction shares the deadline with the transfers. Otherwise a run that
+            # spent most of its budget downloading could still queue one bounded
+            # extraction per artifact and walk the job past `timeout-minutes` without
+            # ever reaching the controlled no-op below.
+            TIME_LEFT=$(( FETCH_DEADLINE - $(date +%s) ))
+            if [ "${TIME_LEFT}" -le 0 ]; then
+              echo "::warning::Fetch budget exhausted before extracting ${name}; stopping."; break
+            fi
+            [ "${TIME_LEFT}" -gt 120 ] && TIME_LEFT=120
+            timeout "${TIME_LEFT}" unzip -o "${ZIP_TMP}" '*.binlog' -d "${AX_DIR}" >/dev/null 2>&1 || uz=$?
             if [ "${uz}" -eq 11 ]; then
               echo "::warning::${name}: published logs contain no binlog; nothing to analyse from this leg."; continue
             fi
