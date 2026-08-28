@@ -226,11 +226,11 @@ public class TempDirectory : IDisposable
     <ItemGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'">
       <PackageReference Include="$(MSBuildCachePackageName)"
                         Version="$(MSBuildCachePackageVersion)"
-                        IncludeAssets="Runtime;Build;Native;contentFiles;Analyzers"
+                        IncludeAssets="Runtime;Build;BuildMultitargeting;Native;contentFiles;Analyzers"
                         PrivateAssets="All" />
       <PackageReference Include="Microsoft.MSBuildCache.SharedCompilation"
                         Version="$(MSBuildCachePackageVersion)"
-                        IncludeAssets="Runtime;Build;Native;contentFiles;Analyzers"
+                        IncludeAssets="Runtime;Build;BuildMultitargeting;Native;contentFiles;Analyzers"
                         PrivateAssets="All" />
     </ItemGroup>
 </Project>
