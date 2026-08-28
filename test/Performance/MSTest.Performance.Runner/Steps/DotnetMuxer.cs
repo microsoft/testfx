@@ -21,7 +21,7 @@ internal class DotnetMuxer : IStep<SingleProject, BuildArtifact>
         }
 
         string binlogPath = Path.Combine(payload.TestAsset.TargetAssetPath, "Build.binlog");
-        string buildCommand = $"build {payload.TestAsset.TargetAssetPath} -c {_buildConfiguration} -bl:\"{binlogPath}\"";
+        string buildCommand = $"build \"{payload.TestAsset.TargetAssetPath}\" -c {_buildConfiguration} -bl:\"{binlogPath}\"";
         Console.WriteLine($"Building: '{buildCommand}'");
         await DotnetCli.RunAsync(buildCommand);
         TestHost? testHost = payload.TestPlatform == TestPlatform.Mtp

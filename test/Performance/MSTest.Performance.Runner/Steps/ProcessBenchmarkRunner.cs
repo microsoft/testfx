@@ -77,7 +77,10 @@ internal static class ProcessBenchmarkRunner
 
             Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
             Task<string> stderrTask = process.StandardError.ReadToEndAsync();
-            Task exitTask = process.WaitForExitAsync();
+            Task<TimeSpan>? processorTimeTask = captureProcessResources
+                ? ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process)
+                : null;
+            Task exitTask = processorTimeTask ?? process.WaitForExitAsync();
             long peakWorkingSetBytes = 0;
             while (captureProcessResources && !exitTask.IsCompleted)
             {
@@ -88,6 +91,7 @@ internal static class ProcessBenchmarkRunner
             await exitTask;
             await Task.WhenAll(stdoutTask, stderrTask);
             stopwatch.Stop();
+            TimeSpan? processorTime = processorTimeTask is null ? null : await processorTimeTask;
 
             string standardOutput = await stdoutTask;
             string standardError = await stderrTask;
@@ -98,7 +102,7 @@ internal static class ProcessBenchmarkRunner
                 samples.Add(new(
                     Index: samples.Count + 1,
                     ElapsedMilliseconds: stopwatch.Elapsed.TotalMilliseconds,
-                    ProcessorMilliseconds: captureProcessResources ? process.TotalProcessorTime.TotalMilliseconds : null,
+                    ProcessorMilliseconds: processorTime?.TotalMilliseconds,
                     PeakWorkingSetBytes: captureProcessResources ? peakWorkingSetBytes : null,
                     TotalTests: counts.Total,
                     PassedTests: counts.Passed,

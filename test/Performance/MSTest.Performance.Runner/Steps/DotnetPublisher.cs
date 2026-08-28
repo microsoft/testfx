@@ -21,7 +21,7 @@ internal sealed class DotnetPublisher : IStep<SingleProject, BuildArtifact>
         string runtimeIdentifier = RuntimeInformation.RuntimeIdentifier;
         string binlogPath = Path.Combine(payload.TestAsset.TargetAssetPath, "Publish.binlog");
         string publishCommand =
-            $"publish {payload.TestAsset.TargetAssetPath} -c {BuildConfiguration.Release} -r {runtimeIdentifier} " +
+            $"publish \"{payload.TestAsset.TargetAssetPath}\" -c {BuildConfiguration.Release} -r {runtimeIdentifier} " +
             $"--self-contained -p:PublishAot=true -p:MSTestSourceGenMode=ReflectionFree -bl:\"{binlogPath}\"";
         Console.WriteLine($"Publishing: '{publishCommand}'");
         await DotnetCli.RunAsync(publishCommand);
