@@ -35,10 +35,7 @@ internal sealed partial class VideoRecorderSessionHandler
                 ? nowOffset
                 : _inFlight.Values.Min(start => (start - recordingStart).TotalSeconds);
 
-            failedWindows = _testRecords
-                .Where(record => record.IsFailure)
-                .SelectMany(record => new[] { (record.Start - recordingStart).TotalSeconds, (record.End - recordingStart).TotalSeconds })
-                .ToArray();
+            failedWindows = [.. _failedWindows];
         }
 
         double ageCutoff = cap is { } c ? nowOffset - c.TotalSeconds : double.NegativeInfinity;
