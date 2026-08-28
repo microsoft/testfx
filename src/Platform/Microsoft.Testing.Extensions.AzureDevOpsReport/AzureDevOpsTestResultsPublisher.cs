@@ -35,6 +35,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
+#if NET9_0_OR_GREATER
+    private readonly Lock _inProcessRetryAttemptsLock = new();
+#else
+    private readonly object _inProcessRetryAttemptsLock = new();
+#endif
+    private readonly Dictionary<(string AutomatedTestName, string TestCaseTitle), List<(int AttemptNumber, AzureDevOpsTestCaseResultWithAttachments Attempt)>> _inProcessRetryAttempts = [];
     // Mutate only while holding _flushSemaphore. One persisted parent may be updated at most once per
     // test-host attempt; a later duplicate is ambiguous and falls back to a separate create.
     private readonly HashSet<int> _claimedResultIds = [];
@@ -284,18 +290,20 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             switch (value)
             {
                 case TestNodeUpdateMessage testNodeUpdateMessage:
-                    // A test framework that retries a test in-process reports every attempt under the same test
-                    // node uid. Azure DevOps keys results by automated test name, so publishing the superseded
-                    // attempts would create duplicate rows for one test; only the final attempt is published.
-                    if (testNodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
-                    {
-                        return;
-                    }
-
                     AzureDevOpsTestCaseResultWithAttachments? testCaseResult = CreateTestCaseResult(testNodeUpdateMessage.TestNode, _publishConfiguration.AutomatedTestStorage);
                     if (testCaseResult is null)
                     {
                         return;
+                    }
+
+                    RetryAttemptProperty? retryAttempt = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
+                    if (retryAttempt is not null)
+                    {
+                        testCaseResult = AggregateInProcessRetryAttempt(retryAttempt, testCaseResult);
+                        if (testCaseResult is null)
+                        {
+                            return;
+                        }
                     }
 
                     // Enqueue before renewing the lease: RenewLeaseAsync does file I/O that can throw
@@ -315,6 +323,36 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+        }
+    }
+
+    private AzureDevOpsTestCaseResultWithAttachments? AggregateInProcessRetryAttempt(
+        RetryAttemptProperty retryAttempt,
+        AzureDevOpsTestCaseResultWithAttachments attempt)
+    {
+        (string AutomatedTestName, string TestCaseTitle) key = (attempt.Result.AutomatedTestName, attempt.Result.TestCaseTitle);
+        lock (_inProcessRetryAttemptsLock)
+        {
+            if (retryAttempt.IsSuperseded)
+            {
+                if (!_inProcessRetryAttempts.TryGetValue(key, out List<(int AttemptNumber, AzureDevOpsTestCaseResultWithAttachments Attempt)>? attempts))
+                {
+                    attempts = [];
+                    _inProcessRetryAttempts.Add(key, attempts);
+                }
+
+                attempts.Add((retryAttempt.AttemptNumber, attempt));
+                return null;
+            }
+
+            if (!_inProcessRetryAttempts.TryGetValue(key, out List<(int AttemptNumber, AzureDevOpsTestCaseResultWithAttachments Attempt)>? previousAttempts))
+            {
+                return attempt;
+            }
+
+            _inProcessRetryAttempts.Remove(key);
+            previousAttempts.Sort(static (left, right) => left.AttemptNumber.CompareTo(right.AttemptNumber));
+            return attempt with { PreviousAttempts = [.. previousAttempts.Select(static item => item.Attempt)] };
         }
     }
 

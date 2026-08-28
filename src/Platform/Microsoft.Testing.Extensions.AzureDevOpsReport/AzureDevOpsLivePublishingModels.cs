@@ -141,7 +141,14 @@ internal sealed record AzureDevOpsTestSubResult(
 /// <summary>A test case result bundled with optional attachments to upload after the result is published.</summary>
 internal sealed record AzureDevOpsTestCaseResultWithAttachments(
     AzureDevOpsTestCaseResult Result,
-    IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments);
+    IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)
+{
+    /// <summary>
+    /// Gets earlier executions that an in-process retry performed before <see cref="Result"/> became the
+    /// test's final outcome.
+    /// </summary>
+    public IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> PreviousAttempts { get; init; } = [];
+}
 
 internal sealed class AzureDevOpsPublishedTestResult
 {
