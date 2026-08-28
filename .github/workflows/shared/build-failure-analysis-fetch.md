@@ -196,7 +196,14 @@ jobs:
           # Returns non-zero rather than calling emit_none directly, because a
           # call inside a command substitution would only exit the subshell.
           ado_get() {
-            local what="$1" url="$2" rc tmp=/tmp/ado-response.json
+            local what="$1" url="$2" rc tmp
+            # `mktemp` rather than a fixed /tmp name: a predictable path is one
+            # pre-created symlink -- or one collision with another job sharing the
+            # runner -- away from being someone else's file.
+            tmp=$(mktemp) || {
+              echo "::warning::Could not create a temporary file for the ${what}; treating as a data-resolution failure."
+              return 1
+            }
             # Write to a file rather than capturing stdout: `curl --retry` can only
             # rewind seekable output, and command-substitution stdout is a pipe. A
             # retry after a partial or error body would append to it, so a *successful*
@@ -204,7 +211,6 @@ jobs:
             # the run would be reported as a data-resolution failure. With `-o` curl
             # truncates the file before each attempt, so only the last response
             # survives.
-            rm -f "${tmp}"
             timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o "${tmp}" "${url}"
             rc=$?
             ADO_DOC=$(cat "${tmp}" 2>/dev/null)
@@ -512,10 +518,10 @@ jobs:
           # already emitted and a *successful* retry would yield two concatenated
           # documents. That parses as neither, so a recoverable blip would look like an
           # unreadable timeline and needlessly disable the analysis below.
-          rm -f /tmp/timeline.json
-          timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o /tmp/timeline.json "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true
-          timeline_json=$(cat /tmp/timeline.json 2>/dev/null)
-          rm -f /tmp/timeline.json
+          TL_TMP=$(mktemp) || TL_TMP=""
+          timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o "${TL_TMP}" "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true
+          timeline_json=$(cat "${TL_TMP}" 2>/dev/null)
+          rm -f "${TL_TMP}"
           MISSING_LEGS=""
           # An unreadable timeline must not look like a complete build. A failed
           # request, a non-JSON error page and an ADO error document all left
@@ -587,6 +593,10 @@ jobs:
           MAX_ARTIFACTS=40              # cap only; the real count is path-dependent
           TOTAL_BYTES=0
           TOTAL_ZIP_BYTES=0
+          # One private scratch file for every download. A fixed /tmp name is a
+          # pre-created symlink, or a second job on the same runner, away from being
+          # someone else's file.
+          ZIP_TMP=$(mktemp) || { echo "::warning::Could not create a temporary file for downloads."; emit_none; }
           # Bound the work before starting: a pipeline change (or repeated leg
           # retries) could grow the matched set well past today's count. Refuse
           # rather than process a prefix of the list, because a partial view is
@@ -612,7 +622,7 @@ jobs:
             ai=$((ai + 1))
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
             [ -z "${url}" ] && { echo "::warning::No download URL for ${name}."; continue; }
-            rm -rf /tmp/ax /tmp/a.zip
+            rm -rf /tmp/ax "${ZIP_TMP}"
             mkdir -p /tmp/ax
             # Hard-cap the bytes written to disk regardless of Content-Length:
             # stream through `head -c` (cap + 1) and bound total time. This
@@ -652,15 +662,15 @@ jobs:
             # Content-Length; the size check below is authoritative. The block count is
             # rounded UP so any positive ZIP_CAP still buys at least one block. SIGXFSZ
             # is ignored so hitting the cap is an ordinary write error.
-            rm -f /tmp/a.zip
+            rm -f "${ZIP_TMP}"
             (
               ulimit -f $(( (ZIP_CAP + 511) / 512 ))
               trap '' XFSZ
               timeout "${TIME_LEFT}" curl -sSL --fail --retry 3 --retry-delay 2 \
                 --connect-timeout 15 --max-time "${ATTEMPT_SECONDS}" \
-                --retry-max-time "${TIME_LEFT}" -o /tmp/a.zip "${url}"
+                --retry-max-time "${TIME_LEFT}" -o "${ZIP_TMP}" "${url}"
             ) 2>/dev/null
-            ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
+            ZIP_BYTES=$(stat -c%s "${ZIP_TMP}" 2>/dev/null || echo 0)
             # Charge the budget with the bytes that actually crossed the wire,
             # including those of an artifact that is about to be skipped.
             TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
@@ -670,7 +680,7 @@ jobs:
             if [ "${ZIP_BYTES}" -gt "${ZIP_CAP}" ]; then
               echo "::warning::Skipping ${name}: download exceeded the ${ZIP_CAP}-byte cap."; continue
             fi
-            UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
+            UNCOMP=$(unzip -l "${ZIP_TMP}" 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected `unzip -l` output), we can't verify it — skip the
             # artifact rather than let a non-numeric value bypass the `-gt` guard.
@@ -697,7 +707,7 @@ jobs:
             # then extract `*.binlog` entries *preserving* their in-archive
             # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
             # share a basename in different folders don't overwrite each other.
-            if unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'; then
+            if unzip -Z1 "${ZIP_TMP}" 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'; then
               echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
             fi
             # `unzip` exit 11 means "no files matched" — the artifact carries no
@@ -713,7 +723,7 @@ jobs:
             # archive that extracted nothing would let one large binlog-free
             # artifact push a genuinely useful later leg past MAX_TOTAL_BYTES.
             uz=0
-            timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || uz=$?
+            timeout 120 unzip -o "${ZIP_TMP}" '*.binlog' -d /tmp/ax >/dev/null 2>&1 || uz=$?
             if [ "${uz}" -eq 11 ]; then
               echo "::warning::${name}: published logs contain no binlog; nothing to analyse from this leg."; continue
             fi
