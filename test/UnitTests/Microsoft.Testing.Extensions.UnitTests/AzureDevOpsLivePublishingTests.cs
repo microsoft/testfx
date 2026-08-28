@@ -2051,6 +2051,65 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task InProcessRetry_DuplicateFoldedRowsPublishEveryExecutionIndependently()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>(Enumerable.Range(100, results.Count).ToArray());
+        };
+
+        TestNode firstRowAttempt = CreateNode(
+            "SharedUid",
+            new FailedTestNodeStateProperty(new InvalidOperationException("row A first")),
+            RetryTestStartTime,
+            displayName: "Duplicate title");
+        firstRowAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true));
+        firstRowAttempt.Properties.Add(new StandardOutputProperty("row A output"));
+
+        TestNode secondRowAttempt = CreateNode(
+            "SharedUid",
+            new FailedTestNodeStateProperty(new InvalidOperationException("row B first")),
+            RetryTestStartTime,
+            displayName: "Duplicate title");
+        secondRowAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true));
+        secondRowAttempt.Properties.Add(new StandardOutputProperty("row B output"));
+
+        TestNode firstRowFinal = CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title");
+        firstRowFinal.Properties.Add(new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false));
+        TestNode secondRowFinal = CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title");
+        secondRowFinal.Properties.Add(new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(firstRowAttempt), CancellationToken.None);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(secondRowAttempt), CancellationToken.None);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(firstRowFinal), CancellationToken.None);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(secondRowFinal), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(4, created);
+        Assert.AreEqual("row A first", created[0].ErrorMessage);
+        Assert.AreEqual("row B first", created[1].ErrorMessage);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[2].Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[3].Outcome);
+        Assert.IsTrue(created.All(result => result.SubResults is null));
+        Assert.IsEmpty(client.UpdateTestResultsCalls);
+        Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual(100, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
+        Assert.AreEqual("row A output", client.UploadTestResultAttachmentCalls[0].Attachment.InlineContent);
+        Assert.AreEqual(101, client.UploadTestResultAttachmentCalls[1].TestCaseResultId);
+        Assert.AreEqual("row B output", client.UploadTestResultAttachmentCalls[1].Attachment.InlineContent);
+    }
+
+    [TestMethod]
     public async Task RetryAttempt_UpdatesTheResultTheEarlierAttemptCreatedInsteadOfAddingAnother()
     {
         using TestDirectory directory = CreateTestDirectory();

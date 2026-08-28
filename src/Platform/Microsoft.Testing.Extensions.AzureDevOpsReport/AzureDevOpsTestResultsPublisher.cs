@@ -40,7 +40,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
 #else
     private readonly object _inProcessRetryAttemptsLock = new();
 #endif
-    private readonly Dictionary<(string AutomatedTestName, string TestCaseTitle), List<(int AttemptNumber, AzureDevOpsTestCaseResultWithAttachments Attempt)>> _inProcessRetryAttempts = [];
+    private readonly Dictionary<(string AutomatedTestName, string TestCaseTitle), List<InProcessRetrySequence>> _inProcessRetrySequences = [];
     // Mutate only while holding _flushSemaphore. One persisted parent may be updated at most once per
     // test-host attempt; a later duplicate is ambiguous and falls back to a separate create.
     private readonly HashSet<int> _claimedResultIds = [];
@@ -333,27 +333,91 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         (string AutomatedTestName, string TestCaseTitle) key = (attempt.Result.AutomatedTestName, attempt.Result.TestCaseTitle);
         lock (_inProcessRetryAttemptsLock)
         {
-            if (retryAttempt.IsSuperseded)
+            if (retryAttempt.AttemptNumber == 1)
             {
-                if (!_inProcessRetryAttempts.TryGetValue(key, out List<(int AttemptNumber, AzureDevOpsTestCaseResultWithAttachments Attempt)>? attempts))
+                if (!retryAttempt.IsSuperseded)
                 {
-                    attempts = [];
-                    _inProcessRetryAttempts.Add(key, attempts);
+                    return attempt;
                 }
 
-                attempts.Add((retryAttempt.AttemptNumber, attempt));
+                if (!_inProcessRetrySequences.TryGetValue(key, out List<InProcessRetrySequence>? sequences))
+                {
+                    sequences = [];
+                    _inProcessRetrySequences.Add(key, sequences);
+                }
+
+                sequences.Add(new InProcessRetrySequence(attempt));
                 return null;
             }
 
-            if (!_inProcessRetryAttempts.TryGetValue(key, out List<(int AttemptNumber, AzureDevOpsTestCaseResultWithAttachments Attempt)>? previousAttempts))
+            if (!_inProcessRetrySequences.TryGetValue(key, out List<InProcessRetrySequence>? candidates))
             {
                 return attempt;
             }
 
-            _inProcessRetryAttempts.Remove(key);
-            previousAttempts.Sort(static (left, right) => left.AttemptNumber.CompareTo(right.AttemptNumber));
-            return attempt with { PreviousAttempts = [.. previousAttempts.Select(static item => item.Attempt)] };
+            InProcessRetrySequence? matchingSequence = null;
+            int matchingSequenceCount = 0;
+            foreach (InProcessRetrySequence candidate in candidates)
+            {
+                if (candidate.NextAttemptNumber == retryAttempt.AttemptNumber)
+                {
+                    matchingSequence = candidate;
+                    matchingSequenceCount++;
+                }
+            }
+
+            if (matchingSequenceCount != 1)
+            {
+                if (matchingSequenceCount > 1)
+                {
+                    // Retry metadata has no row identity beyond the test name, title, and attempt number.
+                    // Preserve every execution independently rather than cross-wire diagnostics between
+                    // folded data-driven rows that share all three values.
+                    foreach (InProcessRetrySequence candidate in candidates)
+                    {
+                        if (candidate.NextAttemptNumber != retryAttempt.AttemptNumber)
+                        {
+                            continue;
+                        }
+
+                        foreach (AzureDevOpsTestCaseResultWithAttachments previousAttempt in candidate.Attempts)
+                        {
+                            _pendingResults.Enqueue(previousAttempt);
+                        }
+                    }
+
+                    _ = candidates.RemoveAll(candidate => candidate.NextAttemptNumber == retryAttempt.AttemptNumber);
+                    if (candidates.Count == 0)
+                    {
+                        _inProcessRetrySequences.Remove(key);
+                    }
+                }
+
+                return attempt;
+            }
+
+            matchingSequence!.Attempts.Add(attempt);
+            matchingSequence.NextAttemptNumber++;
+            if (retryAttempt.IsSuperseded)
+            {
+                return null;
+            }
+
+            candidates.Remove(matchingSequence);
+            if (candidates.Count == 0)
+            {
+                _inProcessRetrySequences.Remove(key);
+            }
+
+            return attempt with { PreviousAttempts = [.. matchingSequence.Attempts.Take(matchingSequence.Attempts.Count - 1)] };
         }
+    }
+
+    private sealed class InProcessRetrySequence(AzureDevOpsTestCaseResultWithAttachments firstAttempt)
+    {
+        public List<AzureDevOpsTestCaseResultWithAttachments> Attempts { get; } = [firstAttempt];
+
+        public int NextAttemptNumber { get; set; } = 2;
     }
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
