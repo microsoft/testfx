@@ -46,11 +46,15 @@ Out of process file artifacts produced:
         // be controller-backed by default on this platform. The "Out of process" heading is only emitted
         // when the surviving controller (rather than the test host itself) reports the TRX file artifact,
         // so its presence here is direct proof that a bare --report-trx run went through the controller.
+        string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-trx", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+
+        string[] trxFiles = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
