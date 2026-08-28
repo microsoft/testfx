@@ -145,6 +145,43 @@ public class RetryTests
     }
 
     [TestMethod]
+    public async Task RunAttemptAsync_CanceledConnection_TerminatesCustomHandleBeforeDisposal()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> applicationCancellation = new();
+        applicationCancellation.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(applicationCancellation.Object);
+        serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
+        var launcher = new TerminatedTestHostLauncher();
+        serviceProvider.AddService(launcher);
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+        using var cancellation = new CancellationTokenSource();
+#pragma warning disable VSTHRD103 // CancelAsync is unavailable on .NET Framework.
+        cancellation.Cancel();
+#pragma warning restore VSTHRD103
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            [],
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            cancellation.Token));
+
+        Assert.IsTrue(launcher.Handle.TerminateCalled);
+        Assert.IsTrue(launcher.Handle.Disposed);
+    }
+
+    [TestMethod]
     public void SnapshotAttemptArtifacts_CopiesExternalArtifactAndPreservesDestination()
     {
         string retryRoot = Path.GetFullPath(Path.Combine("TR", "Retries", "abcde"));
@@ -1091,5 +1128,48 @@ public class RetryTests
         public void Dispose()
         {
         }
+    }
+
+    private sealed class TerminatedTestHostLauncher : ITestHostLauncher
+    {
+        public TerminatedTestHostHandle Handle { get; } = new();
+
+        public string Uid => nameof(TerminatedTestHostLauncher);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
+            => Task.FromResult<ITestHostHandle>(Handle);
+    }
+
+    private sealed class TerminatedTestHostHandle : ITestHostHandle
+    {
+        private readonly TaskCompletionSource<bool> _exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public bool TerminateCalled { get; private set; }
+
+        public bool Disposed { get; private set; }
+
+        public string Identifier => nameof(TerminatedTestHostHandle);
+
+        public int ExitCode => 1;
+
+        public bool HasExited => _exited.Task.IsCompleted;
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken) => _exited.Task.WithCancellationAsync(cancellationToken);
+
+        public void Terminate()
+        {
+            TerminateCalled = true;
+            _exited.TrySetResult(true);
+        }
+
+        public void Dispose() => Disposed = true;
     }
 }

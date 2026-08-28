@@ -19,6 +19,8 @@ namespace Microsoft.Testing.Extensions.Policy;
 [UnsupportedOSPlatform("browser")]
 internal static class RetryTestHostRunner
 {
+    private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// Result of running one attempt. When <see cref="ExitedBeforeConnect"/> is <see langword="true"/>, the child
     /// process died before it could connect to the retry pipe, and the orchestrator should stop with a generic failure.
@@ -131,6 +133,11 @@ internal static class RetryTestHostRunner
                 await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = true };
             }
+            catch (OperationCanceledException)
+            {
+                await TerminateAndWaitForExitAsync(testHostProcess, logger).ConfigureAwait(false);
+                throw;
+            }
         }
         finally
         {
@@ -140,6 +147,34 @@ internal static class RetryTestHostRunner
         await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
         return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = false };
+    }
+
+    private static async Task TerminateAndWaitForExitAsync(IProcess testHostProcess, ILogger logger)
+    {
+        try
+        {
+            testHostProcess.Kill();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogDebugAsync($"Ignoring failure while terminating the retry test host: {ex}").ConfigureAwait(false);
+        }
+
+        using var timeout = new CancellationTokenSource(TestHostTerminationTimeout);
+        try
+        {
+            await testHostProcess.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            if (testHostProcess is TestHostHandleToProcessAdapter adapter)
+            {
+                adapter.DeferDisposalUntilExit();
+            }
+
+            await logger.LogWarningAsync(
+                $"Retry test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing cancellation.").ConfigureAwait(false);
+        }
     }
 
     private static async Task<IProcess> LaunchUsingCustomLauncherAsync(
