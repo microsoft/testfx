@@ -7,6 +7,11 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
+    internal readonly struct CommandSlot : IDisposable
+    {
+        public void Dispose() => s_maxOutstandingCommands_semaphore.Release();
+    }
+
     private static readonly string[] CodeCoverageEnvironmentVariables =
     [
         "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
@@ -56,28 +61,27 @@ public static class DotnetCli
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
+        using CommandSlot commandSlot = await AcquireCommandSlotAsync(cancellationToken);
+        environmentVariables = CreateEnvironmentVariables(environmentVariables, disableTelemetry, disableCodeCoverage);
+
+        string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
+        extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
+        if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+        {
+            args = args.Insert(platformArgsIndex, extraArgs + " ");
+        }
+        else
+        {
+            args += extraArgs;
+        }
+
+        return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+    }
+
+    internal static async Task<CommandSlot> AcquireCommandSlotAsync(CancellationToken cancellationToken)
+    {
         await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
-        try
-        {
-            environmentVariables = CreateEnvironmentVariables(environmentVariables, disableTelemetry, disableCodeCoverage);
-
-            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
-            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
-            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
-            {
-                args = args.Insert(platformArgsIndex, extraArgs + " ");
-            }
-            else
-            {
-                args += extraArgs;
-            }
-
-            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
-        }
-        finally
-        {
-            s_maxOutstandingCommands_semaphore.Release();
-        }
+        return default;
     }
 
     internal static Dictionary<string, string?> CreateEnvironmentVariables(
