@@ -45,8 +45,6 @@ steps:
 
       & $msbuildPath -version -nologo
       if ($LASTEXITCODE -ne 0) { throw "The patched MSBuild executable failed its version check with exit code $LASTEXITCODE." }
-
-      Write-Host "##vso[task.prependpath]$([System.IO.Path]::GetDirectoryName($msbuildPath))"
     }
     catch {
       Write-Host "##vso[task.logissue type=warning]Patched MSBuild is unavailable: $($_.Exception.Message) The authoritative Arcade build will run."
