@@ -196,7 +196,6 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     $TargetFramework$

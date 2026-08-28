@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -199,6 +200,10 @@ internal static class ProcessBenchmarkRunner
             return Math.Max(currentPeak, process.PeakWorkingSet64);
         }
         catch (InvalidOperationException) when (process.HasExited)
+        {
+            return currentPeak;
+        }
+        catch (Win32Exception) when (process.HasExited)
         {
             return currentPeak;
         }
