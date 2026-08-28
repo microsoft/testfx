@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
         <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
-        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <target state="translated">因 CI 設定的截止時間即將到來，因此測試執行已提早停止。</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
@@ -119,32 +119,32 @@
       </trans-unit>
       <trans-unit id="FailureDetailExceptionLabel">
         <source>Exception</source>
-        <target state="new">Exception</target>
+        <target state="translated">例外狀況</target>
         <note>Label preceding the exception type of a failed test in the job summary.</note>
       </trans-unit>
       <trans-unit id="FailureDetailLocationLabel">
         <source>Location</source>
-        <target state="new">Location</target>
+        <target state="translated">位置</target>
         <note>Label preceding the source file and line of a failed test in the job summary.</note>
       </trans-unit>
       <trans-unit id="FailureDetailTruncated">
         <source>[... truncated]</source>
-        <target state="new">[... truncated]</target>
+        <target state="translated">[... 已截斷]</target>
         <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOmitted">
         <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
-        <target state="new">Failure details for {0} listed test(s) were omitted because the error details take up too much space.</target>
+        <target state="translated">已省略 {0} 個列出的測試的失敗詳細資料，因為錯誤詳細資料占用太多空間。</target>
         <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">啟用或停用將工作摘要中的每個失敗測試展開為可摺疊區段，並顯示其失敗訊息、例外狀況類型、來源位置和堆疊追蹤。有效值為 'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。在 GitHub Actions 上執行時，預設為 'on'。</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
         <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
-        <target state="new">Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</target>
+        <target state="translated">顯示前 {1} 個失敗測試中的第 {0} 個。其餘失敗請參閱工作流程記錄或測試報告。</target>
         <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
@@ -234,12 +234,12 @@
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
         <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
-        <target state="new">Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</target>
+        <target state="translated">因為錯誤詳細資料已占用太多空間，所以已省略 {0}/{1} 個測試專案的失敗詳細資料。如需其完整診斷，請參閱工作流程記錄或測試報告。</target>
         <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
       </trans-unit>
       <trans-unit id="ModulesNotListed">
         <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
-        <target state="new">{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</target>
+        <target state="translated">因為已達到作業摘要大小限制，所以未列出其餘 {0} 個測試專案。GitHub 會完整捨棄大於 1 MB 的作業摘要，而不會將其縮短。如需其結果，請參閱工作流程記錄或測試報告。</target>
         <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryLimitExceededWarning">
         <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
-        <target state="new">The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</target>
+        <target state="translated">GitHub 工作摘要檔案為 {0} 個位元組，附加此報告區段會超過 GitHub 每個步驟強制執行的 {1} 個位元組限制。GitHub 會直接捨棄過大的工作摘要，而不是截斷，因此如果附加，所有區段都會遺失，包括其他測試專案已寫入的內容。為了保留摘要的其餘部分，系統已略過這個區段。這通常表示有許多測試專案，或其他工具正在寫入同一份工作摘要；如需這些結果，請參閱工作流程記錄或測試報告。</target>
         <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
@@ -309,12 +309,12 @@
       </trans-unit>
       <trans-unit id="SummaryCondensed">
         <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
-        <target state="new">condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</target>
+        <target state="translated">因為摘要已經占用太多空間，所以已濃縮為一行。如需完整結果，請參閱工作流程記錄或測試報告。</target>
         <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
       </trans-unit>
       <trans-unit id="SummaryTruncatedNotice">
         <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
-        <target state="new">This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</target>
+        <target state="translated">此工作摘要已過長，因此已縮短：它包含第一個 {0} 個測試專案的完整結果，而以下以單行回報的項目則省略了結果。GitHub 會完整捨棄大於 1 MB 的作業摘要，而不會將其縮短。如需完整結果，請參閱工作流程記錄或測試報告。</target>
         <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>
