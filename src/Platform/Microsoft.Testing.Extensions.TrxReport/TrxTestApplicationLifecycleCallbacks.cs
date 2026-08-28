@@ -14,7 +14,11 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
-    [UnsupportedOSPlatformGuard("BROWSER")]
+    [UnsupportedOSPlatformGuard("android")]
+    [UnsupportedOSPlatformGuard("browser")]
+    [UnsupportedOSPlatformGuard("ios")]
+    [UnsupportedOSPlatformGuard("tvos")]
+    [UnsupportedOSPlatformGuard("wasi")]
     private readonly bool _isEnabled;
 
     private readonly IEnvironment _environment;
@@ -26,7 +30,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
         _isEnabled =
            // TrxReportGenerator is enabled only when trx report is enabled
            commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName) &&
-           // If crash dump is not enabled we run trx in-process only
+           // The controller pipe is available only in a controller-launched test host.
            TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptionsService);
 
         _environment = environment;

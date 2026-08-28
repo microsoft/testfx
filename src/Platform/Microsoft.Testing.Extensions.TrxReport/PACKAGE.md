@@ -22,6 +22,10 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable TRX report generation via the `--report-trx` command line option.
 
+On platforms that can launch a test-host process (all except Android, browser, iOS, tvOS, and WASI), TRX uses controller-backed recovery by default: the test host still streams results and generates the report during normal execution, but a surviving controller process can recover completed results into a TRX report if the test host crashes, hangs, or is stopped by `--timeout`. Android, browser, iOS, tvOS, and WASI cannot launch a test-host process, so TRX automatically falls back to its original in-process implementation there — no controller-backed recovery is attempted, and no configuration is required to get this fallback.
+
+The extra process has a measurable startup cost, which varies by target framework: for a trivial single-test run, launching the controller added no statistically measurable overhead on .NET (differences were within normal process-launch noise) but added roughly 700-800ms on .NET Framework in local measurements. Weigh this against the reliability benefit for your scenario, especially on .NET Framework or in tight inner-loop test runs.
+
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport.Abstractions](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions): interfaces for extensions interoperating with TRX reports
