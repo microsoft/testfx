@@ -33,6 +33,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     // Mutate only while holding _flushSemaphore.
     private readonly Stack<AzureDevOpsTestCaseResultWithAttachments> _retryResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
+    private readonly ConcurrentQueue<(int TestCaseResultId, AzureDevOpsTestResultAttachment Attachment)> _pendingResultAttachments = new();
     private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 #if NET9_0_OR_GREATER
@@ -510,6 +511,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, unpublishedResultCount),
                 CancellationToken.None).ConfigureAwait(false);
         }
+
+        await UploadPendingResultAttachmentsAsync(CancellationToken.None).ConfigureAwait(false);
 
         try
         {

@@ -34,6 +34,26 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
     }
 
+    private async Task UploadPendingResultAttachmentsAsync(CancellationToken cancellationToken)
+    {
+        while (_pendingResultAttachments.TryDequeue(out (int TestCaseResultId, AzureDevOpsTestResultAttachment Attachment) pending))
+        {
+            try
+            {
+                await UploadAttachmentsForResultAsync(
+                    pending.TestCaseResultId,
+                    testSubResultId: null,
+                    [pending.Attachment],
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+            {
+                Interlocked.Increment(ref _failedAttachmentCount);
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+            }
+        }
+    }
+
     private async Task UploadResultAttachmentsAsync(int testCaseResultId, int? testSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
     {
         if (_publishConfiguration is null || CurrentRunId is null || attachments.Count == 0)
@@ -412,6 +432,14 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
             if (ex is OperationCanceledException)
             {
+                foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
+                {
+                    foreach (AzureDevOpsTestResultAttachment attachment in parent.Attachments)
+                    {
+                        _pendingResultAttachments.Enqueue((resultId, attachment));
+                    }
+                }
+
                 throw;
             }
 

@@ -2051,6 +2051,74 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task InProcessRetry_ThreeAttemptsPublishOrderedHistoryAndAttachments()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            new AzureDevOpsTestResultsPublisherOptions(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)),
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _);
+        AppendingAzureDevOpsService service = new();
+        service.Connect(client);
+
+        TestNode firstAttempt = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            RetryTestStartTime,
+            new TimingProperty(new TimingInfo(
+                RetryTestStartTime,
+                RetryTestStartTime + TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(1))));
+        firstAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true));
+        firstAttempt.Properties.Add(new StandardOutputProperty("first output"));
+
+        TestNode secondAttempt = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("second")),
+            RetryTestStartTime + TimeSpan.FromSeconds(1),
+            new TimingProperty(new TimingInfo(
+                RetryTestStartTime + TimeSpan.FromSeconds(1),
+                RetryTestStartTime + TimeSpan.FromSeconds(3),
+                TimeSpan.FromSeconds(2))));
+        secondAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 2, isSuperseded: true));
+        secondAttempt.Properties.Add(new StandardOutputProperty("second output"));
+
+        TestNode finalAttempt = CreateNode(
+            "MyTest",
+            new PassedTestNodeStateProperty(),
+            RetryTestStartTime + TimeSpan.FromSeconds(3),
+            new TimingProperty(new TimingInfo(
+                RetryTestStartTime + TimeSpan.FromSeconds(3),
+                RetryTestStartTime + TimeSpan.FromSeconds(6),
+                TimeSpan.FromSeconds(3))));
+        finalAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 3, isSuperseded: false));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(firstAttempt), CancellationToken.None);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(secondAttempt), CancellationToken.None);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(finalAttempt), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
+        Assert.AreEqual(6_000L, parent.DurationInMs);
+        Assert.HasCount(3, service.SubResults);
+        for (int i = 0; i < service.SubResults.Count; i++)
+        {
+            Assert.AreEqual(i + 1, service.SubResults[i].SequenceId);
+            Assert.AreEqual($"Attempt# {i.ToString(CultureInfo.InvariantCulture)} - MyTest", service.SubResults[i].DisplayName);
+        }
+
+        Assert.ContainsSingle(service.SubResults[0].Attachments);
+        Assert.AreEqual("first output", service.SubResults[0].Attachments[0].InlineContent);
+        Assert.ContainsSingle(service.SubResults[1].Attachments);
+        Assert.AreEqual("second output", service.SubResults[1].Attachments[0].InlineContent);
+        Assert.IsEmpty(service.SubResults[2].Attachments);
+        Assert.IsEmpty(service.ParentAttachments);
+    }
+
+    [TestMethod]
     public async Task InProcessRetry_DuplicateFoldedRowsPublishEveryExecutionIndependently()
     {
         using TestDirectory directory = CreateTestDirectory();
@@ -3464,8 +3532,12 @@ public sealed class AzureDevOpsLivePublishingTests
             new FailedTestNodeStateProperty(new InvalidOperationException("first")),
             RetryTestStartTime);
         firstAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true));
-        TestNode finalAttempt = CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime);
+        TestNode finalAttempt = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("final")),
+            RetryTestStartTime);
         finalAttempt.Properties.Add(new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false));
+        finalAttempt.Properties.Add(new StandardOutputProperty("final output"));
 
         await StartPublisherAsync(publisher);
         await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(firstAttempt), CancellationToken.None);
@@ -3474,9 +3546,14 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[0].Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, created[0].Outcome);
+        Assert.AreEqual("final", created[0].ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, created[1].Outcome);
         Assert.AreEqual("first", created[1].ErrorMessage);
+        Assert.ContainsSingle(client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual(131, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
+        Assert.IsNull(client.UploadTestResultAttachmentCalls[0].TestSubResultId);
+        Assert.AreEqual("final output", client.UploadTestResultAttachmentCalls[0].Attachment.InlineContent);
     }
 
     [TestMethod]
