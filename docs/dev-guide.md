@@ -102,7 +102,7 @@ Cache population and multithreaded cache consumption intentionally use different
 # Trusted main population: process nodes provide unambiguous Detours attribution.
 eng\common\msbuild.ps1 -msbuildMultiThreaded:$false -warnAsError:$false TestFx.slnx /restore /graph /m /reportfileaccesses /t:Build /p:Configuration=<Debug|Release> /p:MSBuildCachePackageEnabled=true /p:MSBuildCacheEnabled=true /p:MSBuildCacheRemoteCacheIsReadOnly=false
 
-# PR consumption: thread nodes perform lookup/materialization only and never receive write permission.
+# PR consumption: hits materialize; misses execute under MT but cannot publish to the remote cache.
 eng\common\msbuild.ps1 -msbuildMultiThreaded:$true -warnAsError:$false TestFx.slnx /restore /graph /m /t:Build /p:Configuration=<Debug|Release> /p:MSBuildCachePackageEnabled=true /p:MSBuildCacheEnabled=true /p:MSBuildCacheRemoteCacheIsReadOnly=true
 ```
 
