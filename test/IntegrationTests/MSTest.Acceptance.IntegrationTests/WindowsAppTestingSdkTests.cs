@@ -46,10 +46,16 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests(string tfm)
     {
         string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c Release {AssetFixture.VSTestProjectPath} --framework {tfm}",
+            workingDirectory: AssetFixture.VSTestProjectPath,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {testHost.FullName} --filter ClassName=CharacterMapTests",
-            workingDirectory: AssetFixture.ProjectPath,
+            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --no-build --no-restore --filter ClassName=CharacterMapTests",
+            workingDirectory: AssetFixture.VSTestProjectPath,
             environmentVariables: new()
             {
                 ["DOTNET_ROLL_FORWARD"] = "Major",
@@ -61,7 +67,8 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             cancellationToken: TestContext.CancellationToken);
 
         dotnetTestResult.AssertExitCodeIs(0);
-        dotnetTestResult.AssertOutputContains("VSTest version");
+        dotnetTestResult.AssertOutputContains("Test run for ");
+        dotnetTestResult.AssertOutputContains("VSTestWindowsAppTesting.dll");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
         await AssertProcessExitedAsync(pidFile);
     }
@@ -208,6 +215,22 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
   </PropertyGroup>
 </Project>
 
+#file VSTest/VSTestWindowsAppTesting.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseVSTest>true</UseVSTest>
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\CharacterMapTests.cs" Link="CharacterMapTests.cs" />
+  </ItemGroup>
+</Project>
+
 #file CharacterMapTests.cs
 using System.Globalization;
 using System.Windows.Automation;
@@ -287,6 +310,8 @@ public class StartupTimeoutTests : ApplicationTest
 
         public string CrossTargetingProjectPath =>
             Path.Combine(ProjectPath, "CrossTargeting", "CrossTargeting.csproj");
+
+        public string VSTestProjectPath => Path.Combine(ProjectPath, "VSTest");
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
