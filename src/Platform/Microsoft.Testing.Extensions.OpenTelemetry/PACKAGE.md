@@ -60,6 +60,21 @@ The legacy `tests.discovered` / `tests.started` / `tests.completed` / `tests.pas
 | `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES` | `1` | Emit the pre-semantic-convention attribute and instrument names alongside the new ones. |
 | `OTEL_SDK_DISABLED`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER` | unset | Standard OpenTelemetry variables honored by `AddOpenTelemetryProviderFromEnvironment`. |
 
+## Data exported and controlling sensitive values
+
+Telemetry is only ever sent to the exporters and endpoints **you** configure — nothing leaves the process unless you register an exporter (directly, or via `AddOpenTelemetryProviderFromEnvironment` and the `OTEL_*` variables). Once an exporter is configured, the following attributes can carry environment-specific or sensitive values, so review them against your exporter's destination:
+
+| Attribute (and legacy twin) | Carries | Control |
+| --- | --- | --- |
+| `code.file.path` (`test.file.path`), `code.line.number` (`test.line.start`/`test.line.end`) | Absolute source file path of the test — reveals machine and repository layout. | On by default whenever a test reports a file location. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
+| `test.artifact.file[N].path` | Absolute path of each file artifact a test attaches (dumps, logs, screenshots). | Emitted whenever a test produces file artifacts. |
+| `test.output.stdout` / `test.output.stderr` (`test.stdout`/`test.stderr`) | Captured standard output and error of the test, which routinely contains secrets or environment data. | Off when `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0`; always truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
+| `code.stacktrace`, `test.case.result.explanation` (`test.result.explanation`), and the `exception` span event (`exception.message` / `exception.stacktrace`) | Exception message and stack trace text. | Always truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
+| `test.metadata.*` (`test.metadata.*` legacy) | Framework-supplied trait/metadata values verbatim. | Emitted whenever a test carries metadata. |
+| Resource `vcs.repository.url.full` | The CI repository URL. | User-info credentials (`https://user:token@host/...`) are stripped before export. |
+
+All string attributes — the semantic-convention names and their legacy twins alike — are truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` (8192 characters by default). Set `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0` on any job whose test output can contain secrets, and prefer sending telemetry to a backend you control.
+
 ## Documentation
 
 For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-open-telemetry>.

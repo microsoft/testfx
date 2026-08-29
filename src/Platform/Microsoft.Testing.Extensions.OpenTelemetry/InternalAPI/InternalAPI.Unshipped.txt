@@ -37,3 +37,13 @@ Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValu
 Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.MeasurementWrapper(TInstrument! instrument) -> void
 abstract Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.EmitCore(TValue value) -> void
 abstract Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.EmitCore(TValue value, System.Collections.Generic.KeyValuePair<string!, object?>[]! tags) -> void
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.ConfigureMetricsProvider.get -> bool
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.ConfigureTracingProvider.get -> bool
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.EnvironmentConfiguration() -> void
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.EnvironmentConfiguration(bool configureTracingProvider, bool configureMetricsProvider, bool useOtlpTracing, bool useOtlpMetrics) -> void
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.ShouldRegisterProvider.get -> bool
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.UseOtlpMetrics.get -> bool
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.UseOtlpTracing.get -> bool
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration.Disabled.get -> Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.ResolveEnvironmentConfiguration(System.Func<string!, string?>! getEnvironmentVariable, bool hasTracingDelegate, bool hasMetricsDelegate) -> Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.EnvironmentConfiguration
