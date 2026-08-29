@@ -477,7 +477,7 @@
   </data>
   <data name="CommandLineVSTestConsoleLoggerReplacement" xml:space="preserve">
     <value>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</value>
-    <comment>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output"}</comment>
+    <comment>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</comment>
   </data>
   <data name="CommandLineVSTestXPlatCoverageReplacement" xml:space="preserve">
     <value>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</value>

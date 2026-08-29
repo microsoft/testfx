@@ -295,7 +295,7 @@
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
         <target state="new">For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</target>
-        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output"}</note>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>

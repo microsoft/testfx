@@ -282,18 +282,16 @@ internal static partial class CommandLineOptionsValidator
 
         if (value is not null
             && IsVSTestNamedValue(value, "console")
-            && GetVSTestSubOptionValue(value, "verbosity") is { } verbosity)
-        {
-            if (verbosity.Equals("minimal", StringComparison.OrdinalIgnoreCase)
+            && GetVSTestSubOptionValue(value, "verbosity") is { } verbosity
+            && (verbosity.Equals("minimal", StringComparison.OrdinalIgnoreCase)
                 || verbosity.Equals("normal", StringComparison.OrdinalIgnoreCase)
-                || verbosity.Equals("detailed", StringComparison.OrdinalIgnoreCase))
-            {
-                stringBuilder.AppendLine(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.CommandLineVSTestConsoleLoggerReplacement,
-                    verbosity.ToLowerInvariant()));
-                return;
-            }
+                || verbosity.Equals("detailed", StringComparison.OrdinalIgnoreCase)))
+        {
+            stringBuilder.AppendLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.CommandLineVSTestConsoleLoggerReplacement,
+                verbosity.ToLowerInvariant()));
+            return;
         }
 
         stringBuilder.AppendLine(PlatformResources.CommandLineVSTestLoggerGuidance);
