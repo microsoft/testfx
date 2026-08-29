@@ -212,3 +212,13 @@ Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole 
 - Remaining zero-coverage `SharedExtensionHelpers` candidates for future runs: `RunSettingsCommandLineOptionsProviderBase`, `RunSettingsEnvironmentVariableProviderBase`, `TestRunParametersCommandLineOptionsProviderBase`. `TestCaseFilterCommandLineOptionsProviderBase` (27 lines) likely trivial — skip.
 - Task 4/5: confirmed no open `[test-improver]` PRs needing maintenance beyond the new one just created; no open issues labeled `testing` needing comment this run.
 - Task 7 done: issue #10389 updated with new Run History entry for run 33218583492, new PR added to Suggested Actions, backlog refreshed.
+
+## Run 2026-08-29 (run 33279734783) — RunSettingsCommandLineOptionsProviderBase
+
+- Task 4/7 reconciliation: confirmed PR #10840 ("Cover superseded retry slow-test tracking", fixes #10825) is **merged** (2026-08-28) — removed from Suggested Actions. PR #10860 (ReportGeneratorBase, fixes #10850) remains **open** — kept in Suggested Actions.
+- Task 3: Selected `RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync` (browser/WebAssembly guard: loads runsettings and rejects `<EnvironmentVariables>` on browser; always valid otherwise) — zero coverage. Verified `RunSettingsEnvironmentVariableProviderBase` and `TestRunParametersCommandLineOptionsProviderBase` are already fully tested (no action needed — remove from backlog).
+- Added 2 tests to `RunSettingsCommandLineOptionsProviderTests.cs` (VSTestBridge): non-browser always-valid (even with `<EnvironmentVariables>` present), and no-runsettings-provided valid path. **Limitation**: `OperatingSystem.IsBrowser()` is always false on net8.0/net462 test hosts, so the actual browser-rejection branch can't be exercised — documented inline, consistent with other untested `IsBrowser()` guards elsewhere in repo (no test attempts them either).
+- Build succeeded; targeted 6/6 passed; full `Microsoft.Testing.Extensions.VSTestBridge.UnitTests` suite: 91/91 passed, 0 failed (vstestbridge.dll coverage 1.9%→52.3% line). Format check clean.
+- Created draft PR "Cover RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync" on branch `test-assist/run-settings-provider-browser-guard`.
+- Remaining zero-coverage `SharedExtensionHelpers` candidates for future runs: none of real value left — only `TestCaseFilterCommandLineOptionsProviderBase` (27 lines, trivial, skip). Consider next run pivoting to Task 5 (issue comments) or Task 6 (test infrastructure) since the `SharedExtensionHelpers` backlog begun 2026-08-24 is now exhausted.
+- Task 7 done: issue #10389 updated with new Run History entry for run 33279734783, new PR added to Suggested Actions, backlog refreshed, merged PR item removed.
