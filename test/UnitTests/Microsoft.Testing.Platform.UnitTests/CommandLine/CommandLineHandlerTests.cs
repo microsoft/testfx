@@ -763,6 +763,36 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("crashdump", "Microsoft.Testing.Extensions.CrashDump", "--hangdump", "Microsoft.Testing.Extensions.HangDump")]
+    [DataRow("hangdump", "Microsoft.Testing.Extensions.HangDump", "--crashdump", "Microsoft.Testing.Extensions.CrashDump")]
+    public async Task ParseAndValidateAsync_VSTestBlameWithOneRegisteredReplacement_SuggestsOtherExtension(
+        string registeredReplacement,
+        string registeredPackageName,
+        string missingReplacement,
+        string missingPackageName)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["--collect", "blame"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration(registeredReplacement),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.DoesNotContain(
+            $"Option '--{registeredReplacement}' is provided by the '{registeredPackageName}' extension.",
+            result.ErrorMessage);
+        Assert.Contains(
+            $"Option '{missingReplacement}' is provided by the '{missingPackageName}' extension. Add a package reference to use it.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_VSTestOptionInTestConfig_SuggestsMTPReplacement()
     {
         CommandLineParseResult parseResult = CommandLineParser.Parse([], new SystemEnvironment());
