@@ -657,6 +657,97 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("logger", "trx", "Use '--report-trx' instead.")]
+    [DataRow("logger", "trx;LogFileName=results.trx", "Use '--report-trx' and '--report-trx-filename <FILE>' instead.")]
+    [DataRow("logger", "console;verbosity=detailed", "For comparable console verbosity, use '--output detailed'.")]
+    [DataRow("logger", "custom", "MTP uses reporter-specific options")]
+    [DataRow("collect", "Code Coverage", "Use '--coverage' instead.")]
+    [DataRow("collect", "XPlat Code Coverage", "This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.")]
+    [DataRow("collect", "blame", "there is no one-to-one replacement for the VSTest blame collector.")]
+    [DataRow("collect", "custom", "MTP uses collector-specific options.")]
+    public async Task ParseAndValidateAsync_VSTestOption_SuggestsMTPReplacement(
+        string option,
+        string argument,
+        string expectedGuidance)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([$"--{option}", argument], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains($"Option '--{option}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.", result.ErrorMessage);
+        Assert.Contains(expectedGuidance, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("logger", "MTP uses reporter-specific options")]
+    [DataRow("collect", "MTP uses collector-specific options")]
+    public async Task ParseAndValidateAsync_VSTestOptionWithoutArgument_ProvidesGeneralGuidance(
+        string option,
+        string expectedGuidance)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([$"--{option}"], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(expectedGuidance, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("logger", "trx", "--report-trx", "Microsoft.Testing.Extensions.TrxReport")]
+    [DataRow("collect", "Code Coverage", "--coverage", "Microsoft.Testing.Extensions.CodeCoverage")]
+    [DataRow("collect", "XPlat Code Coverage", "--coverage", "Microsoft.Testing.Extensions.CodeCoverage")]
+    [DataRow("collect", "blame", "--crashdump", "Microsoft.Testing.Extensions.CrashDump")]
+    [DataRow("collect", "blame", "--hangdump", "Microsoft.Testing.Extensions.HangDump")]
+    public async Task ParseAndValidateAsync_VSTestOption_SuggestsRequiredExtension(
+        string option,
+        string argument,
+        string replacement,
+        string packageName)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([$"--{option}", argument], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(
+            $"Option '{replacement}' is provided by the '{packageName}' extension. Add a package reference to use it.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_VSTestOptionInTestConfig_SuggestsMTPReplacement()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            Mock.Of<ICommandLineOptions>(),
+            [new JsonCommandLineOptionEntry("logger", ["trx"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(
+            "In testconfig.json under 'commandLineOptions': Unknown option '--logger'",
+            result.ErrorMessage);
+        Assert.Contains("Use '--report-trx' instead.", result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("--report-azdo", "Microsoft.Testing.Extensions.AzureDevOpsReport")]
     [DataRow("--coverage-output-format", "Microsoft.Testing.Extensions.CodeCoverage")]
     [DataRow("--crashdump-type", "Microsoft.Testing.Extensions.CrashDump")]

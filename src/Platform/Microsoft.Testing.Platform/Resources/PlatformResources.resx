@@ -467,6 +467,34 @@
     <value>Unknown option '--{0}'</value>
     <comment>{0} is the unknown option name without the leading dashes.</comment>
   </data>
+  <data name="CommandLineVSTestOptionUnsupported" xml:space="preserve">
+    <value>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</value>
+    <comment>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</comment>
+  </data>
+  <data name="CommandLineVSTestReplacementSuggestion" xml:space="preserve">
+    <value>Use {0} instead.</value>
+    <comment>{0} is one or more replacement MTP command-line options, including their leading dashes.</comment>
+  </data>
+  <data name="CommandLineVSTestConsoleLoggerReplacement" xml:space="preserve">
+    <value>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</value>
+    <comment>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output"}</comment>
+  </data>
+  <data name="CommandLineVSTestXPlatCoverageReplacement" xml:space="preserve">
+    <value>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</value>
+    <comment>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</comment>
+  </data>
+  <data name="CommandLineVSTestBlameReplacement" xml:space="preserve">
+    <value>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</value>
+    <comment>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</comment>
+  </data>
+  <data name="CommandLineVSTestLoggerGuidance" xml:space="preserve">
+    <value>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</value>
+    <comment>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</comment>
+  </data>
+  <data name="CommandLineVSTestCollectorGuidance" xml:space="preserve">
+    <value>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</value>
+    <comment>{Locked="MTP"}</comment>
+  </data>
   <data name="CommandLineOptionSuggestion" xml:space="preserve">
     <value>Did you mean '--{0}'?</value>
     <comment>{0} is the suggested option name without the leading dashes.</comment>

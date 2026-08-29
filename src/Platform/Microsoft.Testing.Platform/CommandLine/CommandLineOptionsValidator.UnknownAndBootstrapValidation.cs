@@ -131,7 +131,7 @@ internal static partial class CommandLineOptionsValidator
             if (!validOptionNames.Contains(optionRecord.Name))
             {
                 stringBuilder ??= new();
-                AppendUnknownOptionError(stringBuilder, optionRecord.Name, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
+                AppendUnknownOptionError(stringBuilder, optionRecord.Name, optionRecord.Arguments, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
             }
         }
 
@@ -147,7 +147,7 @@ internal static partial class CommandLineOptionsValidator
                 {
                     stringBuilder ??= new();
                     StringBuilder innerErrorBuilder = new();
-                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
+                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, entry.Arguments, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
                     string innerError = innerErrorBuilder.ToTrimmedString();
                     stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
                 }
@@ -185,11 +185,18 @@ internal static partial class CommandLineOptionsValidator
     private static void AppendUnknownOptionError(
         StringBuilder stringBuilder,
         string unknownOptionName,
+        IReadOnlyList<string> arguments,
         HashSet<string> validOptionNames,
         HashSet<string> visibleOptionNames,
         bool includeKnownExtensionOptions)
     {
         stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, unknownOptionName));
+
+        if (includeKnownExtensionOptions
+            && TryAppendVSTestOptionGuidance(stringBuilder, unknownOptionName, arguments))
+        {
+            return;
+        }
 
         if (includeKnownExtensionOptions
             && GetKnownExtensionPackage(unknownOptionName) is { } packageName)
@@ -217,6 +224,108 @@ internal static partial class CommandLineOptionsValidator
         {
             AppendMissingExtensionSuggestion(stringBuilder, suggestedOptionName, suggestedPackageName);
         }
+    }
+
+    private static bool TryAppendVSTestOptionGuidance(
+        StringBuilder stringBuilder,
+        string unknownOptionName,
+        IReadOnlyList<string> arguments)
+    {
+        bool isLogger = unknownOptionName.Equals("logger", StringComparison.OrdinalIgnoreCase);
+        bool isCollect = unknownOptionName.Equals("collect", StringComparison.OrdinalIgnoreCase);
+        if (!isLogger && !isCollect)
+        {
+            return false;
+        }
+
+        stringBuilder.AppendLine(string.Format(
+            CultureInfo.InvariantCulture,
+            PlatformResources.CommandLineVSTestOptionUnsupported,
+            unknownOptionName));
+
+        string? value = arguments.Count == 1 ? arguments[0] : null;
+        if (isLogger)
+        {
+            AppendVSTestLoggerGuidance(stringBuilder, value);
+        }
+        else
+        {
+            AppendVSTestCollectGuidance(stringBuilder, value);
+        }
+
+        return true;
+    }
+
+    private static void AppendVSTestLoggerGuidance(StringBuilder stringBuilder, string? value)
+    {
+        if (value is not null
+            && (value.Equals("trx", StringComparison.OrdinalIgnoreCase)
+                || value.StartsWith("trx;", StringComparison.OrdinalIgnoreCase)))
+        {
+            string replacement = value.Split(';').Skip(1).Any(static segment =>
+                segment.StartsWith("LogFileName=", StringComparison.OrdinalIgnoreCase)
+                && segment.Length > "LogFileName=".Length)
+                ? "'--report-trx' and '--report-trx-filename <FILE>'"
+                : "'--report-trx'";
+            stringBuilder.AppendLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.CommandLineVSTestReplacementSuggestion,
+                replacement));
+            AppendMissingExtensionSuggestion(stringBuilder, "report-trx", "Microsoft.Testing.Extensions.TrxReport");
+            return;
+        }
+
+        if (value is not null
+            && value.StartsWith("console;", StringComparison.OrdinalIgnoreCase)
+            && value.Split(';').Skip(1).FirstOrDefault(static segment =>
+                segment.StartsWith("verbosity=", StringComparison.OrdinalIgnoreCase)) is { } verbositySegment)
+        {
+            string verbosity = verbositySegment.Substring("verbosity=".Length);
+            if (verbosity.Equals("minimal", StringComparison.OrdinalIgnoreCase)
+                || verbosity.Equals("normal", StringComparison.OrdinalIgnoreCase)
+                || verbosity.Equals("detailed", StringComparison.OrdinalIgnoreCase))
+            {
+                stringBuilder.AppendLine(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.CommandLineVSTestConsoleLoggerReplacement,
+                    verbosity.ToLowerInvariant()));
+                return;
+            }
+        }
+
+        stringBuilder.AppendLine(PlatformResources.CommandLineVSTestLoggerGuidance);
+    }
+
+    private static void AppendVSTestCollectGuidance(StringBuilder stringBuilder, string? value)
+    {
+        if (value?.Equals("Code Coverage", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            stringBuilder.AppendLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.CommandLineVSTestReplacementSuggestion,
+                "'--coverage'"));
+            AppendMissingExtensionSuggestion(stringBuilder, "coverage", "Microsoft.Testing.Extensions.CodeCoverage");
+            return;
+        }
+
+        if (value?.Equals("XPlat Code Coverage", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            stringBuilder.AppendLine(PlatformResources.CommandLineVSTestXPlatCoverageReplacement);
+            AppendMissingExtensionSuggestion(stringBuilder, "coverage", "Microsoft.Testing.Extensions.CodeCoverage");
+            return;
+        }
+
+        if (value is not null
+            && (value.Equals("blame", StringComparison.OrdinalIgnoreCase)
+                || value.StartsWith("blame;", StringComparison.OrdinalIgnoreCase)))
+        {
+            stringBuilder.AppendLine(PlatformResources.CommandLineVSTestBlameReplacement);
+            AppendMissingExtensionSuggestion(stringBuilder, "crashdump", "Microsoft.Testing.Extensions.CrashDump");
+            AppendMissingExtensionSuggestion(stringBuilder, "hangdump", "Microsoft.Testing.Extensions.HangDump");
+            return;
+        }
+
+        stringBuilder.AppendLine(PlatformResources.CommandLineVSTestCollectorGuidance);
     }
 
     private static void AppendMissingExtensionSuggestion(StringBuilder stringBuilder, string optionName, string packageName)
