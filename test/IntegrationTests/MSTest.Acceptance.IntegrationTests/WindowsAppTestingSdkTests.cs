@@ -106,6 +106,14 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     [TestMethod]
     public async Task EnableWindowsAppTesting_WhenCrossTargetingFromNonWindows_BuildsSuccessfully()
     {
+        DotnetMuxerResult propertyResult = await DotnetCli.RunAsync(
+            $"msbuild {AssetFixture.CrossTargetingProjectPath} -getProperty:EnableWindowsTargeting -p:OS=Unix",
+            workingDirectory: AssetFixture.ProjectPath,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        propertyResult.AssertExitCodeIs(0);
+        propertyResult.AssertOutputContains("true");
+
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {AssetFixture.CrossTargetingProjectPath} -p:OS=Unix",
             workingDirectory: AssetFixture.ProjectPath,
@@ -113,6 +121,19 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             cancellationToken: TestContext.CancellationToken);
 
         buildResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    public async Task EnableWindowsAppTesting_WhenWindowsTargetingIsExplicitlyDisabled_PreservesValue()
+    {
+        DotnetMuxerResult propertyResult = await DotnetCli.RunAsync(
+            $"msbuild {AssetFixture.CrossTargetingOptOutProjectPath} -getProperty:EnableWindowsTargeting -p:OS=Unix",
+            workingDirectory: AssetFixture.ProjectPath,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        propertyResult.AssertExitCodeIs(0);
+        propertyResult.AssertOutputContains("false");
     }
 
     [TestMethod]
@@ -215,6 +236,17 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
   </PropertyGroup>
 </Project>
 
+#file CrossTargetingOptOut/CrossTargetingOptOut.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsTargeting>false</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>
+
 #file VSTest/VSTestWindowsAppTesting.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
@@ -310,6 +342,9 @@ public class StartupTimeoutTests : ApplicationTest
 
         public string CrossTargetingProjectPath =>
             Path.Combine(ProjectPath, "CrossTargeting", "CrossTargeting.csproj");
+
+        public string CrossTargetingOptOutProjectPath =>
+            Path.Combine(ProjectPath, "CrossTargetingOptOut", "CrossTargetingOptOut.csproj");
 
         public string VSTestProjectPath => Path.Combine(ProjectPath, "VSTest");
 
