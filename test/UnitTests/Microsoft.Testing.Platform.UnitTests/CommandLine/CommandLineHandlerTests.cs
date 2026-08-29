@@ -659,6 +659,8 @@ public sealed class CommandLineHandlerTests
     [TestMethod]
     [DataRow("logger", "trx", "Use '--report-trx' instead.")]
     [DataRow("logger", "trx;LogFileName=results.trx", "Use '--report-trx', '--report-trx-filename <FILE>' instead.")]
+    [DataRow("logger", "console;verbosity=minimal", "For comparable console verbosity, use '--output minimal'.")]
+    [DataRow("logger", "console;verbosity=normal", "For comparable console verbosity, use '--output normal'.")]
     [DataRow("logger", "console;verbosity=detailed", "For comparable console verbosity, use '--output detailed'.")]
     [DataRow("logger", "custom", "MTP uses reporter-specific options")]
     [DataRow("collect", "Code Coverage", "Use '--coverage' instead.")]
@@ -733,16 +735,17 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
-    [DataRow("logger", "trx", "report-trx", "Microsoft.Testing.Extensions.TrxReport")]
-    [DataRow("collect", "Code Coverage", "coverage", "Microsoft.Testing.Extensions.CodeCoverage")]
-    [DataRow("collect", "XPlat Code Coverage", "coverage", "Microsoft.Testing.Extensions.CodeCoverage")]
-    [DataRow("collect", "blame", "crashdump", "Microsoft.Testing.Extensions.CrashDump")]
-    [DataRow("collect", "blame", "hangdump", "Microsoft.Testing.Extensions.HangDump")]
+    [DataRow("logger", "trx", "report-trx", "Microsoft.Testing.Extensions.TrxReport", "Use '--report-trx' instead.")]
+    [DataRow("collect", "Code Coverage", "coverage", "Microsoft.Testing.Extensions.CodeCoverage", "Use '--coverage' instead.")]
+    [DataRow("collect", "XPlat Code Coverage", "coverage", "Microsoft.Testing.Extensions.CodeCoverage", "For MTP code coverage, use '--coverage'.")]
+    [DataRow("collect", "blame", "crashdump", "Microsoft.Testing.Extensions.CrashDump", "Use '--crashdump' and/or '--hangdump' instead.")]
+    [DataRow("collect", "blame", "hangdump", "Microsoft.Testing.Extensions.HangDump", "Use '--crashdump' and/or '--hangdump' instead.")]
     public async Task ParseAndValidateAsync_VSTestOptionWithRegisteredReplacement_DoesNotSuggestPackage(
         string option,
         string argument,
         string registeredReplacement,
-        string packageName)
+        string packageName,
+        string expectedGuidance)
     {
         CommandLineParseResult parseResult = CommandLineParser.Parse([$"--{option}", argument], new SystemEnvironment());
         ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
@@ -760,6 +763,7 @@ public sealed class CommandLineHandlerTests
         Assert.DoesNotContain(
             $"Option '--{registeredReplacement}' is provided by the '{packageName}' extension. Add a package reference to use it.",
             result.ErrorMessage);
+        Assert.Contains(expectedGuidance, result.ErrorMessage);
     }
 
     [TestMethod]
