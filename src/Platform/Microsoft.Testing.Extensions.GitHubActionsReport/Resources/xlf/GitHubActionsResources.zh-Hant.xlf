@@ -159,57 +159,57 @@
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
         <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
-        <target state="new">Historical duration: p95 {0}, p99 {1} across {2} prior samples.</target>
+        <target state="translated">歷史持續時間: p95 {0}、p99 {1}，共 {2} 個先前樣本。</target>
         <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
       </trans-unit>
       <trans-unit id="HistoryFailureContext">
         <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
-        <target state="new">Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</target>
+        <target state="translated">歷程內容: 在 {3} 天的歷程視窗內，先前執行中有 {0} 次失敗和 {1} 次不穩定，總計 {2} 次。</target>
         <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryFlakyContext">
         <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
-        <target state="new">Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</target>
+        <target state="translated">歷程內容: 在 {2} 天的歷程視窗內，先前執行中有 {0} 次不穩定，總計 {1} 次。</target>
         <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryLoadFailedWarning">
         <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
-        <target state="new">Failed to load the GitHub Actions test history snapshot from '{0}': {1}</target>
+        <target state="translated">無法從 '{0}' 載入 GitHub Actions 測試歷程記錄快照: {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">讀取並更新位於指定路徑的 GitHub Actions 測試歷程記錄快照。此工作流程負責在測試執行前下載先前的快照，並在執行後上傳更新後的檔案。需要 '--report-gh'。</target>
         <note>{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
-        <target state="new">Historical context: passed all {0} prior runs within the {1}-day history window.</target>
+        <target state="translated">歷程內容: 在 {1} 天的歷程視窗內，先前執行全部都已通過，共 {0} 次。</target>
         <note>{0} is the total prior result count, {1} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">要保留並用於不穩定測試內容的測試歷程記錄天數 (1-90)。預設為 30。需要 '--report-gh-history'。</target>
         <note>{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
-        <target state="new">The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</target>
+        <target state="translated">'--report-gh-history-window' 選項需要指定 '--report-gh-history'。</target>
         <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions test history snapshot to '{0}': {1}</target>
+        <target state="translated">無法將 GitHub Actions 測試歷程記錄快照寫入至 '{0}': {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
         <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
-        <target state="new">The GitHub Actions test history snapshot path must be a valid, non-empty path.</target>
+        <target state="translated">GitHub Actions 測試歷程記錄快照路徑必須是有效且非空白的路徑。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryWindow">
         <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
-        <target state="new">Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</target>
+        <target state="translated">無效的 GitHub Actions 測試歷程視窗 '{0}'。請指定 1 到 90 之間的整數天數。</target>
         <note>{0} is the invalid history window.</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
