@@ -70,6 +70,19 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task EnableWindowsAppTesting_WhenTargetFrameworkUsesUppercase_IsAccepted()
+    {
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {AssetFixture.UppercaseTargetFrameworkProjectPath}",
+            workingDirectory: AssetFixture.ProjectPath,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        buildResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
     public async Task ApplicationSetup_WhenApplicationExitsBeforeCreatingWindow_ReportsClearFailure(string tfm)
@@ -144,6 +157,16 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
   </PropertyGroup>
 </Project>
 
+#file UppercaseTargetFramework/UppercaseTargetFramework.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+  <PropertyGroup>
+    <TargetFramework>NET8.0-WINDOWS</TargetFramework>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+  </PropertyGroup>
+</Project>
+
 #file CharacterMapTests.cs
 using System.Windows.Automation;
 using Microsoft.MSTest.Windows.AppTesting;
@@ -213,6 +236,9 @@ public class StartupTimeoutTests : ApplicationTest
 
         public string InvalidTargetFrameworkProjectPath =>
             Path.Combine(ProjectPath, "InvalidTargetFramework", "InvalidTargetFramework.csproj");
+
+        public string UppercaseTargetFrameworkProjectPath =>
+            Path.Combine(ProjectPath, "UppercaseTargetFramework", "UppercaseTargetFramework.csproj");
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode

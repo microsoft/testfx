@@ -9,7 +9,7 @@ It launches the application under test, exposes its main window through Windows 
 Enable the feature when using `MSTest.Sdk`:
 
 ```xml
-<Project Sdk="MSTest.Sdk">
+<Project Sdk="MSTest.Sdk/4.4.0">
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <EnableWindowsAppTesting>true</EnableWindowsAppTesting>

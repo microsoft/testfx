@@ -2,12 +2,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <_IsWindowsTfm>false</_IsWindowsTfm>
-    <_IsWindowsTfm Condition="$(TargetFramework.Contains('-windows'))">true</_IsWindowsTfm>
+    <_WindowsAppTestingTargetPlatformIdentifier>$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))</_WindowsAppTestingTargetPlatformIdentifier>
   </PropertyGroup>
 
   <Target Name="_ValidateWindowsAppTestingPlatform" BeforeTargets="Restore;Build"
-          Condition=" '$(TargetFramework)' != '' and '$(_IsWindowsTfm)' != 'true' ">
+          Condition=" '$(TargetFramework)' != '' and '$(_WindowsAppTestingTargetPlatformIdentifier)' != 'windows' ">
     <Error Text="MSTest.Windows.AppTesting requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: '$(TargetFramework)'." />
   </Target>
 
