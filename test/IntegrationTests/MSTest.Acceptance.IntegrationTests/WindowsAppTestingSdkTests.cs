@@ -42,6 +42,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {testHost.FullName} --filter ClassName=CharacterMapTests",
             workingDirectory: AssetFixture.ProjectPath,
+            environmentVariables: new() { ["DOTNET_ROLL_FORWARD"] = "Major" },
             failIfReturnValueIsNotZero: false,
             warnAsError: false,
             suppressPreviewDotNetMessage: false,
