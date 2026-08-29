@@ -23,14 +23,20 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
     public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests(string tfm)
     {
+        string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--filter ClassName=CharacterMapTests",
-            environmentVariables: new() { ["DOTNET_ROLL_FORWARD"] = "Major" },
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["WINDOWS_APP_TESTING_PID_FILE"] = pidFile,
+            },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        await AssertProcessExitedAsync(pidFile);
     }
 
     [TestMethod]
@@ -38,11 +44,16 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
     public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests(string tfm)
     {
+        string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {testHost.FullName} --filter ClassName=CharacterMapTests",
             workingDirectory: AssetFixture.ProjectPath,
-            environmentVariables: new() { ["DOTNET_ROLL_FORWARD"] = "Major" },
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["WINDOWS_APP_TESTING_PID_FILE"] = pidFile,
+            },
             failIfReturnValueIsNotZero: false,
             warnAsError: false,
             suppressPreviewDotNetMessage: false,
@@ -51,6 +62,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
         dotnetTestResult.AssertExitCodeIs(0);
         dotnetTestResult.AssertOutputContains("VSTest version");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
+        await AssertProcessExitedAsync(pidFile);
     }
 
     [TestMethod]
@@ -116,6 +128,11 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("did not create a main window within 00:00:03.");
 
+        await AssertProcessExitedAsync(pidFile);
+    }
+
+    private async Task AssertProcessExitedAsync(string pidFile)
+    {
         int pid = int.Parse(await File.ReadAllTextAsync(pidFile, TestContext.CancellationToken), CultureInfo.InvariantCulture);
         try
         {
@@ -168,6 +185,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 </Project>
 
 #file CharacterMapTests.cs
+using System.Globalization;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -180,6 +198,10 @@ public class CharacterMapTests : WindowTest
     [TestMethod]
     public void CharacterMap_MainWindow_IsVisible()
     {
+        string pidFile = Environment.GetEnvironmentVariable("WINDOWS_APP_TESTING_PID_FILE")
+            ?? throw new InvalidOperationException("WINDOWS_APP_TESTING_PID_FILE must be set.");
+        File.WriteAllText(pidFile, AppProcess.Id.ToString(CultureInfo.InvariantCulture));
+
         Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType,
             "Expected the main window element to be of control type Window.");
     }
