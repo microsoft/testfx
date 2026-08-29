@@ -2,6 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
+    <EnableWindowsTargeting Condition=" '$(EnableWindowsTargeting)' == '' and '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
     <_WindowsAppTestingTargetPlatformIdentifier>$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))</_WindowsAppTestingTargetPlatformIdentifier>
   </PropertyGroup>
 

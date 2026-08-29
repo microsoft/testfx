@@ -97,6 +97,18 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     }
 
     [TestMethod]
+    public async Task EnableWindowsAppTesting_WhenCrossTargetingFromNonWindows_BuildsSuccessfully()
+    {
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {AssetFixture.CrossTargetingProjectPath} -p:OS=Unix",
+            workingDirectory: AssetFixture.ProjectPath,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        buildResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
     public async Task ApplicationSetup_WhenApplicationExitsBeforeCreatingWindow_ReportsClearFailure(string tfm)
@@ -186,6 +198,16 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
   </PropertyGroup>
 </Project>
 
+#file CrossTargeting/CrossTargeting.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+  </PropertyGroup>
+</Project>
+
 #file CharacterMapTests.cs
 using System.Globalization;
 using System.Windows.Automation;
@@ -262,6 +284,9 @@ public class StartupTimeoutTests : ApplicationTest
 
         public string UppercaseTargetFrameworkProjectPath =>
             Path.Combine(ProjectPath, "UppercaseTargetFramework", "UppercaseTargetFramework.csproj");
+
+        public string CrossTargetingProjectPath =>
+            Path.Combine(ProjectPath, "CrossTargeting", "CrossTargeting.csproj");
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
