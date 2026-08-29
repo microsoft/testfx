@@ -15,17 +15,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         // down the pipes. The happy path disposes them in OnTestHostProcessExitedAsync, but that runs
         // only on a clean exit; Ctrl+C or an exception skips it, so dispose here too (Timer.Dispose is
         // idempotent, so disposing twice is safe).
-        _deadlineTimer?.Dispose();
-        _activityTimer?.Dispose();
-
-        Task? activityIndicatorTask;
-        lock (_dumpLock)
-        {
-            // Claim the gate so no timer callback can start a new dump once we begin tearing down the
-            // pipes, and capture any dump already in flight so we wait for it below.
-            _dumpTaken = 1;
-            activityIndicatorTask = _activityIndicatorTask;
-        }
+        StopTimersAndCaptureActivityTask(out Task? activityIndicatorTask);
 
         if (activityIndicatorTask is not null)
         {
@@ -51,6 +41,23 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         _singleConnectionNamedPipeServer?.Dispose();
     }
 
+    // Stops the deadline and inactivity timers so no callback can start a new dump while we tear down
+    // the pipes. The happy path disposes them in OnTestHostProcessExitedAsync, but that runs only on a
+    // clean exit; Ctrl+C or an exception skips it, so dispose here too (Timer.Dispose is idempotent, so
+    // disposing twice is safe). Also claims the gate so no timer callback can start a new dump once we
+    // begin tearing down the pipes, and captures any dump already in flight so callers can wait for it.
+    private void StopTimersAndCaptureActivityTask(out Task? activityIndicatorTask)
+    {
+        _deadlineTimer?.Dispose();
+        _activityTimer?.Dispose();
+
+        lock (_dumpLock)
+        {
+            _dumpTaken = 1;
+            activityIndicatorTask = _activityIndicatorTask;
+        }
+    }
+
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
@@ -58,17 +65,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         // down the pipes. The happy path disposes them in OnTestHostProcessExitedAsync, but that runs
         // only on a clean exit; Ctrl+C or an exception skips it, so dispose here too (Timer.Dispose is
         // idempotent, so disposing twice is safe).
-        _deadlineTimer?.Dispose();
-        _activityTimer?.Dispose();
-
-        Task? activityIndicatorTask;
-        lock (_dumpLock)
-        {
-            // Claim the gate so no timer callback can start a new dump once we begin tearing down the
-            // pipes, and capture any dump already in flight so we await it below.
-            _dumpTaken = 1;
-            activityIndicatorTask = _activityIndicatorTask;
-        }
+        StopTimersAndCaptureActivityTask(out Task? activityIndicatorTask);
 
         if (activityIndicatorTask is not null)
         {
