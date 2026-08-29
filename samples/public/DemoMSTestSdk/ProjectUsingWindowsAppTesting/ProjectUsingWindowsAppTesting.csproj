@@ -28,7 +28,7 @@ Below is the equivalent project configuration when not using MSTest.Sdk
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.Windows.AppTesting" Version="$(MSTestWindowsAppTestingVersion)" />
+    <PackageReference Include="MSTest.Windows.AppTesting" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />

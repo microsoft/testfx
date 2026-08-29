@@ -25,6 +25,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=CharacterMapTests",
             environmentVariables: new() { ["DOTNET_ROLL_FORWARD"] = "Major" },
             cancellationToken: TestContext.CancellationToken);
 
@@ -39,7 +40,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {testHost.FullName}",
+            $"test {testHost.FullName} --filter ClassName=CharacterMapTests",
             workingDirectory: AssetFixture.ProjectPath,
             failIfReturnValueIsNotZero: false,
             warnAsError: false,
@@ -49,6 +50,68 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
         dotnetTestResult.AssertExitCodeIs(0);
         dotnetTestResult.AssertOutputContains("VSTest version");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task EnableWindowsAppTesting_WhenTargetFrameworkIsNotWindows_FailsWithClearError()
+    {
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {AssetFixture.InvalidTargetFrameworkProjectPath}",
+            workingDirectory: AssetFixture.ProjectPath,
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        buildResult.AssertExitCodeIs(1);
+        buildResult.AssertOutputContains(
+            "MSTest.Windows.AppTesting requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: 'net8.0'.");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task ApplicationSetup_WhenApplicationExitsBeforeCreatingWindow_ReportsClearFailure(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=EarlyExitTests",
+            environmentVariables: new() { ["DOTNET_ROLL_FORWARD"] = "Major" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("exited with code 0 before a main window was created.");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task ApplicationTearDown_WhenApplicationNeverCreatesWindow_TerminatesProcess(string tfm)
+    {
+        string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=StartupTimeoutTests",
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["WINDOWS_APP_TESTING_PID_FILE"] = pidFile,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("did not create a main window within 00:00:03.");
+
+        int pid = int.Parse(await File.ReadAllTextAsync(pidFile, TestContext.CancellationToken), CultureInfo.InvariantCulture);
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            Assert.IsTrue(process.WaitForExit(1000), $"Expected process {pid} to be terminated by test cleanup.");
+        }
+        catch (ArgumentException)
+        {
+            // The process has already exited and been removed from the operating system's process table.
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -70,6 +133,14 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
+</Project>
+
+#file InvalidTargetFramework/InvalidTargetFramework.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+  </PropertyGroup>
 </Project>
 
 #file CharacterMapTests.cs
@@ -98,6 +169,37 @@ public class CharacterMapTests : WindowTest
     }
 }
 
+[STATestClass]
+public class EarlyExitTests : ApplicationTest
+{
+    public override string ApplicationPath =>
+        Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
+
+    public override string? ApplicationArguments => "/c exit 0";
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+}
+
+[STATestClass]
+public class StartupTimeoutTests : ApplicationTest
+{
+    public override string ApplicationPath =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe");
+
+    public override string? ApplicationArguments =>
+        "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:WINDOWS_APP_TESTING_PID_FILE; Start-Sleep -Seconds 30\"";
+
+    public override TimeSpan ApplicationStartTimeout => TimeSpan.FromSeconds(3);
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+}
+
 #file global.json
 {
   "test": {
@@ -107,6 +209,9 @@ public class CharacterMapTests : WindowTest
 """;
 
         public string ProjectPath => GetAssetPath(ProjectName);
+
+        public string InvalidTargetFrameworkProjectPath =>
+            Path.Combine(ProjectPath, "InvalidTargetFramework", "InvalidTargetFramework.csproj");
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
