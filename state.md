@@ -12,10 +12,11 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30 (still valid)
-- Task 2 (Identify Opportunities): 2026-08-27 (no new findings)
-- Task 4 (Maintain PRs): 2026-08-27 (no open perf-improver PRs)
-- Task 5 (Comment Issues): 2026-08-27 (no open performance-labeled issues)
-- Task 7 (Monthly Summary): 2026-08-27
+- Task 2 (Identify Opportunities): 2026-08-29 (no new hot-path findings; backlog unchanged)
+- Task 4 (Maintain PRs): 2026-08-29 (no open perf-improver PRs before this run's new PR)
+- Task 5 (Comment Issues): 2026-08-29 (no open performance-labeled issues)
+- Task 6 (Infrastructure): 2026-08-29 (added TestDataSourceUtilitiesBenchmarks.cs, new draft PR)
+- Task 7 (Monthly Summary): 2026-08-29
 - Task 2 (Identify Opportunities): 2026-08-13 (explore-agent scan of Retry, CrashDump/HangDump, VSTestBridge, MSTestAdapter.PlatformServices, TestFramework.Extensions — found ObjectModelConverters.FixUpTestCase LINQ Any(lambda) delegate alloc per test case; fixed same run. Other findings: PrivateObject generic-method cache rebuild (net-framework-only, medium risk, not fixed), TestExecutionManager.ParallelExecution per-test array wrapping (medium risk, not fixed), RetryDataConsumer SingleOrDefault already uses optimized PropertyBag method not LINQ (no action needed))
 - Task 2 (previous): 2026-08-11 (explore-agent scan of Assert*.cs, MSTest.TestAdapter/Execution, Platform Hosts/Requests, DataRow/DynamicData attrs, Analyzers hot paths — found TelemetryCollector.TrackAssertionCall ConcurrentDictionary.AddOrUpdate contention, fixed same run; secondary: Assert.HasCount non-generic overload Cast<object>() not fast-pathing ICollection.Count, low priority/not fixed)
 - Task 3 (Implement): 2026-08-13 (PR: "Avoid LINQ Any() delegate allocation in VSTestBridge FixUpTestCase" — branch perf-assist/fixup-testcase-any-loop; manual foreach replaces Any(lambda) over testCase.Properties, per-test-case hot path in VSTest bridge; microbenchmark 5M calls over 4-item list: 252ms/440MB alloc -> 225ms/0 alloc; VSTestBridge.UnitTests 70/70 pass)
@@ -177,6 +178,15 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Task 7: Monthly Activity issue #10381 (August 2026) still open and current - updated with this run's entry.
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-08-29 Notes
+- Task 6 (Infrastructure, last run 2026-08-05): reassessed measurement infra. `MSTest.Performance.Benchmarks` only had `MSTestTestNodeConverterBenchmarks`; `TestDataSourceUtilities.ComputeDefaultDisplayName` (fixed for allocations on 2026-08-09, a real per-data-row hot path for [DataRow]/[DynamicData] tests) had no dedicated benchmark. Added IVT from TestFramework.csproj -> MSTest.Performance.Benchmarks, added ProjectReference, and created TestDataSourceUtilitiesBenchmarks.cs covering mixed-type-argument and object[]-argument shapes. Verified build (`./build.sh -c Release` succeeded) and ran the new benchmark (`--job short --buildTimeout 600`) - both methods executed, 448.5ns/768B and 437.8ns/792B. Created draft PR "Add benchmark coverage for TestDataSourceUtilities display-name computation" branch perf-assist/testdatasource-benchmark.
+- Task 2: reviewed memory backlog (unchanged since 08-28) plus re-verified ObjectModelConverters.FixUpTestCase already uses GetProperties().Any(static lambda) not a fresh LINQ chain - confirmed no action needed there.
+- Task 4: no open PRs with "[perf-improver]" title prefix before this run's new PR (search_pull_requests 0 results).
+- Task 5: no open performance-labeled issues found (search_issues label:performance is:open 0 results).
+- Task 7: Monthly Activity issue #10381 (August 2026) still open and current - updated with this run's entry. No new maintainer comments since 2026-08-02 (already reflected as won't-fix items in backlog).
+- Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
+- Task schedule: Task 6 done this run (new PR), Task 2 done this run, Task 4 done this run (nothing to maintain before new PR), Task 5 done this run (nothing to do), Task 7 done this run.
 
 ## Run 2026-08-28 Notes
 - Task 2: dispatched explore-agent scan of Platform Services/Helpers/Capabilities, Adapter reflection, Assert.Fail/Inconclusive/ThrowsExactly/ReplaceNulls, Analyzers Helpers - all confirmed cold/startup/one-shot paths or already optimized (ReflectionOperations caching, ArtifactNamingService compiled regex). No new hot-path findings.
