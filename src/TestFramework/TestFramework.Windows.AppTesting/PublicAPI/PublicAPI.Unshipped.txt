@@ -1,0 +1,15 @@
+#nullable enable
+Microsoft.MSTest.Windows.AppTesting.AutomationTest
+Microsoft.MSTest.Windows.AppTesting.AutomationTest.AutomationTest() -> void
+Microsoft.MSTest.Windows.AppTesting.ApplicationTest
+Microsoft.MSTest.Windows.AppTesting.ApplicationTest.AppProcess.get -> System.Diagnostics.Process!
+virtual Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationArguments.get -> string?
+virtual Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationPath.get -> string!
+Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationSetup() -> void
+virtual Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationStartTimeout.get -> System.TimeSpan
+Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationTearDown() -> void
+Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationTest() -> void
+Microsoft.MSTest.Windows.AppTesting.WindowTest
+Microsoft.MSTest.Windows.AppTesting.WindowTest.MainWindow.get -> System.Windows.Automation.AutomationElement!
+Microsoft.MSTest.Windows.AppTesting.WindowTest.WindowSetup() -> void
+Microsoft.MSTest.Windows.AppTesting.WindowTest.WindowTest() -> void
