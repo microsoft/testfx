@@ -148,6 +148,21 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>().Should().BeTrue();
     }
 
+    public void ToDiscoveredTestNode_AddsTrxWorkItems_OnlyWhenTrxEnabled()
+    {
+        UnitTestElement element = CreateElement();
+        element.WorkItemIds = ["123", "456"];
+
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false)
+            .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>().Should().BeFalse();
+
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty property = MSTestTestNodeConverter
+            .ToDiscoveredTestNode(element, isTrxEnabled: true)
+            .Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+        property.WorkItemIds.Should().Equal("123", "456");
+        property.WorkItemIds.Should().NotBeSameAs(element.WorkItemIds);
+    }
+
     public void RepeatedConversions_ReuseImmutableBaseProperties_WithoutSharingNodesOrPropertyBags()
     {
         UnitTestElement element = CreateElement();

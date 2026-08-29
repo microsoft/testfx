@@ -64,6 +64,13 @@ internal static class TrxTestResultExtractor
                 case TrxExceptionProperty e: trxException = GetSingleOrDefaultValue(trxException, e); break;
                 case TrxMessagesProperty msg: trxMessages = GetSingleOrDefaultValue(trxMessages, msg); break;
                 case TrxCategoriesProperty c: trxCategories = GetSingleOrDefaultValue(trxCategories, c); break;
+                case TrxWorkItemsProperty w:
+                    foreach (string workItemId in w.WorkItemIds)
+                    {
+                        (metadata ??= []).Add(new TrxTestMetadata { Key = nameof(TrxWorkItemsProperty), Value = workItemId });
+                    }
+
+                    break;
                 case TestMetadataProperty md: (metadata ??= []).Add(new TrxTestMetadata { Key = md.Key, Value = md.Value }); break;
                 case FileArtifactProperty fa: (artifacts ??= []).Add(new TrxTestFileArtifact { FullPath = fa.FileInfo.FullName }); break;
             }
