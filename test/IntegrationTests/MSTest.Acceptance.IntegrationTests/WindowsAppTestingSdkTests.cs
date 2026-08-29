@@ -169,7 +169,6 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
 #file CharacterMapTests.cs
 using System.Windows.Automation;
-using Microsoft.MSTest.Windows.AppTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [STATestClass]
