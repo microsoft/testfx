@@ -159,57 +159,57 @@
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
         <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
-        <target state="new">Historical duration: p95 {0}, p99 {1} across {2} prior samples.</target>
+        <target state="translated">기록 기간: 이전 샘플 {2}에서 기준 p95 {0}, p99 {1}.</target>
         <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
       </trans-unit>
       <trans-unit id="HistoryFailureContext">
         <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
-        <target state="new">Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</target>
+        <target state="translated">기록 컨텍스트: {3}일 기록 기간 내 이전 {2}번의 실행 중 {0}번은 실패했고 {1}번은 불안정했습니다.</target>
         <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryFlakyContext">
         <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
-        <target state="new">Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</target>
+        <target state="translated">기록 컨텍스트: {2}일 기록 기간 내 이전 {1}번의 실행 중 {0}번은 불안정했습니다.</target>
         <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryLoadFailedWarning">
         <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
-        <target state="new">Failed to load the GitHub Actions test history snapshot from '{0}': {1}</target>
+        <target state="translated">'{0}'에서 GitHub Actions 테스트 기록 스냅샷을 로드하지 못했습니다. {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">지정된 경로에서 바인딩된 GitHub Actions 테스트 기록 스냅샷을 읽고 업데이트합니다. 워크플로는 테스트 실행 전에 이전 스냅샷을 다운로드하고 나중에 업데이트된 파일을 업로드합니다. '--report-gh'가 필요합니다.</target>
         <note>{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
-        <target state="new">Historical context: passed all {0} prior runs within the {1}-day history window.</target>
+        <target state="translated">기록 컨텍스트: {1}일 기록 기간 내 이전 실행 {0}번이 모두 통과했습니다.</target>
         <note>{0} is the total prior result count, {1} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">불안정한 테스트 컨텍스트에 보존하고 사용할 테스트 기록의 일 수입니다(1-90). 기본값은 30입니다. '--report-gh-history'가 필요합니다.</target>
         <note>{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
-        <target state="new">The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</target>
+        <target state="translated">'--report-gh-history-window' 옵션을 사용하려면 '--report-gh-history'를 지정해야 합니다.</target>
         <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions test history snapshot to '{0}': {1}</target>
+        <target state="translated">'{0}'에 GitHub Actions 테스트 기록 스냅샷을 쓰지 못했습니다. {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
         <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
-        <target state="new">The GitHub Actions test history snapshot path must be a valid, non-empty path.</target>
+        <target state="translated">GitHub Actions 테스트 기록 스냅샷 경로는 비어 있지 않은 유효한 경로여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryWindow">
         <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
-        <target state="new">Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</target>
+        <target state="translated">잘못된 GitHub Actions 테스트 기록 창 '{0}'입니다. 1에서 90까지의 일수를 정수로 지정합니다.</target>
         <note>{0} is the invalid history window.</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">

@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
         <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
-        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <target state="translated">CI によって設定された期限が迫っていたため、テストの実行が早期に停止されました。</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
@@ -119,32 +119,32 @@
       </trans-unit>
       <trans-unit id="FailureDetailExceptionLabel">
         <source>Exception</source>
-        <target state="new">Exception</target>
+        <target state="translated">例外</target>
         <note>Label preceding the exception type of a failed test in the job summary.</note>
       </trans-unit>
       <trans-unit id="FailureDetailLocationLabel">
         <source>Location</source>
-        <target state="new">Location</target>
+        <target state="translated">場所</target>
         <note>Label preceding the source file and line of a failed test in the job summary.</note>
       </trans-unit>
       <trans-unit id="FailureDetailTruncated">
         <source>[... truncated]</source>
-        <target state="new">[... truncated]</target>
+        <target state="translated">[...切り詰められました]</target>
         <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOmitted">
         <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
-        <target state="new">Failure details for {0} listed test(s) were omitted because the error details take up too much space.</target>
+        <target state="translated">エラーの詳細が多くの領域を占めているため、一覧表示されている {0} 件のテストの失敗の詳細は省略されています。</target>
         <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">ジョブ概要で失敗した各テストを、失敗メッセージ、例外の種類、ソースの場所、スタック トレースを含む折りたたみ可能なセクションとして表示する機能を有効または無効にします。有効な値は、'on' ('true'、'enable'、'1' も指定可能)、または 'off' ('false'、'disable'、'0' も指定可能) です。GitHub Actions で実行する場合、既定値は 'on' です。</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
         <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
-        <target state="new">Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</target>
+        <target state="translated">失敗したテストの {1} 件中最初の {0} 件を表示しています。残りの失敗については、ワークフロー ログまたはテスト レポートを参照してください。</target>
         <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
@@ -234,12 +234,12 @@
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
         <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
-        <target state="new">Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</target>
+        <target state="translated">エラーの詳細が既に多くのス領域を占めているため、{1} 件のテスト プロジェクトのうち {0} 件について、失敗の詳細が省略されました。完全な診断については、ワークフロー ログまたはテスト レポートを参照してください。</target>
         <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
       </trans-unit>
       <trans-unit id="ModulesNotListed">
         <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
-        <target state="new">{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</target>
+        <target state="translated">ジョブ概要のサイズ上限に達したため、さらに {0} 件のテスト プロジェクトは一覧に表示されていません。GitHub では、1 MB を超えるジョブの概要は短縮されず、全体が破棄されます。これらの結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
         <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryLimitExceededWarning">
         <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
-        <target state="new">The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</target>
+        <target state="translated">GitHub のジョブ概要ファイルは {0} バイトで、このレポート セクションを追加すると、GitHub がステップごとに適用する {1} バイトの上限を超えてしまいます。GitHub では、サイズ超過したジョブ概要は切り詰められず、全体が破棄されるため、追加すると、他のテスト プロジェクトが既に書き込んだセクションを含め、すべてのセクションが失われることになります。このセクションは、概要の残りを保持するためにスキップされました。これは通常、多くのテスト プロジェクトや他のツールが同じジョブ概要に書き込んでいることを意味します。これらの結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
         <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
@@ -309,12 +309,12 @@
       </trans-unit>
       <trans-unit id="SummaryCondensed">
         <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
-        <target state="new">condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</target>
+        <target state="translated">概要がすでに多くの領域を占めているため、1 行に圧縮されています。完全な結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
         <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
       </trans-unit>
       <trans-unit id="SummaryTruncatedNotice">
         <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
-        <target state="new">This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</target>
+        <target state="translated">このジョブの概要は長くなっていたため、短縮されました。最初の {0} 件のテスト プロジェクトの結果はすべて含まれていますが、以下で 1 行で報告されたものは結果が省略されています。GitHub では、1 MB を超えるジョブの概要は短縮されず、全体が破棄されます。完全な結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
         <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>

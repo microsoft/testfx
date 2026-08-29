@@ -224,12 +224,12 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionRequiresExtension">
         <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
-        <target state="new">Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</target>
+        <target state="translated">'--{0}' 옵션은 '{1}' 확장에서 제공됩니다. 사용할 패키지 참조를 추가합니다.</target>
         <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionSuggestion">
         <source>Did you mean '--{0}'?</source>
-        <target state="new">Did you mean '--{0}'?</target>
+        <target state="translated">'--{0}'을(를) 의미했나요?</target>
         <note>{0} is the suggested option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <target state="translated">'--help'를 실행하여 이 테스트 애플리케이션에서 등록된 옵션을 확인합니다. 옵션이 확장에 속하는 경우 패키지가 참조되고 확장이 등록되어 있는지 확인합니다.</target>
         <note>{Locked="'--help'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">

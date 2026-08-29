@@ -386,13 +386,13 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="new">Preset the per-test result blocks shown in the terminal.
-Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
+        <target state="translated">ターミナルに表示されるテストごとの結果ブロックを事前設定します。
+有効な値は 'Minimal'、'Normal'、'Detailed' です。既定値は 'Normal' です。正確な結果を選択するには '--show-test-results' を使用します。</target>
         <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</target>
+        <target state="translated">--output には、'Minimal'、'Normal'、または 'Detailed' のいずれか 1 つの値を持つ単一のパラメーターが必要です。</target>
         <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
@@ -471,26 +471,26 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="new">--show-test-results value 'all' or 'none' cannot be combined with any other value.</target>
+        <target state="translated">--show-test-results の値 'all' または 'none' は、他の値と組み合わせることはできません。</target>
         <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
-Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</target>
+        <target state="translated">ターミナルにテストごとの結果ブロック (詳細情報、スタック トレース、キャプチャされた出力を含む) をレンダリングするテスト結果の種類を選択します。
+有効な値は 'passed'、'failed' (エラー、タイムアウト、およびキャンセルされたテストも含む)、'skipped'、'all'、'none' です。複数の値は、コンマ区切りまたはスペース区切りのリストとして指定するか、オプションを繰り返して指定します。'all' と 'none' は、他の値と組み合わせることはできません。
+'--output' が 'Minimal' の場合の既定値は 'failed'、'Normal' の場合または省略時は 'failed' と 'skipped'、'Detailed' の場合は 'all' です。明示的な '--show-test-results' は、指定する順序にかかわらず、常に '--output' よりも優先されます。</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">--show-test-results には、'passed'、'failed'、'skipped'、'all'、'none' のいずれかの値を少なくとも 1 つ指定する必要があります。</target>
         <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">--show-test-results には、'passed'、'failed'、'skipped'、'all'、'none' のいずれかの値を 1 つ以上、コンマ区切りまたはスペース区切りで指定する必要があります。</target>
         <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
