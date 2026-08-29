@@ -35,6 +35,7 @@
       "src\\Platform\\Microsoft.Testing.Platform.ServerMode.Client.Sources\\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj",
       "src\\Platform\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj",
       "src\\TestFramework\\TestFramework.Extensions\\TestFramework.Extensions.csproj",
+      "src\\TestFramework\\TestFramework.Windows.AppTesting\\TestFramework.Windows.AppTesting.csproj",
       "src\\TestFramework\\TestFramework.SourceGeneration\\TestFramework.SourceGeneration.csproj",
       "src\\TestFramework\\TestFramework\\TestFramework.csproj",
       "test\\IntegrationTests\\MSTest.Acceptance.IntegrationTests\\MSTest.Acceptance.IntegrationTests.csproj",
