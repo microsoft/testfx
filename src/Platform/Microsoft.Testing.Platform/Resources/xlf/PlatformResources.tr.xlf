@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
         <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
-        <target state="new">Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</target>
+        <target state="translated">'{0}' ortam değişkeni ayarlandı ancak test çerçevesi '{1}' değerini desteklemiyor. Platform, son tarihten önce test çalıştırmasını durduramıyor.</target>
         <note>{0} is the environment variable name. {1} is the capability interface name.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineDescription">
         <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
-        <target state="new">Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</target>
+        <target state="translated">Raporların son halini alabilmesi için, CI tarafından belirlenen son tarihten kısa süre önce test çalıştırmasını düzgün bir şekilde durduran uzantı.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
         <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
-        <target state="new">Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</target>
+        <target state="translated">'{0}' ortam değişkeni '{1}' değerine ayarlandı ancak geçerli bir mutlak ISO 8601 anı değil. Son tarihe duyarlı iptal işlemi devre dışı bırakıldı.</target>
         <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
         <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
-        <target state="new">Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</target>
+        <target state="translated">Son tarih döküm marjı ({0}), durdurma marjına ({1}) eşit ya da ondan büyük. Askıda kalma dökümü düzgün bir durdurmadan önce başlatılabilir.</target>
         <note>{0} is the dump margin. {1} is the stop margin.</note>
       </trans-unit>
       <trans-unit id="AbortAtDeadlineMessage">
         <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
-        <target state="new">Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</target>
+        <target state="translated">Son tarih yaklaşıyor: CI zorla iptal etmeden önce raporların tamamlanabilmesi için test çalıştırması düzgün bir şekilde durduruluyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
