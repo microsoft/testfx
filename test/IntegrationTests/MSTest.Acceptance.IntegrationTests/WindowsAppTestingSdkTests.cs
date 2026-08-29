@@ -92,6 +92,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             cancellationToken: TestContext.CancellationToken);
 
         buildResult.AssertExitCodeIs(0);
+        buildResult.AssertOutputDoesNotContain("requires a Windows target framework");
     }
 
     [TestMethod]
