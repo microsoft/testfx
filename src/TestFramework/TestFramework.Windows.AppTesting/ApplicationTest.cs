@@ -61,6 +61,9 @@ public class ApplicationTest : AutomationTest
     [TestInitialize]
     public void ApplicationSetup()
     {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        cancellationToken.ThrowIfCancellationRequested();
+
         ProcessStartInfo startInfo = new(ApplicationPath);
         if (ApplicationArguments is not null)
         {
@@ -84,9 +87,11 @@ public class ApplicationTest : AutomationTest
             TimeSpan remainingTime = ApplicationStartTimeout - sw.Elapsed;
             if (remainingTime > TimeSpan.Zero)
             {
-                Thread.Sleep(remainingTime < TimeSpan.FromMilliseconds(50)
+                TimeSpan delay = remainingTime < TimeSpan.FromMilliseconds(50)
                     ? remainingTime
-                    : TimeSpan.FromMilliseconds(50));
+                    : TimeSpan.FromMilliseconds(50);
+                _ = cancellationToken.WaitHandle.WaitOne(delay);
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
 

@@ -12,7 +12,11 @@ namespace Microsoft.MSTest.Windows.AppTesting;
 /// This layer exists to match the Playwright base class hierarchy pattern
 /// and provides the extension point for future automation-level configuration.
 /// </remarks>
-[TestClass]
+[STATestClass]
 public class AutomationTest
 {
+    /// <summary>
+    /// Gets or sets the test context populated by MSTest before each test runs.
+    /// </summary>
+    public TestContext TestContext { get; set; } = null!;
 }

@@ -55,6 +55,7 @@ function Confirm-NugetPackages {
 
     Write-Verbose "Verifying NuGet packages files."
     $errors = @()
+    $verifiedPackageKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
@@ -94,6 +95,7 @@ function Confirm-NugetPackages {
 
             $packageKey = $packageName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
+            $null = $verifiedPackageKeys.Add($packageKey)
 
             $actualNumOfFiles = (Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir).Count
             if ($expectedNumOfFiles[$packageKey] -ne $actualNumOfFiles) {
@@ -104,6 +106,12 @@ function Confirm-NugetPackages {
             if (Test-Path $unzipNugetPackageDir) {
                 Remove-Item -Force -Recurse $unzipNugetPackageDir | Out-Null
             }
+        }
+    }
+
+    foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+        if (!$verifiedPackageKeys.Contains($expectedPackageKey)) {
+            $errors += "Expected package '$expectedPackageKey' was not found"
         }
     }
 

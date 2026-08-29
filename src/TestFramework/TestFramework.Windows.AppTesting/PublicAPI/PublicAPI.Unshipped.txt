@@ -1,6 +1,8 @@
 #nullable enable
 Microsoft.MSTest.Windows.AppTesting.AutomationTest
 Microsoft.MSTest.Windows.AppTesting.AutomationTest.AutomationTest() -> void
+Microsoft.MSTest.Windows.AppTesting.AutomationTest.TestContext.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext!
+Microsoft.MSTest.Windows.AppTesting.AutomationTest.TestContext.set -> void
 Microsoft.MSTest.Windows.AppTesting.ApplicationTest
 Microsoft.MSTest.Windows.AppTesting.ApplicationTest.AppProcess.get -> System.Diagnostics.Process!
 virtual Microsoft.MSTest.Windows.AppTesting.ApplicationTest.ApplicationArguments.get -> string?
