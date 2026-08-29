@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTestingSdkTests.TestAssetFixture>
 {
     private static readonly string[] DesktopTargetFrameworks =

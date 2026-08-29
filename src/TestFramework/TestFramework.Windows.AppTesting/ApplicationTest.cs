@@ -121,12 +121,15 @@ public class ApplicationTest : AutomationTest
                     if (!appProcess.WaitForExit(5000))
                     {
                         appProcess.Kill(entireProcessTree: true);
-                        _ = appProcess.WaitForExit(5000);
+                        if (!appProcess.WaitForExit(5000))
+                        {
+                            throw new TimeoutException($"Application process {appProcess.Id} did not exit within 5 seconds after termination was requested.");
+                        }
                     }
                 }
-                catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
+                catch (Exception ex) when ((ex is InvalidOperationException or Win32Exception) && appProcess.HasExited)
                 {
-                    // The process exited or became inaccessible between state checks and shutdown operations.
+                    // The process exited between the state check and the shutdown operation.
                 }
             }
         }
