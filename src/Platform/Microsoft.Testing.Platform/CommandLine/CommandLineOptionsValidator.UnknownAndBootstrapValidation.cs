@@ -193,7 +193,7 @@ internal static partial class CommandLineOptionsValidator
         stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, unknownOptionName));
 
         if (includeKnownExtensionOptions
-            && TryAppendVSTestOptionGuidance(stringBuilder, unknownOptionName, arguments))
+            && TryAppendVSTestOptionGuidance(stringBuilder, unknownOptionName, arguments, validOptionNames))
         {
             return;
         }
@@ -229,7 +229,8 @@ internal static partial class CommandLineOptionsValidator
     private static bool TryAppendVSTestOptionGuidance(
         StringBuilder stringBuilder,
         string unknownOptionName,
-        IReadOnlyList<string> arguments)
+        IReadOnlyList<string> arguments,
+        HashSet<string> validOptionNames)
     {
         bool isLogger = unknownOptionName.Equals("logger", StringComparison.OrdinalIgnoreCase);
         bool isCollect = unknownOptionName.Equals("collect", StringComparison.OrdinalIgnoreCase);
@@ -246,41 +247,43 @@ internal static partial class CommandLineOptionsValidator
         string? value = arguments.Count == 1 ? arguments[0] : null;
         if (isLogger)
         {
-            AppendVSTestLoggerGuidance(stringBuilder, value);
+            AppendVSTestLoggerGuidance(stringBuilder, value, validOptionNames);
         }
         else
         {
-            AppendVSTestCollectGuidance(stringBuilder, value);
+            AppendVSTestCollectGuidance(stringBuilder, value, validOptionNames);
         }
 
         return true;
     }
 
-    private static void AppendVSTestLoggerGuidance(StringBuilder stringBuilder, string? value)
+    private static void AppendVSTestLoggerGuidance(
+        StringBuilder stringBuilder,
+        string? value,
+        HashSet<string> validOptionNames)
     {
         if (value is not null
-            && (value.Equals("trx", StringComparison.OrdinalIgnoreCase)
-                || value.StartsWith("trx;", StringComparison.OrdinalIgnoreCase)))
+            && IsVSTestNamedValue(value, "trx"))
         {
-            string replacement = value.Split(';').Skip(1).Any(static segment =>
-                segment.StartsWith("LogFileName=", StringComparison.OrdinalIgnoreCase)
-                && segment.Length > "LogFileName=".Length)
-                ? "'--report-trx' and '--report-trx-filename <FILE>'"
+            string replacement = GetVSTestSubOptionValue(value, "LogFileName") is not null
+                ? "'--report-trx', '--report-trx-filename <FILE>'"
                 : "'--report-trx'";
             stringBuilder.AppendLine(string.Format(
                 CultureInfo.InvariantCulture,
                 PlatformResources.CommandLineVSTestReplacementSuggestion,
                 replacement));
-            AppendMissingExtensionSuggestion(stringBuilder, "report-trx", "Microsoft.Testing.Extensions.TrxReport");
+            AppendMissingExtensionSuggestionIfNeeded(
+                stringBuilder,
+                validOptionNames,
+                "report-trx",
+                "Microsoft.Testing.Extensions.TrxReport");
             return;
         }
 
         if (value is not null
-            && value.StartsWith("console;", StringComparison.OrdinalIgnoreCase)
-            && value.Split(';').Skip(1).FirstOrDefault(static segment =>
-                segment.StartsWith("verbosity=", StringComparison.OrdinalIgnoreCase)) is { } verbositySegment)
+            && IsVSTestNamedValue(value, "console")
+            && GetVSTestSubOptionValue(value, "verbosity") is { } verbosity)
         {
-            string verbosity = verbositySegment.Substring("verbosity=".Length);
             if (verbosity.Equals("minimal", StringComparison.OrdinalIgnoreCase)
                 || verbosity.Equals("normal", StringComparison.OrdinalIgnoreCase)
                 || verbosity.Equals("detailed", StringComparison.OrdinalIgnoreCase))
@@ -296,36 +299,83 @@ internal static partial class CommandLineOptionsValidator
         stringBuilder.AppendLine(PlatformResources.CommandLineVSTestLoggerGuidance);
     }
 
-    private static void AppendVSTestCollectGuidance(StringBuilder stringBuilder, string? value)
+    private static void AppendVSTestCollectGuidance(
+        StringBuilder stringBuilder,
+        string? value,
+        HashSet<string> validOptionNames)
     {
-        if (value?.Equals("Code Coverage", StringComparison.OrdinalIgnoreCase) == true)
+        if (value is not null
+            && IsVSTestNamedValue(value, "Code Coverage"))
         {
+            string replacement = GetVSTestSubOptionValue(value, "Format") is { } format
+                ? $"'--coverage', '--coverage-output-format {format}'"
+                : "'--coverage'";
             stringBuilder.AppendLine(string.Format(
                 CultureInfo.InvariantCulture,
                 PlatformResources.CommandLineVSTestReplacementSuggestion,
-                "'--coverage'"));
-            AppendMissingExtensionSuggestion(stringBuilder, "coverage", "Microsoft.Testing.Extensions.CodeCoverage");
-            return;
-        }
-
-        if (value?.Equals("XPlat Code Coverage", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            stringBuilder.AppendLine(PlatformResources.CommandLineVSTestXPlatCoverageReplacement);
-            AppendMissingExtensionSuggestion(stringBuilder, "coverage", "Microsoft.Testing.Extensions.CodeCoverage");
+                replacement));
+            AppendMissingExtensionSuggestionIfNeeded(
+                stringBuilder,
+                validOptionNames,
+                "coverage",
+                "Microsoft.Testing.Extensions.CodeCoverage");
             return;
         }
 
         if (value is not null
-            && (value.Equals("blame", StringComparison.OrdinalIgnoreCase)
-                || value.StartsWith("blame;", StringComparison.OrdinalIgnoreCase)))
+            && IsVSTestNamedValue(value, "XPlat Code Coverage"))
+        {
+            stringBuilder.AppendLine(PlatformResources.CommandLineVSTestXPlatCoverageReplacement);
+            AppendMissingExtensionSuggestionIfNeeded(
+                stringBuilder,
+                validOptionNames,
+                "coverage",
+                "Microsoft.Testing.Extensions.CodeCoverage");
+            return;
+        }
+
+        if (value is not null
+            && IsVSTestNamedValue(value, "blame"))
         {
             stringBuilder.AppendLine(PlatformResources.CommandLineVSTestBlameReplacement);
-            AppendMissingExtensionSuggestion(stringBuilder, "crashdump", "Microsoft.Testing.Extensions.CrashDump");
-            AppendMissingExtensionSuggestion(stringBuilder, "hangdump", "Microsoft.Testing.Extensions.HangDump");
+            AppendMissingExtensionSuggestionIfNeeded(
+                stringBuilder,
+                validOptionNames,
+                "crashdump",
+                "Microsoft.Testing.Extensions.CrashDump");
+            AppendMissingExtensionSuggestionIfNeeded(
+                stringBuilder,
+                validOptionNames,
+                "hangdump",
+                "Microsoft.Testing.Extensions.HangDump");
             return;
         }
 
         stringBuilder.AppendLine(PlatformResources.CommandLineVSTestCollectorGuidance);
+    }
+
+    private static bool IsVSTestNamedValue(string value, string name)
+        => value.Equals(name, StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith($"{name};", StringComparison.OrdinalIgnoreCase);
+
+    private static string? GetVSTestSubOptionValue(string value, string subOptionName)
+    {
+        string prefix = $"{subOptionName}=";
+        return value.Split(';').Skip(1).FirstOrDefault(segment =>
+            segment.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            && segment.Length > prefix.Length)?[prefix.Length..];
+    }
+
+    private static void AppendMissingExtensionSuggestionIfNeeded(
+        StringBuilder stringBuilder,
+        HashSet<string> validOptionNames,
+        string optionName,
+        string packageName)
+    {
+        if (!validOptionNames.Contains(optionName))
+        {
+            AppendMissingExtensionSuggestion(stringBuilder, optionName, packageName);
+        }
     }
 
     private static void AppendMissingExtensionSuggestion(StringBuilder stringBuilder, string optionName, string packageName)
