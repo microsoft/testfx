@@ -230,8 +230,11 @@ public static class OpenTelemetryProviderExtensions
         return false;
     }
 
+    // OTEL_SDK_DISABLED follows the OpenTelemetry boolean convention: only a case-insensitive "true" enables it,
+    // any other value (including "1") leaves the SDK enabled. This is intentionally stricter than the CI-marker
+    // parsing in TestingPlatformResourceDetector, which recognises provider-specific spellings.
     private static bool IsTrue(string? value)
-        => value is "1" or "true" or "True" or "TRUE";
+        => value is not null && value.Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// The decision produced by <see cref="ResolveEnvironmentConfiguration"/>: which providers to configure and

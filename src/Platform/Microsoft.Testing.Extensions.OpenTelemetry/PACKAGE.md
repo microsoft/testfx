@@ -1,4 +1,4 @@
-# Microsoft.Testing.Extensions.OpenTelemetry
+﻿# Microsoft.Testing.Extensions.OpenTelemetry
 
 Microsoft.Testing.Extensions.OpenTelemetry is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that instruments test execution with [OpenTelemetry](https://opentelemetry.io/)-compatible traces and metrics.
 
@@ -66,14 +66,14 @@ Telemetry is only ever sent to the exporters and endpoints **you** configure —
 
 | Attribute (and legacy twin) | Carries | Control |
 | --- | --- | --- |
-| `code.file.path` (`test.file.path`), `code.line.number` (`test.line.start`/`test.line.end`) | Absolute source file path of the test — reveals machine and repository layout. | On by default whenever a test reports a file location. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
-| `test.artifact.file[N].path` | Absolute path of each file artifact a test attaches (dumps, logs, screenshots). | Emitted whenever a test produces file artifacts. |
-| `test.output.stdout` / `test.output.stderr` (`test.stdout`/`test.stderr`) | Captured standard output and error of the test, which routinely contains secrets or environment data. | Off when `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0`; always truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
-| `code.stacktrace`, `test.case.result.explanation` (`test.result.explanation`), and the `exception` span event (`exception.message` / `exception.stacktrace`) | Exception message and stack trace text. | Always truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
-| `test.metadata.*` (`test.metadata.*` legacy) | Framework-supplied trait/metadata values verbatim. | Emitted whenever a test carries metadata. |
-| Resource `vcs.repository.url.full` | The CI repository URL. | User-info credentials (`https://user:token@host/...`) are stripped before export. |
+| `code.file.path` (`test.file.path`), `code.line.number` (`test.line.start`/`test.line.end`) | Absolute source file path of the test — reveals machine and repository layout. Exported verbatim (not truncated). | On by default whenever a test reports a file location. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
+| `test.artifact.file[N].path` | Absolute path of each file artifact a test attaches (dumps, logs, screenshots). Exported verbatim (not truncated). | Emitted whenever a test produces file artifacts. |
+| `test.output.stdout` / `test.output.stderr` (`test.stdout` / `test.stderr`) | Captured standard output and error of the test, which routinely contains secrets or environment data. | Off when `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0`; truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
+| `code.stacktrace`, `test.case.result.explanation` (`test.result.explanation`), the `exception` span event (`exception.type` / `exception.message` / `exception.stacktrace`), the span status description, and the legacy `test.result.exception.type` / `test.result.exception.message` / `test.result.exception.stacktrace` | Exception message and stack-trace text. | Truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. Disable the legacy twins with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
+| `test.metadata.*` (`test.metadataProperty.*`) | Framework-supplied trait/metadata values, exported verbatim (not truncated). | Emitted whenever a test carries metadata. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
+| Resource `vcs.repository.url.full`, plus the other resource attributes (`host.name`, `os.description`, and in CI the `cicd.*` / `vcs.*` pipeline, branch and commit — see *Resource attributes* above) | The machine, OS and CI provenance attached to every span and metric point. | User-info credentials in the repository URL (`https://user:token@host/...`) are stripped before export. |
 
-All string attributes — the semantic-convention names and their legacy twins alike — are truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` (8192 characters by default). Set `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0` on any job whose test output can contain secrets, and prefer sending telemetry to a backend you control.
+Only the captured output, the result explanation and the exception message and stack trace are truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` (8192 characters by default); the file, artifact and metadata values above are exported verbatim, so truncation is a size guard rather than redaction. Set `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0` on any job whose test output can contain secrets, and prefer sending telemetry to a backend you control.
 
 ## Documentation
 

@@ -78,11 +78,12 @@ public sealed class OpenTelemetryProviderExtensionsTests
     }
 
     [TestMethod]
-    [DataRow("1")]
     [DataRow("true")]
     [DataRow("True")]
     [DataRow("TRUE")]
-    public void ResolveEnvironmentConfiguration_TreatsTruthySdkDisabledValuesAsDisabled(string value)
+    [DataRow("tRuE")]
+    [DataRow(" true ")]
+    public void ResolveEnvironmentConfiguration_TreatsCaseInsensitiveTrueSdkDisabledAsDisabled(string value)
     {
         EnvironmentConfiguration configuration = OpenTelemetryProviderExtensions.ResolveEnvironmentConfiguration(
             Env(new() { ["OTEL_SDK_DISABLED"] = value }),
@@ -90,6 +91,30 @@ public sealed class OpenTelemetryProviderExtensionsTests
             hasMetricsDelegate: true);
 
         Assert.IsFalse(configuration.ShouldRegisterProvider);
+    }
+
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("yes")]
+    [DataRow("false")]
+    [DataRow("")]
+    public void ResolveEnvironmentConfiguration_TreatsNonTrueSdkDisabledValuesAsEnabled(string value)
+    {
+        // The OpenTelemetry boolean convention recognises only a case-insensitive "true"; "1" and other spellings
+        // must leave the SDK enabled. Pairing the value with an endpoint proves the SDK was not disabled: if it had
+        // been, the endpoint opt-in below would have been ignored.
+        EnvironmentConfiguration configuration = OpenTelemetryProviderExtensions.ResolveEnvironmentConfiguration(
+            Env(new()
+            {
+                ["OTEL_SDK_DISABLED"] = value,
+                ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4317",
+            }),
+            hasTracingDelegate: false,
+            hasMetricsDelegate: false);
+
+        Assert.IsTrue(configuration.ShouldRegisterProvider);
+        Assert.IsTrue(configuration.UseOtlpTracing);
+        Assert.IsTrue(configuration.UseOtlpMetrics);
     }
 
     [TestMethod]
