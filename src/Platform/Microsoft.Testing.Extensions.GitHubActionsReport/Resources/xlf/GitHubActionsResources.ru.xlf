@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
         <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
-        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <target state="translated">Выполнение теста было остановлено досрочно, поскольку приближался срок, установленный CI.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
@@ -119,22 +119,22 @@
       </trans-unit>
       <trans-unit id="FailureDetailExceptionLabel">
         <source>Exception</source>
-        <target state="new">Exception</target>
+        <target state="translated">Исключение</target>
         <note>Label preceding the exception type of a failed test in the job summary.</note>
       </trans-unit>
       <trans-unit id="FailureDetailLocationLabel">
         <source>Location</source>
-        <target state="new">Location</target>
+        <target state="translated">Расположение</target>
         <note>Label preceding the source file and line of a failed test in the job summary.</note>
       </trans-unit>
       <trans-unit id="FailureDetailTruncated">
         <source>[... truncated]</source>
-        <target state="new">[... truncated]</target>
+        <target state="translated">[... усечено]</target>
         <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOmitted">
         <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
-        <target state="new">Failure details for {0} listed test(s) were omitted because the error details take up too much space.</target>
+        <target state="translated">Сведения о сбое {0} перечисленных тестов были опущены, так как сведения об ошибке занимают слишком много места.</target>
         <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="FailureListTruncated">
         <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
-        <target state="new">Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</target>
+        <target state="translated">Показаны первые {0} из {1} неудачных тестов. Остальные сбои см. в журнале рабочего процесса или в отчете о тесте.</target>
         <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
@@ -159,22 +159,22 @@
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
         <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
-        <target state="new">Historical duration: p95 {0}, p99 {1} across {2} prior samples.</target>
+        <target state="translated">Историческая длительность: p95 {0}, p99 {1} по {2} предыдущим выборкам.</target>
         <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
       </trans-unit>
       <trans-unit id="HistoryFailureContext">
         <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
-        <target state="new">Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</target>
+        <target state="translated">Исторический контекст: сбойные {0} и нестабильные {1} из {2} предыдущих запусков за {3}-дневный период в журнале.</target>
         <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryFlakyContext">
         <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
-        <target state="new">Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</target>
+        <target state="translated">Исторический контекст: нестабильные {0} из {1} предыдущих запусков за {2}-дневный период в журнале.</target>
         <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryLoadFailedWarning">
         <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
-        <target state="new">Failed to load the GitHub Actions test history snapshot from '{0}': {1}</target>
+        <target state="translated">Не удалось загрузить снимок журнала тестов GitHub Actions в "{0}": {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
-        <target state="new">Historical context: passed all {0} prior runs within the {1}-day history window.</target>
+        <target state="translated">Исторический контекст: пройдено во всех {0} предыдущих запусках в пределах {1}-дневного окна журнала.</target>
         <note>{0} is the total prior result count, {1} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
@@ -199,17 +199,17 @@
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions test history snapshot to '{0}': {1}</target>
+        <target state="translated">Не удалось записать снимок журнала тестов GitHub Actions в "{0}": {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
         <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
-        <target state="new">The GitHub Actions test history snapshot path must be a valid, non-empty path.</target>
+        <target state="translated">Путь к снимку журнала тестов GitHub Actions должен быть допустимым непустым путем.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryWindow">
         <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
-        <target state="new">Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</target>
+        <target state="translated">Недопустимое окно журнала тестов GitHub Actions "{0}". Укажите целое число дней от 1 до 90.</target>
         <note>{0} is the invalid history window.</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
@@ -234,12 +234,12 @@
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
         <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
-        <target state="new">Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</target>
+        <target state="translated">Сведения о сбое были опущены для {0} из {1} тестовых проектов, так как сведения об ошибке уже занимают слишком много места. Полную диагностику смотрите в журнале рабочего процесса или в отчете об тестировании.</target>
         <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
       </trans-unit>
       <trans-unit id="ModulesNotListed">
         <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
-        <target state="new">{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</target>
+        <target state="translated">{0} последующих тестовых проектов не показаны, так как был достигнут лимит размера сводки задания. GitHub полностью удаляет сводку задания размером более 1 МБ, а не сокращает ее. Сведения об их результатах см. в журнале рабочего процесса или в отчете о тестировании.</target>
         <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryLimitExceededWarning">
         <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
-        <target state="new">The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</target>
+        <target state="translated">Файл сводки задания GitHub имеет размер в {0} байт, и добавление этого раздела отчета превысит ограничение в {1} байт, которое GitHub устанавливает для каждого шага. GitHub полностью отбрасывает превысившую лимит сводку задания, вместо того чтобы обрезать ее, поэтому добавление в конец привело бы к потере всех разделов, включая те, что уже записали другие тестовые проекты. Этот раздел был пропущен, чтобы сохранить остальную часть сводки в неизменном виде. Обычно это означает, что многие тестовые проекты или другие инструменты записывают данные в одну и ту же сводку задания; сведения об этих результатах см. в журнале рабочего процесса или в отчете о тестировании.</target>
         <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
@@ -309,12 +309,12 @@
       </trans-unit>
       <trans-unit id="SummaryCondensed">
         <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
-        <target state="new">condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</target>
+        <target state="translated">сокращено до одной строки, так как сводка уже занимает слишком много места. Сведения о полных результатах см. в журнале рабочего процесса или в отчете о тестировании.</target>
         <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
       </trans-unit>
       <trans-unit id="SummaryTruncatedNotice">
         <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
-        <target state="new">This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</target>
+        <target state="translated">Эта сводка задания становилась слишком длинной, поэтому была сокращена: она содержит полные результаты первых {0} тестовых проектов, а те, что перечислены ниже в виде одной строки, были представлены без подробных результатов. GitHub полностью удаляет сводку задания размером более 1 МБ, а не сокращает ее. Полные результаты см. в журнале рабочего процесса или в отчете о тестировании.</target>
         <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>

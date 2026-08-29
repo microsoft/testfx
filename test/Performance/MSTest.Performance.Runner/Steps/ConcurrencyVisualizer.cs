@@ -3,6 +3,8 @@
 
 using System.IO.Compression;
 
+using Microsoft.Testing.TestInfrastructure;
+
 namespace MSTest.Performance.Runner.Steps;
 
 internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
@@ -22,6 +24,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        TestHost testHost = payload.GetRequiredTestHost();
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Console.WriteLine("Skip run, not supported in Windows");
@@ -38,7 +41,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
 <LocalConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" MajorVersion="1" MinorVersion="0">
   <IncludeEnvSymbolPath>true</IncludeEnvSymbolPath>
   <DeleteEtlsAfterAnalysis>true</DeleteEtlsAfterAnalysis>
-  <TraceLocation>{Path.GetDirectoryName(payload.TestHost.FullName)}</TraceLocation>
+  <TraceLocation>{Path.GetDirectoryName(testHost.FullName)}</TraceLocation>
   <SymbolPath>{_symbols}</SymbolPath>
 
   <FilterConfig>
@@ -65,23 +68,23 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
 
   <!-- List of MyCodeDirectory directories -->
   <JustMyCode>
-    <MyCodeDirectory>{Path.GetDirectoryName(payload.TestHost.FullName)}</MyCodeDirectory>
+    <MyCodeDirectory>{Path.GetDirectoryName(testHost.FullName)}</MyCodeDirectory>
     <MyCodeDirectory>{payload.TestAsset.TargetAssetPath}</MyCodeDirectory>
   </JustMyCode>
 </LocalConfig>
 """;
 
-        string configFilePath = Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Config.xml");
+        string configFilePath = Path.Combine(Path.GetDirectoryName(testHost.FullName)!, "Config.xml");
         await File.WriteAllTextAsync(configFilePath, config);
         StringBuilder commandLine = new();
-        commandLine.Append(CultureInfo.InvariantCulture, $"/Config \"{configFilePath}\" /launch \"{payload.TestHost.FullName}\" /outdir \"{Path.GetDirectoryName(payload.TestHost.FullName)!}\"");
+        commandLine.Append(CultureInfo.InvariantCulture, $"/Config \"{configFilePath}\" /launch \"{testHost.FullName}\" /outdir \"{Path.GetDirectoryName(testHost.FullName)!}\"");
 
         ManualResetEventSlim profiledProcessExited = new(false);
-        WindowsProcessWatcher processWatcher = new(Path.GetFileName(payload.TestHost.FullName));
+        WindowsProcessWatcher processWatcher = new(Path.GetFileName(testHost.FullName));
         processWatcher.Start();
         processWatcher.ProcessDeleted += (_, _) =>
         {
-            Console.WriteLine($"Process '{Path.GetFileName(payload.TestHost.FullName)}' exited.");
+            Console.WriteLine($"Process '{Path.GetFileName(testHost.FullName)}' exited.");
             profiledProcessExited.Set();
         };
 

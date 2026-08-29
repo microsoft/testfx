@@ -118,22 +118,21 @@ internal sealed partial class TestHostControllersTestHost
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 
+        SystemEnvironmentVariableProvider systemEnvironmentVariableProvider = new(environment);
+        EnvironmentVariables environmentVariables = new(_loggerFactory)
+        {
+            CurrentProvider = systemEnvironmentVariableProvider,
+        };
+        await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
+        await ApplyControllerExtensionPreLaunchAsync(
+            _testHostsInformation.LifetimeHandlers,
+            _testHostsInformation.EnvironmentVariableProviders,
+            environmentVariables,
+            cancellationToken).ConfigureAwait(false);
+
         // Apply the ITestHostEnvironmentVariableProvider
         if (_testHostsInformation.EnvironmentVariableProviders.Length > 0)
         {
-            SystemEnvironmentVariableProvider systemEnvironmentVariableProvider = new(environment);
-            EnvironmentVariables environmentVariables = new(_loggerFactory)
-            {
-                CurrentProvider = systemEnvironmentVariableProvider,
-            };
-            await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
-
-            foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
-            {
-                environmentVariables.CurrentProvider = environmentVariableProvider;
-                await environmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
-            }
-
             environmentVariables.CurrentProvider = null;
 
             List<(IExtension, string)> failedValidations = [];
@@ -170,5 +169,25 @@ internal sealed partial class TestHostControllersTestHost
         }
 
         return (processStartInfo, partialCommandLine);
+    }
+
+    internal static async Task ApplyControllerExtensionPreLaunchAsync(
+        IReadOnlyList<ITestHostProcessLifetimeHandler> lifetimeHandlers,
+        IReadOnlyList<ITestHostEnvironmentVariableProvider> environmentVariableProviders,
+        EnvironmentVariables environmentVariables,
+        CancellationToken cancellationToken)
+    {
+        // Servers can qualify their endpoint while starting, so handlers must run before providers publish
+        // those endpoints to the child process.
+        foreach (ITestHostProcessLifetimeHandler lifetimeHandler in lifetimeHandlers)
+        {
+            await lifetimeHandler.BeforeTestHostProcessStartAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in environmentVariableProviders)
+        {
+            environmentVariables.CurrentProvider = environmentVariableProvider;
+            await environmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
+        }
     }
 }

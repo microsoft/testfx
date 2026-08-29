@@ -14,6 +14,7 @@ internal class PipelinesRunner
     public int Run(string pipelineNameFilter, IDictionary<string, object>? parametersBag = null)
     {
         parametersBag ??= new Dictionary<string, object>();
+        int failedPipelines = 0;
 
         Matcher pipelineNameFilterMatcher = new();
         pipelineNameFilterMatcher.AddInclude(string.IsNullOrEmpty(pipelineNameFilter) ? "*.*" : pipelineNameFilter);
@@ -48,10 +49,23 @@ internal class PipelinesRunner
 
             pipeline.UpdatePropertyBag?.Invoke(pipelinePropertyBag);
 
-            pipeline.Func(pipelinePropertyBag);
+            try
+            {
+                pipeline.Func(pipelinePropertyBag);
+            }
+            catch (Exception ex)
+            {
+                failedPipelines++;
+                WriteConsole($"Pipeline '{pipeline.PipelineName}' failed.", ConsoleColor.Red);
+                Console.Error.WriteLine(ex.GetBaseException());
+            }
+            finally
+            {
+                Pipeline.DisposeCurrentContext();
+            }
         }
 
-        return 0;
+        return failedPipelines == 0 ? 0 : 1;
     }
 
     private static void WriteConsole(string message, ConsoleColor consoleColor)

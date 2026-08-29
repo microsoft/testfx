@@ -105,6 +105,7 @@
     <Project Path="test/IntegrationTests/TestAssets/TestProject/TestProjectForDiscovery.csproj" />
   </Folder>
   <Folder Name="/test/Performance/">
+    <Project Path="test/Performance/MSTest.Performance.Benchmarks/MSTest.Performance.Benchmarks.csproj" />
     <Project Path="test/Performance/MSTest.Performance.Runner/MSTest.Performance.Runner.csproj" />
   </Folder>
   <Folder Name="/test/TestUtilities/">

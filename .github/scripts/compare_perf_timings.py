@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 TIME_PATTERN = re.compile(
     r"^(?:(?P<days>\d+)\.)?(?P<hours>\d{2}):(?P<minutes>\d{2}):"
     r"(?P<seconds>\d{2})(?:\.(?P<fraction>\d{1,7}))?$"
@@ -32,9 +32,11 @@ def parse_duration(value: str) -> float:
     return days * 86400 + hours * 3600 + minutes * 60 + seconds + ticks / 10_000_000
 
 
-def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]], int]:
+def load_current_results(
+    current_dir: Path,
+) -> tuple[dict[str, dict[str, float]], dict[str, object]]:
     pipelines: dict[str, dict[str, float]] = {}
-    processor_counts: set[int] = set()
+    environment: dict[str, object] | None = None
     result_files = sorted(current_dir.rglob("Result.json"))
     if not result_files:
         raise ValueError(f"No Result.json files found under {current_dir}")
@@ -44,36 +46,131 @@ def load_current_results(current_dir: Path) -> tuple[dict[str, dict[str, float]]
         if not isinstance(report, dict):
             raise ValueError(f"{result_file} does not contain a named performance report")
 
-        pipeline_name = report.get("PipelineName")
-        measurements = report.get("Measurements")
+        pipeline_name = report.get("Pipeline")
+        if pipeline_name is None:
+            pipeline_name = report.get("PipelineName")
         if not isinstance(pipeline_name, str) or not pipeline_name:
-            raise ValueError(f"{result_file} has no PipelineName")
+            raise ValueError(f"{result_file} has no pipeline name")
         if pipeline_name in pipelines:
             raise ValueError(f"Duplicate performance report for {pipeline_name}")
+
+        summary = report.get("Summary")
+        if isinstance(summary, dict):
+            elapsed_milliseconds = summary.get("MedianElapsedMilliseconds")
+            processor_milliseconds = summary.get("MedianProcessorMilliseconds")
+            if (
+                not isinstance(elapsed_milliseconds, (int, float))
+                or isinstance(elapsed_milliseconds, bool)
+                or not math.isfinite(elapsed_milliseconds)
+                or elapsed_milliseconds <= 0
+            ):
+                raise ValueError(f"{result_file} has an invalid elapsed-time median")
+            metrics = {"elapsedTimeSeconds": elapsed_milliseconds / 1000}
+            if processor_milliseconds is not None:
+                if (
+                    not isinstance(processor_milliseconds, (int, float))
+                    or isinstance(processor_milliseconds, bool)
+                    or not math.isfinite(processor_milliseconds)
+                    or processor_milliseconds <= 0
+                ):
+                    raise ValueError(f"{result_file} has an invalid CPU-time median")
+                metrics["totalProcessorTimeSeconds"] = processor_milliseconds / 1000
+
+            report_environment = {
+                "operatingSystem": report.get("OperatingSystem"),
+                "processArchitecture": report.get("ProcessArchitecture"),
+                "processorCount": report.get("ProcessorCount"),
+                "workerCount": report.get("WorkerCount"),
+                "runnerRuntimeVersion": report.get("RunnerRuntimeVersion"),
+                "targetFramework": report.get("TargetFramework"),
+                "configuration": report.get("Configuration"),
+                "ciImage": report.get("CiImage"),
+                "ciImageVersion": report.get("CiImageVersion"),
+            }
+            validate_environment(report_environment, str(result_file))
+            if environment is None:
+                environment = report_environment
+            elif environment != report_environment:
+                raise ValueError(
+                    f"{result_file} environment does not match the other current results"
+                )
+
+            pipelines[pipeline_name] = metrics
+            continue
+
+        measurements = report.get("Measurements")
         if not isinstance(measurements, list) or not measurements:
-            raise ValueError(f"{result_file} has no Measurements")
+            raise ValueError(f"{result_file} has neither Summary nor Measurements")
 
         elapsed_times: list[float] = []
         processor_times: list[float] = []
+        legacy_processor_counts: set[int] = set()
         for measurement in measurements:
             if not isinstance(measurement, dict):
                 raise ValueError(f"{result_file} contains an invalid measurement")
 
             elapsed_times.append(parse_duration(measurement["ElapsedTime"]))
             processor_times.append(parse_duration(measurement["TotalProcessorTime"]))
-            processor_counts.add(int(measurement["ProcessorCount"]))
+            legacy_processor_counts.add(int(measurement["ProcessorCount"]))
+
+        if len(legacy_processor_counts) != 1:
+            raise ValueError(
+                f"{result_file} contains multiple processor counts: "
+                f"{sorted(legacy_processor_counts)}"
+            )
+        legacy_processor_count = legacy_processor_counts.pop()
+        report_environment = {
+            "operatingSystem": "unknown",
+            "processArchitecture": "unknown",
+            "processorCount": legacy_processor_count,
+            "workerCount": legacy_processor_count,
+            "runnerRuntimeVersion": "unknown",
+            "targetFramework": "unknown",
+            "configuration": "unknown",
+            "ciImage": None,
+            "ciImageVersion": None,
+        }
+        if environment is None:
+            environment = report_environment
+        elif environment != report_environment:
+            raise ValueError(
+                f"{result_file} environment does not match the other current results"
+            )
 
         pipelines[pipeline_name] = {
             "elapsedTimeSeconds": statistics.median(elapsed_times),
             "totalProcessorTimeSeconds": statistics.median(processor_times),
         }
 
-    if len(processor_counts) != 1:
-        raise ValueError(
-            f"Expected one processor count across current results, found {sorted(processor_counts)}"
-        )
+    if environment is None:
+        raise ValueError(f"No usable Result.json files found under {current_dir}")
 
-    return pipelines, processor_counts.pop()
+    return pipelines, environment
+
+
+def validate_environment(environment: dict[str, object], source: str) -> None:
+    processor_count = environment.get("processorCount")
+    if not isinstance(processor_count, int) or processor_count <= 0:
+        raise ValueError(f"{source} has an invalid processor count")
+    worker_count = environment.get("workerCount")
+    if not isinstance(worker_count, int) or worker_count <= 0:
+        raise ValueError(f"{source} has an invalid worker count")
+
+    for field in (
+        "operatingSystem",
+        "processArchitecture",
+        "runnerRuntimeVersion",
+        "targetFramework",
+        "configuration",
+    ):
+        value = environment.get(field)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{source} has an invalid {field}")
+
+    for field in ("ciImage", "ciImageVersion"):
+        value = environment.get(field)
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(f"{source} has an invalid {field}")
 
 
 def load_baseline(path: Path) -> list[dict]:
@@ -96,11 +193,10 @@ def load_baseline(path: Path) -> list[dict]:
             if not isinstance(run, dict):
                 raise ValueError(f"Baseline run {run_index} must be an object")
 
-            processor_count = run.get("processorCount")
-            if not isinstance(processor_count, int) or processor_count <= 0:
-                raise ValueError(
-                    f"Baseline run {run_index} has an invalid processor count"
-                )
+            environment = run.get("environment")
+            if not isinstance(environment, dict):
+                raise ValueError(f"Baseline run {run_index} has no environment")
+            validate_environment(environment, f"Baseline run {run_index}")
 
             pipelines = run.get("pipelines")
             if not isinstance(pipelines, dict):
@@ -114,10 +210,7 @@ def load_baseline(path: Path) -> list[dict]:
                     raise ValueError(
                         f"Baseline metrics for {pipeline_name} must be an object"
                     )
-                for metric_name in (
-                    "elapsedTimeSeconds",
-                    "totalProcessorTimeSeconds",
-                ):
+                for metric_name in ("elapsedTimeSeconds",):
                     metric = metrics.get(metric_name)
                     if (
                         not isinstance(metric, (int, float))
@@ -128,6 +221,17 @@ def load_baseline(path: Path) -> list[dict]:
                         raise ValueError(
                             f"Baseline metric {pipeline_name}.{metric_name} is invalid"
                         )
+                processor_time = metrics.get("totalProcessorTimeSeconds")
+                if processor_time is not None and (
+                    not isinstance(processor_time, (int, float))
+                    or isinstance(processor_time, bool)
+                    or not math.isfinite(processor_time)
+                    or processor_time <= 0
+                ):
+                    raise ValueError(
+                        f"Baseline metric {pipeline_name}.totalProcessorTimeSeconds "
+                        "is invalid"
+                    )
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
         message = f"Ignoring invalid baseline {path}: {error}"
         escaped = (
@@ -140,11 +244,14 @@ def load_baseline(path: Path) -> list[dict]:
 
 
 def metric_baseline(
-    runs: list[dict], pipeline_name: str, metric_name: str, processor_count: int
+    runs: list[dict],
+    pipeline_name: str,
+    metric_name: str,
+    environment: dict[str, object],
 ) -> list[float]:
     values = []
     for run in runs:
-        if run.get("processorCount") != processor_count:
+        if run.get("environment") != environment:
             continue
 
         pipeline = run.get("pipelines", {}).get(pipeline_name)
@@ -165,7 +272,7 @@ def format_change(value: float | None) -> str:
 def build_summary(
     pipelines: dict[str, dict[str, float]],
     runs: list[dict],
-    processor_count: int,
+    environment: dict[str, object],
     threshold_percent: float,
     minimum_baseline_runs: int,
 ) -> tuple[str, list[str]]:
@@ -173,7 +280,12 @@ def build_summary(
         "## PlainProcess performance regression report",
         "",
         f"Rolling baseline threshold: **>{threshold_percent:g}%**; "
-        f"runner processor count: **{processor_count}**.",
+        f"environment: **{environment['operatingSystem']} / "
+        f"{environment['processArchitecture']} / "
+        f"{environment['processorCount']} processors / "
+        f"{environment['workerCount']} workers / "
+        f"{environment['targetFramework']} / "
+        f"{environment['configuration']}**.",
         "",
         "| Pipeline | Wall clock | Baseline | Change | CPU time | Baseline | Change | Status |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
@@ -183,12 +295,17 @@ def build_summary(
     for pipeline_name in sorted(pipelines):
         current = pipelines[pipeline_name]
         elapsed_values = metric_baseline(
-            runs, pipeline_name, "elapsedTimeSeconds", processor_count
+            runs, pipeline_name, "elapsedTimeSeconds", environment
         )
-        processor_values = metric_baseline(
-            runs, pipeline_name, "totalProcessorTimeSeconds", processor_count
+        current_processor_time = current.get("totalProcessorTimeSeconds")
+        processor_values = (
+            metric_baseline(
+                runs, pipeline_name, "totalProcessorTimeSeconds", environment
+            )
+            if current_processor_time is not None
+            else []
         )
-        baseline_count = min(len(elapsed_values), len(processor_values))
+        baseline_count = len(elapsed_values)
 
         if baseline_count < minimum_baseline_runs:
             elapsed_baseline = None
@@ -198,17 +315,27 @@ def build_summary(
             status = f"Collecting baseline ({baseline_count}/{minimum_baseline_runs})"
         else:
             elapsed_baseline = statistics.median(elapsed_values)
-            processor_baseline = statistics.median(processor_values)
             elapsed_change = (
                 current["elapsedTimeSeconds"] / elapsed_baseline - 1
             ) * 100
-            processor_change = (
-                current["totalProcessorTimeSeconds"] / processor_baseline - 1
-            ) * 100
+            if (
+                current_processor_time is not None
+                and len(processor_values) >= minimum_baseline_runs
+            ):
+                processor_baseline = statistics.median(processor_values)
+                processor_change = (
+                    current_processor_time / processor_baseline - 1
+                ) * 100
+            else:
+                processor_baseline = None
+                processor_change = None
             regressed_metrics = []
             if elapsed_change > threshold_percent:
                 regressed_metrics.append(f"wall clock {elapsed_change:+.1f}%")
-            if processor_change > threshold_percent:
+            if (
+                processor_change is not None
+                and processor_change > threshold_percent
+            ):
                 regressed_metrics.append(f"CPU time {processor_change:+.1f}%")
 
             if regressed_metrics:
@@ -222,7 +349,7 @@ def build_summary(
             f"| {format_seconds(current['elapsedTimeSeconds'])} "
             f"| {format_seconds(elapsed_baseline)} "
             f"| {format_change(elapsed_change)} "
-            f"| {format_seconds(current['totalProcessorTimeSeconds'])} "
+            f"| {format_seconds(current_processor_time)} "
             f"| {format_seconds(processor_baseline)} "
             f"| {format_change(processor_change)} "
             f"| {status} |"
@@ -241,7 +368,7 @@ def write_updated_baseline(
     prior_runs: list[dict],
     run_id: str,
     created_at: str,
-    processor_count: int,
+    environment: dict[str, object],
     pipelines: dict[str, dict[str, float]],
     window_size: int,
 ) -> None:
@@ -250,7 +377,7 @@ def write_updated_baseline(
         {
             "runId": run_id,
             "createdAt": created_at,
-            "processorCount": processor_count,
+            "environment": environment,
             "pipelines": pipelines,
         }
     )
@@ -284,7 +411,7 @@ def main() -> int:
     if args.window_size < args.minimum_baseline_runs:
         parser.error("--window-size must be at least --minimum-baseline-runs")
 
-    pipelines, processor_count = load_current_results(args.current_dir)
+    pipelines, environment = load_current_results(args.current_dir)
     prior_runs = [
         run
         for run in load_baseline(args.baseline)
@@ -293,7 +420,7 @@ def main() -> int:
     summary, regressions = build_summary(
         pipelines,
         prior_runs,
-        processor_count,
+        environment,
         args.threshold_percent,
         args.minimum_baseline_runs,
     )
@@ -304,7 +431,7 @@ def main() -> int:
         prior_runs,
         args.run_id,
         args.created_at,
-        processor_count,
+        environment,
         pipelines,
         args.window_size,
     )

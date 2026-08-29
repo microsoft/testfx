@@ -7,7 +7,9 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -148,6 +150,57 @@ public static class ServiceProviderExtensions
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
         return ((ServiceProvider)provider).GetServicesInternal(typeof(TService)).Cast<TService>();
+    }
+
+    internal static IReadOnlyList<string>? GetTestHostControllerAuthorizedSecurityIdentities(this IServiceProvider serviceProvider)
+        => ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities;
+
+    internal static async Task<IReadOnlyList<string>?> ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+        this IServiceProvider serviceProvider,
+        ITestHostLauncher? testHostLauncher,
+        string testHostFileName,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        if (testHostLauncher is not ITestHostControllerConnectionAuthorizer connectionAuthorizer)
+        {
+            ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = null;
+            return null;
+        }
+
+        IReadOnlyList<string> extensionResult = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(testHostFileName, cancellationToken).ConfigureAwait(false);
+        if (extensionResult is null || extensionResult.Count == 0)
+        {
+            ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = null;
+            return null;
+        }
+
+        // Snapshot immediately. Validation, logging, and every controller-side pipe must operate on
+        // the same fixed set of extension-supplied values.
+        string[] securityIdentities = [.. extensionResult];
+
+        if (!NamedPipeServerSecurity.IsSupported)
+        {
+            await logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentities.Length} connection authorization(s), ignored on this operating system.").ConfigureAwait(false);
+            ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = null;
+            return null;
+        }
+
+        foreach (string securityIdentity in securityIdentities.Where(static securityIdentity =>
+            !NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity)))
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage,
+                testHostLauncher.DisplayName,
+                testHostLauncher.Uid,
+                securityIdentity ?? "<null>",
+                NamedPipeServerSecurity.AllApplicationPackagesSid));
+        }
+
+        await logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested the following validated security identity/identities for controller-side connections: {string.Join(", ", securityIdentities)}").ConfigureAwait(false);
+        ((ServiceProvider)serviceProvider).TestHostControllerAuthorizedSecurityIdentities = securityIdentities;
+        return securityIdentities;
     }
 
     internal static ITestSessionContext GetTestSessionContext(this IServiceProvider serviceProvider)

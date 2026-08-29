@@ -3,16 +3,20 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 #pragma warning restore IDE0073 // The file header does not match the required text
 
+using System.IO.Pipes;
+
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 using Moq;
 
@@ -23,6 +27,160 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class RetryTests
 {
+    private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainer pipe authorization is Windows-only.")]
+    public void RetryPipeServer_UsesControllerAuthorizedSecurityIdentities()
+    {
+        ServiceProvider serviceProvider = new()
+        {
+            TestHostControllerAuthorizedSecurityIdentities = [ContosoPackageSid],
+        };
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(cancellationTokenSource.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        serviceProvider.AddService(new Mock<IFileSystem>().Object);
+
+        var orchestrator = new RetryOrchestrator(serviceProvider);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+
+        Assert.IsInstanceOfType<ITestHostControllerConnectionAuthorizationConsumer>(orchestrator);
+        Assert.IsTrue(server.PipeName.StartsWith(@"LOCAL\", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [TestMethod]
+    public async Task RunAttemptAsync_UsesRegisteredTestHostLauncher()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(cancellationTokenSource.Object);
+        Mock<IProcessHandler> processHandler = new(MockBehavior.Strict);
+        serviceProvider.AddService(processHandler.Object);
+        var launcher = new ConnectingTestHostLauncher();
+        serviceProvider.AddService(launcher);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+        List<string> arguments =
+        [
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}",
+            server.PipeName,
+        ];
+
+        RetryTestHostRunner.AttemptResult result = await RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            arguments,
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            CancellationToken.None);
+
+        Assert.AreEqual(0, result.ExitCode);
+        Assert.IsFalse(result.ExitedBeforeConnect);
+        Assert.AreEqual("testhost.exe", launcher.Context!.FileName);
+        Assert.AreSequenceEqual(arguments, launcher.Context.Arguments);
+        processHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task RunAttemptAsync_AlreadyExitedCustomHandle_DoesNotWaitForPipeTimeout()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(cancellationTokenSource.Object);
+        serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
+        serviceProvider.AddService(new AlreadyExitedTestHostLauncher(exitCode: 7));
+        Mock<IOutputDevice> outputDevice = new();
+        outputDevice.Setup(x => x.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+
+        RetryTestHostRunner.AttemptResult result = await RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            outputDevice.Object,
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            [],
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            CancellationToken.None);
+
+        Assert.AreEqual(7, result.ExitCode);
+        Assert.IsTrue(result.ExitedBeforeConnect);
+        outputDevice.Verify(
+            x => x.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RunAttemptAsync_CanceledConnection_TerminatesCustomHandleBeforeDisposal()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        Mock<ITestApplicationCancellationTokenSource> applicationCancellation = new();
+        applicationCancellation.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        serviceProvider.AddService(applicationCancellation.Object);
+        serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
+        var launcher = new TerminatedTestHostLauncher();
+        serviceProvider.AddService(launcher);
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], new Mock<ILogger>().Object);
+        using var cancellation = new CancellationTokenSource();
+#pragma warning disable VSTHRD103 // CancelAsync is unavailable on .NET Framework.
+        cancellation.Cancel();
+#pragma warning restore VSTHRD103
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            [],
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            cancellation.Token));
+
+        Assert.IsTrue(launcher.Handle.TerminateCalled);
+        Assert.IsTrue(launcher.Handle.Disposed);
+    }
+
     [TestMethod]
     public void SnapshotAttemptArtifacts_CopiesExternalArtifactAndPreservesDestination()
     {
@@ -894,5 +1052,124 @@ public class RetryTests
             ProcessCallCount++;
             return _processAsync(inputs, outputDirectory, context, cancellationToken);
         }
+    }
+
+    private sealed class ConnectingTestHostLauncher : ITestHostLauncher
+    {
+        public TestHostLaunchContext? Context { get; private set; }
+
+        public string Uid => nameof(ConnectingTestHostLauncher);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(ConnectingTestHostLauncher);
+
+        public string Description => nameof(ConnectingTestHostLauncher);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public async Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
+        {
+            Context = context;
+            int pipeNameIndex = context.Arguments.ToList().IndexOf($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}") + 1;
+            var pipeClient = new NamedPipeClientStream(".", context.Arguments[pipeNameIndex], PipeDirection.InOut, PipeOptions.Asynchronous);
+            await pipeClient.ConnectAsync(5_000, cancellationToken);
+            return new ConnectedTestHostHandle(pipeClient);
+        }
+    }
+
+    private sealed class ConnectedTestHostHandle(NamedPipeClientStream pipeClient) : ITestHostHandle
+    {
+        public string Identifier => nameof(ConnectedTestHostHandle);
+
+        public int ExitCode => 0;
+
+        public bool HasExited => true;
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public void Terminate()
+        {
+        }
+
+        public void Dispose() => pipeClient.Dispose();
+    }
+
+    private sealed class AlreadyExitedTestHostLauncher(int exitCode) : ITestHostLauncher
+    {
+        public string Uid => nameof(AlreadyExitedTestHostLauncher);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(AlreadyExitedTestHostLauncher);
+
+        public string Description => nameof(AlreadyExitedTestHostLauncher);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
+            => Task.FromResult<ITestHostHandle>(new AlreadyExitedTestHostHandle(exitCode));
+    }
+
+    private sealed class AlreadyExitedTestHostHandle(int exitCode) : ITestHostHandle
+    {
+        public string Identifier => nameof(AlreadyExitedTestHostHandle);
+
+        public int ExitCode => exitCode;
+
+        public bool HasExited => true;
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public void Terminate()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class TerminatedTestHostLauncher : ITestHostLauncher
+    {
+        public TerminatedTestHostHandle Handle { get; } = new();
+
+        public string Uid => nameof(TerminatedTestHostLauncher);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
+            => Task.FromResult<ITestHostHandle>(Handle);
+    }
+
+    private sealed class TerminatedTestHostHandle : ITestHostHandle
+    {
+        private readonly TaskCompletionSource<bool> _exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public bool TerminateCalled { get; private set; }
+
+        public bool Disposed { get; private set; }
+
+        public string Identifier => nameof(TerminatedTestHostHandle);
+
+        public int ExitCode => 1;
+
+        public bool HasExited => _exited.Task.IsCompleted;
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken) => _exited.Task.WithCancellationAsync(cancellationToken);
+
+        public void Terminate()
+        {
+            TerminateCalled = true;
+            _exited.TrySetResult(true);
+        }
+
+        public void Dispose() => Disposed = true;
     }
 }

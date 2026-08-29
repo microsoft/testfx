@@ -132,11 +132,11 @@ public static class WasmRuntime
     /// to the bundle so the platform can read/write its files.
     /// </summary>
     public static async Task<(int ExitCode, string Output, string Error, string Combined)> RunUnderWasmtimeAsync(
-        string wasmtime, string appBundle, string appName, CancellationToken cancellationToken)
+        string wasmtime, string appBundle, string appName, CancellationToken cancellationToken, string? arguments = null)
     {
         var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{wasmtime}\" run -S http --dir . -- dotnet.wasm {appName}",
+            $"\"{wasmtime}\" run -S http --dir . -- dotnet.wasm {appName}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}")}",
             workingDirectory: appBundle,
             cancellationToken: cancellationToken);
 

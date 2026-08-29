@@ -33,8 +33,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     // Mutate only while holding _flushSemaphore.
     private readonly Stack<AzureDevOpsTestCaseResultWithAttachments> _retryResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
+    private readonly ConcurrentQueue<(int TestCaseResultId, AzureDevOpsTestResultAttachment Attachment)> _pendingResultAttachments = new();
     private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
+#if NET9_0_OR_GREATER
+    private readonly Lock _inProcessRetryAttemptsLock = new();
+#else
+    private readonly object _inProcessRetryAttemptsLock = new();
+#endif
+    private readonly Dictionary<(string AutomatedTestName, string TestCaseTitle), List<InProcessRetrySequence>> _inProcessRetrySequences = [];
     // Mutate only while holding _flushSemaphore. One persisted parent may be updated at most once per
     // test-host attempt; a later duplicate is ambiguous and falls back to a separate create.
     private readonly HashSet<int> _claimedResultIds = [];
@@ -284,18 +291,20 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             switch (value)
             {
                 case TestNodeUpdateMessage testNodeUpdateMessage:
-                    // A test framework that retries a test in-process reports every attempt under the same test
-                    // node uid. Azure DevOps keys results by automated test name, so publishing the superseded
-                    // attempts would create duplicate rows for one test; only the final attempt is published.
-                    if (testNodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
-                    {
-                        return;
-                    }
-
                     AzureDevOpsTestCaseResultWithAttachments? testCaseResult = CreateTestCaseResult(testNodeUpdateMessage.TestNode, _publishConfiguration.AutomatedTestStorage);
                     if (testCaseResult is null)
                     {
                         return;
+                    }
+
+                    RetryAttemptProperty? retryAttempt = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
+                    if (retryAttempt is not null)
+                    {
+                        testCaseResult = AggregateInProcessRetryAttempt(retryAttempt, testCaseResult);
+                        if (testCaseResult is null)
+                        {
+                            return;
+                        }
                     }
 
                     // Enqueue before renewing the lease: RenewLeaseAsync does file I/O that can throw
@@ -315,6 +324,119 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+        }
+    }
+
+    private AzureDevOpsTestCaseResultWithAttachments? AggregateInProcessRetryAttempt(
+        RetryAttemptProperty retryAttempt,
+        AzureDevOpsTestCaseResultWithAttachments attempt)
+    {
+        (string AutomatedTestName, string TestCaseTitle) key = (attempt.Result.AutomatedTestName, attempt.Result.TestCaseTitle);
+        lock (_inProcessRetryAttemptsLock)
+        {
+            if (retryAttempt.AttemptNumber == 1)
+            {
+                if (!retryAttempt.IsSuperseded)
+                {
+                    return attempt;
+                }
+
+                if (!_inProcessRetrySequences.TryGetValue(key, out List<InProcessRetrySequence>? sequences))
+                {
+                    sequences = [];
+                    _inProcessRetrySequences.Add(key, sequences);
+                }
+
+                sequences.Add(new InProcessRetrySequence(attempt));
+                return null;
+            }
+
+            if (!_inProcessRetrySequences.TryGetValue(key, out List<InProcessRetrySequence>? candidates))
+            {
+                return attempt;
+            }
+
+            InProcessRetrySequence? matchingSequence = null;
+            int matchingSequenceCount = 0;
+            foreach (InProcessRetrySequence candidate in candidates)
+            {
+                if (candidate.NextAttemptNumber == retryAttempt.AttemptNumber)
+                {
+                    matchingSequence = candidate;
+                    matchingSequenceCount++;
+                }
+            }
+
+            if (matchingSequenceCount != 1)
+            {
+                if (matchingSequenceCount > 1)
+                {
+                    // Retry metadata has no row identity beyond the test name, title, and attempt number.
+                    // Preserve every execution independently rather than cross-wire diagnostics between
+                    // folded data-driven rows that share all three values.
+                    foreach (InProcessRetrySequence candidate in candidates)
+                    {
+                        if (candidate.NextAttemptNumber != retryAttempt.AttemptNumber)
+                        {
+                            continue;
+                        }
+
+                        foreach (AzureDevOpsTestCaseResultWithAttachments previousAttempt in candidate.Attempts)
+                        {
+                            _pendingResults.Enqueue(previousAttempt);
+                        }
+                    }
+
+                    _ = candidates.RemoveAll(candidate => candidate.NextAttemptNumber == retryAttempt.AttemptNumber);
+                    if (candidates.Count == 0)
+                    {
+                        _inProcessRetrySequences.Remove(key);
+                    }
+                }
+
+                return attempt;
+            }
+
+            matchingSequence!.Attempts.Add(attempt);
+            matchingSequence.NextAttemptNumber++;
+            if (retryAttempt.IsSuperseded)
+            {
+                return null;
+            }
+
+            candidates.Remove(matchingSequence);
+            if (candidates.Count == 0)
+            {
+                _inProcessRetrySequences.Remove(key);
+            }
+
+            return attempt with { PreviousAttempts = [.. matchingSequence.Attempts.Take(matchingSequence.Attempts.Count - 1)] };
+        }
+    }
+
+    private sealed class InProcessRetrySequence(AzureDevOpsTestCaseResultWithAttachments firstAttempt)
+    {
+        public List<AzureDevOpsTestCaseResultWithAttachments> Attempts { get; } = [firstAttempt];
+
+        public int NextAttemptNumber { get; set; } = 2;
+    }
+
+    private void DrainIncompleteInProcessRetrySequences()
+    {
+        lock (_inProcessRetryAttemptsLock)
+        {
+            foreach (List<InProcessRetrySequence> sequences in _inProcessRetrySequences.Values)
+            {
+                foreach (InProcessRetrySequence sequence in sequences)
+                {
+                    foreach (AzureDevOpsTestCaseResultWithAttachments attempt in sequence.Attempts)
+                    {
+                        _pendingResults.Enqueue(attempt);
+                    }
+                }
+            }
+
+            _inProcessRetrySequences.Clear();
         }
     }
 
@@ -346,6 +468,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 // Cancellation — expected and fine.
             }
         }
+
+        // If cancellation or a framework failure stopped result delivery before the final retry attempt,
+        // preserve every execution already received. Publishing them independently is safer than guessing
+        // an outcome that never arrived, and moving them into the normal queue also includes them in the
+        // unpublished-result warning when cancellation prevents the forced flush.
+        DrainIncompleteInProcessRetrySequences();
 
         try
         {
@@ -383,6 +511,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, unpublishedResultCount),
                 CancellationToken.None).ConfigureAwait(false);
         }
+
+        await UploadPendingResultAttachmentsAsync(CancellationToken.None).ConfigureAwait(false);
 
         try
         {

@@ -5,12 +5,16 @@ using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Helpers;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 using Moq;
 
@@ -19,6 +23,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class HangDumpTests
 {
+    private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+
     public TestContext TestContext { get; set; } = null!;
 
     private HangDumpCommandLineProvider GetProvider()
@@ -26,6 +32,44 @@ public sealed class HangDumpTests
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         _ = testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("FullPath");
         return new();
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainer pipe authorization is Windows-only.")]
+    public async Task BeforeTestHostProcessStartAsync_UsesControllerAuthorizedSecurityIdentities()
+    {
+        var endpoint = new NamedPipeServerEndpoint($"hang_{Guid.NewGuid():N}");
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [HangDumpCommandLineProvider.HangDumpOptionName] = [],
+        });
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        Mock<ITask> task = new();
+        task.Setup(x => x.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        Mock<IClock> clock = new();
+        clock.SetupGet(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
+        ServiceProvider serviceProvider = new()
+        {
+            TestHostControllerAuthorizedSecurityIdentities = [ContosoPackageSid],
+        };
+
+        using var handler = new HangDumpProcessLifetimeHandler(
+            endpoint,
+            new Mock<IMessageBus>().Object,
+            new Mock<IOutputDevice>().Object,
+            options,
+            task.Object,
+            new Mock<IEnvironment>().Object,
+            loggerFactory.Object,
+            new Mock<IConfiguration>().Object,
+            new Mock<IProcessHandler>().Object,
+            clock.Object,
+            serviceProvider);
+
+        await handler.BeforeTestHostProcessStartAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(endpoint.PipeName.StartsWith(@"LOCAL\", StringComparison.OrdinalIgnoreCase));
     }
 
     [TestMethod]

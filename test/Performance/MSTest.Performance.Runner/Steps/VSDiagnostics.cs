@@ -3,6 +3,8 @@
 
 using System.IO.Compression;
 
+using Microsoft.Testing.TestInfrastructure;
+
 namespace MSTest.Performance.Runner.Steps;
 
 internal class VSDiagnostics : IStep<BuildArtifact, Files>
@@ -22,6 +24,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        TestHost testHost = payload.GetRequiredTestHost();
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Console.WriteLine("Skip run, not supported in Windows");
@@ -39,7 +42,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
 
         string sessionID = Guid.NewGuid().ToString();
         ProcessStartInfo startCollection =
-           new(vSDiagnostics, $"start {sessionID} /launch:\"{payload.TestHost.FullName}\" /loadConfig:\"{agentConfig}\"")
+           new(vSDiagnostics, $"start {sessionID} /launch:\"{testHost.FullName}\" /loadConfig:\"{agentConfig}\"")
            {
                UseShellExecute = false,
                RedirectStandardOutput = true,
@@ -48,11 +51,11 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
            };
 
         ManualResetEventSlim profiledProcessExited = new(false);
-        WindowsProcessWatcher processWatcher = new(Path.GetFileName(payload.TestHost.FullName));
+        WindowsProcessWatcher processWatcher = new(Path.GetFileName(testHost.FullName));
         processWatcher.Start();
         processWatcher.ProcessDeleted += (_, _) =>
         {
-            Console.WriteLine($"Process '{Path.GetFileName(payload.TestHost.FullName)}' exited.");
+            Console.WriteLine($"Process '{Path.GetFileName(testHost.FullName)}' exited.");
             profiledProcessExited.Set();
         };
 
@@ -66,7 +69,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         // Wait for process exit
         profiledProcessExited.Wait();
 
-        string diagSessionFileName = Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "session.diagsession");
+        string diagSessionFileName = Path.Combine(Path.GetDirectoryName(testHost.FullName)!, "session.diagsession");
         File.Delete(diagSessionFileName);
         ProcessStartInfo stopCollection =
           new(vSDiagnostics, $"stop {sessionID} /output:{diagSessionFileName}")

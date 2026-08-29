@@ -4,6 +4,7 @@
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -13,8 +14,8 @@ internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing
 
     private readonly ICommandLineOptions _commandLineOptions;
 
-    public TrxEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, string pipeName)
-        : base(pipeName, TRXNAMEDPIPENAME)
+    public TrxEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, NamedPipeServerEndpoint endpoint)
+        : base(endpoint, TRXNAMEDPIPENAME)
     {
         _commandLineOptions = commandLineOptions;
     }
@@ -32,8 +33,9 @@ internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing
         => Task.FromResult(
             // TrxReportGenerator is enabled only when trx report is enabled
             _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
-            // If crash dump is not enabled we run trx in-process only
-            && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
+            // TRX requires (and will trigger) a controller-managed test host whenever the current
+            // platform supports process restart; this is what makes plain --report-trx controller-backed.
+            && TrxModeHelpers.IsTestHostControllerSupported);
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)

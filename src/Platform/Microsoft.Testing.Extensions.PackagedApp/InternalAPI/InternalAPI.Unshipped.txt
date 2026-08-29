@@ -33,10 +33,11 @@ static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.R
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeletePayload(string? payloadPath) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeleteStalePayloads(string! localStateDirectory, System.DateTime utcNow) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
-static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! testHostControllerPid) -> string!
-static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! handshakeId) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! handshakeId) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.ReadAndDelete(string! filePath) -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryDelete(string! filePath) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetHandshakeId(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.Write(string! filePath, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>! entries) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(System.Collections.Generic.IReadOnlyList<string!>! commandLineArguments) -> void
@@ -47,6 +48,7 @@ static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.Try
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PackagedAppTestHostLauncher(string! testApplicationDirectory, System.Func<string!, string?>! getEnvironmentVariable) -> void
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.LauncherModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER" -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.CreateActivationArguments(Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo! application, System.Collections.Generic.IReadOnlyList<string!>! arguments, string! localStateDirectory) -> Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.GetConnectBackEnvironment(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>!
 Microsoft.Testing.Extensions.PackagedApp.AppContainerSecurityIdentifier
 static Microsoft.Testing.Extensions.PackagedApp.AppContainerSecurityIdentifier.TryDerive(string? packageFamilyName) -> string?
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.GetAuthorizedSecurityIdentitiesAsync(string! testHostFileName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!

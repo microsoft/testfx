@@ -139,7 +139,7 @@
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">Włącz lub wyłącz opcję rozwijania każdego nieudanego testu w podsumowaniu zadania do sekcji, którą można zwinąć, zawierającej komunikat o niepowodzeniu, typ wyjątku, lokalizację źródłową oraz ślad stosu. Dopuszczalne wartości to 'on' (akceptowane są również wartości 'true', 'enable', '1') lub 'off' (akceptowane są również wartości 'false', 'disable', '0'). Wartość domyślna to 'on' podczas uruchamiania w funkcji GitHub Actions.</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
@@ -159,22 +159,22 @@
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
         <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
-        <target state="new">Historical duration: p95 {0}, p99 {1} across {2} prior samples.</target>
+        <target state="translated">Historyczny czas trwania: p95 {0}, p99 {1} na podstawie {2} wcześniejszych próbek.</target>
         <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
       </trans-unit>
       <trans-unit id="HistoryFailureContext">
         <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
-        <target state="new">Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</target>
+        <target state="translated">Kontekst historyczny: niepowodzenie {0} i niestabilnych {1} spośród {2} poprzednich uruchomień w {3}-dniowym oknie historii.</target>
         <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryFlakyContext">
         <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
-        <target state="new">Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</target>
+        <target state="translated">Kontekst historyczny: {0} z {1} poprzednich przebiegów w oknie historii {2}-dniowym.</target>
         <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryLoadFailedWarning">
         <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
-        <target state="new">Failed to load the GitHub Actions test history snapshot from '{0}': {1}</target>
+        <target state="translated">Nie można załadować migawki historii testów funkcji GitHub Actions z „{0}”: {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
-        <target state="new">Historical context: passed all {0} prior runs within the {1}-day history window.</target>
+        <target state="translated">Kontekst historyczny: przekazano wszystkie {0} poprzednich przebiegów w {1}-dniowym oknie historii.</target>
         <note>{0} is the total prior result count, {1} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
@@ -199,17 +199,17 @@
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions test history snapshot to '{0}': {1}</target>
+        <target state="translated">Nie można zapisać migawki historii testów usługi GitHub Actions w „{0}”: {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
         <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
-        <target state="new">The GitHub Actions test history snapshot path must be a valid, non-empty path.</target>
+        <target state="translated">Ścieżka migawki historii testów funkcji GitHub Actions musi być prawidłową, niepustą ścieżką.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryWindow">
         <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
-        <target state="new">Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</target>
+        <target state="translated">Nieprawidłowe okno historii testów funkcji GitHub Actions „{0}”. Określ liczbę całkowitą dni z zakresu od 1 do 90.</target>
         <note>{0} is the invalid history window.</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">

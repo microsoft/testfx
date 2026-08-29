@@ -24,12 +24,13 @@ internal class DotnetTrace : IStep<BuildArtifact, Files>
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        TestHost testHost = payload.GetRequiredTestHost();
         await DotnetCli.RunAsync($"tool install --tool-path \"{payload.TestAsset.TargetAssetPath}\" dotnet-trace");
 
         string dotnetTrace = Path.Combine(payload.TestAsset.TargetAssetPath, "dotnet-trace" + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty));
 
         ProcessStartInfo processStartInfo =
-        new(dotnetTrace, $" collect {_arguments} -- \"{payload.TestHost.FullName}\"")
+        new(dotnetTrace, $" collect {_arguments} -- \"{testHost.FullName}\"")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,

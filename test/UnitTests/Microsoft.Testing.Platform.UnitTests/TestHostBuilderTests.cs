@@ -5,11 +5,14 @@ using System.Runtime.ExceptionServices;
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -17,6 +20,29 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TestHostBuilderTests
 {
+    [TestMethod]
+    public async Task ControllerPreLaunch_StartsLifetimeHandlersBeforePublishingEnvironment()
+    {
+        string endpoint = "unqualified";
+        string? publishedEndpoint = null;
+        Mock<ITestHostProcessLifetimeHandler> handler = new();
+        handler.Setup(x => x.BeforeTestHostProcessStartAsync(It.IsAny<CancellationToken>()))
+            .Callback(() => endpoint = @"LOCAL\qualified")
+            .Returns(Task.CompletedTask);
+        Mock<ITestHostEnvironmentVariableProvider> provider = new();
+        provider.Setup(x => x.UpdateAsync(It.IsAny<IEnvironmentVariables>()))
+            .Callback(() => publishedEndpoint = endpoint)
+            .Returns(Task.CompletedTask);
+
+        await TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(
+            [handler.Object],
+            [provider.Object],
+            new EnvironmentVariables(new Mock<ILoggerFactory>().Object),
+            CancellationToken.None);
+
+        Assert.AreEqual(@"LOCAL\qualified", publishedEndpoint);
+    }
+
     [TestMethod]
     public async Task ConnectToTestHostProcessMonitorIfAvailableAsync_MissingPipeName_ReportsPidQualifiedEnvironmentVariable()
     {

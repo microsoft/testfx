@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="HangDumpDeadlineApproaching">
         <source>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</source>
-        <target state="new">CI deadline approaching: taking a hang dump before the run is hard-cancelled.</target>
+        <target state="translated">L’échéance CI approche : il est difficile de prendre un vidage de blocage avant que l’exécution ne soit annulée définitivement.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">

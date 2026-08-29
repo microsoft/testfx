@@ -2,24 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
-using System.Text.Json;
 
 using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Performance.Runner.Steps;
 
 /// <summary>
-/// Runs the test project via <c>dotnet test --no-build</c> to exercise the MTP
-/// server-mode (JSON-RPC / named-pipe) path, and records wall-clock timing using
-/// the same plain <see cref="Process"/> metrics as <see cref="PlainProcess"/>.
+/// Runs the test project via <c>dotnet test --no-build</c> and records wall-clock
+/// timing using the same plain <see cref="Process"/> metrics as <see cref="PlainProcess"/>.
 /// </summary>
 /// <remarks>
 /// <para>
-/// When <c>EnableMSTestRunner=true</c> (MTP native mode), <c>dotnet test</c> invokes the
+/// With <c>EnableMSTestRunner=true</c> (MTP native mode), <c>dotnet test</c> invokes the
 /// compiled test host in server mode, passing <c>--server --protocol dotnet-test-protocol</c>.
 /// The host then communicates results back via a named pipe / TCP socket rather than running
 /// standalone. This exercises the serialisation, JSON-RPC framing, and pipe I/O paths that
-/// the plain-process scenario does not cover.
+/// the plain-process scenario does not cover. With <c>EnableMSTestRunner=false</c>, the same
+/// step exercises the VSTest runner selected by the generated asset's <c>global.json</c>.
 /// </para>
 /// <para>
 /// <b>Measurement note:</b> <see cref="Process.TotalProcessorTime"/> reflects only the
@@ -30,25 +29,31 @@ namespace MSTest.Performance.Runner.Steps;
 /// </remarks>
 internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     private readonly string _reportFileName;
     private readonly BuildConfiguration _buildConfiguration;
     private readonly int _numberOfRun;
+    private readonly int _warmupCount;
     private readonly CompressionLevel _compressionLevel;
 
-    public string Description => "run dotnet test (MTP server mode)";
+    public string Description => "run dotnet test";
 
-    public DotnetTestProcess(string reportFileName, BuildConfiguration buildConfiguration = BuildConfiguration.Debug, int numberOfRun = 3, CompressionLevel compressionLevel = CompressionLevel.Fastest)
+    public DotnetTestProcess(string reportFileName, BuildConfiguration buildConfiguration = BuildConfiguration.Release, int numberOfRun = 5, int warmupCount = 1, CompressionLevel compressionLevel = CompressionLevel.Fastest)
     {
         _reportFileName = reportFileName;
         _buildConfiguration = buildConfiguration;
         _numberOfRun = numberOfRun;
+        _warmupCount = warmupCount;
         _compressionLevel = compressionLevel;
     }
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        if (_buildConfiguration != payload.BuildConfiguration)
+        {
+            throw new InvalidOperationException(
+                $"The dotnet test configuration '{_buildConfiguration}' must match the built configuration '{payload.BuildConfiguration}'.");
+        }
+
         string root = RootFinder.Find();
         string dotnet = Path.Combine(root, ".dotnet", $"dotnet{Constants.ExecutableExtension}");
         string projectDir = payload.TestAsset.TargetAssetPath;
@@ -69,66 +74,21 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
             WorkingDirectory = projectDir,
         };
 
-        // Strip ambient environment variables that the test infrastructure isolates (diagnostics,
-        // dotnet-test execution IDs, NO_COLOR, LLM/agent detection, minidump, telemetry, ...) so the
-        // measured run is reproducible and not influenced by the shell or CI agent it runs under,
-        // matching the isolation DotnetCli applies.
-        foreach (string toSkip in WellKnownEnvironmentVariables.ToSkipEnvironmentVariables)
+        ProcessBenchmarkRunner.ConfigureEnvironment(psi);
+        await ProcessBenchmarkRunner.RunAsync(
+            psi,
+            payload,
+            context,
+            executionKind: "dotnet test",
+            processResourceScope: "dotnet test parent only; test-host children excluded",
+            captureProcessResources: false,
+            numberOfRuns: _numberOfRun,
+            warmupCount: _warmupCount);
+
+        if (string.Equals(Environment.GetEnvironmentVariable("MSTEST_PERFORMANCE_SKIP_ARCHIVE"), "1", StringComparison.Ordinal))
         {
-            psi.EnvironmentVariables.Remove(toSkip);
+            return new Files([payload.ResultFilePath]);
         }
-
-        psi.EnvironmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
-        psi.EnvironmentVariables["DOTNET_ROOT"] = Path.Combine(root, ".dotnet");
-        psi.EnvironmentVariables["DOTNET_INSTALL_DIR"] = Path.Combine(root, ".dotnet");
-        psi.EnvironmentVariables["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1";
-        psi.EnvironmentVariables["DOTNET_MULTILEVEL_LOOKUP"] = "0";
-
-        Console.WriteLine($"Process command: '{psi.FileName} {psi.Arguments.Trim()}' for {_numberOfRun} times");
-
-        List<object> results = [];
-        for (int i = 0; i < _numberOfRun; i++)
-        {
-            long startTimestamp = Stopwatch.GetTimestamp();
-            using Process process = Process.Start(psi)!;
-            // Drain stdout/stderr asynchronously to prevent buffer deadlocks.
-            Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
-            Task<string> stderrTask = process.StandardError.ReadToEndAsync();
-            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
-            TimeSpan elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
-            await Task.WhenAll(stdoutTask, stderrTask);
-
-            // Fail fast on a non-zero exit code: `dotnet test` has many infrastructure failure
-            // modes (restore issues, SDK mismatch, missing build artefacts) that would otherwise
-            // record timings for an invalid run and silently corrupt the perf baseline.
-            if (process.ExitCode != 0)
-            {
-                throw new InvalidOperationException(
-                    $"'dotnet test' exited with code {process.ExitCode}.{Environment.NewLine}" +
-                    $"stdout:{Environment.NewLine}{await stdoutTask}{Environment.NewLine}" +
-                    $"stderr:{Environment.NewLine}{await stderrTask}");
-            }
-
-            var result = new
-            {
-                ElapsedTime = elapsedTime,
-                TotalProcessorTime = totalProcessorTime,
-                Environment.ProcessorCount,
-                GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
-            };
-
-            results.Add(result);
-        }
-
-        var report = new
-        {
-            PipelineName = (string)context.Properties["PipelineName"],
-            Measurements = results,
-        };
-
-        await File.WriteAllTextAsync(
-            Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"),
-            JsonSerializer.Serialize(report, JsonOptions));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);

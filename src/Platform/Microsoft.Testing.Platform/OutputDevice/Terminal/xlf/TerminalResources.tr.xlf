@@ -471,26 +471,26 @@ Geçerli değerler: 'All', 'Failed', 'None'. Varsayılan değer 'All' (veya bir 
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="new">--show-test-results value 'all' or 'none' cannot be combined with any other value.</target>
+        <target state="translated">--show-test-results değeri 'all' veya 'none', başka hiçbir değerle birlikte kullanılamaz.</target>
         <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
-Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</target>
+        <target state="translated">Terminalde hangi test sonuçlarının test başına sonuç bloğunu (bilgilendirici ayrıntıları, yığın izlemesi ve yakalanan çıktısıyla birlikte) oluşturduğunu seçer.
+Geçerli değerler 'passed', 'failed' (hatalı, zaman aşımına uğramış ve iptal edilmiş testleri de kapsar) 'skipped', 'all' ve 'none' değerleridir. Birden çok değeri virgülle veya boşlukla ayrılmış bir liste olarak ya da seçeneği yineleyerek birleştirin; 'all' ve 'none' başka hiçbir değerle birleştirilemez.
+'--output' 'Minimal' olduğunda varsayılan değer 'failed', 'Normal' olduğunda veya belirtilmediğinde 'failed' ve 'skipped', 'Detailed' olduğunda ise 'all' değeridir. Açıkça belirtilen '--show-test-results', hangi sırayla geçirildiğine bakılmaksızın her zaman '--output' değerinden önceliklidir.</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">--show-test-results, 'passed', 'failed', 'skipped', 'all' veya 'none' değerlerinden en az birini gerektiriyor.</target>
         <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="new">--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <target state="translated">--show-test-results, virgülle veya boşlukla ayrılmış olarak 'passed', 'failed', 'skipped', 'all' veya 'none' değerlerinden birini veya birden fazlasını bekliyor.</target>
         <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

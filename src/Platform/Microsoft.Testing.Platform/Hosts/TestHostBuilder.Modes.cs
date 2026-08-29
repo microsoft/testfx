@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -129,6 +130,19 @@ internal sealed partial class TestHostBuilder
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return null;
+        }
+
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
+            static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
+        {
+            ITestHostLauncher? testHostLauncher =
+                await ((TestHostControllersManager)TestHostControllers).BuildTestHostLauncherAsync(context.ServiceProvider).ConfigureAwait(false);
+            ExecutableInfo executableInfo = context.ServiceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
+            await context.ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                testHostLauncher,
+                executableInfo.FilePath,
+                context.LoggerFactory.CreateLogger<TestHostBuilder>(),
+                context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
 
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
