@@ -965,7 +965,8 @@ public class TrxTests
         using MemoryFileStream memoryStream = new();
         var propertyBag = new PropertyBag(
             new PassedTestNodeStateProperty(),
-            new TrxWorkItemsProperty(["123", "456"]));
+            new TrxWorkItemsProperty(["123", "456"]),
+            new TestMetadataProperty(nameof(TrxWorkItemsProperty), "NotAWorkItem"));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -977,6 +978,9 @@ public class TrxTests
         XElement unitTest = memoryStream.TrxContent.Descendants(ns + "UnitTest").Single();
         string[] workItemIds = [.. unitTest.Element(ns + "Workitems")!.Elements(ns + "WorkItem").Select(element => element.Attribute("id")!.Value)];
         Assert.AreSequenceEqual(["123", "456"], workItemIds);
+        XElement metadataProperty = unitTest.Element(ns + "Properties")!.Element(ns + "Property")!;
+        Assert.AreEqual(nameof(TrxWorkItemsProperty), metadataProperty.Element(ns + "Key")!.Value);
+        Assert.AreEqual("NotAWorkItem", metadataProperty.Element(ns + "Value")!.Value);
     }
 
     [TestMethod]

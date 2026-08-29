@@ -25,7 +25,6 @@ internal sealed partial class TrxReportEngine
         XElement? properties = null;
         XElement? owners = null;
         XElement? description = null;
-        XElement? workItems = null;
         foreach (TrxTestMetadata property in testResult.Metadata ?? [])
         {
             switch (property.Key)
@@ -45,11 +44,6 @@ internal sealed partial class TrxReportEngine
 
                 case "Description":
                     description ??= new XElement("Description", property.Value);
-                    break;
-
-                case nameof(TrxWorkItemsProperty):
-                    workItems ??= new XElement("Workitems");
-                    workItems.Add(new XElement("WorkItem", new XAttribute("id", property.Value)));
                     break;
 
                 default:
@@ -99,9 +93,9 @@ internal sealed partial class TrxReportEngine
             unitTest.Add(properties);
         }
 
-        if (workItems is not null)
+        if (testResult.WorkItemIds is { Count: > 0 } workItemIds)
         {
-            unitTest.Add(workItems);
+            unitTest.Add(new XElement("Workitems", workItemIds.Select(id => new XElement("WorkItem", new XAttribute("id", id)))));
         }
 
         return unitTest;

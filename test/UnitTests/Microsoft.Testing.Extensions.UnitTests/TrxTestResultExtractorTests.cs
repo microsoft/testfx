@@ -48,7 +48,7 @@ public class TrxTestResultExtractorTests
     }
 
     [TestMethod]
-    public void Extract_WorkItems_ProjectsIdsAsTrxMetadata()
+    public void Extract_WorkItems_CopiesIds()
     {
         string[] workItemIds = ["123", "456"];
         var bag = new PropertyBag(
@@ -59,9 +59,9 @@ public class TrxTestResultExtractorTests
             new SessionUid("1"),
             new TestNode { Uid = "u", DisplayName = "d", Properties = bag }));
 
-        Assert.IsNotNull(result.Metadata);
-        Assert.AreSequenceEqual(workItemIds, result.Metadata.Select(metadata => metadata.Value).ToArray());
-        Assert.IsTrue(result.Metadata.All(metadata => metadata.Key == nameof(TrxWorkItemsProperty)));
+        Assert.IsNotNull(result.WorkItemIds);
+        Assert.AreSequenceEqual(workItemIds, result.WorkItemIds.ToArray());
+        Assert.AreNotSame(workItemIds, result.WorkItemIds);
     }
 
     [TestMethod]

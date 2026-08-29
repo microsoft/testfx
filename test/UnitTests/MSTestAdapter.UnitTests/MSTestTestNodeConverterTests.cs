@@ -237,6 +237,25 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         }
     }
 
+    public void TrxWorkItems_AreCopiedPerNode_AndCannotCrossMutate()
+    {
+        UnitTestElement element = CreateElement();
+        element.WorkItemIds = ["123", "456"];
+
+        TestNode first = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        TestNode second = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true);
+
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty firstWorkItems =
+            first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty secondWorkItems =
+            second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+
+        firstWorkItems.Should().NotBeSameAs(secondWorkItems);
+        firstWorkItems.WorkItemIds.Should().NotBeSameAs(secondWorkItems.WorkItemIds);
+        firstWorkItems.WorkItemIds[0] = "Mutated";
+        secondWorkItems.WorkItemIds.Should().Equal("123", "456");
+    }
+
     public void ResultDisplayNameOverride_RemainsPerResult_WhileTrxDefinitionUsesTestDefinitionName()
     {
         UnitTestElement element = CreateElement();
