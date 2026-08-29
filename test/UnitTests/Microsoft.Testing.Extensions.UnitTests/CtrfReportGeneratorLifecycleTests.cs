@@ -215,12 +215,10 @@ public sealed class CtrfReportGeneratorLifecycleTests
 
         public string GetUtf8Content() => Encoding.UTF8.GetString(_stream.ToArray());
 
-        void IDisposable.Dispose()
-        {
-        }
+        void IDisposable.Dispose() => _stream.Dispose();
 
 #if NETCOREAPP
-        ValueTask IAsyncDisposable.DisposeAsync() => default;
+        ValueTask IAsyncDisposable.DisposeAsync() => _stream.DisposeAsync();
 #endif
     }
 }
