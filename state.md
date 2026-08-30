@@ -12,7 +12,7 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30 (still valid)
-- Task 2 (Identify Opportunities): 2026-08-29 (no new hot-path findings; backlog unchanged)
+- Task 2 (Identify Opportunities): 2026-08-30 (no new hot-path findings; backlog unchanged)
 - Task 4 (Maintain PRs): 2026-08-29 (no open perf-improver PRs before this run's new PR)
 - Task 5 (Comment Issues): 2026-08-29 (no open performance-labeled issues)
 - Task 6 (Infrastructure): 2026-08-29 (added TestDataSourceUtilitiesBenchmarks.cs, new draft PR)
@@ -195,3 +195,11 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Task 7: Monthly Activity issue #10381 (August 2026) still open and current - updated with this run's entry. Reviewed comments - old, already reflected in backlog as won't-fix (DotnetTestHttpClient, OpenTelemetryResultHandler).
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-08-30 Notes
+- Task 4: PR #10843 "Add reproducible MSTest performance benchmarks" (the TestDataSourceUtilities benchmark work from 2026-08-29) is now MERGED. No open PRs with "[perf-improver]" title prefix remain.
+- Task 2: dispatched explore-agent scan of TestMethodAttributes/Execution path (TestMethodInfo/TestMethodRunner - confirmed heavily optimized with explicit PERF comments), Discovery (AssemblyEnumerator/TypeEnumerator - LINQ present but once-per-class, not per-test), Platform/Framework invocation path (thin interfaces, no loops), non-terminal OutputDevices (ProxyOutputDevice/DotnetTestPassthroughOutputDevice/BrowserOutputDevice/WasiOutputDevice - clean), MessageBus (AsynchronousMessageBus/MessageBusProxy PublishAsync - already plain for-loop, cached dict lookup, gated trace logging), Assertions (CollectionAssert/ThrowsException* - Cast/ToArray inherent to API shape, Select only on failure path). No new hot-path findings.
+- Task 5: no open performance-labeled issues found (search_issues label:performance 0 results).
+- Task 7: Monthly Activity issue #10381 (August 2026) still open and current - rewrote with this run's entry, removed the now-merged PR from Suggested Actions.
+- Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
+- Task schedule: Task 2 done this run, Task 4 done this run (confirmed PR merge), Task 5 done this run (nothing to do), Task 7 done this run.
