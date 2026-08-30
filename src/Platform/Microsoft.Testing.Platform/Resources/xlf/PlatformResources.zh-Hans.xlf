@@ -224,12 +224,12 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionRequiresExtension">
         <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
-        <target state="new">Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</target>
+        <target state="translated">选项 '--{0}' 由 '{1}' 扩展提供。添加包引用以使用它。</target>
         <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionSuggestion">
         <source>Did you mean '--{0}'?</source>
-        <target state="new">Did you mean '--{0}'?</target>
+        <target state="translated">你是否指的是 '--{0}'?</target>
         <note>{0} is the suggested option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <target state="translated">运行 '--help' 以查看此测试应用程序注册的选项。如果该选项属于扩展，请确保引用其包并注册扩展。</target>
         <note>{Locked="'--help'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
