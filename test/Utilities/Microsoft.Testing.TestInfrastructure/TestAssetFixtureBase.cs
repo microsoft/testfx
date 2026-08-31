@@ -290,13 +290,14 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         int cacheBuildId,
         IReadOnlyList<string> outputLines)
     {
-        bool hasHitCount = TryReadCacheCount(outputLines, "Cache Hit Count:", out int hitCount);
-        bool hasMissCount = TryReadCacheCount(outputLines, "Cache Miss Count:", out int missCount);
-        bool hasStatistics = hasHitCount && hasMissCount;
+        bool hasStatistics = TryReadCacheStatistics(
+            outputLines,
+            out int hitCount,
+            out int missCount,
+            out double savedSeconds);
         double hitRatio = hasStatistics && hitCount + missCount > 0
             ? (double)hitCount / (hitCount + missCount)
             : 0;
-        double savedSeconds = TryReadSavedProjectSeconds(outputLines, out double value) ? value : 0;
 
         Console.WriteLine(
             hasStatistics
@@ -355,7 +356,23 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         }
     }
 
-    internal static bool TryReadCacheCount(IReadOnlyList<string> outputLines, string label, out int count)
+    private static bool TryReadCacheStatistics(
+        IReadOnlyList<string> outputLines,
+        out int hitCount,
+        out int missCount,
+        out double savedSeconds)
+    {
+        bool hasHitCount = TryReadCacheCount(outputLines, "Cache Hit Count:", out hitCount);
+        bool hasMissCount = TryReadCacheCount(outputLines, "Cache Miss Count:", out missCount);
+        bool hasSavedTime = TryReadSavedProjectSeconds(outputLines, out savedSeconds);
+        bool hasSavedTimeText = outputLines.Any(line => line.Contains("(saved ", StringComparison.Ordinal));
+
+        return hasHitCount
+            && hasMissCount
+            && (hasSavedTime || (hitCount == 0 && !hasSavedTimeText));
+    }
+
+    private static bool TryReadCacheCount(IReadOnlyList<string> outputLines, string label, out int count)
     {
         string? line = outputLines.LastOrDefault(line => line.TrimStart().StartsWith(label, StringComparison.Ordinal));
         if (line is null)
@@ -374,7 +391,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         return int.TryParse(value, out count);
     }
 
-    internal static bool TryReadSavedProjectSeconds(IReadOnlyList<string> outputLines, out double savedSeconds)
+    private static bool TryReadSavedProjectSeconds(IReadOnlyList<string> outputLines, out double savedSeconds)
     {
         const string SavedPrefix = "(saved ";
         const string ProjectUnitPrefix = " project-";
