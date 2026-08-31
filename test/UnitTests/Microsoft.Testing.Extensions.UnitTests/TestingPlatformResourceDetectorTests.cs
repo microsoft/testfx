@@ -210,8 +210,17 @@ public sealed class TestingPlatformResourceDetectorTests
             {
                 ["GITHUB_ACTIONS"] = "true",
                 ["TF_BUILD"] = "true",
+                // Azure-only marker: vcs.repository.url.full is emitted by the Azure branch but never by the
+                // GitHub branch, so its absence proves the GitHub branch won and yielded before Azure could run.
+                ["BUILD_REPOSITORY_URI"] = "https://dev.azure.com/org/_git/repo",
             },
-            () => Assert.AreEqual("github_actions", GetResourceAttributeMap()["cicd.provider.name"]));
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap();
+
+                Assert.AreEqual("github_actions", attributes["cicd.provider.name"]);
+                Assert.IsFalse(attributes.ContainsKey("vcs.repository.url.full"));
+            });
 
     private static Dictionary<string, object> GetResourceAttributeMap()
     {

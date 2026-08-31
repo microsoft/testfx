@@ -224,6 +224,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
             hasMetricsDelegate: false);
 
         Assert.IsTrue(configuration.UseOtlpTracing);
+        Assert.IsTrue(configuration.ConfigureTracingProvider);
     }
 
     [TestMethod]
