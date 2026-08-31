@@ -47,8 +47,7 @@ internal sealed class ReportJournalConfiguration(string environmentVariableName)
     {
         if (_path is null)
         {
-            string directory = configuration.GetTestResultDirectory();
-            fileSystem.CreateDirectory(directory);
+            string directory = fileSystem.CreateDirectory(configuration.GetTestResultDirectory());
             _path = Path.Combine(directory, $"report-recovery-{Guid.NewGuid():N}.jsonl");
         }
 

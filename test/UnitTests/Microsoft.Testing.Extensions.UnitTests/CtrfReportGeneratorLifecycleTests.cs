@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -166,6 +167,45 @@ public sealed class CtrfReportGeneratorLifecycleTests
     }
 
     [TestMethod]
+    public async Task ControllerChild_BoundedJournalOverflow_DoesNotBlockAndNormalReportStillCompletesAsync()
+    {
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, blockJournalWrites: true);
+        var sessionContext = new TestSessionContextStub();
+        int queueCapacity = (int)typeof(CtrfReportEngine).Assembly
+            .GetType("Microsoft.Testing.Extensions.ReportGeneratorBase`2", throwOnError: true)!
+            .GetField("JournalQueueCapacity", BindingFlags.Static | BindingFlags.NonPublic)!
+            .GetRawConstantValue()!;
+        int resultCount = queueCapacity + 2;
+
+        await context.Generator.OnTestSessionStartingAsync(sessionContext).ConfigureAwait(false);
+        for (int i = 0; i < resultCount; i++)
+        {
+            Task consume = context.Generator.ConsumeAsync(
+                null!,
+                CreateMessage(i.ToString(CultureInfo.InvariantCulture), PassedTestNodeStateProperty.CachedInstance),
+                CancellationToken.None);
+            Assert.IsTrue(consume.IsCompleted);
+            await consume.ConfigureAwait(false);
+        }
+
+        context.JournalStream.ReleaseWrites();
+        await context.Generator.OnTestSessionFinishingAsync(sessionContext).ConfigureAwait(false);
+
+        Assert.HasCount(1, context.PublishedArtifacts);
+        using var document = JsonDocument.Parse(context.ReportStream.GetUtf8Content());
+        Assert.AreEqual(
+            resultCount,
+            document.RootElement.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32());
+        context.LoggerMock.Verify(
+            logger => logger.Log(
+                LogLevel.Warning,
+                It.Is<string>(message => message.Contains("dropped", StringComparison.OrdinalIgnoreCase)),
+                null,
+                It.IsAny<Func<string, Exception?, string>>()),
+            Times.AtLeastOnce);
+    }
+
+    [TestMethod]
     public async Task OnTestSessionFinishingAsync_WithoutWarning_PublishesArtifactWithoutOutputAsync()
     {
         GeneratorTestContext context = CreateGenerator(optionIsSet: true);
@@ -195,6 +235,7 @@ public sealed class CtrfReportGeneratorLifecycleTests
         var messageBusMock = new Mock<IMessageBus>();
         var outputDeviceMock = new Mock<IOutputDevice>();
         var loggerFactoryMock = new Mock<ILoggerFactory>();
+        var loggerMock = new Mock<ILogger>();
         var testApplicationProcessExitCodeMock = new Mock<ITestApplicationProcessExitCode>();
         List<SessionFileArtifact> publishedArtifacts = [];
         List<string> journalContentsAtArtifactPublication = [];
@@ -231,7 +272,7 @@ public sealed class CtrfReportGeneratorLifecycleTests
             .Returns(Task.CompletedTask);
         _ = loggerFactoryMock
             .Setup(loggerFactory => loggerFactory.CreateLogger(It.IsAny<string>()))
-            .Returns(Mock.Of<ILogger>());
+            .Returns(loggerMock.Object);
         _ = testApplicationProcessExitCodeMock
             .Setup(exitCode => exitCode.GetProcessExitCode())
             .Returns(0);
@@ -269,7 +310,8 @@ public sealed class CtrfReportGeneratorLifecycleTests
             reportStream,
             journalStream,
             journalContentsAtArtifactPublication,
-            journalPath);
+            journalPath,
+            loggerMock);
     }
 
     private static TestNodeUpdateMessage CreateMessage(string uid, IProperty state)
@@ -289,7 +331,8 @@ public sealed class CtrfReportGeneratorLifecycleTests
         MemoryFileStream reportStream,
         MemoryFileStream journalStream,
         List<string> journalContentsAtArtifactPublication,
-        string journalPath)
+        string journalPath,
+        Mock<ILogger> loggerMock)
     {
         public CtrfReportGenerator Generator { get; } = generator;
 
@@ -304,6 +347,8 @@ public sealed class CtrfReportGeneratorLifecycleTests
         public List<string> JournalContentsAtArtifactPublication { get; } = journalContentsAtArtifactPublication;
 
         public string JournalPath { get; } = journalPath;
+
+        public Mock<ILogger> LoggerMock { get; } = loggerMock;
     }
 
     private sealed class TestSessionContextStub : ITestSessionContext

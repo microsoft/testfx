@@ -27,6 +27,28 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class ReportRecoverySerializationTests
 {
     [TestMethod]
+    public void ReportJournalConfiguration_RelativeResultsDirectory_UsesCreatedFullPath()
+    {
+        const string relativeDirectory = "relative-results";
+        string fullDirectory = Path.GetFullPath(relativeDirectory);
+        var configuration = new Mock<IConfiguration>();
+        configuration.SetupGet(value => value[PlatformConfigurationConstants.PlatformResultDirectory])
+            .Returns(relativeDirectory);
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.CreateDirectory(relativeDirectory)).Returns(fullDirectory);
+        Type journalConfigurationType = typeof(CtrfReportEngine).Assembly
+            .GetType("Microsoft.Testing.Extensions.ReportJournalConfiguration", throwOnError: true)!;
+        object journalConfiguration = Activator.CreateInstance(journalConfigurationType, "TEST_REPORT_JOURNAL")!;
+
+        string path = (string)journalConfigurationType
+            .GetMethod("GetOrCreatePath", BindingFlags.Instance | BindingFlags.Public)!
+            .Invoke(journalConfiguration, [configuration.Object, fileSystem.Object])!;
+
+        Assert.AreEqual(fullDirectory, Path.GetDirectoryName(path));
+        Assert.EndsWith(".jsonl", path, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
     [DataRow(typeof(HtmlReportEngine), "Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator", "Outcome", "passed")]
     [DataRow(typeof(JUnitReportEngine), "Microsoft.Testing.Extensions.JUnitReport.JUnitReportGenerator", "Outcome", "passed")]
     [DataRow(typeof(CtrfReportEngine), "Microsoft.Testing.Extensions.CtrfReport.CtrfReportGenerator", "Status", "passed")]
