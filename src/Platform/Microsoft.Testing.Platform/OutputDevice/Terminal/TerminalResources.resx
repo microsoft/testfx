@@ -323,6 +323,14 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
     <value>Test discovery summary: found {0} test(s)</value>
     <comment>{0} is the number of discovered tests.</comment>
   </data>
+  <data name="TestDiscoveryExitCode" xml:space="preserve">
+    <value>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</value>
+    <comment>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</comment>
+  </data>
+  <data name="TestRunExitCode" xml:space="preserve">
+    <value>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</value>
+    <comment>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</comment>
+  </data>
   <data name="ActiveTestsRunning_MoreTestsCount" xml:space="preserve">
     <value>and {0} more</value>
     <comment>{0} is the number of additional active tests.</comment>
@@ -342,6 +350,51 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
   </data>
   <data name="ExitCode" xml:space="preserve">
     <value>Exit code</value>
+  </data>
+  <data name="ExitCodeAtLeastOneTestFailedDescription" xml:space="preserve">
+    <value>At least one test failed.</value>
+  </data>
+  <data name="ExitCodeCoverageThresholdFailedDescription" xml:space="preserve">
+    <value>One or more code coverage thresholds were not met.</value>
+  </data>
+  <data name="ExitCodeDependentProcessExitedDescription" xml:space="preserve">
+    <value>A dependent process exited.</value>
+  </data>
+  <data name="ExitCodeGenericFailureDescription" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
+  <data name="ExitCodeIncompatibleProtocolVersionDescription" xml:space="preserve">
+    <value>The test platform protocol version is incompatible.</value>
+  </data>
+  <data name="ExitCodeInvalidCommandLineDescription" xml:space="preserve">
+    <value>The command-line arguments are invalid.</value>
+  </data>
+  <data name="ExitCodeInvalidPlatformSetupDescription" xml:space="preserve">
+    <value>The test platform setup or extension configuration is invalid.</value>
+  </data>
+  <data name="ExitCodeMinimumExpectedTestsPolicyViolationDescription" xml:space="preserve">
+    <value>Fewer tests ran than required by the minimum expected tests policy.</value>
+  </data>
+  <data name="ExitCodeTestAdapterTestSessionFailureDescription" xml:space="preserve">
+    <value>The test adapter reported a test session failure.</value>
+  </data>
+  <data name="ExitCodeTestExecutionStoppedAtDeadlineDescription" xml:space="preserve">
+    <value>Test execution stopped because the configured deadline was approaching.</value>
+  </data>
+  <data name="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription" xml:space="preserve">
+    <value>Test execution stopped after reaching the maximum failed tests limit.</value>
+  </data>
+  <data name="ExitCodeTestHostProcessExitedNonGracefullyDescription" xml:space="preserve">
+    <value>The test host process exited unexpectedly.</value>
+  </data>
+  <data name="ExitCodeTestSessionAbortedDescription" xml:space="preserve">
+    <value>The test session was aborted.</value>
+  </data>
+  <data name="ExitCodeUnknownDescription" xml:space="preserve">
+    <value>The exit code is not recognized.</value>
+  </data>
+  <data name="ExitCodeZeroTestsDescription" xml:space="preserve">
+    <value>No tests ran.</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>

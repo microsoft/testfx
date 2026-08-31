@@ -3207,6 +3207,59 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestExecutionCompleted_WithInvalidCommandLineExitCode_PrintsDescriptionAndDocumentationLink()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: (int)ExitCode.InvalidCommandLine);
+
+        string expected = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestRunExitCode,
+            (int)ExitCode.InvalidCommandLine,
+            TerminalResources.ExitCodeInvalidCommandLineDescription);
+        Assert.Contains(expected, stringBuilderConsole.Output);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_InDiscoveryModeWithInvalidCommandLineExitCode_PrintsDiscoveryDescription()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: true, isHelp: false, isRetry: false);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: (int)ExitCode.InvalidCommandLine);
+
+        string expected = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestDiscoveryExitCode,
+            (int)ExitCode.InvalidCommandLine,
+            TerminalResources.ExitCodeInvalidCommandLineDescription);
+        Assert.Contains(expected, stringBuilderConsole.Output);
+    }
+
+    [TestMethod]
+    public void GetExitCodeDescription_MapsEveryKnownFailureExitCode()
+    {
+        foreach (ExitCode exitCode in (ExitCode[])Enum.GetValues(typeof(ExitCode)))
+        {
+            if (exitCode == ExitCode.Success)
+            {
+                continue;
+            }
+
+            Assert.AreNotEqual(
+                TerminalResources.ExitCodeUnknownDescription,
+                TerminalTestReporter.GetExitCodeDescription((int)exitCode),
+                $"Exit code '{exitCode}' should have a description.");
+        }
+
+        Assert.AreEqual(TerminalResources.ExitCodeUnknownDescription, TerminalTestReporter.GetExitCodeDescription(42));
+    }
+
+    [TestMethod]
     public void TestExecutionCompleted_WhenHandshakeFailures_PrintsRecapAndFailsRun()
     {
         var stringBuilderConsole = new StringBuilderConsole();

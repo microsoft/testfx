@@ -153,7 +153,19 @@ internal sealed partial class TerminalTestReporter
 
         if (!_isHelp)
         {
-            _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                if (_isDiscovery)
+                {
+                    AppendTestDiscoverySummary(terminal);
+                }
+                else
+                {
+                    AppendTestRunSummary(terminal);
+                }
+
+                AppendExitCodeDescription(terminal, exitCode, _isDiscovery);
+            });
         }
 
         // This is relevant for HotReload scenarios. We want the next test sessions to start fresh, so we reset all
@@ -176,4 +188,36 @@ internal sealed partial class TerminalTestReporter
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;
     }
+
+    private static void AppendExitCodeDescription(ITerminal terminal, int? exitCode, bool isDiscovery)
+    {
+        if (exitCode is null or (int)ExitCode.Success)
+        {
+            return;
+        }
+
+        string description = GetExitCodeDescription(exitCode.Value);
+        string message = isDiscovery ? TerminalResources.TestDiscoveryExitCode : TerminalResources.TestRunExitCode;
+        terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, message, exitCode.Value, description));
+    }
+
+    internal static string GetExitCodeDescription(int exitCode)
+        => exitCode switch
+        {
+            (int)ExitCode.GenericFailure => TerminalResources.ExitCodeGenericFailureDescription,
+            (int)ExitCode.AtLeastOneTestFailed => TerminalResources.ExitCodeAtLeastOneTestFailedDescription,
+            (int)ExitCode.TestSessionAborted => TerminalResources.ExitCodeTestSessionAbortedDescription,
+            (int)ExitCode.InvalidPlatformSetup => TerminalResources.ExitCodeInvalidPlatformSetupDescription,
+            (int)ExitCode.InvalidCommandLine => TerminalResources.ExitCodeInvalidCommandLineDescription,
+            (int)ExitCode.TestHostProcessExitedNonGracefully => TerminalResources.ExitCodeTestHostProcessExitedNonGracefullyDescription,
+            (int)ExitCode.ZeroTests => TerminalResources.ExitCodeZeroTestsDescription,
+            (int)ExitCode.MinimumExpectedTestsPolicyViolation => TerminalResources.ExitCodeMinimumExpectedTestsPolicyViolationDescription,
+            (int)ExitCode.TestAdapterTestSessionFailure => TerminalResources.ExitCodeTestAdapterTestSessionFailureDescription,
+            (int)ExitCode.DependentProcessExited => TerminalResources.ExitCodeDependentProcessExitedDescription,
+            (int)ExitCode.IncompatibleProtocolVersion => TerminalResources.ExitCodeIncompatibleProtocolVersionDescription,
+            (int)ExitCode.TestExecutionStoppedForMaxFailedTests => TerminalResources.ExitCodeTestExecutionStoppedForMaxFailedTestsDescription,
+            (int)ExitCode.CoverageThresholdFailed => TerminalResources.ExitCodeCoverageThresholdFailedDescription,
+            (int)ExitCode.TestExecutionStoppedAtDeadline => TerminalResources.ExitCodeTestExecutionStoppedAtDeadlineDescription,
+            _ => TerminalResources.ExitCodeUnknownDescription,
+        };
 }
