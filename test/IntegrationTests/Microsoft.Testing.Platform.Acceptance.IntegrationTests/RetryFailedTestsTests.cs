@@ -204,19 +204,48 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputDoesNotContain("Flaky tests:");
 
         string htmlReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single());
-        Assert.Contains("TestMethod2", htmlReport);
-        Assert.Contains("TestMethod3", htmlReport);
-        Assert.Contains(@"""total"":3", htmlReport);
-        Assert.Contains(@"""failed"":1", htmlReport);
-        Assert.Contains(@"""incomplete"":true", htmlReport);
-        Assert.Contains(@"""runStatus"":""aborted""", htmlReport);
+        const string htmlDataStart = "<script id=\"mtp-data\" type=\"application/json\">";
+        const string htmlDataEnd = "</script>";
+        int htmlDataStartIndex = htmlReport.IndexOf(htmlDataStart, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, htmlDataStartIndex, htmlReport);
+        htmlDataStartIndex += htmlDataStart.Length;
+        int htmlDataEndIndex = htmlReport.IndexOf(htmlDataEnd, htmlDataStartIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(htmlDataStartIndex, htmlDataEndIndex, htmlReport);
+        using var htmlDocument = System.Text.Json.JsonDocument.Parse(
+            htmlReport.Substring(htmlDataStartIndex, htmlDataEndIndex - htmlDataStartIndex));
+        System.Text.Json.JsonElement htmlRoot = htmlDocument.RootElement;
+        Assert.AreEqual(3, htmlRoot.GetProperty("summary").GetProperty("total").GetInt32());
+        Assert.AreEqual(1, htmlRoot.GetProperty("summary").GetProperty("failed").GetInt32());
+        Assert.IsTrue(htmlRoot.GetProperty("incomplete").GetBoolean());
+        Assert.AreEqual("aborted", htmlRoot.GetProperty("runStatus").GetString());
+        string[] htmlTestNames =
+        [
+            .. htmlRoot.GetProperty("tests").EnumerateArray()
+                .Select(test => test.GetProperty("displayName").GetString()!),
+        ];
+        Assert.Contains("TestMethod2", htmlTestNames);
+        Assert.Contains("TestMethod3", htmlTestNames);
 
         string junitReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single());
-        Assert.Contains("TestMethod2", junitReport);
-        Assert.Contains("TestMethod3", junitReport);
-        Assert.Contains(@"tests=""3"" failures=""1""", junitReport);
-        Assert.Contains(@"name=""incomplete"" value=""true""", junitReport);
-        Assert.Contains(@"name=""run-status"" value=""aborted""", junitReport);
+        var junitDocument = System.Xml.Linq.XDocument.Parse(junitReport);
+        System.Xml.Linq.XElement junitRoot = junitDocument.Root!;
+        Assert.AreEqual("3", junitRoot.Attribute("tests")!.Value);
+        Assert.AreEqual("1", junitRoot.Attribute("failures")!.Value);
+        string[] junitTestNames =
+        [
+            .. junitRoot.Descendants("testcase").Select(test => test.Attribute("name")!.Value),
+        ];
+        Assert.Contains("TestMethod2", junitTestNames);
+        Assert.Contains("TestMethod3", junitTestNames);
+        System.Xml.Linq.XElement[] junitProperties = [.. junitRoot.Descendants("property")];
+        Assert.Contains(
+            property => property.Attribute("name")?.Value == "incomplete"
+                && property.Attribute("value")?.Value == "true",
+            junitProperties);
+        Assert.Contains(
+            property => property.Attribute("name")?.Value == "run-status"
+                && property.Attribute("value")?.Value == "aborted",
+            junitProperties);
     }
 
     /// <summary>
