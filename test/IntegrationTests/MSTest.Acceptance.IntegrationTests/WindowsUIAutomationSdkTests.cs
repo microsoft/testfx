@@ -194,6 +194,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
     public async Task ApplicationTest_WhenShutdownIsCustomized_UsesOverride(string tfm)
     {
         string shutdownMarker = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.shutdown");
+        string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--filter ClassName=CustomShutdownTests",
@@ -201,11 +202,13 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
             {
                 ["DOTNET_ROLL_FORWARD"] = "Major",
                 ["MSTEST_UI_AUTOMATION_SHUTDOWN_MARKER"] = shutdownMarker,
+                ["MSTEST_UI_AUTOMATION_PID_FILE"] = pidFile,
             },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.IsTrue(File.Exists(shutdownMarker), "Expected the custom shutdown hook to create its marker file.");
+        await AssertProcessExitedAsync(pidFile);
     }
 
     [TestMethod]
@@ -404,7 +407,7 @@ public class CustomShutdownTests : ApplicationTest
     protected override ProcessStartInfo CreateProcessStartInfo()
         => new(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
-            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
+            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
 
     protected override void StopApplication(Process applicationProcess)
     {
