@@ -65,6 +65,7 @@ public class RetryTests
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
         serviceProvider.AddService(loggerFactory.Object);
         serviceProvider.AddService(new SystemTask());
+        serviceProvider.AddService(Mock.Of<IFileSystem>());
         Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
         cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
         serviceProvider.AddService(cancellationTokenSource.Object);
@@ -108,6 +109,7 @@ public class RetryTests
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
         serviceProvider.AddService(loggerFactory.Object);
         serviceProvider.AddService(new SystemTask());
+        serviceProvider.AddService(Mock.Of<IFileSystem>());
         Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
         cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
         serviceProvider.AddService(cancellationTokenSource.Object);
@@ -153,6 +155,9 @@ public class RetryTests
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
         serviceProvider.AddService(loggerFactory.Object);
         serviceProvider.AddService(new SystemTask());
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        serviceProvider.AddService(fileSystem.Object);
         Mock<ITestApplicationCancellationTokenSource> applicationCancellation = new();
         applicationCancellation.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
         serviceProvider.AddService(applicationCancellation.Object);
@@ -179,6 +184,45 @@ public class RetryTests
 
         Assert.IsTrue(launcher.Handle.TerminateCalled);
         Assert.IsTrue(launcher.Handle.Disposed);
+        fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RunAttemptAsync_LauncherFailure_DeletesRecoveredArtifactManifest()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(Mock.Of<IEnvironment>());
+        serviceProvider.AddService(Mock.Of<IProcessHandler>());
+        serviceProvider.AddService(new SystemTask());
+        serviceProvider.AddService(Mock.Of<ITestApplicationCancellationTokenSource>(
+            source => source.CancellationToken == CancellationToken.None));
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(factory => factory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        serviceProvider.AddService(loggerFactory.Object);
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        serviceProvider.AddService(fileSystem.Object);
+        Mock<ITestHostLauncher> launcher = new();
+        launcher.SetupGet(value => value.DisplayName).Returns("launcher");
+        launcher.SetupGet(value => value.Uid).Returns("launcher");
+        launcher.Setup(value => value.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("launch failed"));
+        serviceProvider.AddService(launcher.Object);
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], Mock.Of<ILogger>());
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            [],
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            CancellationToken.None));
+
+        fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
     }
 
     [TestMethod]

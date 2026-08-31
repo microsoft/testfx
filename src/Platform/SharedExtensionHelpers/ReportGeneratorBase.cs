@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -16,14 +16,23 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
+#pragma warning disable RS0051 // Reporter lifecycle internals are shared-source implementation detail, not package API.
+#pragma warning disable CA1416 // BlockingCollection is unreachable on single-threaded browser/WASI runtimes.
+
 internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     IDataConsumer,
     ITestSessionLifetimeHandler,
     IDataProducer,
-    IOutputDeviceDataProducer
+    IOutputDeviceDataProducer,
+    IDisposable
     where TGenerator : ReportGeneratorBase<TGenerator, TCapturedTestResult>
     where TCapturedTestResult : class
 {
+    private const int JournalBatchSize = 64;
+    private const int JournalFlushIntervalMilliseconds = 500;
+    private const int JournalQueueCapacity = 4096;
+    private static readonly TimeSpan JournalShutdownTimeout = TimeSpan.FromSeconds(30);
+
     // MTP guarantees that ConsumeAsync is called sequentially (never concurrently)
     // for a given consumer instance, so List<T> is safe here without locking.
     private readonly List<TCapturedTestResult> _tests = [];
@@ -31,11 +40,23 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger<TGenerator> _logger;
+    private readonly ITask _task;
     private readonly bool _isEnabled;
+    private readonly string? _journalPath;
+    private readonly int? _recoveredProcessId;
+    private readonly bool _isRecoveredReportIncomplete;
 
     private DateTimeOffset? _testStartTime;
+    private IFileStream? _journalStream;
+    private BlockingCollection<ReportJournalRecord<TCapturedTestResult>>? _journalQueue;
+    private Task? _journalWriterTask;
+    private volatile bool _journalFailed;
+    private volatile bool _journalCompletionTimedOut;
+    private volatile bool _writeCompletionRecord;
+    private int _droppedJournalRecords;
+    private bool _disposed;
 
-    protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName)
+    protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName, string journalEnvironmentVariableName)
         : this(
             (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
             serviceProvider.GetCommandLineOptions(),
@@ -48,7 +69,35 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             serviceProvider.GetTestFramework(),
             serviceProvider.GetTestApplicationProcessExitCode(),
             serviceProvider.GetLoggerFactory().CreateLogger<TGenerator>(),
-            optionName)
+            serviceProvider.GetTask(),
+            optionName,
+            serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)
+                ? serviceProvider.GetEnvironment().GetEnvironmentVariable(journalEnvironmentVariableName)
+                : null,
+            recoveredMetadata: null)
+    {
+    }
+
+    protected ReportGeneratorBase(
+        IServiceProvider serviceProvider,
+        string optionName,
+        RecoveredReportMetadata recoveredMetadata)
+        : this(
+            (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetRequiredService<IFileSystem>(),
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetMessageBus(),
+            serviceProvider.GetSystemClock(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetOutputDevice(),
+            new RecoveredTestFramework(recoveredMetadata),
+            serviceProvider.GetTestApplicationProcessExitCode(),
+            serviceProvider.GetLoggerFactory().CreateLogger<TGenerator>(),
+            serviceProvider.GetTask(),
+            optionName,
+            journalPath: null,
+            recoveredMetadata)
     {
     }
 
@@ -64,7 +113,10 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         ITestFramework testFramework,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ILogger<TGenerator> logger,
-        string optionName)
+        ITask task,
+        string optionName,
+        string? journalPath = null,
+        RecoveredReportMetadata? recoveredMetadata = null)
     {
         Configuration = configuration;
         CommandLineOptions = commandLineOptions;
@@ -77,7 +129,11 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         TestFramework = testFramework;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = logger;
+        _task = task;
         _isEnabled = commandLineOptions.IsOptionSet(optionName);
+        _journalPath = journalPath;
+        _recoveredProcessId = recoveredMetadata?.ProcessId;
+        _isRecoveredReportIncomplete = recoveredMetadata?.IsIncomplete == true;
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -127,27 +183,52 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             TestFramework,
             testStartTime,
             exitCode,
-            cancellationToken);
+            cancellationToken,
+            _recoveredProcessId,
+            _isRecoveredReportIncomplete);
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         if (value is TestNodeUpdateMessage update)
         {
-            OnTestNodeUpdate(update);
+            await OnTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
         }
-
-        return Task.CompletedTask;
     }
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         testSessionContext.CancellationToken.ThrowIfCancellationRequested();
         _testStartTime = Clock.UtcNow;
+        if (_journalPath is not null)
+        {
+            if (ReportControllerMode.IsSupported)
+            {
+                StartJournalWriter();
+            }
+            else
+            {
+                TryWriteJournalBatch(
+                [
+                    ReportJournalRecord<TCapturedTestResult>.CreateHeader(
+                        _testStartTime.Value,
+                        Environment.ProcessId,
+                        TestFramework),
+                ]);
+            }
+
+            EnqueueJournalRecord(
+                ReportJournalRecord<TCapturedTestResult>.CreateHeader(
+                    _testStartTime.Value,
+                    Environment.ProcessId,
+                    TestFramework),
+                inlineAlreadyWritten: !ReportControllerMode.IsSupported);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -158,24 +239,33 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
         DateTimeOffset testStartTime = _testStartTime ?? throw ApplicationStateGuard.Unreachable();
 
-        await _logger.LogTraceAsync(GetGenerationLogMessage(_tests.Count)).ConfigureAwait(false);
-
-        int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-        (string reportFileName, string? warning) = await GenerateReportAsync([.. _tests], testStartTime, exitCode, cancellationToken).ConfigureAwait(false);
-
-        if (warning is not null)
+        try
         {
-            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
-        }
+            await _logger.LogTraceAsync(GetGenerationLogMessage(_tests.Count)).ConfigureAwait(false);
 
-        await _messageBus.PublishAsync(
-            this,
-            new SessionFileArtifact(
-                testSessionContext.SessionUid,
-                new FileInfo(reportFileName),
-                ArtifactDisplayName,
-                ArtifactDescription,
-                ArtifactKind)).ConfigureAwait(false);
+            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+            (string reportFileName, string? warning) = await GenerateReportAsync([.. _tests], testStartTime, exitCode, cancellationToken).ConfigureAwait(false);
+
+            if (warning is not null)
+            {
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
+            }
+
+            await _messageBus.PublishAsync(
+                this,
+                new SessionFileArtifact(
+                    testSessionContext.SessionUid,
+                    new FileInfo(reportFileName),
+                    ArtifactDisplayName,
+                    ArtifactDescription,
+                    ArtifactKind)).ConfigureAwait(false);
+
+            await CompleteJournalAsync(writeCompletionRecord: true, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await CompleteJournalAsync(writeCompletionRecord: false, CancellationToken.None).ConfigureAwait(false);
+        }
     }
 
     // Capture every update unconditionally — no UID-based deduplication. HTML, JUnit,
@@ -183,13 +273,316 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     // (parameterized rows, in-process retries, framework quirks). CTRF groups only
     // in-process updates explicitly tagged with RetryAttemptProperty; out-of-process
     // retry inference occurs only during an explicit CollapseRetryAttempts merge.
-    protected virtual void OnTestNodeUpdate(TestNodeUpdateMessage update)
+    protected virtual Task OnTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {
         TCapturedTestResult? captured = TryCapture(update);
         if (captured is not null)
         {
             _tests.Add(captured);
         }
+
+        if (_journalPath is not null && !_journalFailed)
+        {
+            ReportJournalParentEntry? parent = CaptureParentEntry(update);
+            if (captured is not null || parent is not null)
+            {
+                EnqueueJournalRecord(ReportJournalRecord<TCapturedTestResult>.CreateTest(captured, parent));
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    protected virtual ReportJournalParentEntry? CaptureParentEntry(TestNodeUpdateMessage update) => null;
+
+    protected virtual void RestoreParentEntry(ReportJournalParentEntry parent)
+    {
+    }
+
+    internal async Task<(string FileName, string? Warning)> GenerateRecoveredReportAsync(
+        ReportJournalReadResult<TCapturedTestResult> journal,
+        int exitCode,
+        CancellationToken cancellationToken)
+    {
+        foreach (ReportJournalParentEntry parent in journal.Parents)
+        {
+            RestoreParentEntry(parent);
+        }
+
+        return await GenerateReportAsync(
+            [.. journal.Results],
+            journal.Metadata.StartTime,
+            exitCode,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    internal string RecoveredArtifactDisplayName => ArtifactDisplayName;
+
+    internal string RecoveredArtifactDescription => ArtifactDescription;
+
+    internal string? RecoveredArtifactKind => ArtifactKind;
+
+    private void StartJournalWriter()
+    {
+#pragma warning disable IDE0028 // Explicit ConcurrentQueue documents FIFO ordering.
+        _journalQueue = new(new ConcurrentQueue<ReportJournalRecord<TCapturedTestResult>>(), JournalQueueCapacity);
+#pragma warning restore IDE0028
+        _journalWriterTask = _task.RunLongRunning(WriteJournalLoopAsync, $"{DisplayName} recovery journal writer", CancellationToken.None);
+    }
+
+    private void EnqueueJournalRecord(
+        ReportJournalRecord<TCapturedTestResult> record,
+        bool inlineAlreadyWritten = false)
+    {
+        if (inlineAlreadyWritten || _journalFailed)
+        {
+            return;
+        }
+
+        if (_journalQueue is null)
+        {
+            TryWriteJournalBatch([record]);
+            return;
+        }
+
+        try
+        {
+            if (_journalQueue.IsAddingCompleted || !_journalQueue.TryAdd(record))
+            {
+                RecordDroppedJournalRecord();
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            RecordDroppedJournalRecord();
+        }
+        catch (InvalidOperationException)
+        {
+            RecordDroppedJournalRecord();
+        }
+    }
+
+    private void RecordDroppedJournalRecord()
+    {
+        if (Interlocked.Increment(ref _droppedJournalRecords) == 1)
+        {
+            _logger.LogWarning(
+                $"Report recovery journal '{_journalPath}' writer queue is full or unavailable. Records are being dropped without affecting normal report generation; crash recovery may be partial.");
+        }
+    }
+
+    private async Task WriteJournalLoopAsync()
+    {
+        ApplicationStateGuard.Ensure(_journalQueue is not null);
+        var batch = new List<ReportJournalRecord<TCapturedTestResult>>(JournalBatchSize);
+        try
+        {
+            while (!_journalQueue.IsCompleted)
+            {
+                if (!_journalQueue.TryTake(out ReportJournalRecord<TCapturedTestResult>? first, JournalFlushIntervalMilliseconds))
+                {
+                    continue;
+                }
+
+                batch.Add(first);
+                while (batch.Count < JournalBatchSize
+                    && _journalQueue.TryTake(out ReportJournalRecord<TCapturedTestResult>? next))
+                {
+                    batch.Add(next);
+                }
+
+                await WriteJournalBatchAsync(batch).ConfigureAwait(false);
+                batch.Clear();
+            }
+
+            if (_writeCompletionRecord)
+            {
+                await WriteJournalBatchAsync([ReportJournalRecord<TCapturedTestResult>.CreateCompletion()]).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _journalFailed = true;
+            int dropped = batch.Count + DrainJournalQueue();
+            Interlocked.Add(ref _droppedJournalRecords, dropped);
+            await LogJournalFailureAsync(ex).ConfigureAwait(false);
+        }
+        finally
+        {
+            DisposeJournalStream();
+        }
+    }
+
+    private void TryWriteJournalBatch(IReadOnlyList<ReportJournalRecord<TCapturedTestResult>> records)
+    {
+        try
+        {
+            WriteJournalBatchAsync(records).GetAwaiter().GetResult();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _journalFailed = true;
+            _ = LogJournalFailureAsync(ex);
+            DisposeJournalStream();
+        }
+    }
+
+    private async Task WriteJournalBatchAsync(IReadOnlyList<ReportJournalRecord<TCapturedTestResult>> records)
+    {
+        _journalStream ??= FileSystem.NewFileStream(
+            _journalPath!,
+            FileMode.Append,
+            FileAccess.Write,
+            FileShare.ReadWrite);
+
+        var batch = new StringBuilder();
+        foreach (ReportJournalRecord<TCapturedTestResult> record in records)
+        {
+            batch.Append(SerializeJournalRecord(record)).Append('\n');
+        }
+
+        byte[] bytes = Encoding.UTF8.GetBytes(batch.ToString());
+#if NETCOREAPP
+        await _journalStream.Stream.WriteAsync(bytes.AsMemory(), CancellationToken.None).ConfigureAwait(false);
+#else
+        await _journalStream.Stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None).ConfigureAwait(false);
+#endif
+        await _journalStream.Stream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private async Task CompleteJournalAsync(bool writeCompletionRecord, CancellationToken cancellationToken)
+    {
+        if (_journalPath is null || _journalCompletionTimedOut)
+        {
+            return;
+        }
+
+        if (_journalQueue is null)
+        {
+            if (writeCompletionRecord && !_journalFailed)
+            {
+                TryWriteJournalBatch([ReportJournalRecord<TCapturedTestResult>.CreateCompletion()]);
+            }
+
+            DisposeJournalStream();
+            return;
+        }
+
+        if (!_journalQueue.IsAddingCompleted)
+        {
+            _writeCompletionRecord = writeCompletionRecord;
+            _journalQueue.CompleteAdding();
+        }
+
+        if (_journalWriterTask is not null)
+        {
+            Task timeout = _task.Delay(JournalShutdownTimeout, cancellationToken);
+            Task completed = await Task.WhenAny(_journalWriterTask, timeout).ConfigureAwait(false);
+            if (completed != _journalWriterTask)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _journalCompletionTimedOut = true;
+                await _logger.LogWarningAsync(
+                    $"Report recovery journal '{_journalPath}' writer did not drain within the hang timeout. Normal report generation is unaffected, but crash recovery may be partial.").ConfigureAwait(false);
+                return;
+            }
+
+            await _journalWriterTask.ConfigureAwait(false);
+        }
+
+        int dropped = Volatile.Read(ref _droppedJournalRecords);
+        if (dropped > 0)
+        {
+            await _logger.LogWarningAsync(
+                $"Report recovery journal '{_journalPath}' dropped {dropped} record(s) because its bounded writer queue was full or unavailable. Normal report generation is unaffected, but crash recovery may be partial.").ConfigureAwait(false);
+        }
+    }
+
+    private int DrainJournalQueue()
+    {
+        if (_journalQueue is null)
+        {
+            return 0;
+        }
+
+        if (!_journalQueue.IsAddingCompleted)
+        {
+            _journalQueue.CompleteAdding();
+        }
+
+        int count = 0;
+        while (_journalQueue.TryTake(out _))
+        {
+            count++;
+        }
+
+        return count;
+    }
+
+    private Task LogJournalFailureAsync(Exception exception)
+        => _logger.LogWarningAsync(
+            $"Report recovery journal '{_journalPath}' could not be written. The report will still be generated in process, but it might not be recoverable after a crash. Reason: {exception.Message}");
+
+    private void DisposeJournalStream()
+    {
+        IFileStream? stream = Interlocked.Exchange(ref _journalStream, null);
+        try
+        {
+            stream?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug($"Failed to close report recovery journal '{_journalPath}': {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_journalQueue is not null)
+        {
+            if (!_journalQueue.IsAddingCompleted)
+            {
+                _journalQueue.CompleteAdding();
+            }
+
+            if (_journalCompletionTimedOut)
+            {
+                _disposed = true;
+                return;
+            }
+
+            try
+            {
+                if (_journalWriterTask is not null
+                    && !_journalWriterTask.Wait(JournalShutdownTimeout))
+                {
+                    _journalCompletionTimedOut = true;
+                    _logger.LogWarning(
+                        $"Report recovery journal '{_journalPath}' writer did not stop within the hang timeout during disposal. The writer will be abandoned until process exit.");
+                    _disposed = true;
+                    return;
+                }
+
+                _journalWriterTask?.GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"Failed to drain report recovery journal '{_journalPath}' during disposal: {ex.Message}");
+            }
+
+            _journalQueue.Dispose();
+        }
+        else
+        {
+            DisposeJournalStream();
+        }
+
+        _disposed = true;
     }
 
     protected abstract string ArtifactDisplayName { get; }
@@ -206,6 +599,8 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     protected abstract string GetGenerationLogMessage(int testResultCount);
 
+    protected abstract string SerializeJournalRecord(ReportJournalRecord<TCapturedTestResult> record);
+
     protected abstract TCapturedTestResult? TryCapture(TestNodeUpdateMessage update);
 
     protected abstract Task<(string FileName, string? Warning)> GenerateReportAsync(
@@ -214,3 +609,6 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         int exitCode,
         CancellationToken cancellationToken);
 }
+
+#pragma warning restore RS0051
+#pragma warning restore CA1416

@@ -67,6 +67,7 @@ internal static class JUnitReportMerger
         long totalSkipped = 0;
         double totalTime = 0;
         DateTimeOffset? earliestTimestamp = null;
+        XElement? recoveryProperties = FindRecoveryProperties(inputReports);
 
         var mergedRoot = new XElement(RootElementName);
         int suiteId = 0;
@@ -91,6 +92,7 @@ internal static class JUnitReportMerger
             {
                 var clonedSuite = new XElement(suite);
                 clonedSuite.SetAttributeValue("id", suiteId++);
+                ApplyRecoveryProperties(clonedSuite, recoveryProperties);
                 mergedRoot.Add(clonedSuite);
 
                 // Derive aggregates from the per-suite counters rather than trusting the (optional)
@@ -199,6 +201,7 @@ internal static class JUnitReportMerger
         var suiteIndices = new Dictionary<string, int>(StringComparer.Ordinal);
         DateTimeOffset? earliestTimestamp = null;
         XElement? finalSuiteProperties = null;
+        XElement? recoveryProperties = FindRecoveryProperties(inputReports);
 
         foreach (XDocument report in inputReports)
         {
@@ -277,6 +280,8 @@ internal static class JUnitReportMerger
                         duplicateProperties.Remove();
                     }
                 }
+
+                ApplyRecoveryProperties(mergedSuite, recoveryProperties);
             }
 
             long failures = 0;
@@ -336,6 +341,66 @@ internal static class JUnitReportMerger
 
     private static bool IsProperties(XElement element)
         => element.Name.LocalName == "properties";
+
+    private static XElement? FindRecoveryProperties(IReadOnlyList<XDocument> reports)
+    {
+        foreach (XDocument report in reports)
+        {
+            foreach (XElement properties in GetSuites(report).SelectMany(suite => suite.Elements().Where(IsProperties)))
+            {
+                if (ReadSuiteProperty(properties, "incomplete") == "true")
+                {
+                    var recoveryProperties = new XElement("properties");
+                    CopyProperty(properties, recoveryProperties, "exit-code");
+                    recoveryProperties.Add(
+                        new XElement("property", new XAttribute("name", "run-status"), new XAttribute("value", "aborted")),
+                        new XElement("property", new XAttribute("name", "incomplete"), new XAttribute("value", "true")));
+                    return recoveryProperties;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static void ApplyRecoveryProperties(XElement suite, XElement? recoveryProperties)
+    {
+        if (recoveryProperties is null)
+        {
+            return;
+        }
+
+        XElement properties = suite.Elements().FirstOrDefault(IsProperties) ?? new XElement("properties");
+        if (properties.Parent is null)
+        {
+            suite.AddFirst(properties);
+        }
+
+        foreach (XElement recoveryProperty in recoveryProperties.Elements("property"))
+        {
+            string name = recoveryProperty.Attribute("name")!.Value;
+            properties.Elements("property")
+                .Where(property => property.Attribute("name")?.Value == name)
+                .Remove();
+            properties.Add(new XElement(recoveryProperty));
+        }
+    }
+
+    private static string? ReadSuiteProperty(XElement properties, string name)
+        => properties.Elements("property")
+            .FirstOrDefault(property => property.Attribute("name")?.Value == name)
+            ?.Attribute("value")
+            ?.Value;
+
+    private static void CopyProperty(XElement source, XElement destination, string name)
+    {
+        XElement? property = source.Elements("property")
+            .FirstOrDefault(candidate => candidate.Attribute("name")?.Value == name);
+        if (property is not null)
+        {
+            destination.Add(new XElement(property));
+        }
+    }
 
     private static string BuildSuiteIdentity(XElement suite)
         => BuildIdentity(

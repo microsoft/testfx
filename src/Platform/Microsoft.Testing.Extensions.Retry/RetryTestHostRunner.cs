@@ -30,6 +30,10 @@ internal static class RetryTestHostRunner
         public required int ExitCode { get; init; }
 
         public required bool ExitedBeforeConnect { get; init; }
+
+#pragma warning disable RS0051 // Retry-attempt transport detail, not package API.
+        public required string RecoveredArtifactManifestPath { get; init; }
+#pragma warning restore RS0051
     }
 
     public static async Task<AttemptResult> RunAttemptAsync(
@@ -66,6 +70,15 @@ internal static class RetryTestHostRunner
         {
             UseShellExecute = false,
         };
+        string recoveredArtifactManifestPath = Path.Combine(
+            Path.GetTempPath(),
+            $"testfx-retry-recovered-artifacts-{Guid.NewGuid():N}.txt");
+        processStartInfo.EnvironmentVariables["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] =
+            recoveredArtifactManifestPath;
+        using var manifestOwnership = new RecoveredArtifactManifestOwnership(
+            serviceProvider.GetFileSystem(),
+            recoveredArtifactManifestPath,
+            logger);
 
         // Tell the launched test host which retry attempt it is, so it can report an explicit AttemptNumber in
         // its dotnet test handshake instead of the consumer having to infer it from a change in InstanceId.
@@ -143,7 +156,13 @@ internal static class RetryTestHostRunner
             else
             {
                 await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
-                return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = true };
+                manifestOwnership.Transfer();
+                return new AttemptResult
+                {
+                    ExitCode = testHostProcess.ExitCode,
+                    ExitedBeforeConnect = true,
+                    RecoveredArtifactManifestPath = recoveredArtifactManifestPath,
+                };
             }
         }
         catch (OperationCanceledException)
@@ -158,7 +177,43 @@ internal static class RetryTestHostRunner
 
         await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
-        return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = false };
+        manifestOwnership.Transfer();
+        return new AttemptResult
+        {
+            ExitCode = testHostProcess.ExitCode,
+            ExitedBeforeConnect = false,
+            RecoveredArtifactManifestPath = recoveredArtifactManifestPath,
+        };
+    }
+
+    private sealed class RecoveredArtifactManifestOwnership(
+        IFileSystem fileSystem,
+        string path,
+        ILogger logger) : IDisposable
+    {
+        private bool _transferred;
+
+        public void Transfer() => _transferred = true;
+
+        public void Dispose()
+        {
+            if (_transferred)
+            {
+                return;
+            }
+
+            try
+            {
+                if (fileSystem.ExistFile(path))
+                {
+                    fileSystem.DeleteFile(path);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning($"Failed to delete recovered retry artifact manifest '{path}' after retry launch failed: {ex}");
+            }
+        }
     }
 
     private static async Task TerminateAndWaitForExitAsync(IProcess testHostProcess, ILogger logger)

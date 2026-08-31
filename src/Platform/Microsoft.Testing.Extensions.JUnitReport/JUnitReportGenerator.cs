@@ -1,14 +1,20 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
 using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
+#pragma warning disable RS0051 // Crash-recovery serialization is an implementation detail.
+
 internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGenerator, CapturedTestResult>
 {
     internal const string JUnitArtifactKind = "microsoft.testing.junit";
+    internal const string JournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
 
     // Parent chain for ALL TestNodeUpdateMessages (including Discovered / InProgress).
     // Keyed by the TestNodeUid value after truncation to TestResultCaptureHelper.MaxIdentityFieldLength
@@ -20,7 +26,12 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
     private readonly Dictionary<string, TestResultCapture.ParentChainEntry> _parentChain = [];
 
     public JUnitReportGenerator(IServiceProvider serviceProvider)
-        : base(serviceProvider, JUnitReportGeneratorCommandLine.JUnitReportOptionName)
+        : base(serviceProvider, JUnitReportGeneratorCommandLine.JUnitReportOptionName, JournalEnvironmentVariableName)
+    {
+    }
+
+    internal JUnitReportGenerator(IServiceProvider serviceProvider, RecoveredReportMetadata recoveredMetadata)
+        : base(serviceProvider, JUnitReportGeneratorCommandLine.JUnitReportOptionName, recoveredMetadata)
     {
     }
 
@@ -42,7 +53,16 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
     protected override string GetGenerationLogMessage(int testResultCount)
         => $"Generating JUnit XML report for {testResultCount} test result(s).";
 
-    protected override void OnTestNodeUpdate(TestNodeUpdateMessage update)
+    protected override string SerializeJournalRecord(ReportJournalRecord<CapturedTestResult> record)
+        => JsonSerializer.Serialize(record, typeof(ReportJournalRecord<CapturedTestResult>), ReportJournalJsonSerializerContext.Default);
+
+    internal static ReportJournalRecord<CapturedTestResult>? DeserializeJournalRecord(string json)
+        => (ReportJournalRecord<CapturedTestResult>?)JsonSerializer.Deserialize(
+            json,
+            typeof(ReportJournalRecord<CapturedTestResult>),
+            ReportJournalJsonSerializerContext.Default);
+
+    protected override async Task OnTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {
         // Record the parent chain entry for EVERY update so non-terminal parent
         // nodes (Discovered / InProgress) are still available when reconstructing
@@ -55,8 +75,23 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         string rawUid = TestResultCaptureHelper.Truncate(update.TestNode.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!;
         _parentChain[rawUid] = TestResultCapture.GetParentChainEntry(update);
 
-        base.OnTestNodeUpdate(update);
+        await base.OnTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
     }
+
+    protected override ReportJournalParentEntry? CaptureParentEntry(TestNodeUpdateMessage update)
+    {
+        string rawUid = TestResultCaptureHelper.Truncate(update.TestNode.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!;
+        TestResultCapture.ParentChainEntry parent = TestResultCapture.GetParentChainEntry(update);
+        return new ReportJournalParentEntry
+        {
+            Uid = rawUid,
+            DisplayName = parent.DisplayName,
+            ParentUid = parent.ParentRawUid,
+        };
+    }
+
+    protected override void RestoreParentEntry(ReportJournalParentEntry parent)
+        => _parentChain[parent.Uid] = new TestResultCapture.ParentChainEntry(parent.DisplayName, parent.ParentUid);
 
     protected override CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
         // A test framework that retries a test in-process reports every attempt under the same test node uid.
@@ -74,3 +109,8 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         CancellationToken cancellationToken)
         => new JUnitReportEngine(CreateReportEngineContext(testStartTime, exitCode, cancellationToken)).GenerateReportAsync(tests, _parentChain);
 }
+
+[JsonSerializable(typeof(ReportJournalRecord<CapturedTestResult>))]
+internal sealed partial class ReportJournalJsonSerializerContext : JsonSerializerContext;
+
+#pragma warning restore RS0051

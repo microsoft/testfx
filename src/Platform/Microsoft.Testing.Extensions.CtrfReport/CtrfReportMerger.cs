@@ -98,6 +98,7 @@ internal static partial class CtrfReportMerger
         // ones (values that differ across inputs) dropped, rather than attributing the first report's
         // environment to every merged test.
         var environments = new List<JsonObject>();
+        bool isIncomplete = false;
 
         foreach (string reportJson in inputReports)
         {
@@ -140,6 +141,10 @@ internal static partial class CtrfReportMerger
             if (root["results"]?["environment"] is JsonObject environment)
             {
                 environments.Add(environment);
+                isIncomplete |= environment["extra"] is JsonObject extra
+                    && extra["incomplete"] is JsonValue incompleteValue
+                    && incompleteValue.TryGetValue(out bool incomplete)
+                    && incomplete;
             }
 
             JsonNode? results = root["results"];
@@ -278,7 +283,17 @@ internal static partial class CtrfReportMerger
         // environment at all counts as disagreement (its fields are absent), so a common field requires
         // every accepted report to provide it. Module-specific 'extra' values (the producing test
         // application and its exit code) are always dropped.
-        if (BuildCommonEnvironment(environments, reportCount) is JsonObject commonEnvironment)
+        JsonObject? commonEnvironment = BuildCommonEnvironment(environments, reportCount);
+        if (isIncomplete)
+        {
+            commonEnvironment ??= [];
+            JsonObject extra = commonEnvironment["extra"] as JsonObject ?? [];
+            extra["incomplete"] = true;
+            extra["runStatus"] = "aborted";
+            commonEnvironment["extra"] = extra;
+        }
+
+        if (commonEnvironment is not null)
         {
             resultsObject["environment"] = commonEnvironment;
         }

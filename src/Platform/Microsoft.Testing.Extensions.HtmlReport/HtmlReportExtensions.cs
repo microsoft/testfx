@@ -24,11 +24,15 @@ public static class HtmlReportExtensions
             throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
         }
 
-        ReportProviderRegistration.AddReportProvider(
+        ReportProviderRegistration.AddReportProvider<HtmlReportGenerator, HtmlReport.CapturedTestResult>(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
+            HtmlReportGeneratorCommandLine.HtmlReportOptionName,
+            HtmlReportGenerator.JournalEnvironmentVariableName,
             () => new HtmlReportGeneratorCommandLine(),
-            serviceProvider => new HtmlReportGenerator(serviceProvider));
+            serviceProvider => new HtmlReportGenerator(serviceProvider),
+            (serviceProvider, metadata) => new HtmlReportGenerator(serviceProvider, metadata),
+            HtmlReportGenerator.DeserializeJournalRecord);
 
         artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new HtmlArtifactPostProcessor());
     }

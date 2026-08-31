@@ -236,6 +236,29 @@ public sealed class JUnitReportMergerTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_WhenAnyInputIsIncomplete_PropagatesRecoveryProperties(bool collapseRetryAttempts)
+    {
+        XElement incompleteSuite = SuiteWithExitCode("Suite", exitCode: 137);
+        incompleteSuite.Element("properties")!.Add(
+            new XElement("property", new XAttribute("name", "run-status"), new XAttribute("value", "aborted")),
+            new XElement("property", new XAttribute("name", "incomplete"), new XAttribute("value", "true")));
+
+        XElement suite = JUnitReportMerger.Merge(
+            [BuildReport(suites: [incompleteSuite]), BuildReport(suites: [SuiteWithExitCode("Suite", exitCode: 0)])],
+            "run",
+            collapseRetryAttempts ? JUnitMergeMode.CollapseRetryAttempts : JUnitMergeMode.Concatenate)
+            .Root!
+            .Elements("testsuite")
+            .Last();
+
+        Assert.AreEqual("137", ReadSuiteProperty(suite, "exit-code"));
+        Assert.AreEqual("aborted", ReadSuiteProperty(suite, "run-status"));
+        Assert.AreEqual("true", ReadSuiteProperty(suite, "incomplete"));
+    }
+
+    [TestMethod]
     public void MergeRetryAttempts_PreservesSameIdentityOccurrencesWithinAnAttempt()
     {
         XDocument firstAttempt = BuildReport(suites:
@@ -429,6 +452,13 @@ public sealed class JUnitReportMergerTests
                     ? null
                     : new XElement("property", new XAttribute("name", "original-name"), new XAttribute("value", originalName))),
             outcomeElement);
+
+    private static string? ReadSuiteProperty(XElement suite, string name)
+        => suite.Element("properties")?
+            .Elements("property")
+            .SingleOrDefault(property => property.Attribute("name")?.Value == name)?
+            .Attribute("value")?
+            .Value;
 
     private static XDocument BuildReport(
         long tests = 1,
