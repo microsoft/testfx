@@ -3224,6 +3224,23 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestExecutionCompleted_InDiscoveryModeWithInvalidCommandLineExitCode_PrintsDiscoveryDescription()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: true, isHelp: false, isRetry: false);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: (int)ExitCode.InvalidCommandLine);
+
+        string expected = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestDiscoveryExitCode,
+            (int)ExitCode.InvalidCommandLine,
+            TerminalResources.ExitCodeInvalidCommandLineDescription);
+        Assert.Contains(expected, stringBuilderConsole.Output);
+    }
+
+    [TestMethod]
     public void GetExitCodeDescription_MapsEveryKnownFailureExitCode()
     {
         foreach (ExitCode exitCode in (ExitCode[])Enum.GetValues(typeof(ExitCode)))
