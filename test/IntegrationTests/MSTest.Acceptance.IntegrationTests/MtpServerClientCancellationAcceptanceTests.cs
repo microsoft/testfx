@@ -3,6 +3,8 @@
 
 extern alias serverclient;
 
+using System.Diagnostics;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 using serverclient::Microsoft.Testing.Platform.ServerMode.Client;
@@ -67,6 +69,14 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
             object updatesGate = new();
 
             using var client = MtpServerClient.Launch(source, CreateOptions(signalFilePath, bodyStartedSignalFilePath));
+
+            // Capture a Process handle for the launched server immediately, while it is guaranteed to still be
+            // alive (Launch only returns after the server has connected back). Holding this handle from before
+            // exit lets us read its real ExitCode later, proving the server terminated cleanly - as opposed to
+            // polling MtpServerClient.ProcessId, which reports 0 for both a graceful exit and a crash: ExitAsync
+            // only writes a fire-and-forget notification, so its completion does not prove the peer processed
+            // it before dying, and a crash right after would still make ProcessId settle to 0.
+            using var serverProcess = Process.GetProcessById(client.ProcessId);
             client.TestNodesUpdated += (_, e) =>
             {
                 lock (updatesGate)
@@ -135,10 +145,12 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
                 $"Expected exactly one 'in-progress' update for '{ExpectedTestDisplayName}'. Collected: {Describe(snapshot)}");
 
             // Server and client must shut down cleanly and promptly: the server must actually exit on its own
-            // in response to 'exit' - not merely be force-killed by Dispose() below (MtpServerProcess.Dispose
-            // kills the process if it is still alive, which would let a server that ignores 'exit' still pass).
+            // in response to 'exit', with a zero exit code - not merely be force-killed by Dispose() below
+            // (MtpServerProcess.Dispose kills the process if it is still alive), and not merely have
+            // disappeared because it crashed after writing the marker (see the remark on serverProcess above).
             await client.ExitAsync(testTimeoutToken).WaitAsync(WaitTimeout, testTimeoutToken);
-            await WaitForProcessExitAsync(client, WaitTimeout, testTimeoutToken);
+            await WaitForProcessExitAsync(serverProcess, WaitTimeout, testTimeoutToken);
+            Assert.AreEqual(0, serverProcess.ExitCode, "Expected the server process to exit cleanly (exit code 0) in response to 'exit'.");
         }
         finally
         {
@@ -166,19 +178,13 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         }
     }
 
-    private static async Task WaitForProcessExitAsync(MtpServerClient client, TimeSpan timeout, CancellationToken cancellationToken)
+    private static async Task WaitForProcessExitAsync(Process process, TimeSpan timeout, CancellationToken cancellationToken)
     {
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutSource.CancelAfter(timeout);
         try
         {
-            // ProcessId returns 0 once the launched process has exited (see MtpServerProcess.ProcessId), so
-            // polling it proves the server exited naturally in response to 'exit' rather than merely being
-            // force-killed by the Dispose() that runs when the caller's 'using' block ends.
-            while (client.ProcessId != 0)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(50), timeoutSource.Token);
-            }
+            await process.WaitForExitAsync(timeoutSource.Token);
         }
         catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
