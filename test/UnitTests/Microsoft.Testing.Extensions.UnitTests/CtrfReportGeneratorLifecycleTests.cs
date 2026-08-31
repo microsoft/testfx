@@ -175,9 +175,10 @@ public sealed class CtrfReportGeneratorLifecycleTests
             .GetType("Microsoft.Testing.Extensions.ReportGeneratorBase`2", throwOnError: true)!
             .GetField("JournalQueueCapacity", BindingFlags.Static | BindingFlags.NonPublic)!
             .GetRawConstantValue()!;
-        int resultCount = queueCapacity + 2;
+        int resultCount = queueCapacity + 1;
 
         await context.Generator.OnTestSessionStartingAsync(sessionContext).ConfigureAwait(false);
+        await context.JournalStream.WaitForWriteStartAsync().ConfigureAwait(false);
         for (int i = 0; i < resultCount; i++)
         {
             Task consume = context.Generator.ConsumeAsync(
@@ -361,6 +362,7 @@ public sealed class CtrfReportGeneratorLifecycleTests
     private sealed class MemoryFileStream : IFileStream
     {
         private readonly TaskCompletionSource<object?> _writeGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<object?> _writeStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CountingMemoryStream _stream;
 
         public MemoryFileStream()
@@ -375,7 +377,7 @@ public sealed class CtrfReportGeneratorLifecycleTests
                 _writeGate.SetResult(null);
             }
 
-            _stream = new(throwOnWrite, _writeGate.Task);
+            _stream = new(throwOnWrite, _writeGate.Task, _writeStarted);
         }
 
         public int FlushCount => _stream.FlushCount;
@@ -387,6 +389,8 @@ public sealed class CtrfReportGeneratorLifecycleTests
         string IFileStream.Name => string.Empty;
 
         public string GetUtf8Content() => Encoding.UTF8.GetString(_stream.ToArray());
+
+        public Task WaitForWriteStartAsync() => _writeStarted.Task;
 
         public void ReleaseWrites() => _writeGate.TrySetResult(null);
 
@@ -400,12 +404,16 @@ public sealed class CtrfReportGeneratorLifecycleTests
         ValueTask IAsyncDisposable.DisposeAsync() => _stream.DisposeAsync();
 #endif
 
-        private sealed class CountingMemoryStream(bool throwOnWrite, Task writeGate) : MemoryStream
+        private sealed class CountingMemoryStream(
+            bool throwOnWrite,
+            Task writeGate,
+            TaskCompletionSource<object?> writeStarted) : MemoryStream
         {
             public int FlushCount { get; private set; }
 
             public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
+                writeStarted.TrySetResult(null);
                 await writeGate.ConfigureAwait(false);
                 if (throwOnWrite)
                 {
@@ -418,6 +426,7 @@ public sealed class CtrfReportGeneratorLifecycleTests
 #if NETCOREAPP
             public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
             {
+                writeStarted.TrySetResult(null);
                 await writeGate.ConfigureAwait(false);
                 if (throwOnWrite)
                 {
