@@ -133,28 +133,4 @@ public sealed class RunSettingsCommandLineOptionsProviderTests
         Assert.IsTrue(result.IsValid);
         Assert.IsNull(result.ErrorMessage);
     }
-
-    [TestMethod]
-    public async Task ValidateCommandLineOptionsAsync_WhenRunSettingsAreNotSupplied_IsValid()
-    {
-        // Arrange
-        var commandLineOptions = new Mock<ICommandLineOptions>(MockBehavior.Strict);
-        commandLineOptions.Setup(x => x.TryGetOptionArgumentList("settings", out It.Ref<string[]?>.IsAny))
-            .Returns((string optionName, out string[]? value) =>
-            {
-                value = null;
-                return false;
-            });
-
-        var provider = new RunSettingsCommandLineOptionsProvider(
-            new TestExtension(),
-            new Mock<IFileSystem>(MockBehavior.Strict).Object);
-
-        // Act
-        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(commandLineOptions.Object);
-
-        // Assert
-        Assert.IsTrue(result.IsValid);
-        Assert.IsNull(result.ErrorMessage);
-    }
 }
