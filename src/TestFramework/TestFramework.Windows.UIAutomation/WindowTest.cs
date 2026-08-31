@@ -67,7 +67,7 @@ public abstract class WindowTest : ApplicationTest
     {
         if (applicationProcess.HasExited)
         {
-            return null;
+            throw CreateProcessExitedException(applicationProcess);
         }
 
         try
@@ -80,7 +80,7 @@ public abstract class WindowTest : ApplicationTest
         }
         catch (InvalidOperationException) when (applicationProcess.HasExited)
         {
-            return null;
+            throw CreateProcessExitedException(applicationProcess);
         }
         catch (ElementNotAvailableException)
         {
@@ -108,12 +108,6 @@ public abstract class WindowTest : ApplicationTest
                 return;
             }
 
-            if (AppProcess.HasExited)
-            {
-                throw new InvalidOperationException(
-                    $"Application '{AppProcess.StartInfo.FileName}' exited with code {AppProcess.ExitCode} before a window was discovered.");
-            }
-
             TimeSpan remainingTime = WindowDiscoveryTimeout - stopwatch.Elapsed;
             if (remainingTime <= TimeSpan.Zero)
             {
@@ -127,4 +121,8 @@ public abstract class WindowTest : ApplicationTest
             _ = cancellationToken.WaitHandle.WaitOne(delay);
         }
     }
+
+    private static InvalidOperationException CreateProcessExitedException(Process applicationProcess)
+        => new(
+            $"Application '{applicationProcess.StartInfo.FileName}' exited with code {applicationProcess.ExitCode} before a window was discovered.");
 }

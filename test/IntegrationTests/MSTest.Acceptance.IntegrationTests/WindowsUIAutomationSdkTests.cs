@@ -254,6 +254,27 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
         await AssertProcessExitedAsync(pidFile);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task WindowTest_WhenLauncherExitsBeforeChildWindow_DiscoversAndStopsChild(string tfm)
+    {
+        string childPidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=LauncherChildWindowTests",
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["MSTEST_UI_AUTOMATION_CHILD_PID_FILE"] = childPidFile,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        await AssertProcessExitedAsync(childPidFile);
+    }
+
     private async Task AssertProcessExitedAsync(string pidFile)
     {
         int pid = int.Parse(await File.ReadAllTextAsync(pidFile, TestContext.CancellationToken), CultureInfo.InvariantCulture);
@@ -428,12 +449,15 @@ public class CustomShutdownTests : ApplicationTest
     protected override ProcessStartInfo CreateProcessStartInfo()
         => new(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
-            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
 
     protected override void StopApplication(Process applicationProcess)
     {
         string marker = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_SHUTDOWN_MARKER")
             ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_SHUTDOWN_MARKER must be set.");
+        string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
+        File.WriteAllText(pidFile, applicationProcess.Id.ToString(CultureInfo.InvariantCulture));
         File.WriteAllText(marker, string.Empty);
         base.StopApplication(applicationProcess);
     }
@@ -479,16 +503,78 @@ public class DerivedCleanupFailureTests : ApplicationTest
     protected override ProcessStartInfo CreateProcessStartInfo()
         => new(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
-            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
 
     [TestMethod]
     public void TestMethod()
     {
+        string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
+        File.WriteAllText(pidFile, AppProcess.Id.ToString(CultureInfo.InvariantCulture));
     }
 
     [TestCleanup]
     public void FailingCleanup()
         => throw new InvalidOperationException("Derived cleanup failed.");
+}
+
+[STATestClass]
+public class LauncherChildWindowTests : WindowTest
+{
+    private Process? _childProcess;
+
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile -NonInteractive -Command \"$process = Start-Process -FilePath (Join-Path $env:WINDIR 'System32\\charmap.exe') -PassThru; $process.Id | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_CHILD_PID_FILE\"");
+
+    protected override AutomationElement? FindWindow(Process applicationProcess)
+    {
+        _childProcess ??= TryGetChildProcess();
+        return _childProcess is null ? null : base.FindWindow(_childProcess);
+    }
+
+    protected override void StopApplication(Process applicationProcess)
+    {
+        _childProcess ??= TryGetChildProcess();
+        if (_childProcess is not null)
+        {
+            try
+            {
+                base.StopApplication(_childProcess);
+            }
+            finally
+            {
+                _childProcess.Dispose();
+            }
+        }
+
+        base.StopApplication(applicationProcess);
+    }
+
+    [TestMethod]
+    public void ChildWindowIsDiscovered()
+        => Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType);
+
+    private static Process? TryGetChildProcess()
+    {
+        string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_CHILD_PID_FILE")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_CHILD_PID_FILE must be set.");
+        if (!File.Exists(pidFile)
+            || !int.TryParse(File.ReadAllText(pidFile), CultureInfo.InvariantCulture, out int pid))
+        {
+            return null;
+        }
+
+        try
+        {
+            return Process.GetProcessById(pid);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
 }
 
 #file global.json
