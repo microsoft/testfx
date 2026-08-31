@@ -60,6 +60,8 @@ public abstract class WindowTest : ApplicationTest
     /// <remarks>
     /// Override this method for applications that use a launcher process, show a splash screen,
     /// or require selection among multiple top-level windows.
+    /// If the returned window belongs to a process other than <paramref name="applicationProcess"/>,
+    /// also override <see cref="ApplicationTest.StopApplication"/> to track and stop that process.
     /// </remarks>
     protected virtual AutomationElement? FindWindow(Process applicationProcess)
     {

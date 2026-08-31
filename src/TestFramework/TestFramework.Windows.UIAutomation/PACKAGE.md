@@ -22,6 +22,7 @@ Enable the feature when using `MSTest.Sdk`:
 Then derive your test class from `WindowTest`:
 
 ```csharp
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -37,7 +38,7 @@ public sealed class MyAppTests : WindowTest
 }
 ```
 
-`ApplicationTest` provides process lifecycle management. `WindowTest` additionally waits for a window and exposes it through `MainWindow`. Override `FindWindow` for launcher processes, splash screens, or applications whose desired window is not `Process.MainWindowHandle`, and override `StopApplication` for custom shutdown behavior.
+`ApplicationTest` provides process lifecycle management. `WindowTest` additionally waits for a window and exposes it through `MainWindow`. Override `FindWindow` for launcher processes, splash screens, or applications whose desired window is not `Process.MainWindowHandle`. If the selected window belongs to a process other than the process created by `CreateProcessStartInfo`, also override `StopApplication` to track and stop that process.
 
 Concrete test classes must declare `[STATestClass]`; MSTest test-class attributes are not inherited.
 

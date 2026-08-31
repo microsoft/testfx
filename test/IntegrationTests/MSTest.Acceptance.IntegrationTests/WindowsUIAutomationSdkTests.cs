@@ -233,6 +233,27 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
         await AssertProcessExitedAsync(pidFile);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task ApplicationTest_WhenDerivedCleanupFails_StillTerminatesProcess(string tfm)
+    {
+        string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=DerivedCleanupFailureTests",
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["MSTEST_UI_AUTOMATION_PID_FILE"] = pidFile,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("Derived cleanup failed.");
+        await AssertProcessExitedAsync(pidFile);
+    }
+
     private async Task AssertProcessExitedAsync(string pidFile)
     {
         int pid = int.Parse(await File.ReadAllTextAsync(pidFile, TestContext.CancellationToken), CultureInfo.InvariantCulture);
@@ -450,6 +471,24 @@ public class CancellationDuringWindowDiscoveryTests : WindowTest
     public void TestMethod()
     {
     }
+}
+
+[STATestClass]
+public class DerivedCleanupFailureTests : ApplicationTest
+{
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+
+    [TestCleanup]
+    public void FailingCleanup()
+        => throw new InvalidOperationException("Derived cleanup failed.");
 }
 
 #file global.json

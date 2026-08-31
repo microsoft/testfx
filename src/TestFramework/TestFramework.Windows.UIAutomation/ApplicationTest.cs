@@ -12,8 +12,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;
 /// Concrete test classes must also be decorated with <see cref="STATestClassAttribute"/>
 /// because MSTest test-class attributes are not inherited.
 /// </remarks>
-public abstract class ApplicationTest
+public abstract class ApplicationTest : IDisposable
 {
+    private Process? _appProcess;
+
     /// <summary>
     /// Gets or sets the test context populated by MSTest before each test runs.
     /// </summary>
@@ -22,7 +24,9 @@ public abstract class ApplicationTest
     /// <summary>
     /// Gets the process of the application under test.
     /// </summary>
-    protected Process AppProcess { get; private set; } = null!;
+    protected Process AppProcess
+        => _appProcess
+        ?? throw new InvalidOperationException("The application process is available only after application setup and before disposal.");
 
     /// <summary>
     /// Gets the time to wait for graceful shutdown and forced termination.
@@ -44,17 +48,19 @@ public abstract class ApplicationTest
         TestContext.CancellationToken.ThrowIfCancellationRequested();
 
         ProcessStartInfo startInfo = CreateProcessStartInfo();
-        AppProcess = Process.Start(startInfo)
+        _appProcess = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start process '{startInfo.FileName}'.");
     }
 
     /// <summary>
-    /// Stops and disposes the application after each test method.
+    /// Stops and disposes the application process.
     /// </summary>
-    [TestCleanup]
-    public void ApplicationTearDown()
+    /// <remarks>
+    /// MSTest invokes this method even when a test cleanup declared by a derived class fails.
+    /// </remarks>
+    public void Dispose()
     {
-        Process? applicationProcess = AppProcess;
+        Process? applicationProcess = _appProcess;
 
         try
         {
@@ -66,7 +72,8 @@ public abstract class ApplicationTest
         finally
         {
             applicationProcess?.Dispose();
-            AppProcess = null!;
+            _appProcess = null;
+            GC.SuppressFinalize(this);
         }
     }
 
