@@ -26,4 +26,20 @@ internal interface IMtpServerHost : IDisposable
     /// already exited).
     /// </summary>
     int ProcessId { get; }
+
+    /// <summary>
+    /// Gets the exit code the application reported, or <see langword="null"/> while it is still running (or
+    /// when it failed rather than exiting).
+    /// </summary>
+    int? ExitCode { get; }
+
+    /// <summary>
+    /// Tears the server down without blocking the calling thread.
+    /// </summary>
+    /// <remarks>
+    /// This is the preferred teardown on platforms with a responsiveness watchdog (Android ANR, the iOS
+    /// watchdog), where the synchronous <see cref="IDisposable.Dispose"/> wait is not acceptable. Calling
+    /// <see cref="IDisposable.Dispose"/> afterwards is safe and returns immediately.
+    /// </remarks>
+    Task ShutdownAsync();
 }

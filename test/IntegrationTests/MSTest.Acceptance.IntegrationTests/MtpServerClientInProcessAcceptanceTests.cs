@@ -110,7 +110,13 @@ internal static class Program
                 return 1;
             }
 
-            if (capabilities.ServerProcessId != System.Diagnostics.Process.GetCurrentProcess().Id)
+            int currentProcessId;
+            using (System.Diagnostics.Process current = System.Diagnostics.Process.GetCurrentProcess())
+            {
+                currentProcessId = current.Id;
+            }
+
+            if (capabilities.ServerProcessId != currentProcessId)
             {
                 Console.Error.WriteLine("INPROCESSHOST: the server reported a different process id, so it was not hosted in process.");
                 return 1;
@@ -136,8 +142,17 @@ internal static class Program
 
             await client.ExitAsync(cancellationToken);
 
-            // Disposal closes the transport and waits for the hosted application to finish.
-            client.Dispose();
+            // The non-blocking teardown: closes the transport and awaits the hosted application. The trailing
+            // Dispose from the using block is then a no-op.
+            await client.ShutdownAsync();
+
+            if (client.ServerExitCode != 0)
+            {
+                Console.Error.WriteLine("INPROCESSHOST: the hosted application exited with " + client.ServerExitCode);
+                return 1;
+            }
+
+            Console.WriteLine("INPROCESSHOST: EXITCODE " + client.ServerExitCode);
             Console.WriteLine("INPROCESSHOST: OK");
             return 0;
         }
@@ -252,6 +267,7 @@ internal static class Program
         Assert.Contains("INPROCESSHOST: SAMEPROCESS", command.StandardOutput);
         Assert.Contains("INPROCESSHOST: DISCOVERED TestMethod1", command.StandardOutput);
         Assert.Contains("INPROCESSHOST: EXECUTED TestMethod1", command.StandardOutput);
+        Assert.Contains("INPROCESSHOST: EXITCODE 0", command.StandardOutput);
         Assert.Contains("INPROCESSHOST: OK", command.StandardOutput);
     }
 

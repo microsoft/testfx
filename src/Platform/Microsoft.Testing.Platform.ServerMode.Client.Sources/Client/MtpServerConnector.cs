@@ -35,10 +35,16 @@ internal static class MtpServerConnector
 
     /// <summary>
     /// How often the connect wait re-checks whether the launched server has already stopped, so a server that
-    /// dies during startup fails fast instead of blocking for the full connection timeout. It is also the
-    /// bounded grace given to a still-pending accept once the server is seen to have stopped.
+    /// dies during startup fails fast instead of blocking for the full connection timeout.
     /// </summary>
     internal static readonly TimeSpan ServerStoppedPollInterval = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
+    /// The largest delay <see cref="Task.Delay(TimeSpan)"/> accepts on every target framework (.NET Framework
+    /// rejects anything above <see cref="int.MaxValue"/> milliseconds). Bounded waits clamp to it so an
+    /// absurd caller-supplied timeout cannot turn a teardown into an exception.
+    /// </summary>
+    private static readonly TimeSpan MaxDelay = TimeSpan.FromMilliseconds(int.MaxValue);
 
     /// <summary>
     /// Registers the client serializers and creates the message formatter, in that order.
@@ -61,16 +67,25 @@ internal static class MtpServerConnector
     public static TcpListener StartLoopbackListener(out int port)
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
         try
         {
+            // Start() is inside the try: it creates the underlying socket before binding, so a bind or listen
+            // failure (port exhaustion, a sandbox that forbids listening) would otherwise leak that socket
+            // because the caller never receives a listener it could stop.
+            listener.Start();
             port = ((IPEndPoint)listener.LocalEndpoint).Port;
         }
         catch
         {
-            // Reading the bound endpoint should not fail after a successful Start, but if it does the
-            // listener is already holding a port; release it rather than leaking a bound socket.
-            listener.Stop();
+            try
+            {
+                listener.Stop();
+            }
+            catch (Exception)
+            {
+                // Best-effort cleanup: the original failure is the one worth reporting.
+            }
+
             throw;
         }
 
@@ -141,18 +156,14 @@ internal static class MtpServerConnector
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                // No grace period here on purpose. Once the server has stopped, any socket the accept might
+                // still yield belongs to a dead peer, so waiting for it would only trade this precise failure
+                // (exit code, captured stderr) for a generic connection-closed error on the first request.
+                // The loop re-checks acceptTask above, so a connection that completed while the server was
+                // still alive is already taken before this probe runs.
                 if (tryGetServerStoppedFailure() is { } serverStopped)
                 {
-                    // The server stopped, but it may have dialed back microseconds before stopping. Give the
-                    // pending accept one bounded chance so a usable connection is never discarded in favor of
-                    // a misleading "stopped before connecting back" failure.
-                    _ = await Task.WhenAny(acceptTask, Task.Delay(ServerStoppedPollInterval, CancellationToken.None)).ConfigureAwait(false);
-                    if (!acceptTask.IsCompleted)
-                    {
-                        throw serverStopped;
-                    }
-
-                    break;
+                    throw serverStopped;
                 }
 
                 if (connectStopwatch.Elapsed >= connectionTimeout)
@@ -229,11 +240,27 @@ internal static class MtpServerConnector
     /// completed. Never throws, and never propagates the task's own failure: the caller decides how to report
     /// it, which keeps a shutdown failure from masking the primary one.
     /// </summary>
+    /// <remarks>
+    /// A caller-supplied timeout is clamped rather than trusted: this runs on disposal and teardown paths
+    /// that are documented never to throw, so a non-positive value degrades to "check, do not wait" (which
+    /// also covers <see cref="Timeout.InfiniteTimeSpan"/>, since an unbounded wait is exactly what these paths
+    /// must not do) and an oversized one is capped to the largest delay every target framework accepts.
+    /// </remarks>
     public static async Task<bool> WaitBoundedAsync(Task task, TimeSpan timeout)
     {
         if (task.IsCompleted)
         {
             return true;
+        }
+
+        if (timeout <= TimeSpan.Zero)
+        {
+            return false;
+        }
+
+        if (timeout > MaxDelay)
+        {
+            timeout = MaxDelay;
         }
 
         Task completed = await Task.WhenAny(task, Task.Delay(timeout, CancellationToken.None)).ConfigureAwait(false);
@@ -248,9 +275,17 @@ internal static class MtpServerConnector
     {
         if (!task.IsCompleted)
         {
-            // Still running: attach a continuation so a later failure is still observed.
+            // Still running (abandoned): attach a continuation so a later failure is both observed and
+            // reported, rather than disappearing because nothing was left to await it.
             _ = task.ContinueWith(
-                static t => _ = t.Exception,
+                (completed, state) =>
+                {
+                    if (completed.Exception is { } late)
+                    {
+                        ((IMtpClientLogger)state!).SafeLog(MtpClientLogLevel.Error, $"{description}: {late}");
+                    }
+                },
+                logger,
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);

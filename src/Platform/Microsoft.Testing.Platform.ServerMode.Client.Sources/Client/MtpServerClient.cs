@@ -78,6 +78,9 @@ internal sealed class MtpServerClient : IMtpServerClient
     public int ProcessId => _host?.ProcessId ?? 0;
 
     /// <inheritdoc />
+    public int? ServerExitCode => _host?.ExitCode;
+
+    /// <inheritdoc />
     public MtpServerCapabilities? Capabilities { get; private set; }
 
     /// <summary>
@@ -259,8 +262,7 @@ internal sealed class MtpServerClient : IMtpServerClient
             return;
         }
 
-        _connection.NotificationReceived -= OnNotificationReceived;
-        _connection.ServerRequestHandler = null;
+        DetachHandlers();
 
         if (_host is not null)
         {
@@ -272,6 +274,32 @@ internal sealed class MtpServerClient : IMtpServerClient
         {
             _connection.Dispose();
         }
+    }
+
+    /// <inheritdoc />
+    public async Task ShutdownAsync()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
+        DetachHandlers();
+
+        if (_host is not null)
+        {
+            await _host.ShutdownAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            _connection.Dispose();
+        }
+    }
+
+    private void DetachHandlers()
+    {
+        _connection.NotificationReceived -= OnNotificationReceived;
+        _connection.ServerRequestHandler = null;
     }
 
     private static ICollection<TestNode> BuildTestNodes(IReadOnlyCollection<string> testNodeUids)

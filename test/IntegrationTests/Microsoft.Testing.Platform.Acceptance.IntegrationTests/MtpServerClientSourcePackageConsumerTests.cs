@@ -98,6 +98,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 Console.WriteLine(capabilities.ServerName ?? "unknown");
                 Console.WriteLine(client.Capabilities?.MultiRequestSupport ?? false);
                 Console.WriteLine(client.ProcessId);
+                Console.WriteLine(client.ServerExitCode ?? -1);
 
                 await client.DiscoverTestsAsync(cancellationToken);
                 await client.DiscoverTestsAsync(new[] { "uid" }, cancellationToken);
@@ -112,6 +113,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 await client.RunTestsAsync(new[] { "uid" }, cancellationToken);
                 await client.RunTestsWithFilterAsync("/*/*/*/*", cancellationToken);
                 await client.ExitAsync(cancellationToken);
+                await client.ShutdownAsync();
 
                 // Referencing the platform assembly alongside the source package must bind these two public
                 // types to the same assembly. Injected protocol types live in a package-private namespace.
@@ -132,6 +134,8 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
 
                 Console.WriteLine(client.ProcessId);
                 await client.ExitAsync(cancellationToken);
+                await client.ShutdownAsync();
+                Console.WriteLine(client.ServerExitCode ?? -1);
             }
 
             private static void OnTestNodesUpdated(object? sender, MtpTestNodeUpdateEventArgs e)

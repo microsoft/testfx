@@ -24,6 +24,12 @@ public sealed class MtpServerClientInProcessTests
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// The id of the process the tests run in. An in-process host runs the application here, so this is also
+    /// the id the client and the server-mode handshake must report.
+    /// </summary>
+    private static readonly int CurrentProcessId = GetCurrentProcessId();
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -65,7 +71,7 @@ public sealed class MtpServerClientInProcessTests
 
         MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
         Assert.AreEqual("FakeMtpServer", capabilities.ServerName);
-        Assert.AreEqual(Process.GetCurrentProcess().Id, client.ProcessId, "An in-process host runs the application in the caller's process.");
+        Assert.AreEqual(CurrentProcessId, client.ProcessId, "An in-process host runs the application in the caller's process.");
 
         await server.Value.SendDiscoveredTestNodeAsync(discoverRunId, "uid-1", "Test1");
         await WithTimeoutAsync(client.DiscoverTestsAsync(TestContext.CancellationToken));
@@ -120,6 +126,30 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken));
 
         Assert.AreSame(callbackFailure, exception.InnerException);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackExitsWithoutConnecting_FailsFastInsteadOfWaitingOutTheTimeout()
+    {
+        // The connect race probes "has the server stopped?" between accept polls. A server that stopped can
+        // no longer serve the connection, so the launch must report that precise failure (with its exit code)
+        // immediately rather than waiting for the connection timeout or handing back a dead client.
+        MtpServerClientOptions options = CreateOptions();
+        options.ConnectionTimeout = TimeSpan.FromMinutes(5);
+
+        var stopwatch = Stopwatch.StartNew();
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) => Task.FromResult(9),
+                options,
+                TestContext.CancellationToken));
+        stopwatch.Stop();
+
+        Assert.Contains("exited with code 9", exception.Message);
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(20),
+            stopwatch.Elapsed,
+            "A server that stopped without connecting must fail fast, not wait out the connection timeout.");
     }
 
     [TestMethod]
@@ -210,22 +240,33 @@ public sealed class MtpServerClientInProcessTests
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         MtpServerClientOptions options = CreateOptions();
         options.ConnectionTimeout = TimeSpan.FromMilliseconds(250);
-        options.ServerShutdownTimeout = TimeSpan.FromMilliseconds(250);
+
+        // Deliberately large: an abandoned launch must NOT spend the graceful shutdown timeout waiting for a
+        // callback that was never connected, so this value must not show up in the elapsed time below.
+        options.ServerShutdownTimeout = TimeSpan.FromMinutes(5);
 
         try
         {
+            var stopwatch = Stopwatch.StartNew();
             MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
                 () => MtpServerClient.LaunchInProcessAsync(
-                    async (_, _) =>
+                    async (_, serverToken) =>
                     {
                         // Runs happily but never dials back: only the connection timeout can end the wait.
+                        // It does observe the token, so the unwind does not pay the full cancellation grace.
+                        using CancellationTokenRegistration registration = serverToken.Register(() => release.TrySetResult(true));
                         await release.Task;
                         return 0;
                     },
                     options,
                     TestContext.CancellationToken));
+            stopwatch.Stop();
 
             Assert.Contains("did not connect back within", exception.Message);
+            Assert.IsLessThan(
+                TimeSpan.FromSeconds(20),
+                stopwatch.Elapsed,
+                $"The failed launch took {stopwatch.Elapsed.TotalSeconds:N1}s; it must be bounded by the connection timeout plus the fixed cancellation grace, not by ServerShutdownTimeout.");
         }
         finally
         {
@@ -241,6 +282,7 @@ public sealed class MtpServerClientInProcessTests
         MtpServerClient client = await LaunchAsync(server);
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
         Assert.IsFalse(server.Completion.IsCompleted, "The application must stay alive while the client is in use.");
+        Assert.IsNull(client.ServerExitCode, "The exit code is only known once the application has stopped.");
 
         client.Dispose();
 
@@ -248,6 +290,30 @@ public sealed class MtpServerClientInProcessTests
             server.Completion.IsCompleted,
             "Dispose must close the transport and wait for the hosted application before it returns.");
         Assert.AreEqual(0, await server.Completion);
+        Assert.AreEqual(0, client.ServerExitCode, "The callback's exit code must be reachable after shutdown.");
+    }
+
+    [TestMethod]
+    public async Task ShutdownAsync_ClosesTransportAndAwaitsTheCallback_WithoutBlocking()
+    {
+        using var server = new InProcessServerFixture();
+
+        using MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        Assert.IsFalse(server.Completion.IsCompleted);
+
+        await WithTimeoutAsync(client.ShutdownAsync());
+
+        Assert.IsTrue(server.Completion.IsCompleted, "ShutdownAsync must await the hosted application.");
+        Assert.AreEqual(0, client.ServerExitCode);
+
+        // The documented pattern is ShutdownAsync inside a using block, so the trailing Dispose must be a
+        // cheap no-op rather than a second teardown.
+        var stopwatch = Stopwatch.StartNew();
+        client.Dispose();
+        stopwatch.Stop();
+        Assert.IsLessThan(TimeSpan.FromSeconds(2), stopwatch.Elapsed, "Dispose after ShutdownAsync must return immediately.");
+        Assert.AreEqual(1, server.CompletionCount);
     }
 
     [TestMethod]
@@ -259,10 +325,15 @@ public sealed class MtpServerClientInProcessTests
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
 
         client.Dispose();
+        int afterFirst = server.TransportClosedCount;
         client.Dispose();
         client.Dispose();
 
-        Assert.IsTrue(server.Completion.IsCompleted);
+        Assert.AreEqual(1, afterFirst, "The first Dispose must close the transport exactly once.");
+        Assert.AreEqual(
+            1,
+            server.TransportClosedCount,
+            "Repeated Dispose must not run the teardown again; without the guard the transport would be closed once per call.");
         Assert.AreEqual(1, server.CompletionCount, "The hosted application must be torn down exactly once.");
     }
 
@@ -322,11 +393,11 @@ public sealed class MtpServerClientInProcessTests
             client.Dispose();
             stopwatch.Stop();
 
-            // ServerShutdownTimeout + the fixed 5s cancellation grace, with generous slack for slow agents.
+            // ServerShutdownTimeout (200ms) + the fixed 5s cancellation grace, with slack for slow agents.
             Assert.IsLessThan(
-                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(15),
                 stopwatch.Elapsed,
-                "Dispose must abandon an unresponsive application rather than block indefinitely.");
+                $"Dispose took {stopwatch.Elapsed.TotalSeconds:N1}s; it must abandon an unresponsive application within the documented bound rather than block indefinitely.");
 
             string text;
             lock (log)
@@ -381,7 +452,7 @@ public sealed class MtpServerClientInProcessTests
 
         Assert.AreEqual(isStateful, args.Capabilities.IsStateful, "The in-process path must forward the client's stateful capability unchanged.");
         Assert.AreEqual("EmbeddedHost", args.ClientInfo.Name);
-        Assert.AreEqual(Process.GetCurrentProcess().Id, args.ProcessId);
+        Assert.AreEqual(CurrentProcessId, args.ProcessId);
     }
 
     [TestMethod]
@@ -457,6 +528,12 @@ public sealed class MtpServerClientInProcessTests
             : throw new InvalidOperationException($"The client did not pass '{name}'. Arguments: {string.Join(" ", serverArguments)}");
     }
 
+    private static int GetCurrentProcessId()
+    {
+        using var current = Process.GetCurrentProcess();
+        return current.Id;
+    }
+
     private static async Task<T> WithTimeoutAsync<T>(Task<T> task)
     {
         Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
@@ -478,19 +555,7 @@ public sealed class MtpServerClientInProcessTests
 
     private static async Task<TException> AssertThrowsAsync<TException>(Func<Task> action)
         where TException : Exception
-    {
-        try
-        {
-            await WithTimeoutAsync(action()).ConfigureAwait(false);
-        }
-        catch (TException exception)
-        {
-            return exception;
-        }
-
-        Assert.Fail($"Expected an exception of type {typeof(TException).Name}, but none was thrown.");
-        throw new InvalidOperationException("Unreachable.");
-    }
+        => await Assert.ThrowsExactlyAsync<TException>(() => WithTimeoutAsync(action()));
 
     /// <summary>
     /// Plays the part of the hosted MTP application: it reads the client-generated arguments, dials back to
@@ -506,6 +571,7 @@ public sealed class MtpServerClientInProcessTests
         private FakeMtpServer? _server;
         private int _connectionCount;
         private int _completionCount;
+        private int _transportClosedCount;
 
         public InProcessServerFixture(Action? onDisconnected = null)
             => _onDisconnected = onDisconnected;
@@ -524,6 +590,12 @@ public sealed class MtpServerClientInProcessTests
 
         /// <summary>Gets how many times the hosted application ran to completion.</summary>
         public int CompletionCount => Volatile.Read(ref _completionCount);
+
+        /// <summary>
+        /// Gets how many times the client closed the transport. Teardown is observable from the server side,
+        /// so a repeated Dispose that skipped its guard would show up here as a second close.
+        /// </summary>
+        public int TransportClosedCount => Volatile.Read(ref _transportClosedCount);
 
         /// <summary>Gets the diagnostics the client emitted through its logger.</summary>
         public string Log
@@ -557,6 +629,7 @@ public sealed class MtpServerClientInProcessTests
                 // A real server-mode application runs until its session ends, which is what closing the
                 // client's end of the transport produces.
                 await server.Disconnected.ConfigureAwait(false);
+                _ = Interlocked.Increment(ref _transportClosedCount);
                 _onDisconnected?.Invoke();
                 _ = Interlocked.Increment(ref _completionCount);
                 _ = _completion.TrySetResult(0);

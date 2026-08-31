@@ -67,6 +67,18 @@ internal interface IMtpServerClient : IDisposable
     MtpServerCapabilities? Capabilities { get; }
 
     /// <summary>
+    /// Gets the exit code the launched application reported, or <see langword="null"/> while it is still
+    /// running, when it failed rather than exiting, or when the client was created over an externally
+    /// supplied connection.
+    /// </summary>
+    /// <remarks>
+    /// For an application hosted in the caller's own process this is the value the launch callback returned
+    /// (typically <c>TestApplication.RunAsync</c>'s exit code) and it becomes available once
+    /// <see cref="ShutdownAsync"/> or <see cref="IDisposable.Dispose"/> has completed.
+    /// </remarks>
+    int? ServerExitCode { get; }
+
+    /// <summary>
     /// Gets or sets an opt-in handler for server-initiated requests (for example the debugger-attach
     /// request). The handler receives the request method and parameters and returns the response object
     /// as a dictionary (or <see langword="null"/> to answer with a null result). When the handler itself
@@ -142,6 +154,19 @@ internal interface IMtpServerClient : IDisposable
     /// Sends the <c>exit</c> notification, asking the application to shut down.
     /// </summary>
     Task ExitAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tears the client and the launched application down without blocking the calling thread, then returns.
+    /// </summary>
+    /// <remarks>
+    /// Equivalent to <see cref="IDisposable.Dispose"/> but asynchronous, which matters for an application
+    /// hosted in the caller's own process: disposal waits for the hosted application, and doing that
+    /// synchronously on a UI thread can trip a platform responsiveness watchdog (Android ANR, the iOS
+    /// watchdog). Calling <see cref="IDisposable.Dispose"/> afterwards is safe and returns immediately, so a
+    /// <c>using</c> block plus an <c>await client.ShutdownAsync()</c> before it leaves is the recommended
+    /// pattern on those platforms.
+    /// </remarks>
+    Task ShutdownAsync();
 }
 
 /// <summary>

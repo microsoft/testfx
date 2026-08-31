@@ -52,7 +52,7 @@ race, the serializer/formatter/transport setup and the shutdown sequence:
 
 ```csharp
 using IMtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
-    async (serverArgs, cancellationToken) =>
+    async (serverArgs, token) =>
     {
         // serverArgs is the complete server-mode argument array
         // (--server jsonrpc --client-host … --client-port … --no-banner).
@@ -69,26 +69,40 @@ await client.InitializeAsync();
 await client.DiscoverTestsAsync();
 await client.RunTestsAsync();
 await client.ExitAsync();
+
+// Non-blocking teardown. The trailing Dispose from the `using` is then a no-op.
+await client.ShutdownAsync();
+Console.WriteLine(client.ServerExitCode);
 ```
 
 Things to know:
 
-- **Ownership.** The returned client owns the hosted application. Disposing it closes the transport —
+- **Ownership.** The returned client owns the hosted application. Tearing it down closes the transport —
   which is how a server-mode application is asked to stop — and then waits for your callback. Call
   `ExitAsync` first for a protocol-level shutdown.
-- **Bounded shutdown.** Disposal waits at most `MtpServerClientOptions.ServerShutdownTimeout`
+- **Prefer `ShutdownAsync()` over `Dispose()`.** `Dispose()` performs that wait **synchronously on the
+  calling thread**, so on a platform with a responsiveness watchdog (Android ANR, the iOS watchdog) it can
+  trip it. `await client.ShutdownAsync()` does the same work without blocking; a following `Dispose()`
+  returns immediately. Both are idempotent.
+- **Bounded shutdown.** Teardown waits at most `MtpServerClientOptions.ServerShutdownTimeout`
   (default 30 seconds), then cancels the token passed to your callback and waits a further fixed
   5 seconds. A callback still running after that is abandoned rather than hanging your app; its failure
-  is reported through `MtpServerClientOptions.Logger`.
+  is reported through `MtpServerClientOptions.Logger`. A *failed launch* skips the graceful wait
+  entirely — the callback's token is canceled immediately and only the fixed 5-second grace applies —
+  so an unwinding caller never waits for `ServerShutdownTimeout`.
 - **Cancellation.** The `cancellationToken` passed to `LaunchInProcessAsync` scopes the *launch* only.
-  Once the client exists, canceling it no longer affects the hosted application. Per-request
-  cancellation is unchanged: canceling a `RunTestsAsync`/`DiscoverTestsAsync` token sends
+  Once the client exists, canceling it no longer affects the hosted application. Cancellation is bounded
+  rather than immediate: the unwind waits up to 5 seconds for the callback to stop before abandoning it.
+  Per-request cancellation is unchanged — canceling a `RunTestsAsync`/`DiscoverTestsAsync` token sends
   `$/cancelRequest`.
+- **Exit code.** `client.ServerExitCode` carries the value your callback returned (typically
+  `TestApplication.RunAsync`'s exit code) once teardown has completed.
 - **Failures before connection.** If the callback throws, is canceled, or returns before dialing back,
   the launch fails with `MtpServerConnectionClosedException` and your exception is preserved as the
   inner exception (instead of surfacing as a misleading connection timeout).
-- **Threading.** The callback is invoked on the thread pool, so it never blocks the caller and never
-  inherits the caller's synchronization context. There is no synchronous overload on purpose.
+- **Threading.** The callback is invoked on the thread pool, so the launch never blocks the caller and
+  the callback never inherits the caller's synchronization context. There is no synchronous
+  `LaunchInProcess` overload on purpose.
 - **`EnvironmentVariables` is ignored** on this path: the application shares your process's
   environment. Set the variables before starting the host.
 - **Platform limits.** Both launch paths use loopback TCP. On browser/WASM there is no listening

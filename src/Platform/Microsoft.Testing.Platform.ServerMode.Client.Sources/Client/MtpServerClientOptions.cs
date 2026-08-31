@@ -62,9 +62,11 @@ internal sealed class MtpServerClientOptions
     /// callback's cancellation token is canceled. Defaults to 30 seconds.
     /// </summary>
     /// <remarks>
-    /// Disposal is bounded by this value plus a further fixed 5-second grace after cancellation is requested;
-    /// a callback still running after that is abandoned rather than hanging the caller. This option has no
-    /// effect on the external-process launch path, which kills the child process instead.
+    /// Disposal waits at most <see cref="MtpServerClientOptions.ServerShutdownTimeout"/> after the transport
+    /// is closed, plus a further fixed 5 seconds after the callback's token is canceled. This option has no
+    /// effect on the external-process launch path, which kills the child process instead, and it does not
+    /// apply to a <em>failed</em> launch: nothing is connected there, so the callback is canceled immediately
+    /// and only the fixed 5-second grace applies.
     /// </remarks>
     public TimeSpan ServerShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
 

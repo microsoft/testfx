@@ -49,6 +49,10 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         _serverCancellation = serverCancellation;
         _shutdownTimeout = shutdownTimeout;
         _logger = logger;
+
+        // Snapshot once: the id cannot change for the lifetime of the host, and resolving it allocates and
+        // disposes a Process instance, which a property read must not do on every access.
+        ProcessId = MtpServerConnector.GetCurrentProcessId();
     }
 
     /// <inheritdoc />
@@ -58,7 +62,13 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// Gets the id of the process the application runs in. The application is hosted in the caller's own
     /// process, so this is always the current process id.
     /// </summary>
-    public int ProcessId => MtpServerConnector.GetCurrentProcessId();
+    public int ProcessId { get; }
+
+    /// <summary>
+    /// Gets the exit code the hosted application returned, or <see langword="null"/> while it is still
+    /// running (or when it failed or was abandoned rather than returning one).
+    /// </summary>
+    public int? ExitCode { get; private set; }
 
     /// <summary>
     /// Starts the application through <paramref name="serverEntryPoint"/> and waits for it to connect back.
@@ -71,6 +81,17 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// <param name="options">Client options (connection timeout, shutdown timeout, logger).</param>
     /// <param name="cancellationToken">Cancels the launch and the connection wait.</param>
     /// <exception cref="PlatformNotSupportedException">The current platform has no loopback TCP support.</exception>
+    /// <exception cref="MtpServerConnectionClosedException">
+    /// The application failed, was canceled, or exited before connecting back, or did not connect back within
+    /// <see cref="MtpServerClientOptions.ConnectionTimeout"/>. The callback's own exception, when there is one,
+    /// is the inner exception.
+    /// </exception>
+    /// <remarks>
+    /// When the launch fails the callback is abandoned promptly: its token is canceled straight away (there is
+    /// no connected transport whose closure could signal it) and it is then given the same fixed 5-second
+    /// grace disposal uses, so an unwinding caller never waits for
+    /// <see cref="MtpServerClientOptions.ServerShutdownTimeout"/>.
+    /// </remarks>
     public static async Task<MtpServerInProcessHost> StartAsync(
         Func<string[], CancellationToken, Task<int>> serverEntryPoint,
         MtpServerClientOptions options,
@@ -159,11 +180,15 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
 
             if (serverTask is not null)
             {
-                // The launch is being abandoned, so ask the callback to stop straight away rather than first
-                // spending the full shutdown timeout on a graceful wait: there is no connected transport whose
-                // closure could signal it, and the caller (often a canceling one) is waiting on this unwind.
-                SafeCancel(serverCancellation!, logger);
-                await ShutdownServerAsync(serverTask, serverCancellation!, options.ServerShutdownTimeout, logger).ConfigureAwait(false);
+                // The launch is being abandoned, so skip the graceful wait entirely: there is no connected
+                // transport whose closure could signal the callback, and the caller (often a canceling one) is
+                // waiting on this unwind. A zero graceful timeout goes straight to cancel-then-grace.
+                if (!await ShutdownServerAsync(serverTask, serverCancellation!, TimeSpan.Zero, logger).ConfigureAwait(false))
+                {
+                    // The callback is still running and still holds the token; disposing its source now would
+                    // turn a clean abandonment into an ObjectDisposedException inside the caller's own code.
+                    throw;
+                }
             }
 
             SafeDispose(serverCancellation, logger, "Disposing the server cancellation source");
@@ -179,6 +204,10 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// transport is closed, plus a further 5 seconds after the callback's token is canceled. If the callback
     /// is still running after that it is abandoned (its failure is still observed and logged) rather than
     /// hanging the caller. Disposal never throws, so it cannot mask a failure that is already propagating.
+    /// <para>
+    /// The wait happens synchronously on the calling thread. Prefer <see cref="ShutdownAsync"/> on platforms
+    /// with a responsiveness watchdog; disposing afterwards then returns immediately.
+    /// </para>
     /// </remarks>
     public void Dispose()
     {
@@ -187,20 +216,55 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             return;
         }
 
-        // Close the transport first. A server-mode application exits its message loop when the client's
-        // connection reaches EOF, so this is the graceful stop signal even for a callback that ignores the
-        // cancellation token (the common case: TestApplication.RunAsync takes none).
-        Connection.Dispose();
-        SafeDispose(_client, _logger, "Disposing the accepted client socket");
-        MtpServerConnector.SafeStop(_listener, _logger);
+        CloseTransport();
 
         // Run the bounded wait off the caller's synchronization context: a host that disposes from a UI
         // thread must not deadlock against a continuation that wants that same thread.
-        Task.Run(() => ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger))
+        bool stopped = Task.Run(() => ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger))
             .GetAwaiter()
             .GetResult();
 
-        SafeDispose(_serverCancellation, _logger, "Disposing the server cancellation source");
+        CompleteShutdown(stopped);
+    }
+
+    /// <inheritdoc />
+    public async Task ShutdownAsync()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+        {
+            return;
+        }
+
+        CloseTransport();
+        bool stopped = await ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger).ConfigureAwait(false);
+        CompleteShutdown(stopped);
+    }
+
+    /// <summary>
+    /// Closes the transport. A server-mode application exits its message loop when the client's connection
+    /// reaches EOF, so this is the graceful stop signal even for a callback that ignores the cancellation
+    /// token (the common case: <c>TestApplication.RunAsync</c> takes none).
+    /// </summary>
+    private void CloseTransport()
+    {
+        Connection.Dispose();
+        SafeDispose(_client, _logger, "Disposing the accepted client socket");
+        MtpServerConnector.SafeStop(_listener, _logger);
+    }
+
+    private void CompleteShutdown(bool stopped)
+    {
+        if (_serverTask.Status == TaskStatus.RanToCompletion)
+        {
+            ExitCode = _serverTask.Result;
+        }
+
+        if (stopped)
+        {
+            // Only safe once the callback has finished: an abandoned one still holds the token, and
+            // token.WaitHandle / CreateLinkedTokenSource would then throw inside the caller's own code.
+            SafeDispose(_serverCancellation, _logger, "Disposing the server cancellation source");
+        }
     }
 
     /// <summary>
@@ -251,21 +315,42 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// Waits for the hosted application to finish, escalating to cancellation and then to abandonment. Never
     /// throws: the application's own failure is observed and logged so it cannot mask the caller's failure.
     /// </summary>
-    private static async Task ShutdownServerAsync(
+    /// <param name="serverTask">The running callback.</param>
+    /// <param name="serverCancellation">The cancellation source handed to the callback.</param>
+    /// <param name="gracefulTimeout">
+    /// How long the callback is given to stop on its own before its token is canceled.
+    /// <see cref="TimeSpan.Zero"/> skips the graceful wait, which is what an abandoned launch wants: nothing
+    /// has been connected, so there is no transport closure for the callback to observe.
+    /// </param>
+    /// <param name="logger">Sink for the shutdown diagnostics.</param>
+    /// <returns>
+    /// <see langword="true"/> when the callback finished, <see langword="false"/> when it was abandoned while
+    /// still running. The caller uses this to decide whether it may dispose the cancellation source: an
+    /// abandoned callback still holds the token, and <c>token.WaitHandle</c> or
+    /// <c>CancellationTokenSource.CreateLinkedTokenSource(token)</c> would throw
+    /// <see cref="ObjectDisposedException"/> inside the caller's own code.
+    /// </returns>
+    private static async Task<bool> ShutdownServerAsync(
         Task<int> serverTask,
         CancellationTokenSource serverCancellation,
-        TimeSpan shutdownTimeout,
+        TimeSpan gracefulTimeout,
         IMtpClientLogger logger)
     {
-        if (!await MtpServerConnector.WaitBoundedAsync(serverTask, shutdownTimeout).ConfigureAwait(false))
+        bool stopped = true;
+        if (!await MtpServerConnector.WaitBoundedAsync(serverTask, gracefulTimeout).ConfigureAwait(false))
         {
-            logger.SafeLog(
-                MtpClientLogLevel.Debug,
-                $"The in-process MTP application did not stop within {shutdownTimeout.TotalSeconds:N0}s of the transport closing; requesting cancellation.");
+            if (gracefulTimeout > TimeSpan.Zero)
+            {
+                logger.SafeLog(
+                    MtpClientLogLevel.Debug,
+                    $"The in-process MTP application did not stop within {gracefulTimeout.TotalSeconds:N0}s of the transport closing; requesting cancellation.");
+            }
+
             SafeCancel(serverCancellation, logger);
 
             if (!await MtpServerConnector.WaitBoundedAsync(serverTask, CancellationGrace).ConfigureAwait(false))
             {
+                stopped = false;
                 logger.SafeLog(
                     MtpClientLogLevel.Warning,
                     $"The in-process MTP application is still running {CancellationGrace.TotalSeconds:N0}s after cancellation was requested; abandoning it.");
@@ -273,6 +358,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         }
 
         MtpServerConnector.ObserveFailure(serverTask, logger, "The in-process MTP application failed");
+        return stopped;
     }
 
     private static void SafeCancel(CancellationTokenSource cancellationTokenSource, IMtpClientLogger logger)

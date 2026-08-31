@@ -78,6 +78,34 @@ internal sealed class MtpServerProcess : IMtpServerHost
     }
 
     /// <summary>
+    /// Gets the exit code of the launched application, or <see langword="null"/> while it is still running.
+    /// </summary>
+    public int? ExitCode
+    {
+        get
+        {
+            try
+            {
+                return _process.HasExited ? _process.ExitCode : null;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
+            {
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tears the process down. Killing a child process is already a bounded, non-awaiting operation, so this
+    /// completes the synchronous teardown; it exists so both hosts expose one shutdown contract.
+    /// </summary>
+    public Task ShutdownAsync()
+    {
+        Dispose();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Launches the MTP application at <paramref name="source"/> and waits for it to connect back.
     /// </summary>
     /// <param name="source">
@@ -259,6 +287,12 @@ internal sealed class MtpServerProcess : IMtpServerHost
 
     internal static LaunchCommand BuildLaunch(string source, int port)
     {
+        // Deliberately NOT composed from MtpServerConnector.BuildInProcessServerArguments: this string is the
+        // command line an already-shipped API hands to already-shipped test applications, so it is kept
+        // byte-identical rather than gaining the in-process path's explicit protocol and host. The server
+        // maps its 'localhost' default to IPAddress.Loopback, which is what the listener binds, so the two
+        // forms are equivalent on the wire; only the in-process array states them explicitly because an
+        // embedded host reads it as the documentation of what the client asked for.
         string serverArgs = $"{ServerArgument} {ClientPortArgument} {port} {NoBannerArgument}";
         string workingDirectory = Path.GetDirectoryName(source) ?? Directory.GetCurrentDirectory();
         string extension = Path.GetExtension(source);
