@@ -82,11 +82,6 @@ internal sealed class MtpServerProcess : IDisposable
         }
     }
 
-    internal int ExitCode => _process.ExitCode;
-
-    internal Task WaitForExitAsync(CancellationToken cancellationToken = default)
-        => _process.WaitForExitAsync(cancellationToken);
-
     /// <summary>
     /// Launches the MTP application at <paramref name="source"/> and waits for it to connect back.
     /// </summary>
