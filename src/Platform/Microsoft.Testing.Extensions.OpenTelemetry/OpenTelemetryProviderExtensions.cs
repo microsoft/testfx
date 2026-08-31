@@ -129,16 +129,12 @@ public static class OpenTelemetryProviderExtensions
     {
         _ = builder ?? throw new ArgumentNullException(nameof(builder));
 
-        if (IsTrue(Environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.SdkDisabled)))
-        {
-            return;
-        }
+        EnvironmentConfiguration configuration = ResolveEnvironmentConfiguration(
+            Environment.GetEnvironmentVariable,
+            hasTracingDelegate: configureTracing is not null,
+            hasMetricsDelegate: configureMetrics is not null);
 
-        bool useOtlpTracing = UseOtlpExporter(OpenTelemetryEnvironmentVariables.TracesExporter);
-        bool useOtlpMetrics = UseOtlpExporter(OpenTelemetryEnvironmentVariables.MetricsExporter);
-        bool configureTracingProvider = useOtlpTracing || configureTracing is not null;
-        bool configureMetricsProvider = useOtlpMetrics || configureMetrics is not null;
-        if (!configureTracingProvider && !configureMetricsProvider)
+        if (!configuration.ShouldRegisterProvider)
         {
             return;
         }
@@ -149,14 +145,14 @@ public static class OpenTelemetryProviderExtensions
                 // Registering the source installs an ActivityListener that samples and fully tags every span, so
                 // when nothing will consume them we must not instrument at all - otherwise every test allocates a
                 // span (and copies its whole stdout/stderr into tags) just to have it dropped.
-                if (configureTracingProvider)
+                if (configuration.ConfigureTracingProvider)
                 {
                     tracing
                         .AddTestingPlatformInstrumentation()
                         .ConfigureResource(resource => resource.AddTestingPlatformResource());
                 }
 
-                if (useOtlpTracing)
+                if (configuration.UseOtlpTracing)
                 {
                     tracing.AddOtlpExporter();
                 }
@@ -165,14 +161,14 @@ public static class OpenTelemetryProviderExtensions
             },
             metrics =>
             {
-                if (configureMetricsProvider)
+                if (configuration.ConfigureMetricsProvider)
                 {
                     metrics
                         .AddTestingPlatformInstrumentation()
                         .ConfigureResource(resource => resource.AddTestingPlatformResource());
                 }
 
-                if (useOtlpMetrics)
+                if (configuration.UseOtlpMetrics)
                 {
                     metrics.AddOtlpExporter();
                 }
@@ -181,14 +177,44 @@ public static class OpenTelemetryProviderExtensions
             });
     }
 
-    private static bool UseOtlpExporter(string environmentVariableName)
+    /// <summary>
+    /// Resolves, from the standard <c>OTEL_*</c> environment variables, whether the tracing and metrics providers
+    /// should be configured and whether the OTLP exporter should be attached to each. Kept as a pure function -
+    /// reading environment values through <paramref name="getEnvironmentVariable"/> rather than
+    /// <see cref="Environment.GetEnvironmentVariable(string)"/> directly - so the decision can be unit-tested
+    /// without a live <see cref="ITestApplicationBuilder"/>.
+    /// </summary>
+    /// <param name="getEnvironmentVariable">Resolves an environment variable by name.</param>
+    /// <param name="hasTracingDelegate">Whether the caller passed a tracing configuration delegate.</param>
+    /// <param name="hasMetricsDelegate">Whether the caller passed a metrics configuration delegate.</param>
+    /// <returns>The resolved configuration decision.</returns>
+    internal static EnvironmentConfiguration ResolveEnvironmentConfiguration(
+        Func<string, string?> getEnvironmentVariable,
+        bool hasTracingDelegate,
+        bool hasMetricsDelegate)
     {
-        string? configured = Environment.GetEnvironmentVariable(environmentVariableName);
+        // OTEL_SDK_DISABLED wins over everything, including an explicit endpoint or a caller-supplied delegate.
+        if (IsTrue(getEnvironmentVariable(OpenTelemetryEnvironmentVariables.SdkDisabled)))
+        {
+            return EnvironmentConfiguration.Disabled;
+        }
+
+        bool useOtlpTracing = UseOtlpExporter(getEnvironmentVariable, OpenTelemetryEnvironmentVariables.TracesExporter);
+        bool useOtlpMetrics = UseOtlpExporter(getEnvironmentVariable, OpenTelemetryEnvironmentVariables.MetricsExporter);
+        bool configureTracingProvider = useOtlpTracing || hasTracingDelegate;
+        bool configureMetricsProvider = useOtlpMetrics || hasMetricsDelegate;
+
+        return new EnvironmentConfiguration(configureTracingProvider, configureMetricsProvider, useOtlpTracing, useOtlpMetrics);
+    }
+
+    private static bool UseOtlpExporter(Func<string, string?> getEnvironmentVariable, string environmentVariableName)
+    {
+        string? configured = getEnvironmentVariable(environmentVariableName);
 
         // Mirror the behavior of the OpenTelemetry auto-instrumentation: an endpoint alone is enough to opt in.
         if (OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(configured))
         {
-            return !OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint));
+            return !OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(getEnvironmentVariable(OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint));
         }
 
         // The specification defines these variables as comma-separated lists, so 'otlp,console' must still enable
@@ -204,6 +230,55 @@ public static class OpenTelemetryProviderExtensions
         return false;
     }
 
+    // OTEL_SDK_DISABLED follows the OpenTelemetry boolean convention: only a case-insensitive "true" enables it,
+    // any other value (including "1" or leading/trailing whitespace) leaves the SDK enabled. This is
+    // intentionally stricter than the CI-marker parsing in TestingPlatformResourceDetector, which recognises
+    // provider-specific spellings.
     private static bool IsTrue(string? value)
-        => value is "1" or "true" or "True" or "TRUE";
+        => value is not null && value.Equals("true", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The decision produced by <see cref="ResolveEnvironmentConfiguration"/>: which providers to configure and
+    /// whether to attach the OTLP exporter to each.
+    /// </summary>
+    internal readonly struct EnvironmentConfiguration
+    {
+        public EnvironmentConfiguration(bool configureTracingProvider, bool configureMetricsProvider, bool useOtlpTracing, bool useOtlpMetrics)
+        {
+            ConfigureTracingProvider = configureTracingProvider;
+            ConfigureMetricsProvider = configureMetricsProvider;
+            UseOtlpTracing = useOtlpTracing;
+            UseOtlpMetrics = useOtlpMetrics;
+        }
+
+        /// <summary>
+        /// Gets the decision returned when <c>OTEL_SDK_DISABLED</c> is set: nothing is configured.
+        /// </summary>
+        public static EnvironmentConfiguration Disabled => default;
+
+        /// <summary>
+        /// Gets a value indicating whether the tracing provider should be instrumented with the platform source and resource.
+        /// </summary>
+        public bool ConfigureTracingProvider { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the metrics provider should be instrumented with the platform meter and resource.
+        /// </summary>
+        public bool ConfigureMetricsProvider { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the OTLP exporter should be attached to the tracing provider.
+        /// </summary>
+        public bool UseOtlpTracing { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the OTLP exporter should be attached to the metrics provider.
+        /// </summary>
+        public bool UseOtlpMetrics { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether any provider should be registered at all. When false the whole helper is a no-op.
+        /// </summary>
+        public bool ShouldRegisterProvider => ConfigureTracingProvider || ConfigureMetricsProvider;
+    }
 }
