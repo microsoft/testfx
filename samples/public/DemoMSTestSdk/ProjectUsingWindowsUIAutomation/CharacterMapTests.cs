@@ -28,7 +28,7 @@ public class CharacterMapTests : WindowTest
     }
 
     [TestMethod]
-    public void CharacterMap_MainWindow_HasTitle()
+    public void CharacterMap_MainWindow_HasNonEmptyTitle()
     {
         Assert.IsFalse(
             string.IsNullOrWhiteSpace(MainWindow.Current.Name),

@@ -389,7 +389,7 @@ public class CharacterMapTests : WindowTest
     }
 
     [TestMethod]
-    public void CharacterMap_MainWindow_HasExpectedTitle()
+    public void CharacterMap_MainWindow_HasNonEmptyTitle()
     {
         string title = MainWindow.Current.Name;
         Assert.IsFalse(string.IsNullOrEmpty(title), "Window title should not be empty.");
