@@ -39,6 +39,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
     private const string AssetName = "MtpServerClientCancellationAsset";
     private const string ExpectedTestDisplayName = "LongRunningCancellableTest";
     private const string SignalFileEnvironmentVariable = "MTP_CANCELLATION_SIGNAL_FILE";
+    private const string BodyStartedSignalFileEnvironmentVariable = "MTP_BODY_STARTED_SIGNAL_FILE";
     private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(60);
 
     public TestContext TestContext { get; set; } = null!;
@@ -50,17 +51,22 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         string source = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent).FullName;
 
         string signalFilePath = Path.Combine(Path.GetTempPath(), $"mtp-cancellation-signal-{Guid.NewGuid():N}.txt");
+        string bodyStartedSignalFilePath = Path.Combine(Path.GetTempPath(), $"mtp-cancellation-body-started-{Guid.NewGuid():N}.txt");
         File.Delete(signalFilePath);
+        File.Delete(bodyStartedSignalFilePath);
         try
         {
-            // Signaled from the 'in-progress' test-node update, proving the test has actually started (as opposed
-            // to a timing-only sleep that could race with test startup).
+            // Signaled from the 'in-progress' test-node update, proving the platform recorded the test as
+            // started. This alone is not sufficient proof that the test method's body is executing: MSTest
+            // publishes 'in-progress' before RunSingleTestAsync, which still runs TestInitialize/constructors
+            // before invoking the method (see TestExecutionManager.Runner.cs). bodyStartedSignalFilePath below
+            // closes that gap.
             TaskCompletionSource testStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
             List<MtpTestNodeUpdate> allUpdates = [];
             object updatesGate = new();
 
-            using var client = MtpServerClient.Launch(source, CreateOptions(signalFilePath));
+            using var client = MtpServerClient.Launch(source, CreateOptions(signalFilePath, bodyStartedSignalFilePath));
             client.TestNodesUpdated += (_, e) =>
             {
                 lock (updatesGate)
@@ -82,9 +88,13 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
             using CancellationTokenSource runCancellation = new();
             Task<MtpRunResult> runTask = client.RunTestsAsync(runCancellation.Token);
 
-            // Wait until the server confirms the test is actually running before canceling. This avoids a
-            // timing-only race between "cancel" and "test has started" that a blind Task.Delay would risk.
-            await testStarted.Task.WaitAsync(WaitTimeout, testTimeoutToken);
+            // Wait for both: the platform's 'in-progress' node update, and the test method itself signaling
+            // (via bodyStartedSignalFilePath, written immediately before it awaits the cancellable delay) that
+            // its body has actually reached the point where it awaits TestContext.CancellationToken. Only the
+            // second removes the race the first alone leaves open - see the field-level remarks above.
+            Task testNodeStartedTask = testStarted.Task.WaitAsync(WaitTimeout, testTimeoutToken);
+            Task testBodyStartedTask = WaitForFileAsync(bodyStartedSignalFilePath, WaitTimeout, testTimeoutToken);
+            await Task.WhenAll(testNodeStartedTask, testBodyStartedTask);
 
             await runCancellation.CancelAsync();
 
@@ -134,6 +144,8 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         {
             File.Delete(signalFilePath);
             File.Delete(signalFilePath + ".tmp");
+            File.Delete(bodyStartedSignalFilePath);
+            File.Delete(bodyStartedSignalFilePath + ".tmp");
         }
     }
 
@@ -179,7 +191,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
             ? "<none>"
             : string.Join(", ", nodes.Select(n => $"[uid={n.Uid}, name={n.DisplayName}, type={n.NodeType}, state={n.ExecutionState}, error={n.ErrorMessage}]"));
 
-    private static MtpServerClientOptions CreateOptions(string signalFilePath)
+    private static MtpServerClientOptions CreateOptions(string signalFilePath, string bodyStartedSignalFilePath)
     {
         MtpServerClientOptions options = new();
 
@@ -203,6 +215,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         options.EnvironmentVariables["TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION"] = "0";
 
         options.EnvironmentVariables[SignalFileEnvironmentVariable] = signalFilePath;
+        options.EnvironmentVariables[BodyStartedSignalFileEnvironmentVariable] = bodyStartedSignalFilePath;
 
         return options;
     }
@@ -240,6 +253,13 @@ public class UnitTest1
     [TestMethod]
     public async Task LongRunningCancellableTest()
     {
+        // Signal that the method body has actually been entered and is about to await the cancellable delay -
+        // as opposed to the platform's 'in-progress' test-node update, which is published before
+        // RunSingleTestAsync even runs TestInitialize/constructors, let alone this method. Waiting on this
+        // signal (rather than only the node update) is what lets the acceptance test cancel with certainty
+        // that this delay - not some earlier setup step - is what will observe the cancellation.
+        WriteMarkerFile("MTP_BODY_STARTED_SIGNAL_FILE", "body started");
+
         // Runs until the server-mode client cancels the request. The platform then cancels
         // TestContext.CancellationToken, which this awaited delay observes directly, proving cancellation
         // propagated all the way from the client into the executing test. The catch block below writes a
@@ -252,19 +272,25 @@ public class UnitTest1
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == TestContext.CancellationToken)
         {
-            string? signalFilePath = Environment.GetEnvironmentVariable("MTP_CANCELLATION_SIGNAL_FILE");
-            if (signalFilePath is not null)
-            {
-                // Write to a sibling temp file and rename into place so the acceptance test - which polls via
-                // File.Exists - never observes an empty or partially written marker file. File.Move onto the
-                // final path is atomic on both Windows and Unix.
-                string tempSignalFilePath = signalFilePath + ".tmp";
-                File.WriteAllText(tempSignalFilePath, $"{nameof(LongRunningCancellableTest)} observed TestContext.CancellationToken");
-                File.Move(tempSignalFilePath, signalFilePath);
-            }
-
+            WriteMarkerFile("MTP_CANCELLATION_SIGNAL_FILE", $"{nameof(LongRunningCancellableTest)} observed TestContext.CancellationToken");
             throw;
         }
+    }
+
+    private static void WriteMarkerFile(string environmentVariable, string contents)
+    {
+        string? path = Environment.GetEnvironmentVariable(environmentVariable);
+        if (path is null)
+        {
+            return;
+        }
+
+        // Write to a sibling temp file and rename into place so the acceptance test - which polls via
+        // File.Exists - never observes an empty or partially written marker file. File.Move onto the final
+        // path is atomic on both Windows and Unix.
+        string tempPath = path + ".tmp";
+        File.WriteAllText(tempPath, contents);
+        File.Move(tempPath, path);
     }
 }
 """;
