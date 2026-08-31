@@ -29,8 +29,9 @@ tools:
 # gh-aw auto-footer is therefore disabled on every comment handler below so the
 # attribution is not duplicated (a single header is enough).
 safe-outputs:
-  # Pin the detector because the default model has emitted malformed JSON (#10438).
-  # Explain this workflow's trusted orchestration to avoid false positives (#10696).
+  # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
+  # false positives and malformed result markers (#10821). Explain this workflow's
+  # trusted orchestration to avoid false positives (#10696).
   threat-detection:
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
@@ -46,7 +47,7 @@ safe-outputs:
       backslashes inside reason strings.
     engine:
       id: copilot
-      model: gpt-5-mini
+      model: detection
   create-pull-request-review-comment:
     max: 30
     footer: "none"

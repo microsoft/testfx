@@ -253,40 +253,37 @@ that the marker was found and then failed to parse:
   [Copilot CLI installer failure](#detection-job-fails-at-install-github-copilot-cli), or another
   job-level failure that stopped the model before it answered.
 
-**Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the line starts with
-`**THREAT_…` instead of `THREAT_…`. gh-aw's parser slices the JSON at a fixed offset from the start
-of the line instead of from the index of the marker it just located, so the two extra characters
-move the cut two positions into `RESULT` and it tries to parse `T:{"prompt"…`. This cannot be fixed
-in this repository: the parser is `parse_threat_detection_results.cjs` inside the gh-aw actions
-bundle that every run downloads to `${{ runner.temp }}/gh-aw/actions`.
+**Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the
+line starts with `**THREAT_…` instead of `THREAT_…`. Another run appended the marker directly after
+prose instead of starting it on a new line. gh-aw's fallback parser requires the marker at the start
+of the line, so either format is rejected even when the JSON itself is valid.
 
 Another observed cause is invalid JSON inside an otherwise correctly positioned marker, such as a
 reason string containing an unescaped quoted gh-aw redaction marker. The affected workflow should
 constrain the detector prompt to emit exactly one single-line result and JSON-escape quotes and
 backslashes inside reason strings.
 
-**Status.** Mitigated by pinning the detector to a model that does not add the emphasis, rather than
-by changing the parser. `safe-outputs.threat-detection.engine.model: gpt-5-mini` was applied to the
-expert-review workflows in [#10684](https://github.com/microsoft/testfx/pull/10684) and to every
-remaining workflow that runs threat detection in
-[#10729](https://github.com/microsoft/testfx/pull/10729). Runs after the pin locate and parse the
-marker with no error.
+**Status.** The original mitigation pinned every detector to `gpt-5-mini` in
+[#10729](https://github.com/microsoft/testfx/pull/10729). Detection runs tracked by
+[#10821](https://github.com/microsoft/testfx/issues/10821) showed that the pin was unreliable: it
+still emitted a misplaced marker and repeatedly classified trusted workflow orchestration as prompt
+injection even when its own reasons said no malicious injection was present. The concrete override
+was replaced with gh-aw's maintained `detection` model alias.
 
-**What to do.** Check that the workflow's source, or a `shared/*.md` it imports, declares the pin,
-and add it if a newly added workflow was missed:
+**What to do.** Use the `detection` alias instead of pinning a concrete detector model:
 
 ```yaml
 safe-outputs:
   threat-detection:
     engine:
       id: copilot
-      model: gpt-5-mini
+      model: detection
 ```
 
-Then recompile with `gh aw compile --strict` and confirm the regenerated lock reports
-`COPILOT_MODEL: gpt-5-mini`. Never hand-edit a `.lock.yml` and never disable threat detection to
-avoid the parse failure. The detection run itself was clean; only its result line was unreadable,
-so turning the check off would remove a security control that is working.
+Then recompile with `gh aw compile --strict` and confirm the generated detection step reports
+`COPILOT_MODEL: detection`. Never hand-edit a `.lock.yml` or disable threat detection to avoid a
+parser or model failure; both approaches remove or bypass a security control instead of fixing the
+cause.
 
 ## Catalog
 
