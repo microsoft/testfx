@@ -203,7 +203,8 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         testSessionContext.CancellationToken.ThrowIfCancellationRequested();
-        _testStartTime = Clock.UtcNow;
+        DateTimeOffset testStartTime = Clock.UtcNow;
+        _testStartTime = testStartTime;
         if (_journalPath is not null)
         {
             if (ReportControllerMode.IsSupported)
@@ -215,7 +216,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
                 TryWriteJournalBatch(
                 [
                     ReportJournalRecord<TCapturedTestResult>.CreateHeader(
-                        _testStartTime.Value,
+                        testStartTime,
                         Environment.ProcessId,
                         TestFramework),
                 ]);
@@ -223,7 +224,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
             EnqueueJournalRecord(
                 ReportJournalRecord<TCapturedTestResult>.CreateHeader(
-                    _testStartTime.Value,
+                    testStartTime,
                     Environment.ProcessId,
                     TestFramework),
                 inlineAlreadyWritten: !ReportControllerMode.IsSupported);
