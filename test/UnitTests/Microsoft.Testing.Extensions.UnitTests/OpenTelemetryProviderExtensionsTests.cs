@@ -24,13 +24,13 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// plus an end-to-end trace test that runs the real OpenTelemetry SDK pipeline.
 /// </summary>
 /// <remarks>
-/// The end-to-end test stands up a real <see cref="TracerProvider"/> listening on the platform activity source, so
-/// the class is <see cref="DoNotParallelizeAttribute"/> to keep only one such provider alive at a time; captured
-/// spans are additionally filtered by a per-test unique name prefix so an ambient provider in the test host cannot
-/// pollute the assertions.
+/// Only the two methods that touch process-global state carry <see cref="DoNotParallelizeAttribute"/>: the one that
+/// mutates real environment variables, and the end-to-end test that stands up a real <see cref="TracerProvider"/>
+/// against the shared platform <c>ActivitySource</c>. The remaining methods use a pure in-memory environment fake
+/// (or only read process state) and stay in the parallel set. Captured spans in the end-to-end test are additionally
+/// filtered by a per-test unique name prefix so an ambient provider in the test host cannot pollute the assertions.
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class OpenTelemetryProviderExtensionsTests
 {
     private static readonly string[] ObservedEnvironmentVariables =
@@ -67,6 +67,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
         => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddOpenTelemetryProviderFromEnvironment());
 
     [TestMethod]
+    [DoNotParallelize]
     public async Task AddOpenTelemetryProviderFromEnvironment_RegistersProviderWithDelegateAndSkipsWhenSdkDisabled()
         => await WithEnvironmentAsync(
             new()
@@ -241,6 +242,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public void EndToEnd_InstrumentationAndResource_ExportSpanWithSemanticConventionTagsAndResource()
     {
         string namePrefix = $"e2e-{Guid.NewGuid():N}-";
