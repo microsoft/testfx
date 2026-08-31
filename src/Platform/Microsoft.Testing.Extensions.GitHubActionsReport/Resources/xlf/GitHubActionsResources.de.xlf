@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">Liest eine begrenzte Momentaufnahme des GitHub Actions Testverlaufs am angegebenen Pfad und aktualisiert ihn. Der Workflow ist dafür verantwortlich, die vorherige Momentaufnahme vor dem Testlauf herunterzuladen und die aktualisierte Datei anschließend hochzuladen. Erfordert '--report-gh'.</target>
         <note>{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
@@ -189,12 +189,12 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">Anzahl der Tage des Testverlaufs, die aufbewahrt und für den Kontext zu instabilen Tests verwendet werden sollen (1–90). Standardwert ist 30. Erfordert '--report-gh-history'.</target>
         <note>{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
-        <target state="new">The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</target>
+        <target state="translated">Die Option '--report-gh-history-window' erfordert, dass '--report-gh-history' angegeben wird.</target>
         <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
