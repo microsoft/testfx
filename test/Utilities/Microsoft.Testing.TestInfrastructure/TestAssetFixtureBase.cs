@@ -173,9 +173,10 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         }
 
         string projectPath = ResolveEntryProject(testAsset.TargetAssetPath, testAsset.AssetId);
+        int cacheBuildId = Interlocked.Increment(ref s_cacheBinlogCounter);
         string binlogPath = Path.Combine(
             TempDirectory.TestSuiteDirectory,
-            $"{binlogBaseFileName}-{Interlocked.Increment(ref s_cacheBinlogCounter)}.binlog");
+            $"{binlogBaseFileName}-{cacheBuildId}.binlog");
         string localCacheRoot = Path.Combine(
             cacheConfiguration.CacheRoot,
             "Content",
@@ -223,6 +224,13 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
         if (exitCode == 0)
         {
+            ReportCacheStatistics(
+                testAsset.AssetId,
+                cacheVariant,
+                cacheConfiguration,
+                cacheBuildId,
+                [.. cacheBuild.StandardOutputLines, .. cacheBuild.ErrorOutputLines]);
+
             if (cacheVariant == "Reflection")
             {
                 // The cache provider's build assets are recorded in project.assets.json during the
@@ -256,6 +264,16 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             + $"falling back to dotnet build.{Environment.NewLine}"
             + $"StandardOutput:{Environment.NewLine}{cacheBuild.StandardOutput}{Environment.NewLine}"
             + $"StandardError:{Environment.NewLine}{cacheBuild.ErrorOutput}");
+        WriteCacheSummary(
+            testAsset.AssetId,
+            cacheVariant,
+            cacheConfiguration,
+            cacheBuildId,
+            outcome: "Fallback",
+            hasStatistics: false,
+            hitCount: 0,
+            missCount: 0,
+            savedSeconds: 0);
         CleanCacheOutputs(testAsset.TargetAssetPath, cacheVariant);
         return await DotnetCli.RunAsync(
             dotnetBuildArguments + " --no-incremental",
@@ -263,6 +281,139 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             warnAsError: false,
             callerMemberName: $"{binlogBaseFileName}_CacheFallback",
             cancellationToken: cancellationToken);
+    }
+
+    private static void ReportCacheStatistics(
+        string assetId,
+        string cacheVariant,
+        CacheConfiguration cacheConfiguration,
+        int cacheBuildId,
+        IReadOnlyList<string> outputLines)
+    {
+        bool hasHitCount = TryReadCacheCount(outputLines, "Cache Hit Count:", out int hitCount);
+        bool hasMissCount = TryReadCacheCount(outputLines, "Cache Miss Count:", out int missCount);
+        bool hasStatistics = hasHitCount && hasMissCount;
+        double hitRatio = hasStatistics && hitCount + missCount > 0
+            ? (double)hitCount / (hitCount + missCount)
+            : 0;
+        double savedSeconds = TryReadSavedProjectSeconds(outputLines, out double value) ? value : 0;
+
+        Console.WriteLine(
+            hasStatistics
+                ? $"Acceptance MSBuild cache [{cacheConfiguration.Mode}] {assetId}/{cacheVariant}: "
+                    + $"{hitCount} hit node(s), {missCount} miss node(s), {hitRatio:P1} hit ratio, "
+                    + $"{savedSeconds:F1} project-seconds saved."
+                : $"Acceptance MSBuild cache [{cacheConfiguration.Mode}] {assetId}/{cacheVariant}: "
+                    + "build succeeded, but MSBuildCache emitted no cache statistics.");
+
+        WriteCacheSummary(
+            assetId,
+            cacheVariant,
+            cacheConfiguration,
+            cacheBuildId,
+            outcome: "Succeeded",
+            hasStatistics,
+            hitCount,
+            missCount,
+            savedSeconds);
+    }
+
+    private static void WriteCacheSummary(
+        string assetId,
+        string cacheVariant,
+        CacheConfiguration cacheConfiguration,
+        int cacheBuildId,
+        string outcome,
+        bool hasStatistics,
+        int hitCount,
+        int missCount,
+        double savedSeconds)
+    {
+        try
+        {
+            string summaryDirectory = Path.Combine(cacheConfiguration.LogRoot, "Summaries");
+            Directory.CreateDirectory(summaryDirectory);
+            File.WriteAllLines(
+                Path.Combine(
+                    summaryDirectory,
+                    $"{cacheConfiguration.AssetKey}-{cacheVariant}-{Environment.ProcessId}-{cacheBuildId}.txt"),
+                [
+                    $"AssetId={assetId}",
+                    $"Variant={cacheVariant}",
+                    $"Mode={cacheConfiguration.Mode}",
+                    $"Outcome={outcome}",
+                    $"HasStatistics={hasStatistics}",
+                    $"Hits={hitCount}",
+                    $"Misses={missCount}",
+                    $"SavedProjectSeconds={savedSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
+                ]);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Console.WriteLine(
+                $"Could not persist acceptance MSBuild cache statistics for {assetId}/{cacheVariant}: {ex.Message}");
+        }
+    }
+
+    private static bool TryReadCacheCount(IReadOnlyList<string> outputLines, string label, out int count)
+    {
+        string? line = outputLines.LastOrDefault(line => line.TrimStart().StartsWith(label, StringComparison.Ordinal));
+        if (line is null)
+        {
+            count = 0;
+            return false;
+        }
+
+        ReadOnlySpan<char> value = line.AsSpan(line.IndexOf(label, StringComparison.Ordinal) + label.Length).TrimStart();
+        int separator = value.IndexOf(' ');
+        if (separator >= 0)
+        {
+            value = value[..separator];
+        }
+
+        return int.TryParse(value, out count);
+    }
+
+    private static bool TryReadSavedProjectSeconds(IReadOnlyList<string> outputLines, out double savedSeconds)
+    {
+        const string SavedPrefix = "(saved ";
+        const string ProjectUnitPrefix = " project-";
+
+        string? line = outputLines.LastOrDefault(line => line.Contains(SavedPrefix, StringComparison.Ordinal));
+        int start = line?.IndexOf(SavedPrefix, StringComparison.Ordinal) ?? -1;
+        int end = line?.IndexOf(ProjectUnitPrefix, StringComparison.Ordinal) ?? -1;
+        if (start < 0 || end <= start)
+        {
+            savedSeconds = 0;
+            return false;
+        }
+
+        start += SavedPrefix.Length;
+        ReadOnlySpan<char> savedValueText = line.AsSpan(start, end - start);
+        if (!double.TryParse(
+                savedValueText,
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.CurrentCulture,
+                out double savedValue)
+            && !double.TryParse(
+                savedValueText,
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out savedValue))
+        {
+            savedSeconds = 0;
+            return false;
+        }
+
+        string unit = line.AsSpan(end + ProjectUnitPrefix.Length).TrimEnd(')').ToString();
+        savedSeconds = unit switch
+        {
+            "seconds" => savedValue,
+            "minutes" => savedValue * 60,
+            "hours" => savedValue * 60 * 60,
+            _ => 0,
+        };
+        return savedSeconds > 0 || savedValue == 0;
     }
 
     private static void CleanCacheOutputs(string assetPath, string cacheVariant)

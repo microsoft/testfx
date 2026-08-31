@@ -135,6 +135,70 @@ steps:
   - pwsh: throw "affectedTestsMode must be 'collect' or 'run' when enableAffectedTests is true."
     displayName: Reject invalid affected-test configuration
 
+- pwsh: |
+    $summaryRoot = "$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)\Summaries"
+    $summaryFiles = if (Test-Path -LiteralPath $summaryRoot -PathType Container) {
+      @(Get-ChildItem -LiteralPath $summaryRoot -Filter '*.txt' -File -ErrorAction SilentlyContinue)
+    }
+    else {
+      @()
+    }
+
+    if ($summaryFiles.Count -eq 0) {
+      Write-Host "No acceptance MSBuild cache statistics were produced. Caching was either skipped or no generated acceptance assets ran."
+      exit 0
+    }
+
+    $records = @(
+      foreach ($file in $summaryFiles) {
+        try {
+          $values = ConvertFrom-StringData -StringData (Get-Content -LiteralPath $file.FullName -Raw)
+          [pscustomobject]@{
+            Variant = $values.Variant
+            Outcome = $values.Outcome
+            HasStatistics = $values.HasStatistics -eq 'True'
+            Hits = [int]$values.Hits
+            Misses = [int]$values.Misses
+            SavedProjectSeconds = [double]::Parse(
+              $values.SavedProjectSeconds,
+              [System.Globalization.CultureInfo]::InvariantCulture)
+          }
+        }
+        catch {
+          Write-Host "##vso[task.logissue type=warning]Could not read acceptance cache summary '$($file.FullName)': $($_.Exception.Message)"
+        }
+      }
+    )
+
+    if ($records.Count -eq 0) {
+      Write-Host "No parseable acceptance MSBuild cache statistics were produced."
+      exit 0
+    }
+
+    $hits = ($records | Measure-Object -Property Hits -Sum).Sum
+    $misses = ($records | Measure-Object -Property Misses -Sum).Sum
+    $totalNodes = $hits + $misses
+    $hitRatio = if ($totalNodes -eq 0) { 0 } else { $hits / $totalNodes }
+    $savedProjectSeconds = ($records | Measure-Object -Property SavedProjectSeconds -Sum).Sum
+    $fallbacks = @($records | Where-Object Outcome -EQ 'Fallback').Count
+    $missingStatistics = @(
+      $records | Where-Object { -not $_.HasStatistics -and $_.Outcome -ne 'Fallback' }
+    ).Count
+
+    Write-Host "Acceptance MSBuild cache [${{ parameters.acceptanceTestCacheMode }}]: $($records.Count) generated build attempt(s), $hits hit node(s), $misses miss node(s), $($hitRatio.ToString('P1')) hit ratio, $($savedProjectSeconds.ToString('F1')) project-seconds saved, $fallbacks fallback(s), $missingStatistics successful attempt(s) without statistics."
+
+    $summaryPath = "$(Agent.TempDirectory)\AcceptanceMSBuildCacheSummary-$(_BuildConfig).md"
+    @"
+    # Acceptance MSBuild cache
+
+    | Mode | Generated build attempts | Hit nodes | Miss nodes | Hit ratio | Saved project time | Fallbacks | Successful attempts missing statistics |
+    | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+    | ${{ parameters.acceptanceTestCacheMode }} | $($records.Count) | $hits | $misses | $($hitRatio.ToString('P1')) | $([TimeSpan]::FromSeconds($savedProjectSeconds).ToString()) | $fallbacks | $missingStatistics |
+    "@ | Set-Content -LiteralPath $summaryPath
+    Write-Host "##vso[task.uploadsummary]$summaryPath"
+  displayName: Report acceptance MSBuild cache usage
+  condition: and(always(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
 # A cache hit materializes compiled outputs but does not run Arcade's restore phase, which installs the .NET runtimes
 # declared in global.json. Release gets those runtimes from its sign/pack preparation; initialize them explicitly for
 # the cached Debug leg before launching its unit-test apphosts. This template is only included when tests are enabled.
