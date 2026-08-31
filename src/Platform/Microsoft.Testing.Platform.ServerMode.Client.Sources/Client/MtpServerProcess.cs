@@ -40,8 +40,15 @@ internal sealed class MtpServerProcess : IMtpServerHost
     private readonly IMtpClientLogger _logger;
     private readonly StringBuilder _standardError;
     private readonly TcpClient _client;
+    private readonly object _shutdownLock = new();
 
-    private int _disposed;
+    private Task? _shutdown;
+
+    /// <summary>
+    /// The exit code captured during teardown, boxed so the read is atomic. A <see cref="Process"/> cannot be
+    /// queried once disposed, so the value has to be taken before that happens.
+    /// </summary>
+    private object? _capturedExitCode;
 
     private MtpServerProcess(TcpListener listener, Process process, TcpClient client, MtpJsonRpcConnection connection, StringBuilder standardError, IMtpClientLogger logger)
     {
@@ -80,28 +87,32 @@ internal sealed class MtpServerProcess : IMtpServerHost
     /// <summary>
     /// Gets the exit code of the launched application, or <see langword="null"/> while it is still running.
     /// </summary>
+    /// <remarks>
+    /// Once teardown has run this returns the value captured then: a <see cref="Process"/> cannot be read
+    /// after it is disposed, so a live read would always report <see langword="null"/> afterwards.
+    /// </remarks>
     public int? ExitCode
+        => Volatile.Read(ref _capturedExitCode) is int captured ? captured : TryReadExitCode();
+
+    private int? TryReadExitCode()
     {
-        get
+        try
         {
-            try
-            {
-                return _process.HasExited ? _process.ExitCode : null;
-            }
-            catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
-            {
-                return null;
-            }
+            return _process.HasExited ? _process.ExitCode : null;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
+        {
+            return null;
         }
     }
 
     /// <summary>
-    /// Tears the process down without blocking the caller. Killing a child process is bounded but still
+    /// Tears the process down without blocking the caller: killing a child process is bounded but still
     /// synchronous (it waits for the OS to release the executable's file locks), so it is moved off the
-    /// calling thread to honour the same non-blocking contract the in-process host provides.
+    /// calling thread. Shares the one teardown with <see cref="Dispose"/>.
     /// </summary>
     public Task ShutdownAsync()
-        => Task.Run(Dispose);
+        => StartShutdownAsync();
 
     /// <summary>
     /// Launches the MTP application at <paramref name="source"/> and waits for it to connect back.
@@ -429,27 +440,58 @@ internal sealed class MtpServerProcess : IMtpServerHost
         }
     }
 
+    /// <summary>
+    /// Kills the launched process and releases the transport, waiting synchronously for the bounded kill so a
+    /// caller can immediately delete the application directory.
+    /// </summary>
+    /// <remarks>
+    /// Joins the one teardown rather than starting a second, so a <see cref="Dispose"/> that races or follows
+    /// <see cref="ShutdownAsync"/> still returns only once the process has actually gone.
+    /// </remarks>
     public void Dispose()
+#pragma warning disable VSTHRD002 // Synchronously waiting on tasks - this IS the synchronous disposal path; ShutdownAsync is the awaitable one.
+        => StartShutdownAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+
+    private Task StartShutdownAsync()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+        lock (_shutdownLock)
         {
-            return;
+            return _shutdown ??= Task.Run(ShutdownCore);
         }
+    }
 
-        // Dispose the connection first (cancels the read loop, disposes the handler -> socket/streams).
-        Connection.Dispose();
-
+    private void ShutdownCore()
+    {
         try
         {
-            _client.Dispose();
-        }
-        catch (SocketException ex)
-        {
-            _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
-        }
+            // Dispose the connection first (cancels the read loop, disposes the handler -> socket/streams).
+            Connection.Dispose();
 
-        MtpServerConnector.SafeStop(_listener, _logger);
-        SafeKill(_process, _logger);
-        _process.Dispose();
+            try
+            {
+                _client.Dispose();
+            }
+            catch (SocketException ex)
+            {
+                _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
+            }
+
+            MtpServerConnector.SafeStop(_listener, _logger);
+
+            // Capture before killing, so an application that already exited on its own reports its real exit
+            // code rather than the kill's, and before Dispose(), after which the Process cannot be read.
+            int? exitCode = TryReadExitCode();
+            SafeKill(_process, _logger);
+            Volatile.Write(ref _capturedExitCode, exitCode ?? TryReadExitCode());
+
+            _process.Dispose();
+        }
+        catch (Exception ex)
+        {
+            // The shared teardown task must never fault: every current and future Dispose/ShutdownAsync
+            // caller awaits this one task, so a fault here would throw from every subsequent disposal.
+            _logger.SafeLog(MtpClientLogLevel.Error, $"Tearing down the MTP server process threw: {ex}");
+        }
     }
 }

@@ -94,6 +94,11 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
                 $"Expected exactly one passed action node named '{ExpectedTestDisplayName}'. Collected: {Describe(snapshot)}");
 
             await client.ExitAsync(cancellationToken);
+
+            // The non-blocking teardown on the external-process path: it shares one teardown with Dispose, so
+            // the trailing Dispose from the using block joins the same (already finished) work.
+            await client.ShutdownAsync();
+            Assert.IsNotNull(client.ServerExitCode, "The launched process must have reported an exit code once shutdown completed.");
         }
     }
 

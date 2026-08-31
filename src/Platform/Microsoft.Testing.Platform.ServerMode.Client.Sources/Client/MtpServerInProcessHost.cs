@@ -229,6 +229,12 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// a continuation that wants the caller's synchronization context (a UI thread, typically). Because every
     /// caller receives the same task, <see cref="Dispose"/> and <see cref="ShutdownAsync"/> are idempotent
     /// with respect to each other and to themselves.
+    /// <para>
+    /// <see cref="Task.Run(Func{Task})"/> captures the ambient execution context, so the connection's
+    /// read-loop <see cref="AsyncLocal{T}"/> marker still flows into the teardown. Disposing from inside a
+    /// notification handler therefore continues to skip the connection's read-loop self-wait instead of
+    /// stalling for its shutdown timeout.
+    /// </para>
     /// </remarks>
     private Task StartShutdownAsync()
     {
@@ -240,30 +246,41 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
 
     private async Task ShutdownCoreAsync()
     {
-        // Close the transport first. A server-mode application exits its message loop when the client's
-        // connection reaches EOF, so this is the graceful stop signal even for a callback that ignores the
-        // cancellation token (the common case: TestApplication.RunAsync takes none).
-        Connection.Dispose();
-        SafeDispose(_client, _logger, "Disposing the accepted client socket");
-        MtpServerConnector.SafeStop(_listener, _logger);
-
-        bool stopped = await ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger).ConfigureAwait(false);
-
-        if (_serverTask.Status == TaskStatus.RanToCompletion)
+        try
         {
-            // Reading Result cannot block here: the status check already established the task completed
-            // successfully. Awaiting instead would be wrong, because a faulted or abandoned task must not
-            // throw out of a teardown that is documented never to throw.
+            // Close the transport first. A server-mode application exits its message loop when the client's
+            // connection reaches EOF, so this is the graceful stop signal even for a callback that ignores the
+            // cancellation token (the common case: TestApplication.RunAsync takes none).
+            Connection.Dispose();
+            SafeDispose(_client, _logger, "Disposing the accepted client socket");
+            MtpServerConnector.SafeStop(_listener, _logger);
+
+            bool stopped = await ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger).ConfigureAwait(false);
+
+            if (_serverTask.Status == TaskStatus.RanToCompletion)
+            {
+                // Reading Result cannot block here: the status check already established the task completed
+                // successfully. Awaiting instead would be wrong, because a faulted or abandoned task must not
+                // throw out of a teardown that is documented never to throw.
 #pragma warning disable VSTHRD103 // Result synchronously blocks
-            ExitCode = _serverTask.Result;
+                ExitCode = _serverTask.Result;
 #pragma warning restore VSTHRD103
-        }
+            }
 
-        if (stopped)
+            if (stopped)
+            {
+                // Only safe once nothing holds the token any more: an abandoned callback (or a cancellation
+                // registration still executing) would see token.WaitHandle / CreateLinkedTokenSource throw
+                // inside the caller's own code.
+                SafeDispose(_serverCancellation, _logger, "Disposing the server cancellation source");
+            }
+        }
+        catch (Exception ex)
         {
-            // Only safe once the callback has finished: an abandoned one still holds the token, and
-            // token.WaitHandle / CreateLinkedTokenSource would then throw inside the caller's own code.
-            SafeDispose(_serverCancellation, _logger, "Disposing the server cancellation source");
+            // The shared teardown task must never fault: every current and future Dispose/ShutdownAsync
+            // caller awaits this one task, so a fault here would turn one unlucky teardown into an exception
+            // thrown from every subsequent disposal — on paths documented never to throw.
+            _logger.SafeLog(MtpClientLogLevel.Error, $"Tearing down the in-process MTP application threw: {ex}");
         }
     }
 

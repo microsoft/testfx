@@ -160,11 +160,11 @@ internal interface IMtpServerClient : IDisposable
     /// </summary>
     /// <remarks>
     /// Equivalent to <see cref="IDisposable.Dispose"/> but asynchronous, which matters for an application
-    /// hosted in the caller's own process: disposal waits for the hosted application, and doing that
+    /// hosted in the caller's own process: teardown waits for the hosted application, and doing that
     /// synchronously on a UI thread can trip a platform responsiveness watchdog (Android ANR, the iOS
-    /// watchdog). Calling <see cref="IDisposable.Dispose"/> afterwards is safe and returns immediately, so a
-    /// <c>using</c> block plus an <c>await client.ShutdownAsync()</c> before it leaves is the recommended
-    /// pattern on those platforms.
+    /// watchdog). Both entry points share one teardown, so a following <see cref="IDisposable.Dispose"/> is
+    /// safe and returns as soon as that teardown is done — a <c>using</c> block plus an
+    /// <c>await client.ShutdownAsync()</c> before it leaves is the recommended pattern on those platforms.
     /// </remarks>
     Task ShutdownAsync();
 }

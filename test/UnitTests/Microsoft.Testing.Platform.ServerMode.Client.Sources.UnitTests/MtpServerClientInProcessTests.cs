@@ -317,6 +317,35 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task Dispose_FromANotificationHandler_DoesNotSelfWaitOnTheReadLoop()
+    {
+        // Teardown runs on the thread pool, so the read-loop AsyncLocal marker the connection uses to detect
+        // re-entrant disposal has to survive that hop. If it did not, disposing from a handler would stall
+        // for the connection's read-loop shutdown timeout while the read loop sits in this very handler.
+        using var server = new InProcessServerFixture();
+
+        MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        var disposeElapsed = new TaskCompletionSource<TimeSpan>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TestNodesUpdated += (_, _) =>
+        {
+            var stopwatch = Stopwatch.StartNew();
+            client.Dispose();
+            stopwatch.Stop();
+            disposeElapsed.TrySetResult(stopwatch.Elapsed);
+        };
+
+        await server.Value.SendDiscoveredTestNodeAsync(Guid.NewGuid(), "uid-1", "Test1");
+
+        TimeSpan elapsed = await WithTimeoutAsync(disposeElapsed.Task);
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(4),
+            elapsed,
+            $"Dispose from a notification handler took {elapsed.TotalMilliseconds:F0} ms; it must not self-wait on the read loop.");
+    }
+
+    [TestMethod]
     public async Task Dispose_WhileShutdownAsyncIsInFlight_WaitsForTheSameTeardown()
     {
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -352,15 +381,18 @@ public sealed class MtpServerClientInProcessTests
 
         client.Dispose();
         int afterFirst = server.TransportClosedCount;
+        var stopwatch = Stopwatch.StartNew();
         client.Dispose();
         client.Dispose();
+        stopwatch.Stop();
 
         Assert.AreEqual(1, afterFirst, "The first Dispose must close the transport exactly once.");
-        Assert.AreEqual(
-            1,
-            server.TransportClosedCount,
-            "Repeated Dispose must not run the teardown again; without the guard the transport would be closed once per call.");
+        Assert.AreEqual(1, server.TransportClosedCount, "Repeated Dispose must not tear the application down again.");
         Assert.AreEqual(1, server.CompletionCount, "The hosted application must be torn down exactly once.");
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(2),
+            stopwatch.Elapsed,
+            "A repeated Dispose joins the already-completed teardown, so it must return immediately.");
     }
 
     [TestMethod]
@@ -518,17 +550,31 @@ public sealed class MtpServerClientInProcessTests
             "An in-process application shares the caller's environment, so silently dropping the variables would be a trap.");
     }
 
-    private Task<MtpServerClient> LaunchAsync(InProcessServerFixture server, MtpServerClientOptions? options = null)
+    private async Task<MtpServerClient> LaunchAsync(InProcessServerFixture server, MtpServerClientOptions? options = null)
     {
         options ??= CreateOptions();
 
         // Route the client's own diagnostics into the fixture so a test can assert on them.
         options.Logger ??= new DelegateMtpClientLogger((_, message) => server.Append(message));
 
-        return WithTimeoutAsync(MtpServerClient.LaunchInProcessAsync(
+        MtpServerClient client = await WithTimeoutAsync(MtpServerClient.LaunchInProcessAsync(
             server.RunAsync,
             options,
             TestContext.CancellationToken));
+
+        try
+        {
+            // The client's accept can complete while the callback is still inside its own connect call, so
+            // wait for the callback to publish its server before any test touches it.
+            _ = await WithTimeoutAsync(server.Connected);
+        }
+        catch
+        {
+            client.Dispose();
+            throw;
+        }
+
+        return client;
     }
 
     private static MtpServerClientOptions CreateOptions()
@@ -592,6 +638,7 @@ public sealed class MtpServerClientInProcessTests
     {
         private readonly Action? _onDisconnected;
         private readonly TaskCompletionSource<int> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<FakeMtpServer> _connected = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly StringBuilder _log = new();
 
         private FakeMtpServer? _server;
@@ -607,6 +654,14 @@ public sealed class MtpServerClientInProcessTests
 
         /// <summary>Gets the served fake server. Valid once the launch has completed.</summary>
         public FakeMtpServer Value => _server ?? throw new InvalidOperationException("The callback has not connected yet.");
+
+        /// <summary>
+        /// Completes once the callback has published its server. The client's accept can complete while the
+        /// callback is still inside its own connect call, so a test must await this before touching
+        /// <see cref="Value"/> rather than assuming the launch returning means the callback finished setting
+        /// itself up.
+        /// </summary>
+        public Task<FakeMtpServer> Connected => _connected.Task;
 
         /// <summary>Gets the task that mirrors the hosted application's lifetime.</summary>
         public Task<int> Completion => _completion.Task;
@@ -648,6 +703,7 @@ public sealed class MtpServerClientInProcessTests
             Arguments = serverArguments;
             FakeMtpServer server = ConnectBack(serverArguments);
             _server = server;
+            _connected.TrySetResult(server);
             _ = Interlocked.Increment(ref _connectionCount);
 
             try
@@ -673,6 +729,7 @@ public sealed class MtpServerClientInProcessTests
         {
             _server?.Dispose();
             _ = _completion.TrySetResult(0);
+            _ = _connected.TrySetCanceled();
         }
     }
 }

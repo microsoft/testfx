@@ -38,8 +38,10 @@ internal interface IMtpServerHost : IDisposable
     /// </summary>
     /// <remarks>
     /// This is the preferred teardown on platforms with a responsiveness watchdog (Android ANR, the iOS
-    /// watchdog), where the synchronous <see cref="IDisposable.Dispose"/> wait is not acceptable. Calling
-    /// <see cref="IDisposable.Dispose"/> afterwards is safe and returns immediately.
+    /// watchdog), where the synchronous <see cref="IDisposable.Dispose"/> wait is not acceptable. Both entry
+    /// points share one teardown, so calling <see cref="IDisposable.Dispose"/> afterwards is safe and returns
+    /// as soon as that teardown is done — immediately when it has already finished, and otherwise once it
+    /// does, rather than reporting success while the server is still stopping.
     /// </remarks>
     Task ShutdownAsync();
 }
