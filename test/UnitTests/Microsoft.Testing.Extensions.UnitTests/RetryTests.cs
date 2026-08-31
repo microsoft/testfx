@@ -4,6 +4,7 @@
 #pragma warning restore IDE0073 // The file header does not match the required text
 
 using System.IO.Pipes;
+using System.Reflection;
 
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
@@ -223,6 +224,89 @@ public class RetryTests
             CancellationToken.None));
 
         fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
+    }
+
+    [TestMethod]
+    public void CollectRecoveredArtifacts_MalformedAndMissingEntries_AreIgnoredAndManifestIsDeleted()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        const string missingArtifactPath = "missing.xml";
+        string manifest = $"not-base64\t-{Environment.NewLine}{CreateManifestLine(missingArtifactPath, "microsoft.testing.junit")}";
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>()))
+            .Returns<string>(path => path == manifestPath);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(manifest));
+        List<ArtifactRequest> artifacts = [];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+
+        Assert.IsEmpty(artifacts);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void CollectRecoveredArtifacts_RecoveredKind_ReplacesPreviouslyPublishedArtifact()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        const string recoveredArtifactPath = "recovered.xml";
+        const string kind = "microsoft.testing.junit";
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(CreateManifestLine(recoveredArtifactPath, kind)));
+        List<ArtifactRequest> artifacts = [new("original.xml", kind)];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+
+        ArtifactRequest artifact = Assert.ContainsSingle(artifacts);
+        Assert.AreEqual(recoveredArtifactPath, artifact.Path);
+        Assert.AreEqual(kind, artifact.Kind);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void CollectRecoveredArtifacts_OversizedLine_IsRejectedAndManifestIsDeleted()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        int maxLineBytes = (int)typeof(RetryOrchestrator)
+            .GetField("MaxRecoveredArtifactManifestLineBytes", BindingFlags.Static | BindingFlags.NonPublic)!
+            .GetRawConstantValue()!;
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(manifestPath)).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(new string('x', maxLineBytes + 1)));
+        List<ArtifactRequest> artifacts = [];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+
+        Assert.IsEmpty(artifacts);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void CollectRecoveredArtifacts_RecordLimit_IsEnforcedAndManifestIsDeleted()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        int maxRecords = (int)typeof(RetryOrchestrator)
+            .GetField("MaxRecoveredArtifactManifestRecords", BindingFlags.Static | BindingFlags.NonPublic)!
+            .GetRawConstantValue()!;
+        var manifest = new StringBuilder();
+        for (int i = 0; i <= maxRecords; i++)
+        {
+            manifest.AppendLine("malformed");
+        }
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(manifestPath)).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(manifest.ToString()));
+        List<ArtifactRequest> artifacts = [];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+
+        Assert.IsEmpty(artifacts);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
     }
 
     [TestMethod]
@@ -1032,11 +1116,37 @@ public class RetryTests
         return serviceProvider;
     }
 
+    private static string CreateManifestLine(string path, string? kind)
+        => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{(kind is null ? "-" : Convert.ToBase64String(Encoding.UTF8.GetBytes(kind)))}";
+
+    private static void InvokeCollectRecoveredArtifacts(
+        IFileSystem fileSystem,
+        string manifestPath,
+        List<ArtifactRequest> artifacts)
+        => typeof(RetryOrchestrator)
+            .GetMethod("CollectRecoveredArtifacts", BindingFlags.Static | BindingFlags.NonPublic)!
+            .Invoke(null, [fileSystem, manifestPath, artifacts, Mock.Of<ILogger>()]);
+
     private static string CreateTemporaryDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"retry-artifact-processor-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
         return directory;
+    }
+
+    private sealed class ReadOnlyMemoryFileStream(string content) : IFileStream
+    {
+        private readonly MemoryStream _stream = new(Encoding.UTF8.GetBytes(content));
+
+        Stream IFileStream.Stream => _stream;
+
+        string IFileStream.Name => string.Empty;
+
+        void IDisposable.Dispose() => _stream.Dispose();
+
+#if NETCOREAPP
+        ValueTask IAsyncDisposable.DisposeAsync() => _stream.DisposeAsync();
+#endif
     }
 
     private sealed class TestArtifactPostProcessor : IArtifactPostProcessor

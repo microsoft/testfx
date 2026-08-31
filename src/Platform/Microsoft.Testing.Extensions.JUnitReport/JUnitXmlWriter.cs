@@ -17,6 +17,16 @@ internal sealed class JUnitXmlWriter(
     CancellationToken cancellationToken,
     bool isIncomplete = false)
 {
+    public JUnitXmlWriter(
+        IFileSystem fileSystem,
+        IEnvironment environment,
+        ITestFramework testFramework,
+        int exitCode,
+        CancellationToken cancellationToken)
+        : this(fileSystem, environment, testFramework, exitCode, cancellationToken, isIncomplete: false)
+    {
+    }
+
     public async Task WriteXmlAsync(string tempPath, SuiteSet suites)
     {
         var settings = new XmlWriterSettings

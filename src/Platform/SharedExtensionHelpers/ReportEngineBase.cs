@@ -24,7 +24,59 @@ internal readonly record struct ReportEngineContext(
     int ExitCode,
     CancellationToken CancellationToken,
     int? ProcessId = null,
-    bool IsIncomplete = false);
+    bool IsIncomplete = false)
+{
+    public ReportEngineContext(
+        IFileSystem fileSystem,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IEnvironment environment,
+        ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
+        IClock clock,
+        ITestFramework testFramework,
+        DateTimeOffset testStartTime,
+        int exitCode,
+        CancellationToken cancellationToken)
+        : this(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken,
+            ProcessId: null,
+            IsIncomplete: false)
+    {
+    }
+
+    public void Deconstruct(
+        out IFileSystem fileSystem,
+        out ITestApplicationModuleInfo testApplicationModuleInfo,
+        out IEnvironment environment,
+        out ICommandLineOptions commandLineOptions,
+        out IConfiguration configuration,
+        out IClock clock,
+        out ITestFramework testFramework,
+        out DateTimeOffset testStartTime,
+        out int exitCode,
+        out CancellationToken cancellationToken)
+    {
+        fileSystem = FileSystem;
+        testApplicationModuleInfo = TestApplicationModuleInfo;
+        environment = Environment;
+        commandLineOptions = CommandLineOptions;
+        configuration = Configuration;
+        clock = Clock;
+        testFramework = TestFramework;
+        testStartTime = TestStartTime;
+        exitCode = ExitCode;
+        cancellationToken = CancellationToken;
+    }
+}
 
 /// <summary>
 /// Shared base class for report engine implementations (CTRF, JUnit, HTML, ...) that all consume

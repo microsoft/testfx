@@ -92,6 +92,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
     private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     private const string LogicalRunIdEnvironmentVariableName = "TESTINGPLATFORM_LOGICAL_RUN_ID";
+    // These names must match the reporter packages' JournalEnvironmentVariableName constants. They are repeated
+    // here intentionally so PackagedApp does not take dependencies on every report package just to forward launch metadata.
     private const string CtrfReportJournalEnvironmentVariableName = "TESTINGPLATFORM_CTRFREPORT_JOURNAL";
     private const string HtmlReportJournalEnvironmentVariableName = "TESTINGPLATFORM_HTMLREPORT_JOURNAL";
     private const string JUnitReportJournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";

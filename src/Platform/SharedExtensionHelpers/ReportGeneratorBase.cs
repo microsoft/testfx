@@ -56,6 +56,11 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     private int _droppedJournalRecords;
     private bool _disposed;
 
+    protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName)
+        : this(serviceProvider, optionName, journalEnvironmentVariableName: string.Empty)
+    {
+    }
+
     protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName, string journalEnvironmentVariableName)
         : this(
             (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
@@ -71,7 +76,8 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             serviceProvider.GetLoggerFactory().CreateLogger<TGenerator>(),
             serviceProvider.GetTask(),
             optionName,
-            serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)
+            journalEnvironmentVariableName.Length > 0
+                && serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)
                 ? serviceProvider.GetEnvironment().GetEnvironmentVariable(journalEnvironmentVariableName)
                 : null,
             recoveredMetadata: null)
@@ -98,6 +104,36 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             optionName,
             journalPath: null,
             recoveredMetadata)
+    {
+    }
+
+    protected ReportGeneratorBase(
+        IConfiguration configuration,
+        ICommandLineOptions commandLineOptions,
+        IFileSystem fileSystem,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IMessageBus messageBus,
+        IClock clock,
+        IEnvironment environment,
+        IOutputDevice outputDevice,
+        ITestFramework testFramework,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ILogger<TGenerator> logger,
+        string optionName)
+        : this(
+            configuration,
+            commandLineOptions,
+            fileSystem,
+            testApplicationModuleInfo,
+            messageBus,
+            clock,
+            environment,
+            outputDevice,
+            testFramework,
+            testApplicationProcessExitCode,
+            logger,
+            new SystemTask(),
+            optionName)
     {
     }
 
@@ -190,14 +226,16 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 
-    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         if (value is TestNodeUpdateMessage update)
         {
-            await OnTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
+            OnTestNodeUpdate(update);
         }
+
+        return Task.CompletedTask;
     }
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
@@ -274,7 +312,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     // (parameterized rows, in-process retries, framework quirks). CTRF groups only
     // in-process updates explicitly tagged with RetryAttemptProperty; out-of-process
     // retry inference occurs only during an explicit CollapseRetryAttempts merge.
-    protected virtual Task OnTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
+    protected virtual void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
         TCapturedTestResult? captured = TryCapture(update);
         if (captured is not null)
@@ -290,8 +328,6 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
                 EnqueueJournalRecord(ReportJournalRecord<TCapturedTestResult>.CreateTest(captured, parent));
             }
         }
-
-        return Task.CompletedTask;
     }
 
     protected virtual ReportJournalParentEntry? CaptureParentEntry(TestNodeUpdateMessage update) => null;

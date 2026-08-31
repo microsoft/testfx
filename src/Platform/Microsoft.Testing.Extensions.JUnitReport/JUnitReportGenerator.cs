@@ -62,7 +62,7 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
             typeof(ReportJournalRecord<CapturedTestResult>),
             ReportJournalJsonSerializerContext.Default);
 
-    protected override async Task OnTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
+    protected override void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
         // Record the parent chain entry for EVERY update so non-terminal parent
         // nodes (Discovered / InProgress) are still available when reconstructing
@@ -75,7 +75,7 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         string rawUid = TestResultCaptureHelper.Truncate(update.TestNode.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!;
         _parentChain[rawUid] = TestResultCapture.GetParentChainEntry(update);
 
-        await base.OnTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
+        base.OnTestNodeUpdate(update);
     }
 
     protected override ReportJournalParentEntry? CaptureParentEntry(TestNodeUpdateMessage update)
