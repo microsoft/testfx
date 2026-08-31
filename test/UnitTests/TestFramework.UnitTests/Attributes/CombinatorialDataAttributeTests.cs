@@ -82,6 +82,7 @@ public class CombinatorialDataAttributeTests : TestContainer
                 [true, true],
                 [false, true],
             ]);
+        AssertRows(GetData(nameof(NullExclusion)), [["value"]]);
     }
 
     public void GetDataValidatesExclusionWidth()
@@ -200,6 +201,11 @@ public class CombinatorialDataAttributeTests : TestContainer
 
     [ExcludeTestCase(true)]
     private static void InvalidExclusion(bool first, bool second)
+    {
+    }
+
+    [ExcludeTestCase(null)]
+    private static void NullExclusion([CombinatorialValues(null, "value")] string? value)
     {
     }
 

@@ -18,7 +18,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
     public CombinatorialMemberDataAttribute(string memberName, params object?[]? arguments)
     {
         MemberName = memberName ?? throw new ArgumentNullException(nameof(memberName));
-        Arguments = arguments;
+        Arguments = arguments ?? [null];
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
     /// <summary>
     /// Gets the arguments passed to a method member.
     /// </summary>
-    public object?[]? Arguments { get; }
+    public object?[] Arguments { get; }
 
     /// <inheritdoc />
     public object?[] GetValues(ParameterInfo parameter)
@@ -56,7 +56,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             ?? GetFieldAccessor(type, parameter);
         if (accessor is null)
         {
-            string message = Arguments?.Length > 0
+            string message = Arguments.Length > 0
                 ? string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.CombinatorialMemberNotFoundWithParameterTypes,

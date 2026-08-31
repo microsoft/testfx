@@ -26,7 +26,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.Re
 const Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialRandomDataAttribute.NoSeed = 0 -> int
 Microsoft.VisualStudio.TestTools.UnitTesting.AnyDataValue
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialClassDataAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialClassDataAttribute.CombinatorialClassDataAttribute(System.Type! valuesSourceType, params object![]? arguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialClassDataAttribute.CombinatorialClassDataAttribute(System.Type! valuesSourceType, params object?[]? arguments) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialClassDataAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialDataAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialDataAttribute.CombinatorialDataAttribute() -> void
@@ -34,7 +34,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialDataAttribute.GetData(
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialDataAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialMemberDataAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialMemberDataAttribute.Arguments.get -> object?[]?
+Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialMemberDataAttribute.Arguments.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialMemberDataAttribute.CombinatorialMemberDataAttribute(string! memberName, params object?[]? arguments) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialMemberDataAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialMemberDataAttribute.MemberName.get -> string!
@@ -76,7 +76,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialValuesAttribute.GetVal
 Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialValuesAttribute.Values.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute.Arguments.get -> object?[]!
-Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute.ExcludeTestCaseAttribute(params object?[]! arguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute.ExcludeTestCaseAttribute(params object?[]? arguments) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ICombinatorialValuesProvider
 Microsoft.VisualStudio.TestTools.UnitTesting.ICombinatorialValuesProvider.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
 static Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialTestCaseGenerator.GenerateCombinations(int[]! dimensionSizes, Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate? isTestCaseAllowed = null) -> int[]![]!

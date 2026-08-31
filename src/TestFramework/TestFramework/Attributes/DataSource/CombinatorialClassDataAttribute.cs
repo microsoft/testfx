@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [CLSCompliant(false)]
 public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesProvider
 {
-    private readonly object[]? _arguments;
+    private readonly object?[] _arguments;
 
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     private readonly Type _valuesSourceType;
@@ -22,7 +22,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
     /// <param name="arguments">Arguments to pass to the constructor of <paramref name="valuesSourceType"/>.</param>
     public CombinatorialClassDataAttribute(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
-        params object[]? arguments)
+        params object?[]? arguments)
     {
         _valuesSourceType = valuesSourceType ?? throw new ArgumentNullException(nameof(valuesSourceType));
         if (!typeof(IEnumerable<object[]>).IsAssignableFrom(valuesSourceType))
@@ -35,7 +35,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
                     typeof(IEnumerable<object[]>)));
         }
 
-        _arguments = arguments is null ? null : [.. arguments];
+        _arguments = arguments is null ? [null] : [.. arguments];
     }
 
     /// <inheritdoc />
@@ -44,7 +44,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
     [UnconditionalSuppressMessage("Trimming", "IL2067:UnrecognizedReflectionPattern", Justification = "The Activator overload requires both public and non-public constructors in its static contract, but the binding flags restrict activation to public instance constructors preserved by valuesSourceType.")]
     private static object?[] GetValues(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
-        object[]? arguments)
+        object?[] arguments)
     {
         IEnumerable values;
         try

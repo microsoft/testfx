@@ -14,8 +14,8 @@ public class ExcludeTestCaseAttribute : Attribute
     /// Initializes a new instance of the <see cref="ExcludeTestCaseAttribute"/> class.
     /// </summary>
     /// <param name="arguments">The values that match the test case to exclude.</param>
-    public ExcludeTestCaseAttribute(params object?[] arguments)
-        => Arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
+    public ExcludeTestCaseAttribute(params object?[]? arguments)
+        => Arguments = arguments ?? [null];
 
     /// <summary>
     /// Gets the values that match the test case to exclude.

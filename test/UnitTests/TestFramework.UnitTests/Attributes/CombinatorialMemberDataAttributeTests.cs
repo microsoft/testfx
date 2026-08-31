@@ -72,6 +72,15 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         attribute.GetValues(IntParameter).Should().Equal([1]);
     }
 
+    public void TreatsExplicitNullParamsArrayAsSingleMemberArgument()
+    {
+        ParameterInfo parameter = GetParameter(nameof(ExplicitNullMemberArgument));
+        CombinatorialMemberDataAttribute attribute = parameter.GetCustomAttribute<CombinatorialMemberDataAttribute>()!;
+
+        attribute.Arguments.Should().Equal([null]);
+        attribute.GetValues(parameter).Should().Equal([1]);
+    }
+
     public void AllowsNonNullForNullableMethodParameter()
     {
         var attribute = new CombinatorialMemberDataAttribute(nameof(GetValuesForNullable), 2);
@@ -117,6 +126,14 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         var attribute = new CombinatorialClassDataAttribute(typeof(IntegerRows), 3);
 
         attribute.GetValues(IntParameter).Should().Equal([0, 1, 2]);
+    }
+
+    public void ClassDataTreatsExplicitNullParamsArrayAsSingleArgument()
+    {
+        ParameterInfo parameter = GetParameter(nameof(ExplicitNullClassArgument));
+        CombinatorialClassDataAttribute attribute = parameter.GetCustomAttribute<CombinatorialClassDataAttribute>()!;
+
+        attribute.GetValues(parameter).Should().Equal([null]);
     }
 
     public void ClassDataRejectsInvalidTypesAndConstructorArguments()
@@ -172,6 +189,16 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     }
 
     private static void NullableIntParameterStub(int? value)
+    {
+    }
+
+    private static void ExplicitNullMemberArgument(
+        [CombinatorialMemberData(nameof(GetValuesForNullable), null)] int value)
+    {
+    }
+
+    private static void ExplicitNullClassArgument(
+        [CombinatorialClassData(typeof(NullableArgumentRows), null)] string? value)
     {
     }
 
@@ -243,6 +270,20 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     public sealed class ThrowingRows : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator() => throw new NotSupportedException("Enumeration failed.");
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    public sealed class NullableArgumentRows : IEnumerable<object[]>
+    {
+        private readonly object? _value;
+
+        public NullableArgumentRows(object? value) => _value = value;
+
+        public IEnumerator<object[]> GetEnumerator()
+        {
+            yield return [_value!];
+        }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
