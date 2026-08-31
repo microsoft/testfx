@@ -39,6 +39,35 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         attribute.GetValues(IntParameter).Should().Equal([1, 2]);
     }
 
+    public void SelectsMostSpecificCompatibleMethod()
+    {
+        var attribute = new CombinatorialMemberDataAttribute(nameof(SpecificOverloads.GetValues), "value")
+        {
+            MemberType = typeof(SpecificOverloads),
+        };
+
+        attribute.GetValues(IntParameter).Should().Equal([2]);
+    }
+
+    public void AllowsNullForNullableMethodParameter()
+    {
+        var attribute = new CombinatorialMemberDataAttribute(nameof(GetValuesForNullable), [null]);
+
+        attribute.GetValues(IntParameter).Should().Equal([1]);
+    }
+
+    public void FindsEligibleInheritedMembersHiddenByInstanceMembers()
+    {
+        new CombinatorialMemberDataAttribute(nameof(HiddenMembers.IntProperty))
+        {
+            MemberType = typeof(HiddenMembers),
+        }.GetValues(IntParameter).Should().Equal([1, 2]);
+        new CombinatorialMemberDataAttribute(nameof(HiddenMembers.IntField))
+        {
+            MemberType = typeof(HiddenMembers),
+        }.GetValues(IntParameter).Should().Equal([3, 4]);
+    }
+
     public void FlattensObjectArrayRows()
         => new CombinatorialMemberDataAttribute(nameof(Rows)).GetValues(IntParameter).Should().Equal([1, 2, 3]);
 
@@ -71,6 +100,13 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         invalidArguments.Should().Throw<InvalidOperationException>().WithMessage("*Failed to create*");
     }
 
+    public void ClassDataDoesNotReportEnumerationFailuresAsConstructorFailures()
+    {
+        Action action = () => _ = new CombinatorialClassDataAttribute(typeof(ThrowingRows));
+
+        action.Should().Throw<NotSupportedException>().WithMessage("Enumeration failed.");
+    }
+
     public void DataProviderAttributesOnlyApplyToParametersAndDisallowDuplicates()
     {
         AttributeUsageAttribute memberUsage = typeof(CombinatorialMemberDataAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
@@ -91,6 +127,8 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     public static IEnumerable<object[]> Rows => [[1], [2, 3]];
 
     public static IEnumerable<int> GetInts(int start, int step) => new[] { start, start + step };
+
+    public static IEnumerable<int> GetValuesForNullable(int? value) => [value ?? 1];
 
     public static IEnumerable NonGenericValues => new ArrayList { 1, 2 };
 
@@ -121,6 +159,29 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         public static IEnumerable<int> GetValues(string value) => [1, 2];
     }
 
+    public static class SpecificOverloads
+    {
+        public static IEnumerable<int> GetValues(object value) => [1];
+
+        public static IEnumerable<int> GetValues(string value) => [2];
+    }
+
+    public class BaseMembers
+    {
+        public static IEnumerable<int> IntProperty => [1, 2];
+
+        public static readonly IEnumerable<int> IntField = [3, 4];
+    }
+
+#pragma warning disable CS0108, SA1401 // Intentionally hide eligible base members with ineligible members.
+    public sealed class HiddenMembers : BaseMembers
+    {
+        public IEnumerable<int> IntProperty => [5, 6];
+
+        public readonly IEnumerable<int> IntField = [7, 8];
+    }
+#pragma warning restore CS0108, SA1401
+
     public sealed class IntegerRows : IEnumerable<object[]>
     {
         private readonly int _count;
@@ -129,6 +190,13 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
         public IEnumerator<object[]> GetEnumerator()
             => Enumerable.Range(0, _count).Select(value => new object[] { value }).GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    public sealed class ThrowingRows : IEnumerable<object[]>
+    {
+        public IEnumerator<object[]> GetEnumerator() => throw new NotSupportedException("Enumeration failed.");
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }

@@ -95,14 +95,17 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         PropertyInfo? propertyInfo = null;
         for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
         {
-            propertyInfo = reflectionType.GetRuntimeProperty(MemberName);
+            propertyInfo = reflectionType.GetTypeInfo().DeclaredProperties.FirstOrDefault(property =>
+                property.Name == MemberName
+                && property.GetMethod is { IsPublic: true, IsStatic: true }
+                && property.GetIndexParameters().Length == 0);
             if (propertyInfo is not null)
             {
                 break;
             }
         }
 
-        if (propertyInfo?.GetMethod is not { IsPublic: true, IsStatic: true })
+        if (propertyInfo is null)
         {
             return null;
         }
@@ -116,14 +119,16 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         MethodInfo? methodInfo = null;
         for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
         {
-            methodInfo = reflectionType.GetRuntimeMethods()
-                .FirstOrDefault(method =>
+            MethodInfo[] compatibleMethods = reflectionType.GetTypeInfo().DeclaredMethods
+                .Where(method =>
                     method.Name == MemberName
                     && method.IsPublic
                     && method.IsStatic
-                    && ParameterTypesCompatible(method.GetParameters(), Arguments));
-            if (methodInfo is not null)
+                    && ParameterTypesCompatible(method.GetParameters(), Arguments))
+                .ToArray();
+            if (compatibleMethods.Length > 0)
             {
+                methodInfo = SelectMostSpecificMethod(compatibleMethods);
                 break;
             }
         }
@@ -142,14 +147,17 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         FieldInfo? fieldInfo = null;
         for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
         {
-            fieldInfo = reflectionType.GetRuntimeField(MemberName);
+            fieldInfo = reflectionType.GetTypeInfo().DeclaredFields.FirstOrDefault(field =>
+                field.Name == MemberName
+                && field.IsPublic
+                && field.IsStatic);
             if (fieldInfo is not null)
             {
                 break;
             }
         }
 
-        if (fieldInfo is null || !fieldInfo.IsPublic || !fieldInfo.IsStatic)
+        if (fieldInfo is null)
         {
             return null;
         }
@@ -179,13 +187,49 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
                     return false;
                 }
             }
-            else if (parameters[i].ParameterType.IsValueType)
+            else if (parameters[i].ParameterType.IsValueType
+                && Nullable.GetUnderlyingType(parameters[i].ParameterType) is null)
             {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private MethodInfo SelectMostSpecificMethod(MethodInfo[] methods)
+    {
+        MethodInfo[] mostSpecificMethods = methods
+            .Where(candidate => methods.All(other => candidate == other || IsMoreSpecific(candidate, other)))
+            .ToArray();
+        return mostSpecificMethods.Length == 1
+            ? mostSpecificMethods[0]
+            : throw new ArgumentException($"Multiple public static methods named '{MemberName}' accept the supplied arguments.");
+    }
+
+    private static bool IsMoreSpecific(MethodInfo candidate, MethodInfo other)
+    {
+        ParameterInfo[] candidateParameters = candidate.GetParameters();
+        ParameterInfo[] otherParameters = other.GetParameters();
+        bool isStrictlyMoreSpecific = false;
+        for (int i = 0; i < candidateParameters.Length; i++)
+        {
+            Type candidateType = candidateParameters[i].ParameterType;
+            Type otherType = otherParameters[i].ParameterType;
+            if (candidateType == otherType)
+            {
+                continue;
+            }
+
+            if (!otherType.GetTypeInfo().IsAssignableFrom(candidateType.GetTypeInfo()))
+            {
+                return false;
+            }
+
+            isStrictlyMoreSpecific = true;
+        }
+
+        return isStrictlyMoreSpecific;
     }
 
     private void EnsureValidMemberDataType(Type enumerableType, Type declaringType, ParameterInfo parameterInfo)

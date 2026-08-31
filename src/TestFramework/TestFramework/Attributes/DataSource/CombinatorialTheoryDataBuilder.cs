@@ -246,7 +246,7 @@ public sealed class CombinatorialTheoryDataBuilder
         object?[] values = Flatten(dimensions, indices);
         foreach (CombinatorialTheoryDataPredicate predicate in _predicates)
         {
-            if (!predicate(values))
+            if (!predicate([.. values]))
             {
                 return false;
             }

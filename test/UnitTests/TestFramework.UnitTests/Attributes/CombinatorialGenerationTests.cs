@@ -32,6 +32,19 @@ public class CombinatorialGenerationTests : TestContainer
         AssertRows(rows, [[0, 1], [0, 2], [1, 2]]);
     }
 
+    public void GenerateCombinationsIsolatesPredicateFromTraversalState()
+    {
+        int[][] rows = CombinatorialTestCaseGenerator.GenerateCombinations(
+            [2, 2],
+            indices =>
+            {
+                indices[0] = 42;
+                return true;
+            });
+
+        AssertRows(rows, [[0, 0], [0, 1], [1, 0], [1, 1]]);
+    }
+
     public void GenerateCombinationsHandlesEmptyAndInvalidDimensions()
     {
         CombinatorialTestCaseGenerator.GenerateCombinations([]).Should().BeEmpty();
@@ -86,6 +99,21 @@ public class CombinatorialGenerationTests : TestContainer
             .BuildCombinations();
 
         AssertRows(rows.ToArray(), [[10, 0, true], [1, 2, false]]);
+    }
+
+    public void BuilderIsolatesPredicatesFromEachOther()
+    {
+        IReadOnlyCollection<object?[]> rows = new CombinatorialTheoryDataBuilder()
+            .AddValues(1, 2)
+            .Where(row =>
+            {
+                row[0] = 42;
+                return true;
+            })
+            .Where(row => (int)row[0]! < 3)
+            .BuildCombinations();
+
+        AssertRows(rows.ToArray(), [[1], [2]]);
     }
 
     public void BuilderSnapshotsInputs()

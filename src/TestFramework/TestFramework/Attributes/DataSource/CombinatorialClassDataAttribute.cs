@@ -40,15 +40,15 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
                 $"The values source {valuesSourceType} must be assignable to {typeof(IEnumerable<object[]>)}.");
         }
 
+        IEnumerable values;
         try
         {
-            var values = (IEnumerable)Activator.CreateInstance(
+            values = (IEnumerable)Activator.CreateInstance(
                 valuesSourceType,
                 BindingFlags.CreateInstance | BindingFlags.OptionalParamBinding,
                 binder: null,
                 args: arguments,
                 culture: CultureInfo.InvariantCulture)!;
-            return values.Cast<object[]>().SelectMany(row => row).ToArray();
         }
         catch (Exception ex)
         {
@@ -56,5 +56,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
                 $"Failed to create an instance of {valuesSourceType}. Please make sure the type has a public constructor and the arguments match.",
                 ex);
         }
+
+        return values.Cast<object[]>().SelectMany(row => row).ToArray();
     }
 }

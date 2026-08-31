@@ -93,7 +93,7 @@ public static class CombinatorialTestCaseGenerator
             {
                 FillCombinations(dimensions, current, dimension + 1, isTestCaseAllowed, results);
             }
-            else if (isTestCaseAllowed?.Invoke(current) ?? true)
+            else if (isTestCaseAllowed?.Invoke([.. current]) ?? true)
             {
                 results.Add([.. current]);
             }
