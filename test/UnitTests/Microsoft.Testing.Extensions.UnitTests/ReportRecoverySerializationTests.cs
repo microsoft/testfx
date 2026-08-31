@@ -146,16 +146,18 @@ public sealed class ReportRecoverySerializationTests
     }
 
     [TestMethod]
-    public async Task OnTestHostProcessExitedAsync_CompletionRecord_RegeneratesAndPublishesReportAsync()
+    public async Task OnTestHostProcessExitedAsync_CompletionRecord_RepublishesCompletedReportAsync()
     {
         const string journal = """
             {"Type":0,"StartTime":"2026-08-31T12:00:00+00:00","ProcessId":42,"FrameworkUid":"framework","FrameworkVersion":"1.0","FrameworkDisplayName":"Framework"}
-            {"Type":2}
+            {"Type":2,"ReportFileName":"completed.ctrf.json","DroppedJournalRecords":2}
 
             """;
         var fileSystem = new Mock<IFileSystem>();
         _ = fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>()))
-            .Returns<string>(path => path.EndsWith(".jsonl", StringComparison.Ordinal));
+            .Returns<string>(path =>
+                path.EndsWith(".jsonl", StringComparison.Ordinal)
+                || path == "completed.ctrf.json");
         _ = fileSystem
             .Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             .Returns(() => new MemoryFileStream(journal));
@@ -175,15 +177,20 @@ public sealed class ReportRecoverySerializationTests
         messageBus.Verify(
             bus => bus.PublishAsync(
                 It.IsAny<IDataProducer>(),
-                It.Is<FileArtifact>(artifact => artifact.Kind == "microsoft.testing.ctrf")),
+                It.Is<FileArtifact>(artifact =>
+                    artifact.Kind == "microsoft.testing.ctrf"
+                    && artifact.FileInfo.Name == "completed.ctrf.json")),
             Times.Once);
         outputDevice.Verify(
             device => device.DisplayAsync(
                 It.IsAny<IOutputDeviceDataProducer>(),
                 It.Is<WarningMessageOutputDeviceData>(message =>
-                    message.Message.Contains("before report artifact delivery was confirmed", StringComparison.Ordinal)),
+                    message.Message.Contains("Re-published the completed report", StringComparison.Ordinal)),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+        fileSystem.Verify(
+            fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create),
+            Times.Never);
         fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
     }
 
@@ -221,6 +228,9 @@ public sealed class ReportRecoverySerializationTests
 
         var configuration = new Mock<IConfiguration>();
         _ = configuration.SetupGet(c => c[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("results");
+        _ = Mock.Get(fileSystem)
+            .Setup(fs => fs.CreateDirectory(It.IsAny<string>()))
+            .Returns<string>(Path.GetFullPath);
         messageBus = new Mock<IMessageBus>();
         _ = messageBus
             .Setup(bus => bus.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))

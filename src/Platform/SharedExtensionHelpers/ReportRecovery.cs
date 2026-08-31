@@ -179,10 +179,21 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
 
             ReportJournalReadResult<TCapturedTestResult> journal = ReadJournal(path, testHostProcessInformation);
             TGenerator generator = _generatorFactory(_serviceProvider, journal.Metadata);
-            (string fileName, string? warning) = await generator.GenerateRecoveredReportAsync(
-                journal,
-                testHostProcessInformation.ExitCode,
-                cancellationToken).ConfigureAwait(false);
+            bool republishCompletedReport = journal.CompletedReportFileName is not null
+                && _fileSystem.ExistFile(journal.CompletedReportFileName);
+            string fileName;
+            string? warning = null;
+            if (republishCompletedReport)
+            {
+                fileName = journal.CompletedReportFileName!;
+            }
+            else
+            {
+                (fileName, warning) = await generator.GenerateRecoveredReportAsync(
+                    journal,
+                    testHostProcessInformation.ExitCode,
+                    cancellationToken).ConfigureAwait(false);
+            }
 
             if (warning is not null)
             {
@@ -191,11 +202,13 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
 
             await _outputDevice.DisplayAsync(
                 this,
-                new WarningMessageOutputDeviceData(journal.Completed
-                    ? $"The test host terminated before report artifact delivery was confirmed. Re-generated the report from {journal.Results.Count} journaled terminal test result(s) and marked it incomplete."
+                new WarningMessageOutputDeviceData(republishCompletedReport
+                    ? $"The test host terminated before report artifact delivery was confirmed. Re-published the completed report '{fileName}'."
+                    : journal.Completed
+                    ? $"The test host terminated before report artifact delivery was confirmed, but the completed report file was unavailable. Re-generated it from {journal.Results.Count} journaled terminal test result(s) and marked it incomplete."
                     : $"The test host terminated before report generation completed. Recovered {journal.Results.Count} terminal test result(s); the generated report is marked incomplete."),
                 cancellationToken).ConfigureAwait(false);
-            if (journal.IsPartial)
+            if (journal.IsPartial && !republishCompletedReport)
             {
                 await _outputDevice.DisplayAsync(
                     this,
@@ -299,6 +312,8 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
         List<TCapturedTestResult> results = [];
         List<ReportJournalParentEntry> parents = [];
         bool completed = false;
+        string? completedReportFileName = null;
+        int droppedJournalRecords = 0;
         bool isPartial = false;
         int recordCount = 0;
 
@@ -349,6 +364,8 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
                         break;
                     case ReportJournalRecordType.Completion:
                         completed = true;
+                        completedReportFileName = record.ReportFileName;
+                        droppedJournalRecords = record.DroppedJournalRecords;
                         break;
                 }
 
@@ -380,7 +397,14 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
             FrameworkDisplayName = header?.FrameworkDisplayName ?? "unknown",
             IsIncomplete = true,
         };
-        return new ReportJournalReadResult<TCapturedTestResult>(metadata, results, parents, completed, isPartial);
+        return new ReportJournalReadResult<TCapturedTestResult>(
+            metadata,
+            results,
+            parents,
+            completed,
+            completedReportFileName,
+            droppedJournalRecords,
+            isPartial || droppedJournalRecords > 0);
     }
 }
 
@@ -509,6 +533,10 @@ internal sealed class ReportJournalRecord<TCapturedTestResult>
 
     public ReportJournalParentEntry? Parent { get; set; }
 
+    public string? ReportFileName { get; set; }
+
+    public int DroppedJournalRecords { get; set; }
+
     public static ReportJournalRecord<TCapturedTestResult> CreateHeader(
         DateTimeOffset startTime,
         int processId,
@@ -533,8 +561,15 @@ internal sealed class ReportJournalRecord<TCapturedTestResult>
             Parent = parent,
         };
 
-    public static ReportJournalRecord<TCapturedTestResult> CreateCompletion()
-        => new() { Type = ReportJournalRecordType.Completion };
+    public static ReportJournalRecord<TCapturedTestResult> CreateCompletion(
+        string reportFileName,
+        int droppedJournalRecords)
+        => new()
+        {
+            Type = ReportJournalRecordType.Completion,
+            ReportFileName = reportFileName,
+            DroppedJournalRecords = droppedJournalRecords,
+        };
 }
 
 internal sealed class ReportJournalParentEntry
@@ -551,6 +586,8 @@ internal sealed record ReportJournalReadResult<TCapturedTestResult>(
     IReadOnlyList<TCapturedTestResult> Results,
     IReadOnlyList<ReportJournalParentEntry> Parents,
     bool Completed,
+    string? CompletedReportFileName,
+    int DroppedJournalRecords,
     bool IsPartial)
     where TCapturedTestResult : class;
 

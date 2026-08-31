@@ -214,6 +214,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             }
 
             currentTryResultFolder = Path.Combine(retryRootFolder, attemptCount.ToString(CultureInfo.InvariantCulture));
+            fileSystem.CreateDirectory(currentTryResultFolder);
 
             // Prepare the pipe server that collects the child process's failed test UIDs.
             using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);

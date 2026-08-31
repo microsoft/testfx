@@ -29,6 +29,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     where TCapturedTestResult : class
 {
     private const int JournalBatchSize = 64;
+    private const int JournalCompletionReserveBytes = 64 * 1024;
     private const int JournalFlushIntervalMilliseconds = 500;
     private const int JournalQueueCapacity = 4096;
     private static readonly TimeSpan JournalShutdownTimeout = TimeSpan.FromSeconds(30);
@@ -51,8 +52,12 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     private BlockingCollection<ReportJournalRecord<TCapturedTestResult>>? _journalQueue;
     private Task? _journalWriterTask;
     private volatile bool _journalFailed;
+    private volatile bool _journalBudgetExceeded;
     private volatile bool _journalCompletionTimedOut;
     private volatile bool _writeCompletionRecord;
+    private string? _completedReportFileName;
+    private long _journalBytesWritten;
+    private int _journalRecordsWritten;
     private int _droppedJournalRecords;
     private bool _disposed;
 
@@ -299,11 +304,17 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
                     ArtifactDescription,
                     ArtifactKind)).ConfigureAwait(false);
 
-            await CompleteJournalAsync(writeCompletionRecord: true, cancellationToken).ConfigureAwait(false);
+            await CompleteJournalAsync(
+                writeCompletionRecord: true,
+                new FileInfo(reportFileName).FullName,
+                cancellationToken).ConfigureAwait(false);
         }
         finally
         {
-            await CompleteJournalAsync(writeCompletionRecord: false, CancellationToken.None).ConfigureAwait(false);
+            await CompleteJournalAsync(
+                writeCompletionRecord: false,
+                reportFileName: null,
+                CancellationToken.None).ConfigureAwait(false);
         }
     }
 
@@ -376,6 +387,12 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             return;
         }
 
+        if (_journalBudgetExceeded)
+        {
+            RecordDroppedJournalRecords(1, "its configured size or record limit was reached");
+            return;
+        }
+
         if (_journalQueue is null)
         {
             TryWriteJournalBatch([record]);
@@ -386,25 +403,25 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         {
             if (_journalQueue.IsAddingCompleted || !_journalQueue.TryAdd(record))
             {
-                RecordDroppedJournalRecord();
+                RecordDroppedJournalRecords(1, "its writer queue is full or unavailable");
             }
         }
         catch (ObjectDisposedException)
         {
-            RecordDroppedJournalRecord();
+            RecordDroppedJournalRecords(1, "its writer queue is full or unavailable");
         }
         catch (InvalidOperationException)
         {
-            RecordDroppedJournalRecord();
+            RecordDroppedJournalRecords(1, "its writer queue is full or unavailable");
         }
     }
 
-    private void RecordDroppedJournalRecord()
+    private void RecordDroppedJournalRecords(int count, string reason)
     {
-        if (Interlocked.Increment(ref _droppedJournalRecords) == 1)
+        if (Interlocked.Add(ref _droppedJournalRecords, count) == count)
         {
             _logger.LogWarning(
-                $"Report recovery journal '{_journalPath}' writer queue is full or unavailable. Records are being dropped without affecting normal report generation; crash recovery may be partial.");
+                $"Report recovery journal '{_journalPath}' dropped records because {reason}. Normal report generation is unaffected; crash recovery may be partial.");
         }
     }
 
@@ -434,7 +451,12 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
             if (_writeCompletionRecord)
             {
-                await WriteJournalBatchAsync([ReportJournalRecord<TCapturedTestResult>.CreateCompletion()]).ConfigureAwait(false);
+                ApplicationStateGuard.Ensure(_completedReportFileName is not null);
+                await WriteJournalBatchAsync(
+                    [ReportJournalRecord<TCapturedTestResult>.CreateCompletion(
+                        _completedReportFileName,
+                        Volatile.Read(ref _droppedJournalRecords))],
+                    isCompletion: true).ConfigureAwait(false);
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -450,11 +472,13 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         }
     }
 
-    private void TryWriteJournalBatch(IReadOnlyList<ReportJournalRecord<TCapturedTestResult>> records)
+    private void TryWriteJournalBatch(
+        IReadOnlyList<ReportJournalRecord<TCapturedTestResult>> records,
+        bool isCompletion = false)
     {
         try
         {
-            WriteJournalBatchAsync(records).GetAwaiter().GetResult();
+            WriteJournalBatchAsync(records, isCompletion).GetAwaiter().GetResult();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -464,7 +488,9 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         }
     }
 
-    private async Task WriteJournalBatchAsync(IReadOnlyList<ReportJournalRecord<TCapturedTestResult>> records)
+    private async Task WriteJournalBatchAsync(
+        IReadOnlyList<ReportJournalRecord<TCapturedTestResult>> records,
+        bool isCompletion = false)
     {
         _journalStream ??= FileSystem.NewFileStream(
             _journalPath!,
@@ -473,9 +499,33 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             FileShare.ReadWrite);
 
         var batch = new StringBuilder();
+        int accepted = 0;
+        long maxBytes = ReportProcessLifetimeHandler<TGenerator, TCapturedTestResult>.MaxJournalBytes
+            - (isCompletion ? 0 : JournalCompletionReserveBytes);
+        int maxRecords = ReportProcessLifetimeHandler<TGenerator, TCapturedTestResult>.MaxJournalRecordCount
+            - (isCompletion ? 0 : 1);
         foreach (ReportJournalRecord<TCapturedTestResult> record in records)
         {
-            batch.Append(SerializeJournalRecord(record)).Append('\n');
+            string serializedRecord = SerializeJournalRecord(record);
+            int recordBytes = Encoding.UTF8.GetByteCount(serializedRecord) + 1;
+            if (recordBytes > ReportProcessLifetimeHandler<TGenerator, TCapturedTestResult>.MaxJournalRecordBytes
+                || _journalBytesWritten + recordBytes > maxBytes
+                || _journalRecordsWritten >= maxRecords)
+            {
+                _journalBudgetExceeded = true;
+                RecordDroppedJournalRecords(records.Count - accepted, "its configured size or record limit was reached");
+                break;
+            }
+
+            batch.Append(serializedRecord).Append('\n');
+            _journalBytesWritten += recordBytes;
+            _journalRecordsWritten++;
+            accepted++;
+        }
+
+        if (batch.Length == 0)
+        {
+            return;
         }
 
         byte[] bytes = Encoding.UTF8.GetBytes(batch.ToString());
@@ -487,7 +537,10 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         await _journalStream.Stream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
     }
 
-    private async Task CompleteJournalAsync(bool writeCompletionRecord, CancellationToken cancellationToken)
+    private async Task CompleteJournalAsync(
+        bool writeCompletionRecord,
+        string? reportFileName,
+        CancellationToken cancellationToken)
     {
         if (_journalPath is null || _journalCompletionTimedOut)
         {
@@ -498,7 +551,12 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         {
             if (writeCompletionRecord && !_journalFailed)
             {
-                TryWriteJournalBatch([ReportJournalRecord<TCapturedTestResult>.CreateCompletion()]);
+                ApplicationStateGuard.Ensure(reportFileName is not null);
+                TryWriteJournalBatch(
+                    [ReportJournalRecord<TCapturedTestResult>.CreateCompletion(
+                        reportFileName,
+                        Volatile.Read(ref _droppedJournalRecords))],
+                    isCompletion: true);
             }
 
             DisposeJournalStream();
@@ -508,6 +566,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         if (!_journalQueue.IsAddingCompleted)
         {
             _writeCompletionRecord = writeCompletionRecord;
+            _completedReportFileName = reportFileName;
             _journalQueue.CompleteAdding();
         }
 
@@ -531,7 +590,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         if (dropped > 0)
         {
             await _logger.LogWarningAsync(
-                $"Report recovery journal '{_journalPath}' dropped {dropped} record(s) because its bounded writer queue was full or unavailable. Normal report generation is unaffected, but crash recovery may be partial.").ConfigureAwait(false);
+                $"Report recovery journal '{_journalPath}' dropped {dropped} record(s) because its bounded writer queue was full or unavailable, or its safety limits were reached. Normal report generation is unaffected, but crash recovery may be partial.").ConfigureAwait(false);
         }
     }
 
