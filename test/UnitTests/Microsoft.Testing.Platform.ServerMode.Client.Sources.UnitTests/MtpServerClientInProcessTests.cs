@@ -1,0 +1,579 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Diagnostics;
+
+using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.ServerMode.Client;
+
+namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
+
+/// <summary>
+/// Tests for <see cref="MtpServerClient.LaunchInProcessAsync"/>: the launch path for embedded hosts that
+/// cannot spawn a child process. The callback plays the part of the hosted MTP application — it parses the
+/// server-mode arguments the client generated, dials back to the client's loopback listener, and serves the
+/// real wire protocol through <see cref="FakeMtpServer"/>.
+/// </summary>
+/// <remarks>
+/// Everything below the callback is production code: the client owns the listener, the argument array, the
+/// connect race, the serializer/formatter/transport setup and the shutdown sequence. That is exactly what an
+/// embedded host must not have to reimplement.
+/// </remarks>
+[TestClass]
+public sealed class MtpServerClientInProcessTests
+{
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_PassesCompleteServerModeArguments()
+    {
+        using var server = new InProcessServerFixture();
+
+        using MtpServerClient client = await LaunchAsync(server);
+
+        string[] arguments = server.Arguments;
+        Assert.AreSequenceEqual(
+            new[] { "--server", "jsonrpc", "--client-host", "127.0.0.1", "--client-port" },
+            arguments.Take(5),
+            $"The client must hand the callback a complete, ordered server-mode argument array. Actual: {string.Join(" ", arguments)}");
+        Assert.IsTrue(
+            int.TryParse(arguments[5], out int port) && port > 0,
+            $"'--client-port' must carry the client's listener port. Actual: {string.Join(" ", arguments)}");
+        Assert.AreEqual("--no-banner", arguments[6]);
+        Assert.HasCount(7, arguments);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_DrivesInitializeDiscoverRunAndExit()
+    {
+        using var server = new InProcessServerFixture();
+        var discoverRunId = Guid.NewGuid();
+        var runRunId = Guid.NewGuid();
+
+        using MtpServerClient client = await LaunchAsync(server);
+        List<MtpTestNodeUpdate> updates = [];
+        object gate = new();
+        client.TestNodesUpdated += (_, e) =>
+        {
+            lock (gate)
+            {
+                updates.AddRange(e.Changes);
+            }
+        };
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        Assert.AreEqual("FakeMtpServer", capabilities.ServerName);
+        Assert.AreEqual(Process.GetCurrentProcess().Id, client.ProcessId, "An in-process host runs the application in the caller's process.");
+
+        await server.Value.SendDiscoveredTestNodeAsync(discoverRunId, "uid-1", "Test1");
+        await WithTimeoutAsync(client.DiscoverTestsAsync(TestContext.CancellationToken));
+
+        await server.Value.SendPassedTestNodeAsync(runRunId, "uid-1", "Test1");
+        MtpRunResult result = await WithTimeoutAsync(client.RunTestsAsync(TestContext.CancellationToken));
+        Assert.IsEmpty(result.Artifacts);
+
+        await WithTimeoutAsync(client.ExitAsync(TestContext.CancellationToken));
+        await WithTimeoutAsync(server.Value.WaitForNotificationAsync(JsonRpcMethods.Exit, DefaultTimeout));
+
+        List<MtpTestNodeUpdate> snapshot;
+        lock (gate)
+        {
+            snapshot = [.. updates];
+        }
+
+        Assert.ContainsSingle(update => update.Uid == "uid-1" && update.ExecutionState == "discovered", snapshot);
+        Assert.ContainsSingle(update => update.Uid == "uid-1" && update.ExecutionState == "passed", snapshot);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackFaultsBeforeConnecting_PreservesCallbackException()
+    {
+        var callbackFailure = new InvalidOperationException("The embedded host could not start the application.");
+
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) => throw callbackFailure,
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        Assert.AreSame(
+            callbackFailure,
+            exception.InnerException,
+            "The callback's own exception must survive as the inner exception instead of being replaced by a timeout.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackFaultsAsynchronouslyBeforeConnecting_PreservesCallbackException()
+    {
+        var callbackFailure = new InvalidOperationException("The application crashed during startup.");
+
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                async (_, _) =>
+                {
+                    await Task.Yield();
+                    throw callbackFailure;
+                },
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        Assert.AreSame(callbackFailure, exception.InnerException);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackExitsBeforeConnecting_ReportsExitCode()
+    {
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) => Task.FromResult(3),
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        Assert.Contains(
+            "exited with code 3",
+            exception.Message,
+            "A callback that returns without connecting back must be reported with its exit code, not as a timeout.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackReturnsNullTask_Fails()
+    {
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+#pragma warning disable VSTHRD114 // Avoid returning null from a Task-returning method - this test deliberately supplies a misbehaving callback.
+                (_, _) => null!,
+#pragma warning restore VSTHRD114
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        Assert.IsInstanceOfType<MtpServerClientException>(exception.InnerException);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_NullCallback_Throws()
+        => await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+            () => MtpServerClient.LaunchInProcessAsync(null!, CreateOptions(), TestContext.CancellationToken));
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_AlreadyCanceled_DoesNotInvokeCallback()
+    {
+        using var alreadyCanceled = new CancellationTokenSource();
+        alreadyCanceled.Cancel();
+        int invocations = 0;
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) =>
+                {
+                    _ = Interlocked.Increment(ref invocations);
+                    return Task.FromResult(0);
+                },
+                CreateOptions(),
+                alreadyCanceled.Token));
+
+        Assert.AreEqual(0, Volatile.Read(ref invocations), "A pre-canceled launch must not start the application.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CanceledWhileConnecting_CancelsTheCallbackToken()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var callbackObservedCancellation = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // The callback never dials back, so the launch stays in the connect race until the caller cancels.
+        Task<MtpServerClient> launch = MtpServerClient.LaunchInProcessAsync(
+            async (serverArguments, serverToken) =>
+            {
+                callbackStarted.TrySetResult(true);
+                using CancellationTokenRegistration registration = serverToken.Register(() => callbackObservedCancellation.TrySetResult(true));
+                await callbackObservedCancellation.Task;
+                return 0;
+            },
+            CreateOptions(),
+            cancellation.Token);
+
+        await WithTimeoutAsync(callbackStarted.Task);
+        cancellation.Cancel();
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => WithTimeoutAsync(launch));
+        Assert.IsTrue(
+            await WithTimeoutAsync(callbackObservedCancellation.Task),
+            "A canceled launch must cancel the token handed to the callback so the abandoned application can stop.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_ConnectionTimeoutElapses_FailsWithTimeoutMessage()
+    {
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        MtpServerClientOptions options = CreateOptions();
+        options.ConnectionTimeout = TimeSpan.FromMilliseconds(250);
+        options.ServerShutdownTimeout = TimeSpan.FromMilliseconds(250);
+
+        try
+        {
+            MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+                () => MtpServerClient.LaunchInProcessAsync(
+                    async (_, _) =>
+                    {
+                        // Runs happily but never dials back: only the connection timeout can end the wait.
+                        await release.Task;
+                        return 0;
+                    },
+                    options,
+                    TestContext.CancellationToken));
+
+            Assert.Contains("did not connect back within", exception.Message);
+        }
+        finally
+        {
+            _ = release.TrySetResult(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispose_ClosesTransportAndAwaitsTheCallback()
+    {
+        using var server = new InProcessServerFixture();
+
+        MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        Assert.IsFalse(server.Completion.IsCompleted, "The application must stay alive while the client is in use.");
+
+        client.Dispose();
+
+        Assert.IsTrue(
+            server.Completion.IsCompleted,
+            "Dispose must close the transport and wait for the hosted application before it returns.");
+        Assert.AreEqual(0, await server.Completion);
+    }
+
+    [TestMethod]
+    public async Task Dispose_IsIdempotent()
+    {
+        using var server = new InProcessServerFixture();
+
+        MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        client.Dispose();
+        client.Dispose();
+        client.Dispose();
+
+        Assert.IsTrue(server.Completion.IsCompleted);
+        Assert.AreEqual(1, server.CompletionCount, "The hosted application must be torn down exactly once.");
+    }
+
+    [TestMethod]
+    public async Task Dispose_CallbackFaultsDuringShutdown_DoesNotThrow()
+    {
+        using var server = new InProcessServerFixture(
+            onDisconnected: () => throw new InvalidOperationException("The application failed while shutting down."));
+
+        MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        // A shutdown failure is observed and logged, never rethrown: Dispose runs on the unwind path of the
+        // caller's own failure and must not replace it.
+        client.Dispose();
+
+        Assert.IsTrue(server.Completion.IsFaulted);
+        _ = server.Completion.Exception;
+        Assert.Contains(
+            "The in-process MTP application failed",
+            server.Log,
+            $"The shutdown failure must be reported through the client logger. Log:{Environment.NewLine}{server.Log}");
+    }
+
+    [TestMethod]
+    public async Task Dispose_CallbackIgnoresShutdown_ReturnsWithinTheDocumentedBound()
+    {
+        var neverCompletes = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        MtpServerClientOptions options = CreateOptions();
+        options.ServerShutdownTimeout = TimeSpan.FromMilliseconds(200);
+        var log = new StringBuilder();
+        options.Logger = new DelegateMtpClientLogger((_, message) =>
+        {
+            lock (log)
+            {
+                log.AppendLine(message);
+            }
+        });
+
+        try
+        {
+            using MtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+                async (arguments, serverToken) =>
+                {
+                    using FakeMtpServer server = ConnectBack(arguments);
+
+                    // Deliberately ignores both the closed transport and the cancellation token.
+                    await neverCompletes.Task;
+                    return 0;
+                },
+                options,
+                TestContext.CancellationToken);
+
+            _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+            var stopwatch = Stopwatch.StartNew();
+            client.Dispose();
+            stopwatch.Stop();
+
+            // ServerShutdownTimeout + the fixed 5s cancellation grace, with generous slack for slow agents.
+            Assert.IsLessThan(
+                TimeSpan.FromSeconds(30),
+                stopwatch.Elapsed,
+                "Dispose must abandon an unresponsive application rather than block indefinitely.");
+
+            string text;
+            lock (log)
+            {
+                text = log.ToString();
+            }
+
+            Assert.Contains("abandoning it", text, $"Abandoning the application must be reported. Log:{Environment.NewLine}{text}");
+        }
+        finally
+        {
+            _ = neverCompletes.TrySetResult(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_Canceled_SendsCancelRequestToTheHostedApplication()
+    {
+        using var server = new InProcessServerFixture();
+
+        using MtpServerClient client = await LaunchAsync(server);
+        server.Value.WithholdRunResponse = true;
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        using var cancellation = new CancellationTokenSource();
+        Task<MtpRunResult> run = client.RunTestsAsync(cancellation.Token);
+        _ = await WithTimeoutAsync(server.Value.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout));
+
+        cancellation.Cancel();
+
+        await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => WithTimeoutAsync(run));
+        await WithTimeoutAsync(server.Value.WaitForNotificationAsync(JsonRpcMethods.CancelRequest, DefaultTimeout));
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task LaunchInProcessAsync_HonorsTheStatefulOption(bool isStateful)
+    {
+        using var server = new InProcessServerFixture();
+        MtpServerClientOptions options = CreateOptions();
+        options.IsStateful = isStateful;
+        options.ClientName = "EmbeddedHost";
+
+        using MtpServerClient client = await LaunchAsync(server, options);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        RequestMessage initialize = server.Value.ReceivedRequests.Single(request => request.Method == JsonRpcMethods.Initialize);
+        InitializeRequestArgs args = initialize.Params is InitializeRequestArgs typed
+            ? typed
+            : SerializerUtilities.Deserialize<InitializeRequestArgs>((IDictionary<string, object?>)initialize.Params!);
+
+        Assert.AreEqual(isStateful, args.Capabilities.IsStateful, "The in-process path must forward the client's stateful capability unchanged.");
+        Assert.AreEqual("EmbeddedHost", args.ClientInfo.Name);
+        Assert.AreEqual(Process.GetCurrentProcess().Id, args.ProcessId);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_MultipleRequestsOnOneSession_ReuseTheSameConnection()
+    {
+        using var server = new InProcessServerFixture();
+        MtpServerClientOptions options = CreateOptions();
+        options.IsStateful = true;
+
+        using MtpServerClient client = await LaunchAsync(server, options);
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        Assert.IsTrue(capabilities.MultiRequestSupport, "The fake server negotiates keep-alive back.");
+
+        await WithTimeoutAsync(client.DiscoverTestsAsync(TestContext.CancellationToken));
+        _ = await WithTimeoutAsync(client.RunTestsAsync(TestContext.CancellationToken));
+        _ = await WithTimeoutAsync(client.RunTestsWithFilterAsync("/*/*/*/*", TestContext.CancellationToken));
+
+        Assert.AreEqual(
+            1,
+            server.ConnectionCount,
+            "A stateful session must serve every request over the single connection the launch established.");
+        Assert.HasCount(4, server.Value.ReceivedRequestMethods);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_IgnoresEnvironmentVariablesAndWarns()
+    {
+        using var server = new InProcessServerFixture();
+        MtpServerClientOptions options = CreateOptions();
+        options.EnvironmentVariables["EXAMPLE"] = "1";
+
+        using MtpServerClient client = await LaunchAsync(server, options);
+
+        Assert.Contains(
+            nameof(MtpServerClientOptions.EnvironmentVariables),
+            server.Log,
+            "An in-process application shares the caller's environment, so silently dropping the variables would be a trap.");
+    }
+
+    private Task<MtpServerClient> LaunchAsync(InProcessServerFixture server, MtpServerClientOptions? options = null)
+    {
+        options ??= CreateOptions();
+
+        // Route the client's own diagnostics into the fixture so a test can assert on them.
+        options.Logger ??= new DelegateMtpClientLogger((_, message) => server.Append(message));
+
+        return WithTimeoutAsync(MtpServerClient.LaunchInProcessAsync(
+            server.RunAsync,
+            options,
+            TestContext.CancellationToken));
+    }
+
+    private static MtpServerClientOptions CreateOptions()
+        => new()
+        {
+            // Keep every negative test bounded well below the suite timeout.
+            ConnectionTimeout = TimeSpan.FromSeconds(20),
+            ServerShutdownTimeout = TimeSpan.FromSeconds(10),
+        };
+
+    private static FakeMtpServer ConnectBack(string[] serverArguments)
+    {
+        string host = ReadArgument(serverArguments, "--client-host");
+        int port = int.Parse(ReadArgument(serverArguments, "--client-port"), CultureInfo.InvariantCulture);
+        return FakeMtpServer.ConnectBackTo(host, port);
+    }
+
+    private static string ReadArgument(string[] serverArguments, string name)
+    {
+        int index = Array.IndexOf(serverArguments, name);
+        return index >= 0 && index + 1 < serverArguments.Length
+            ? serverArguments[index + 1]
+            : throw new InvalidOperationException($"The client did not pass '{name}'. Arguments: {string.Join(" ", serverArguments)}");
+    }
+
+    private static async Task<T> WithTimeoutAsync<T>(Task<T> task)
+    {
+        Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
+        return completed != task
+            ? throw new TimeoutException("Timed out waiting for the operation to complete.")
+            : await task.ConfigureAwait(false);
+    }
+
+    private static async Task WithTimeoutAsync(Task task)
+    {
+        Task completed = await Task.WhenAny(task, Task.Delay(DefaultTimeout)).ConfigureAwait(false);
+        if (completed != task)
+        {
+            throw new TimeoutException("Timed out waiting for the operation to complete.");
+        }
+
+        await task.ConfigureAwait(false);
+    }
+
+    private static async Task<TException> AssertThrowsAsync<TException>(Func<Task> action)
+        where TException : Exception
+    {
+        try
+        {
+            await WithTimeoutAsync(action()).ConfigureAwait(false);
+        }
+        catch (TException exception)
+        {
+            return exception;
+        }
+
+        Assert.Fail($"Expected an exception of type {typeof(TException).Name}, but none was thrown.");
+        throw new InvalidOperationException("Unreachable.");
+    }
+
+    /// <summary>
+    /// Plays the part of the hosted MTP application: it reads the client-generated arguments, dials back to
+    /// the client's listener, serves the protocol until the client closes the connection, and then completes
+    /// like a real <c>TestApplication.RunAsync</c> would.
+    /// </summary>
+    private sealed class InProcessServerFixture : IDisposable
+    {
+        private readonly Action? _onDisconnected;
+        private readonly TaskCompletionSource<int> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly StringBuilder _log = new();
+
+        private FakeMtpServer? _server;
+        private int _connectionCount;
+        private int _completionCount;
+
+        public InProcessServerFixture(Action? onDisconnected = null)
+            => _onDisconnected = onDisconnected;
+
+        /// <summary>Gets the argument array the client generated for the callback (empty before it ran).</summary>
+        public string[] Arguments { get; private set; } = [];
+
+        /// <summary>Gets the served fake server. Valid once the launch has completed.</summary>
+        public FakeMtpServer Value => _server ?? throw new InvalidOperationException("The callback has not connected yet.");
+
+        /// <summary>Gets the task that mirrors the hosted application's lifetime.</summary>
+        public Task<int> Completion => _completion.Task;
+
+        /// <summary>Gets how many times the callback dialed back to the client.</summary>
+        public int ConnectionCount => Volatile.Read(ref _connectionCount);
+
+        /// <summary>Gets how many times the hosted application ran to completion.</summary>
+        public int CompletionCount => Volatile.Read(ref _completionCount);
+
+        /// <summary>Gets the diagnostics the client emitted through its logger.</summary>
+        public string Log
+        {
+            get
+            {
+                lock (_log)
+                {
+                    return _log.ToString();
+                }
+            }
+        }
+
+        public void Append(string message)
+        {
+            lock (_log)
+            {
+                _log.AppendLine(message);
+            }
+        }
+
+        public async Task<int> RunAsync(string[] serverArguments, CancellationToken cancellationToken)
+        {
+            Arguments = serverArguments;
+            FakeMtpServer server = ConnectBack(serverArguments);
+            _server = server;
+            _ = Interlocked.Increment(ref _connectionCount);
+
+            try
+            {
+                // A real server-mode application runs until its session ends, which is what closing the
+                // client's end of the transport produces.
+                await server.Disconnected.ConfigureAwait(false);
+                _onDisconnected?.Invoke();
+                _ = Interlocked.Increment(ref _completionCount);
+                _ = _completion.TrySetResult(0);
+                return 0;
+            }
+            catch (Exception exception)
+            {
+                _ = Interlocked.Increment(ref _completionCount);
+                _ = _completion.TrySetException(exception);
+                throw;
+            }
+        }
+
+        public void Dispose()
+        {
+            _server?.Dispose();
+            _ = _completion.TrySetResult(0);
+        }
+    }
+}

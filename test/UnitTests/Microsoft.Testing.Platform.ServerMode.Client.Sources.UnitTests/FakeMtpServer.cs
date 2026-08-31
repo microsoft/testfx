@@ -39,7 +39,7 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// </summary>
 internal sealed class FakeMtpServer : IDisposable
 {
-    private readonly TcpListener _listener;
+    private readonly TcpListener? _listener;
     private readonly IMessageFormatter _formatter;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly List<NotificationMessage> _receivedNotifications = [];
@@ -49,6 +49,7 @@ internal sealed class FakeMtpServer : IDisposable
     private readonly Dictionary<int, TaskCompletionSource<ResponseMessage>> _pendingServerRequests = [];
     private readonly object _pendingServerRequestsLock = new();
     private readonly TaskCompletionSource<TcpMessageHandler> _handlerReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<object?> _disconnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private TcpClient? _serverClient;
     private NetworkStream? _serverStream;
@@ -60,25 +61,33 @@ internal sealed class FakeMtpServer : IDisposable
         _listener.Start();
         Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
         _formatter = FormatterUtilities.CreateFormatter();
-
-        InitializeResponse = new InitializeResponseArgs(
-            ProcessId: 4242,
-            ServerInfo: new ServerInfo("FakeMtpServer", "1.2.3"),
-            Capabilities: new ServerCapabilities(new ServerTestingCapabilities(
-                SupportsDiscovery: true,
-                MultiRequestSupport: true,
-                VSTestProviderSupport: false,
-                SupportsAttachments: true,
-                MultiConnectionProvider: false)))
-        {
-            ProtocolVersion = JsonRpcProtocolVersions.Current,
-        };
+        InitializeResponse = CreateDefaultInitializeResponse();
 
         _ = Task.Run(AcceptAndServeAsync);
     }
 
-    /// <summary>Gets the loopback port the fake server is listening on.</summary>
+    /// <summary>
+    /// Serves the protocol over a socket the fake server dialed itself. This is the shape an
+    /// <c>MtpServerClient.LaunchInProcessAsync</c> callback sees: the CLIENT listens and the server connects
+    /// back, which is the opposite of the parameterless constructor's listen-and-accept mode.
+    /// </summary>
+    private FakeMtpServer(TcpClient dialedSocket)
+    {
+        _formatter = FormatterUtilities.CreateFormatter();
+        InitializeResponse = CreateDefaultInitializeResponse();
+
+        _ = Task.Run(() => ServeAsync(dialedSocket));
+    }
+
+    /// <summary>Gets the loopback port the fake server is listening on (listen mode only).</summary>
     public int Port { get; }
+
+    /// <summary>
+    /// Gets a task that completes when the connection to the client is gone (the client disposed it, or the
+    /// read loop ended). An in-process server callback awaits this to model a real test application, which
+    /// runs until its server-mode session ends.
+    /// </summary>
+    public Task Disconnected => _disconnected.Task;
 
     /// <summary>Gets or sets the response returned for an <c>initialize</c> request.</summary>
     public InitializeResponseArgs InitializeResponse { get; set; }
@@ -133,6 +142,26 @@ internal sealed class FakeMtpServer : IDisposable
             {
                 return _receivedRequests.ToArray();
             }
+        }
+    }
+
+    /// <summary>
+    /// Dials back to a client's loopback listener and serves the protocol on that socket. This is what an
+    /// in-process MTP application does when it is handed <c>--client-host</c>/<c>--client-port</c>.
+    /// </summary>
+    public static FakeMtpServer ConnectBackTo(string host, int port)
+    {
+        var tcp = new TcpClient();
+        try
+        {
+            tcp.Connect(host, port);
+            tcp.NoDelay = true;
+            return new FakeMtpServer(tcp);
+        }
+        catch
+        {
+            tcp.Dispose();
+            throw;
         }
     }
 
@@ -356,7 +385,7 @@ internal sealed class FakeMtpServer : IDisposable
     {
         try
         {
-            _listener.Stop();
+            _listener?.Stop();
         }
         catch (Exception)
         {
@@ -382,6 +411,7 @@ internal sealed class FakeMtpServer : IDisposable
         }
 
         _writeLock.Dispose();
+        _ = _disconnected.TrySetResult(null);
     }
 
     private Task SendTestNodeAsync(Guid runId, string uid, string displayName, PropertyBag properties)
@@ -398,21 +428,41 @@ internal sealed class FakeMtpServer : IDisposable
             new TestNodeStateChangedEventArgs(runId, [change])));
     }
 
+    private static InitializeResponseArgs CreateDefaultInitializeResponse()
+        => new(
+            ProcessId: 4242,
+            ServerInfo: new ServerInfo("FakeMtpServer", "1.2.3"),
+            Capabilities: new ServerCapabilities(new ServerTestingCapabilities(
+                SupportsDiscovery: true,
+                MultiRequestSupport: true,
+                VSTestProviderSupport: false,
+                SupportsAttachments: true,
+                MultiConnectionProvider: false)))
+        {
+            ProtocolVersion = JsonRpcProtocolVersions.Current,
+        };
+
     private async Task AcceptAndServeAsync()
     {
         TcpClient socket;
         try
         {
-            socket = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
+            socket = await _listener!.AcceptTcpClientAsync().ConfigureAwait(false);
         }
         catch (Exception)
         {
             // The listener was stopped before a client connected (e.g. the test finished). Leave the
             // handler-ready task pending; nothing will await it.
+            _ = _disconnected.TrySetResult(null);
             return;
         }
 
         socket.NoDelay = true;
+        await ServeAsync(socket).ConfigureAwait(false);
+    }
+
+    private async Task ServeAsync(TcpClient socket)
+    {
         _serverClient = socket;
         _serverStream = socket.GetStream();
         var handler = new TcpMessageHandler(socket, _serverStream, _serverStream, _formatter);
@@ -425,6 +475,10 @@ internal sealed class FakeMtpServer : IDisposable
         catch (Exception)
         {
             // The connection was torn down (client disposed or the test ended). Nothing to do.
+        }
+        finally
+        {
+            _ = _disconnected.TrySetResult(null);
         }
     }
 

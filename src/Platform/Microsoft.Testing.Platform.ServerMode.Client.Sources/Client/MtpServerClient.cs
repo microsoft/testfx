@@ -9,9 +9,12 @@ namespace Microsoft.Testing.Platform.ServerMode.Client;
 /// Default <see cref="IMtpServerClient"/> implementation over a <see cref="MtpJsonRpcConnection"/>.
 /// </summary>
 /// <remarks>
-/// Two ways to obtain a client:
+/// Three ways to obtain a client:
 /// <list type="bullet">
-/// <item><see cref="Launch(string, MtpServerClientOptions?)"/> starts the MTP application and owns its process.</item>
+/// <item><see cref="Launch(string, MtpServerClientOptions?)"/> starts the MTP application as a child process
+/// and owns that process.</item>
+/// <item><see cref="LaunchInProcessAsync"/> hosts the MTP application in the caller's own process through a
+/// callback and owns the resulting server task (for embedded hosts that cannot spawn a process).</item>
 /// <item>The <see cref="MtpServerClient(MtpJsonRpcConnection, MtpServerClientOptions?)"/> constructor wraps an
 /// already-connected transport (used by tests over a paired in-memory stream).</item>
 /// </list>
@@ -22,7 +25,7 @@ internal sealed class MtpServerClient : IMtpServerClient
 {
     private readonly MtpJsonRpcConnection _connection;
     private readonly MtpServerClientOptions _options;
-    private readonly MtpServerProcess? _process;
+    private readonly IMtpServerHost? _host;
 
     private Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? _serverRequestHandler;
     private int _disposed;
@@ -35,8 +38,9 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <remarks>
     /// Precondition: the connection's formatter must have been created with the client serializers already
     /// registered — call <see cref="SerializerUtilities.RegisterClientSerializers"/> before building the
-    /// formatter passed to <paramref name="connection"/>. The <see cref="Launch"/> factory does this for you;
-    /// callers that construct a connection directly are responsible for the ordering.
+    /// formatter passed to <paramref name="connection"/>. The <see cref="Launch"/> and
+    /// <see cref="LaunchInProcessAsync"/> factories do this for you; callers that construct a connection
+    /// directly are responsible for the ordering.
     /// </remarks>
     public MtpServerClient(MtpJsonRpcConnection connection, MtpServerClientOptions? options = null)
     {
@@ -47,9 +51,9 @@ internal sealed class MtpServerClient : IMtpServerClient
         _connection.ServerRequestHandler = OnServerRequestAsync;
     }
 
-    private MtpServerClient(MtpServerProcess process, MtpServerClientOptions options)
-        : this(process.Connection, options)
-        => _process = process;
+    private MtpServerClient(IMtpServerHost host, MtpServerClientOptions options)
+        : this(host.Connection, options)
+        => _host = host;
 
     /// <inheritdoc />
     public event EventHandler<MtpTestNodeUpdateEventArgs>? TestNodesUpdated;
@@ -71,7 +75,7 @@ internal sealed class MtpServerClient : IMtpServerClient
     }
 
     /// <inheritdoc />
-    public int ProcessId => _process?.ProcessId ?? 0;
+    public int ProcessId => _host?.ProcessId ?? 0;
 
     /// <inheritdoc />
     public MtpServerCapabilities? Capabilities { get; private set; }
@@ -114,12 +118,88 @@ internal sealed class MtpServerClient : IMtpServerClient
         }
     }
 
+    /// <summary>
+    /// Hosts an MTP application in the caller's own process through <paramref name="serverEntryPoint"/> and
+    /// asynchronously waits for it to connect back.
+    /// </summary>
+    /// <param name="serverEntryPoint">
+    /// Builds and runs the MTP application. It receives the complete server-mode argument array, which it must
+    /// forward verbatim to the test application, plus a cancellation token, and returns the application's exit
+    /// code. The callback is invoked on the thread pool, so it never blocks the caller and never inherits the
+    /// caller's synchronization context.
+    /// </param>
+    /// <param name="options">Client options (name, capabilities, connection timeout, shutdown timeout, logger).</param>
+    /// <param name="cancellationToken">
+    /// Cancels the launch and the connection wait. It scopes the launch only: once the returned client exists,
+    /// canceling this token no longer affects the hosted application.
+    /// </param>
+    /// <exception cref="PlatformNotSupportedException">
+    /// The current platform has no loopback TCP listener (browser/WASM). This API is TCP-based and does not
+    /// enable WASM hosting.
+    /// </exception>
+    /// <exception cref="MtpServerConnectionClosedException">
+    /// The application failed, was canceled, or exited before connecting back, or did not connect back within
+    /// <see cref="MtpServerClientOptions.ConnectionTimeout"/>. The callback's own exception, when there is one,
+    /// is the inner exception.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// This is the embedded-host counterpart of <see cref="LaunchAsync"/>: the client still owns the loopback
+    /// listener, the server-mode arguments, the connect race, the serializer/formatter/transport setup and the
+    /// shutdown sequence — the caller only supplies "how to run the application":
+    /// </para>
+    /// <code>
+    /// using IMtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+    ///     async (serverArgs, token) =>
+    ///     {
+    ///         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(serverArgs);
+    ///         builder.AddMSTest(() =&gt; testAssemblies);
+    ///         using ITestApplication app = await builder.BuildAsync();
+    ///         return await app.RunAsync();
+    ///     },
+    ///     options,
+    ///     cancellationToken);
+    /// </code>
+    /// <para>
+    /// Ownership: the returned client owns the hosted application. Disposing it closes the transport (which is
+    /// how a server-mode application is asked to stop) and then waits for the callback within a documented
+    /// bound — see <see cref="MtpServerClientOptions.ServerShutdownTimeout"/>. Call
+    /// <see cref="ExitAsync"/> before disposing for a protocol-level shutdown.
+    /// </para>
+    /// <para>
+    /// There is deliberately no synchronous overload: the callback runs in the caller's process, so blocking
+    /// the launching thread risks deadlocking the very application being launched.
+    /// </para>
+    /// </remarks>
+    public static async Task<MtpServerClient> LaunchInProcessAsync(
+        Func<string[], CancellationToken, Task<int>> serverEntryPoint,
+        MtpServerClientOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (serverEntryPoint is null)
+        {
+            throw new ArgumentNullException(nameof(serverEntryPoint));
+        }
+
+        options ??= new MtpServerClientOptions();
+        MtpServerInProcessHost host = await MtpServerInProcessHost.StartAsync(serverEntryPoint, options, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return new MtpServerClient(host, options);
+        }
+        catch
+        {
+            host.Dispose();
+            throw;
+        }
+    }
+
     /// <inheritdoc />
     public async Task<MtpServerCapabilities> InitializeAsync(CancellationToken cancellationToken = default)
     {
         EnsureStarted();
         var args = new InitializeRequestArgs(
-            GetCurrentProcessId(),
+            MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
             new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful))
         {
@@ -182,20 +262,16 @@ internal sealed class MtpServerClient : IMtpServerClient
         _connection.NotificationReceived -= OnNotificationReceived;
         _connection.ServerRequestHandler = null;
 
-        if (_process is not null)
+        if (_host is not null)
         {
-            _process.Dispose();
+            // The host owns the connection: its Dispose closes the transport in the order the launched server
+            // expects and then tears the server itself down.
+            _host.Dispose();
         }
         else
         {
             _connection.Dispose();
         }
-    }
-
-    private static int GetCurrentProcessId()
-    {
-        using var current = Process.GetCurrentProcess();
-        return current.Id;
     }
 
     private static ICollection<TestNode> BuildTestNodes(IReadOnlyCollection<string> testNodeUids)

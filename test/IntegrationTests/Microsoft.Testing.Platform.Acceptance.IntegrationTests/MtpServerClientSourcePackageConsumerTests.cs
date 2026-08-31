@@ -80,6 +80,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                     DebuggerProvider = true,
                     IsStateful = true,
                     ConnectionTimeout = TimeSpan.FromSeconds(30),
+                    ServerShutdownTimeout = TimeSpan.FromSeconds(30),
                     Logger = logger,
                 };
                 options.EnvironmentVariables["EXAMPLE"] = "1";
@@ -115,6 +116,22 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 // Referencing the platform assembly alongside the source package must bind these two public
                 // types to the same assembly. Injected protocol types live in a package-private namespace.
                 _ = new TestNodeUidListFilter(new[] { new TestNodeUid("uid") });
+            }
+
+            // The embedded-host launch path: no Process.Start, the caller only supplies "how to run the app".
+            internal static async Task DriveInProcessAsync(CancellationToken cancellationToken)
+            {
+                using IMtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+                    (string[] serverArgs, CancellationToken serverToken) =>
+                    {
+                        Console.WriteLine(string.Join(" ", serverArgs));
+                        return Task.FromResult(serverToken.IsCancellationRequested ? 1 : 0);
+                    },
+                    new MtpServerClientOptions(),
+                    cancellationToken);
+
+                Console.WriteLine(client.ProcessId);
+                await client.ExitAsync(cancellationToken);
             }
 
             private static void OnTestNodesUpdated(object? sender, MtpTestNodeUpdateEventArgs e)

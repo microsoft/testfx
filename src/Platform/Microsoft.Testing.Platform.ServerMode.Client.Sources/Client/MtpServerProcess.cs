@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using System.Net;
 using System.Net.Sockets;
 
 namespace Microsoft.Testing.Platform.ServerMode.Client;
@@ -19,11 +18,11 @@ namespace Microsoft.Testing.Platform.ServerMode.Client;
 /// formatter (Jsonite on .NET Framework / netstandard, in-box System.Text.Json on .NET), so the wire
 /// is byte-for-byte identical to the server's expectations.
 /// </remarks>
-internal sealed class MtpServerProcess : IDisposable
+internal sealed class MtpServerProcess : IMtpServerHost
 {
-    private const string ServerArgument = "--server";
-    private const string ClientPortArgument = "--client-port";
-    private const string NoBannerArgument = "--no-banner";
+    private const string ServerArgument = MtpServerConnector.ServerArgument;
+    private const string ClientPortArgument = MtpServerConnector.ClientPortArgument;
+    private const string NoBannerArgument = MtpServerConnector.NoBannerArgument;
 
     // Bounded wait after killing the process so the OS releases the executable's file locks before a
     // caller (for example an acceptance test) deletes the application directory.
@@ -35,10 +34,6 @@ internal sealed class MtpServerProcess : IDisposable
     // this buffer without limit. The tail is what matters for diagnosing a failure near exit, so when the
     // cap is exceeded the oldest text is dropped from the front and the most recent output is kept.
     private const int MaxStandardErrorLength = 64 * 1024;
-
-    // How often the connect wait re-checks whether the launched process has already exited, so a child
-    // that dies on startup fails fast instead of blocking the full ConnectionTimeout.
-    private static readonly TimeSpan ProcessExitPollInterval = TimeSpan.FromMilliseconds(100);
 
     private readonly TcpListener _listener;
     private readonly Process _process;
@@ -123,13 +118,11 @@ internal sealed class MtpServerProcess : IDisposable
         // The serializers must be registered BEFORE the formatter is created: the .NET
         // System.Text.Json formatter snapshots the registered serializer/deserializer type sets into
         // its per-type engine at construction time.
-        SerializerUtilities.RegisterClientSerializers();
-        IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
+        IMessageFormatter formatter = MtpServerConnector.CreateFormatter();
 
         TcpListener? listener = null;
         Process? process = null;
         TcpClient? acceptedClient = null;
-        Task<TcpClient>? acceptTask = null;
         var standardError = new StringBuilder();
         try
         {
@@ -137,9 +130,7 @@ internal sealed class MtpServerProcess : IDisposable
             // process) lives inside the try so the catch can tear down whatever was already created. In
             // particular, if listener.Start() fails to bind or the process fails to start, the listener is
             // stopped rather than leaked.
-            listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener = MtpServerConnector.StartLoopbackListener(out int port);
 
             LaunchCommand launch = BuildLaunch(source, port);
             string fileName = launch.FileName;
@@ -187,49 +178,28 @@ internal sealed class MtpServerProcess : IDisposable
             // Drain stdout so the child never blocks on a full pipe (banner, diagnostics).
             process.BeginOutputReadLine();
 
-#if NET8_0_OR_GREATER
-            acceptTask = listener.AcceptTcpClientAsync(cancellationToken).AsTask();
-#else
-            acceptTask = listener.AcceptTcpClientAsync();
-#endif
-
             // Wait for the app to dial back, but poll the process alongside the accept: if the child exits
             // early (bad arguments, startup crash) we fail fast with its exit code + captured stderr instead
             // of blocking the full ConnectionTimeout and then reporting a misleading timeout. Polling
             // process.HasExited (rather than racing the accept against Process.Exited) keeps this free of a
             // TaskCompletionSource ordering race.
-            var connectStopwatch = Stopwatch.StartNew();
-            while (!acceptTask.IsCompleted)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (process.HasExited)
-                {
-                    throw new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' exited with code {process.ExitCode} before connecting back. {GetStandardError(standardError)}");
-                }
-
-                if (connectStopwatch.Elapsed >= options.ConnectionTimeout)
-                {
-                    throw new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}");
-                }
-
-                var delayTask = Task.Delay(ProcessExitPollInterval, cancellationToken);
-                _ = await Task.WhenAny(acceptTask, delayTask).ConfigureAwait(false);
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-            acceptedClient = await acceptTask.ConfigureAwait(false);
-            acceptedClient.NoDelay = true;
-            NetworkStream stream = acceptedClient.GetStream();
-
-            var handler = new TcpMessageHandler(acceptedClient, stream, stream, formatter);
-            var connection = new MtpJsonRpcConnection(handler, logger);
+            Process startedProcess = process;
+            acceptedClient = await MtpServerConnector.AcceptAsync(
+                listener,
+                () => startedProcess.HasExited
+                    ? new MtpServerConnectionClosedException(
+                        $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}")
+                    : null,
+                () => new MtpServerConnectionClosedException(
+                    $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
+                options.ConnectionTimeout,
+                serverCompletion: null,
+                cancellationToken).ConfigureAwait(false);
 
             // NOTE: the read loop is intentionally NOT started here. The owner (MtpServerClient) wires its
             // notification/server-request handlers first and then calls Connection.Start(), so no server ->
             // client message can slip past before the handlers are attached.
+            MtpJsonRpcConnection connection = MtpServerConnector.CreateConnection(acceptedClient, formatter, logger);
             return new MtpServerProcess(listener, process, acceptedClient, connection, standardError, logger);
         }
         catch
@@ -240,34 +210,11 @@ internal sealed class MtpServerProcess : IDisposable
                 process.Dispose();
             }
 
-            // If the accept has not produced a socket we own yet, guard against a late dial-back leaking a
-            // connected socket: hand the still-pending accept a continuation that disposes any socket it
-            // eventually yields (or observes its fault so the task is not left unobserved when SafeStop
-            // faults it). When acceptedClient is already set we own it and dispose it directly below.
-            if (acceptedClient is null && acceptTask is not null)
-            {
-                _ = acceptTask.ContinueWith(
-                    static t =>
-                    {
-                        if (t.Status == TaskStatus.RanToCompletion)
-                        {
-                            t.Result.Dispose();
-                        }
-                        else
-                        {
-                            _ = t.Exception;
-                        }
-                    },
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-            }
-
             acceptedClient?.Dispose();
 
             if (listener is not null)
             {
-                SafeStop(listener, logger);
+                MtpServerConnector.SafeStop(listener, logger);
             }
 
             throw;
@@ -425,18 +372,6 @@ internal sealed class MtpServerProcess : IDisposable
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
 
-    private static void SafeStop(TcpListener listener, IMtpClientLogger logger)
-    {
-        try
-        {
-            listener.Stop();
-        }
-        catch (SocketException ex)
-        {
-            logger.SafeLog(MtpClientLogLevel.Debug, $"Stopping the TCP listener threw: {ex}");
-        }
-    }
-
     private static void SafeKill(Process process, IMtpClientLogger logger)
     {
         try
@@ -481,7 +416,7 @@ internal sealed class MtpServerProcess : IDisposable
             _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
         }
 
-        SafeStop(_listener, _logger);
+        MtpServerConnector.SafeStop(_listener, _logger);
         SafeKill(_process, _logger);
         _process.Dispose();
     }

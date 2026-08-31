@@ -55,7 +55,8 @@ internal interface IMtpServerClient : IDisposable
 
     /// <summary>
     /// Gets the process id of the launched application, or 0 when the client was created over an
-    /// externally supplied connection (for example in tests).
+    /// externally supplied connection (for example in tests). For an application hosted in the caller's
+    /// own process this is the current process id.
     /// </summary>
     int ProcessId { get; }
 

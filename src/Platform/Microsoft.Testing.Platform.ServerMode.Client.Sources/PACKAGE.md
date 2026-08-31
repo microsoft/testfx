@@ -16,6 +16,9 @@ compiled (as `internal` types) into your own assembly. That means:
 - `MtpServerClient` / `IMtpServerClient` — launch an MTP test app in server mode and drive it:
   `InitializeAsync`, `DiscoverTestsAsync`, `RunTestsAsync`, `ExitAsync`, plus a `TestNodesUpdated`
   event.
+- Two launch paths: an **external process** (`LaunchAsync(path)`) for IDE and desktop tooling, and an
+  **in-process host** (`LaunchInProcessAsync(callback)`) for embedded runners (MAUI, Android/iOS test
+  apps) that cannot spawn a child process.
 - The launch/transport layer (loopback TCP listener the app dials back to, LSP-style
   `Content-Length` framing) and the strongly-typed protocol records.
 
@@ -40,6 +43,57 @@ await client.DiscoverTestsAsync();
 MtpRunResult result = await client.RunTestsAsync();
 await client.ExitAsync();
 ```
+
+### Embedded hosts (no child process)
+
+`LaunchInProcessAsync` runs the test application in **your own process**. You supply only "how to run
+the application"; the client still owns the loopback listener, the server-mode arguments, the connect
+race, the serializer/formatter/transport setup and the shutdown sequence:
+
+```csharp
+using IMtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+    async (serverArgs, cancellationToken) =>
+    {
+        // serverArgs is the complete server-mode argument array
+        // (--server jsonrpc --client-host … --client-port … --no-banner).
+        // Forward it verbatim; do not filter or reorder it.
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(serverArgs);
+        builder.AddMSTest(() => testAssemblies);
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
+    },
+    options,
+    cancellationToken);
+
+await client.InitializeAsync();
+await client.DiscoverTestsAsync();
+await client.RunTestsAsync();
+await client.ExitAsync();
+```
+
+Things to know:
+
+- **Ownership.** The returned client owns the hosted application. Disposing it closes the transport —
+  which is how a server-mode application is asked to stop — and then waits for your callback. Call
+  `ExitAsync` first for a protocol-level shutdown.
+- **Bounded shutdown.** Disposal waits at most `MtpServerClientOptions.ServerShutdownTimeout`
+  (default 30 seconds), then cancels the token passed to your callback and waits a further fixed
+  5 seconds. A callback still running after that is abandoned rather than hanging your app; its failure
+  is reported through `MtpServerClientOptions.Logger`.
+- **Cancellation.** The `cancellationToken` passed to `LaunchInProcessAsync` scopes the *launch* only.
+  Once the client exists, canceling it no longer affects the hosted application. Per-request
+  cancellation is unchanged: canceling a `RunTestsAsync`/`DiscoverTestsAsync` token sends
+  `$/cancelRequest`.
+- **Failures before connection.** If the callback throws, is canceled, or returns before dialing back,
+  the launch fails with `MtpServerConnectionClosedException` and your exception is preserved as the
+  inner exception (instead of surfacing as a misleading connection timeout).
+- **Threading.** The callback is invoked on the thread pool, so it never blocks the caller and never
+  inherits the caller's synchronization context. There is no synchronous overload on purpose.
+- **`EnvironmentVariables` is ignored** on this path: the application shares your process's
+  environment. Set the variables before starting the host.
+- **Platform limits.** Both launch paths use loopback TCP. On browser/WASM there is no listening
+  socket, so `LaunchInProcessAsync` throws `PlatformNotSupportedException`. This package does **not**
+  enable server-mode testing in the browser.
 
 ## Consumer requirements
 
