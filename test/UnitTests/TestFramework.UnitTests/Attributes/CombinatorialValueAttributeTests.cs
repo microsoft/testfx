@@ -75,6 +75,13 @@ public class CombinatorialValueAttributeTests : TestContainer
             Maximum = 20,
             Seed = 42,
         }.Values.Should().Equal(values);
+        new CombinatorialRandomDataAttribute
+        {
+            Count = 5,
+            Minimum = 10,
+            Maximum = 20,
+            Seed = 43,
+        }.Values.Should().NotEqual(values);
     }
 
     public void RandomDataRejectsInvalidConfiguration()
