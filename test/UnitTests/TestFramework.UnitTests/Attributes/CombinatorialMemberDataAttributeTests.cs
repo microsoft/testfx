@@ -66,6 +66,13 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         attribute.GetValues(IntParameter).Should().Equal([1]);
     }
 
+    public void AllowsNonNullForNullableMethodParameter()
+    {
+        var attribute = new CombinatorialMemberDataAttribute(nameof(GetValuesForNullable), 2);
+
+        attribute.GetValues(IntParameter).Should().Equal([2]);
+    }
+
     public void FindsEligibleInheritedMembersHiddenByInstanceMembers()
     {
         new CombinatorialMemberDataAttribute(nameof(HiddenMembers.IntProperty))

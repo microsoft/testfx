@@ -189,7 +189,10 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         {
             if (arguments[i] is object argument)
             {
-                if (!parameters[i].ParameterType.GetTypeInfo().IsAssignableFrom(argument.GetType().GetTypeInfo()))
+                Type parameterType = parameters[i].ParameterType;
+                Type argumentType = argument.GetType();
+                if (!parameterType.GetTypeInfo().IsAssignableFrom(argumentType.GetTypeInfo())
+                    && Nullable.GetUnderlyingType(parameterType) != argumentType)
                 {
                     return false;
                 }
