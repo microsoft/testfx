@@ -11,7 +11,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 ### Added
 
 * Add managed-identity authentication to `Microsoft.Testing.Extensions.AzureFoundry`, while keeping `Azure.Identity` optional for consumers that provide their own `TokenCredential`, by @Evangelink in [#9707](https://github.com/microsoft/testfx/pull/9707) and [#9779](https://github.com/microsoft/testfx/pull/9779)
-* Add the client-declared `IsStateful` capability to the Microsoft.Testing.Platform server-mode protocol, allowing editor and IDE clients to tell the server whether state must be preserved between requests, by @Evangelink in [#9789](https://github.com/microsoft/testfx/pull/9789)
+* Add the client-declared `IsStateful` capability to the Microsoft.Testing.Platform server-mode protocol, allowing editor and IDE clients to declare that they retain test-node state for the whole session, by @Evangelink in [#9789](https://github.com/microsoft/testfx/pull/9789)
 * Add the public injectable `IArtifactNamingService` for extensions that need platform-consistent artifact names by @Evangelink in [#9783](https://github.com/microsoft/testfx/pull/9783)
 * Allow overriding the Unix directory used for IPC named pipes, enabling test execution in sandboxes where the default temporary directory is unavailable, by @Evangelink in [#9846](https://github.com/microsoft/testfx/pull/9846)
 * Add `--show-slowest-tests <count>` to the core terminal reporter to list the requested number of slowest completed tests at the end of a run by @Evangelink in [#9894](https://github.com/microsoft/testfx/pull/9894)

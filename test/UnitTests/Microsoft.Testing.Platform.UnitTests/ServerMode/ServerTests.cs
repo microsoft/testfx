@@ -59,9 +59,25 @@ public sealed class ServerTests
 
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         TestApplicationHooks testApplicationHooks = new();
+        IClientInfo? clientInfo = null;
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
+        builder.RegisterTestFramework(
+            _ => new TestFrameworkCapabilities(),
+            (_, serviceProvider) =>
+            {
+#pragma warning disable TPEXP // IClientInfo is experimental.
+                clientInfo = serviceProvider.GetClientInfo();
+#pragma warning restore TPEXP
+                return new MockTestAdapter
+                {
+                    DiscoveryAction = context =>
+                    {
+                        context.Complete();
+                        return Task.CompletedTask;
+                    },
+                };
+            });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
@@ -86,7 +102,8 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
                         "testing": {
-                            "debuggerProvider": true
+                            "debuggerProvider": true,
+                            "isStateful": true
                         }
                     }
                 }
@@ -126,6 +143,29 @@ public sealed class ServerTests
         Assert.AreEqual(expectedResponse.ServerInfo.Name, resultJson.ServerInfo.Name);
         Assert.AreEqual(JsonRpcProtocolVersions.Current, resultJson.ProtocolVersion);
         Assert.IsNotEmpty(resultJson.ServerInfo.Version);
+
+        await WriteMessageAsync(
+            writer,
+            """
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "testing/discoverTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000001"
+                }
+            }
+            """);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage { Id: 2 },
+            "Wait discovery",
+            cancellationToken);
+
+        Assert.IsNotNull(clientInfo);
+        Assert.AreEqual("testingplatform-unittests", clientInfo.Id);
+        Assert.AreEqual("1.0.0", clientInfo.Version);
+        Assert.IsTrue(clientInfo.Capabilities.IsStateful);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 

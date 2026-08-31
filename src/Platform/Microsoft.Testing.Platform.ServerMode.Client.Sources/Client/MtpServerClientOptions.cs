@@ -36,16 +36,13 @@ internal sealed class MtpServerClientOptions
     public bool DebuggerProvider { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the client keeps the connection alive for multiple requests
-    /// (<c>capabilities.testing.isStateful</c> / <c>experimental_multiRequestSupport</c>). When
-    /// <see langword="false"/> the client performs a single discover or run and then exits. Defaults to
-    /// <see langword="false"/>.
+    /// Gets or sets a value indicating whether the client persists an addressable set of test nodes for the
+    /// whole session and keeps each node in its last-known state until explicitly updated
+    /// (<c>capabilities.testing.isStateful</c>). Defaults to <see langword="false"/>.
     /// </summary>
     /// <remarks>
-    /// This flag only advertises the client's willingness to the server during the handshake; it does not by
-    /// itself guarantee multi-request behavior. Real keep-alive additionally requires the server to negotiate
-    /// it back via <c>ServerCapabilities.MultiRequestSupport</c>. Setting this to <see langword="true"/>
-    /// against a server that does not support it has no effect.
+    /// This capability describes how the client consumes test-node updates. It is independent of connection
+    /// lifetime and the server's <c>ServerCapabilities.MultiRequestSupport</c> capability.
     /// </remarks>
     public bool IsStateful { get; set; }
 

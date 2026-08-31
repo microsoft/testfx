@@ -240,7 +240,8 @@ interface InitializeParams {
             // whole session and keeps each node in its last-known state until it is explicitly updated
             // (for example, an IDE test explorer). If false or missing, the client is stateless: it
             // consumes test updates as a stream and does not retain node state after the run
-            // (for example, `dotnet test`). Defaults to false.
+            // (for example, `dotnet test`). This is independent of connection lifetime and
+            // experimental_multiRequestSupport. Defaults to false.
             isStateful?: boolean,
         },
     }
