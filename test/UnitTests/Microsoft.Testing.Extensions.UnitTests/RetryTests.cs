@@ -659,7 +659,7 @@ public class RetryTests
                 Assert.ContainsSingle(displayed));
             Assert.Contains("invalid-processor", warning.Message);
             logger.Verify(
-                logger => logger.Log(
+                logger => logger.LogAsync(
                     LogLevel.Warning,
                     It.Is<string>(message =>
                         message.Contains("invalid-processor", StringComparison.Ordinal)
@@ -703,7 +703,7 @@ public class RetryTests
             cancellationToken));
 
         logger.Verify(
-            logger => logger.Log(
+            logger => logger.LogAsync(
                 It.IsAny<LogLevel>(),
                 It.IsAny<string>(),
                 It.IsAny<Exception?>(),
@@ -764,7 +764,7 @@ public class RetryTests
                 ExceptionMessage),
             displayedWarning.Message);
         logger.Verify(
-            logger => logger.Log(
+            logger => logger.LogAsync(
                 LogLevel.Warning,
                 It.Is<string>(message =>
                     message.Contains(ProcessorUid, StringComparison.Ordinal)

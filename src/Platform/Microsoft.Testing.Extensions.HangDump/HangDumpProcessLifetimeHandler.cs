@@ -209,12 +209,13 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         }
         else if (request is ActivitySignalRequest)
         {
+            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
+
             if (_traceEnabled)
             {
-                _logger.LogTrace($"Activity signal received by the test host '{_clock.UtcNow}'");
+                await _logger.LogTraceAsync($"Activity signal received by the test host '{_clock.UtcNow}'").ConfigureAwait(false);
             }
 
-            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
             return VoidResponse.CachedInstance;
         }
         else
@@ -366,7 +367,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {
-            _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
+            await _logger.LogDebugAsync($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')").ConfigureAwait(false);
         }
 
         foreach (string dumpFile in _dumpFiles)
