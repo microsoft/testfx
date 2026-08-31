@@ -66,6 +66,9 @@ Telemetry is only ever sent to the exporters and endpoints **you** configure —
 
 | Attribute (and legacy twin) | Carries | Control |
 | --- | --- | --- |
+| `test.case.name` (`test.name`) | The test's framework-provided display name, which for parameterized or data-driven tests can embed argument values or other user data. Exported verbatim (not truncated). | Emitted for every test. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
+| `test.case.id` / `test.case.parent.id` (`test.id` / `test.parent.id`) | The framework-provided test UID(s), which can embed parameter values. Exported verbatim (not truncated). | `test.case.id` is emitted for every test; `test.case.parent.id` is emitted when the test has a parent. Disable the legacy twins with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
+| `test.step.<id>.description` (`test.step<id>.description`) | Per-step descriptions supplied by the framework. Exported verbatim (not truncated). | Emitted whenever a test reports step timings. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
 | `code.file.path` (`test.file.path`), `code.line.number` (`test.line.start`/`test.line.end`) | Absolute source file path of the test — reveals machine and repository layout. Exported verbatim (not truncated). | On by default whenever a test reports a file location. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
 | `test.artifact.file[N].path` | Absolute path of each file artifact a test attaches (dumps, logs, screenshots). Exported verbatim (not truncated). | Emitted whenever a test produces file artifacts. |
 | `test.output.stdout` / `test.output.stderr` (`test.stdout` / `test.stderr`) | Captured standard output and error of the test, which routinely contains secrets or environment data. | Off when `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0`; truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
@@ -73,7 +76,7 @@ Telemetry is only ever sent to the exporters and endpoints **you** configure —
 | `test.metadata.*` (`test.metadataProperty.*`) | Framework-supplied trait/metadata values, exported verbatim (not truncated). | Emitted whenever a test carries metadata. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
 | Resource `vcs.repository.url.full`, plus the other resource attributes (`host.name`, `os.description`, and in CI the `cicd.*` / `vcs.*` pipeline, branch and commit — see *Resource attributes* above) | The machine, OS and CI provenance attached to every span and metric point. | User-info credentials in the repository URL (`https://user:token@host/...`) are stripped before export. |
 
-Only the captured output, the result explanation and the exception message and stack trace are truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` (8192 characters by default); the file, artifact and metadata values above are exported verbatim, so truncation is a size guard rather than redaction. Set `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0` on any job whose test output can contain secrets, and prefer sending telemetry to a backend you control.
+Only the captured output, the result explanation and the exception message and stack trace are truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` (8192 characters by default); all other listed values are exported verbatim unless the Control column notes otherwise, so truncation is a size guard rather than redaction. Set `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0` on any job whose test output can contain secrets, and prefer sending telemetry to a backend you control.
 
 ## Documentation
 

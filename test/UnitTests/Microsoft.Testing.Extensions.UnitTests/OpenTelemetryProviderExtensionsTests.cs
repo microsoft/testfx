@@ -6,6 +6,7 @@ using System.Diagnostics;
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
 using OpenTelemetry;
@@ -32,6 +33,14 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [DoNotParallelize]
 public sealed class OpenTelemetryProviderExtensionsTests
 {
+    private static readonly string[] ObservedEnvironmentVariables =
+    [
+        "OTEL_SDK_DISABLED",
+        "OTEL_TRACES_EXPORTER",
+        "OTEL_METRICS_EXPORTER",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+    ];
+
     [TestMethod]
     public void AddTestingPlatformResource_WithNullBuilder_Throws()
         => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformResource(null!));
@@ -58,6 +67,39 @@ public sealed class OpenTelemetryProviderExtensionsTests
         => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddOpenTelemetryProviderFromEnvironment());
 
     [TestMethod]
+    public async Task AddOpenTelemetryProviderFromEnvironment_RegistersProviderWithDelegateAndSkipsWhenSdkDisabled()
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "none",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+                bool tracingConfigured = false;
+
+                builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => tracingConfigured = true);
+
+                IOpenTelemetryProvider? provider = ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).BuildOTelProvider(new ServiceProvider());
+                using (provider)
+                {
+                    Assert.IsNotNull(provider);
+                    Assert.IsTrue(tracingConfigured);
+                }
+
+                ITestApplicationBuilder disabledBuilder = await TestApplication.CreateBuilderAsync([]);
+                Environment.SetEnvironmentVariable("OTEL_SDK_DISABLED", "true");
+                disabledBuilder.AddOpenTelemetryProviderFromEnvironment();
+
+                IOpenTelemetryProvider? disabledProvider = ((TelemetryManager)((TestApplicationBuilder)disabledBuilder).Telemetry).BuildOTelProvider(new ServiceProvider());
+                using (disabledProvider)
+                {
+                    Assert.IsNull(disabledProvider);
+                }
+            });
+
+    [TestMethod]
     public void ResolveEnvironmentConfiguration_WhenSdkDisabled_RegistersNothingEvenWithEndpointAndDelegates()
     {
         // OTEL_SDK_DISABLED must win over an explicit endpoint and over caller-supplied delegates.
@@ -82,7 +124,6 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow("True")]
     [DataRow("TRUE")]
     [DataRow("tRuE")]
-    [DataRow(" true ")]
     public void ResolveEnvironmentConfiguration_TreatsCaseInsensitiveTrueSdkDisabledAsDisabled(string value)
     {
         EnvironmentConfiguration configuration = OpenTelemetryProviderExtensions.ResolveEnvironmentConfiguration(
@@ -98,6 +139,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow("yes")]
     [DataRow("false")]
     [DataRow("")]
+    [DataRow(" true ")]
     public void ResolveEnvironmentConfiguration_TreatsNonTrueSdkDisabledValuesAsEnabled(string value)
     {
         // The OpenTelemetry boolean convention recognises only a case-insensitive "true"; "1" and other spellings
@@ -204,6 +246,8 @@ public sealed class OpenTelemetryProviderExtensionsTests
         List<Activity> exported = [];
         CapturingActivityExporter exporter = new(exported, namePrefix);
 
+        // The built TracerProvider (disposed by the using below) takes ownership of the processor added through
+        // AddProcessor and disposes it — and the exporter it wraps — on Dispose, so there is no undisposed local.
         using (TracerProvider tracerProvider = Sdk.CreateTracerProviderBuilder()
             .AddTestingPlatformInstrumentation()
             .ConfigureResource(resource => resource.AddTestingPlatformResource())
@@ -255,6 +299,33 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
     private static Func<string, string?> Env(Dictionary<string, string?> values)
         => name => values.TryGetValue(name, out string? value) ? value : null;
+
+    private static async Task WithEnvironmentAsync(Dictionary<string, string?> values, Func<Task> body)
+    {
+        Dictionary<string, string?> snapshot = [];
+        foreach (string name in ObservedEnvironmentVariables)
+        {
+            snapshot[name] = Environment.GetEnvironmentVariable(name);
+            Environment.SetEnvironmentVariable(name, null);
+        }
+
+        try
+        {
+            foreach (KeyValuePair<string, string?> value in values)
+            {
+                Environment.SetEnvironmentVariable(value.Key, value.Value);
+            }
+
+            await body().ConfigureAwait(false);
+        }
+        finally
+        {
+            foreach (KeyValuePair<string, string?> entry in snapshot)
+            {
+                Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            }
+        }
+    }
 
     private sealed class CapturingActivityExporter : BaseExporter<Activity>
     {
