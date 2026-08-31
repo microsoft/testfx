@@ -21,6 +21,11 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
             throw new ArgumentOutOfRangeException(nameof(count));
         }
 
+        if ((long)from + count - 1 > int.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "The range exceeds the maximum integer value.");
+        }
+
         Values = new object[count];
         for (int i = 0; i < count; i++)
         {
@@ -55,11 +60,17 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
             throw new ArgumentOutOfRangeException(nameof(step));
         }
 
-        int count = ((to - from) / step) + 1;
+        long valueCount = (((long)to - from) / step) + 1;
+        if (valueCount > int.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(to), "The range contains too many values.");
+        }
+
+        int count = (int)valueCount;
         Values = new object[count];
         for (int i = 0; i < count; i++)
         {
-            Values[i] = from + (i * step);
+            Values[i] = checked((int)(from + ((long)i * step)));
         }
     }
 
@@ -76,10 +87,21 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
             throw new ArgumentOutOfRangeException(nameof(count));
         }
 
-        Values = new object[count];
-        for (uint i = 0; i < count; i++)
+        if ((ulong)from + count - 1 > uint.MaxValue)
         {
-            Values[i] = from + i;
+            throw new ArgumentOutOfRangeException(nameof(count), "The range exceeds the maximum unsigned integer value.");
+        }
+
+        if (count > int.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "The range contains too many values.");
+        }
+
+        int valueCount = (int)count;
+        Values = new object[valueCount];
+        for (int i = 0; i < valueCount; i++)
+        {
+            Values[i] = from + (uint)i;
         }
     }
 
@@ -97,23 +119,20 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
             throw new ArgumentOutOfRangeException(nameof(step));
         }
 
-        var values = new List<uint>();
-        if (from < to)
+        bool ascending = from < to;
+        ulong difference = ascending ? (ulong)to - from : (ulong)from - to;
+        ulong count = (difference / step) + 1;
+        if (count > int.MaxValue)
         {
-            for (uint i = from; i <= to; i += step)
-            {
-                values.Add(i);
-            }
-        }
-        else
-        {
-            for (uint i = from; i >= to && i <= from; i -= step)
-            {
-                values.Add(i);
-            }
+            throw new ArgumentOutOfRangeException(nameof(to), "The range contains too many values.");
         }
 
-        Values = values.Cast<object>().ToArray();
+        Values = new object[(int)count];
+        for (int i = 0; i < Values.Length; i++)
+        {
+            ulong offset = (ulong)i * step;
+            Values[i] = (uint)(ascending ? from + offset : from - offset);
+        }
     }
 
     /// <summary>

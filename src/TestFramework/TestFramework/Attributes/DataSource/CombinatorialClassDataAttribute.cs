@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Specifies a class that provides values for a parameter on a combinatorial test method.
 /// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
 [CLSCompliant(false)]
 public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesProvider
 {
@@ -16,13 +17,17 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
     /// </summary>
     /// <param name="valuesSourceType">The type that provides values.</param>
     /// <param name="arguments">Arguments to pass to the constructor of <paramref name="valuesSourceType"/>.</param>
-    public CombinatorialClassDataAttribute(Type valuesSourceType, params object[]? arguments)
+    public CombinatorialClassDataAttribute(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
+        params object[]? arguments)
         => _values = GetValues(valuesSourceType, arguments);
 
     /// <inheritdoc />
     public object?[] GetValues(ParameterInfo parameter) => _values;
 
-    private static object?[] GetValues(Type valuesSourceType, object[]? arguments)
+    private static object?[] GetValues(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
+        object[]? arguments)
     {
         if (valuesSourceType is null)
         {

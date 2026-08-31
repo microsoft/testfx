@@ -62,7 +62,7 @@ public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesP
             throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "{0} must not be greater than {1}.", nameof(Minimum), nameof(Maximum)));
         }
 
-        int maxPossibleValues = Maximum - Minimum + 1;
+        long maxPossibleValues = (long)Maximum - Minimum + 1;
         if (Count > maxPossibleValues)
         {
             throw new InvalidOperationException(
@@ -75,28 +75,46 @@ public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesP
         }
 
         Random random = Seed != NoSeed ? new Random(Seed) : new Random();
-        var collisionChecker = new HashSet<int>();
+        var selectedOffsets = new HashSet<long>();
         object[] values = new object[Count];
-        int collisionCount = 0;
+        byte[] randomBytes = new byte[sizeof(uint)];
         int index = 0;
-        while (collisionChecker.Count < Count)
+        for (long maximumOffset = maxPossibleValues - Count; maximumOffset < maxPossibleValues; maximumOffset++)
         {
-            int value = random.Next(Minimum, Maximum + 1);
-            if (collisionChecker.Add(value))
+            long candidateOffset = NextInt64(random, maximumOffset + 1, randomBytes);
+            long selectedOffset;
+            if (selectedOffsets.Add(candidateOffset))
             {
-                values[index++] = value;
+                selectedOffset = candidateOffset;
             }
             else
             {
-                collisionCount++;
+                selectedOffsets.Add(maximumOffset);
+                selectedOffset = maximumOffset;
             }
 
-            if (collisionCount > collisionChecker.Count * 5 && collisionCount > 1000)
-            {
-                throw new InvalidOperationException("Too many collisions occurred while generating unique random values.");
-            }
+            values[index++] = checked((int)(Minimum + selectedOffset));
         }
 
         return values;
+    }
+
+    private static long NextInt64(Random random, long maximumExclusive, byte[] randomBytes)
+    {
+        const ulong uintRange = (ulong)uint.MaxValue + 1;
+        ulong range = (ulong)maximumExclusive;
+        ulong rejectionLimit = uintRange - (uintRange % range);
+        uint sample;
+        do
+        {
+            random.NextBytes(randomBytes);
+            sample = (uint)(randomBytes[0]
+                | (randomBytes[1] << 8)
+                | (randomBytes[2] << 16)
+                | (randomBytes[3] << 24));
+        }
+        while (sample >= rejectionLimit);
+
+        return (long)(sample % range);
     }
 }

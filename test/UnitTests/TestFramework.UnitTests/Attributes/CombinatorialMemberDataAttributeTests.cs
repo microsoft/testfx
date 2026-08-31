@@ -29,6 +29,16 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         attribute.GetValues(StringParameter).Should().Equal(["a", "b"]);
     }
 
+    public void SelectsPublicStaticMethodWhenInstanceOverloadAlsoMatches()
+    {
+        var attribute = new CombinatorialMemberDataAttribute(nameof(OverloadedValues.GetValues), "value")
+        {
+            MemberType = typeof(OverloadedValues),
+        };
+
+        attribute.GetValues(IntParameter).Should().Equal([1, 2]);
+    }
+
     public void FlattensObjectArrayRows()
         => new CombinatorialMemberDataAttribute(nameof(Rows)).GetValues(IntParameter).Should().Equal([1, 2, 3]);
 
@@ -61,6 +71,17 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         invalidArguments.Should().Throw<InvalidOperationException>().WithMessage("*Failed to create*");
     }
 
+    public void DataProviderAttributesOnlyApplyToParametersAndDisallowDuplicates()
+    {
+        AttributeUsageAttribute memberUsage = typeof(CombinatorialMemberDataAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
+        AttributeUsageAttribute classUsage = typeof(CombinatorialClassDataAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
+
+        memberUsage.ValidOn.Should().Be(AttributeTargets.Parameter);
+        memberUsage.AllowMultiple.Should().BeFalse();
+        classUsage.ValidOn.Should().Be(AttributeTargets.Parameter);
+        classUsage.AllowMultiple.Should().BeFalse();
+    }
+
     public static IEnumerable<int> IntProperty => [1, 2];
 
     public static readonly IEnumerable<int> IntField = [3, 4];
@@ -91,6 +112,13 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     public static class ExternalValues
     {
         public static IEnumerable<string> Strings => ["a", "b"];
+    }
+
+    public sealed class OverloadedValues
+    {
+        public IEnumerable<int> GetValues(object value) => [0];
+
+        public static IEnumerable<int> GetValues(string value) => [1, 2];
     }
 
     public sealed class IntegerRows : IEnumerable<object[]>

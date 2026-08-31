@@ -29,14 +29,28 @@ public class CombinatorialValueAttributeTests : TestContainer
     public void RangeRejectsInvalidCountsAndSteps()
     {
         Action signedCount = () => _ = new CombinatorialRangeAttribute(0, 0);
+        Action signedOverflow = () => _ = new CombinatorialRangeAttribute(int.MaxValue, 2);
         Action signedStep = () => _ = new CombinatorialRangeAttribute(0, 1, 0);
         Action unsignedCount = () => _ = new CombinatorialRangeAttribute(0u, 0u);
+        Action unsignedOverflow = () => _ = new CombinatorialRangeAttribute(uint.MaxValue, 2u);
         Action unsignedStep = () => _ = new CombinatorialRangeAttribute(0u, 1u, 0u);
 
         signedCount.Should().Throw<ArgumentOutOfRangeException>();
+        signedOverflow.Should().Throw<ArgumentOutOfRangeException>();
         signedStep.Should().Throw<ArgumentOutOfRangeException>();
         unsignedCount.Should().Throw<ArgumentOutOfRangeException>();
+        unsignedOverflow.Should().Throw<ArgumentOutOfRangeException>();
         unsignedStep.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    public void RangeHandlesBoundaryArithmeticWithoutWrapping()
+    {
+        new CombinatorialRangeAttribute(int.MinValue, int.MaxValue, int.MaxValue)
+            .Values.Should().Equal([int.MinValue, -1, int.MaxValue - 1]);
+        new CombinatorialRangeAttribute(0u, uint.MaxValue, uint.MaxValue)
+            .Values.Should().Equal([0u, uint.MaxValue]);
+        new CombinatorialRangeAttribute(uint.MaxValue - 1, uint.MaxValue, 2u)
+            .Values.Should().Equal([uint.MaxValue - 1]);
     }
 
     public void RandomDataIsUniqueBoundedSeededAndCached()
@@ -72,5 +86,34 @@ public class CombinatorialValueAttributeTests : TestContainer
         nonPositiveCount.Should().Throw<InvalidOperationException>();
         reversedRange.Should().Throw<InvalidOperationException>();
         excessiveCount.Should().Throw<InvalidOperationException>();
+    }
+
+    public void RandomDataSupportsDenseAndFullIntegerRanges()
+    {
+        object[] denseValues = new CombinatorialRandomDataAttribute
+        {
+            Count = 1001,
+            Minimum = 0,
+            Maximum = 1000,
+            Seed = 42,
+        }.Values;
+        object[] fullRangeValues = new CombinatorialRandomDataAttribute
+        {
+            Count = 10,
+            Minimum = int.MinValue,
+            Maximum = int.MaxValue,
+            Seed = 42,
+        }.Values;
+        object[] maximumValue = new CombinatorialRandomDataAttribute
+        {
+            Count = 1,
+            Minimum = int.MaxValue,
+            Maximum = int.MaxValue,
+            Seed = 42,
+        }.Values;
+
+        denseValues.Should().HaveCount(1001).And.OnlyHaveUniqueItems();
+        fullRangeValues.Should().HaveCount(10).And.OnlyHaveUniqueItems();
+        maximumValue.Should().Equal([int.MaxValue]);
     }
 }

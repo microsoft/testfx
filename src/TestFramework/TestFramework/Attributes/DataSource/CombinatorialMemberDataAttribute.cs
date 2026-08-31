@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Specifies a member that provides values for a parameter on a combinatorial test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Parameter)]
 [CLSCompliant(false)]
 public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesProvider
 {
@@ -29,6 +29,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
     /// <summary>
     /// Gets or sets the type from which to retrieve the member. The test class is used by default.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
     public Type? MemberType { get; set; }
 
     /// <summary>
@@ -101,7 +102,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             }
         }
 
-        if (propertyInfo?.GetMethod is null || !propertyInfo.GetMethod.IsStatic)
+        if (propertyInfo?.GetMethod is not { IsPublic: true, IsStatic: true })
         {
             return null;
         }
@@ -116,14 +117,18 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
         {
             methodInfo = reflectionType.GetRuntimeMethods()
-                .FirstOrDefault(method => method.Name == MemberName && ParameterTypesCompatible(method.GetParameters(), Arguments));
+                .FirstOrDefault(method =>
+                    method.Name == MemberName
+                    && method.IsPublic
+                    && method.IsStatic
+                    && ParameterTypesCompatible(method.GetParameters(), Arguments));
             if (methodInfo is not null)
             {
                 break;
             }
         }
 
-        if (methodInfo is null || !methodInfo.IsStatic)
+        if (methodInfo is null)
         {
             return null;
         }
@@ -144,7 +149,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             }
         }
 
-        if (fieldInfo is null || !fieldInfo.IsStatic)
+        if (fieldInfo is null || !fieldInfo.IsPublic || !fieldInfo.IsStatic)
         {
             return null;
         }
