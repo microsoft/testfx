@@ -71,6 +71,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             : values.Cast<object?>().ToArray();
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern", Justification = "The reflected source member is preserved by MemberType, including its return type. NativeAOT acceptance coverage exercises this interface lookup with a concrete collection return type.")]
     private static TypeInfo? GetEnumeratedType(Type enumerableType)
     {
         if (enumerableType.IsGenericType && enumerableType.GetGenericTypeDefinition() == typeof(IEnumerable<>))

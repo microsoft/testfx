@@ -11,6 +11,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesProvider
 {
     private readonly object[]? _arguments;
+
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     private readonly Type _valuesSourceType;
 
     /// <summary>
@@ -35,6 +37,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
     /// <inheritdoc />
     public object?[] GetValues(ParameterInfo parameter) => GetValues(_valuesSourceType, _arguments);
 
+    [UnconditionalSuppressMessage("Trimming", "IL2067:UnrecognizedReflectionPattern", Justification = "The Activator overload requires both public and non-public constructors in its static contract, but the binding flags restrict activation to public instance constructors preserved by valuesSourceType.")]
     private static object?[] GetValues(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
         object[]? arguments)
@@ -44,7 +47,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
         {
             values = (IEnumerable)Activator.CreateInstance(
                 valuesSourceType,
-                BindingFlags.CreateInstance | BindingFlags.OptionalParamBinding,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.CreateInstance | BindingFlags.OptionalParamBinding,
                 binder: null,
                 args: arguments,
                 culture: CultureInfo.InvariantCulture)!;

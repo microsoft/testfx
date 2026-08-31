@@ -22,6 +22,13 @@ public sealed class CombinatorialTheoryDataBuilder
     private int? _baseColumnCount;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="CombinatorialTheoryDataBuilder"/> class.
+    /// </summary>
+    public CombinatorialTheoryDataBuilder()
+    {
+    }
+
+    /// <summary>
     /// Adds complete hand-authored rows for the base columns.
     /// </summary>
     /// <param name="rows">The rows to add. Every row must have the same width.</param>

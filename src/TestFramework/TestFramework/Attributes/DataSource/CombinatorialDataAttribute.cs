@@ -11,6 +11,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 public class CombinatorialDataAttribute : Attribute, ITestDataSource
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CombinatorialDataAttribute"/> class.
+    /// </summary>
+    public CombinatorialDataAttribute()
+    {
+    }
+
     /// <inheritdoc />
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
     {

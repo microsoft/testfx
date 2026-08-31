@@ -99,6 +99,40 @@ public class UnitTest1
         {
            new object[] { 1, 2 }
         };
+
+    [TestMethod]
+    [CombinatorialData]
+    public void TestMethod6(
+        [CombinatorialMemberData(nameof(MemberValues.Values), MemberType = typeof(MemberValues))]
+        int value)
+    {
+        Assert.IsTrue(value is 1 or 2);
+    }
+
+    [TestMethod]
+    [CombinatorialData]
+    public void TestMethod7(
+        [CombinatorialClassData(typeof(ClassValues), 3)]
+        int value)
+    {
+        Assert.IsTrue(value is 3 or 4);
+    }
+}
+
+public static class MemberValues
+{
+    public static List<int> Values => [1, 2];
+}
+
+public sealed class ClassValues(int start) : IEnumerable<object[]>
+{
+    public IEnumerator<object[]> GetEnumerator()
+    {
+        yield return [start];
+        yield return [start + 1];
+    }
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }
 """;
 
@@ -179,7 +213,7 @@ public sealed class AsyncVoidTests
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 0);
         result.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(
