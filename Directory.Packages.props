@@ -142,7 +142,7 @@
       AND <PackageReference Include="MessagePack" /> entries, otherwise the transitive (vulnerable)
       versions get restored. See PR #9120 / #9124 for context.
     -->
-    <PackageVersion Include="Nerdbank.MessagePack" Version="1.2.4" />
+    <PackageVersion Include="Nerdbank.MessagePack" Version="1.2.36" />
     <PackageVersion Include="MessagePack" Version="3.1.8" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
