@@ -95,9 +95,12 @@ public class CtrfReportEngineTests
         await engine.GenerateReportAsync([Captured("p1", "Recovered test", "passed")]);
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
-        JsonElement extra = document.RootElement.GetProperty("results").GetProperty("environment").GetProperty("extra");
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement extra = results.GetProperty("environment").GetProperty("extra");
         Assert.IsTrue(extra.GetProperty("incomplete").GetBoolean());
         Assert.AreEqual("aborted", extra.GetProperty("runStatus").GetString());
+        JsonElement test = Assert.ContainsSingle(results.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("Recovered test", test.GetProperty("name").GetString());
     }
 
     [TestMethod]

@@ -75,6 +75,7 @@ public class HtmlReportEngineTests
         string html = memoryStream.GetUtf8Content();
         Assert.Contains("\"incomplete\":true", html);
         Assert.Contains("\"runStatus\":\"aborted\"", html);
+        Assert.Contains("\"displayName\":\"Recovered test\"", html);
         Assert.Contains("Tests absent from this report did not necessarily pass.", html);
     }
 

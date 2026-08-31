@@ -204,9 +204,12 @@ public class RetryTests
         fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
         serviceProvider.AddService(fileSystem.Object);
         Mock<ITestHostLauncher> launcher = new();
+        string? expectedManifestPath = null;
         launcher.SetupGet(value => value.DisplayName).Returns("launcher");
         launcher.SetupGet(value => value.Uid).Returns("launcher");
         launcher.Setup(value => value.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()))
+            .Callback<TestHostLaunchContext, CancellationToken>((context, _) =>
+                expectedManifestPath = context.EnvironmentVariables["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"])
             .ThrowsAsync(new InvalidOperationException("launch failed"));
         serviceProvider.AddService(launcher.Object);
         using var server = new RetryFailedTestsPipeServer(serviceProvider, [], Mock.Of<ILogger>());
@@ -223,7 +226,8 @@ public class RetryTests
             userMaxRetryCount: 2,
             CancellationToken.None));
 
-        fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
+        Assert.IsNotNull(expectedManifestPath);
+        fileSystem.Verify(fs => fs.DeleteFile(expectedManifestPath), Times.Once);
     }
 
     [TestMethod]

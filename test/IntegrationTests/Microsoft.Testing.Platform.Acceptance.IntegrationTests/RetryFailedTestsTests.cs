@@ -206,12 +206,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         string htmlReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single());
         Assert.Contains("TestMethod2", htmlReport);
         Assert.Contains("TestMethod3", htmlReport);
+        Assert.Contains(@"""total"":3", htmlReport);
+        Assert.Contains(@"""failed"":1", htmlReport);
         Assert.Contains(@"""incomplete"":true", htmlReport);
         Assert.Contains(@"""runStatus"":""aborted""", htmlReport);
 
         string junitReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single());
         Assert.Contains("TestMethod2", junitReport);
         Assert.Contains("TestMethod3", junitReport);
+        Assert.Contains(@"tests=""3"" failures=""1""", junitReport);
         Assert.Contains(@"name=""incomplete"" value=""true""", junitReport);
         Assert.Contains(@"name=""run-status"" value=""aborted""", junitReport);
     }
