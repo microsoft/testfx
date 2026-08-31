@@ -99,6 +99,16 @@ public abstract class WindowTest : ApplicationTest
     public void WindowSetup()
     {
         CancellationToken cancellationToken = TestContext.CancellationToken;
+        TimeSpan configuredDiscoveryTimeout = WindowDiscoveryTimeout;
+        TimeSpan discoveryTimeout = configuredDiscoveryTimeout != Timeout.InfiniteTimeSpan
+            && configuredDiscoveryTimeout < TimeSpan.Zero
+            ? throw new ArgumentOutOfRangeException(
+                nameof(WindowDiscoveryTimeout),
+                configuredDiscoveryTimeout,
+                "The window discovery timeout must be non-negative or infinite.")
+            : configuredDiscoveryTimeout;
+        bool hasInfiniteDiscoveryTimeout = discoveryTimeout == Timeout.InfiniteTimeSpan;
+
         var stopwatch = Stopwatch.StartNew();
 
         while (true)
@@ -112,11 +122,13 @@ public abstract class WindowTest : ApplicationTest
                 return;
             }
 
-            TimeSpan remainingTime = WindowDiscoveryTimeout - stopwatch.Elapsed;
-            if (remainingTime <= TimeSpan.Zero)
+            TimeSpan remainingTime = hasInfiniteDiscoveryTimeout
+                ? TimeSpan.FromMilliseconds(50)
+                : discoveryTimeout - stopwatch.Elapsed;
+            if (!hasInfiniteDiscoveryTimeout && remainingTime <= TimeSpan.Zero)
             {
                 throw new TimeoutException(
-                    $"Application '{AppProcess.StartInfo.FileName}' did not expose a window within {WindowDiscoveryTimeout}.");
+                    $"Application '{AppProcess.StartInfo.FileName}' did not expose a window within {discoveryTimeout}.");
             }
 
             TimeSpan delay = remainingTime < TimeSpan.FromMilliseconds(50)

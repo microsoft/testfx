@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows;net9.0-windows</TargetFrameworks>
-    <EnableWindowsTargeting Condition=" '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
+    <EnableWindowsTargeting Condition=" '$(EnableWindowsTargeting)' == '' and '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>

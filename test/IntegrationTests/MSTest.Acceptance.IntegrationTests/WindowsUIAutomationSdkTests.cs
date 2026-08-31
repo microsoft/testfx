@@ -296,6 +296,27 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
         Assert.IsFalse(File.Exists(launchMarker), "The application must not launch when its shutdown timeout is invalid.");
     }
 
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task WindowSetup_WhenDiscoveryTimeoutIsInvalid_FailsAndTerminatesProcess(string tfm)
+    {
+        string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=InvalidWindowDiscoveryTimeoutTests",
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["MSTEST_UI_AUTOMATION_PID_FILE"] = pidFile,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("The window discovery timeout must be non-negative or infinite.");
+        await AssertProcessExitedAsync(pidFile);
+    }
+
     private async Task AssertProcessExitedAsync(string pidFile)
     {
         int pid = int.Parse(await File.ReadAllTextAsync(pidFile, TestContext.CancellationToken), CultureInfo.InvariantCulture);
@@ -528,7 +549,7 @@ public class CancellationDuringWindowDiscoveryTests : WindowTest
         return null;
     }
 
-    protected override TimeSpan WindowDiscoveryTimeout => TimeSpan.FromSeconds(30);
+    protected override TimeSpan WindowDiscoveryTimeout => Timeout.InfiniteTimeSpan;
 
     [TestMethod]
     public void TestMethod()
@@ -629,6 +650,30 @@ public class InvalidShutdownTimeoutTests : ApplicationTest
         return new ProcessStartInfo(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
             "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+}
+
+[STATestClass]
+public class InvalidWindowDiscoveryTimeoutTests : WindowTest
+{
+    protected override TimeSpan WindowDiscoveryTimeout => TimeSpan.FromMilliseconds(-2);
+
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
+
+    protected override void StopApplication(Process applicationProcess)
+    {
+        string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
+        File.WriteAllText(pidFile, applicationProcess.Id.ToString(CultureInfo.InvariantCulture));
+        base.StopApplication(applicationProcess);
     }
 
     [TestMethod]
