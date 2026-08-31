@@ -46,3 +46,9 @@ The package uses the UIA2 `System.Windows.Automation` API. Additional UI automat
 ## Without MSTest.Sdk
 
 Reference `MSTest.Windows.UIAutomation` together with `MSTest.TestFramework`, `MSTest.TestAdapter`, and `Microsoft.NET.Test.Sdk`, then import `Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation`. The package version should match the MSTest framework and adapter versions.
+
+When restoring or building the Windows-targeted project on Linux or macOS, set:
+
+```xml
+<EnableWindowsTargeting Condition=" '$(EnableWindowsTargeting)' == '' and '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
+```

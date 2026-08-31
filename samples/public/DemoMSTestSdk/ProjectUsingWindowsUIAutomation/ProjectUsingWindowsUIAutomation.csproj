@@ -24,6 +24,7 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableWindowsTargeting Condition=" '$(EnableWindowsTargeting)' == '' and '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
