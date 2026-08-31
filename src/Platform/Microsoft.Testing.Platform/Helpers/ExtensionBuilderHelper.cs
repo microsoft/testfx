@@ -111,7 +111,10 @@ internal static class ExtensionBuilderHelper
                 // We clone the instance because we want to have fresh instance per build phase
                 compositeFactoryInstance = (ICompositeExtensionFactory)compositeServiceFactory.Clone();
 
-                // Create the new fresh instance
+                // Create the new fresh instance. If the underlying factory throws (or returns a null
+                // instance), CompositeExtensionFactory{T}.GetInstance wraps the failure in an actionable
+                // InvalidOperationException that names the composite extension type and preserves the
+                // original exception as InnerException, so no additional wrapping is needed here.
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
@@ -163,7 +166,10 @@ internal static class ExtensionBuilderHelper
     {
         foreach (ICompositeExtensionFactory compositeServiceFactory in compositeFactories)
         {
-            // Get the singleton
+            // Get the singleton. If the underlying factory throws (or returns a null instance),
+            // CompositeExtensionFactory{T}.GetInstance wraps the failure in an actionable
+            // InvalidOperationException that names the composite extension type and preserves the
+            // original exception as InnerException, so no additional wrapping is needed here.
             var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
             bool isEnabledAsync = await extension.IsEnabledAsync().ConfigureAwait(false);
 

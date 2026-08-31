@@ -85,26 +85,27 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         string? instanceId = null;
         DiscoveredTestMessage[]? discoveredTestMessages = [];
 
-        ReadFields(stream, (fieldId, fieldSize) =>
+        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
+        ushort fieldCount = ReadUShort(stream);
+        for (int f = 0; f < fieldCount; f++)
         {
-            switch (fieldId)
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
             {
-                case DiscoveredTestMessagesFieldsId.ExecutionId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case DiscoveredTestMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList:
-                    discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
-                    return true;
-
-                default:
-                    return false;
+                continue;
             }
-        });
+
+            if (fieldId == DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList)
+            {
+                discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
+            }
+            else
+            {
+                SetPosition(stream, stream.Position + fieldSize);
+            }
+        }
 
         return new(executionId, instanceId, discoveredTestMessages);
     }
@@ -125,50 +126,56 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
             TraitMessage[] traits = [];
             string[] parameterTypeFullNames = [];
 
-            ReadFields(stream, (fieldId, fieldSize) =>
+            // Inline ReadFields to avoid per-test closure allocation on the hot IPC deserialization path.
+            ushort msgFieldCount = ReadUShort(stream);
+            for (int f = 0; f < msgFieldCount; f++)
             {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+
                 switch (fieldId)
                 {
                     case DiscoveredTestMessageFieldsId.Uid:
                         uid = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.DisplayName:
                         displayName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.FilePath:
                         filePath = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.LineNumber:
                         lineNumber = ReadInt(stream);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.Namespace:
                         @namespace = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.TypeName:
                         typeName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.MethodName:
                         methodName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.Traits:
                         traits = ReadTraitsPayload(stream);
-                        return true;
+                        break;
 
                     case DiscoveredTestMessageFieldsId.ParameterTypeFullNames:
                         parameterTypeFullNames = ReadParameterTypeFullNamesPayload(stream);
-                        return true;
+                        break;
 
                     default:
-                        return false;
+                        SetPosition(stream, stream.Position + fieldSize);
+                        break;
                 }
-            });
+            }
 
             discoveredTestMessages[i] = new DiscoveredTestMessage(uid, displayName, filePath, lineNumber, @namespace, typeName, methodName, parameterTypeFullNames, traits);
         }
@@ -198,22 +205,28 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
             string? key = null;
             string? value = null;
 
-            ReadFields(stream, (fieldId, fieldSize) =>
+            // Inline ReadFields to avoid per-trait closure allocation.
+            ushort traitFieldCount = ReadUShort(stream);
+            for (int f = 0; f < traitFieldCount; f++)
             {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+
                 switch (fieldId)
                 {
                     case TraitMessageFieldsId.Key:
                         key = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case TraitMessageFieldsId.Value:
                         value = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     default:
-                        return false;
+                        SetPosition(stream, stream.Position + fieldSize);
+                        break;
                 }
-            });
+            }
 
             _ = key ?? throw new InvalidOperationException("Trait key is required.");
             _ = value ?? throw new InvalidOperationException("Trait value is required.");
@@ -225,12 +238,12 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     protected override void SerializeCore(DiscoveredTestMessages objectToSerialize, Stream stream)
     {
-        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+        WriteExecutionScopedHeader(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)(IsNullOrEmpty(objectToSerialize.DiscoveredMessages) ? 0 : 1));
 
-        WriteUShort(stream, GetFieldCount(objectToSerialize));
-
-        WriteField(stream, DiscoveredTestMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
-        WriteField(stream, DiscoveredTestMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
         WriteDiscoveredTestMessagesPayload(stream, objectToSerialize.DiscoveredMessages);
     }
 
@@ -261,11 +274,6 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     private static void WriteParameterTypeFullNamesPayload(Stream stream, string[]? parameterTypeFullNames)
         => WriteListPayload(stream, DiscoveredTestMessageFieldsId.ParameterTypeFullNames, parameterTypeFullNames, static (s, parameterTypeFullName) => WriteString(s, parameterTypeFullName));
-
-    private static ushort GetFieldCount(DiscoveredTestMessages discoveredTestMessages) =>
-        (ushort)((discoveredTestMessages.ExecutionId is null ? 0 : 1) +
-        (discoveredTestMessages.InstanceId is null ? 0 : 1) +
-        (IsNullOrEmpty(discoveredTestMessages.DiscoveredMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(DiscoveredTestMessage discoveredTestMessage) =>
         (ushort)((discoveredTestMessage.Uid is null ? 0 : 1) +

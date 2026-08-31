@@ -12,6 +12,21 @@
         <target state="translated">UITestMethodAttribute.DispatcherQueue não deve ser null. Para usar o UITestMethodAttribute em um Aplicativo de Área de Trabalho do WinUI, lembre-se de definir a variável estática UITestMethodAttribute.DispatcherQueue durante a inicialização do teste.</target>
         <note>Do not localize API names {Locked="UITestMethodAttribute.DispatcherQueue"}{Locked="UITestMethodAttribute"}, the product name {Locked="WinUI"}, or the C# keyword {Locked="null"}.</note>
       </trans-unit>
+      <trans-unit id="WinUIApplicationFailedToStart">
+        <source>The WinUI application under test exited without initializing. When running unpackaged, this usually means the Windows App SDK runtime could not be resolved for the process.</source>
+        <target state="translated">O aplicativo WinUI em teste foi encerrado sem ser inicializado. Ao executar sem empacotamento, isso geralmente significa que o runtime do Windows App SDK não pôde ser resolvido para o processo.</target>
+        <note>Do not localize the product names {Locked="WinUI"}{Locked="Windows App SDK"}.</note>
+      </trans-unit>
+      <trans-unit id="WinUIApplicationInitializationAlreadyFailed">
+        <source>The WinUI application under test failed to initialize earlier in this run, and Application.Start cannot be retried in the same process. The original failure was: {0}</source>
+        <target state="translated">O aplicativo WinUI em teste falhou ao ser inicializado antes nesta execução, e o Application.Start não pode ser tentado novamente no mesmo processo. A falha original foi: {0}</target>
+        <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is the message of the original failure.</note>
+      </trans-unit>
+      <trans-unit id="WinUIApplicationStartupTimedOut">
+        <source>The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</source>
+        <target state="translated">O aplicativo WinUI em teste não concluiu a inicialização em {0}. O Application.Start foi chamado, mas a inicialização não foi concluída.</target>
+        <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is a timeout duration.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

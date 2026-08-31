@@ -12,6 +12,11 @@
         <target state="translated">Přidat zástupné odůvodnění do „[Ignore]“</target>
         <note>{Locked="[Ignore]"}</note>
       </trans-unit>
+      <trans-unit id="AddResourceLockFix">
+        <source>Add '[ResourceLock(WellKnownResources.{0})]'</source>
+        <target state="translated">Přidat [ResourceLock(WellKnownResources.{0})]</target>
+        <note>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</note>
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">Přidat [TestClass]</target>
@@ -167,6 +172,11 @@
         <target state="translated">Transformovat přepsání Execute na ExecuteAsync</target>
         <note>{Locked="ExecuteAsync"}{Locked="Execute"}</note>
       </trans-unit>
+      <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[ArchitectureCondition]' attribute</source>
+        <target state="translated">Použít atribut [ArchitectureCondition]</target>
+        <note>{Locked="[ArchitectureCondition]"}</note>
+      </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
         <target state="translated">Použít asynchronní kontrolní výraz</target>
@@ -176,6 +186,11 @@
         <source>Add '[TestMethod]'</source>
         <target state="translated">Přidat [TestMethod]</target>
         <note>{Locked="[TestMethod]"}</note>
+      </trans-unit>
+      <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckFix">
+        <source>Use '[CICondition]' attribute</source>
+        <target state="translated">Použít atribut [CICondition]</target>
+        <note>{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
         <source>Use 'ContainsKey' instead of 'Contains'</source>
@@ -196,6 +211,11 @@
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">Místo řetězcového argumentu použijte vlastnost DisplayName</target>
         <note>{Locked="DisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckFix">
+        <source>Use '[ExecutableCondition]' attribute</source>
+        <target state="translated">Použít atribut '[ExecutableCondition]'</target>
+        <note>{Locked="[ExecutableCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>

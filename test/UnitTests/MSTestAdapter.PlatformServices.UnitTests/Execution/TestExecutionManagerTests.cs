@@ -334,6 +334,38 @@ public class TestExecutionManagerTests : TestContainer
         VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
     }
 
+    public async Task RunTestsShouldKeepTcmPropertiesOutOfClassLifecycleAndSiblingTestContexts()
+    {
+        TestCase testWithTcmProperty = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty));
+        testWithTcmProperty.SetPropertyValue(AdapterTestProperties.TestCaseIdProperty, 1401);
+        TestCase siblingTest = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.SiblingTest));
+
+        TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
+        testablePlatformService.MockSettingsProvider
+            .Setup(sp => sp.GetProperties(It.IsAny<string>()))
+            .Returns(new Dictionary<string, object> { ["SourceProperty"] = "SourceValue" });
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        await _testExecutionManager.RunTestsAsync(
+            ToUnitTestElements(testWithTcmProperty, siblingTest),
+            CurrentDeploymentContext,
+            _frameworkHandle.ToAdapterMessageLogger(),
+            TestResultRecorder,
+            new TestElementFilterProvider(_runContext),
+            new TestRunCancellationToken());
+
+        _frameworkHandle.TestCaseEndList.Should().Equal(
+            $"{nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty)}:Passed",
+            $"{nameof(DummyTestClassWithScopedTcmProperties.SiblingTest)}:Passed");
+    }
+
     public async Task RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -725,6 +757,197 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    /// <summary>
+    /// A chunk that throws outside the test body (here: a host-side recording failure) must not strand the
+    /// workers waiting on it. Before the scheduler released its dependents in a <c>finally</c>, an exception
+    /// skipped both the dependent release and the completion count, so every other worker blocked forever on
+    /// a permit that would never be issued and the whole run hung instead of failing.
+    /// </summary>
+    public async Task RunTestsWhenADependencyChunkThrowsShouldNotHang()
+    {
+        TestCase root = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+        TestCase branchA = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
+        TestCase branchB = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod2");
+
+        _frameworkHandle.ThrowOnRecordStartForTest = root.DisplayName;
+
+        TestCase[] tests = [root, branchA, branchB];
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        UnitTestElement[] elements = ToUnitTestElements(tests);
+
+        // BranchA and BranchB both wait for the chunk that is about to throw, so with the bug present there
+        // is nothing left to release them and the second worker waits forever. The dependency is set on the
+        // element directly rather than through the transport property because these elements are already
+        // materialized (the property round-trip has its own tests); what is under test here is the scheduler.
+        TestDependencyInfo[] dependsOnRoot = [new TestDependencyInfo(typeof(DummyTestClassForParallelize).FullName, "TestMethod1", proceedOnFailure: false)];
+        elements[1].Dependencies = dependsOnRoot;
+        elements[2].Dependencies = dependsOnRoot;
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+
+            Task run = _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            // The run must finish - failing is fine, hanging is not. The timeout is what actually asserts the
+            // fix: without it the test would deadlock rather than fail.
+            Task completed = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(60)));
+            completed.Should().BeSameAs(run, "the run must not hang when a chunk throws");
+
+            // Reading Exception is what actually observes the fault - awaiting a continuation that ignores
+            // its antecedent does not, leaving the run to resurface as an UnobservedTaskException later and
+            // destabilize unrelated tests. It doubles as the assertion that the injected failure propagates
+            // out of the run rather than being swallowed by the scheduler.
+            run.IsFaulted.Should().BeTrue("the injected RecordStart failure must surface, not be swallowed");
+            run.Exception.Should().NotBeNull();
+        }
+        finally
+        {
+            _frameworkHandle.ThrowOnRecordStartForTest = null;
+            DummyTestClassForParallelize.Cleanup();
+            DummyTestClassForParallelize2.Cleanup();
+        }
+    }
+
+    /// <summary>
+    /// A dependency graph must not switch <c>OrderTestsByNameInClass</c> off for the whole source. Tests that
+    /// are simultaneously ready still run in name order; the graph only constrains the pairs that actually
+    /// declare an edge.
+    /// </summary>
+    public async Task RunTestsWithDependenciesShouldStillOrderUnconstrainedTestsByName()
+    {
+        // Passed in the order 2, 1, 4 so that declaration order and name order disagree. Only TestMethod4 is
+        // constrained (it waits for TestMethod2), leaving 1 and 2 simultaneously ready - and they must run in
+        // name order, not the order they were handed over in.
+        TestCase testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
+        TestCase testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
+        TestCase testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
+
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <OrderTestsByNameInClass>true</OrderTestsByNameInClass>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        UnitTestElement[] elements = ToUnitTestElements(testCase2, testCase1, testCase4);
+        elements[2].Dependencies = [new TestDependencyInfo(typeof(DummyTestClassWithDoNotParallelizeMethods).FullName, "TestMethod2", proceedOnFailure: false)];
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            _frameworkHandle.TestCaseStartList.Should().Equal("TestMethod1", "TestMethod2", "TestMethod4");
+        }
+        finally
+        {
+            DummyTestClassWithDoNotParallelizeMethods.Cleanup();
+        }
+    }
+
+    /// <summary>
+    /// A dependency-skipped test is still one of the tests the class-cleanup countdown was built from, so it
+    /// has to be accounted for even though it never runs. Otherwise the class never completes: its
+    /// <c>[ClassCleanup]</c> is silently lost, and because end-of-assembly cleanup waits on every class
+    /// completing, the assembly's <c>[AssemblyCleanup]</c> is lost with it.
+    /// </summary>
+    public async Task RunTestsWhenADependentIsSkippedShouldStillRunClassCleanup()
+    {
+        TestCase prereq = GetTestCase(typeof(DummyTestClassWithCleanupAndDependency), "Prereq");
+        TestCase dependent = GetTestCase(typeof(DummyTestClassWithCleanupAndDependency), "Dependent");
+
+        UnitTestElement[] elements = ToUnitTestElements(prereq, dependent);
+        elements[1].Dependencies = [new TestDependencyInfo(typeof(DummyTestClassWithCleanupAndDependency).FullName, "Prereq", proceedOnFailure: false)];
+
+        // The assertion reads a static of the test class, which lives in whichever app domain ran it, so the
+        // run has to stay in this one - the same reason every other static-observing test here disables them.
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            // Prereq ran (and failed), so [ClassInitialize] executed and [ClassCleanup] is genuinely owed.
+            DummyTestClassWithCleanupAndDependency.ClassCleanupCount.Should().Be(1);
+
+            // The skip itself must still be reported - the cleanup accounting must not swallow it.
+            _frameworkHandle.TestCaseEndList.Should().Contain("Dependent:Skipped");
+        }
+        finally
+        {
+            DummyTestClassWithCleanupAndDependency.Cleanup();
+        }
+    }
+
+    /// <summary>
+    /// Same accounting requirement for tests failed by a dependency cycle: they are reported without ever
+    /// reaching the runner, so the countdown still owes their decrement.
+    /// </summary>
+    public async Task RunTestsWhenTestsAreBrokenByACycleShouldStillRunClassCleanup()
+    {
+        TestCase ok = GetTestCase(typeof(DummyTestClassWithCleanupAndCycle), "Ok");
+        TestCase inCycleA = GetTestCase(typeof(DummyTestClassWithCleanupAndCycle), "InCycleA");
+        TestCase inCycleB = GetTestCase(typeof(DummyTestClassWithCleanupAndCycle), "InCycleB");
+
+        UnitTestElement[] elements = ToUnitTestElements(ok, inCycleA, inCycleB);
+        string className = typeof(DummyTestClassWithCleanupAndCycle).FullName!;
+        elements[1].Dependencies = [new TestDependencyInfo(className, "InCycleB", proceedOnFailure: false)];
+        elements[2].Dependencies = [new TestDependencyInfo(className, "InCycleA", proceedOnFailure: false)];
+
+        // See the sibling test: the static counter is only observable when the run stays in this app domain.
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            // Ok is not in the cycle, so it runs and initializes the class; the two cycle members never reach
+            // the runner, yet the class must still complete.
+            DummyTestClassWithCleanupAndCycle.ClassCleanupCount.Should().Be(1);
+            _frameworkHandle.TestCaseEndList.Should().Contain("InCycleA:Failed").And.Contain("InCycleB:Failed");
+        }
+        finally
+        {
+            DummyTestClassWithCleanupAndCycle.Cleanup();
+        }
+    }
+
     public async Task RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -1015,6 +1238,64 @@ public class TestExecutionManagerTests : TestContainer
     }
 
     [DummyTestClass]
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is a MSTest sample class so it's expected to use MSTest assertions")]
+    private sealed class DummyTestClassWithScopedTcmProperties : IDisposable
+    {
+        private readonly TestContext _testContext;
+
+        public DummyTestClassWithScopedTcmProperties(TestContext testContext)
+        {
+            _testContext = testContext;
+            AssertExpectedTestProperties(testContext);
+        }
+
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
+        {
+            AssertSourceProperty(context);
+            Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+        }
+
+        [TestInitialize]
+        public void TestInitialize() => AssertExpectedTestProperties(_testContext);
+
+        [TestMethod]
+        public void TestWithTcmProperty() => AssertExpectedTestProperties(_testContext);
+
+        [TestMethod]
+        public void SiblingTest() => AssertExpectedTestProperties(_testContext);
+
+        [TestCleanup]
+        public void TestCleanup() => AssertExpectedTestProperties(_testContext);
+
+        public void Dispose() => AssertExpectedTestProperties(_testContext);
+
+        [ClassCleanup]
+        public static void ClassCleanup(TestContext context)
+        {
+            AssertSourceProperty(context);
+            Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+        }
+
+        private static void AssertSourceProperty(TestContext context)
+            => Assert.AreEqual("SourceValue", context.Properties["SourceProperty"]);
+
+        private static void AssertExpectedTestProperties(TestContext context)
+        {
+            AssertSourceProperty(context);
+            if (context.TestName == nameof(TestWithTcmProperty))
+            {
+                Assert.AreEqual(1401, context.Properties[AdapterTestProperties.TestCaseIdProperty.Id]);
+            }
+            else
+            {
+                Assert.AreEqual(nameof(SiblingTest), context.TestName);
+                Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+            }
+        }
+    }
+
+    [DummyTestClass]
     private class DummyTestClassWithFailingCleanupMethods
     {
         [ClassCleanup]
@@ -1022,6 +1303,51 @@ public class TestExecutionManagerTests : TestContainer
 
         [TestMethod]
         public void TestMethod()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithCleanupAndDependency
+    {
+        public static int ClassCleanupCount { get; private set; }
+
+        public static void Cleanup() => ClassCleanupCount = 0;
+
+        [ClassCleanup]
+        public static void ClassCleanup() => ClassCleanupCount++;
+
+        [TestMethod]
+        public void Prereq() => throw new Exception("Prereq failed on purpose");
+
+        [TestMethod]
+        public void Dependent()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithCleanupAndCycle
+    {
+        public static int ClassCleanupCount { get; private set; }
+
+        public static void Cleanup() => ClassCleanupCount = 0;
+
+        [ClassCleanup]
+        public static void ClassCleanup() => ClassCleanupCount++;
+
+        [TestMethod]
+        public void Ok()
+        {
+        }
+
+        [TestMethod]
+        public void InCycleA()
+        {
+        }
+
+        [TestMethod]
+        public void InCycleB()
         {
         }
     }
@@ -1213,6 +1539,13 @@ internal sealed class TestableFrameworkHandle : IFrameworkHandle
 
     public List<string> TestDisplayNameList { get; }
 
+    /// <summary>
+    /// When set, <see cref="RecordStart"/> throws for the test whose display name matches. Used to simulate a
+    /// chunk that fails outside the test body (a host-side recording failure), which the dependency scheduler
+    /// must survive without stranding the workers waiting on that chunk.
+    /// </summary>
+    public string? ThrowOnRecordStartForTest { get; set; }
+
     public void RecordResult(TestResult testResult)
     {
         ResultsList.Add(testResult.ToString());
@@ -1221,7 +1554,15 @@ internal sealed class TestableFrameworkHandle : IFrameworkHandle
 
     public void SendMessage(TestMessageLevel testMessageLevel, string message) => MessageList.Add($"{testMessageLevel}:{message}");
 
-    public void RecordStart(TestCase testCase) => TestCaseStartList.Add(testCase.DisplayName);
+    public void RecordStart(TestCase testCase)
+    {
+        if (ThrowOnRecordStartForTest is { } failing && string.Equals(testCase.DisplayName, failing, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Simulated host failure while recording the start of '{failing}'.");
+        }
+
+        TestCaseStartList.Add(testCase.DisplayName);
+    }
 
     public void RecordEnd(TestCase testCase, TestOutcome outcome) => TestCaseEndList.Add($"{testCase.DisplayName}:{outcome}");
 

@@ -14,14 +14,21 @@ namespace Microsoft.Testing.Extensions.Hosting;
 internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFrameworkInvoker
 {
     private readonly bool _isHotReloadEnabled;
+    private readonly IStopPoliciesService _stopPoliciesService;
 
     public HotReloadTestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
         : base(serviceProvider)
     {
         _isHotReloadEnabled = IsHotReloadEnabled(serviceProvider.GetEnvironment());
+        _stopPoliciesService = serviceProvider.GetRequiredService<IStopPoliciesService>();
         if (_isHotReloadEnabled)
         {
             ((SystemRuntimeFeature)serviceProvider.GetRuntimeFeature()).EnableHotReload();
+            _stopPoliciesService.RegisterDeadlineStopFallback(() =>
+            {
+                HotReloadHandler.RequestShutdown();
+                return Task.FromResult(true);
+            });
         }
     }
 
@@ -41,10 +48,21 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         // Using the output device here rather than Console WriteLine ensures that we don't break live logger output.
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
+        await _stopPoliciesService.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            HotReloadHandler.RequestShutdown();
+            return Task.CompletedTask;
+        }).ConfigureAwait(false);
         TaskCompletionSource<int>? executionCompleted = null;
-        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
+        while (!_stopPoliciesService.IsDeadlineTriggered
+            && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
         {
             executionCompleted = new();
+
+            // Reset the shared coverage accumulator at the start of every hot-reload cycle so each cycle reports
+            // only its own coverage and a prior cycle's threshold-failure verdict cannot carry over.
+            ServiceProvider.GetRequiredService<TestCoverageResult>().Reset();
+
             var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
             if (hotReloadOutputDevice is not null)
             {

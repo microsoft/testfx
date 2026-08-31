@@ -537,9 +537,19 @@ Tatsächlich: {2}</target>
         <target state="translated">Die Eigenschaft „TestContext.{0}“ im Zusammenhang mit dem aktuellen Test steht während Assembly- oder Klassenfixierungen nicht zur Verfügung.</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
+      <trans-unit id="InvalidDependsOnTestMethodName">
+        <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
+        <target state="translated">Der Name der Testmethode eines [DependsOn] muss eine nicht leere Zeichenfolge ohne Leerraumzeichen sein.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">Ungültige GitHub-Ticket-URL.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidResourceLockResource">
+        <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
+        <target state="translated">Der „[ResourceLock]“-Ressourcenschlüssel muss eine nicht leere Zeichenfolge ohne Leerzeichen sein. Ein leerer Schlüssel serialisiert nicht verknüpfte Tests im Hintergrund, die ebenfalls einen leeren Schlüssel verwenden.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">

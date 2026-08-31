@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
@@ -13,11 +14,53 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class ProtocolTests
 {
     [TestMethod]
+    public void TestHostCompletedRequestSerializeDeserialize_PreservesFilteredAndUnfilteredExitCodes()
+    {
+        var message = new TestHostCompletedRequest(returnCode: 0, unfilteredReturnCode: 2);
+
+        TestHostCompletedRequest actual = RoundTrip(new TestHostCompletedRequestSerializer(), message);
+
+        Assert.AreEqual(0, actual.ExitCode);
+        Assert.AreEqual(2, actual.UnfilteredExitCode);
+    }
+
+    [TestMethod]
+    public void TestHostCompletedRequestDeserialize_LegacyPayloadDefaultsUnfilteredExitCode()
+    {
+        var stream = new MemoryStream();
+        byte[] legacyPayload = BitConverter.GetBytes((int)ExitCode.AtLeastOneTestFailed);
+        stream.Write(legacyPayload, 0, legacyPayload.Length);
+        stream.Position = 0;
+
+        var actual = (TestHostCompletedRequest)Deserialize(new TestHostCompletedRequestSerializer(), stream);
+
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, actual.ExitCode);
+        Assert.AreEqual(actual.ExitCode, actual.UnfilteredExitCode);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    [DataRow(3)]
+    public void TestHostCompletedRequestDeserialize_TruncatedUnfilteredExitCodeThrows(int trailingByteCount)
+    {
+        var stream = new MemoryStream();
+        byte[] exitCodeBytes = BitConverter.GetBytes((int)ExitCode.AtLeastOneTestFailed);
+        stream.Write(exitCodeBytes, 0, exitCodeBytes.Length);
+        stream.Write(new byte[trailingByteCount], 0, trailingByteCount);
+        stream.Position = 0;
+
+        TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
+            () => Deserialize(new TestHostCompletedRequestSerializer(), stream));
+        Assert.IsInstanceOfType<EndOfStreamException>(wrapper.InnerException);
+    }
+
+    [TestMethod]
     public void TestResultMessagesSerializeDeserialize()
     {
         object serializer = new TestResultMessagesSerializer();
         var success = new SuccessfulTestResultMessage("uid", "displayName", 1, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
-        var fail = new FailedTestResultMessage("uid", "displayName", 2, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
+        var fail = new FailedTestResultMessage("uid", "displayName", 2, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid", "expected", "actual");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         var stream = new MemoryStream();
@@ -264,6 +307,13 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.ExecutionMode, nameof(HandshakeMessagePropertyNames.ExecutionMode) },
             { HandshakeMessagePropertyNames.OrchestratorFeature, nameof(HandshakeMessagePropertyNames.OrchestratorFeature) },
             { HandshakeMessagePropertyNames.ServerControlPipeName, nameof(HandshakeMessagePropertyNames.ServerControlPipeName) },
+            { HandshakeMessagePropertyNames.AttemptNumber, nameof(HandshakeMessagePropertyNames.AttemptNumber) },
+            { HandshakeMessagePropertyNames.SupportedPostProcessorKinds, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds) },
+            { HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy) },
+            { HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds, nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds) },
+            { HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy) },
+            { HandshakeMessagePropertyNames.RequiredPostProcessorKinds, nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds) },
+            { HandshakeMessagePropertyNames.RequiredPostProcessingSupported, nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -279,6 +329,13 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ExecutionMode), properties[10]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.OrchestratorFeature), properties[11]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlPipeName), properties[12]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds), properties[16]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -289,11 +346,12 @@ public sealed class ProtocolTests
     {
         // Indirect the comparisons through a collection so the MSTest analyzer
         // does not flag string compile-time equalities as "always true".
-        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover];
+        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover, HandshakeMessageExecutionModes.Tool];
 
         Assert.AreEqual("run", modes[0]);
         Assert.AreEqual("help", modes[1]);
         Assert.AreEqual("discover", modes[2]);
+        Assert.AreEqual("tool", modes[3]);
     }
 
     [TestMethod]
@@ -340,7 +398,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.IsNotNull(actual.InProgressMessages);
-        Assert.HasCount(0, actual.InProgressMessages);
+        Assert.IsEmpty(actual.InProgressMessages);
     }
 
     [TestMethod]
@@ -383,8 +441,24 @@ public sealed class ProtocolTests
             "MyExecId",
             "MyInstId",
             [
-                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1"),
-                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null),
+                new FileArtifactMessage(
+                    "/full/path/artifact1.txt",
+                    "artifact1",
+                    "description1",
+                    "uid-1",
+                    "Test 1",
+                    "session-1",
+                    "microsoft.testing.trx",
+                    ["/full/path/input1.trx", "/full/path/input2.trx"]),
+                new FileArtifactMessage(
+                    "/full/path/artifact2.coverage",
+                    "artifact2",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "microsoft.testing.coverage",
+                    ["/full/path/input1.coverage", "/full/path/input2.coverage"]),
             ]);
 
         var stream = new MemoryStream();
@@ -405,6 +479,8 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.TestUid, actualArtifact.TestUid);
             Assert.AreEqual(expected.TestDisplayName, actualArtifact.TestDisplayName);
             Assert.AreEqual(expected.SessionUid, actualArtifact.SessionUid);
+            Assert.AreEqual(expected.Kind, actualArtifact.Kind);
+            Assert.AreSequenceEqual(expected.InputArtifactPaths, actualArtifact.InputArtifactPaths);
         }
     }
 

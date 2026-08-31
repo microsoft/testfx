@@ -132,6 +132,10 @@
     // MD051: Link fragments should be valid
     "MD051": true,
 
+    // MD060: Table column style - disabled. Purely cosmetic pipe padding, added in
+    // markdownlint v0.41, that no existing table in the repository follows.
+    "MD060": false,
+
     // proper-names: Enforce proper capitalization of names
     "proper-names": {
       "code_blocks": false,

@@ -15,7 +15,7 @@ internal static class TelemetryCollector
     // happens at most once per process.
     private static readonly Lazy<bool> IsEnabled = new(IsTelemetryEnabledFromEnvironment, LazyThreadSafetyMode.ExecutionAndPublication);
 
-    private static ConcurrentDictionary<string, long> s_assertionCallCounts = new();
+    private static ConcurrentDictionary<string, StrongBox<long>> s_assertionCallCounts = new();
 
     /// <summary>
     /// Records that an assertion method was called. This is on the hot path of every assertion,
@@ -26,16 +26,23 @@ internal static class TelemetryCollector
     /// </summary>
     /// <param name="assertionName">The full name of the assertion (e.g. "Assert.AreEqual", "CollectionAssert.Contains").</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void TrackAssertionCall(string assertionName)
+    internal static void TrackAssertionCall(string assertionName) =>
+        TrackAssertionCall(assertionName, IsEnabled.Value);
+
+#pragma warning disable RS0051 // Internal overload keeps unit tests independent from process-wide telemetry opt-out.
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void TrackAssertionCall(string assertionName, bool isEnabled)
+#pragma warning restore RS0051
     {
-        if (!IsEnabled.Value)
+        if (!isEnabled)
         {
             return;
         }
 
         try
         {
-            s_assertionCallCounts.AddOrUpdate(assertionName, 1, static (_, count) => count + 1);
+            StrongBox<long> counter = s_assertionCallCounts.GetOrAdd(assertionName, static _ => new StrongBox<long>());
+            Interlocked.Increment(ref counter.Value);
         }
         catch
         {
@@ -46,20 +53,26 @@ internal static class TelemetryCollector
     /// <summary>
     /// Gets a snapshot of all assertion call counts and resets the counters.
     /// This is thread-safe but best-effort: it atomically swaps the dictionary and copies the old one.
-    /// In-flight calls to <see cref="TrackAssertionCall"/> that race with the swap may be lost.
+    /// In-flight calls to <see cref="TrackAssertionCall(string)"/> that race with the swap may be lost.
     /// This is acceptable for telemetry where approximate counts are sufficient.
     /// </summary>
     /// <returns>A dictionary mapping assertion names to their (best-effort) call counts.</returns>
     internal static Dictionary<string, long> DrainAssertionCallCounts()
     {
-        ConcurrentDictionary<string, long> old = Interlocked.Exchange(ref s_assertionCallCounts, new ConcurrentDictionary<string, long>());
+        ConcurrentDictionary<string, StrongBox<long>> old = Interlocked.Exchange(
+            ref s_assertionCallCounts,
+            new ConcurrentDictionary<string, StrongBox<long>>());
+        var snapshot = new Dictionary<string, long>(old.Count);
+        foreach ((string assertionName, StrongBox<long> counter) in old)
+        {
+            long count = Volatile.Read(ref counter.Value);
+            if (count > 0)
+            {
+                snapshot[assertionName] = count;
+            }
+        }
 
-        // Use the explicit Dictionary(IEnumerable<KeyValuePair>) ctor so we get a stable
-        // snapshot of the swapped-out instance. A collection-expression spread would be
-        // semantically equivalent but the explicit ctor reads more clearly here.
-#pragma warning disable IDE0028 // Simplify collection initialization
-        return new Dictionary<string, long>(old);
-#pragma warning restore IDE0028
+        return snapshot;
     }
 
     private static bool IsTelemetryEnabledFromEnvironment()

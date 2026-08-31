@@ -71,6 +71,7 @@ public class TestMethodRunnerTests : TestContainer
         {
             base.Dispose(disposing);
             PlatformServiceProvider.Instance = null;
+            MSTestInstrumentation.SetActivityFactory(null);
         }
     }
 
@@ -165,6 +166,84 @@ public class TestMethodRunnerTests : TestContainer
 
         results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
         results[1].Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task ExecuteForFailingTestShouldRecordReturnedFailureExceptionOnActivity()
+    {
+        var failureException = new InvalidOperationException("failed");
+        var activity = new FakeActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () => new TestResult
+            {
+                Outcome = UnitTestOutcome.Failed,
+                TestFailureException = failureException,
+            });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        results[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+        activity.Tags.Should().Contain(new KeyValuePair<string, object?>("test.case.result.status", "fail"));
+        activity.RecordedException.Should().BeSameAs(failureException);
+        activity.FailureDescription.Should().BeNull();
+    }
+
+    public async Task ExecuteForFailingTestWithoutFailureExceptionShouldSetActivityFailureStatus()
+    {
+        var activity = new FakeActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () => new TestResult { Outcome = UnitTestOutcome.Failed });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        results[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+        activity.Tags.Should().Contain(new KeyValuePair<string, object?>("test.case.result.status", "fail"));
+        activity.RecordedException.Should().BeNull();
+        activity.FailureDescription.Should().Be(nameof(UnitTestOutcome.Failed));
+    }
+
+    public async Task ExecuteForAbortedTestShouldReportFailStatusOnActivity()
+    {
+        // Aborted, Unknown and Inconclusive used to fall through to "pass" because they are neither in the
+        // failing set nor counted as skipped, which contradicted the outcome the adapter reports.
+        var activity = new FakeActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () => new TestResult { Outcome = UnitTestOutcome.Aborted });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        activity.Tags.Should().Contain(new KeyValuePair<string, object?>("test.case.result.status", "fail"));
+    }
+
+    public async Task ExecuteForInconclusiveTestShouldReportSkippedStatusOnActivityByDefault()
+    {
+        var activity = new FakeActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () => new TestResult { Outcome = UnitTestOutcome.Inconclusive });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        // MapInconclusiveToFailed defaults to false, so the adapter reports skipped and the span must agree.
+        activity.Tags.Should().Contain(new KeyValuePair<string, object?>("test.case.result.status", "skipped"));
     }
 
     public async Task RunTestMethodForPassingTestThrowingExceptionShouldReturnTestResultWithPassedOutcome()
@@ -493,7 +572,7 @@ public class TestMethodRunnerTests : TestContainer
 
             // Write a fairly large chunk of console output. If contexts were shared, the next
             // iteration would observe a non-zero existing length.
-            current.WriteConsoleOut(new string('x', 1024));
+            current.StandardOutputBuilder.Append(new string('x', 1024));
             return new TestResult { Outcome = UnitTestOutcome.Passed };
         });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -542,6 +621,28 @@ public class TestMethodRunnerTests : TestContainer
     }
 
     #region Test data
+
+    private sealed class FakeActivity : IMSTestActivity
+    {
+        public List<KeyValuePair<string, object?>> Tags { get; } = [];
+
+        public string? FailureDescription { get; private set; }
+
+        public Exception? RecordedException { get; private set; }
+
+        public void SetTag(string key, object? value)
+            => Tags.Add(new KeyValuePair<string, object?>(key, value));
+
+        public void SetFailed(string? description)
+            => FailureDescription = description;
+
+        public void RecordException(Exception exception)
+            => RecordedException = exception;
+
+        public void Dispose()
+        {
+        }
+    }
 
     private sealed class ExecutionContextUnsafeThreadTestMethodAttribute : TestMethodAttribute
     {

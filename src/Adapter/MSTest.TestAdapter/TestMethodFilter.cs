@@ -37,7 +37,7 @@ internal sealed class TestMethodFilter
     internal ITestCaseFilterExpression? GetFilterExpression(IDiscoveryContext? context, IAdapterMessageLogger logger, out bool filterHasError)
     {
         filterHasError = false;
-        if (context == null)
+        if (context is null)
         {
             return null;
         }
@@ -96,7 +96,7 @@ internal sealed class TestMethodFilter
     /// <returns>The property value.</returns>
     internal object? PropertyValueProvider(TestCase? currentTest, string? propertyName)
     {
-        if (currentTest != null && propertyName != null)
+        if (currentTest is not null && propertyName is not null)
         {
             if (_supportedProperties.TryGetValue(propertyName, out TestProperty? testProperty))
             {

@@ -101,6 +101,56 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">디버그 추적:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">'mstest:execution:dependencies' 구성 섹션은 이번 실행에서 어떤 테스트와도 일치하지 않는 '{0}'에 대한 종속성을 선언합니다. 이 참조는 무시됩니다.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">'mstest:execution:dependencies:chains' 구성 섹션의 인덱스 {0}에 있는 체인은 비어 있고 종속성을 선언하지 않습니다. 제거하세요. 체인으로 순서를 표현하려면 최소 두 개의 테스트가 필요합니다.</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">'mstest:execution:dependencies' 구성 섹션의 테스트 참조 '{0}'은(는) 잘못되었습니다. 모든 클래스 테스트에는 'Namespace.Class.Method' 또는 'Namespace.Class.*'를 사용하세요.</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">'mstest:execution:dependencies' 구성 섹션은 'dependsOn' 항목이 없는 '{0}'에 대한 노드를 선언합니다. 이 설정은 아무 영향도 없습니다.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="translated">'mstest:execution:dependencies:nodes' 구성 섹션의 인덱스 {0}에 있는 종속성 노드에 'test' 값이 없으므로 무시됩니다.</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">다음 테스트 클래스는 서로 종속되어 있으므로 클래스 수준 병렬 처리로는 예약할 수 없습니다. {0}. 테스트는 종속성 순서에 따라 순차적으로 실행되므로 선언된 순서는 그대로 유지됩니다. 각 테스트를 개별적으로 예약하고 다시 병렬로 실행하려면 &lt;Scope&gt;MethodLevel&lt;/Scope&gt; 또는 [Parallelize(Scope = ExecutionScope.MethodLevel)]를 사용하세요.</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">테스트 간에 종속성 순환이 감지되었습니다. {0}. 순환에 있는 테스트는 순서를 정할 수 없으므로 실패한 것으로 보고됩니다. 종속성 선언 중 하나를 제거하여 순환을 끊으세요.</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">'{0}'에 종속되어 있지만 해당 테스트를 통과하지 못했기 때문에 테스트를 건너뜁니다.</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">테스트 '{0}'이(가) '{1}'에 대한 종속성을 선언하지만, 이는 이 테스트 소스의 어떤 테스트와도 일치하지 않습니다. 종속성은 단일 소스 내에서만 해결되므로 다른 테스트 어셈블리의 대상을 지원하지 않습니다. 이 종속성은 무시됩니다.</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">테스트 실행 배포 문제: 어셈블리 또는 모듈 '{0}'을(를) 로드하지 못했습니다. 이유: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">테스트 실행 배포 문제: 잘못된 배포 항목: '{0}': 출력 디렉터리 '{1}'에서 항목을 배포 루트 디렉터리 외부에 배포하도록 지정하며 이는 허용되지 않습니다.</target>
@@ -117,9 +167,9 @@ but received {4} argument(s), with types '{5}'.</source>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">테스트 실행 배포 문제: '{0}' 파일을 '{1}'에 복사하지 못함: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="translated">테스트 실행 배포 문제: '{0}' 파일을 '{1}'에 복사하지 못함: {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -228,6 +278,26 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">제네릭 매개 변수 '{0}'에 대해 충돌하는 두 가지 형식을 찾았습니다. 충돌하는 형식은 '{1}' 및 ''{2}입니다.</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">{2}밀리초 후 전역 테스트 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">전역 테스트 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">{2}밀리초 후 '{0}.{1}' 전역 테스트 초기화 메서드의 시간이 초과되었습니다.</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">전역 테스트 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">'Scope'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
@@ -237,6 +307,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">'Workers'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 이 값은 음수가 아닌 정수여야 합니다.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">MSTestAdapter가 runsettings XML을 구문 분석하지 못했습니다.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

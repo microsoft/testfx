@@ -4,6 +4,13 @@
 - [ ] Under discussion
 - [ ] Implementation
 - [ ] Shipped
+- [x] Rejected
+
+## Decision
+
+The mapping extensibility API was rejected in favor of value-aware migration diagnostics. MTP keeps VSTest options such as `--logger` and `--collect` invalid, but recognizes common values and reports the canonical MTP options and extension packages to use instead.
+
+This preserves the single-owner command-line option model and avoids making a temporary migration aid into permanent public API. The decision can be revisited if migration telemetry or supported tooling that injects immutable VSTest arguments demonstrates that diagnostics are insufficient. In that case, prefer a narrow, hidden, first-party compatibility shim with an explicit removal release over a general public mapping API.
 
 ## Summary
 
@@ -300,7 +307,7 @@ The mapping API is additive. Existing `ICommandLineOptionsProvider` implementati
 
 ### What about `--logger console;verbosity=detailed`?
 
-In VSTest, the console logger options govern terminal output. In MTP, terminal output is governed by `--output` and the terminal-test-reporter options. A mapping for `--logger console` would naturally live in the same package that owns `--output`, and would translate `verbosity=detailed` to `--output detailed`, `verbosity=normal` to `--output normal`, etc. This is exemplary, not normative for this RFC — the mechanism is what we're shipping, not a fixed list of mappings.
+In VSTest, the console logger options govern terminal output. In MTP, terminal output is governed by `--output` and the terminal-test-reporter options. A mapping for `--logger console` would naturally live in the same package that owns `--output`, and would translate `verbosity=detailed` to `--output detailed` and `verbosity=normal` to `--output normal`. The `--output minimal` per-test-result preset has no VSTest console-verbosity counterpart. This is exemplary, not normative for this RFC — the mechanism is what we're shipping, not a fixed list of mappings.
 
 ### Sub-option handling and the `trx;LogFileName=` shape
 

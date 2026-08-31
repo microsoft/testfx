@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[Pouze net6.0+ ] Vytvořit soubory výpisu stavu systému při neočekávaném chybovém ukončení procesu provádění testu</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="translated">[Pouze net6.0+ ] Vytvořit soubory výpisu stavu systému při neočekávaném chybovém ukončení procesu provádění testu.</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -50,8 +50,8 @@ Podporuje následující zástupné symboly: {pname} (název spustitelného soub
         <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
-        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="translated">[Pouze net6.0+ ] Vygenerovat soubor výpisu paměti v případě chybového ukončení procesu testu</target>
+        <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
+        <target state="translated">[Pouze net6.0+ ] Vygenerovat soubor výpisu paměti v případě chybového ukončení procesu testu.</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -84,10 +84,20 @@ Podporuje následující zástupné symboly: {pname} (název spustitelného soub
         <target state="translated">Soubor sekvence chybových ukončení</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileOpenError">
+        <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
+        <target state="translated">Nepovedlo se inicializovat soubor sekvence při chybovém ukončení '{0}': {1}. Pokud dojde k chybovému ukončení hostitele testů, informace o sekvenci testů nebudou k dispozici.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
+      </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Nepodařilo se přečíst soubor sekvence chybových ukončení {0}: {1}.</target>
         <note>{0} is the crash sequence file path. {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileWriteError">
+        <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
+        <target state="translated">Nepovedlo se zapsat do souboru sekvence při chybovém ukončení '{0}': {1}. Soubor sekvence při chybovém ukončení nemusí být úplný.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -97,10 +107,10 @@ Podporuje následující zástupné symboly: {pname} (název spustitelného soub
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
         <target state="translated">Určete typ výpisu paměti.
 Platné hodnoty jsou Mini, Heap, Triage a Full. Výchozí typ je Full.
-Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">

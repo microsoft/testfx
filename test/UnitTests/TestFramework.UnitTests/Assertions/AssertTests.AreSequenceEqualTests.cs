@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 public partial class AssertTests : TestContainer
 {
     public void AreSequenceEqual_InOrder_IdenticalSequences_Passes()
-        => Assert.AreSequenceEqual(new[] { 1, 2, 3 }, new[] { 1, 2, 3 });
+        => Assert.AreSequenceEqual([1, 2, 3], [1, 2, 3]);
 
     public void AreSequenceEqual_InOrder_DifferentLengths_Fails()
     {
@@ -53,11 +53,14 @@ public partial class AssertTests : TestContainer
     }
 
     public void AreSequenceEqual_InOrder_BothNull_Passes()
-        => Assert.AreSequenceEqual<string>(null, null);
+    {
+        IEnumerable<string>? value = null;
+        Assert.AreSequenceEqual<string>(value, value);
+    }
 
     public void AreSequenceEqual_InOrder_OneNull_Fails()
     {
-        string[] actual = ["a"];
+        IEnumerable<string> actual = ["a"];
 
         Action action = () => Assert.AreSequenceEqual<string>(null, actual);
         action.Should().Throw<AssertFailedException>()
@@ -65,11 +68,11 @@ public partial class AssertTests : TestContainer
     }
 
     public void AreSequenceEqual_InOrder_BothEmpty_Passes()
-        => Assert.AreSequenceEqual(Array.Empty<int>(), Array.Empty<int>());
+        => Assert.AreSequenceEqual<int>([], []);
 
     public void AreSequenceEqual_InOrder_OneEmpty_Fails()
     {
-        Action action = () => Assert.AreSequenceEqual(Array.Empty<int>(), new[] { 1 });
+        Action action = () => Assert.AreSequenceEqual([], [1]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("*different lengths (expected: 0, actual: 1)*");
     }
@@ -133,21 +136,25 @@ public partial class AssertTests : TestContainer
     }
 
     public void AreSequenceEqual_InAnyOrder_BothNull_Passes()
-        => Assert.AreSequenceEqual<string>(null, null, SequenceOrder.InAnyOrder);
+    {
+        IEnumerable<string>? value = null;
+        Assert.AreSequenceEqual<string>(value, value, SequenceOrder.InAnyOrder);
+    }
 
     public void AreSequenceEqual_InAnyOrder_OneNull_Fails()
     {
-        Action action = () => Assert.AreSequenceEqual<string>(["a"], null, SequenceOrder.InAnyOrder);
+        IEnumerable<string> expected = ["a"];
+        Action action = () => Assert.AreSequenceEqual<string>(expected, null, SequenceOrder.InAnyOrder);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("*Expected sequences to be equal (in any order).*one side is null, the other is not.*");
     }
 
     public void AreSequenceEqual_InAnyOrder_BothEmpty_Passes()
-        => Assert.AreSequenceEqual(Array.Empty<int>(), Array.Empty<int>(), SequenceOrder.InAnyOrder);
+        => Assert.AreSequenceEqual<int>([], [], SequenceOrder.InAnyOrder);
 
     public void AreSequenceEqual_InAnyOrder_OneEmpty_Fails()
     {
-        Action action = () => Assert.AreSequenceEqual(Array.Empty<int>(), new[] { 1 }, SequenceOrder.InAnyOrder);
+        Action action = () => Assert.AreSequenceEqual([], [1], SequenceOrder.InAnyOrder);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("*Missing 0 element(s) from actual. Found 1 unexpected element(s).*unexpected: [1]*");
     }
@@ -222,7 +229,8 @@ public partial class AssertTests : TestContainer
 
     public void AreNotSequenceEqual_BothNull_Fails()
     {
-        Action action = () => Assert.AreNotSequenceEqual<string>(null, null);
+        IEnumerable<string>? value = null;
+        Action action = () => Assert.AreNotSequenceEqual<string>(value, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assertion failed. Expected sequences to differ.*notExpected: null*actual:      null*");
     }
@@ -247,7 +255,7 @@ public partial class AssertTests : TestContainer
     }
 
     public void AreNotSequenceEqual_OneNull_Passes()
-        => Assert.AreNotSequenceEqual(new[] { 1 }, null);
+        => Assert.AreNotSequenceEqual([1], null);
 
     public void AreSequenceEqual_InvalidOrder_Throws()
     {

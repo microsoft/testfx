@@ -9,6 +9,14 @@
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynDebug.cs" Link="Helpers\RoslynDebug.cs" />
+    <!-- Dependency-free logic shared with the MSTest adapter's native MTP providers (see issue #9762). -->
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsProviderHelper.cs" Link="Helpers\RunSettingsProviderHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Helpers\RunSettingsCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsConfigurationProviderBase.cs" Link="Helpers\RunSettingsConfigurationProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsEnvironmentVariableProviderBase.cs" Link="Helpers\RunSettingsEnvironmentVariableProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestRunParametersCommandLineOptionsProviderBase.cs" Link="Helpers\TestRunParametersCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestCaseFilterCommandLineOptionsProviderBase.cs" Link="Helpers\TestCaseFilterCommandLineOptionsProviderBase.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,11 +42,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.
 
-This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

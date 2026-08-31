@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">테스트 실패: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,142 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">테스트 실행이 GitHub Actions에서 일급 경험처럼 보이도록 워크플로 명령을 내보내는 GitHub Actions 보고서 생성기입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">GitHub Actions 보고서 생성기</target>
         <note />
+      </trans-unit>
+      <trans-unit id="EmptyStepSummarySections">
+        <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
+        <target state="translated">하나 이상의 GitHub Actions 작업 요약 섹션이 필요합니다. 유효한 값은 'test-results', 'slow-tests', 'coverage' 또는 'all'입니다.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="translated">테스트 실행 실패(종료 코드 {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="translated">종료 코드 {0} — {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">하나 이상의 테스트가 실패했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">하나 이상의 코드 검사 임계값을 충족하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">종속 프로세스가 예기치 않게 종료되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">테스트 실행에 실패했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">호환되지 않는 프로토콜 버전이 협상되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">명령줄 인수가 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">테스트 플랫폼 설정이 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">--minimum-expected-tests에서 요구하는 최소 수보다 적은 테스트만 실행되었습니다.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">테스트 실행에 성공했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">테스트 어댑터에서 테스트 세션 실패를 보고했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">CI 적용 마감일이 다가와서 테스트 실행이 조기에 중지되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">--maximum-failed-tests에서 설정한 한도에 도달해 테스트 실행이 중지되었습니다.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">테스트 호스트 프로세스가 정상적으로 종료되지 않았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">테스트 세션이 중단되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">테스트 실행에서 성공하지 못한 종료 코드를 보고했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">실행할 테스트를 찾지 못했습니다. 이는 테스트 필터가 아무 항목과도 일치하지 않았음을 의미하는 경우가 많습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureDetailExceptionLabel">
+        <source>Exception</source>
+        <target state="translated">예외</target>
+        <note>Label preceding the exception type of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailLocationLabel">
+        <source>Location</source>
+        <target state="translated">위치</target>
+        <note>Label preceding the source file and line of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailTruncated">
+        <source>[... truncated]</source>
+        <target state="translated">[... 잘림]</target>
+        <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOmitted">
+        <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
+        <target state="translated">오류 세부 정보가 너무 많은 공간을 차지하므로 나열된 {0}개 테스트의 실패 세부 정보는 생략되었습니다.</target>
+        <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOptionDescription">
+        <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">작업 요약에서 실패한 각 테스트를 실패 메시지, 예외 유형, 원본 위치 및 스택 추적이 포함된 접을 수 있는 섹션으로 확장할지 여부를 설정합니다. 유효한 값은 'on'('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다. GitHub Actions에서 실행할 때 기본값은 'on'입니다.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
+      </trans-unit>
+      <trans-unit id="FailureListTruncated">
+        <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
+        <target state="translated">실패한 {1} 테스트 중 첫 {0} 표시합니다. 나머지 실패는 워크플로 로그 또는 테스트 보고서를 확인하세요.</target>
+        <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">테스트: {0}({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -32,9 +157,64 @@
         <target state="new">Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
+      <trans-unit id="HistoryDurationContext">
+        <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
+        <target state="translated">기록 기간: 이전 샘플 {2}에서 기준 p95 {0}, p99 {1}.</target>
+        <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFailureContext">
+        <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
+        <target state="translated">기록 컨텍스트: {3}일 기록 기간 내 이전 {2}번의 실행 중 {0}번은 실패했고 {1}번은 불안정했습니다.</target>
+        <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFlakyContext">
+        <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
+        <target state="translated">기록 컨텍스트: {2}일 기록 기간 내 이전 {1}번의 실행 중 {0}번은 불안정했습니다.</target>
+        <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryLoadFailedWarning">
+        <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
+        <target state="translated">'{0}'에서 GitHub Actions 테스트 기록 스냅샷을 로드하지 못했습니다. {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="HistoryOptionDescription">
+        <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
+        <target state="translated">지정된 경로에서 바인딩된 GitHub Actions 테스트 기록 스냅샷을 읽고 업데이트합니다. 워크플로는 테스트 실행 전에 이전 스냅샷을 다운로드하고 나중에 업데이트된 파일을 업로드합니다. '--report-gh'가 필요합니다.</target>
+        <note>{Locked="'--report-gh'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryRegressionContext">
+        <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
+        <target state="translated">기록 컨텍스트: {1}일 기록 기간 내 이전 실행 {0}번이 모두 통과했습니다.</target>
+        <note>{0} is the total prior result count, {1} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowOptionDescription">
+        <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
+        <target state="translated">불안정한 테스트 컨텍스트에 보존하고 사용할 테스트 기록의 일 수입니다(1-90). 기본값은 30입니다. '--report-gh-history'가 필요합니다.</target>
+        <note>{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowRequiresHistory">
+        <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
+        <target state="translated">'--report-gh-history-window' 옵션을 사용하려면 '--report-gh-history'를 지정해야 합니다.</target>
+        <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWriteFailedWarning">
+        <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
+        <target state="translated">'{0}'에 GitHub Actions 테스트 기록 스냅샷을 쓰지 못했습니다. {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="InvalidHistoryPath">
+        <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
+        <target state="translated">GitHub Actions 테스트 기록 스냅샷 경로는 비어 있지 않은 유효한 경로여야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHistoryWindow">
+        <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
+        <target state="translated">잘못된 GitHub Actions 테스트 기록 창 '{0}'입니다. 1에서 90까지의 일수를 정수로 지정합니다.</target>
+        <note>{0} is the invalid history window.</note>
+      </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">값 '{0}'이(가) 잘못되었습니다. 유효한 값은 'on'(또는 'true', 'enable', '1') 또는 'off'(또는 'false', 'disable', '0')입니다.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -42,29 +222,49 @@
         <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="InvalidStepSummarySection">
+        <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
+        <target state="translated">잘못된 GitHub Actions 작업 요약 섹션 '{0}'입니다. 유효한 값은 'test-results', 'slow-tests', 'coverage' 또는 'all'입니다. 값은 반복되거나 공백이나 쉼표로 구분할 수 있습니다.</target>
+        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidStepSummaryValue">
+        <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
+        <target state="translated">값 '{0}'이(가) 잘못되었습니다. 유효한 값은 'on'(또는 'true', 'enable', '1'), 'off'(또는 'false', 'disable', '0') 또는 'on-failure'입니다.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+      </trans-unit>
+      <trans-unit id="ModuleDetailsOmitted">
+        <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
+        <target state="translated">오류 세부 정보가 이미 너무 많은 공간을 차지하므로 {1} 테스트 프로젝트 중 {0} 오류 세부 정보가 생략되었습니다. 전체 진단은 워크플로 로그 또는 테스트 보고서를 확인하세요.</target>
+        <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
+      </trans-unit>
+      <trans-unit id="ModulesNotListed">
+        <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
+        <target state="translated">{0} 추가 테스트 프로젝트는 작업 요약 크기 제한에 도달했기 때문에 나열되지 않습니다. GitHub는 1MB보다 큰 작업 요약은 축소하는 대신 전체를 삭제합니다. 해당 결과는 워크플로 로그 또는 테스트 보고서를 확인하세요.</target>
+        <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">실패 메시지를 제공하지 않고 테스트에 실패했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">이유를 제공하지 않고 테스트를 건너뛰었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">GitHub Actions 보고서 생성기가 워크플로 명령을 내보내도록 설정하면 테스트 실행으로 GitHub Actions에 대한 첫 번째 클래스 환경이 생성됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">테스트 건너뜀: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">느린 테스트: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +274,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{1}s 후에도 {0} 여전히 실행 중</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -82,15 +282,40 @@
         <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
+      <trans-unit id="StepSummaryLimitExceededWarning">
+        <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
+        <target state="translated">GitHub 작업 요약 파일은 {0} 바이트이고, 이 보고서 섹션을 추가하면 GitHub가 단계마다 적용하는 {1}-바이트 제한을 초과합니다. GitHub는 너무 큰 작업 요약을 자르지 않고 전체를 삭제하므로 추가하면 다른 테스트 프로젝트에서 이미 작성한 내용을 포함하여 모든 섹션이 손실됩니다. 나머지 요약을 그대로 유지하려고 이 섹션은 건너뛰었습니다. 일반적으로 많은 테스트 프로젝트 또는 다른 도구가 같은 작업 요약에 쓰고 있다는 의미입니다. 이러한 결과는 워크플로 로그 또는 테스트 보고서를 확인하세요.</target>
+        <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
+      </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
-        <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">GITHUB_STEP_SUMMARY 파일에 markdown 작업 요약을 작성하는 것을 제어합니다. 유효한 값은 'on'('true', 'enable', '1'도 허용), 'off'('false', 'disable', '0'도 허용) 또는 테스트 호출이 실패할 때만 작성하는 'on-failure'입니다. GitHub Actions에서 실행할 때 기본값은 'on'입니다.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+      </trans-unit>
+      <trans-unit id="StepSummarySectionsOptionDescription">
+        <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
+        <target state="translated">GitHub Actions 작업 요약에 포함된 콘텐츠를 선택합니다. 'test-results', 'slow-tests', 'coverage' 또는 'all' 값을 하나 이상 지정하세요. 값은 반복되거나 공백이나 쉼표로 구분할 수 있습니다. 기본값은 'all'입니다. '--report-gh'가 필요합니다.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">'{0}'에 GitHub Actions 작업 요약을 쓰지 못했습니다. {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="SubOptionsRequireReportGh">
+        <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
+        <target state="translated">GitHub Actions 보고서 하위 옵션을 사용하려면 '--{0}'을(를) 지정해야 합니다.</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryCondensed">
+        <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
+        <target state="translated">요약이 이미 너무 많은 공간을 차지하므로 한 줄로 줄였습니다. 전체 결과는 워크플로 로그 또는 테스트 보고서를 확인하세요.</target>
+        <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
+      </trans-unit>
+      <trans-unit id="SummaryTruncatedNotice">
+        <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
+        <target state="translated">이 작업 요약이 너무 길어져서 줄였습니다. 첫 {0} 테스트 프로젝트의 전체 결과가 포함되어 있고, 아래에 한 줄로 보고된 항목들의 결과는 제외되었습니다. GitHub는 1MB보다 큰 작업 요약은 축소하는 대신 전체를 삭제합니다. 전체 결과는 워크플로 로그 또는 테스트 보고서를 참조하세요.</target>
+        <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>
   </file>

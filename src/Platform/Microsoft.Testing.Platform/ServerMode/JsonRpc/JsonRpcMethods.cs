@@ -17,6 +17,34 @@ internal static class JsonRpcMethods
     public const string TestingTestUpdatesAttachments = "testing/testUpdates/attachments";
 }
 
+internal static class JsonRpcProtocolVersions
+{
+    public const string V1 = "1.0.0";
+
+    public static string Current => V1;
+
+    public static IReadOnlyList<string> Supported { get; } = Array.AsReadOnly([V1]);
+
+    public static string? Negotiate(IReadOnlyCollection<string>? clientSupportedVersions)
+    {
+        if (clientSupportedVersions is null || clientSupportedVersions.Count == 0)
+        {
+            return V1;
+        }
+
+        IReadOnlyList<string> serverSupportedVersions = Supported;
+        for (int i = serverSupportedVersions.Count - 1; i >= 0; i--)
+        {
+            if (clientSupportedVersions.Contains(serverSupportedVersions[i]))
+            {
+                return serverSupportedVersions[i];
+            }
+        }
+
+        return null;
+    }
+}
+
 internal static class JsonRpcStrings
 {
     // Common
@@ -35,6 +63,8 @@ internal static class JsonRpcStrings
     public const string ServerInfo = "serverInfo";
     public const string Name = "name";
     public const string Version = "version";
+    public const string ProtocolVersions = "protocolVersions";
+    public const string ProtocolVersion = "protocolVersion";
 
     // Capabilities
     public const string Capabilities = "capabilities";
@@ -46,6 +76,7 @@ internal static class JsonRpcStrings
     public const string VSTestProviderSupport = "vstestProvider";
     public const string AttachmentsSupport = "attachmentsSupport";
     public const string MultiConnectionProvider = "multipleConnectionProvider";
+    public const string SupportsTestCoverageMessages = "supportsTestCoverageMessages";
 
     // Discovery and run
     public const string RunId = "runId";

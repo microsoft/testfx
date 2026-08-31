@@ -123,7 +123,7 @@ internal sealed partial class UnitTestRunner
 
         return new TestFilterContext
         {
-            FullyQualifiedName = $"{testMethod.FullClassName}.{testMethod.Name}",
+            FullyQualifiedName = testMethod.FullyQualifiedName,
             DisplayName = testMethod.DisplayName,
             MethodName = testMethod.Name,
             Source = testMethod.AssemblyName,
@@ -140,15 +140,22 @@ internal sealed partial class UnitTestRunner
     }
 
     /// <summary>
-    /// Handles the bookkeeping (class-cleanup countdown, class cleanup, end-of-assembly cleanup) for a
-    /// test that was filtered out by a <see cref="ITestFilter"/>. Mirrors the tail of
-    /// <see cref="RunSingleTestAsync"/>. The filtered-out test never loaded its own type, but if a
+    /// Handles the bookkeeping (class-cleanup countdown, class cleanup, end-of-assembly cleanup) for a test
+    /// that was selected for the run - and so counted in the class-cleanup countdown - but never executed.
+    /// Mirrors the tail of normal test execution path. The test never loaded its own type, but if a
     /// sibling test of the same class already ran in this worker the class was initialized and still
     /// owes its <c>[ClassCleanup]</c>, so it is executed here when this is the last test of the class.
     /// </summary>
-    private async Task<TestResult[]> FinishFilteredOutTestAsync(
+    /// <remarks>
+    /// Shared by every "selected but not run" path: a test dropped by an <see cref="ITestFilter"/>, and a
+    /// test whose outcome the scheduler decided without running it (a prerequisite did not pass, or it is
+    /// part of a dependency cycle). Skipping this bookkeeping leaves the countdown permanently above zero,
+    /// which silently loses the class's <c>[ClassCleanup]</c> and - because end-of-assembly cleanup is gated
+    /// on <em>every</em> class having completed - the whole assembly's <c>[AssemblyCleanup]</c>.
+    /// </remarks>
+    private async Task<TestResult[]> FinishTestThatDidNotRunAsync(
         TestMethod testMethod,
-        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
         IAdapterMessageLogger messageLogger,
         TestResult[] filterResult,
         ITestContext testContextForTestExecution)
@@ -171,7 +178,7 @@ internal sealed partial class UnitTestRunner
                 TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(lastRunnableTest.TestMethod);
                 if (testMethodInfo is not null)
                 {
-                    ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                    ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
                     try
                     {
                         // Flow properties set during AssemblyInitialize and ClassInitialize so the
@@ -211,7 +218,7 @@ internal sealed partial class UnitTestRunner
             ITestContext? testContextForAssemblyCleanup = null;
             try
             {
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, filterResult).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)

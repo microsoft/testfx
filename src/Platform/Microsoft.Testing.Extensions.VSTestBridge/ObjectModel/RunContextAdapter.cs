@@ -14,7 +14,12 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
 {
     public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
-        : base(commandLineOptions, runSettings, filter)
+        : this(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid: false)
+    {
+    }
+
+    public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, bool useFullyQualifiedNameAsUid)
+        : base(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid)
     {
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 

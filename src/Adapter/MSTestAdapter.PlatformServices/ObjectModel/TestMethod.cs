@@ -68,13 +68,37 @@ internal sealed class TestMethod : ITestMethod
     /// <inheritdoc />
     public string FullClassName { get; }
 
+    /// <summary>
+    /// Gets the <c>FullClassName.Name</c> pair used as the test's fully qualified name by both the VSTest and the
+    /// Microsoft.Testing.Platform paths (discovery, test id hashing and filtering).
+    /// </summary>
+    /// <remarks>
+    /// Computed on first access and cached, as <see cref="FullClassName"/> and <see cref="Name"/> are immutable for
+    /// the lifetime of the instance. Concurrent first accesses may each compute the string, but they all produce an
+    /// equal value, so the race is benign. The cache is a pure function of two already-serialized fields, so it is
+    /// excluded from serialization on .NET Framework and simply re-derived after deserialization.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    public string FullyQualifiedName => field ??= $"{FullClassName}.{Name}";
+
     public string? ParameterTypes { get; }
 
     /// <inheritdoc />
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public string? ManagedTypeName => GetManagedTypeName(FullClassName);
+    /// <remarks>
+    /// Computed on first access and cached, as <see cref="FullClassName"/> is immutable for the lifetime of the
+    /// instance. Concurrent first accesses may each compute the string, but they all produce an equal value, so the
+    /// race is benign. The cache is a pure function of an already-serialized field, so it is excluded from
+    /// serialization on .NET Framework and simply re-derived after deserialization.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    public string? ManagedTypeName => field ??= GetManagedTypeName(FullClassName);
 
     /// <inheritdoc />
     public string? ManagedMethodName { get; }

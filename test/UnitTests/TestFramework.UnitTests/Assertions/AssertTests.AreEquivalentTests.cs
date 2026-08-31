@@ -12,7 +12,10 @@ public partial class AssertTests : TestContainer
     #region AreEquivalent — primitives, nulls, strings
 
     public void AreEquivalent_BothNull_Passes()
-        => Assert.AreEquivalent<object>(null, null);
+    {
+        object? value = null;
+        Assert.AreEquivalent<object>(value, value);
+    }
 
     public void AreEquivalent_SameReference_Passes()
     {
@@ -691,7 +694,8 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEquivalent_BothNull_Fails()
     {
-        Action act = () => Assert.AreNotEquivalent<object>(null, null);
+        object? value = null;
+        Action act = () => Assert.AreNotEquivalent<object>(value, value);
         act.Should().Throw<AssertFailedException>();
     }
 

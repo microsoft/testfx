@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -17,6 +17,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ITestCoverageResult? _testCoverageResult;
     private readonly OpenTelemetryResultHandler? _openTelemetryResultHandler;
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
@@ -30,14 +31,26 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IEnvironment environment,
         IStopPoliciesService policiesService,
         IPlatformOpenTelemetryService? otelService)
+        : this(outputService, commandLineOptions, environment, policiesService, otelService, testCoverageResult: null)
+    {
+    }
+
+    public TestApplicationResult(
+        IOutputDevice outputService,
+        ICommandLineOptions commandLineOptions,
+        IEnvironment environment,
+        IStopPoliciesService policiesService,
+        IPlatformOpenTelemetryService? otelService,
+        ITestCoverageResult? testCoverageResult)
     {
         _outputService = outputService;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
+        _testCoverageResult = testCoverageResult;
         if (otelService is not null)
         {
-            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
+            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, PlatformOpenTelemetryOptions.FromEnvironment(environment));
         }
 
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
@@ -71,7 +84,22 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         var message = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? executionState = message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
 
+        if (message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
+        {
+            _openTelemetryResultHandler?.NotifyExecutionCompleted(message.TestNode);
+            return Task.CompletedTask;
+        }
+
         if (executionState is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        // A test framework that retries a test in-process (MSTest's [Retry], ...) reports every attempt under the
+        // same test node uid. Only the final attempt is the test's outcome, so superseded attempts must not be
+        // counted here: otherwise a test that failed once and then passed would still leave _failedTestsCount > 0
+        // and make the process exit with ExitCode.AtLeastOneTestFailed.
+        if (message.TestNode.IsSupersededRetryAttempt())
         {
             return Task.CompletedTask;
         }
@@ -137,12 +165,22 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     }
 
     public int GetProcessExitCode()
+        => ExitCodeIgnorePolicy.Apply(GetProcessExitCodeWithoutIgnore(), _commandLineOptions, _environment);
+
+    internal int GetProcessExitCodeWithoutIgnore()
     {
         ExitCode exitCode = ExitCode.Success;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCode.TestExecutionStoppedForMaxFailedTests : exitCode;
         exitCode = exitCode == ExitCode.Success && _testAdapterTestSessionFailure ? ExitCode.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
+
+        // A deadline-driven graceful stop (see AbortAtDeadlineExtension) truncates the run before the CI
+        // hard-cancel. Such a run may otherwise look successful (it did not fail or abort), but it did not
+        // execute every test, so it must not report success. Real failures/abort above keep precedence; a
+        // clean-but-truncated run becomes non-zero here and takes precedence over the zero-tests/coverage
+        // verdicts below (a truncated run legitimately may not have run the expected number of tests).
+        exitCode = exitCode == ExitCode.Success && _policiesService.IsDeadlineTriggered ? ExitCode.TestExecutionStoppedAtDeadline : exitCode;
 
         // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
         // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields
@@ -171,23 +209,9 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
         }
 
-        // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
-        string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
-        if (RoslynString.IsNullOrEmpty(exitCodeToIgnore))
-        {
-            if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
-            {
-                exitCodeToIgnore = commandLineExitCodes[0];
-            }
-        }
-
-        if (exitCodeToIgnore is not null)
-        {
-            if (exitCodeToIgnore.Split(';').Any(code => int.TryParse(code, out int parsedExitCode) && parsedExitCode == (int)exitCode))
-            {
-                exitCode = ExitCode.Success;
-            }
-        }
+        // Coverage thresholds override only an otherwise-successful run. Count-based policies above retain
+        // precedence when no tests ran or the explicit minimum was not met.
+        exitCode = exitCode == ExitCode.Success && _testCoverageResult?.HasThresholdFailure == true ? ExitCode.CoverageThresholdFailed : exitCode;
 
         return (int)exitCode;
     }
@@ -201,6 +225,21 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
+
+    /// <summary>
+    /// Emits the run-level OpenTelemetry metrics and tags the root span with the run counts.
+    /// </summary>
+    /// <param name="runActivity">The root span of the run, if any.</param>
+    /// <param name="exitCode">The exit code the host is about to return. Passed in rather than recomputed so the
+    /// telemetry always agrees with what the process actually exits with, including on the cancellation path.</param>
+    /// <remarks>
+    /// This deliberately does not live in <see cref="Dispose"/>: services are disposed in registration order, and the
+    /// OpenTelemetry provider is registered long before this one, so by the time we were disposed the
+    /// <c>MeterProvider</c> had already been shut down and the measurement was silently dropped. The host calls this
+    /// from its <c>finally</c> block instead, while the providers and the root span are still alive.
+    /// </remarks>
+    internal void ReportRunTelemetry(IPlatformActivity? runActivity, int exitCode)
+        => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, exitCode, runActivity);
 
     public void Dispose()
         => _openTelemetryResultHandler?.Dispose();

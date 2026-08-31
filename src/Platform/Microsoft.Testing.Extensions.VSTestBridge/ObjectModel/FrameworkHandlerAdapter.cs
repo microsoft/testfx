@@ -80,6 +80,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     }
 
     /// <inheritdoc/>
+    [Obsolete("This property has no effect")]
     public bool EnableShutdownAfterTestRun
     {
         get => _frameworkHandle?.EnableShutdownAfterTestRun ?? false;

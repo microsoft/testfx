@@ -24,11 +24,12 @@ jobs:
   cleanup:
     if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       actions: write
     steps:
     - name: Cleanup workflow runs
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const repo_owner = context.payload.repository.owner.login;
@@ -64,13 +65,14 @@ jobs:
   run_backport:
     if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       issues: write
       pull-requests: write
     steps:
     - name: Extract backport target branch
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       id: target-branch-extractor
       with:
         result-encoding: string
@@ -85,7 +87,7 @@ jobs:
           return target_branch[1];
 
     - name: Extract PR id
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       id: pr-id-extractor
       with:
         result-encoding: string
@@ -93,7 +95,7 @@ jobs:
           return context.issue.number;
 
     - name: Calculate backport branch name
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       id: backport-branch-name-extractor
       with:
         result-encoding: string
@@ -101,7 +103,7 @@ jobs:
           return `backport/${{ steps.pr-id-extractor.outputs.result }}/to/${{ steps.target-branch-extractor.outputs.result }}`;
 
     - name: Calculate backport PR title
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       id: backport-pr-title-extractor
       env:
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
@@ -121,7 +123,7 @@ jobs:
             return backport_pr_title;
 
     - name: Calculate backport PR description
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       id: backport-pr-description-extractor
       env:
         BACKPORT_PR_DESCRIPTION_TEMPLATE: ${{ inputs.pr_description_template }}
@@ -146,7 +148,7 @@ jobs:
             return backport_pr_description;
 
     - name: Unlock comments if PR is locked
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       if: ${{ github.event.issue.locked == true }}
       with:
         script: |
@@ -157,7 +159,7 @@ jobs:
             repo: context.repo.repo,
           });
     - name: Post backport started comment to pull request
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -169,11 +171,11 @@ jobs:
             body: backport_start_body
           });
     - name: Checkout repo
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
     - name: Run backport
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -281,7 +283,7 @@ jobs:
             });
           }
 
-    - uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7
+    - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
       with:
         token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
         push-to-fork: nohwnd-bot/testfx
@@ -290,7 +292,7 @@ jobs:
         body: ${{ steps.backport-pr-description-extractor.outputs.result }}
 
     - name: Re-lock PR comments
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       if: ${{ github.event.issue.locked == true && (success() || failure()) }}
       with:
         script: |

@@ -71,4 +71,34 @@ internal static partial class ArtifactNamingHelper
             return ordinalReplacements.TryGetValue(fieldName, out string? value) ? value : match.Value;
         });
     }
+
+    /// <summary>
+    /// Resolves the standard placeholders in <paramref name="template"/> and sanitizes the leaf file name
+    /// portion of the result using <paramref name="sanitizeLeafFileName"/>. The directory portion (if any)
+    /// is preserved without sanitization so that absolute or relative paths containing path separators are
+    /// kept intact.
+    /// </summary>
+    /// <param name="template">The file name template that may contain <c>{pname}</c>, <c>{pid}</c>, <c>{time}</c>, etc. placeholders.</param>
+    /// <param name="processName">The process name (resolves <c>{pname}</c>).</param>
+    /// <param name="processId">The process ID (resolves <c>{pid}</c>).</param>
+    /// <param name="timestamp">The timestamp to use (resolves <c>{time}</c>).</param>
+    /// <param name="sanitizeLeafFileName">The sanitizer applied to the resolved leaf file name.</param>
+    /// <returns>The resolved and sanitized file name (or path, if the template contained a directory component).</returns>
+    /// <exception cref="ArgumentException">The resolved template does not produce a leaf file name (e.g. it ends with a directory separator).</exception>
+    public static string ResolveAndSanitize(string template, string processName, string processId, DateTimeOffset timestamp, Func<string, string> sanitizeLeafFileName)
+    {
+        Dictionary<string, string> replacements = GetStandardReplacements(processName, processId, timestamp);
+        string resolved = ResolveTemplate(template, replacements);
+
+        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
+        string leafName = Path.GetFileName(resolved);
+        if (leafName.Length == 0)
+        {
+            throw new ArgumentException("The resolved template must produce a file name, not just a directory path.", nameof(template));
+        }
+
+        string sanitized = sanitizeLeafFileName(leafName);
+
+        return directoryPart.Length == 0 ? sanitized : Path.Combine(directoryPart, sanitized);
+    }
 }

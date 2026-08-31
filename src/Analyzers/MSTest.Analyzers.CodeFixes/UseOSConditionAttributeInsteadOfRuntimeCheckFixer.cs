@@ -46,6 +46,15 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
             return;
         }
 
+        // Only offer a fix when the OS platform maps to a known OperatingSystems enum value.
+        // Platforms without a mapping (e.g. custom OSPlatform.Create values, iOS, Android) have no
+        // OSCondition equivalent, so registering a fix would produce a no-op code action.
+        string? operatingSystem = MapOSPlatformToOperatingSystem(osPlatform);
+        if (operatingSystem is null)
+        {
+            return;
+        }
+
         SyntaxNode diagnosticNode = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
 
         // Find the containing method
@@ -65,7 +74,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseOSConditionAttributeInsteadOfRuntimeCheckFix,
-                createChangedDocument: ct => AddOSConditionAttributeAsync(context.Document, methodDeclaration, ifStatement, osPlatform, isNegated, ct),
+                createChangedDocument: ct => AddOSConditionAttributeAsync(context.Document, methodDeclaration, ifStatement, operatingSystem, isNegated, ct),
                 equivalenceKey: nameof(UseOSConditionAttributeInsteadOfRuntimeCheckFixer)),
             diagnostic);
     }
@@ -74,17 +83,11 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
         Document document,
         MethodDeclarationSyntax methodDeclaration,
         IfStatementSyntax ifStatement,
-        string osPlatform,
+        string operatingSystem,
         bool isNegated,
         CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-
-        string? operatingSystem = MapOSPlatformToOperatingSystem(osPlatform);
-        if (operatingSystem is null)
-        {
-            return document;
-        }
 
         MethodDeclarationSyntax? modifiedMethod = RemoveIfStatementFromMethod(methodDeclaration, ifStatement);
         if (modifiedMethod is null)

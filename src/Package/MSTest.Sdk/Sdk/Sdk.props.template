@@ -39,19 +39,14 @@
   <PropertyGroup>
     <EnableAspireTesting Condition=" '$(EnableAspireTesting)' == '' ">false</EnableAspireTesting>
     <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
-    <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
-
     <AspireHostingTestingVersion Condition=" '$(AspireHostingTestingVersion)' == '' ">${AspireHostingTestingVersion}</AspireHostingTestingVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">${MicrosoftPlaywrightVersion}</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >${MicrosoftTestingExtensionsCtrfReportVersion}</MicrosoftTestingExtensionsCtrfReportVersion>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
-    <MicrosoftTestingExtensionsGitHubActionsReportVersion Condition=" '$(MicrosoftTestingExtensionsGitHubActionsReportVersion)' == '' " >${MicrosoftTestingExtensionsGitHubActionsReportVersion}</MicrosoftTestingExtensionsGitHubActionsReportVersion>
     <MicrosoftTestingExtensionsJUnitReportVersion Condition=" '$(MicrosoftTestingExtensionsJUnitReportVersion)' == '' " >${MicrosoftTestingExtensionsJUnitReportVersion}</MicrosoftTestingExtensionsJUnitReportVersion>
-    <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >${MicrosoftTestingExtensionsOpenTelemetryVersion}</MicrosoftTestingExtensionsOpenTelemetryVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>
-    <MSTestSourceGenerationVersion Condition=" '$(MSTestSourceGenerationVersion)' == '' ">${MSTestSourceGenerationVersion}</MSTestSourceGenerationVersion>
     <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
   </PropertyGroup>
 

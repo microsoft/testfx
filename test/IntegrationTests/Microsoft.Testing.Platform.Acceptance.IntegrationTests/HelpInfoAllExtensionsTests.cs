@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -31,9 +31,9 @@ Options:
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -44,6 +44,8 @@ Options:
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --enable-dynamic-extensions
+        Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
@@ -51,8 +53,9 @@ Options:
     --help
         Show the command line help.
     --ignore-exit-code
-        Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
@@ -65,8 +68,8 @@ Options:
     --no-progress
         [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
-        Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
@@ -76,12 +79,22 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-flaky-tests
+        Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        Passing the option without a value turns it on.
+    --show-slowest-tests
+        Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
     --show-stdout
         Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+    --show-test-results
+        Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+        Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
@@ -110,16 +123,16 @@ Extension options:
         The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
         Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
     --crashdump
-        [net6.0+ only] Generate a dump file if the test process crashes
+        [net6.0+ only] Generate a dump file if the test process crashes.
     --crashdump-filename
         Specify the name of the dump file.
         Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.
     --crashdump-type
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.
     --hangdump
-        Generate a dump file if the test process hangs
+        Generate a dump file if the test process hangs.
     --hangdump-filename
         Specify the name of the dump file.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
@@ -136,13 +149,13 @@ Extension options:
     --hangdump-type
         Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
-        Default type is 'Full'
+        Default type is 'Full'.
     --hangdump-type-if-supported
         Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
     --publish-azdo-test-results
-        Publish test results live to the Azure DevOps Tests tab.
+        Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.
     --report-azdo
         Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
     --report-azdo-annotations
@@ -152,7 +165,7 @@ Extension options:
     --report-azdo-flaky-history
         Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
     --report-azdo-groups
-        Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.
+        Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.
     --report-azdo-quarantine-file
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
@@ -176,49 +189,57 @@ Extension options:
     --report-azdo-upload-artifacts
         Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
     --report-ctrf
-        Enable generating a CTRF (Common Test Report Format) JSON report
+        Enable generating a CTRF (Common Test Report Format) JSON report.
     --report-ctrf-filename
         The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json
+        Example: 'MyReport_{tfm}.ctrf.json'.
     --report-gh
         Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
     --report-gh-annotations
         Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-failure-details
+        Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-groups
         Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-history
+        Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.
+    --report-gh-history-window
+        Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.
     --report-gh-slow-test-notices
         Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-slow-test-threshold
         The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.
     --report-gh-step-summary
-        Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+        Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.
+    --report-gh-step-summary-sections
+        Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.
     --report-html
-        Enable generating an HTML report
+        Enable generating an HTML report.
     --report-html-filename
         The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.html
+        Example: 'MyReport_{tfm}.html'.
     --report-junit
-        Enable generating a JUnit XML report
+        Enable generating a JUnit XML report.
     --report-junit-filename
         The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.xml
+        Example: 'MyReport_{tfm}.xml'.
     --report-trx
-        Enable generating TRX report
+        Enable generating TRX report.
     --report-trx-filename
         The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.trx
+        Example: 'MyReport_{tfm}.trx'.
     --retry-failed-tests
-        Retry failed tests the given number of times
+        Retry failed tests the given number of times.
     --retry-failed-tests-delay
         Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.
     --retry-failed-tests-max-percentage
-        Disable retry mechanism if the percentage of failed tests is greater than the specified value
+        Disable retry mechanism if the percentage of failed tests is greater than the specified value.
     --retry-failed-tests-max-tests
-        Disable retry mechanism if the number of failed tests is greater than the specified value
+        Disable retry mechanism if the number of failed tests is greater than the specified value.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -264,7 +285,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: *
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --?
         Arity: 0
@@ -290,11 +311,11 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
-        Description: Prefix for the log file name that will replace '[log]_.'
+        Description: Replace '[log]_.' with the specified log file name prefix.
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
@@ -311,10 +332,26 @@ Built-in command line providers:
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+      --dotnet-test-http-endpoint
+        Arity: 1
+        Hidden: True
+        Description: Specifies the authenticated HTTP endpoint for the dotnet test protocol.
+      --dotnet-test-http-token
+        Arity: 1
+        Hidden: True
+        Description: Specifies the per-run HTTP bearer token for the dotnet test protocol.
       --dotnet-test-pipe
         Arity: 1
         Hidden: True
         Description: dotnet test pipe.
+      --dotnet-test-transport
+        Arity: 1
+        Hidden: True
+        Description: Selects the pre-launch transport for the dotnet test protocol.
+      --enable-dynamic-extensions
+        Arity: 0
+        Hidden: False
+        Description: Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -330,8 +367,9 @@ Built-in command line providers:
       --ignore-exit-code
         Arity: 1
         Hidden: False
-        Description: Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Description: Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
       --info
         Arity: 0
         Hidden: False
@@ -343,7 +381,7 @@ Built-in command line providers:
       --internal-testingplatform-skipbuildercheck
         Arity: 0
         Hidden: True
-        Description: For testing purposes
+        Description: For testing purposes.
       --list-tests
         Arity: 0..1
         Hidden: False
@@ -400,8 +438,8 @@ Built-in command line providers:
       --output
         Arity: 1
         Hidden: False
-        Description: Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Description: Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
       --progress
         Arity: 1
         Hidden: False
@@ -409,6 +447,16 @@ Built-in command line providers:
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
         This option takes precedence over the deprecated --no-progress flag.
+      --show-flaky-tests
+        Arity: 0..1
+        Hidden: False
+        Description: Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        Passing the option without a value turns it on.
+      --show-slowest-tests
+        Arity: 1
+        Hidden: False
+        Description: Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
       --show-stderr
         Arity: 1
         Hidden: False
@@ -419,6 +467,12 @@ Built-in command line providers:
         Hidden: False
         Description: Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+      --show-test-results
+        Arity: 1..N
+        Hidden: False
+        Description: Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+        Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
 Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
@@ -432,7 +486,7 @@ Registered command line providers:
       --publish-azdo-test-results
         Arity: 0
         Hidden: False
-        Description: Publish test results live to the Azure DevOps Tests tab.
+        Description: Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.
       --report-azdo
         Arity: 0
         Hidden: False
@@ -452,7 +506,7 @@ Registered command line providers:
       --report-azdo-groups
         Arity: 1
         Hidden: False
-        Description: Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.
+        Description: Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.
       --report-azdo-quarantine-file
         Arity: 1
         Hidden: False
@@ -500,7 +554,7 @@ Registered command line providers:
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
-    Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly
+    Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.
     Options:
       --crash-report
         Arity: 0
@@ -519,7 +573,7 @@ Registered command line providers:
       --crashdump
         Arity: 0
         Hidden: False
-        Description: [net6.0+ only] Generate a dump file if the test process crashes
+        Description: [net6.0+ only] Generate a dump file if the test process crashes.
       --crashdump-filename
         Arity: 1
         Hidden: False
@@ -530,22 +584,22 @@ Registered command line providers:
         Hidden: False
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.
   CtrfReportGeneratorCommandLine
     Name: CTRF report generator
     Version: *
-    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
+    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).
     Options:
       --report-ctrf
         Arity: 0
         Hidden: False
-        Description: Enable generating a CTRF (Common Test Report Format) JSON report
+        Description: Enable generating a CTRF (Common Test Report Format) JSON report.
       --report-ctrf-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json
+        Example: 'MyReport_{tfm}.ctrf.json'.
   GitHubActionsCommandLineProvider
     Name: GitHub Actions report generator
     Version: *
@@ -559,10 +613,22 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-failure-details
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
       --report-gh-groups
         Arity: 1
         Hidden: False
         Description: Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-history
+        Arity: 1
+        Hidden: False
+        Description: Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.
+      --report-gh-history-window
+        Arity: 1
+        Hidden: False
+        Description: Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.
       --report-gh-slow-test-notices
         Arity: 1
         Hidden: False
@@ -574,7 +640,11 @@ Registered command line providers:
       --report-gh-step-summary
         Arity: 1
         Hidden: False
-        Description: Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+        Description: Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.
+      --report-gh-step-summary-sections
+        Arity: 1..N
+        Hidden: False
+        Description: Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *
@@ -583,7 +653,7 @@ Registered command line providers:
       --hangdump
         Arity: 0
         Hidden: False
-        Description: Generate a dump file if the test process hangs
+        Description: Generate a dump file if the test process hangs.
       --hangdump-filename
         Arity: 1
         Hidden: False
@@ -606,7 +676,7 @@ Registered command line providers:
         Hidden: False
         Description: Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
-        Default type is 'Full'
+        Default type is 'Full'.
       --hangdump-type-if-supported
         Arity: 1
         Hidden: False
@@ -614,42 +684,42 @@ Registered command line providers:
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
     Version: *
-    Description: Produce a self-contained HTML report for the current test session
+    Description: Produce a self-contained HTML report for the current test session.
     Options:
       --report-html
         Arity: 0
         Hidden: False
-        Description: Enable generating an HTML report
+        Description: Enable generating an HTML report.
       --report-html-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.html
+        Example: 'MyReport_{tfm}.html'.
   JUnitReportGeneratorCommandLine
     Name: JUnit XML report generator
     Version: *
-    Description: Produce a JUnit XML report for the current test session
+    Description: Produce a JUnit XML report for the current test session.
     Options:
       --report-junit
         Arity: 0
         Hidden: False
-        Description: Enable generating a JUnit XML report
+        Description: Enable generating a JUnit XML report.
       --report-junit-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.xml
+        Example: 'MyReport_{tfm}.xml'.
   MSBuildCommandLineProvider
     Name: MSBuild integration
     Version: *
-    Description: Extension used to pass parameters from MSBuild node and the hosts
+    Description: Extension used to pass parameters from MSBuild node and the hosts.
     Options:
       --internal-msbuild-node
         Arity: 1
         Hidden: True
-        Description: Used to pass the MSBuild node handle
+        Description: Used to pass the MSBuild node handle.
   RetryCommandLineOptionsProvider
     Name: Retry failed tests
     Version: *
@@ -662,7 +732,7 @@ Registered command line providers:
       --retry-failed-tests
         Arity: 1
         Hidden: False
-        Description: Retry failed tests the given number of times
+        Description: Retry failed tests the given number of times.
       --retry-failed-tests-delay
         Arity: 1
         Hidden: False
@@ -670,26 +740,26 @@ Registered command line providers:
       --retry-failed-tests-max-percentage
         Arity: 1
         Hidden: False
-        Description: Disable retry mechanism if the percentage of failed tests is greater than the specified value
+        Description: Disable retry mechanism if the percentage of failed tests is greater than the specified value.
       --retry-failed-tests-max-tests
         Arity: 1
         Hidden: False
-        Description: Disable retry mechanism if the number of failed tests is greater than the specified value
+        Description: Disable retry mechanism if the number of failed tests is greater than the specified value.
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
-    Description: Produce a TRX report for the current test session
+    Description: Produce a TRX report for the current test session.
     Options:
       --report-trx
         Arity: 0
         Hidden: False
-        Description: Enable generating TRX report
+        Description: Enable generating TRX report.
       --report-trx-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.trx
+        Example: 'MyReport_{tfm}.trx'.
   VideoRecorderCommandLineProvider
     Name: Video recorder
     Version: *
@@ -720,25 +790,44 @@ Registered command line providers:
         Hidden: False
         Description: What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.
 Registered tools:
+  Microsoft.Testing.Extensions.TrxReport.MergeTool
+    Command: merge-trx
+    Name: TRX report merge tool
+    Version: *
+    Description: Merges multiple TRX files into one from the command line.
+    Tool command line providers:
+      Microsoft.Testing.Extensions.TrxReport.MergeTool
+        Name: TRX report merge tool
+        Version: *
+        Description: Merges multiple TRX files into one from the command line.
+        Options:
+          --input
+            Arity: 2..N
+            Hidden: False
+            Description: Two or more input TRX file paths.
+          --output-trx
+            Arity: 1
+            Hidden: False
+            Description: The output TRX file path.
   TrxCompareTool
     Command: ms-trxcompare
     Name: TRX comparer tool
     Version: *
-    Description: This tool allows to compare and highlights differences between 2 TRX reports
+    Description: This tool allows to compare and highlights differences between 2 TRX reports.
     Tool command line providers:
       TrxCompareTool
         Name: TRX comparer tool
         Version: *
-        Description: This tool allows to compare and highlights differences between 2 TRX reports
+        Description: This tool allows to compare and highlights differences between 2 TRX reports.
         Options:
           --baseline-trx
             Arity: 1
             Hidden: False
-            Description: The baseline TRX file
+            Description: The baseline TRX file.
           --trx-to-compare
             Arity: 1
             Hidden: False
-            Description: The TRX file to compare with the baseline
+            Description: The TRX file to compare with the baseline.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);

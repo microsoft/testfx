@@ -34,7 +34,7 @@ internal static class VSTestDiscoverTestExecutionRequestFactory
             requestContext.ClientInfo,
             requestContext.LoggerFactory,
             messageLogger);
-        DiscoveryContextAdapter discoveryContext = new(requestContext.CommandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
+        DiscoveryContextAdapter discoveryContext = new(requestContext.CommandLineOptions, runSettings, discoverTestExecutionRequest.Filter, adapterExtension.UseFullyQualifiedNameAsTestNodeUid);
 
         TestCaseDiscoverySinkAdapter discoverySink = new(
             adapterExtension,

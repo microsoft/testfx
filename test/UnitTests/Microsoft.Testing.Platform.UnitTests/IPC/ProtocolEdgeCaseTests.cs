@@ -40,8 +40,8 @@ public sealed class ProtocolEdgeCaseTests
         ];
         FailedTestResultMessage[] failed =
         [
-            new("f1", "Failed 1", TestStates.Failed, 30, "boom", [new ExceptionMessage("m1", "t1", "st1")], "out", "err", "s"),
-            new("f2", "Errored 2", TestStates.Error, 40, null, [new ExceptionMessage("m2", "t2", "st2"), new ExceptionMessage("m3", "t3", "st3")], null, null, null),
+            new("f1", "Failed 1", TestStates.Failed, 30, "boom", [new ExceptionMessage("m1", "t1", "st1")], "out", "err", "s", "exp1", "act1"),
+            new("f2", "Errored 2", TestStates.Error, 40, null, [new ExceptionMessage("m2", "t2", "st2"), new ExceptionMessage("m3", "t3", "st3")], null, null, null, null, null),
         ];
         var message = new TestResultMessages("exec", "inst", passed, failed);
 
@@ -64,7 +64,7 @@ public sealed class ProtocolEdgeCaseTests
     [TestMethod]
     public void FailedTestResultMessage_WhenNoExceptions_RoundTrips()
     {
-        var message = new TestResultMessages("exec", "inst", [], [new FailedTestResultMessage("f", "F", TestStates.Failed, 1, "reason", [], null, null, null)]);
+        var message = new TestResultMessages("exec", "inst", [], [new FailedTestResultMessage("f", "F", TestStates.Failed, 1, "reason", [], null, null, null, null, null)]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
 
@@ -72,6 +72,68 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsNotNull(actual.FailedTestMessages[0].Exceptions);
         Assert.IsEmpty(actual.FailedTestMessages[0].Exceptions!);
+        Assert.IsNull(actual.FailedTestMessages[0].Expected);
+        Assert.IsNull(actual.FailedTestMessages[0].Actual);
+    }
+
+    [TestMethod]
+    public void FailedTestResultMessage_WithExpectedAndActual_RoundTrips()
+    {
+        var message = new TestResultMessages("exec", "inst", [], [new FailedTestResultMessage("f", "F", TestStates.Failed, 1, "reason", [], null, null, null, "expected value", "actual value")]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("expected value", actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual("actual value", actual.FailedTestMessages[0].Actual);
+    }
+
+    [TestMethod]
+    public void SuccessfulAndFailedTestResultMessage_WithRetryAttemptMetadata_RoundTrips()
+    {
+        // A superseded (non-final) retry attempt that failed, followed by the final attempt that passed - the
+        // typical shape produced by MSTest's [Retry] attribute for a flaky test that eventually succeeds.
+        var message = new TestResultMessages(
+            "exec",
+            "inst",
+            [new SuccessfulTestResultMessage("uid", "F", TestStates.Passed, 1, "reason", null, null, "s", RetryAttemptNumber: 2, IsSuperseded: false)],
+            [new FailedTestResultMessage("uid", "F", TestStates.Failed, 1, "reason", [], null, null, "s", null, null, RetryAttemptNumber: 1, IsSuperseded: true)]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.AreEqual(2, actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsFalse(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.AreEqual(1, actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsTrue(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_WhenPayloadPredatesRetryAttemptFields_DeserializesWithNullRetryMetadata()
+    {
+        // Simulates a payload written by an older SDK/runner that predates the RetryAttemptNumber/IsSuperseded
+        // fields: the field ids are simply absent from the wire, rather than present with a null/default value.
+        // A new reader must treat that absence as "no retry metadata" instead of throwing or defaulting to zero.
+        byte[] successfulResult = WriteFields(
+            (SuccessfulTestResultMessageFieldsId.Uid, WriteString("p")),
+            (SuccessfulTestResultMessageFieldsId.DisplayName, WriteString("passed test")));
+        byte[] failedResult = WriteFields(
+            (FailedTestResultMessageFieldsId.Uid, WriteString("f")),
+            (FailedTestResultMessageFieldsId.DisplayName, WriteString("failed test")));
+        byte[] payload = WriteFields(
+            (TestResultMessagesFieldsId.InstanceId, WriteString("instance")),
+            (TestResultMessagesFieldsId.SuccessfulTestMessageList, WriteList(successfulResult)),
+            (TestResultMessagesFieldsId.FailedTestMessageList, WriteList(failedResult)));
+
+        TestResultMessages actual = DeserializePayload<TestResultMessages>(new TestResultMessagesSerializer(), payload);
+
+        Assert.HasCount(1, actual.SuccessfulTestMessages);
+        Assert.AreEqual("passed test", actual.SuccessfulTestMessages[0].DisplayName);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("failed test", actual.FailedTestMessages[0].DisplayName);
+        Assert.IsNull(actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.FailedTestMessages[0].IsSuperseded);
     }
 
     [TestMethod]
@@ -84,7 +146,7 @@ public sealed class ProtocolEdgeCaseTests
             Tricky,
             "inst",
             [new SuccessfulTestResultMessage("uid", Tricky, TestStates.Passed, 1, Tricky, Tricky, Tricky, "s")],
-            [new FailedTestResultMessage("uid", Tricky, TestStates.Failed, 1, Tricky, [new ExceptionMessage(Tricky, Tricky, Tricky)], Tricky, Tricky, "s")]);
+            [new FailedTestResultMessage("uid", Tricky, TestStates.Failed, 1, Tricky, [new ExceptionMessage(Tricky, Tricky, Tricky)], Tricky, Tricky, "s", Tricky, Tricky)]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
 
@@ -92,6 +154,38 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual(Tricky, actual.SuccessfulTestMessages[0].DisplayName);
         Assert.AreEqual(Tricky, actual.SuccessfulTestMessages[0].StandardOutput);
         Assert.AreEqual(Tricky, actual.FailedTestMessages[0].Exceptions![0].StackTrace);
+        Assert.AreEqual(Tricky, actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual(Tricky, actual.FailedTestMessages[0].Actual);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] successfulResult = WriteFields(
+            (ushort.MaxValue, [0x99]),
+            (SuccessfulTestResultMessageFieldsId.DisplayName, WriteString("passed test")));
+        byte[] exception = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (ExceptionMessageFieldsId.ErrorMessage, WriteString("boom")));
+        byte[] failedResult = WriteFields(
+            (ushort.MaxValue, [0xCC]),
+            (FailedTestResultMessageFieldsId.DisplayName, WriteString("failed test")),
+            (FailedTestResultMessageFieldsId.ExceptionMessageList, WriteList(exception)));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xDD, 0xEE]),
+            (TestResultMessagesFieldsId.InstanceId, WriteString("instance")),
+            (TestResultMessagesFieldsId.SuccessfulTestMessageList, WriteList(successfulResult)),
+            (TestResultMessagesFieldsId.FailedTestMessageList, WriteList(failedResult)));
+
+        TestResultMessages actual = DeserializePayload<TestResultMessages>(new TestResultMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.SuccessfulTestMessages);
+        Assert.AreEqual("passed test", actual.SuccessfulTestMessages[0].DisplayName);
+        Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("failed test", actual.FailedTestMessages[0].DisplayName);
+        Assert.HasCount(1, actual.FailedTestMessages[0].Exceptions!);
+        Assert.AreEqual("boom", actual.FailedTestMessages[0].Exceptions![0].ErrorMessage);
     }
 
     [TestMethod]
@@ -104,6 +198,32 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("exec", actual.ExecutionId);
         Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsEmpty(actual.DiscoveredMessages);
+    }
+
+    [TestMethod]
+    public void DiscoveredTestMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] trait = WriteFields(
+            (ushort.MaxValue, [0xAA]),
+            (TraitMessageFieldsId.Key, WriteString("category")),
+            (TraitMessageFieldsId.Value, WriteString("unit")));
+        byte[] discoveredTest = WriteFields(
+            (ushort.MaxValue, [0xBB, 0xCC]),
+            (DiscoveredTestMessageFieldsId.DisplayName, WriteString("discovered test")),
+            (DiscoveredTestMessageFieldsId.Traits, WriteList(trait)));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xDD]),
+            (DiscoveredTestMessagesFieldsId.InstanceId, WriteString("instance")),
+            (DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, WriteList(discoveredTest)));
+
+        DiscoveredTestMessages actual = DeserializePayload<DiscoveredTestMessages>(new DiscoveredTestMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.DiscoveredMessages);
+        Assert.AreEqual("discovered test", actual.DiscoveredMessages[0].DisplayName);
+        Assert.HasCount(1, actual.DiscoveredMessages[0].Traits);
+        Assert.AreEqual("category", actual.DiscoveredMessages[0].Traits[0].Key);
+        Assert.AreEqual("unit", actual.DiscoveredMessages[0].Traits[0].Value);
     }
 
     [TestMethod]
@@ -125,9 +245,9 @@ public sealed class ProtocolEdgeCaseTests
             "exec",
             "inst",
             [
-                new FileArtifactMessage("/a/b.trx", "b.trx", "a trx", "uid", "Test", "session"),
-                new FileArtifactMessage("/c/d.coverage", "d.coverage", null, null, null, null),
-                new FileArtifactMessage("/e/f.txt", null, null, "uid2", null, "session2"),
+                new FileArtifactMessage("/a/b.trx", "b.trx", "a trx", "uid", "Test", "session", "microsoft.testing.trx"),
+                new FileArtifactMessage("/c/d.coverage", "d.coverage", null, null, null, null, null),
+                new FileArtifactMessage("/e/f.txt", null, null, "uid2", null, "session2", null),
             ]);
 
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
@@ -136,8 +256,32 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("inst", actual.InstanceId);
         Assert.AreEqual("/c/d.coverage", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
+        Assert.IsNull(actual.FileArtifacts[1].Kind);
         Assert.AreEqual("session2", actual.FileArtifacts[2].SessionUid);
         Assert.IsNull(actual.FileArtifacts[2].DisplayName);
+        Assert.IsNull(actual.FileArtifacts[2].InputArtifactPaths);
+    }
+
+    [TestMethod]
+    public void FileArtifactMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] fileArtifact = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (FileArtifactMessageFieldsId.FullPath, WriteString("/a/b.trx")),
+            (FileArtifactMessageFieldsId.Kind, WriteString("microsoft.testing.trx")));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xCC]),
+            (FileArtifactMessagesFieldsId.InstanceId, WriteString("instance")),
+            (FileArtifactMessagesFieldsId.FileArtifactMessageList, WriteList(fileArtifact)));
+
+        FileArtifactMessages actual = DeserializePayload<FileArtifactMessages>(new FileArtifactMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.FileArtifacts);
+        Assert.AreEqual("/a/b.trx", actual.FileArtifacts[0].FullPath);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
+        Assert.IsNull(actual.FileArtifacts[0].InputArtifactPaths);
     }
 
     [TestMethod]
@@ -166,6 +310,24 @@ public sealed class ProtocolEdgeCaseTests
     }
 
     [TestMethod]
+    public void TestInProgressMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] inProgressTest = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (TestInProgressMessageFieldsId.DisplayName, WriteString("running test")));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xCC]),
+            (TestInProgressMessagesFieldsId.InstanceId, WriteString("instance")),
+            (TestInProgressMessagesFieldsId.TestInProgressMessageList, WriteList(inProgressTest)));
+
+        TestInProgressMessages actual = DeserializePayload<TestInProgressMessages>(new TestInProgressMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.InProgressMessages);
+        Assert.AreEqual("running test", actual.InProgressMessages[0].DisplayName);
+    }
+
+    [TestMethod]
     public void TestSessionEvent_End_RoundTrips()
     {
         var message = new TestSessionEvent(SessionEventTypes.TestSessionEnd, "session", "exec");
@@ -175,5 +337,52 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual(SessionEventTypes.TestSessionEnd, actual.SessionType);
         Assert.AreEqual("session", actual.SessionUid);
         Assert.AreEqual("exec", actual.ExecutionId);
+    }
+
+    private static TMessage DeserializePayload<TMessage>(object serializer, byte[] payload)
+    {
+        using var stream = new MemoryStream(payload);
+        return (TMessage)Deserialize(serializer, stream);
+    }
+
+    private static byte[] WriteFields(params (ushort Id, byte[] Payload)[] fields)
+    {
+        using var stream = new MemoryStream();
+        WriteUShort(stream, (ushort)fields.Length);
+
+        foreach ((ushort id, byte[] payload) in fields)
+        {
+            WriteUShort(stream, id);
+            WriteInt(stream, payload.Length);
+            stream.Write(payload, 0, payload.Length);
+        }
+
+        return stream.ToArray();
+    }
+
+    private static byte[] WriteList(params byte[][] items)
+    {
+        using var stream = new MemoryStream();
+        WriteInt(stream, items.Length);
+        foreach (byte[] item in items)
+        {
+            stream.Write(item, 0, item.Length);
+        }
+
+        return stream.ToArray();
+    }
+
+    private static byte[] WriteString(string value) => Encoding.UTF8.GetBytes(value);
+
+    private static void WriteInt(Stream stream, int value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+
+    private static void WriteUShort(Stream stream, ushort value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
     }
 }

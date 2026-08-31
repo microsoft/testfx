@@ -77,6 +77,13 @@ internal sealed partial class TestMethodRunner
                     try
                     {
                         TestResult[] testResults = await ExecuteTestWithDataRowAsync(iterationContext, dataRow, rowIndex++).ConfigureAwait(false);
+
+                        // Sync the clone's outcome with the final (post-cleanup) result before it is
+                        // disposed, so a row that passes its body but fails [TestCleanup]/Dispose is
+                        // not treated as passing by per-test resources keyed off the outcome (e.g.
+                        // TestTempDirectory retention). See TryExecuteFoldedDataDrivenTestsAsync.
+                        iterationContext.SetOutcome(GetAggregateOutcome(testResults));
+
                         results.AddRange(testResults);
                     }
                     finally

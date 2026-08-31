@@ -174,14 +174,15 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
                 testSessionContext.SessionUid,
                 new FileInfo(reportFileName),
                 ArtifactDisplayName,
-                ArtifactDescription)).ConfigureAwait(false);
+                ArtifactDescription,
+                ArtifactKind)).ConfigureAwait(false);
     }
 
-    // Capture every update unconditionally — no UID-based deduplication.
-    // CTRF relies on this to detect flaky tests (earlier attempts become retryAttempts[];
-    // see CtrfReportEngine.CollapseAttempts). HTML/JUnit rely on it to surface all results
-    // for tests that emit multiple updates per UID (parameterized rows, in-process retries,
-    // framework quirks). Engine-side logic handles any deduplication.
+    // Capture every update unconditionally — no UID-based deduplication. HTML, JUnit,
+    // and CTRF preserve all results for tests that emit multiple updates per UID
+    // (parameterized rows, in-process retries, framework quirks). CTRF groups only
+    // in-process updates explicitly tagged with RetryAttemptProperty; out-of-process
+    // retry inference occurs only during an explicit CollapseRetryAttempts merge.
     protected virtual void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
         TCapturedTestResult? captured = TryCapture(update);
@@ -194,6 +195,14 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     protected abstract string ArtifactDisplayName { get; }
 
     protected abstract string ArtifactDescription { get; }
+
+    /// <summary>
+    /// Gets the producer-asserted, reverse-DNS identifier of the artifact format this report
+    /// generator produces (e.g. <c>microsoft.testing.junit</c>). Used by post-processing to
+    /// group same-kind artifacts for consolidation. Returns <see langword="null"/> by default
+    /// (no declared kind); report generators override to tag their output.
+    /// </summary>
+    protected virtual string? ArtifactKind => null;
 
     protected abstract string GetGenerationLogMessage(int testResultCount);
 

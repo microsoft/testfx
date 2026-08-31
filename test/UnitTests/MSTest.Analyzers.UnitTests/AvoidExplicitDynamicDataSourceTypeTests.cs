@@ -315,4 +315,41 @@ public sealed class AvoidExplicitDynamicDataSourceTypeTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenDynamicDataWithExplicitSourceTypeIsOnNonTestMethod_Diagnostic()
+    {
+        // The analyzer registers on SymbolKind.Method and fires on any method decorated with
+        // [DynamicData(..., DynamicDataSourceType.*)] — there is no guard requiring [TestMethod].
+        // The fix simply removes the DynamicDataSourceType argument regardless.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [[|DynamicData("Data", DynamicDataSourceType.Property)|]]
+                public void HelperMethod(object[] o) { }
+
+                static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DynamicData("Data")]
+                public void HelperMethod(object[] o) { }
+
+                static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

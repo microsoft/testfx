@@ -4,14 +4,15 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
 
 /// <summary>
-/// Acceptance tests for forwarding generic warning/error host messages over the
+/// Acceptance tests for forwarding durable session and generic warning/error host messages over the
 /// <c>--server dotnettestcli --dotnet-test-pipe</c> protocol.
 /// <para>
-/// Under the pipe protocol the host installs a forwarding output device that discards informational output,
+/// Under the pipe protocol the host installs a forwarding output device that discards regular informational output,
 /// so host-side diagnostics produced outside test results (hang/crash dump diagnostics, retry summaries, generic
 /// extension/framework warnings and errors) would otherwise be swallowed in multi-assembly runs. Protocol 1.3.0
 /// adds <c>DisplayMessage</c> (serializer id 12): when both sides negotiate 1.3.0, the host forwards
-/// <c>WarningMessageOutputDeviceData</c> / <c>ErrorMessageOutputDeviceData</c> to the SDK as a
+/// <c>SessionMessageOutputDeviceData</c>, <c>WarningMessageOutputDeviceData</c>, and
+/// <c>ErrorMessageOutputDeviceData</c> to the SDK as a
 /// <c>DisplayMessage</c> carrying a severity level. These tests assert that contract on the wire via the
 /// black-box <see cref="FakeDotnetTestSdk"/> harness.
 /// </para>
@@ -22,6 +23,7 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
     private const string AssetName = "DotnetTestPipeDisplayMessageForwarding";
 
     private const string ErrorText = "boom error from the framework";
+    private const string SessionText = "durable session message from the framework";
     private const string WarningText = "careful warning from the framework";
 
     // Mirrors ProtocolConstants.SupportedVersions on the host side: 1.3.0 is the version that introduced
@@ -31,7 +33,7 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public async Task DotnetTestPipe_WhenSdkSupports130_ForwardsWarningAndErrorAsDisplayMessages()
+    public async Task DotnetTestPipe_WhenSdkSupports130_ForwardsSessionWarningAndErrorAsDisplayMessages()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -46,12 +48,12 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
             result.NegotiatedProtocolVersion,
             "When both sides advertise 1.3.0, negotiation should select 1.3.0 to enable DisplayMessage forwarding.");
 
-        (byte? Level, string? Text)[] forwarded = [..
+        (string? InstanceId, byte? Level, string? Text)[] forwarded = [..
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
                 .Select(m =>
                 {
-                    (string? _, string? _, byte? level, string? text) = DotnetTestPipeProtocol.DecodeDisplayMessageBody(m.Body);
-                    return (level, text);
+                    (string? _, string? instanceId, byte? level, string? text) = DotnetTestPipeProtocol.DecodeDisplayMessageBody(m.Body);
+                    return (instanceId, level, text);
                 })];
 
         Assert.Contains(
@@ -62,14 +64,19 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
             m => m.Level == DotnetTestPipeProtocol.DisplayMessageLevels.Warning && m.Text == WarningText,
             forwarded,
             $"Expected a forwarded warning DisplayMessage. Forwarded: [{string.Join(" | ", forwarded.Select(m => $"{m.Level}:{m.Text}"))}].");
-
         // The forwarded frames carry the same InstanceId as the handshake so the SDK can correlate the
         // messages back to the originating assembly in a multi-assembly run.
         Assert.IsNotNull(result.ReceivedHandshake);
         Assert.IsTrue(result.ReceivedHandshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.InstanceId, out string? handshakeInstanceId));
+        Assert.Contains(
+            m => m.Level == DotnetTestPipeProtocol.DisplayMessageLevels.Information
+                && m.Text == SessionText
+                && m.InstanceId == handshakeInstanceId,
+            forwarded,
+            $"Expected a correlated session DisplayMessage. Forwarded: [{string.Join(" | ", forwarded.Select(m => $"{m.InstanceId}:{m.Level}:{m.Text}"))}].");
         string[] forwardedInstanceIds = [..
-            result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
-                .Select(m => DotnetTestPipeProtocol.DecodeDisplayMessageBody(m.Body).InstanceId)
+            forwarded
+                .Select(m => m.InstanceId)
                 .Where(id => id is not null)
                 .Select(id => id!)
                 .Distinct()];
@@ -155,6 +162,7 @@ public class DummyTestFramework : ITestFramework, IOutputDeviceDataProducer
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        await _outputDevice.DisplayAsync(this, new SessionMessageOutputDeviceData("durable session message from the framework"), CancellationToken.None);
         await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData("careful warning from the framework"), CancellationToken.None);
         await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData("boom error from the framework"), CancellationToken.None);
         context.Complete();

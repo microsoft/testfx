@@ -20,6 +20,8 @@ This package extends Microsoft.Testing.Platform with:
 - **CI-friendly**: directly consumable by Jenkins (`junit` step), GitLab (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters and any other tool that understands the JUnit XML schema
 - **Tree-of-tests preserved**: MTP exposes a tree of tests, not a flat list. The JUnit XML schema only defines a flat list of test suites, so the full parent chain of each test is preserved as a `<property name="testpath" value="A/B/C"/>` element inside `<testcase>` for tools that wish to reconstruct the hierarchy
 
+## Usage
+
 Enable the report via the `--report-junit` command line option. The report file name can be overridden with `--report-junit-filename <name>.xml`.
 
 ## Documentation

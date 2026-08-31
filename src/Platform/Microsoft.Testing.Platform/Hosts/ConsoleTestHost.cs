@@ -35,7 +35,7 @@ internal sealed class ConsoleTestHost(
 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> _)
     {
         var consoleRunStarted = Stopwatch.StartNew();
         DateTimeOffset consoleRunStart = _clock.UtcNow;
@@ -47,6 +47,8 @@ internal sealed class ConsoleTestHost(
         // Use user provided filter factory or create console default one.
         ITestExecutionFilterFactory testExecutionFilterFactory = ServiceProvider.GetService<ITestExecutionFilterFactory>()
             ?? new ConsoleTestExecutionFilterFactory(ServiceProvider.GetCommandLineOptions());
+        ITestExecutionFilterProvider[] testExecutionFilterProviders =
+            [.. ServiceProvider.Services.OfType<ITestExecutionFilterProvider>()];
 
         // Use user provided filter factory or create console default one.
         ITestFrameworkInvoker testFrameworkInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
@@ -58,7 +60,10 @@ internal sealed class ConsoleTestHost(
         {
             testFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
                 ServiceProvider,
-                new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
+                new ConsoleTestExecutionRequestFactory(
+                    ServiceProvider.GetCommandLineOptions(),
+                    testExecutionFilterFactory,
+                    testExecutionFilterProviders),
                 testFrameworkInvoker,
                 testExecutionFilterFactory,
                 ServiceProvider.GetPlatformOutputDevice(),
@@ -88,7 +93,8 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
-                ClientInfoHost).ConfigureAwait(false);
+                ClientInfoHost,
+                ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)).ConfigureAwait(false);
             requestExecuteStop = _clock.UtcNow;
 
             // Get the exit code service to be able to set the exit code

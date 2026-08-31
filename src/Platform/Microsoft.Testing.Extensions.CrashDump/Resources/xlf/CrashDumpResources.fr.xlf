@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[net6.0+ uniquement] Produire des fichiers de vidage sur incident lorsque le processus d’exécution des tests se bloque de manière inattendue</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="translated">[net6.0+ uniquement] Produire des fichiers de vidage sur incident lorsque le processus d’exécution des tests se bloque de manière inattendue.</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -50,8 +50,8 @@ Prend en charge les espaces réservés suivants : {pname} (nom de l’exécutabl
         <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
-        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="translated">[net6.0+ uniquement] Générer un fichier de vidage si le processus de test se bloque</target>
+        <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
+        <target state="translated">[net6.0+ uniquement] Générer un fichier de vidage si le processus de test se bloque.</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -84,10 +84,20 @@ Prend en charge les espaces réservés suivants : {pname} (nom de l’exécutabl
         <target state="translated">Fichier de séquence de crash</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileOpenError">
+        <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
+        <target state="translated">Nous n’avons pas pu initialiser le fichier de séquence d’incidents « {0} » : {1}. Les informations sur la séquence de test ne seront pas disponibles si l’hôte de test se bloque.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
+      </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Échec de la lecture du fichier de séquence de crash « {0} » : {1}</target>
         <note>{0} is the crash sequence file path. {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileWriteError">
+        <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
+        <target state="translated">Nous n’avons pas pu écrire dans le fichier de séquence d’incidents « {0} » : {1}. Le fichier de séquence d’incidents peut être incomplet.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -97,10 +107,10 @@ Prend en charge les espaces réservés suivants : {pname} (nom de l’exécutabl
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
         <target state="translated">Spécifiez le type de l’image mémoire.
-Les valeurs valides sont « Mini », « Heap », « Triage » ou « Full ». Le type par défaut est « Full ».
-Pour plus d’informations, visitez https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+Les valeurs valides sont « Mini », « Heap », « Triage » ou « Full ». Le type par défaut est « Full ».
+Pour plus d’informations, visitez https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">

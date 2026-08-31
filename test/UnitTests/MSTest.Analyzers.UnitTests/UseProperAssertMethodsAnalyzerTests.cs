@@ -1395,6 +1395,38 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithNonGenericIDictionaryContains_NoDiagnostic()
+    {
+        // 'System.Collections.IDictionary.Contains(object)' checks for a matching *key*, whereas
+        // 'Assert.Contains' enumerates the dictionary (yielding 'DictionaryEntry' items). These have
+        // different semantics, so the analyzer must not suggest 'Assert.Contains' here.
+        // See https://github.com/microsoft/testfx/issues/9966.
+        string code = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTests
+            {
+                [TestMethod]
+                public void Contains()
+                {
+                    IDictionary dict = new Dictionary<string, string>() { { "a", "b" } };
+                    Assert.IsTrue(dict.Contains("a"));
+                    Assert.IsFalse(dict.Contains("a"));
+
+                    Hashtable hashtable = new Hashtable();
+                    Assert.IsTrue(hashtable.Contains("a"));
+                    Assert.IsFalse(hashtable.Contains("a"));
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     #region New test cases for string methods
 
     [TestMethod]
@@ -2282,6 +2314,154 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertHasCountZero_IsEmpty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    {|#0:Assert.HasCount(0, list)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    Assert.IsEmpty(list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.HasCount'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "HasCount"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertHasCountZeroWithMessage_IsEmpty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    {|#0:Assert.HasCount(0, list, "Collection should be empty")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int>();
+                    Assert.IsEmpty(list, "Collection should be empty");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.HasCount'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "HasCount"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertHasCountZeroWithNonGenericEnumerable_IsEmpty()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.HasCount(0, hashtable)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.HasCount'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "HasCount"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertHasCountNonZero_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.HasCount(3, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -4973,6 +5153,30 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     int? nullableCount = 3;
                     Assert.AreEqual(longCount, span.Length);
                     Assert.AreEqual(nullableCount, span.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertHasCountZeroWithSpan_NoDiagnostic()
+    {
+        // Span/Memory have no IsEmpty overload, so Assert.HasCount(0, span) must NOT be rewritten
+        // to Assert.IsEmpty(span).
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    Assert.HasCount(0, span);
                 }
             }
             """;

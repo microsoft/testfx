@@ -138,8 +138,8 @@
     <comment>{0} is the file path. {1} is the exception type. {2} is the exception message.</comment>
   </data>
   <data name="DeploymentErrorFailedToCopyWithOverwrite" xml:space="preserve">
-    <value>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</value>
-    <comment>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</comment>
+    <value>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</value>
+    <comment>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</comment>
   </data>
   <data name="DeploymentErrorFailedToDeployDependencies" xml:space="preserve">
     <value>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</value>
@@ -179,6 +179,14 @@
   <data name="InvalidSettingsXmlElement" xml:space="preserve">
     <value>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</value>
     <comment>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</comment>
+  </data>
+  <data name="InvalidSettingsXml" xml:space="preserve">
+    <value>MSTestAdapter failed to parse the runsettings XML.</value>
+    <comment>{Locked="MSTestAdapter"}{Locked="runsettings"}</comment>
+  </data>
+  <data name="DeploymentDependencyLoadFailed" xml:space="preserve">
+    <value>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</value>
+    <comment>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</comment>
   </data>
   <data name="MissingDeploymentDependency" xml:space="preserve">
     <value>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</value>
@@ -316,6 +324,22 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
     <comment>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</comment>
   </data>
+  <data name="GlobalTestCleanupTimedOut" xml:space="preserve">
+    <value>Global test cleanup method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</comment>
+  </data>
+  <data name="GlobalTestCleanupWasCancelled" xml:space="preserve">
+    <value>Global test cleanup method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the global test cleanup method name.</comment>
+  </data>
+  <data name="GlobalTestInitializeTimedOut" xml:space="preserve">
+    <value>Global test initialize method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</comment>
+  </data>
+  <data name="GlobalTestInitializeWasCancelled" xml:space="preserve">
+    <value>Global test initialize method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the global test initialize method name.</comment>
+  </data>
   <data name="InvalidParallelScopeValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>
     <comment>{0} is the invalid scope value. {1} is the supported scope list. {Locked="Scope"}</comment>
@@ -362,6 +386,41 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="TestNotFound" xml:space="preserve">
     <value>Test method {0} was not found.</value>
     <comment>{0} is the test method name.</comment>
+  </data>
+  <data name="DependencyConfigurationNodeWithoutTest" xml:space="preserve">
+    <value>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</value>
+    <comment>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</comment>
+  </data>  <data name="DependencyConfigurationEmptyChain" xml:space="preserve">
+    <value>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</value>
+    <comment>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</comment>
+  </data>
+  <data name="DependencyConfigurationInvalidReference" xml:space="preserve">
+    <value>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</value>
+    <comment>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</comment>
+  </data>
+  <data name="DependencyConfigurationDependentNotFound" xml:space="preserve">
+    <value>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</value>
+    <comment>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</comment>
+  </data>
+  <data name="DependencyConfigurationNodeWithoutPrerequisites" xml:space="preserve">
+    <value>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</value>
+    <comment>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</comment>
+  </data>
+  <data name="DependsOnCycle" xml:space="preserve">
+    <value>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</value>
+    <comment>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</comment>
+  </data>
+  <data name="DependsOnClassLevelCycle" xml:space="preserve">
+    <value>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</value>
+    <comment>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</comment>
+  </data>
+  <data name="DependsOnTargetNotFound" xml:space="preserve">
+    <value>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</value>
+    <comment>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</comment>
+  </data>
+  <data name="DependsOnPrerequisiteNotPassed" xml:space="preserve">
+    <value>Test skipped because it depends on '{0}', which did not pass.</value>
+    <comment>{0} is the fully qualified name of the test that did not pass.</comment>
   </data>
   <data name="TestParallelizationBanner" xml:space="preserve">
     <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>

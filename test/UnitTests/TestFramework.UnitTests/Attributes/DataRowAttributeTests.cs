@@ -204,9 +204,76 @@ public class DataRowAttributeTests : TestContainer
         displayName.Should().Be("MyMethod ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
     }
 
+    public void GetDisplayNameTreatsDataAsOneArrayForSingleObjectArrayParameter()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowObjectArrayTestMethod))!;
+
+        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["a", null, 'b']);
+
+        displayName.Should().Be("DataRowObjectArrayTestMethod ([\"a\",null,'b'])");
+    }
+
+    public void GetDisplayNamePreservesRawStringAndCharacterContents()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["quote\"\\\n", '\'']);
+
+        displayName.Should().Be("DataRowTestMethod (\"quote\"\\\n\",''')");
+    }
+
+    public void GetDisplayNameUsesCurrentCultureForValues()
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
+            MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+            string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, [1234.5m]);
+
+            displayName.Should().Be("DataRowTestMethod (1234,5)");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
+    public void GetDisplayNameCapturesLocalizedFormatBeforeFormattingValues()
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+            string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, [new UICultureChangingValue()]);
+
+            displayName.Should().Be("DataRowTestMethod (value)");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
     private class DummyDataRowAttribute : DataRowAttribute
     {
         public override string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";
+    }
+
+    private sealed class UICultureChangingValue
+    {
+        public override string ToString()
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo("ko-KR");
+
+            return "value";
+        }
     }
 }
 
@@ -224,6 +291,10 @@ public class DummyTestClass
     [DataRow("First", null, "Second")]
     [TestMethod]
     public void DataRowTestMethod()
+    {
+    }
+
+    public void DataRowObjectArrayTestMethod(object?[] data)
     {
     }
 }

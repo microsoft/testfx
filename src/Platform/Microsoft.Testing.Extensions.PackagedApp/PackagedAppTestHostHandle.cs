@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -6,9 +6,9 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// An <see cref="ITestHostHandle"/> over a deployed packaged Windows (UWP/WinUI) test host process
-/// that deliberately exposes no identifier, modelling a launch where no local, queryable PID is
-/// available.
+/// An <see cref="ITestHostHandle"/> over a deployed non-packaged (loose-layout) Windows test host
+/// process (for example, unpackaged WinUI) that deliberately exposes no identifier, modelling a
+/// launch where no local, queryable PID is available.
 /// </summary>
 internal sealed class PackagedAppTestHostHandle : ITestHostHandle
 {

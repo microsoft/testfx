@@ -1,19 +1,28 @@
 <Project>
 
   <PropertyGroup>
-    <AspireTestingVersion>13.2.1</AspireTestingVersion>
-    <CodeCoverageVersion>18.5.2</CodeCoverageVersion>
-    <MSTestVersion>4.2.2</MSTestVersion>
-    <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
+    <AspireTestingVersion>13.4.6</AspireTestingVersion>
+    <CodeCoverageVersion>18.9.0</CodeCoverageVersion>
+    <MSTestVersion>4.3.2</MSTestVersion>
     <!--
-      MSTest.Sdk 4.2.3 defaults MSTestEngineVersion to 2.0.0-alpha.26264.3, which is not yet mirrored to the
-      dotnet-public NuGet feed used by these samples. Override it to the highest version available in
-      dotnet-public until the mirror catches up.
+      MSTestAOTVersion pins the experimental MSTest.Engine and the last independently versioned
+      MSTest.SourceGeneration package used by the non-SDK Native AOT runner sample
+      (mstest-runner/NativeAotRunner). It is kept at the highest version mirrored to the dotnet-public NuGet
+      feed used by these samples. MSTestEngineVersion aliases it for the same reason. New
+      MSTest.SourceGeneration packages use the standard MSTestVersion; the legacy pin can be removed once a
+      matching package is available on the feed.
     -->
+    <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
-    <PlaywrightVersion>1.58.0</PlaywrightVersion>
-    <TestingPlatformVersion>2.2.2</TestingPlatformVersion>
-    <VSTestVersion>18.3.0</VSTestVersion>
+    <PlaywrightVersion>1.61.0</PlaywrightVersion>
+    <TestingPlatformVersion>2.3.2</TestingPlatformVersion>
+    <!--
+      Microsoft.Testing.Extensions.PackagedApp deploys and launches a packaged Windows (UWP/WinUI)
+      test host. The latest published package predates its alignment with the testing platform version,
+      so this sample pins that package separately.
+    -->
+    <MicrosoftTestingExtensionsPackagedAppVersion>1.0.0-alpha.26363.8</MicrosoftTestingExtensionsPackagedAppVersion>
+    <VSTestVersion>18.8.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>

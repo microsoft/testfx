@@ -11,8 +11,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// <b>Infrastructure.</b> Entry point used by the MSTest source generator to register pre-computed
 /// reflection metadata for a test assembly. After a successful
 /// <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/> call, MSTest's
-/// discovery and execution paths read metadata from the source-generated data instead of doing
-/// reflection at runtime.
+/// discovery and execution paths consult source-generated data first and retain reflection
+/// fallback for metadata the generator did not register.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -22,6 +22,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// <c>internal</c> APIs from a different assembly. The signature and behaviour of this hook are
 /// implementation details that may evolve with the generator without a major version bump; do
 /// not hand-roll a call to <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/> from your own code.
+/// </para>
+/// <para>
+/// Reflection-free generated registration pre-materializes complete supported type/method
+/// attributes and supplies direct constructor, method, and property-setter delegates. It still
+/// performs bounded startup reflection to resolve the <see cref="MethodInfo"/> and
+/// <see cref="PropertyInfo"/> dictionary keys required by existing adapter contracts. Rooting-mode
+/// registration uses the compatibility overload and leaves the rich dictionaries empty.
 /// </para>
 /// <para>
 /// <b>Discovery limitation.</b> The MSTest source generator only enumerates types that carry
@@ -125,15 +132,15 @@ public static class ReflectionMetadataHook
     /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
     /// </para>
     /// <para>
-    /// <b>Ownership transfer.</b> The adapter takes ownership of every collection passed in
+    /// <b>Ownership transfer.</b> The adapter treats every collection passed in
     /// (the <paramref name="types"/> array, the <paramref name="assemblyAttributes"/> array, and
     /// each dictionary with its value arrays) and stores them without cloning; the read-only
-    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. Callers
-    /// MUST hand over freshly-built collections and MUST NOT mutate them after the call returns;
-    /// the source generator (the only intended caller) already emits fresh, throwaway collections
-    /// that satisfy this. This is a contract about ownership and mutation, not caller identity: it
-    /// trades the previous defensive copies for zero-copy startup on the understanding that the
-    /// inputs are the adapter's to keep.
+    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. The
+    /// adapter never mutates these collections, and callers MUST NOT mutate them after the call
+    /// returns. The source generator (the only intended caller) satisfies this by publishing
+    /// immutable generated metadata and fresh registration dictionaries. This is a contract about
+    /// ownership and mutation, not caller identity: it trades defensive copies for zero-copy
+    /// startup on the understanding that the inputs remain immutable.
     /// </para>
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -146,6 +153,79 @@ public static class ReflectionMetadataHook
         IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
         IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
         IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters)
+        => Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, EmptyMethodAttributes, methodInvokers, constructorInvokers, propertySetters);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes richer source-generated metadata for
+    /// <paramref name="assembly"/>, including pre-materialized method attributes and direct
+    /// invocation delegates. Safe to call from multiple module initializers; later registrations
+    /// are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">A map from each test class to its <c>[TestMethod]</c> set.</param>
+    /// <param name="typeAttributes">A map from each test class to its complete pre-inflated attribute set.</param>
+    /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
+    /// <param name="methodAttributes">
+    /// A map from each successfully resolved method to its complete pre-inflated attribute set.
+    /// Presence is authoritative, including when the value is an empty array; unresolved methods
+    /// and methods whose attributes could not be completely materialized must be omitted.
+    /// </param>
+    /// <param name="methodInvokers">A map from each resolved method to its direct invocation delegate.</param>
+    /// <param name="constructorInvokers">A map from each test class to its constructor invokers.</param>
+    /// <param name="propertySetters">A map from each resolved settable property to its direct setter.</param>
+    /// <remarks>
+    /// Do not call this method from hand-written code. It is public only for generated
+    /// <c>[ModuleInitializer]</c> code and is not a supported application API. Ownership of all
+    /// supplied collections transfers to the adapter as described on the compatibility overload.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Attribute[]> methodAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters)
+        => Register(
+            assembly,
+            types,
+            testMethods,
+            typeAttributes,
+            assemblyAttributes,
+            methodAttributes,
+            methodInvokers,
+            constructorInvokers,
+            propertySetters,
+            EmptyDescriptorTestMethods,
+            []);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes reflection metadata and the deliberately constrained test
+    /// descriptors that native Microsoft.Testing.Platform discovery may consume directly.
+    /// </summary>
+    /// <remarks>
+    /// Descriptor methods must have complete, compatibility-safe metadata. A type listed in
+    /// <paramref name="descriptorCompleteTypes"/> declares that every test method on that type is
+    /// represented in <paramref name="descriptorTestMethods"/>; omitted types retain per-method
+    /// fallback to legacy discovery. This API is exclusively for generated code.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Attribute[]> methodAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters,
+        IReadOnlyDictionary<Type, MethodInfo[]> descriptorTestMethods,
+        Type[] descriptorCompleteTypes)
     {
         if (assembly is null)
         {
@@ -172,6 +252,11 @@ public static class ReflectionMetadataHook
             throw new ArgumentNullException(nameof(assemblyAttributes));
         }
 
+        if (methodAttributes is null)
+        {
+            throw new ArgumentNullException(nameof(methodAttributes));
+        }
+
         if (methodInvokers is null)
         {
             throw new ArgumentNullException(nameof(methodInvokers));
@@ -185,6 +270,16 @@ public static class ReflectionMetadataHook
         if (propertySetters is null)
         {
             throw new ArgumentNullException(nameof(propertySetters));
+        }
+
+        if (descriptorTestMethods is null)
+        {
+            throw new ArgumentNullException(nameof(descriptorTestMethods));
+        }
+
+        if (descriptorCompleteTypes is null)
+        {
+            throw new ArgumentNullException(nameof(descriptorCompleteTypes));
         }
 
         // Ownership transfer (see the remarks on this method): the source generator hands over
@@ -224,6 +319,13 @@ public static class ReflectionMetadataHook
             }
         }
 
+        var descriptorCompleteTypeSet = new HashSet<Type>(descriptorCompleteTypes);
+        var descriptorCompleteness = new Dictionary<Type, bool>(descriptorTestMethods.Count);
+        foreach (Type type in descriptorTestMethods.Keys)
+        {
+            descriptorCompleteness[type] = descriptorCompleteTypeSet.Contains(type);
+        }
+
         var provider = new SourceGeneratedReflectionDataProvider
         {
             Assembly = assembly,
@@ -233,9 +335,12 @@ public static class ReflectionMetadataHook
             TypeMethods = testMethods,
             TypeAttributes = typeAttributes,
             AssemblyAttributes = assemblyAttributes,
+            TypeMethodAttributes = methodAttributes,
             TypeMethodInvokers = methodInvokers,
             TypeConstructorsInvoker = constructorInvokersMap,
             TypePropertySetters = propertySetters,
+            DescriptorTestMethods = descriptorTestMethods,
+            DescriptorCompleteTypes = descriptorCompleteness,
         };
 
         lock (Lock)
@@ -254,9 +359,13 @@ public static class ReflectionMetadataHook
 
     private static readonly Dictionary<Type, Attribute[]> EmptyTypeAttributes = [];
 
+    private static readonly Dictionary<MethodInfo, Attribute[]> EmptyMethodAttributes = [];
+
     private static readonly Dictionary<MethodInfo, Func<object?, object?[]?, object?>> EmptyMethodInvokers = [];
 
     private static readonly Dictionary<Type, ConstructorInvokerInfo[]> EmptyConstructorInvokers = [];
 
     private static readonly Dictionary<PropertyInfo, Action<object?, object?>> EmptyPropertySetters = [];
+
+    private static readonly Dictionary<Type, MethodInfo[]> EmptyDescriptorTestMethods = [];
 }

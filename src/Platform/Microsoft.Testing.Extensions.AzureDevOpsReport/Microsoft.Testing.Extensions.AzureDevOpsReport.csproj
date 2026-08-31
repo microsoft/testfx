@@ -9,11 +9,18 @@
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RuntimeFeatureHelper.cs" Link="Helpers\RuntimeFeatureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestNodeIdentity.cs" Link="Helpers\TestNodeIdentity.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SummaryReporterHelpers.cs" Link="Helpers\SummaryReporterHelpers.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiCoverageSummary.cs" Link="Helpers\CiCoverageSummary.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryAggregateReader.cs" Link="Helpers\CiRunSummaryAggregateReader.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryAggregation.cs" Link="Helpers\CiRunSummaryAggregation.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryFragmentIo.cs" Link="Helpers\CiRunSummaryFragmentIo.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryModels.cs" Link="Helpers\CiRunSummaryModels.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SlowTestReporterBase.cs" Link="Helpers\SlowTestReporterBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReporterLoggingExtensions.cs" Link="Helpers\ReporterLoggingExtensions.cs" />
@@ -22,11 +29,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to provide an Azure DevOps reporting functionality.
 
-This package extends Microsoft Testing Platform to provide a Azure DevOps reporting functionality.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

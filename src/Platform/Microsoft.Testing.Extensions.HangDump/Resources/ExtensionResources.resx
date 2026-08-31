@@ -146,6 +146,9 @@
   <data name="HangDumpArtifactDisplayName" xml:space="preserve">
     <value>Hang dump file</value>
   </data>
+  <data name="HangDumpDeadlineApproaching" xml:space="preserve">
+    <value>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</value>
+  </data>
   <data name="HangDumpEnvironmentVariableInvalidValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' is set to '{1}' instead of '{2}'</value>
     <comment>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</comment>
@@ -174,7 +177,7 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
     <comment>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</comment>
   </data>
   <data name="HangDumpOptionDescription" xml:space="preserve">
-    <value>Generate a dump file if the test process hangs</value>
+    <value>Generate a dump file if the test process hangs.</value>
     <comment>Do not localize option name {Locked="--hangdump"}.</comment>
   </data>
   <data name="HangDumpTimeoutExpired" xml:space="preserve">
@@ -212,7 +215,7 @@ The timeout value is specified in one of the following formats:
   <data name="HangDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</value>
+Default type is 'Full'.</value>
     <comment>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</comment>
   </data>
   <data name="HangDumpTypeOptionInvalidType" xml:space="preserve">

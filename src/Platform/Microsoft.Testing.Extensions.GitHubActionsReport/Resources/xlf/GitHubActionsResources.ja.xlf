@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">テストに失敗しました: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,142 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">GitHub Actions でのテスト実行で第一級エクスペリエンスを実現するためのワークフロー コマンドを生成する GitHub Actions レポート生成プログラム。</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">GitHub Actions レポート生成プログラム</target>
         <note />
+      </trans-unit>
+      <trans-unit id="EmptyStepSummarySections">
+        <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
+        <target state="translated">少なくとも 1 つの GitHub Actions ジョブの要約セクションが必要です。有効な値は 'test-results'、'slow-tests'、'coverage'、または 'all' です。</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="translated">テストの実行に失敗しました (終了コード {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="translated">終了コード {0} — {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">少なくとも 1 つのテストが失敗しました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">1 つ以上のコード カバレッジのしきい値が満たされませんでした。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">依存プロセスが予期せず終了しました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">テストの実行に失敗しました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">互換性のないプロトコル バージョンがネゴシエートされました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">コマンド ライン引数が無効です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">テスト プラットフォームのセットアップが無効です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">--minimum-expected-tests で必要な数より少ないテストしか実行されませんでした。</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">テストの実行に成功しました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">テスト アダプターから、テスト セッションの失敗が報告されました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">CI によって設定された期限が迫っていたため、テストの実行が早期に停止されました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">--maximum-failed-tests で設定された上限に達したため、テストの実行が停止しました。</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">テスト ホスト プロセスが正常に終了しませんでした。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">テスト セッションが中止されました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">テスト実行から成功以外の終了コードが報告されました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">実行するテストが見つかりませんでした。これは多くの場合、テスト フィルターに一致する項目がなかったことを意味します。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureDetailExceptionLabel">
+        <source>Exception</source>
+        <target state="translated">例外</target>
+        <note>Label preceding the exception type of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailLocationLabel">
+        <source>Location</source>
+        <target state="translated">場所</target>
+        <note>Label preceding the source file and line of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailTruncated">
+        <source>[... truncated]</source>
+        <target state="translated">[...切り詰められました]</target>
+        <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOmitted">
+        <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
+        <target state="translated">エラーの詳細が多くの領域を占めているため、一覧表示されている {0} 件のテストの失敗の詳細は省略されています。</target>
+        <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOptionDescription">
+        <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">ジョブ概要で失敗した各テストを、失敗メッセージ、例外の種類、ソースの場所、スタック トレースを含む折りたたみ可能なセクションとして表示する機能を有効または無効にします。有効な値は、'on' ('true'、'enable'、'1' も指定可能)、または 'off' ('false'、'disable'、'0' も指定可能) です。GitHub Actions で実行する場合、既定値は 'on' です。</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
+      </trans-unit>
+      <trans-unit id="FailureListTruncated">
+        <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
+        <target state="translated">失敗したテストの {1} 件中最初の {0} 件を表示しています。残りの失敗については、ワークフロー ログまたはテスト レポートを参照してください。</target>
+        <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">テスト: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -32,9 +157,64 @@
         <target state="new">Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
+      <trans-unit id="HistoryDurationContext">
+        <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
+        <target state="translated">履歴期間: 過去 {2} 件のサンプルにおける p95 {0}、p99 {1}。</target>
+        <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFailureContext">
+        <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
+        <target state="translated">履歴コンテキスト: {3} 日間の履歴期間内の過去 {2} 回の実行のうち、{0} 回が失敗し、{1} 回が不安定でした。</target>
+        <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFlakyContext">
+        <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
+        <target state="translated">履歴コンテキスト: {2} 日間の履歴期間内で、過去 {1} 回の実行のうち {0} 回で不安定でした。</target>
+        <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryLoadFailedWarning">
+        <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
+        <target state="translated">'{0}' から GitHub Actions テスト履歴スナップショットを読み込めませんでした: {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="HistoryOptionDescription">
+        <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
+        <target state="translated">指定されたパスで、制限付きの GitHub Actions テスト履歴スナップショットを読み取り、更新します。このワークフローは、テスト実行前に前回のスナップショットをダウンロードし、その後で更新済みのファイルをアップロードします。'--report-gh' が必要です。</target>
+        <note>{Locked="'--report-gh'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryRegressionContext">
+        <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
+        <target state="translated">履歴コンテキスト: {1} 日間の履歴期間内の過去のすべての {0} 回の実行で成功しました。</target>
+        <note>{0} is the total prior result count, {1} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowOptionDescription">
+        <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
+        <target state="translated">フレーク テストのコンテキストに使用するために保持するテスト履歴の日数 (1 - 90)。既定値は 30 です。'--report-gh-history' が必要です。</target>
+        <note>{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowRequiresHistory">
+        <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
+        <target state="translated">'--report-gh-history-window' オプションを使用するには、'--report-gh-history' を指定する必要があります。</target>
+        <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWriteFailedWarning">
+        <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
+        <target state="translated">GitHub Actions のテスト履歴スナップショットを '{0}' に書き込めませんでした: {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="InvalidHistoryPath">
+        <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
+        <target state="translated">GitHub Actions テスト履歴のスナップショット パスは、有効で空でないパスである必要があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHistoryWindow">
+        <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
+        <target state="translated">無効な GitHub Actions テスト履歴ウィンドウ '{0}' です。1 から 90 までの整数の日数を指定してください。</target>
+        <note>{0} is the invalid history window.</note>
+      </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">値 '{0}' が無効です。有効な値は、'on' (または 'true'、'enable'、'1') または 'off' (または 'false'、'disable'、'0') です。</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -42,29 +222,49 @@
         <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="InvalidStepSummarySection">
+        <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
+        <target state="translated">GitHub Actions ジョブの要約セクション '{0}' が無効です。有効な値は 'test-results'、'slow-tests'、'coverage'、または 'all' です。値は、繰り返し、スペース区切り、またはコンマ区切りにできます。</target>
+        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidStepSummaryValue">
+        <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
+        <target state="translated">値 '{0}' が無効です。有効な値は、'on' (または 'true'、'enable'、'1') または 'off' (または 'false'、'disable'、'0')、あるいは 'on-failure' です。</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+      </trans-unit>
+      <trans-unit id="ModuleDetailsOmitted">
+        <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
+        <target state="translated">エラーの詳細が既に多くのス領域を占めているため、{1} 件のテスト プロジェクトのうち {0} 件について、失敗の詳細が省略されました。完全な診断については、ワークフロー ログまたはテスト レポートを参照してください。</target>
+        <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
+      </trans-unit>
+      <trans-unit id="ModulesNotListed">
+        <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
+        <target state="translated">ジョブ概要のサイズ上限に達したため、さらに {0} 件のテスト プロジェクトは一覧に表示されていません。GitHub では、1 MB を超えるジョブの概要は短縮されず、全体が破棄されます。これらの結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
+        <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">テストは失敗し、失敗メッセージは提供されませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">テストはスキップされ、理由を示されませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">GitHub Actions でのテスト実行で第一級エクスペリエンスを実現するためのワークフロー コマンドを生成する GitHub Actions レポート生成プログラムを有効にします。</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">テストがスキップされました: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">低速テスト: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +274,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} は {1} 秒後もまだ実行中です</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -82,15 +282,40 @@
         <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
+      <trans-unit id="StepSummaryLimitExceededWarning">
+        <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
+        <target state="translated">GitHub のジョブ概要ファイルは {0} バイトで、このレポート セクションを追加すると、GitHub がステップごとに適用する {1} バイトの上限を超えてしまいます。GitHub では、サイズ超過したジョブ概要は切り詰められず、全体が破棄されるため、追加すると、他のテスト プロジェクトが既に書き込んだセクションを含め、すべてのセクションが失われることになります。このセクションは、概要の残りを保持するためにスキップされました。これは通常、多くのテスト プロジェクトや他のツールが同じジョブ概要に書き込んでいることを意味します。これらの結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
+        <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
+      </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
-        <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">GITHUB_STEP_SUMMARY ファイルへのマークダウン ジョブの要約の書き込みを制御します。有効な値は、'on' ('true'、'enable'、'1' も指定可能)、'off' ('false'、'disable'、'0' も指定可能)、またはテストの呼び出しが失敗した場合のみ書き込む 'on-failure' です。GitHub Actions で実行する場合、既定値は 'on' です。</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+      </trans-unit>
+      <trans-unit id="StepSummarySectionsOptionDescription">
+        <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
+        <target state="translated">GitHub Actions ジョブの要約に含めるコンテンツを選択します。'test-results'、'slow-tests'、'coverage'、または 'all' の値を、繰り返し、スペース区切り、またはコンマ区切りで 1 つ以上指定してください。既定値は 'all' です。'--report-gh' が必要です。</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">GitHub Actionsジョブの要約を '{0}' に書き込めませんでした: {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="SubOptionsRequireReportGh">
+        <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
+        <target state="translated">GitHub Actions レポートのサブオプションでは、'--{0}' を指定する必要があります。</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryCondensed">
+        <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
+        <target state="translated">概要がすでに多くの領域を占めているため、1 行に圧縮されています。完全な結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
+        <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
+      </trans-unit>
+      <trans-unit id="SummaryTruncatedNotice">
+        <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
+        <target state="translated">このジョブの概要は長くなっていたため、短縮されました。最初の {0} 件のテスト プロジェクトの結果はすべて含まれていますが、以下で 1 行で報告されたものは結果が省略されています。GitHub では、1 MB を超えるジョブの概要は短縮されず、全体が破棄されます。完全な結果については、ワークフロー ログまたはテスト レポートを参照してください。</target>
+        <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>
   </file>

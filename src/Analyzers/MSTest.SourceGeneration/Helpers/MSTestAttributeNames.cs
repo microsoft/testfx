@@ -20,6 +20,7 @@ internal static class MSTestAttributeNames
     public const string AssemblyCleanup = UnitTestingNamespace + ".AssemblyCleanupAttribute";
     public const string DataRow = UnitTestingNamespace + ".DataRowAttribute";
     public const string DynamicData = UnitTestingNamespace + ".DynamicDataAttribute";
+    public const string DynamicDataSourceType = UnitTestingNamespace + ".DynamicDataSourceType";
     public const string TestCategory = UnitTestingNamespace + ".TestCategoryAttribute";
     public const string TestProperty = UnitTestingNamespace + ".TestPropertyAttribute";
     public const string Priority = UnitTestingNamespace + ".PriorityAttribute";

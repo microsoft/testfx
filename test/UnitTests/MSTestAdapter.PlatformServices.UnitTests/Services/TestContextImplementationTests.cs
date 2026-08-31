@@ -364,7 +364,7 @@ public class TestContextImplementationTests : TestContainer
     public void GetAndClearOutput_ShouldReturnContentThenClearBuffer()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteConsoleOut("hello");
+        _testContextImplementation.StandardOutputBuilder.Append("hello");
 
         string? first = _testContextImplementation.GetAndClearOutput();
         string? second = _testContextImplementation.GetAndClearOutput();
@@ -376,7 +376,7 @@ public class TestContextImplementationTests : TestContainer
     public void GetAndClearError_ShouldReturnContentThenClearBuffer()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteConsoleErr("hello");
+        _testContextImplementation.StandardErrorBuilder.Append("hello");
 
         string? first = _testContextImplementation.GetAndClearError();
         string? second = _testContextImplementation.GetAndClearError();
@@ -388,7 +388,7 @@ public class TestContextImplementationTests : TestContainer
     public void GetAndClearTrace_ShouldReturnContentThenClearBuffer()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteTrace("hello");
+        _testContextImplementation.TraceBuilder.Append("hello");
 
         string? first = _testContextImplementation.GetAndClearTrace();
         string? second = _testContextImplementation.GetAndClearTrace();
@@ -404,8 +404,8 @@ public class TestContextImplementationTests : TestContainer
         {
             for (int i = 0; i < 100; i++)
             {
-                testContextImplementation.WriteConsoleOut(new string('a', 1000000));
-                testContextImplementation.WriteConsoleErr(new string('b', 1000000));
+                testContextImplementation.StandardOutputBuilder.Append(new string('a', 1000000));
+                testContextImplementation.StandardErrorBuilder.Append(new string('b', 1000000));
             }
         });
 
@@ -631,9 +631,9 @@ public class TestContextImplementationTests : TestContainer
     public void CloneForDataDrivenIterationShouldStartWithNoAccumulatedOutput()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteConsoleOut("orig-out");
-        _testContextImplementation.WriteConsoleErr("orig-err");
-        _testContextImplementation.WriteTrace("orig-trace");
+        _testContextImplementation.StandardOutputBuilder.Append("orig-out");
+        _testContextImplementation.StandardErrorBuilder.Append("orig-err");
+        _testContextImplementation.TraceBuilder.Append("orig-trace");
         _testContextImplementation.WriteLine("orig-diag");
 
         TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
@@ -646,7 +646,7 @@ public class TestContextImplementationTests : TestContainer
 
         // The clone's output buffers are independent: writing to the clone does not flow back
         // to the original.
-        clone.WriteConsoleOut("clone-only");
+        clone.StandardOutputBuilder.Append("clone-only");
         _testContextImplementation.GetAndClearOutput().Should().Be("orig-out");
         clone.GetAndClearOutput().Should().Be("clone-only");
     }
@@ -712,4 +712,453 @@ public class TestContextImplementationTests : TestContainer
 
         messageLoggerMock.Verify(x => x.SendMessage(MessageLevel.Informational, "from-clone"), Times.Once);
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    public void TestTempDirectoryShouldNotCreateDirectoryWhenNeverAccessed()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        // Never touch TestTempDirectory, then dispose.
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // Lazy creation: nothing should have been created under the results directory.
+        Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
+    }
+
+    public void TestTempDirectoryShouldReturnNullForNonTestContexts()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+
+        // A fixture (assembly/class initialize or cleanup) context is created with a null test
+        // method. It is not per-test and may never be disposed, so it must not create a directory.
+        using TestContextImplementation fixtureContext = new(null, "SomeClass", _properties, null, null);
+
+        fixtureContext.TestTempDirectory.Should().BeNull();
+        Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
+    }
+
+    public void TestTempDirectoryShouldNotCreateDirectoryAfterDispose()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // A late first access (e.g. from a background thread the test spawned that outlives the test
+        // body) must not create a directory after cleanup already ran, which would leak it. The
+        // getter returns null and creates nothing once cleanup has started.
+        string? afterDispose = _testContextImplementation.TestTempDirectory;
+
+        afterDispose.Should().BeNull();
+        Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
+    }
+
+    public void TestTempDirectoryShouldCreateDirectoryUnderResultsDirectoryOnFirstAccess()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+        Path.GetDirectoryName(tempDirectory).Should().Be(resultsDirectory.Path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        Path.GetFileName(tempDirectory!).Should().StartWith("MyTest_");
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldSanitizeAndBoundLongNameWithInvalidCharacters()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+
+        // A long, data-driven-style display name full of characters that are invalid in a path.
+        string hostileName = "My/Test\\With:Illegal*Chars?\"<>|And " + new string('x', 200);
+        _testMethod.Setup(tm => tm.Name).Returns(hostileName);
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        string fileName = Path.GetFileName(tempDirectory!);
+        fileName.Should().NotContain("/").And.NotContain("\\").And.NotContain(":")
+            .And.NotContain("*").And.NotContain("?").And.NotContain("\"")
+            .And.NotContain("<").And.NotContain(">").And.NotContain("|");
+        fileName.Should().NotContainAny(Array.ConvertAll(Path.GetInvalidFileNameChars(), c => c.ToString()));
+
+        // 50-char sanitized cap + '_' + 32-char GUID suffix = a bounded, MAX_PATH-friendly length.
+        fileName.Length.Should().BeLessThanOrEqualTo(50 + 1 + 32);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldFallBackToTempPathWhenResultsDirectoryTooDeep()
+    {
+        using TempDirectoryScope scope = new();
+
+        // A results directory long enough that, on Windows, even a minimal readable name plus the
+        // reserved MAX_PATH headroom cannot fit — the implementation must fall back to system temp.
+        // It is nested under a TempDirectoryScope so that on non-Windows (where no fallback occurs
+        // and this parent is actually created) it is reclaimed instead of leaking into the temp
+        // folder. On Windows the path is only used for its length; the directory is never created.
+        string deepResults = Path.Combine(scope.Path, new string('d', 200));
+        _properties["TestResultsDirectory"] = deepResults;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // The adaptive budget / fallback is a Windows MAX_PATH concern only.
+        bool onWindows = Path.DirectorySeparatorChar == '\\';
+        if (onWindows)
+        {
+            // Fallback engaged: created directly under the short system temp directory, and the
+            // total path stays within MAX_PATH minus the reserved headroom for the test's files.
+            string tempRoot = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
+            tempDirectory!.Length.Should().BeLessThanOrEqualTo(260 - 80);
+        }
+        else
+        {
+            Path.GetDirectoryName(tempDirectory).Should().Be(deepResults);
+        }
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldFallBackToTempPathWhenResultsDirectoryIsNotWritable()
+    {
+        // TestResultsDirectory is rarely empty in the normal .NET path (it maps to the test
+        // assembly's output directory when no results directory is configured), so the "unavailable"
+        // fallback rarely fires. This covers the more realistic case: the base directory exists but
+        // cannot be written to. It is simulated by pointing at a *file*, so creating a subdirectory
+        // under it throws — the implementation must fall back to the system temp directory rather
+        // than surface a directory-creation error from the property getter.
+        using TempDirectoryScope scope = new();
+        string filePath = Path.Combine(scope.Path, "not_a_directory");
+        File.WriteAllText(filePath, "x");
+        _properties["TestResultsDirectory"] = filePath;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // Fell back to the system temp root, not under the (unwritable) results path.
+        string tempRoot = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldNotSplitSurrogatePairsWhenTruncatingName()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+
+        // A long display name of non-BMP characters (emoji are surrogate pairs). A leading ASCII
+        // char biases the truncation boundary onto a high surrogate, exercising the guard.
+        string emojiName = "a" + string.Concat(Enumerable.Repeat("\U0001F600", 60));
+        _testMethod.Setup(tm => tm.Name).Returns(emojiName);
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // The resulting segment must contain no unpaired surrogate (truncation split a pair).
+        string fileName = Path.GetFileName(tempDirectory!);
+        for (int i = 0; i < fileName.Length; i++)
+        {
+            if (char.IsHighSurrogate(fileName[i]))
+            {
+                (i + 1 < fileName.Length && char.IsLowSurrogate(fileName[i + 1]))
+                    .Should().BeTrue("a high surrogate must be followed by a low surrogate");
+                i++;
+            }
+            else
+            {
+                char.IsLowSurrogate(fileName[i]).Should().BeFalse("no unpaired low surrogate is allowed");
+            }
+        }
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldReturnSamePathOnRepeatedAccess()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? first = _testContextImplementation.TestTempDirectory;
+        string? second = _testContextImplementation.TestTempDirectory;
+
+        second.Should().Be(first);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldBeRetainedWhenOutcomeChangesToFailedAfterCreation()
+    {
+        // Regression for the folded data-driven path: the framework sets the context outcome to
+        // Passed *before* running [TestCleanup]/Dispose, then re-syncs it to the post-cleanup
+        // outcome before the (cloned) context is disposed. The final outcome before disposal must
+        // win, otherwise a row whose body passes but whose cleanup fails would have its directory
+        // deleted.
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed); // pre-cleanup
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Failed);  // post-cleanup re-sync
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeTrue();
+    }
+
+    public void TestTempDirectoryShouldBeUniqueAcrossContexts()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+
+        using TestContextImplementation context1 = CreateTestContextImplementation();
+        using TestContextImplementation context2 = CreateTestContextImplementation();
+
+        string? path1 = context1.TestTempDirectory;
+        string? path2 = context2.TestTempDirectory;
+
+        path1.Should().NotBe(path2);
+        Directory.Exists(path1).Should().BeTrue();
+        Directory.Exists(path2).Should().BeTrue();
+
+        context1.SetOutcome(UnitTestOutcome.Passed);
+        context2.SetOutcome(UnitTestOutcome.Passed);
+    }
+
+    public void TestTempDirectoryShouldBeUniqueAcrossDataDrivenClones()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        using TestContextImplementation clone1 = _testContextImplementation.CloneForDataDrivenIteration();
+        using TestContextImplementation clone2 = _testContextImplementation.CloneForDataDrivenIteration();
+
+        string? path1 = clone1.TestTempDirectory;
+        string? path2 = clone2.TestTempDirectory;
+
+        path1.Should().NotBe(path2);
+        Directory.Exists(path1).Should().BeTrue();
+        Directory.Exists(path2).Should().BeTrue();
+
+        clone1.SetOutcome(UnitTestOutcome.Passed);
+        clone2.SetOutcome(UnitTestOutcome.Passed);
+    }
+
+    public void TestTempDirectoryShouldBeDeletedOnPass()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        File.WriteAllText(Path.Combine(tempDirectory!, "artifact.txt"), "data");
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
+    public void TestTempDirectoryShouldBeRetainedOnPassWhenResultFileRegisteredUnderIt()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        string resultFile = Path.Combine(tempDirectory!, "attachment.txt");
+        File.WriteAllText(resultFile, "data");
+        _testContextImplementation.AddResultFile(resultFile);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // Even on pass, the directory is retained because it holds a registered result file that
+        // the test host collects as an attachment after this context is disposed.
+        Directory.Exists(tempDirectory).Should().BeTrue();
+        File.Exists(resultFile).Should().BeTrue();
+    }
+
+    public void TestTempDirectoryShouldBeDeletedOnPassWhenResultFileIsOutsideIt()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        using TempDirectoryScope elsewhere = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        // A registered result file that does NOT live under the temp directory must not keep the
+        // temp directory alive on pass.
+        string outsideResultFile = Path.Combine(elsewhere.Path, "attachment.txt");
+        File.WriteAllText(outsideResultFile, "data");
+        _testContextImplementation.AddResultFile(outsideResultFile);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
+    public void TestTempDirectoryShouldBeDeletedOnPassWhenOnlyEarlierRetryAttemptRegisteredResultFile()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        // Attempt 1 (e.g. a failed retry attempt) registers a result file under the temp directory,
+        // then the framework consumes the list via GetResultFiles (as it does once per attempt).
+        string attempt1File = Path.Combine(tempDirectory!, "attempt1.txt");
+        File.WriteAllText(attempt1File, "data");
+        _testContextImplementation.AddResultFile(attempt1File);
+        _testContextImplementation.GetResultFiles();
+
+        // Attempt 2 (the passing, reported attempt) registers nothing; the framework consumes again.
+        _testContextImplementation.GetResultFiles();
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // The reported (last) attempt registered no in-directory result file, so the sticky marker
+        // from the earlier attempt must not keep the passing test's directory alive.
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
+    public void TestTempDirectoryShouldBeRetainedOnFailure()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        File.WriteAllText(Path.Combine(tempDirectory!, "artifact.txt"), "data");
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Failed);
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeTrue();
+    }
+
+    public void TestTempDirectoryShouldBeRetainedWhenEnvironmentVariableIsSet()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        string? original = Environment.GetEnvironmentVariable("MSTEST_TEST_TEMP_DIRECTORY_RETAIN");
+        try
+        {
+            Environment.SetEnvironmentVariable("MSTEST_TEST_TEMP_DIRECTORY_RETAIN", "1");
+            _properties["TestResultsDirectory"] = resultsDirectory.Path;
+            _testContextImplementation = CreateTestContextImplementation();
+
+            string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+            _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+            _testContextImplementation.Dispose();
+
+            Directory.Exists(tempDirectory).Should().BeTrue();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MSTEST_TEST_TEMP_DIRECTORY_RETAIN", original);
+        }
+    }
+
+    public void TestTempDirectoryCleanupShouldSwallowErrors()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        string lockedFilePath = Path.Combine(tempDirectory!, "locked.txt");
+
+        // Hold an exclusive handle so recursive delete throws; Dispose must not propagate it.
+        using FileStream lockStream = new(lockedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        Action dispose = () => _testContextImplementation.Dispose();
+        dispose.Should().NotThrow();
+    }
+
+    public void TestTempDirectoryShouldFallBackToTempPathWhenNoResultsDirectory()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // Pin the fallback location: with no results directory, it is created directly under the
+        // system temp root.
+        string tempRoot = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
+    private sealed class TempDirectoryScope : IDisposable
+    {
+        public TempDirectoryScope()
+        {
+            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mstest_ut_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path);
+        }
+
+        public string Path { get; }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(Path))
+                {
+                    Directory.Delete(Path, recursive: true);
+                }
+            }
+            catch (Exception)
+            {
+                // Best-effort cleanup of the test's own scratch directory.
+            }
+        }
+    }
+#endif
 }

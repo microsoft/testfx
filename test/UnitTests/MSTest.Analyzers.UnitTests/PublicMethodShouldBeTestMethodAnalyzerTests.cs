@@ -244,13 +244,89 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestInitialize]
+                [TestCleanup]
                 public void TestCleanup()
                 {
                 }
             }
             """;
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenPublicVirtualMethodInTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public virtual void MyTestMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenPublicOverrideMethodInTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base
+            {
+                public virtual void MyTestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass : Base
+            {
+                public override void MyTestMethod()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndNotMarkedAsTestMethod_ChangeToPrivateFix()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            CodeActionIndex = 1,
+        }.RunAsync();
     }
 
     [TestMethod]

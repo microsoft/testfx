@@ -11,6 +11,17 @@ internal interface IAsyncConsumerDataProcessor : IDisposable
     IDataConsumer DataConsumer { get; }
 
     /// <summary>
+    /// Gets a value indicating whether the consumer may still be executing
+    /// <see cref="IDataConsumer.ConsumeAsync"/>.
+    /// </summary>
+    /// <remarks>
+    /// The platform uses this to avoid disposing a consumer underneath itself when the shutdown handshake
+    /// could not complete, for example a consumer that kept working past the shutdown budget because it
+    /// ignored the cancellation token during an abort.
+    /// </remarks>
+    bool IsConsumerRunning { get; }
+
+    /// <summary>
     /// Gets the total number of data payloads enqueued through <see cref="PublishAsync"/>.
     /// The message bus uses this to detect publisher/consumer cycles across drain rounds:
     /// if a round of drains increases this counter on any processor, another round is needed.

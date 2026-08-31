@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 15
+    labels:
+      - dependencies
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
@@ -16,6 +18,8 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    labels:
+      - dependencies
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
@@ -27,8 +31,37 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
+    labels:
+      - dependencies
     ignore:
       - dependency-name: '*'
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    ignore:
+      # The github/gh-aw-actions/* and github/gh-aw/actions/setup actions are
+      # pinned by `gh aw compile` and
+      # MUST move in lockstep with the gh-aw CLI version that generated the
+      # `.lock.yml` files (and `.github/aw/actions-lock.json`). Letting
+      # Dependabot bump just the `uses:` SHAs drifts them away from the
+      # generator, which breaks the threat-detection job with
+      # `awf: command not found` -> parse_error (see #10203). These are
+      # updated via `gh aw upgrade` / the Agentic Maintenance workflow instead.
+      - dependency-name: "github/gh-aw-actions/*"
+      - dependency-name: "github/gh-aw/actions/setup"
+      # DavidAnson/markdownlint-cli2-action pins the CLI version it bundles, and
+      # `.github/workflows/markdown-linter.md` installs that same version by hand so the
+      # scheduled report and the pull request gate apply identical rules. Dependabot can
+      # only see the action, so letting it bump alone would silently give the two different
+      # rule sets. Move both pins together, by hand, when updating the action.
+      - dependency-name: "DavidAnson/markdownlint-cli2-action"
+    commit-message:
+      prefix: '[main] '
+    cooldown:
+      default-days: 7

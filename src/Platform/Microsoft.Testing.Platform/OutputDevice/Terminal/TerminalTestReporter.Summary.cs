@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 [UnsupportedOSPlatform("browser")]
@@ -42,6 +40,17 @@ internal sealed partial class TerminalTestReporter
 
         List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
 
+        // Retry attempt (second or later): skip straight to the sections the orchestrator does not restate. The
+        // verdict and counts below would describe the filtered subset this attempt re-ran rather than the run, so
+        // the reconciled retry summary owns them instead.
+        if (!_options.ShowRunSummary)
+        {
+            AppendSlowestTests(terminal, assemblies);
+            AppendHandshakeFailureRecap(terminal);
+            AppendErroredAssemblyRecap(terminal);
+            return;
+        }
+
         // Single-pass aggregation: compute all summary counters in one foreach instead of
         // 7 separate LINQ calls (Sum×5, Any×1, Count×1), saving 6 extra O(N) passes and
         // 7 LINQ enumerator allocations per test run.
@@ -49,7 +58,9 @@ internal sealed partial class TerminalTestReporter
         int totalFailedTests = 0;
         int totalSkippedTests = 0;
         int totalPassedTests = 0;
-        int totalRetried = 0;
+        int totalRetriedTests = 0;
+        int totalRetriedExecutions = 0;
+        int totalFlakyTests = 0;
         bool anyAssemblyFailed = false;
         int failedAssembliesWithoutFailedTests = 0;
 
@@ -59,7 +70,9 @@ internal sealed partial class TerminalTestReporter
             totalFailedTests += assembly.FailedTests;
             totalSkippedTests += assembly.SkippedTests;
             totalPassedTests += assembly.PassedTests;
-            totalRetried += assembly.RetriedFailedTests;
+            totalRetriedTests += assembly.RetriedTests;
+            totalRetriedExecutions += assembly.RetriedExecutions;
+            totalFlakyTests += assembly.FlakyTests;
             if (!assembly.Success)
             {
                 anyAssemblyFailed = true;
@@ -119,7 +132,6 @@ internal sealed partial class TerminalTestReporter
         int failed = totalFailedTests;
         int passed = totalPassedTests;
         int skipped = totalSkippedTests;
-        int retried = totalRetried;
 
         // Orchestrator-only: count assemblies that ended unsuccessfully without a failed test (crash / non-zero exit)
         // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
@@ -129,7 +141,7 @@ internal sealed partial class TerminalTestReporter
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;
-        bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
+        bool colorizeSkipped = skipped > 0;
 
         string errorText = $"{SingleIndentation}{TerminalResources.Error}: {error}";
         string totalText = $"{SingleIndentation}{TerminalResources.TotalLowercase}: {total}";
@@ -147,19 +159,8 @@ internal sealed partial class TerminalTestReporter
         }
 
         terminal.ResetColor();
-        terminal.Append(totalText);
+        terminal.AppendLine(totalText);
 
-        // Orchestrator-only: when failed tests were retried, append "(+N retried)" after the total so the headline
-        // count (which reflects the final attempt) is reconciled with the extra retried executions. retried is 0 for
-        // the in-process host, so the total line stays byte-identical there.
-        if (retried > 0)
-        {
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append($" (+{retried} {TerminalResources.Retried})");
-            terminal.ResetColor();
-        }
-
-        terminal.AppendLine();
         if (colorizeFailed)
         {
             terminal.SetColor(TerminalColor.DarkRed);
@@ -196,9 +197,19 @@ internal sealed partial class TerminalTestReporter
             terminal.ResetColor();
         }
 
+        AppendRetrySummaryLines(terminal, totalFlakyTests, totalRetriedTests, totalRetriedExecutions);
+
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
+
+        // Optional "Flaky tests" section (on by default, suppressed by --show-flaky-tests off). No-op when nothing
+        // was retried, so the summary stays byte-identical for a run without retries.
+        AppendFlakyTests(terminal, assemblies);
+
+        // Optional "Slowest tests" section (opt-in via --show-slowest-tests). Additive: no-op when the feature is
+        // off, so the summary stays byte-identical for the default run.
+        AppendSlowestTests(terminal, assemblies);
 
         // Re-print any handshake failures (orchestrator-only) at the very end so they aren't lost above the summary.
         // No-op for the in-process host, which never reports handshake failures.
@@ -210,128 +221,28 @@ internal sealed partial class TerminalTestReporter
     }
 
     /// <summary>
-    /// Orchestrator overload (<c>dotnet test</c>): the multi-process orchestrator also knows each discovered test's
-    /// uid, file path and line number. The shared discovery summary currently lists display names only, so those are
-    /// accepted for signature parity. When <paramref name="displayName"/> is missing the <paramref name="uid"/> is used
-    /// as the listed name; when neither is available the test is still counted (so the discovery total stays correct)
-    /// but no blank entry is added to the summary.
+    /// Appends the retry accounting lines that sit between the skipped count and the duration:
+    /// <c>flaky: N</c> (tests that failed at least once but eventually passed) and
+    /// <c>retried: N tests, M extra runs</c>. Both are omitted entirely when nothing was retried, so a run without
+    /// retries keeps its historical summary byte-for-byte.
     /// </summary>
-    internal void TestDiscovered(string executionId, string? displayName, string? uid, string? filePath, int? lineNumber)
+    private void AppendRetrySummaryLines(ITerminal terminal, int flakyTests, int retriedTests, int retriedExecutions)
     {
-        // Prefer the display name, fall back to the uid so the discovered test is still listed by something.
-        string? name = displayName ?? uid;
-        if (name is not null)
+        // "flaky" is the headline value of retrying, so it is reported whenever it is non-zero unless the user
+        // explicitly turned the feature off.
+        if (flakyTests > 0 && _options.ShowFlakyTests)
         {
-            TestDiscovered(executionId, name);
-            return;
-        }
-
-        // No name available at all: still increment the discovered count so the discovery summary total stays
-        // correct (in discovery mode TotalTests is computed from DiscoveredTests), but avoid adding a blank entry.
-        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
-        asm.DiscoveredTests++;
-        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
-    }
-
-    internal void TestDiscovered(string executionId, string displayName)
-    {
-        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
-        // In discovery mode TotalTests is computed from DiscoveredTests; in execution mode it is computed from the
-        // passed/skipped/failed tally as tests complete. So we only need to bump the discovered count here.
-        asm.DiscoveredTests++;
-
-        asm.DiscoveredTestDisplayNames.Add(MakeControlCharactersVisible(displayName, true));
-
-        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
-    }
-
-    public void AppendTestDiscoverySummary(ITerminal terminal)
-    {
-        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
-        terminal.AppendLine();
-
-        int totalTests = assemblies.Sum(static a => a.TotalTests);
-        bool runFailed = WasCancelled || totalTests < 1;
-
-        if (_options.ShowAssembly)
-        {
-            // Orchestrator (dotnet test): a per-assembly "Discovered N tests in assembly - <link>" header followed by
-            // the discovered test names, then a run-level total ("Discovered N tests." / "... in N assemblies.").
-            foreach (TestProgressState assembly in assemblies)
-            {
-                terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests));
-                terminal.Append(" - ");
-                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly);
-                terminal.AppendLine();
-                foreach (string displayName in assembly.DiscoveredTestDisplayNames)
-                {
-                    terminal.Append(SingleIndentation);
-                    terminal.AppendLine(displayName);
-                }
-
-                terminal.AppendLine();
-            }
-
-            terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
-            terminal.AppendLine(assemblies.Count <= 1
-                ? string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummarySingular, totalTests)
-                : string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummary, totalTests, assemblies.Count));
+            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.AppendLine($"{SingleIndentation}{string.Format(CultureInfo.CurrentCulture, TerminalResources.FlakyLowercase, flakyTests)}");
             terminal.ResetColor();
-            terminal.AppendLine();
-
-            if (WasCancelled)
-            {
-                terminal.Append(TerminalResources.Aborted);
-                terminal.AppendLine();
-            }
-
-            return;
         }
 
-        // In-process host: the single "Test discovery summary: found N test(s)" format (unchanged shipping output).
-        foreach (TestProgressState assembly in assemblies)
-        {
-            foreach (string displayName in assembly.DiscoveredTestDisplayNames)
-            {
-                terminal.Append(SingleIndentation);
-                terminal.AppendLine(displayName);
-            }
-        }
-
-        terminal.AppendLine();
-
-        terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
-        terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.TestDiscoverySummarySingular, totalTests));
-
-        if (assemblies.Count == 1)
+        if (retriedTests > 0)
         {
             terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append(" - ");
+            terminal.Append($"{SingleIndentation}{TerminalResources.Retried}: ");
+            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, retriedTests, retriedExecutions));
             terminal.ResetColor();
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
         }
-
-        terminal.ResetColor();
-        terminal.AppendLine();
-
-        if (WasCancelled)
-        {
-            terminal.Append(TerminalResources.Aborted);
-            terminal.AppendLine();
-        }
-
-        string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
-        TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
-        terminal.Append(durationText);
-        AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
-        terminal.AppendLine();
     }
 }

@@ -48,7 +48,11 @@ See `docs/RFCs/011-Soft-Assertions-Nullability-Design.md` for the nullability-an
 
 ### AzureDevOpsReport
 
-An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
+An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting. Its optional Extensions-tab Markdown summary is aggregated across modules through artifact post-processing when the SDK advertises the required capability; live publishing to the Azure DevOps Tests tab remains a separate path. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>`; the extension is enabled automatically by the `AllMicrosoft` profile. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode.
+
+### Aspire testing
+
+The `Aspire.Hosting.Testing` integration for testing .NET Aspire distributed applications. When using [MSTest.Sdk](#mstestsdk), set `<EnableAspireTesting>true</EnableAspireTesting>` to add the package and its implicit using. This feature is supported in the default MSTest runner and VSTest modes, but not when `PublishAot=true`; MSTest.Sdk emits a build error for that combination.
 
 ### AzureFoundry
 
@@ -62,19 +66,51 @@ An MSTest attribute (`[CIConditionAttribute]`) in `Microsoft.VisualStudio.TestTo
 
 ### CodeCoverage
 
-An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option; VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are proposed via a [command-line option mapping](#commandlineoptionmapping) (see `docs/RFCs/015-Command-Line-Option-Mappings.md`).
+An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option. VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are rejected with migration guidance rather than mapped to MTP options.
 
 ### CommandLineOptionMapping
 
-A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would let an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). In RFC 015, this is expressed via `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
+A rejected MTP extensibility proposal (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would have allowed extensions to rewrite VSTest-style options into canonical MTP options. MTP instead keeps those options invalid and provides value-aware migration diagnostics. The decision can be revisited if migration data demonstrates that actionable diagnostics are insufficient.
 
 ### ConditionBaseAttribute
 
-An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [ArchitectureConditionAttribute](#architectureconditionattribute), [CIConditionAttribute](#ciconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
+An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [ArchitectureConditionAttribute](#architectureconditionattribute), [CIConditionAttribute](#ciconditionattribute), [ExecutableConditionAttribute](#executableconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
 
 ### ConditionMode
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [ConditionBaseAttribute](#conditionbaseattribute)-derived attributes to control whether the condition is reversed. `Include` (default): run the test only when the condition is met. `Exclude`: skip (ignore) the test when the condition is met, reversing the condition.
+
+### CoverageAggregation
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (append-only, treat unrecognized values non-exhaustively) that specifies how per-scope coverage values are combined when evaluating a threshold. Values: `None` (0, not an aggregate — a single scope's own value), `Total` (aggregate covered / aggregate coverable across the population), `Minimum` (worst scope), `Average` (mean of per-scope percentages), `Maximum` (best scope). Used by [TestCoverageThresholdMessage](#testcoveragethresholdmessage) together with `AggregatedOver` (a [CoverageScopeLevel](#coveragescopelevel)) to express the threshold evaluation: for example, `Minimum` over `Module` is a distinct evaluation from `Minimum` over `File`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageMetric
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (closed but append-only; consumers must handle unknown values non-exhaustively) that identifies a code-coverage metric. Well-known values: `Line` (0), `Statement` (1), `Branch` (2), `Method` (3), `Function` (4), `Block` (5, the primary metric of Microsoft.CodeCoverage / dotnet-coverage), `Instruction` (6, JaCoCo), `Region` (7, llvm-cov), `Class` (8, JaCoCo / PHPUnit), `Condition` (9), `Complexity` (10, JaCoCo cyclomatic complexity), and `Custom` (255, escape hatch for proprietary metrics such as MC/DC — carries its identifier in `CustomMetricName`). Used by [TestCoverageMessage](#testcoveragemessage) and [TestCoverageThresholdMessage](#testcoveragethresholdmessage). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageMetricResult
+
+A public sealed class in `Microsoft.Testing.Platform.Services` that represents a single correlated coverage measurement (one [CoverageMetric](#coveragemetric) for one [CoverageScope](#coveragescope)) exposed through [ITestCoverageResult](#itestcoverageresult). Carries `CoveredCount` and `CoverableCount` as `long` values; `Percentage` is derived (`CoveredCount / CoverableCount * 100`, or 0 when nothing is coverable). Also carries `ProducerId` (the collector), `Metric`, and optionally `CustomMetricName` when `Metric == CoverageMetric.Custom`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageReportFormat
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` that identifies the on-disk format of a coverage report artifact referenced by [TestCoverageReportMessage](#testcoveragereportmessage) and [CoverageReportReference](#coveragereportreference). Values: `Unknown` (0), `Cobertura` (1), `OpenCover` (2), `Lcov` (3), `CoverageXml` (4, Microsoft.CodeCoverage XML), `Custom` (255, proprietary format identified by `CustomFormatName`). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageReportReference
+
+A public sealed class in `Microsoft.Testing.Platform.Services` that is a pointer to a rich coverage report artifact, correlated through [ITestCoverageResult](#itestcoverageresult). Carries the report's `SessionUid`, `Path`, [CoverageReportFormat](#coveragereportformat), and collector `ProducerId`, plus an optional `CustomFormatName` when the format is `Custom`. Deep consumers (HTML / UI report generators) parse the referenced artifact for per-line data that the summary intentionally omits. Populated from [TestCoverageReportMessage](#testcoveragereportmessage) by the platform's coverage result aggregator. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageScope
+
+A public readonly struct in `Microsoft.Testing.Platform.Extensions.Messages` that identifies the entity a coverage measurement or threshold entry describes. Combines a [CoverageScopeLevel](#coveragescopelevel) and an optional string `Name` (module path, type name, file path, etc.; `null` only for `Overall`). An optional `ContainerHint` carries a non-authoritative UI grouping hint (e.g. the enclosing module for a namespace scope) used by report generators; it is not part of scope identity or exact containment. The static `CoverageScope.Overall` convenience member creates an `Overall`-level scope. Used by [TestCoverageMessage](#testcoveragemessage), [TestCoverageThresholdMessage](#testcoveragethresholdmessage), and [CoverageScopeSummary](#coveragescopesummary). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageScopeLevel
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (append-only) that specifies the granularity of a [CoverageScope](#coveragescope). Values: `Overall` (0, the whole run), `Module` (1, an assembly file on disk), `Assembly` (2), `Namespace` (3), `Type` (4), `File` (5, a source file). Used with [CoverageScope](#coveragescope) and as the `AggregatedOver` parameter of [TestCoverageThresholdMessage](#testcoveragethresholdmessage). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageScopeSummary
+
+A public sealed class in `Microsoft.Testing.Platform.Services` that aggregates all coverage metrics for a single [CoverageScope](#coveragescope) in a single session. It is the primary summary-layer surface for report generators: one instance per scope, with every [CoverageMetricResult](#coveragemetricresult) that scope reported. Exposes an indexer `summary[CoverageMetric.Line]` for convenient well-known metric lookup (returns `null` if absent; throws for `CoverageMetric.Custom` — use `GetCustom(name)` instead). Populated and exposed through [ITestCoverageResult](#itestcoverageresult). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
 
 ### CrashDump
 
@@ -94,6 +130,12 @@ A public enum in the `Microsoft.VisualStudio.TestTools.UnitTesting` namespace th
 
 An MSTest attribute (`[DynamicData]`) for data-driven tests where test data is sourced from a static property, method, or field rather than inline `[DataRow]` values. The data source name is passed as a constructor argument; `DynamicDataSourceType` controls how the source is located (`Property`, `Method`, `Field`, or `AutoDetect`). Unlike `[DataRow]`, a single `[DynamicData]` source can be shared across multiple test methods and can produce any number of test cases at runtime. See `docs/RFCs/006-DynamicData-Attribute.md` for the original design.
 
+## E
+
+### ExecutableConditionAttribute
+
+An MSTest attribute (`[ExecutableConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on executable availability. The presence-only overload (`[ExecutableCondition("dotnet")]`) resolves a command through `PATH` and, on Windows, `PATHEXT`; the command overload (`[ExecutableCondition("dotnet", "--info")]`) runs the executable with the supplied arguments and requires exit code 0. `TimeoutSeconds` controls how long command execution may take and defaults to 30 seconds. Each distinct executable, arguments, and `ConditionMode` combination has its own `GroupName`, so different commands or opposite modes compose with logical AND while repeated attributes for the same command and mode compose with logical OR. Presence checks and command executions use distinct group and cache keys, and command cache keys also include the timeout. The attribute is not inherited, and executable availability is evaluated immediately before test execution rather than validated statically. Introduced in [PR #9369](https://github.com/microsoft/testfx/pull/9369). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ## F
 
 ### FQN (Fully Qualified Name)
@@ -112,14 +154,15 @@ A specific code component (function, struct, or class) selected for formal verif
 
 ### GitHubActionsReport
 
-An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits GitHub Actions-native workflow commands so test runs on GitHub Actions produce a first-class CI experience. The extension activates only when the test run executes inside GitHub Actions (`GITHUB_ACTIONS=true`) and the `--report-gh` master switch is passed; it no-ops otherwise. When active, it provides four independently toggleable features:
+An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits GitHub Actions-native workflow commands so test runs on GitHub Actions produce a first-class CI experience. The extension activates only when the test run executes inside GitHub Actions (`GITHUB_ACTIONS=true`) and the `--report-gh` master switch is passed; it no-ops otherwise. When active, it provides five independently toggleable features:
 
 - **Per-assembly log groups** (`--report-gh-groups`): emits `::group::`/`::endgroup::` workflow commands so each test assembly's output is collapsed by default in the runner UI.
-- **Failure and skip annotations** (`--report-gh-annotations`): emits a `::error` workflow command for each failing test (with file/line source location when resolvable, so failures appear in the PR "Files changed" diff gutter) and a `::warning` workflow command for each skipped test; both surface in the workflow **Annotations** tab.
-- **Job summary** (`--report-gh-step-summary`): appends a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page.
+- **Failure and skip annotations** (`--report-gh-annotations`): emits a `::error` workflow command for each failing test and a `::warning` workflow command for each skipped test; both surface in the workflow **Annotations** tab. The `file:line` location is taken from the failure's exception stack trace when a frame resolves inside the workspace, and otherwise from the test's own `TestFileLocationProperty` (the only location available for a skipped test), so annotations also appear on the PR "Files changed" diff gutter. `TestFileLocationProperty` is populated by the MSTest adapter and by the [VSTestBridge](#vstestbridge), which covers xUnit/NUnit and other bridged frameworks that report source information.
+- **Job summary** (`--report-gh-step-summary`): writes a markdown roll-up to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page. Set it to `on-failure` to write only when the test invocation fails. `--report-gh-step-summary-sections` independently selects `test-results`, `coverage`, `slow-tests`, or any combination (`all`, the default); values may be repeated, space-separated, or comma-separated. A capable SDK aggregates multi-module `dotnet test` runs into one authoritative overall section with per-assembly detail through artifact post-processing; mixed module selections are combined so the aggregate includes every requested section, and older fragments retain full output. Each failed test is expanded into a collapsible `<details>` section carrying its failure message, exception type, source location and stack trace; turn this off with `--report-gh-failure-details off` to keep the compact one-line-per-failure list. Diagnostics are bounded on four axes — message and stack trace are each clipped by length *and* by line count, the failure list is capped, and expansion stops once the shared UTF-8 byte budget is spent — so this reporter's own contribution stays well inside GitHub's 1 MiB limit no matter how many test projects write to it, and every truncation is stated in the rendered output. The remaining headroom absorbs what other steps and test frameworks append to the same file, which this reporter can observe but not control.
 - **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
+- **Test history** (`--report-gh-history`): reads and updates a bounded, versioned JSON snapshot at a workflow-managed local path. Prior default-branch results can then decorate failures with historical pass/fail context without exposing GitHub credentials to the test process. `--report-gh-history-window` controls the retained 1–90 day window (30 days by default).
 
-When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. Not supported in NativeAOT or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
+When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
 
 ## H
 
@@ -145,9 +188,17 @@ An intermediate artifact in the [Formal Verification (FV)](#formal-verification-
 
 An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformApplication>`) that marks a project as an MTP test application. When set, the project builds into a self-contained test runner executable rather than a class library consumed by a separate test host.
 
+### ITestCoverageCapabilities
+
+A public interface in `Microsoft.Testing.Platform.Services` that describes the test-coverage messaging capabilities available in the current test application. Exposes `SupportsTestCoverageMessages` (whether the platform supports the coverage message contract) and `EnabledProducerUids` (UIDs of registered data producers that declare at least one coverage message type, as a snapshot taken at query time). Extensions should query this from a test-session lifecycle callback rather than from their constructor. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage) and [ITestCoverageResult](#itestcoverageresult).
+
+### ITestCoverageResult
+
+A public interface in `Microsoft.Testing.Platform.Services` that is the application-scoped read model for all coverage data published during a test run. It aggregates raw [TestCoverageMessage](#testcoveragemessage), [TestCoverageThresholdMessage](#testcoveragethresholdmessage), and [TestCoverageReportMessage](#testcoveragereportmessage) messages into three queryable collections: `Scopes` (list of [CoverageScopeSummary](#coveragescopesummary)), `Thresholds` (list of threshold evaluation results), and `Reports` (list of [CoverageReportReference](#coveragereportreference)). `GetOverall(SessionUid)` retrieves the whole-run summary for a specific session, and `HasThresholdFailure` is `true` when any threshold did not pass. The terminal output device and the exit-code policy both read from this interface rather than buffering their own copies. Retrieve via `IServiceProvider`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
 ### ITestFilter
 
-An MSTest interface (`Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter`, `[Experimental("MSTESTEXP")]` — suppress with `#pragma warning disable MSTESTEXP`) that enables programmatic test filtering, evaluated **before** any test type is loaded and before `[AssemblyInitialize]` or `[ClassInitialize]` runs. The single method is `TestFilterResult Filter(TestFilterContext context)`. Implement this interface and register it with `[assembly: TestFilterProvider(typeof(MyFilter))]` to include, drop, or skip tests based on categories, traits, priority, or name — without incurring type-loading cost. Exceptions thrown from `Filter` produce an error result (`UTA078`) rather than silently dropping tests. The filter instance is resolved once per source assembly and cached for the entire run. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [TestFilterContext](#testfiltercontext), [TestFilterProvider](#testfilterprovider), and [TestFilterResult](#testfilterresult).
+An MSTest interface (`Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter`, `[Experimental("MSTESTEXP")]` — suppress with `#pragma warning disable MSTESTEXP`) that enables programmatic test filtering, evaluated **before** any test type is loaded and before `[AssemblyInitialize]` or `[ClassInitialize]` runs. The single method is `TestFilterResult Filter(TestFilterContext context)`. Implement this interface and register it with `[assembly: TestFilterProvider(typeof(MyFilter))]` (or, when targeting .NET, the type-safe `[assembly: TestFilterProvider<MyFilter>]`) to include, drop, or skip tests based on categories, traits, priority, or name — without incurring type-loading cost. Exceptions thrown from `Filter` produce an error result (`UTA078`) rather than silently dropping tests. The filter instance is resolved once per source assembly and cached for the entire run. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [TestFilterContext](#testfiltercontext), [TestFilterProvider](#testfilterprovider), and [TestFilterResult](#testfilterresult).
 
 ### ITestHostHandle
 
@@ -165,7 +216,7 @@ The communication protocol used between a test runner executable (server) and a 
 
 ### JUnitReport
 
-An MTP extension (`Microsoft.Testing.Extensions.JUnitReport`) that emits a JUnit-style XML test report at the end of a test run. The report conforms to the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema and is accepted by Jenkins (`junit` step), GitLab CI (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters, and most other CI tooling. MTP's hierarchical [TestNode](#testnode) tree is preserved as a `<property name="testpath" value="…"/>` element inside each `<testcase>`, allowing tools to reconstruct hierarchy. Auto-registers via the `TestingPlatformBuilderHook` MSBuild item declared in the package's `buildMultiTargeting` props (imported by the `build` and `buildTransitive` props), so adding a `<PackageReference>` to the package is sufficient — no opt-in property is required at the package level. When using [MSTest.Sdk](#mstestsdk), the package is not added by default (the extension is still experimental); opt in with `<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>` to have MSTest.Sdk add the `<PackageReference>` for you. Currently **experimental** — the API, CLI options, and on-disk format may change without notice. Enable via `--report-junit`; override filename with `--report-junit-filename`.
+An MTP extension (`Microsoft.Testing.Extensions.JUnitReport`) that emits a JUnit-style XML test report at the end of a test run. The report conforms to the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema and is accepted by Jenkins (`junit` step), GitLab CI (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters, and most other CI tooling. MTP's hierarchical [TestNode](#testnode) tree is preserved as a `<property name="testpath" value="…"/>` element inside each `<testcase>`, allowing tools to reconstruct hierarchy. Auto-registers via the `TestingPlatformBuilderHook` MSBuild item declared in the package's `buildMultiTargeting` props (imported by the `build` and `buildTransitive` props), so adding a `<PackageReference>` to the package is sufficient — no opt-in property is required at the package level. When using [MSTest.Sdk](#mstestsdk), the package is not added by default (the extension is still experimental); opt in with `<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>` to have MSTest.Sdk add the `<PackageReference>` for you. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Currently **experimental** — the API, CLI options, and on-disk format may change without notice. Enable via `--report-junit`; override filename with `--report-junit-filename`.
 
 ## L
 
@@ -209,11 +260,93 @@ The self-contained test runner mode for MSTest, built on top of Microsoft.Testin
 
 ### MSTest.Sdk
 
-A meta-package that bundles `MSTest.TestFramework`, `MSTest.TestAdapter`, and `MSTest.Analyzers` with default MSBuild SDK configuration. Simplifies project setup by providing a single package reference.
+An MSBuild project SDK that configures MSTest, its runner, and selected Microsoft.Testing.Platform extensions. A minimal project needs only the SDK and a target framework:
+
+```xml
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>
+```
+
+Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through the `msbuild-sdks` section of `global.json`.
+
+#### Runner mode
+
+Runner selection uses the following precedence:
+
+| `UseVSTest` | `PublishAot` | Mode | Result |
+| --- | --- | --- | --- |
+| `true` | Any value | VSTest | Adds `Microsoft.NET.Test.Sdk` and uses `MSTest.TestAdapter`; MTP extension properties are not supported |
+| `false` (default) | `true` | NativeAOT | Builds a self-contained MTP test application using `MSTest.SourceGeneration`; only the NativeAOT-compatible extension subset is available |
+| `false` (default) | Unset or `false` | ClassicEngine (MSTest runner) | Builds an executable MTP test application and supports the full extension configuration |
+
+When `UseUwp=true`, `UseVSTest` defaults to `true` because true UWP/AppContainer test hosts do not support MTP. WinUI keeps the MTP default; set `UseVSTest=true` only for a packaged WinUI test application.
+
+`IsTestApplication` controls whether the project is an executable test application or a reusable test library. It defaults to `true`, except for .NET Standard targets where it defaults to `false`. Set it to `false` for a project that contains shared test helpers or inherited tests and is referenced by an executable test project:
+
+```xml
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsTestApplication>false</IsTestApplication>
+  </PropertyGroup>
+</Project>
+```
+
+In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework` but do not receive the adapter, runner, or testing extensions. Reference the library from an `IsTestApplication=true` project that supplies the executable test host. NativeAOT is intended for executable test applications; its source-generation, platform MSBuild, TrxReport, and CodeCoverage references are added even if `IsTestApplication=false`.
+
+#### Extension profiles
+
+`TestingExtensionsProfile` controls the predefined extension set in ClassicEngine mode:
+
+| Value | Extensions enabled automatically |
+| --- | --- |
+| `Default` (default) | TrxReport and CodeCoverage |
+| `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, GitHubActionsReport, HtmlReport, and Fakes |
+| `None` | No extensions |
+
+Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for a packaged WinUI test application because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
+
+| Property | `Default` | `AllMicrosoft` | `None` | NativeAOT | VSTest |
+| --- | --- | --- | --- | --- | --- |
+| `EnableMicrosoftTestingExtensionsTrxReport` | On | On | Off | Supported | Build error |
+| `EnableMicrosoftTestingExtensionsCodeCoverage` | On | On | Off | Supported | Build error |
+| `EnableMicrosoftTestingExtensionsCrashDump` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsHangDump` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsHotReload` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsRetry` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsAzureDevOpsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsGitHubActionsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsHtmlReport` | Off | On | Off | Not available | Build error |
+| `EnableMicrosoftTestingExtensionsFakes` | Off | On | Off | Not available | Not added |
+| `EnableMicrosoftTestingExtensionsCtrfReport` | Off | Off | Off | Not available | Build error |
+| `EnableMicrosoftTestingExtensionsJUnitReport` | Off | Off | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsOpenTelemetry` | Off | Off | Off | Not available | Build error |
+| `EnableMicrosoftTestingExtensionsPackagedApp` | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Build error |
+| `EnableAspireTesting` | Off | Off | Off | Build error | Supported |
+| `EnablePlaywright` | Off | Off | Off | Build error | Supported |
+
+Individual extension toggles remain unset and disabled when a profile does not enable them. This differs from explicitly setting a toggle to `false`: VSTest rejects any non-empty MTP extension toggle. NativeAOT warnings and errors are reported during the build. Properties marked "Not available" or "Not added" do not add their package in NativeAOT mode.
+
+#### Platform integration and version properties
+
+| Property | Behavior |
+| --- | --- |
+| `TestingPlatformDotnetTestSupport` | Enables the compatibility integration used by `dotnet test` before the .NET SDK introduced native MTP runner selection. For test applications it defaults to `true` with .NET SDK 9 and earlier, and remains unset/disabled with .NET SDK 10 and later. |
+| `EnableMicrosoftTestingPlatform` | Advanced version-alignment escape hatch. When `true` for an `IsTestApplication=true` ClassicEngine or NativeAOT project, adds an explicit `Microsoft.Testing.Platform` package reference using `MicrosoftTestingPlatformVersion`. It is ignored for test libraries and VSTest. It is normally unnecessary and does not select the runner or change `IsTestingPlatformApplication`. |
+| `EnableMSTestSourceGeneration` | Adds `MSTest.SourceGeneration` to non-NativeAOT projects. For reusable test libraries, it also adds `MSTest.TestAdapter`, which provides the runtime hooks referenced by generated code. .NET Standard is not supported because the adapter does not ship compatible runtime hooks. NativeAOT projects always include source generation. |
+| `MSTestVersion` | Overrides the versions of the MSTest framework, adapter, and source generator supplied by the SDK. |
+| `MicrosoftTestingExtensionsPackagedAppVersion` | Overrides the packaged-app launcher version supplied to packaged WinUI MTP projects. |
+
+`EnableMSTestRunner` is set by MSTest.Sdk and should not normally be set by projects. Component-specific properties such as `MicrosoftTestingPlatformVersion`, `MicrosoftTestingExtensionsCommonVersion`, and the individual `MicrosoftTestingExtensions*Version` properties are advanced version-alignment controls.
+
+For assembly-level parallelization properties, see [MSTestParallelizeScope / MSTestParallelizeWorkers](#mstestparallelizescope--mstestparallelizeworkers).
 
 ### MSTest.SourceGeneration
 
-A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. Adoption requires only a `<PackageReference>` to `MSTest.SourceGeneration`; existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
+A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. MSTest.Sdk includes the package automatically for NativeAOT projects; set `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>` to opt in for other configurations. Without MSTest.Sdk, add a `<PackageReference>` to `MSTest.SourceGeneration`. Existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
 
 ### MSTestParallelizeScope / MSTestParallelizeWorkers
 
@@ -247,13 +380,17 @@ A lightweight, extensible test platform for .NET that serves as a modern alterna
 
 A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility abstractions for Microsoft.Testing.Platform. It defines the [IChatClientProvider](#ichatclientprovider) interface and leverages [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI) types so that test frameworks and extensions can consume Large Language Model (LLM) capabilities — flaky test analysis, crash dump analysis, test failure root-cause analysis, and more — without implementing provider-specific logic. This package ships the **abstractions only**; an AI provider implementation such as [Microsoft.Testing.Extensions.AzureFoundry](#azurefoundry) must also be registered to supply actual AI capabilities. See `docs/microsoft.testing.platform/001-AI-Extensibility.md` for the design RFC.
 
+### Microsoft.Testing.Platform.ServerMode.Client.Sources
+
+A source-only NuGet package that provides a client implementation for launching and communicating with an MTP test host running in [Server Mode](#server-mode). Its C# sources are compiled as internal types directly into the consuming project, avoiding a runtime dependency or separate assembly while keeping the client wire-compatible with the MTP server protocol. Added in [PR #10085](https://github.com/microsoft/testfx/pull/10085).
+
 ### Microsoft.Testing.Extensions.Logging
 
 An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.
 
 ### Microsoft.Testing.Extensions.PackagedApp
 
-An experimental MTP extension (`Microsoft.Testing.Extensions.PackagedApp`, `[Experimental("TPEXP")]`, ships as `1.0.0-alpha`) that enables testing packaged Windows apps (UWP / WinUI) by deploying the test payload to an isolated directory and launching it via the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. Register via `builder.AddPackagedAppDeployment()`. Full AUMID activation (for apps requiring the app identity manifest) is planned for a follow-up release. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454). See also [ITestHostLauncher](#itesthostlauncher).
+An MTP extension (`Microsoft.Testing.Extensions.PackagedApp`) that enables testing packaged Windows apps by registering the layout with the `PackageManager` and activating it by AUMID through the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. `packagedClassicApp`/`win32App` hosts receive normal `argv` (including classic AppContainer hosts); `windowsApp`/UWP hosts call `PackagedAppExtensions.GetTestApplicationArguments(LaunchActivatedEventArgs.Arguments)` before creating the MTP builder to restore the same logical arguments. For a selected AppContainer application, the launcher also contributes its exact package SID through `ITestHostControllerConnectionAuthorizer`, and the platform grants only the minimum controller-pipe client rights. Register via `builder.AddPackagedAppDeployment()`, or simply by referencing the package (its MSBuild props register the hook). The launcher only enables itself when the test application is a packaged layout — a manifest in the app's own directory, or an ancestor `AppxManifest.xml` whose `Application/@Executable` resolves back to the app directory — so referencing it from an **unpackaged** app does not force the test host controller process model or copy the build output; `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` (`auto`/`always`/`never`) overrides that decision. These communication primitives do not change the current SDK/platform routing limitation: true UWP/AppContainer projects are still selected for VSTest rather than started as MTP test hosts. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454); AUMID activation added in [PR #9970](https://github.com/microsoft/testfx/pull/9970). See also [ITestHostLauncher](#itesthostlauncher) and [docs/winui-testing.md](winui-testing.md).
 
 ## N
 
@@ -275,7 +412,23 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports tes
 
 An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
+### OutputCaptureMode
+
+An internal MSTest output-capture mode selected through the RunSettings setting `<MSTestV2><CaptureTraceOutput>...</CaptureTraceOutput></MSTestV2>`. It controls how Console/Trace output produced while a test runs is handled and whether `TestContext.Write` and `TestContext.WriteLine` output is echoed live. Backed by the internal `TestOutputCaptureMode` enum with three values:
+
+| Value | Behavior |
+| --- | --- |
+| `None` | Output is not captured; Console/Trace writes flow to their normal destination. Equivalent to the legacy `CaptureTraceOutput=false`. |
+| `Result` (default) | Output is captured and attached to the test result, then surfaced once the test completes. Equivalent to the legacy `CaptureTraceOutput=true`. |
+| `Live` | Console/Trace output is captured and attached to the test result **and** additionally echoed live to the original console as the test runs. `TestContext.Write` and `TestContext.WriteLine` output remains buffered in the completed result and is also echoed live, similar to xUnit's `showLiveOutput` option. |
+
+The `CaptureTraceOutput` setting accepts the mode names as well as the legacy boolean form, with `true` mapped to `Result` and `false` mapped to `None`. The modes were introduced in [PR #10013](https://github.com/microsoft/testfx/pull/10013), and live streaming for `TestContext.Write` and `TestContext.WriteLine` was added in [PR #10040](https://github.com/microsoft/testfx/pull/10040).
+
 ## P
+
+### Playwright
+
+The `Microsoft.Playwright.MSTest.v4` integration for browser end-to-end tests. When using [MSTest.Sdk](#mstestsdk), set `<EnablePlaywright>true</EnablePlaywright>` to add the package and its implicit using. This feature is supported in the default MSTest runner and VSTest modes, but not when `PublishAot=true`; MSTest.Sdk emits a build error for that combination.
 
 ### PlannedTest
 
@@ -301,7 +454,23 @@ An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that
 
 ### Retry
 
-An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times. Useful for reducing flakiness in CI environments.
+An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times by restarting the test host and filtering each new run to the tests that failed previously. It is independent from MSTest's in-process [`RetryAttribute`](#retryattribute) and [`RetryBaseAttribute`](#retrybaseattribute). When both mechanisms are enabled, their attempt counts multiply: a test using `[Retry(n)]` can run up to `(n + 1) * (--retry-failed-tests + 1)` times, so avoid combining them unless that is intended.
+
+### RetryAttribute
+
+An MSTest attribute (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute`) that retries a failed or timed-out test within the same test-host run. It can be applied to a test method or test class and supports a maximum retry count, a delay between attempts, and constant or exponential backoff. It derives from [`RetryBaseAttribute`](#retrybaseattribute), which can be used to implement a custom retry policy. See also the process-level [`Microsoft.Testing.Extensions.Retry`](#retry) extension.
+
+### RetryBaseAttribute
+
+An MSTest extensibility point (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute`) for implementing custom in-process retry policies. A derived attribute overrides the experimental `[Experimental("MSTESTEXP")]` method `ExecuteAsync(RetryContext)`, inspects the initial failed results, invokes the supplied test delegate for each retry attempt, and returns every attempt in a [`RetryResult`](#retryresult). The implementation owns the retry loop and decides when to stop. The attribute can be applied to a test method or test class; a method-level attribute takes precedence over a class-level attribute, and class-level attributes are not inherited.
+
+### RetryContext
+
+An experimental MSTest structure (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext`, `[Experimental("MSTESTEXP")]`) passed to `RetryBaseAttribute.ExecuteAsync`. `FirstRunResults` contains the results from the initial failed or timed-out execution, and `ExecuteTaskGetter` re-executes the test and returns the next attempt's results. See also [`RetryBaseAttribute`](#retrybaseattribute) and [`RetryResult`](#retryresult).
+
+### RetryResult
+
+An experimental MSTest class (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult`, `[Experimental("MSTESTEXP")]`) used by custom [`RetryBaseAttribute`](#retrybaseattribute) implementations to return retry attempts in execution order through `AddResult`. `AllResults` exposes every added attempt. Under Microsoft.Testing.Platform, earlier attempts are reported as superseded and the last attempt determines the test outcome; VSTest receives only the final attempt.
 
 ### RFC
 
@@ -312,6 +481,10 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 ### SequenceOrder
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that controls whether elements must appear in the same position when comparing sequences with `Assert.AreSequenceEqual` and `Assert.AreNotSequenceEqual`. Values: `InOrder` (0, default) — elements must appear in the same order in both sequences (LINQ `SequenceEqual` semantics); `InAnyOrder` (1) — elements may appear in any order, but each element must appear the same number of times in both sequences (multiset equality). Introduced in [PR #8334](https://github.com/microsoft/testfx/pull/8334).
+
+### Server Mode
+
+An MTP execution mode in which the test host process runs as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
 
 ## T
 
@@ -327,13 +500,25 @@ The per-project configuration file for Microsoft.Testing.Platform, placed at the
 
 An abstract base class (`TestFramework.ForTestingMSTest.TestContainer`) in the internal [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) framework used to unit-test MSTest itself. Any class that inherits from `TestContainer` is treated as a test class; every `public` parameterless method on that class is treated as a test — no `[TestClass]` or `[TestMethod]` attributes are needed. The constructor runs before each test and `Dispose(bool)` runs after each test. This framework is used only in `test/UnitTests/TestFramework.UnitTests`; all other test projects in this repository use standard MSTest or MTP.
 
+### TestCoverageMessage
+
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published to the MTP message bus by a coverage collector to report a single coverage measurement. Carries: `Scope` ([CoverageScope](#coveragescope)), `Metric` ([CoverageMetric](#coveragemetric)), `CoveredCount`, `CoverableCount` (both `long`), `ProducerId` (a stable, non-empty collector identifier), and optionally `CustomMetricName` (when `Metric == CoverageMetric.Custom`). The platform's [ITestCoverageResult](#itestcoverageresult) aggregator consumes these messages using last-write-wins correlation on the full key `(SessionUid, ProducerId, Scope, Metric, CustomMetricName)`. `Percentage` is a convenience computed property. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageThresholdMessage](#testcoveragethresholdmessage), [TestCoverageReportMessage](#testcoveragereportmessage).
+
+### TestCoverageReportMessage
+
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to register a rich coverage report artifact. Carries `ReportPath` (path to the file on disk), `Format` ([CoverageReportFormat](#coveragereportformat)), `ProducerId`, and optionally `CustomFormatName` (when `Format == CoverageReportFormat.Custom`). The platform stores a [CoverageReportReference](#coveragereportreference) per unique `(SessionUid, ProducerId, ReportPath)` key and exposes it through [ITestCoverageResult](#itestcoverageresult). Deep consumers such as HTML/UI report generators use this reference to locate and parse the artifact. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [TestCoverageThresholdMessage](#testcoveragethresholdmessage).
+
+### TestCoverageThresholdMessage
+
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to report the result of a coverage threshold evaluation. Carries the same metric identification as [TestCoverageMessage](#testcoveragemessage) plus: `Aggregation` ([CoverageAggregation](#coverageaggregation)), `AggregatedOver` (optional [CoverageScopeLevel](#coveragescopelevel)), `ActualPercentage`, `RequiredPercentage`, `HasCoverableData`, `TreatNoDataAsFailure`, and `Passed` (derived: a threshold with no coverable data passes unless `TreatNoDataAsFailure` is set). When any threshold message has `Passed == false`, `ITestCoverageResult.HasThresholdFailure` returns `true`; an otherwise-successful run then exits with `CoverageThresholdFailed`, while an existing non-success exit code retains precedence. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [ITestCoverageResult](#itestcoverageresult).
+
 ### TestFilterContext
 
 A sealed MSTest class (`Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext`, `[Experimental("MSTESTEXP")]`) passed to `ITestFilter.Filter()`. Exposes test metadata available **without loading the test type**. Always-populated: `FullyQualifiedName`, `DisplayName`, `MethodName`, `Source` (assembly file path). Optionally populated — parsed from the managed name with no reflection or type-load: `Namespace`, `ClassName`, `ManagedTypeName`, `ManagedMethodName`, `MethodArity`, `ParameterTypeFullNames`. Test metadata: `Categories`, `Traits`, `Priority`. Uses a parameterless constructor with mutable properties (no `init`) so new fields can be added additively in future releases without breaking existing callers. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
 
 ### TestFilterProvider
 
-An MSTest assembly-level attribute (`[assembly: TestFilterProvider(typeof(T))]` in `Microsoft.VisualStudio.TestTools.UnitTesting`, `[Experimental("MSTESTEXP")]`) that registers an [ITestFilter](#itestfilter) implementation for the test assembly. `AllowMultiple = false` — applying more than one raises error `UTA079`. The filter type must be non-generic, non-abstract, implement `ITestFilter`, and have a public parameterless constructor; violations produce `UTA074`–`UTA077` (`UTA073` is reported separately when the `[TestFilterProvider]` marker itself fails to load from the assembly). Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
+An MSTest assembly-level attribute (`[assembly: TestFilterProvider(typeof(T))]` in `Microsoft.VisualStudio.TestTools.UnitTesting`, `[Experimental("MSTESTEXP")]`) that registers an [ITestFilter](#itestfilter) implementation for the test assembly. `AllowMultiple = false` — applying more than one raises error `UTA079`. The filter type must be non-generic and instantiable (a concrete class or a struct, but not `ref struct`), implement `ITestFilter`, and have a public parameterless constructor; violations produce `UTA074`–`UTA077` (`UTA073` is reported separately when the `[TestFilterProvider]` marker itself fails to load from the assembly). Because the filter type is passed as a `Type`, none of those requirements are checked by the compiler; the `MSTEST0081` analyzer reports them at build time instead. When targeting .NET, the generic variant `[assembly: TestFilterProvider<T>]` (`TestFilterProviderAttribute<TFilter>`, constrained to `ITestFilter, new()`) enforces the interface and constructor requirements through the type system; the rest are still only reported by `MSTEST0081`. Both attributes are sealed and implement the internal `ITestFilterProviderAttribute` contract, so the set of shapes that can register a filter is closed to exactly those two. The adapter resolves the shipped non-generic attribute through its own concrete type and consults `ITestFilterProviderAttribute` only once its metadata probe has seen a generic marker, so a newer adapter running against an older `MSTest.TestFramework` — which has neither the contract nor the generic attribute — still discovers the non-generic registration instead of failing with `UTA073`. Mixing the two forms in one assembly is still `UTA079` (the compiler does not see it as a duplicate attribute because they are distinct types, so `MSTEST0081` reports it). The generic form is deliberately unavailable on .NET Framework, whose reflection stack throws `NotSupportedException` ("Generic types are not valid.") when it materializes a generic custom attribute. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
 
 ### TestFilterResult
 

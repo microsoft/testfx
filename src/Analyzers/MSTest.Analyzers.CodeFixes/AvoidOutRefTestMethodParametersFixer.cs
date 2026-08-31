@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
 using MSTest.Analyzers.Helpers;
@@ -61,20 +62,42 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         foreach (ParameterSyntax parameter in methodDeclaration.ParameterList.Parameters)
         {
-            int indexToRemove = parameter.Modifiers.IndexOf(SyntaxKind.OutKeyword);
-            if (indexToRemove < 0)
+            SyntaxToken[] removedModifiers = parameter.Modifiers
+                .Where(modifier => modifier.IsKind(SyntaxKind.OutKeyword)
+                    || modifier.IsKind(SyntaxKind.RefKeyword)
+                    || modifier.IsKind(SyntaxKind.ReadOnlyKeyword))
+                .ToArray();
+            if (!removedModifiers.Any(modifier => modifier.IsKind(SyntaxKind.OutKeyword) || modifier.IsKind(SyntaxKind.RefKeyword)))
             {
-                indexToRemove = parameter.Modifiers.IndexOf(SyntaxKind.RefKeyword);
+                continue;
             }
 
-            if (indexToRemove >= 0)
-            {
-                editor.ReplaceNode(parameter, (node, _) =>
-                {
-                    var parameter = (ParameterSyntax)node;
-                    return parameter.WithModifiers(parameter.Modifiers.RemoveAt(indexToRemove)).WithLeadingTrivia(parameter.GetLeadingTrivia());
-                });
-            }
+            SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
+                parameter.Modifiers.Except(removedModifiers));
+
+            ParameterSyntax updatedParameter = parameter.WithModifiers(filteredModifiers);
+            SyntaxTrivia[] removedTrivia = removedModifiers
+                .SelectMany(modifier => modifier.LeadingTrivia.Concat(modifier.TrailingTrivia))
+                .ToArray();
+            SyntaxTrivia[] preservedTrivia = removedTrivia
+                .SkipWhile(trivia => trivia.IsKind(SyntaxKind.WhitespaceTrivia))
+                .Reverse()
+                .SkipWhile(trivia => trivia.IsKind(SyntaxKind.WhitespaceTrivia))
+                .Reverse()
+                .ToArray();
+            IEnumerable<SyntaxTrivia> typeLeadingTrivia = preservedTrivia.Length > 0
+                && !preservedTrivia[^1].IsKind(SyntaxKind.EndOfLineTrivia)
+                    ? preservedTrivia.Append(SyntaxFactory.Space)
+                    : preservedTrivia;
+
+            updatedParameter = parameter.Type is { } parameterType
+                && preservedTrivia.Any(trivia => !trivia.IsKind(SyntaxKind.EndOfLineTrivia))
+                    ? updatedParameter.WithType(parameterType.WithLeadingTrivia(typeLeadingTrivia.Concat(parameterType.GetLeadingTrivia())))
+                    : updatedParameter.WithLeadingTrivia(parameter.GetLeadingTrivia());
+
+            editor.ReplaceNode(
+                parameter,
+                updatedParameter.WithAdditionalAnnotations(Formatter.Annotation));
         }
 
         return editor.GetChangedDocument();

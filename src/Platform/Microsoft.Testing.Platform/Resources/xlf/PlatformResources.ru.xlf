@@ -2,6 +2,31 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
+        <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
+        <target state="translated">Переменная среды {0} задана, но тестовая платформа не поддерживает {1}. Платформа не может остановить тестовый запуск до наступления крайнего срока.</target>
+        <note>{0} is the environment variable name. {1} is the capability interface name.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineDescription">
+        <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
+        <target state="translated">Расширение, которое корректно останавливает тестовый запуск незадолго до наступления установленного CI крайнего срока, чтобы отчеты можно было завершить.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
+        <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
+        <target state="translated">Для переменной среды {0} задано значение {1}, но это не является допустимым абсолютным моментом времени в формате ISO 8601. Отмена с учетом крайнего срока отключена.</target>
+        <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
+        <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
+        <target state="translated">Запас времени для дампа по крайнему сроку ({0}) больше или равен запасу времени для остановки ({1}). Дамп зависания может начаться до корректной остановки.</target>
+        <note>{0} is the dump margin. {1} is the stop margin.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineMessage">
+        <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
+        <target state="translated">Приближается крайний срок: плавная остановка тестового запуска, чтобы отчеты можно было завершить до жесткой отмены CI.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
         <target state="translated">Текущая платформа тестирования не реализует параметр "IGracefulStopTestExecutionCapability", необходимый для функции "--maximum-failed-tests".</target>
@@ -16,6 +41,86 @@
         <source>Aborted</source>
         <target state="translated">Прервано</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherCommandLineDescription">
+        <source>Internal command line for artifact post-processing.</source>
+        <target state="translated">Внутренняя командная строка для постобработки артефактов.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDescription">
+        <source>Dispatches artifact post-processing jobs selected by dotnet test.</source>
+        <target state="translated">Отправляет задания постобработки артефактов, выбранные dotnet test.</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDisplayName">
+        <source>Artifact post-processing dispatcher</source>
+        <target state="translated">Диспетчер постобработки артефактов</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
+        <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
+        <target state="translated">Обработанный артефакт должен быть существующим файлом в каталоге outputDirectory и не может перезаписывать входной артефакт.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
+        <source>The artifact post-processing manifest does not exist.</source>
+        <target state="translated">Манифест постобработки артефактов не существует.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestOptionDescription">
+        <source>Path to the artifact post-processing manifest.</source>
+        <target state="translated">Путь к манифесту артефакта после обработки.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorConflict">
+        <source>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</source>
+        <target state="translated">Несколько постобработчиков артефактов соответствуют {0}. Будет использоваться первый зарегистрированный постобработчик — {1}.</target>
+        <note>{0} is an artifact kind or file extension. {1} is an extension UID.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorFailed">
+        <source>Artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">Обработчик постобработки артефактов {0} завершился с ошибкой: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherRequiresPipe">
+        <source>The artifact post-processing dispatcher requires a dotnet test pipe.</source>
+        <target state="translated">Диспетчеру постобработки артефактов требуется канал dotnet test.</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputMissingPath">
+        <source>Artifact post-processing manifest input {0} does not have a path.</source>
+        <target state="translated">Входные данные манифеста постобработки артефактов {0} не имеют пути.</target>
+        <note>{0} is the zero-based input index.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
+        <source>The artifact post-processing manifest inputs property must be an array.</source>
+        <target state="translated">Свойство inputs манифеста постобработки артефактов должно быть массивом.</target>
+        <note>Do not localize property name {Locked="inputs"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInvalid">
+        <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
+        <target state="translated">Манифест постобработки артефактов должен содержать schemaVersion 1 и outputDirectory.</target>
+        <note>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestReadError">
+        <source>Cannot read the artifact post-processing manifest: {0}</source>
+        <target state="translated">Не удается прочитать манифест постобработки артефактов: {0}</target>
+        <note>{0} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="translated">В манифесте постобработки артефакта runSummary должны содержаться допустимые значения totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode и testModuleCount.</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
+        <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
+        <target state="translated">Постобработчик артефактов {0} объявляет возможность {1}, которая не может содержать разделитель точки с запятой.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
+        <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
+        <target state="translated">Постобработчик артефактов {0} объявляет недопустимую возможность {1}. Типы не могут быть пустыми, а резервные расширения должны быть в нижнем регистре и начинаться с точки.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
@@ -33,9 +138,9 @@
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="translated">Не удалось создать уникальный файл журнала через 3 секунды. Последнее использованное имя файла "{0}".</target>
-        <note>{0} is the last log file name that was tried.</note>
+        <source>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</source>
+        <target state="translated">Не удалось создать файл журнала диагностики "{0}" после {1} попыток. Последняя ошибка: {2}</target>
+        <note>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
@@ -117,6 +222,16 @@
         <target state="translated">Параметр "--{0}" от поставщика "{1}" (UID: {2}) использует зарезервированный префикс "--internal"</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
       </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="translated">Параметр "--{0}" предоставлен расширением "{1}". Чтобы использовать его, добавьте ссылку на пакет.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="translated">Вы имели в виду "'--{0}"?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
+      </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
         <target state="translated">Параметр ICommandLineOptions еще не создан.</target>
@@ -125,7 +240,7 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">Не удалось прочитать файл ответа "{0}". {1}.</target>
-        <note>{0} is the response file path. {1} is the exception message.</note>
+        <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
@@ -162,15 +277,75 @@
         <target state="translated">Неизвестный параметр "--{0}"</target>
         <note>{0} is the unknown option name without the leading dashes.</note>
       </trans-unit>
+      <trans-unit id="CommandLineUnknownOptionsHint">
+        <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
+        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <note>{Locked="'--help'"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestBlameReplacement">
+        <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
+        <target state="new">Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</target>
+        <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestCollectorGuidance">
+        <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
+        <target state="new">MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</target>
+        <note>{Locked="MTP"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
+        <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
+        <target state="new">For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</target>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestLoggerGuidance">
+        <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
+        <target state="new">MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</target>
+        <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestOptionUnsupported">
+        <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
+        <target state="new">Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</target>
+        <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestReplacementSuggestion">
+        <source>Use {0} instead.</source>
+        <target state="new">Use {0} instead.</target>
+        <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
+        <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
+        <target state="new">For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</target>
+        <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
+      </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
         <target state="translated">Командная строка: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
+        <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
+        <target state="translated">Не удалось создать экземпляр составного расширения "{0}". См. подробные сведения во внутреннем исключении.</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
+        <source>The factory for composite extension '{0}' returned a null instance.</source>
+        <target state="translated">Фабрика для составного расширения "{0}" вернула экземпляр null.</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">Такой же экземпляр "CompositeExtensionFactory" уже зарегистрирован</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
+        <source>A composite test execution filter cannot contain a null child filter.</source>
+        <target state="translated">Составной фильтр выполнения тестов не может содержать дочерний фильтр со значением null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
+        <source>A composite test execution filter requires at least two child filters.</source>
+        <target state="translated">Составному фильтру выполнения тестов требуется как минимум два дочерних фильтра.</target>
+        <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
@@ -226,6 +401,136 @@
         <source>Discovering tests from</source>
         <target state="translated">Обнаружение тестов из</target>
         <note />
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
+        <target state="translated">Не удалось загрузить сборку "{0}" расширения "{1}", объявленного в манифесте расширения "{2}".</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
+        <target state="translated">Сборка "{0}" расширения "{1}", объявленного в манифесте расширения "{2}", не найдена.</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
+        <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
+        <target state="translated">Расширение "{0}", объявленное в манифесте расширения "{1}", попыталось зарегистрировать платформу тестирования. Динамически загружаемые расширения не должны заменять платформу тестирования, так как это привело бы к незаметному изменению набора выполняемых тестов и сообщаемых ими результатов.</target>
+        <note>{0} is the extension display name. {1} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
+        <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
+        <target state="translated">Идентификатор расширения "{0}" объявлен дважды с разным содержимым: "{1}" в манифесте расширения "{2}" и "{3}" в манифесте расширения "{4}". Идентификаторы должны обозначать одно и то же расширение, иначе одно объявление незаметно заменит другое.</target>
+        <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookFailedErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
+        <target state="translated">Обработчик расширения "{0}.{1}" из сборки "{2}", объявленный в манифесте расширения "{3}", завершился сбоем.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
+        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
+        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
+        <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
+        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
+        <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
+        <target state="translated">Не удалось выполнить поиск манифестов расширений в каталоге "{0}", поэтому платформа не может определить, требовалось ли загрузить какое-либо расширение. Удалите "{1}" из командной строки, чтобы пропустить обнаружение манифестов расширений.</target>
+        <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: свойство "{1}" объявлено более одного раза, поэтому одно из объявлений будет отброшено.</target>
+        <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: расширение с индексом "{1}" объявляет свойство "{2}" более одного раза, поэтому одно из объявлений будет отброшено.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": путь сборки "{2}" расширения в индексе {1} не является допустимым путем.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: у расширения с индексом "{1}" отсутствует обязательное свойство "{2}" или его значение пусто.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: элемент с индексом "{1}" в "{2}" должен быть объектом JSON.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: свойство "{2}" расширения с индексом "{1}" должно быть логическим значением JSON.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": свойство "{2}" расширения в индексе {1} должно быть строкой JSON.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": свойство "{1}" должно быть массивом JSON.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
+        <source>The extension manifest '{0}' is not valid JSON. {1}</source>
+        <target state="translated">Манифест расширения "{0}" не является допустимым JSON. {1}</target>
+        <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
+        <target state="translated">Недопустимый манифест расширения "{0}": отсутствует обязательное свойство "{1}".</target>
+        <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
+        <source>The extension manifest '{0}' could not be read.</source>
+        <target state="translated">Не удалось прочитать манифест расширения "{0}".</target>
+        <note>{0} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
+        <target state="translated">Манифест расширения "{0}" недействителен: элемент верхнего уровня JSON должен быть объектом, но был обнаружен "{1}".</target>
+        <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
+        <source>Unexpected content after the top-level JSON object.</source>
+        <target state="translated">Непредвиденное содержимое после объекта JSON верхнего уровня.</target>
+        <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
+        <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
+        <target state="translated">Тип "{0}" не найден в сборке "{1}", объявленной в манифесте расширения "{2}".</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedEntry">
+        <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
+        <target state="translated">  {0} -&gt; {1} ({2}), объявлен в {3}</target>
+        <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedHeader">
+        <source>Dynamically loaded test platform extensions ({0}):</source>
+        <target state="translated">Динамически загруженные расширения тестовой платформы ({0}):</target>
+        <note>{0} is the number of extensions that were loaded.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
+        <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
+        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -419,6 +724,16 @@
         <target state="translated">{0} тестов</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
+        <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</source>
+        <target state="translated">Каталог именованного канала "{0}" отсутствует или недоступен для записи: {1}. Настройте для переменной среды "{2}" записываемый существующий каталог или отмените ее настройку, чтобы откатиться к временному каталогу по умолчанию.</target>
+        <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NamedPipePathTooLongErrorMessage">
+        <source>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Use a shorter directory by setting the '{3}' environment variable, or by setting 'TMPDIR' when '{3}' is not set.</source>
+        <target state="translated">Длина пути к именованному каналу "{0}" составляет {1} байт, что превышает максимальное допустимое значение {2} байт для сокета домена Unix. Используйте более короткий каталог, настроив переменную среды "{3}" или настроив "TMPDIR", если "{3}" не задано.</target>
+        <note>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
+      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Недоступно</target>
@@ -475,9 +790,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
         <target state="translated">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Trace".
-Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог</target>
+Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -498,8 +813,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Префикс для имени файла журнала, который заменит "[log]_."</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="translated">Заменить "[log]_." на указанный префикс имени файла журнала.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -526,10 +841,65 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <target state="translated">Для --server {0} требуется указать --{1}.</target>
         <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
+        <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
+        <target state="translated">"--server dotnettestcli" требует указания одного из параметров: "--dotnet-test-pipe" или "--dotnet-test-transport http".</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
+        <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
+        <target state="translated">"--dotnet-test-http-endpoint" требует указания абсолютного URL-адреса HTTPS или URL-адреса замыкания на себя HTTP без сведений о пользователе, запроса или фрагмента.</target>
+        <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
+        <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
+        <target state="translated">Указывает аутентифицированную конечную точку HTTP для протокола dotnet test.</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
+        <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
+        <target state="translated">Параметры конечной точки HTTP и токена dotnet test требуют указания "--dotnet-test-transport http".</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
+        <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
+        <target state="translated">"--dotnet-test-transport http" требует указания как "--dotnet-test-http-endpoint", так и "--dotnet-test-http-token".</target>
+        <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
+        <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
+        <target state="translated">"--dotnet-test-http-token" требует непустого допустимого токена-носителя без пробелов или управляющих символов.</target>
+        <note>{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
+        <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
+        <target state="translated">Указывает токен-носитель HTTP для каждого запуска для протокола dotnet test.</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet test канал.</target>
         <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
+        <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
+        <target state="translated">Именованный канал и транспорт HTTP dotnet test нельзя выбрать одновременно.</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
+        <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">"--dotnet-test-transport" получен непредвиденное значение "{0}". Поддерживаемые значения: {1}.</target>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
+        <source>Selects the pre-launch transport for the dotnet test protocol.</source>
+        <target state="translated">Выбирает транспорт предварительного запуска для протокола dotnet test.</target>
+        <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
+        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
+        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -564,11 +934,13 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">Не сообщать о неуспешном значении выхода для определенных кодов выхода
-(например, "--ignore-exit-code 8;9" игнорирует коды выхода 8 и 9 и в этих случаях возвращает 0)</target>
-        <note>{Locked="--ignore-exit-code 8;9"}</note>
+        <source>Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
+        <target state="new">Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -602,6 +974,16 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <target state="translated">Не отображать баннер запуска, сообщение об авторских правах и баннер телеметрии.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
+        <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">Именованный канал dotnet test не поддерживается на browser-wasm. Используйте "--dotnet-test-transport http".</target>
+        <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
+        <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">Именованный канал dotnet test не поддерживается на wasi-wasm. Используйте "--dotnet-test-transport http".</target>
+        <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
         <target state="translated">Укажите порт сервера.</target>
@@ -613,8 +995,8 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Поставщик командной строки платформы тестирования Майкрософт</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="translated">Поставщик командной строки Microsoft Testing Platform.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -642,8 +1024,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Для тестирования</target>
+        <source>For testing purposes.</source>
+        <target state="translated">Для тестирования.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -880,6 +1262,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">Сводка по обнаружению тестов: найдены тесты ({0}) в {1} сборках.</target>
         <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
+      <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
+        <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
+        <target state="translated">Поставщик фильтра выполнения тестов "{0}" возвратил тип фильтра "{1}" для серверного запроса JSON-RPC. Ограничения поставщика не применяются к серверным запросам; возвращайте null, если TestExecutionFilterContext.Origin имеет значение Server.</target>
+        <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
+      </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
         <target state="translated">Метод "{0}" не должен был вызываться для этого прокси-объекта</target>
@@ -889,6 +1276,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <source>Test adapter test session failure</source>
         <target state="translated">Сбой тестового сеанса адаптера теста</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
+        <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
+        <target state="translated">Средство запуска тестового узла "{0}" (UID: {1}) запросило авторизацию удостоверения безопасности "{2}" для подключения к контроллеру тестового узла, но можно авторизовать только удостоверение одного приложения в песочнице (в Windows — идентификатор безопасности вида 'S-1-15-2-...'). Пользователям, группам и универсальному идентификатору безопасности "{3}" доступ никогда не предоставляется.</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
@@ -906,9 +1298,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="translated">Не удалось записать журналы на диск до истечения времени ожидания ("{0}" с)</target>
-        <note>{0} is the timeout in seconds.</note>
+        <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
+        <target state="translated">Не удалось записать журналы в файл журнала "{0}" до истечения времени ожидания в "{1}" сек. Файл журнала может быть неполным.</target>
+        <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
@@ -966,16 +1358,36 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
-{0}</source>
-        <target state="translated">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
-{0}</target>
-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
+        <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+{1}</source>
+        <target state="translated">В цикле записи 'FileLogger' возникло непредвиденное исключение для файла журнала "{0}". Файл журнала может быть неполным.
+{1}</target>
+        <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] необработанное исключение: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedProviderTestExecutionFilter">
+        <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
+        <target state="translated">Поставщик фильтра выполнения тестов "{0}" возвратил неподдерживаемый тип фильтра "{1}". Поставщики могут возвращать только NopFilter, TestNodeUidListFilter, TreeNodeFilter или And CompositeTestExecutionFilter.</target>
+        <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTestExecutionFilter">
+        <source>The request contains unsupported test execution filter type '{0}'.</source>
+        <target state="translated">Запрос содержит неподдерживаемый тип фильтра выполнения тестов "{0}".</target>
+        <note>{0} is the unsupported filter type.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperator">
+        <source>Only the And test execution filter operator is supported.</source>
+        <target state="translated">Поддерживается только оператор And для фильтра выполнения тестов.</target>
+        <note>{Locked="And"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
+        <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
+        <target state="translated">Оператор фильтра выполнения тестов "{0}" не поддерживается. Поддерживается только And.</target>
+        <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>

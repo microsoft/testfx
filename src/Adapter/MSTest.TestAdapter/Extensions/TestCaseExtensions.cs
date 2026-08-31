@@ -59,8 +59,8 @@ internal static class TestCaseExtensions
         string fullyQualifiedName = testCase.FullyQualifiedName;
 
         // Not using Replace because there can be multiple instances of that string.
-        string name = fullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
-            ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
+        string name = FullyQualifiedNameStartsWithTestClassName(fullyQualifiedName, testClassName)
+            ? fullyQualifiedName.Substring((testClassName?.Length ?? 0) + 1)
             : fullyQualifiedName;
 
         return name;
@@ -136,6 +136,18 @@ internal static class TestCaseExtensions
 
         testElement.DoNotParallelize = testCase.GetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, false);
 
+        string[]? encodedResourceLocks = testCase.GetPropertyValue<string[]>(AdapterTestProperties.ResourceLocksProperty, null);
+        if (encodedResourceLocks is { Length: > 0 })
+        {
+            testElement.ResourceLocks = Array.ConvertAll(encodedResourceLocks, ResourceLockInfo.Decode);
+        }
+
+        string[]? encodedDependencies = testCase.GetPropertyValue<string[]>(AdapterTestProperties.DependenciesProperty, null);
+        if (encodedDependencies is { Length: > 0 })
+        {
+            testElement.Dependencies = Array.ConvertAll(encodedDependencies, TestDependencyInfo.Decode);
+        }
+
         return testElement;
     }
 
@@ -144,9 +156,18 @@ internal static class TestCaseExtensions
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
 
     private static string? GetClassNameWhenFullyQualifiedNameStartsWith(this TestCase testCase, string? testClassName)
-        => testClassName is not null && testCase.FullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
+        => testClassName is not null && FullyQualifiedNameStartsWithTestClassName(testCase.FullyQualifiedName, testClassName)
             ? testClassName
             : null;
+
+    private static bool FullyQualifiedNameStartsWithTestClassName(string fullyQualifiedName, string? testClassName)
+    {
+        int testClassNameLength = testClassName?.Length ?? 0;
+
+        return fullyQualifiedName.Length > testClassNameLength
+            && fullyQualifiedName[testClassNameLength] == '.'
+            && (testClassName is null || fullyQualifiedName.StartsWith(testClassName, StringComparison.Ordinal));
+    }
 
     internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 

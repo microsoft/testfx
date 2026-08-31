@@ -14,6 +14,25 @@ internal static partial class Polyfill
 {
     extension(OperatingSystem)
     {
+#if NETFRAMEWORK
+        // .NET Framework only runs on Windows (and, rarely, Unix via Mono); it never runs on WASI,
+        // Android, iOS, tvOS, or the browser (WASM). RuntimeInformation.IsOSPlatform is also unavailable
+        // on .NET Framework before 4.7.1, so these checks are constant false down-level.
+        public static bool IsWasi()
+            => false;
+
+        public static bool IsAndroid()
+            => false;
+
+        public static bool IsIOS()
+            => false;
+
+        public static bool IsTvOS()
+            => false;
+
+        public static bool IsBrowser()
+            => false;
+#else
         public static bool IsWasi()
             => RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI"));
 
@@ -28,6 +47,7 @@ internal static partial class Polyfill
 
         public static bool IsBrowser()
             => RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+#endif
     }
 }
 #endif

@@ -67,6 +67,15 @@ internal interface IReflectionOperations
     Func<object?[]?, object>? GetConstructorInvoker(Type type);
 
     /// <summary>
+    /// Gets source-generated test descriptors for native discovery.
+    /// </summary>
+    /// <param name="type">The test class to inspect.</param>
+    /// <param name="methods">Methods with complete generated discovery metadata.</param>
+    /// <param name="areAllTestMethodsSupported">Whether the generated set is authoritative for the class.</param>
+    /// <returns><see langword="true"/> when generated descriptor metadata exists for the class.</returns>
+    bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported);
+
+    /// <summary>
     /// Gets a delegate that assigns <paramref name="property"/> directly (without
     /// <see cref="PropertyInfo.SetValue(object, object)"/>), or <see langword="null"/> when no
     /// source-generated setter is available.

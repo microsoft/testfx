@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
@@ -30,5 +32,21 @@ public sealed class StackTraceHelperTests
         Assert.IsNull(file);
         Assert.AreEqual(0, lineNumber);
         Assert.IsNull(place);
+    }
+
+    [TestMethod]
+    public void TryFindLocationFromStackFrame_InitializesRegexWithBoundedTimeout()
+    {
+        const string stackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
+
+        Assert.IsTrue(StackTraceHelper.TryFindLocationFromStackFrame(stackTrace, out _, out _, out _));
+
+        FieldInfo regexField = typeof(StackTraceHelper).GetField("s_regex", BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not resolve StackTraceHelper.s_regex.");
+        var regex = (Regex?)regexField.GetValue(null);
+
+        Assert.IsNotNull(regex);
+        Assert.AreEqual(StackTraceRegexHelper.MatchTimeout, regex.MatchTimeout);
+        Assert.AreNotEqual(Regex.InfiniteMatchTimeout, regex.MatchTimeout);
     }
 }

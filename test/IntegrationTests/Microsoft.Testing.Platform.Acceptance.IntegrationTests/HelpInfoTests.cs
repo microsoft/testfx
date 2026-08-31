@@ -31,9 +31,9 @@ Options:
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -44,6 +44,8 @@ Options:
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --enable-dynamic-extensions
+        Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
@@ -51,8 +53,9 @@ Options:
     --help
         Show the command line help.
     --ignore-exit-code
-        Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
@@ -65,8 +68,8 @@ Options:
     --no-progress
         [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
-        Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
@@ -76,12 +79,22 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-flaky-tests
+        Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        Passing the option without a value turns it on.
+    --show-slowest-tests
+        Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
     --show-stdout
         Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+    --show-test-results
+        Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+        Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
@@ -128,6 +141,7 @@ Options:
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
+Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
 Command line: --no-ansi --progress off -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -158,7 +172,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: .+
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --\?
         Arity: 0
@@ -184,11 +198,11 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
-        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag
+        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag\.
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
-        Description: Prefix for the log file name that will replace '\[log\]_\.'
+        Description: Replace '\[log\]_\.' with the specified log file name prefix\.
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
@@ -205,10 +219,26 @@ Built-in command line providers:
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic\.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+      --dotnet-test-http-endpoint
+        Arity: 1
+        Hidden: True
+        Description: Specifies the authenticated HTTP endpoint for the dotnet test protocol\.
+      --dotnet-test-http-token
+        Arity: 1
+        Hidden: True
+        Description: Specifies the per-run HTTP bearer token for the dotnet test protocol\.
       --dotnet-test-pipe
         Arity: 1
         Hidden: True
         Description: dotnet test pipe\.
+      --dotnet-test-transport
+        Arity: 1
+        Hidden: True
+        Description: Selects the pre-launch transport for the dotnet test protocol\.
+      --enable-dynamic-extensions
+        Arity: 0
+        Hidden: False
+        Description: Enable loading test platform extensions declared by '\*\.testingplatformextensions\.json' manifests found next to the test application\. Disabled by default\.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -224,8 +254,9 @@ Built-in command line providers:
       --ignore-exit-code
         Arity: 1
         Hidden: False
-        Description: Do not report non successful exit value for specific exit codes
-        \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
+        Description: Do not report a non-successful exit value for the specified exit codes\.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases\.
+        For more information about exit codes, see https://learn\.microsoft\.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes\.
       --info
         Arity: 0
         Hidden: False
@@ -237,7 +268,7 @@ Built-in command line providers:
       --internal-testingplatform-skipbuildercheck
         Arity: 0
         Hidden: True
-        Description: For testing purposes
+        Description: For testing purposes\.
       --list-tests
         Arity: 0..1
         Hidden: False
@@ -294,8 +325,8 @@ Built-in command line providers:
       --output
         Arity: 1
         Hidden: False
-        Description: Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Description: Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
       --progress
         Arity: 1
         Hidden: False
@@ -303,6 +334,16 @@ Built-in command line providers:
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
         'auto' shows progress unless the terminal cannot update in place \(for example with --no-ansi or in CI\).
         This option takes precedence over the deprecated --no-progress flag.
+      --show-flaky-tests
+        Arity: 0..1
+        Hidden: False
+        Description: Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' \(the default, also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
+        Passing the option without a value turns it on.
+      --show-slowest-tests
+        Arity: 1
+        Hidden: False
+        Description: Show the specified number of slowest tests \(by reported execution duration\) in the run summary. Expects a positive integer.
       --show-stderr
         Arity: 1
         Hidden: False
@@ -313,6 +354,12 @@ Built-in command line providers:
         Hidden: False
         Description: Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' \(or 'Failed' when an LLM/AI agent environment is detected\).
+      --show-test-results
+        Arity: 1..N
+        Hidden: False
+        Description: Selects which test outcomes render a per-test result block \(with its informative details, stack trace, and captured output\) in the terminal.
+        Valid values are 'passed', 'failed' \(also covers errored, timed out, and canceled tests\), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
 Registered command line providers:
   There are no registered command line providers.
 Registered tools:

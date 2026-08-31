@@ -272,4 +272,29 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenMethodUsesCustomAttributeInheritingDataTestMethod_NoDiagnosticOnMethod()
+    {
+        // AnalyzeMethod uses strict symbol equality, so only the custom attribute declaration is
+        // diagnosed by AnalyzeNamedType; applying the derived attribute does not add a diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            internal class [|MyDataTestMethodAttribute|] : DataTestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyDataTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

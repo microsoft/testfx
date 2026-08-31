@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
 
@@ -58,44 +58,30 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
     public Func<object?[]?, object>? GetConstructorInvoker(Type type)
         => mock.Object.GetConstructorInvoker(type);
 
+    public bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported)
+        => mock.Object.TryGetTestMethodDescriptors(type, out methods, out areAllTestMethodsSupported);
+
     public Action<object?, object?>? GetPropertySetter(PropertyInfo property)
         => mock.Object.GetPropertySetter(property);
 
-    // Higher-level generic methods → filter results from mock's GetCustomAttributes
+    // Higher-level generic methods → filter results from mock's GetCustomAttributes using the
+    // same production logic, so that matching semantics and the error message raised on duplicate
+    // attributes match what callers would see at runtime.
     public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().Any();
+        => AttributeQueryHelper.IsAttributeDefined<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     public TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().FirstOrDefault();
+        => AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     public TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        // Mirror the production ReflectionOperations implementation so that the error
-        // message on duplicate attributes matches what callers would see at runtime.
-        TAttribute? found = null;
-        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
-        {
-            if (attr is TAttribute match)
-            {
-                if (found is not null)
-                {
-                    throw new InvalidOperationException(
-                        string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(TAttribute)));
-                }
-
-                found = match;
-            }
-        }
-
-        return found;
-    }
+        => AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     public IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)
         where TAttributeType : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttributeType>();
+        => AttributeQueryHelper.GetAttributes<TAttributeType>(GetCustomAttributesCached(attributeProvider));
 
     // Note: no caching by design — each call re-queries the mock so that test setups
     // can change the returned attributes between calls without needing to clear a cache.

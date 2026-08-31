@@ -122,6 +122,15 @@ internal sealed class TrxReportGenerator :
                     return;
                 }
 
+                // A test framework that retries a test in-process reports every attempt under the same test node
+                // uid. TRX has one <TestDefinition> per test id, so keeping the superseded attempts would emit
+                // several <UnitTestResult> rows pointing at the same definition and inflate the run summary. Only
+                // the final attempt - the test's actual outcome - is recorded.
+                if (nodeChangedMessage.TestNode.IsSupersededRetryAttempt())
+                {
+                    return;
+                }
+
                 await EnsureStreamingStoreCreatedAsync(cancellationToken).ConfigureAwait(false);
                 (TrxTestResult extracted, bool wasTruncated) = TrxTestResultExtractor.Extract(nodeChangedMessage);
                 if (wasTruncated)
@@ -158,8 +167,8 @@ internal sealed class TrxReportGenerator :
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             await _logger.LogDebugAsync($"""
-CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
+TrxModeHelpers.IsTestHostControllerSupported: {TrxModeHelpers.IsTestHostControllerSupported}
 shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 """).ConfigureAwait(false);
         }
@@ -172,7 +181,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
             // This tells the TestHostController process the info of the registered ITestFramework.
             // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
             // Note: TestHostController cannot retrieve ITestFramework from service provider which is why we need the extra complexity here.
-            // TODO: Investigate if TestHostController can/should have access to ITestFramework and simplify this.
+            // It would be worth investigating whether TestHostController can/should have access to ITestFramework to simplify this.
             await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
                 .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
         }
@@ -226,6 +235,13 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
             await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
 
+        // An attachment that could not be copied is silently missing from the TRX otherwise: the run
+        // still succeeds and the only record is a RunInfo inside the report nobody reads until later.
+        foreach (string attachmentWarning in trxReportGeneratorEngine.AttachmentWarnings)
+        {
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(attachmentWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+
         if (_crashRecoveryUnavailable)
         {
             // Surface this on the output device too — a single Warning log line at first-result time is
@@ -251,7 +267,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
         if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
         {
-            await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+            await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription, TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
         }
         else
         {

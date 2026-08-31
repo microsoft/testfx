@@ -154,7 +154,7 @@ internal static class ObjectModelConverters
             TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
             if (testMethodIdentifierProperty is not null)
             {
-                // TODO: Should TRX className have arity for generic classes?
+                // It is unclear whether the TRX className should have arity for generic classes.
                 if (RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
                 {
                     testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethodIdentifierProperty.TypeName));
@@ -270,7 +270,7 @@ internal static class ObjectModelConverters
     {
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
-        if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))
+        if (!testCase.GetProperties().Any(static property => property.Key.Id == OriginalExecutorUriProperty.Id))
         {
             testCase.SetPropertyValue(OriginalExecutorUriProperty, testCase.ExecutorUri);
         }

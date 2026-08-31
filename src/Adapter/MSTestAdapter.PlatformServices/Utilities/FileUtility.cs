@@ -106,7 +106,7 @@ internal class FileUtility
         }
         catch (Exception e)
         {
-            warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToCopyWithOverwrite, source, destination, e.GetType(), e.GetExceptionMessage());
+            warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToCopyWithOverwrite, source, destination, e.GetType(), e.GetExceptionMessage(), e.HResult);
             return string.Empty;
         }
     }

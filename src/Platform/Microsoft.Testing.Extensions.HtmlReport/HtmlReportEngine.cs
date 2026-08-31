@@ -10,6 +10,8 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 {
     private const string TemplateResourceName = "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html";
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
+    private const string DataElementStart = "<script id=\"mtp-data\" type=\"application/json\">";
+    private const string DataElementEnd = "</script>";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
 
     public HtmlReportEngine(ReportEngineContext context)
@@ -26,16 +28,29 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName,
             "html");
 
-        string template = LoadTemplate();
         string json = BuildJson(results, finishTime);
-
-        string html = template
-            .Replace(GeneratorVersionPlaceholder, ExtensionVersion.DefaultSemVer)
-            .Replace(DataPlaceholder, json);
+        string html = RenderReport(json);
 
         byte[] bytes = Encoding.UTF8.GetBytes(html);
 
         return await WriteAsync(finalPath, bytes).ConfigureAwait(false);
+    }
+
+    internal static string RenderReport(string json)
+        => LoadTemplate()
+            .Replace(GeneratorVersionPlaceholder, ExtensionVersion.DefaultSemVer)
+            .Replace(DataPlaceholder, json);
+
+    internal static string ExtractReportJson(string html)
+    {
+        int dataStart = html.IndexOf(DataElementStart, StringComparison.Ordinal);
+        dataStart = dataStart >= 0
+            ? dataStart + DataElementStart.Length
+            : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html));
+        int dataEnd = html.IndexOf(DataElementEnd, dataStart, StringComparison.Ordinal);
+        return dataEnd >= 0
+            ? html.Substring(dataStart, dataEnd - dataStart)
+            : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html));
     }
 
     private async Task<(string FileName, string? Warning)> WriteAsync(string finalPath, byte[] bytes)
@@ -140,6 +155,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             AppendStringPair(sb, "outcome", r.Outcome);
             sb.Append(',');
             AppendNumberPair(sb, "durationMs", r.Duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+
+            if (r.RetryAttemptNumber is int retryAttemptNumber)
+            {
+                sb.Append(',');
+                AppendNumberPair(sb, "retryAttemptNumber", retryAttemptNumber.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',');
+                AppendBooleanPair(sb, "isSupersededRetryAttempt", r.IsSupersededRetryAttempt == true);
+            }
 
             if (attemptOf > 1)
             {
@@ -292,6 +315,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     {
         AppendKey(sb, key);
         sb.Append(number);
+    }
+
+    private static void AppendBooleanPair(StringBuilder sb, string key, bool value)
+    {
+        AppendKey(sb, key);
+        sb.Append(value ? "true" : "false");
     }
 
     private static void AppendString(StringBuilder sb, string value)

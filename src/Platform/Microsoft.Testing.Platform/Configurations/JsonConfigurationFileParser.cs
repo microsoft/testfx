@@ -69,7 +69,7 @@ internal sealed class JsonConfigurationFileParser
             throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
         }
 
-        _propertyToAllChildren[key] = property.Value.ToString();
+        _propertyToAllChildren[key] = property.Value.GetRawText();
     }
 
     private void VisitArrayElement(JsonElement element)

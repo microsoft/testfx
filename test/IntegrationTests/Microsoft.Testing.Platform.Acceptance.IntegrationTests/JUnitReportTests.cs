@@ -207,7 +207,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         // fallback for the root passing test, then Container1 for its children).
         // Exit code is 2 (AtLeastOneTestFailed). The failure/error exceptions are
         // constructed but never thrown, so they have no stack trace and the
-        // <failure>/<error> elements are self-closing with just message/type.
+        // <failure>/<error> bodies contain only the "type: message" header line.
         const string expected = """
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites name="JUnitReportTest" tests="4" failures="1" errors="1" skipped="1" time="<TIME>" timestamp="<TIMESTAMP>">
@@ -237,7 +237,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         <property name="uid" value="test-fail" />
         <property name="testpath" value="Container1/FailingChild" />
       </properties>
-      <failure message="boom" type="System.InvalidOperationException" />
+      <failure message="boom" type="System.InvalidOperationException">System.InvalidOperationException: boom</failure>
     </testcase>
     <testcase name="SkippedChild" classname="Container1" time="<TIME>">
       <properties>
@@ -251,7 +251,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         <property name="uid" value="test-error" />
         <property name="testpath" value="Container1/ErroredChild" />
       </properties>
-      <error message="kaboom" type="System.InvalidProgramException" />
+      <error message="kaboom" type="System.InvalidProgramException">System.InvalidProgramException: kaboom</error>
     </testcase>
   </testsuite>
 </testsuites>

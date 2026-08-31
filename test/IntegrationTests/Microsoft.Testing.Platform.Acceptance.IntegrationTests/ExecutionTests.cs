@@ -7,6 +7,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests";
+    private const string FilterProviderAEnvironmentVariable = "MTP_TEST_FILTER_PROVIDER_A";
+    private const string FilterProviderBEnvironmentVariable = "MTP_TEST_FILTER_PROVIDER_B";
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -195,6 +197,101 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertOutputContains("Error: '--list-tests' and '--minimum-expected-tests' are incompatible options");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenFilterProviderIsEnabled_OnlyContributedUidRuns(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new Dictionary<string, string?>
+            {
+                [FilterProviderAEnvironmentVariable] = "0",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenTwoProvidersContributeDisjointUids_RunsNoTests(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new Dictionary<string, string?>
+            {
+                [FilterProviderAEnvironmentVariable] = "0",
+                [FilterProviderBEnvironmentVariable] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenBuiltInAndProviderUidFiltersAreSpecified_UsesIntersection(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter-uid 0 --filter-uid 1",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                [FilterProviderAEnvironmentVariable] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenProviderOnlyConstrainsRun_DiscoveryRemainsUnfiltered(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult discoveryResult = await testHost.ExecuteAsync(
+            "--list-tests",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                [FilterProviderAEnvironmentVariable] = "run:0",
+            },
+            cancellationToken: TestContext.CancellationToken);
+        TestHostResult runResult = await testHost.ExecuteAsync(
+            environmentVariables: new Dictionary<string, string?>
+            {
+                [FilterProviderAEnvironmentVariable] = "run:0",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        discoveryResult.AssertExitCodeIs(ExitCode.Success);
+        discoveryResult.AssertOutputMatchesRegex(@"Test discovery summary: found 2 test\(s\)");
+        runResult.AssertExitCodeIs(ExitCode.Success);
+        runResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenTreeAndProviderConstraintsAreDisjoint_RunsNoTests(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--treenode-filter \"<whatever>\"",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                [FilterProviderAEnvironmentVariable] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string TestCode = """
@@ -232,8 +329,10 @@ public class Program
         MyExtension myExtension = new();
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
-            (_,sp) => new DummyTestFramework(sp, myExtension));
+            (_, _) => new DummyTestFramework(myExtension));
         builder.AddTreeNodeFilterService(myExtension);
+        builder.AddTestExecutionFilterProvider(_ => new EnvironmentFilterProvider("filter-provider-a", "MTP_TEST_FILTER_PROVIDER_A"));
+        builder.AddTestExecutionFilterProvider(_ => new EnvironmentFilterProvider("filter-provider-b", "MTP_TEST_FILTER_PROVIDER_B"));
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
@@ -248,14 +347,64 @@ public class MyExtension : IExtension
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }
 
+public sealed class EnvironmentFilterProvider(string uid, string environmentVariable) : ITestExecutionFilterProvider
+{
+    public string Uid => uid;
+
+    public string Version => "1.0.0";
+
+    public string DisplayName => uid;
+
+    public string Description => uid;
+
+    public Task<bool> IsEnabledAsync()
+        => Task.FromResult(Environment.GetEnvironmentVariable(environmentVariable) is not null);
+
+    public Task<ITestExecutionFilter?> GetFilterAsync(
+        TestExecutionFilterContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string? value = Environment.GetEnvironmentVariable(environmentVariable);
+        if (value is null)
+        {
+            return Task.FromResult<ITestExecutionFilter?>(null);
+        }
+
+        string[] requestSpecificValue = value.Split(new[] { ':' }, 2);
+        if (requestSpecificValue.Length == 2)
+        {
+            TestExecutionRequestKind requestedKind = requestSpecificValue[0] switch
+            {
+                "discovery" => TestExecutionRequestKind.Discovery,
+                "run" => TestExecutionRequestKind.Run,
+                _ => throw new InvalidOperationException($"Unknown request kind '{requestSpecificValue[0]}'."),
+            };
+
+            if (context.RequestKind != requestedKind)
+            {
+                return Task.FromResult<ITestExecutionFilter?>(null);
+            }
+
+            value = requestSpecificValue[1];
+        }
+
+        TestNodeUid[] uids =
+        [
+            .. value
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(uidValue => new TestNodeUid(uidValue.Trim())),
+        ];
+        return Task.FromResult<ITestExecutionFilter?>(new TestNodeUidListFilter(uids));
+    }
+}
+
 public class DummyTestFramework : ITestFramework, IDataProducer
 {
-    private IServiceProvider _sp;
-    private MyExtension _myExtension;
+    private readonly MyExtension _myExtension;
 
-    public DummyTestFramework(IServiceProvider sp, MyExtension myExtension)
+    public DummyTestFramework(MyExtension myExtension)
     {
-        _sp = sp;
         _myExtension = myExtension;
     }
 
@@ -281,13 +430,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         // Test runner should be able to return discovery events during discovery, and also run and discovery events during run.
         // Simulate that here.
-        bool isDiscovery = _sp.GetCommandLineOptions().TryGetOptionArgumentList("--list-tests", out _);
-
-        var uidListFilter = ((TestExecutionRequest)context.Request).Filter as TestNodeUidListFilter;
-
-        // If --filter-uid is used, but it doesn't contain a given Uid, then don't publish TestNodeUpdateMessage for that Uid.
-        var excludeUid0 = uidListFilter is not null && !uidListFilter.TestNodeUids.Any(n => n.Value == "0");
-        var excludeUid1 = uidListFilter is not null && !uidListFilter.TestNodeUids.Any(n => n.Value == "1");
+        TestExecutionRequest request = (TestExecutionRequest)context.Request;
+        bool isDiscovery = request is DiscoverTestExecutionRequest;
+        bool excludeUid0 = !MatchesFilter(request.Filter, "0", "/<whatever>");
+        bool excludeUid1 = !MatchesFilter(request.Filter, "1", "/other");
 
         if (!excludeUid0)
         {
@@ -301,7 +447,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         }
 
-        if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _) && !excludeUid1)
+        if (!excludeUid1)
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
@@ -315,6 +461,17 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         context.Complete();
     }
+
+    private static bool MatchesFilter(ITestExecutionFilter filter, string uid, string path)
+        => filter switch
+        {
+            NopFilter => true,
+            TestNodeUidListFilter uidFilter => uidFilter.TestNodeUids.Any(nodeUid => nodeUid.Value == uid),
+            TreeNodeFilter treeFilter => treeFilter.MatchesFilter(path, new PropertyBag()),
+            CompositeTestExecutionFilter { Operator: TestExecutionFilterOperator.And } composite =>
+                composite.Filters.All(childFilter => MatchesFilter(childFilter, uid, path)),
+            _ => throw new NotSupportedException($"Unsupported filter '{filter.GetType()}'."),
+        };
 }
 """;
 

@@ -4,7 +4,9 @@
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -31,18 +33,27 @@ internal sealed partial class TestHostBuilder
             return context.EarlyHost;
         }
 
+        IReadOnlyList<IArtifactPostProcessor> artifactPostProcessors =
+            await ((ArtifactPostProcessingManager)ArtifactPostProcessing).BuildAsync(context.ServiceProvider).ConfigureAwait(false);
+        context.ServiceProvider.AddServices([.. artifactPostProcessors]);
+
+#pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
+        DotnetTestConnection pushOnlyProtocol = new(context.CommandLineHandler, _environment, _testApplicationModuleInfo, context.TestApplicationCancellationTokenSource, context.LoggerFactory.CreateLogger<DotnetTestConnection>());
+        if (!context.LoggingState.CommandLineParseResult.HasTool
+            || context.LoggingState.CommandLineParseResult.ToolName == ArtifactPostProcessingDispatcherTool.ToolName)
+        {
+            await pushOnlyProtocol.AfterCommonServiceSetupAsync().ConfigureAwait(false);
+        }
+
+        if (pushOnlyProtocol.IsServerMode)
+        {
+            context.ServiceProvider.AddService(pushOnlyProtocol);
+        }
+
         IReadOnlyList<ITool> toolsInformation = await BuildToolsInformationAsync(context).ConfigureAwait(false);
         if (context.LoggingState.CommandLineParseResult.HasTool)
         {
             return await BuildToolsHostAsync(context, toolsInformation).ConfigureAwait(false);
-        }
-
-#pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        DotnetTestConnection pushOnlyProtocol = new(context.CommandLineHandler, _environment, _testApplicationModuleInfo, context.TestApplicationCancellationTokenSource);
-        await pushOnlyProtocol.AfterCommonServiceSetupAsync().ConfigureAwait(false);
-        if (pushOnlyProtocol.IsServerMode)
-        {
-            context.ServiceProvider.AddService(pushOnlyProtocol);
         }
 
         if (context.IsHelpCommand)
@@ -54,7 +65,9 @@ internal sealed partial class TestHostBuilder
                 // detect mismatches such as --help being injected via RunArguments during a
                 // normal run. The handshake is needed for the SDK to know that the test host
                 // is in help mode, so it can ignore any incoming CommandLineOptionMessages.
-                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost).ConfigureAwait(false);
+                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
+                    HandshakeMessageHostTypes.TestHost,
+                    ArtifactPostProcessingHandshakeProperties.Create(artifactPostProcessors)).ConfigureAwait(false);
                 if (!isProtocolCompatible)
                 {
                     CompleteBuilderActivity(context.BuilderActivity, nameof(InformativeCommandLineHost));
@@ -117,6 +130,19 @@ internal sealed partial class TestHostBuilder
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return null;
+        }
+
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
+            static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
+        {
+            ITestHostLauncher? testHostLauncher =
+                await ((TestHostControllersManager)TestHostControllers).BuildTestHostLauncherAsync(context.ServiceProvider).ConfigureAwait(false);
+            ExecutableInfo executableInfo = context.ServiceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
+            await context.ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                testHostLauncher,
+                executableInfo.FilePath,
+                context.LoggerFactory.CreateLogger<TestHostBuilder>(),
+                context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
 
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
@@ -214,6 +240,10 @@ internal sealed partial class TestHostBuilder
 #pragma warning restore CS0618 // Type or member is obsolete
         context.ServiceProvider.AddServices(testApplicationLifecycleCallback);
 
+        ITestExecutionFilterProvider[] testExecutionFilterProviders =
+            await ((TestHostManager)TestHost).BuildTestExecutionFilterProvidersAsync(context.ServiceProvider).ConfigureAwait(false);
+        context.ServiceProvider.AddServices(testExecutionFilterProviders);
+
         return context.IsJsonRpcProtocol
             ? await BuildServerTestHostAsync(context, testControllerConnection).ConfigureAwait(false)
             : await BuildConsoleTestHostAsync(context, testControllerConnection).ConfigureAwait(false);
@@ -231,7 +261,11 @@ internal sealed partial class TestHostBuilder
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
         IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(testControllerConnection, serverTestHost, context.TestApplicationCancellationTokenSource.CancellationToken)
+            ? new TestHostControlledHost(
+                testControllerConnection,
+                serverTestHost,
+                context.TestApplicationCancellationTokenSource.CancellationToken,
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
             : serverTestHost;
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
@@ -287,7 +321,11 @@ internal sealed partial class TestHostBuilder
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
         IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(testControllerConnection, consoleHost, context.TestApplicationCancellationTokenSource.CancellationToken)
+            ? new TestHostControlledHost(
+                testControllerConnection,
+                consoleHost,
+                context.TestApplicationCancellationTokenSource.CancellationToken,
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
             : consoleHost;
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 

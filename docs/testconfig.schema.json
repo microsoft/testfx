@@ -70,6 +70,16 @@
               "minimum": 1,
               "description": "Timeout, in milliseconds, for [TestCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
+            "globalTestInitialize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [GlobalTestInitialize] methods. Falls back to 'testInitialize' when not set. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "globalTestCleanup": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [GlobalTestCleanup] methods. Falls back to 'testCleanup' when not set. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
             "useCooperativeCancellation": {
               "type": "boolean",
               "description": "When true, MSTest uses cooperative cancellation for timeouts instead of aborting the thread. Defaults to false."
@@ -88,6 +98,48 @@
             "randomTestOrderSeed": {
               "type": "integer",
               "description": "Seed used when 'randomizeTestOrder' is true, to make the randomized order reproducible."
+            },
+            "dependencies": {
+              "type": "object",
+              "description": "Declares test dependencies outside the test source, as an alternative to the [DependsOn] attribute. A test is referenced by 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class. Merged with attribute-declared dependencies.",
+              "additionalProperties": false,
+              "properties": {
+                "chains": {
+                  "type": "array",
+                  "description": "Ordered sequences: within each chain, every test waits for the one before it.",
+                  "items": {
+                    "type": "array",
+                    "description": "A chain needs at least two tests; a shorter one declares no dependency.",
+                    "minItems": 2,
+                    "items": { "type": "string" }
+                  }
+                },
+                "nodes": {
+                  "type": "array",
+                  "description": "Explicit dependency nodes, allowing one test to wait for several prerequisites (fan-in) and several tests to wait for the same one (fan-out).",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [ "test", "dependsOn" ],
+                    "properties": {
+                      "test": {
+                        "type": "string",
+                        "description": "The test that runs after its prerequisites."
+                      },
+                      "dependsOn": {
+                        "type": "array",
+                        "description": "The tests that must run first. At least one is required; an empty list declares no dependency.",
+                        "minItems": 1,
+                        "items": { "type": "string" }
+                      },
+                      "proceedOnFailure": {
+                        "type": "boolean",
+                        "description": "When true, the test runs even if a prerequisite did not pass. Ordering is still enforced. Defaults to false, which skips the test."
+                      }
+                    }
+                  }
+                }
+              }
             },
             "mapInconclusiveToFailed": {
               "type": "boolean",
@@ -156,8 +208,11 @@
           "additionalProperties": false,
           "properties": {
             "captureTrace": {
-              "type": "boolean",
-              "description": "When true, captures Debug and Trace output during test execution. Defaults to true."
+              "description": "Controls how Console and Trace output produced during test execution is handled. Accepts a boolean (true = 'Result', false = 'None') for backward compatibility, or one of the modes (case-insensitive): 'None' (do not capture; output flows to the console as usual), 'Result' (capture into the test result, the default), 'Live' (capture into the test result and additionally echo it live to the console as the test runs, similar to xUnit's showLiveOutput). Defaults to 'Result'.",
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string", "pattern": "^([Nn][Oo][Nn][Ee]|[Rr][Ee][Ss][Uu][Ll][Tt]|[Ll][Ii][Vv][Ee])$" }
+              ]
             }
           }
         },

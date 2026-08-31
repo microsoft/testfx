@@ -35,15 +35,22 @@
 
   <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
+    <!-- Surfaced so analyzers can warn about features that are unsupported under ahead-of-time
+         compilation (e.g. MSTEST0072 for [AssemblyFixtureProvider]): PublishAot (Native AOT) and
+         RunAOTCompilation (Blazor WebAssembly AOT). -->
+    <CompilerVisibleProperty Include="PublishAot" />
+    <CompilerVisibleProperty Include="RunAOTCompilation" />
     <!-- Selects which MSTest source-generation strategy emits when a source generator is referenced:
-         'Rooting' (default) registers types/methods and roots members for trimming/AOT while the
-         adapter reflects the rest; 'ReflectionFree' additionally materializes attributes and emits
-         delegate-based invokers so the adapter runs without runtime reflection. -->
+         'ReflectionFree' (default) materializes attributes and emits delegate-based invokers so the
+         adapter runs without runtime reflection (best for trimming/Native AOT); 'Rooting' only
+         registers types/methods and roots members for trimming/AOT while the adapter reflects the
+         rest. ReflectionFree is a superset of Rooting, so it is the safer default for the source-gen
+         (AOT/trim) audience that opts into a generator. -->
     <CompilerVisibleProperty Include="MSTestSourceGenMode" />
   </ItemGroup>
 
   <PropertyGroup>
-    <MSTestSourceGenMode Condition=" '$(MSTestSourceGenMode)' == '' ">Rooting</MSTestSourceGenMode>
+    <MSTestSourceGenMode Condition=" '$(MSTestSourceGenMode)' == '' ">ReflectionFree</MSTestSourceGenMode>
   </PropertyGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy" Returns="@(MSTestV2Files)">

@@ -18,6 +18,8 @@ This package extends Microsoft.Testing.Platform with:
 - **Faster inner loop**: reduces the time between making a change and seeing the test results
 - **Console-mode support**: currently supported in console mode (not in Visual Studio/VS Code Test Explorer)
 
+## Usage
+
 Enable Hot Reload support by setting `TESTINGPLATFORM_HOTRELOAD_ENABLED=1`.
 
 ## Documentation

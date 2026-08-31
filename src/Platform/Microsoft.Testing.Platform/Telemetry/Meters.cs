@@ -16,6 +16,28 @@ internal interface ICounter<T>
     /// <param name="delta">The value to add. The meaning of this value depends on the implementation and type parameter <typeparamref
     /// name="T"/>.</param>
     void Add(T delta);
+
+    /// <summary>
+    /// Adds the specified value, associating the measurement with the given attributes.
+    /// </summary>
+    /// <param name="delta">The value to add.</param>
+    /// <param name="tags">The attributes (dimensions) of the measurement. Keep the cardinality low.</param>
+    void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags);
+}
+
+/// <summary>
+/// Defines a counter whose value can both increase and decrease, for example the number of tests currently running.
+/// </summary>
+/// <typeparam name="T">The value type that the counter tracks.</typeparam>
+internal interface IUpDownCounter<T>
+    where T : struct
+{
+    /// <summary>
+    /// Adds (or subtracts, for negative deltas) the specified value.
+    /// </summary>
+    /// <param name="delta">The value to add.</param>
+    /// <param name="tags">The attributes (dimensions) of the measurement. Keep the cardinality low.</param>
+    void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags = null);
 }
 
 /// <summary>
@@ -34,4 +56,11 @@ internal interface IHistogram<T>
     /// </summary>
     /// <param name="value">The value to record. May represent data to be stored, logged, or tracked depending on the implementation.</param>
     void Record(T value);
+
+    /// <summary>
+    /// Records the specified value, associating the measurement with the given attributes.
+    /// </summary>
+    /// <param name="value">The value to record.</param>
+    /// <param name="tags">The attributes (dimensions) of the measurement. Keep the cardinality low.</param>
+    void Record(T value, IEnumerable<KeyValuePair<string, object?>>? tags);
 }

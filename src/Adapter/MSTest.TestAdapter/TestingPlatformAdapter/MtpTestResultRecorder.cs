@@ -44,10 +44,8 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         return PublishAsync(testNode);
     }
 
-    // Mirrors the VSTest recorder: an empty result maps to RecordEnd(TestOutcome.None), which does not publish any
-    // test node update to Microsoft.Testing.Platform. So there is nothing to report here.
     public Task RecordEmptyResultAsync(UnitTestElement testElement)
-        => Task.CompletedTask;
+        => PublishAsync(MSTestTestNodeConverter.ToEmptyResultTestNode(testElement, _isTrxEnabled));
 
     public async Task<bool> RecordResultAsync(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
     {

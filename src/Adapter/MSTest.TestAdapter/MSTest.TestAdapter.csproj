@@ -23,19 +23,17 @@
     -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestAdapter</PackageId>
-    <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2</PackageTags>
+    <PackageDescription><![CDATA[This package includes the adapter logic to discover and run tests. For access to the testing framework, install the MSTest.TestFramework package.
 
-      This package includes the adapter logic to discover and run tests. For access to the testing framework, install the MSTest.TestFramework package.
+Supported platforms:
+- .NET 4.6.2+
+- .NET 8.0+
+- .NET 8.0 Windows.18362+ (WinUI)
+- UWP 10.0.16299
+- UWP 10.0.17763 with .NET 9
 
-      Supported platforms:
-      - .NET 4.6.2+
-      - .NET 8.0+
-      - .NET 8.0 Windows.18362+ (WinUI)
-      - UWP 10.0.16299
-      - UWP 10.0.17763 with .NET 9
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5127;NU5128;NU5100</NoWarn>
 
@@ -111,6 +109,13 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Adapter\Shared\BannerMessageHelper.cs" Link="Shared\BannerMessageHelper.cs" />
+    <!-- Dependency-free logic shared with the VSTestBridge runsettings/test-parameter providers (see issue #9762). -->
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsProviderHelper.cs" Link="Shared\RunSettingsProviderHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Shared\RunSettingsCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsConfigurationProviderBase.cs" Link="Shared\RunSettingsConfigurationProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsEnvironmentVariableProviderBase.cs" Link="Shared\RunSettingsEnvironmentVariableProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestRunParametersCommandLineOptionsProviderBase.cs" Link="Shared\TestRunParametersCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestCaseFilterCommandLineOptionsProviderBase.cs" Link="Shared\TestCaseFilterCommandLineOptionsProviderBase.cs" />
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
@@ -210,8 +215,8 @@
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.VstestConsoleWrapper.IntegrationTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Performance.Benchmarks" Key="$(VsPublicKey)" />
 
     <!-- UseParallelizeAttributeAnalyzerTests need to conditionally include adapter. So it needs typeof(...).Assembly -->
     <!-- We are making everything in adapter as internal. -->

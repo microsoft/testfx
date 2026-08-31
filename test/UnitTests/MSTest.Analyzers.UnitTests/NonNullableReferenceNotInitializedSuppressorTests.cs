@@ -143,6 +143,72 @@ public class SomeClass
         await test.RunAsync();
     }
 
+    [TestMethod]
+    public async Task TestContextFieldOnTestClass_DiagnosticIsNotSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:_testContext|};
+}
+";
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        test.ExpectedDiagnostics.Add(DiagnosticResult.CompilerError("CS8618")
+            .WithLocation(0)
+            .WithOptions(DiagnosticOptions.IgnoreAdditionalLocations)
+            .WithArguments("field", "_testContext")
+            .WithIsSuppressed(false));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task TestContextGetterOnlyPropertyOnTestClass_DiagnosticIsNotSuppressed()
+    {
+        // MSTest cannot assign a getter-only property, so CS8618 must remain visible.
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:TestContext|} { get; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: false);
+    }
+
+    [TestMethod]
+    public async Task PrivateTestContextPropertyOnTestClass_DiagnosticIsNotSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    private TestContext {|#0:TestContext|} { get; set; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: false);
+    }
+
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
         => VerifyDiagnosticsAsync(source, [(0, isSuppressed)]);
 

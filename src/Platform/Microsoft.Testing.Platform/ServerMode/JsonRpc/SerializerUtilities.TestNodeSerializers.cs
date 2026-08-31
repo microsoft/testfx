@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Note: System.Text.Json is only available in .NET 6.0 and above.
@@ -37,10 +37,25 @@ internal static partial class SerializerUtilities
         });
 
         // Serialize event types.
-        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev => new Dictionary<string, object?>
+        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
         {
-            [JsonRpcStrings.RunId] = ev.RunId,
-            [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
+            List<object>? changes = null;
+            if (ev.Changes is not null)
+            {
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+                changes = new(ev.Changes.Length);
+#pragma warning restore IDE0028
+                for (int i = 0; i < ev.Changes.Length; i++)
+                {
+                    changes.Add(Serialize(ev.Changes[i]));
+                }
+            }
+
+            return new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.RunId] = ev.RunId,
+                [JsonRpcStrings.Changes] = changes,
+            };
         });
 
         Serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
@@ -65,6 +80,14 @@ internal static partial class SerializerUtilities
 #else
                 JsonArray? traits = null;
 #endif
+
+                // Collected up-front because the assertion values are rendered inside the failed-state branch
+                // below, and property order inside the bag is not guaranteed. The state lookup is O(1) (it is a
+                // dedicated PropertyBag field), so non-failed nodes — discovery, in-progress, passed, which are
+                // the vast majority — never pay for the linked-list walk.
+                AssertionFailureProperty? assertionFailure = n.Properties.SingleOrDefault<TestNodeStateProperty>() is FailedTestNodeStateProperty
+                    ? n.Properties.SingleOrDefault<AssertionFailureProperty>()
+                    : null;
 
                 foreach (IProperty property in n.Properties)
                 {
@@ -118,6 +141,15 @@ internal static partial class SerializerUtilities
                         continue;
                     }
 
+                    if (property is TestNodeExecutionCompletedProperty)
+                    {
+                        // The server protocol has no outcome-less terminal state. Return the action to discovered
+                        // so clients clear in-progress state without recording a test outcome.
+                        properties["node-type"] = "action";
+                        properties["execution-state"] = "discovered";
+                        continue;
+                    }
+
                     if (property is TestNodeStateProperty testNodeStateProperty)
                     {
                         properties["node-type"] = "action";
@@ -157,10 +189,22 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "failed";
                                     properties["error.message"] = failedTestNodeStateProperty.Explanation ?? failedTestNodeStateProperty.Exception?.Message;
-                                    if (failedTestNodeStateProperty.Exception != null)
+                                    Exception? exception = failedTestNodeStateProperty.Exception;
+                                    if (exception is not null)
                                     {
-                                        Exception exception = failedTestNodeStateProperty.Exception;
                                         properties["error.stacktrace"] = exception.StackTrace ?? string.Empty;
+                                    }
+
+                                    // AssertionFailureProperty is the supported channel; Exception.Data is the
+                                    // legacy fallback for producers that have not been updated yet. The choice is
+                                    // all-or-nothing so the two halves of a diff always come from the same producer.
+                                    if (assertionFailure is not null)
+                                    {
+                                        properties["assert.actual"] = assertionFailure.Actual ?? string.Empty;
+                                        properties["assert.expected"] = assertionFailure.Expected ?? string.Empty;
+                                    }
+                                    else if (exception is not null)
+                                    {
                                         properties["assert.actual"] = exception.Data["assert.actual"] ?? string.Empty;
                                         properties["assert.expected"] = exception.Data["assert.expected"] ?? string.Empty;
                                     }
@@ -172,7 +216,7 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "timed-out";
                                     properties["error.message"] = timeoutTestNodeStateProperty.Explanation ?? timeoutTestNodeStateProperty.Exception?.Message;
-                                    if (timeoutTestNodeStateProperty.Exception != null)
+                                    if (timeoutTestNodeStateProperty.Exception is not null)
                                     {
                                         properties["error.stacktrace"] = timeoutTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
@@ -184,7 +228,7 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "error";
                                     properties["error.message"] = errorTestNodeStateProperty.Explanation ?? errorTestNodeStateProperty.Exception?.Message;
-                                    if (errorTestNodeStateProperty.Exception != null)
+                                    if (errorTestNodeStateProperty.Exception is not null)
                                     {
                                         properties["error.stacktrace"] = errorTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
@@ -198,7 +242,7 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "canceled";
                                     properties["error.message"] = canceledTestNodeStateProperty.Explanation ?? canceledTestNodeStateProperty.Exception?.Message;
-                                    if (canceledTestNodeStateProperty.Exception != null)
+                                    if (canceledTestNodeStateProperty.Exception is not null)
                                     {
                                         properties["error.stacktrace"] = canceledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
@@ -216,6 +260,17 @@ internal static partial class SerializerUtilities
                     if (property is TimingProperty timingProperty)
                     {
                         properties["time.duration-ms"] = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
+                        continue;
+                    }
+
+                    // In-process retry attribution (MSTest's [Retry], ...). Without this the property would fall
+                    // through the chain and be silently dropped, so a server-mode client (an IDE) would see several
+                    // updates for the same test node uid with no way to tell the attempts apart or to know which
+                    // one is the test's final outcome.
+                    if (property is RetryAttemptProperty retryAttemptProperty)
+                    {
+                        properties["retry.attempt"] = retryAttemptProperty.AttemptNumber;
+                        properties["retry.is-superseded"] = retryAttemptProperty.IsSuperseded;
                         continue;
                     }
 

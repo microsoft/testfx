@@ -22,14 +22,19 @@
         <target state="translated">La soglia percentuale di operazioni non riuscite è del {0}% e del {1}% di test non riusciti ({2}/{3})</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
-      <trans-unit id="RetryArtifactsMoved">
-        <source>Retry: moved {0} result file(s) to '{1}'</source>
-        <target state="new">Retry: moved {0} result file(s) to '{1}'</target>
-        <note>{0} is the number of files moved. {1} is the destination result directory.</note>
+      <trans-unit id="RetryArtifactPostProcessorFailed">
+        <source>Retry artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">Nuovo tentativo di post-elaborazione dell'artefatto '{0}' non riuscito: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="RetryArtifactsPublished">
+        <source>Retry: published {0} result file(s) to '{1}'</source>
+        <target state="translated">Nuovo tentativo: {0} file di risultati pubblicati in '{1}'</target>
+        <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
         <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>
-        <target state="new">Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</target>
+        <target state="translated">Nuovo tentativo: tentativo {0}/{1} non riuscito - {2} test non superati, nuovo tentativo</target>
         <note>{0} is the current attempt number. {1} is the total number of attempts. {2} is the number of failing tests in this attempt.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
@@ -63,8 +68,8 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
-        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">Disabilita il meccanismo di ripetizione dei tentativi se la percentuale di test non riusciti è maggiore del valore specificato.</target>
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
+        <target state="translated">Disabilitare il meccanismo di ripetizione dei tentativi se la percentuale di test non riusciti è maggiore del valore specificato.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
@@ -73,8 +78,8 @@
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
-        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">Disabilita il meccanismo di ripetizione dei tentativi se il numero di test non riusciti è maggiore del valore specificato.</target>
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
+        <target state="translated">Disabilitare il meccanismo di ripetizione dei tentativi se il numero di test non riusciti è maggiore del valore specificato.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -88,8 +93,8 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Retry failed tests the given number of times</source>
-        <target state="translated">Ripetere i test non superati per il numero di volte indicato</target>
+        <source>Retry failed tests the given number of times.</source>
+        <target state="translated">Ripetere i test non superati per il numero di volte indicato.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
@@ -109,47 +114,72 @@
       </trans-unit>
       <trans-unit id="RetrySummaryDurationLine">
         <source>  duration: {0}</source>
-        <target state="new">  duration: {0}</target>
+        <target state="translated">  durata: {0}</target>
         <note>{0} is the total retry orchestration duration. Two leading spaces and the lowercase 'duration:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryFailed">
         <source>Retry summary: Failed! after {0}/{1} attempts</source>
-        <target state="new">Retry summary: Failed! after {0}/{1} attempts</target>
+        <target state="translated">Riepilogo nuovi tentativi: Operazione riuscita! dopo {0}/{1} tentativi</target>
         <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryFailedLine">
         <source>  failed: {0}</source>
-        <target state="new">  failed: {0}</target>
+        <target state="translated">  non riuscito: {0}</target>
         <note>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</note>
       </trans-unit>
+      <trans-unit id="RetrySummaryFailedStoppedEarly">
+        <source>Retry summary: Failed! after {0} attempt(s) (retrying stopped early)</source>
+        <target state="translated">Riepilogo tentativi: Non riuscito! dopo {0} tentativo/i (nuovo tentativo interrotto in anticipo)</target>
+        <note>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
+      </trans-unit>
       <trans-unit id="RetrySummaryFlakyLine">
-        <source>  flaky: {0}</source>
-        <target state="new">  flaky: {0}</target>
-        <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</note>
+        <source>  flaky: {0} (passed after retry)</source>
+        <target state="translated">  instabile: {0} (superato dopo un nuovo tentativo)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces mirror the platform run summary. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestLine">
+        <source>  {0} (failed -&gt; passed)</source>
+        <target state="translated">  {0} (non riuscito -&gt; superato)</target>
+        <note>{0} is the display name of a flaky test. The arrow reads left (first outcome) to right (final outcome). Two leading spaces indent the entry under the 'Flaky tests:' header.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestsHeader">
+        <source>Flaky tests:</source>
+        <target state="translated">Test instabili:</target>
+        <note>Header of the section that lists, by name, the tests which failed at least once but eventually passed.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryPassed">
         <source>Retry summary: Passed! after {0}/{1} attempts</source>
-        <target state="new">Retry summary: Passed! after {0}/{1} attempts</target>
+        <target state="translated">Riepilogo tentativi: Operazione riuscita! dopo {0}/{1} tentativi</target>
         <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryPassedNoRetry">
         <source>Retry summary: Passed! on the first attempt (no retries needed)</source>
-        <target state="new">Retry summary: Passed! on the first attempt (no retries needed)</target>
+        <target state="translated">Nuovo tentativo: Operazione riuscita! al primo tentativo (nessun nuovo tentativo necessario)</target>
         <note>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
       </trans-unit>
-      <trans-unit id="RetrySummaryRetriedSuffix">
-        <source> (+{0} retried)</source>
-        <target state="new"> (+{0} retried)</target>
-        <note>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</note>
+      <trans-unit id="RetrySummaryRetriedLine">
+        <source>  retried: {0} test(s), {1} extra run(s)</source>
+        <target state="translated">  ripetuti: {0} test, {1} esecuzione/i aggiuntiva/e</target>
+        <note>{0} is the number of distinct tests that were re-run. {1} is the number of extra executions those retries cost. Two leading spaces and the lowercase 'retried:' label mirror the platform run summary. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummarySkippedLine">
+        <source>  skipped: {0}</source>
+        <target state="translated">  ignorato: {0}</target>
+        <note>{0} is the number of skipped tests. Two leading spaces and the lowercase 'skipped:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummarySucceededLine">
+        <source>  succeeded: {0}</source>
+        <target state="translated">  riuscito: {0}</target>
+        <note>{0} is the number of tests that ended up passing, counting those rescued by a retry. Two leading spaces and the lowercase 'succeeded:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryTotalLine">
         <source>  total: {0}</source>
-        <target state="new">  total: {0}</target>
+        <target state="translated">  totale: {0}</target>
         <note>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetryWaitingBeforeNextAttempt">
         <source>Retry: waiting {0} before attempt {1}/{2}</source>
-        <target state="new">Retry: waiting {0} before attempt {1}/{2}</target>
+        <target state="translated">Nuovo tentativo: attendere {0} prima del tentativo {1}/{2}</target>
         <note>{0} is the delay (e.g. '1s'). {1} is the next attempt number. {2} is the total number of attempts.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

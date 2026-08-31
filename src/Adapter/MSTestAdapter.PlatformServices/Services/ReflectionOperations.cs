@@ -4,8 +4,8 @@
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -98,6 +98,13 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
 
     public Func<object?[]?, object>? GetConstructorInvoker(Type type) => null;
 
+    public bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported)
+    {
+        methods = null;
+        areAllTestMethodsSupported = false;
+        return false;
+    }
+
     public Action<object?, object?>? GetPropertySetter(PropertyInfo property) => null;
 
     /// <summary>
@@ -108,28 +115,7 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// <returns>True if the attribute of the specified type is defined.</returns>
     public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        if (attributeProvider is null)
-        {
-            throw new ArgumentNullException(nameof(attributeProvider));
-        }
-
-        // Get all attributes on the member.
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-
-        // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, $"{nameof(ReflectionOperations)}.{nameof(GetCustomAttributesCached)}: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttribute)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => AttributeQueryHelper.IsAttributeDefined<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -153,25 +139,7 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// <returns>The attribute that is found or null.</returns>
     public TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        // If the attribute is not sealed, then it can allow multiple, even if AllowMultiple is false.
-        // This happens when a derived type is also applied along with the base type.
-        // Or, if the derived type modifies the attribute usage to allow multiple.
-        // So we want to ensure this is only called for sealed attributes.
-        DebugEx.Assert(typeof(TAttribute).IsSealed, $"Expected '{typeof(TAttribute)}' to be sealed, but was not.");
-
-        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
-
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
-            {
-                return cachedAttributeAsTAttribute;
-            }
-        }
-
-        return null;
-    }
+        => AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Gets first attribute that matches the type or is derived from it.
@@ -184,25 +152,7 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
-
-        TAttribute? foundAttribute = null;
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
-            {
-                if (foundAttribute is not null)
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(TAttribute)));
-                }
-
-                foundAttribute = cachedAttributeAsTAttribute;
-            }
-        }
-
-        return foundAttribute;
-    }
+        => AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
@@ -212,20 +162,7 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// <returns>An instance of the attribute.</returns>
     public IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)
         where TAttributeType : Attribute
-    {
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-
-        // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, "ReflectionOperations.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttributeType attributeAsAttributeType)
-            {
-                yield return attributeAsAttributeType;
-            }
-        }
-    }
+        => AttributeQueryHelper.GetAttributes<TAttributeType>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Gets and caches the attributes for the given type, or method.

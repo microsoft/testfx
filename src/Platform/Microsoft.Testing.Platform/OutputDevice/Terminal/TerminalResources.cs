@@ -39,7 +39,67 @@ internal static partial class TerminalResources
 
     internal static string @CancellingTestSession => GetResourceString("CancellingTestSession");
 
+    internal static string @CodeCoverageSummary => GetResourceString("CodeCoverageSummary");
+
     internal static string @ConsoleIsAlreadyInBatchingMode => GetResourceString("ConsoleIsAlreadyInBatchingMode");
+
+    internal static string @CoverageThresholdFailed => GetResourceString("CoverageThresholdFailed");
+
+    internal static string @CoverageThresholdNoDataFailed => GetResourceString("CoverageThresholdNoDataFailed");
+
+    internal static string @CoverageThresholdNoDataPassed => GetResourceString("CoverageThresholdNoDataPassed");
+
+    internal static string @CoverageThresholdPassed => GetResourceString("CoverageThresholdPassed");
+
+    internal static string @CoverageThresholdResults => GetResourceString("CoverageThresholdResults");
+
+    internal static string @CoverageScopeOverall => GetResourceString("CoverageScopeOverall");
+
+    internal static string @CoverageScopeModule => GetResourceString("CoverageScopeModule");
+
+    internal static string @CoverageScopeAssembly => GetResourceString("CoverageScopeAssembly");
+
+    internal static string @CoverageScopeNamespace => GetResourceString("CoverageScopeNamespace");
+
+    internal static string @CoverageScopeType => GetResourceString("CoverageScopeType");
+
+    internal static string @CoverageScopeFile => GetResourceString("CoverageScopeFile");
+
+    internal static string @CoverageNoData => GetResourceString("CoverageNoData");
+
+    internal static string @CoverageMetricLine => GetResourceString("CoverageMetricLine");
+
+    internal static string @CoverageMetricStatement => GetResourceString("CoverageMetricStatement");
+
+    internal static string @CoverageMetricBranch => GetResourceString("CoverageMetricBranch");
+
+    internal static string @CoverageMetricMethod => GetResourceString("CoverageMetricMethod");
+
+    internal static string @CoverageMetricWithProducer => GetResourceString("CoverageMetricWithProducer");
+
+    internal static string @CoverageMetricFunction => GetResourceString("CoverageMetricFunction");
+
+    internal static string @CoverageMetricBlock => GetResourceString("CoverageMetricBlock");
+
+    internal static string @CoverageMetricInstruction => GetResourceString("CoverageMetricInstruction");
+
+    internal static string @CoverageMetricRegion => GetResourceString("CoverageMetricRegion");
+
+    internal static string @CoverageMetricClass => GetResourceString("CoverageMetricClass");
+
+    internal static string @CoverageMetricCondition => GetResourceString("CoverageMetricCondition");
+
+    internal static string @CoverageMetricComplexity => GetResourceString("CoverageMetricComplexity");
+
+    internal static string @CoverageAggregationTotal => GetResourceString("CoverageAggregationTotal");
+
+    internal static string @CoverageAggregationMinimum => GetResourceString("CoverageAggregationMinimum");
+
+    internal static string @CoverageAggregationAverage => GetResourceString("CoverageAggregationAverage");
+
+    internal static string @CoverageAggregationMaximum => GetResourceString("CoverageAggregationMaximum");
+
+    internal static string @CoverageAggregationOver => GetResourceString("CoverageAggregationOver");
 
     internal static string @DiscoveredTestsInAssembly => GetResourceString("DiscoveredTestsInAssembly");
 
@@ -65,6 +125,14 @@ internal static partial class TerminalResources
 
     internal static string @FailedWithErrors => GetResourceString("FailedWithErrors");
 
+    internal static string @FlakyAttempts => GetResourceString("FlakyAttempts");
+
+    internal static string @FlakyLowercase => GetResourceString("FlakyLowercase");
+
+    internal static string @FlakyTests => GetResourceString("FlakyTests");
+
+    internal static string @FlakyTransition => GetResourceString("FlakyTransition");
+
     internal static string @ForTest => GetResourceString("ForTest");
 
     internal static string @HandshakeFailuresHeader => GetResourceString("HandshakeFailuresHeader");
@@ -83,9 +151,13 @@ internal static partial class TerminalResources
 
     internal static string @Retried => GetResourceString("Retried");
 
+    internal static string @RetriedTestsAndRuns => GetResourceString("RetriedTestsAndRuns");
+
     internal static string @RunningTestsFrom => GetResourceString("RunningTestsFrom");
 
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
+
+    internal static string @SlowestTests => GetResourceString("SlowestTests");
 
     internal static string @StackFrameAt => GetResourceString("StackFrameAt");
 
@@ -119,11 +191,27 @@ internal static partial class TerminalResources
 
     internal static string @TerminalProgressSlowTest => GetResourceString("TerminalProgressSlowTest");
 
+    internal static string @TerminalShowFlakyTestsOptionDescription => GetResourceString("TerminalShowFlakyTestsOptionDescription");
+
+    internal static string @TerminalShowFlakyTestsOptionInvalidArgument => GetResourceString("TerminalShowFlakyTestsOptionInvalidArgument");
+
     internal static string @TerminalShowOutputOptionInvalidArgument => GetResourceString("TerminalShowOutputOptionInvalidArgument");
+
+    internal static string @TerminalShowSlowestTestsOptionDescription => GetResourceString("TerminalShowSlowestTestsOptionDescription");
+
+    internal static string @TerminalShowSlowestTestsOptionInvalidArgument => GetResourceString("TerminalShowSlowestTestsOptionInvalidArgument");
 
     internal static string @TerminalShowStderrOptionDescription => GetResourceString("TerminalShowStderrOptionDescription");
 
     internal static string @TerminalShowStdoutOptionDescription => GetResourceString("TerminalShowStdoutOptionDescription");
+
+    internal static string @TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument => GetResourceString("TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument");
+
+    internal static string @TerminalShowTestResultsOptionDescription => GetResourceString("TerminalShowTestResultsOptionDescription");
+
+    internal static string @TerminalShowTestResultsOptionEmptySelectionInvalidArgument => GetResourceString("TerminalShowTestResultsOptionEmptySelectionInvalidArgument");
+
+    internal static string @TerminalShowTestResultsOptionUnknownValueInvalidArgument => GetResourceString("TerminalShowTestResultsOptionUnknownValueInvalidArgument");
 
     internal static string @TerminalTestReporterDescription => GetResourceString("TerminalTestReporterDescription");
 

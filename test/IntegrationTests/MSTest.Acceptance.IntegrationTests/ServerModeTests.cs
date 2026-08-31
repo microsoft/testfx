@@ -37,7 +37,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
         Assert.ContainsSingle(x => x.Node.NodeType == "action", discoveryCollector.TestNodeUpdates, "Wrong number of discovery");
-        Assert.HasCount(2, runCollector.TestNodeUpdates);
+        Assert.ContainsSingle(x => x.Node.ExecutionState == "passed", runCollector.TestNodeUpdates);
         Assert.IsNotEmpty(logs, "Logs are empty");
         Assert.IsFalse(telemetry.IsEmpty, "telemetry is empty");
         await jsonClient.Exit();

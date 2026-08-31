@@ -1,1 +1,11 @@
 #nullable enable
+*REMOVED*[TPEXP]Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions
+*REMOVED*[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddOpenTelemetryProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<OpenTelemetry.Trace.TracerProviderBuilder!>? withTracing = null, System.Action<OpenTelemetry.Metrics.MeterProviderBuilder!>? withMetrics = null) -> void
+*REMOVED*[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformInstrumentation(this OpenTelemetry.Metrics.MeterProviderBuilder! builder) -> OpenTelemetry.Metrics.MeterProviderBuilder!
+*REMOVED*[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformInstrumentation(this OpenTelemetry.Trace.TracerProviderBuilder! builder) -> OpenTelemetry.Trace.TracerProviderBuilder!
+Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddOpenTelemetryProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<OpenTelemetry.Trace.TracerProviderBuilder!>? withTracing = null, System.Action<OpenTelemetry.Metrics.MeterProviderBuilder!>? withMetrics = null) -> void
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddOpenTelemetryProviderFromEnvironment(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<OpenTelemetry.Trace.TracerProviderBuilder!>? configureTracing = null, System.Action<OpenTelemetry.Metrics.MeterProviderBuilder!>? configureMetrics = null) -> void
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformInstrumentation(this OpenTelemetry.Metrics.MeterProviderBuilder! builder) -> OpenTelemetry.Metrics.MeterProviderBuilder!
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformInstrumentation(this OpenTelemetry.Trace.TracerProviderBuilder! builder) -> OpenTelemetry.Trace.TracerProviderBuilder!
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformResource(this OpenTelemetry.Resources.ResourceBuilder! builder) -> OpenTelemetry.Resources.ResourceBuilder!

@@ -65,6 +65,15 @@ internal interface IConsole
 
     void Write(string? value);
 
+    /// <summary>
+    /// Writes the contents of <paramref name="value"/> without materializing them into a <see cref="string"/> first.
+    /// </summary>
+    /// <remarks>
+    /// This exists so that batched terminal output (which is accumulated in a <see cref="StringBuilder"/> and can grow
+    /// to several kilobytes) does not have to allocate a fresh string on every flush.
+    /// </remarks>
+    void Write(StringBuilder value);
+
     void Write(char value);
 
     [UnsupportedOSPlatform("android")]

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -75,15 +75,22 @@ internal sealed partial class ServerTestHost
 
                     case NotificationMessage notification:
                         // This task is recorded inside the _clientToServerRequests
+                        // Cancellation is applied synchronously so queued requests observe it before they resume.
                         _ = HandleNotificationAsync(notification, _serverClosingTokenSource.Token);
                         break;
                     case ResponseMessage response:
-                        CompleteRequest(ref _serverToClientRequests, response.Id, completion => completion.TrySetResult(response));
+                        CompleteRequest(
+                            ref _serverToClientRequests,
+                            GetRequestKey(response.Id, response.StringId),
+                            completion => completion.TrySetResult(response));
                         break;
 
                     case ErrorMessage error:
                         RemoteInvocationException exception = new(error.ErrorCode, error.Message, error.Data);
-                        CompleteRequest(ref _serverToClientRequests, error.Id, completion => completion.TrySetException(exception));
+                        CompleteRequest(
+                            ref _serverToClientRequests,
+                            GetRequestKey(error.Id, error.StringId),
+                            completion => completion.TrySetException(exception));
                         break;
                 }
             }
@@ -118,23 +125,36 @@ internal sealed partial class ServerTestHost
             }
         }
 
-        // Note: Yield, so that the main message reading loop can continue.
-        await Task.Yield();
+        if (Volatile.Read(ref _initializeState) != Initialized
+            && message.Method != JsonRpcMethods.CancelRequest)
+        {
+            _requestCounter.Signal();
+            return;
+        }
 
         try
         {
             switch (message.Method, message.Params)
             {
                 case (JsonRpcMethods.CancelRequest, CancelRequestArgs args):
-                    if (_clientToServerRequests.TryGetValue(args.CancelRequestId, out RpcInvocationState? rpcState))
+                    if (_clientToServerRequests.TryGetValue(
+                        GetRequestKey(args.CancelRequestId, args.StringId),
+                        out RpcInvocationState? rpcState))
                     {
-                        Exception? cancellationException = rpcState.CancelRequest();
+                        if (!rpcState.TryRequestCancellation())
+                        {
+                            break;
+                        }
+
+                        // Record cancellation synchronously so a queued request cannot resume into execution.
+                        // Run token callbacks asynchronously so extension code cannot block the message reader.
+                        Exception? cancellationException = await Task.Run(rpcState.CancelRequest).ConfigureAwait(false);
                         if (cancellationException is not null)
                         {
                             // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
                             // It's meant for troubleshooting and shouldn't be localized.
                             // The localized message that is user-facing will be displayed in the DisplayAsync call next line.
-                            await _logger.LogWarningAsync($"Exception during the cancellation of request id '{args.CancelRequestId}'").ConfigureAwait(false);
+                            QueueLog(LogLevel.Warning, $"Exception during the cancellation of request id '{args.CancelRequestId}': {cancellationException}");
 
                             await ServiceProvider.GetOutputDevice().DisplayAsync(
                                 this,
@@ -159,7 +179,13 @@ internal sealed partial class ServerTestHost
         {
             try
             {
-                await SendErrorAsync(reqId: request.Id, errorCode: ErrorCodes.InvalidRequest, message: "Server is closing", data: null, cancellationToken).ConfigureAwait(false);
+                await SendErrorAsync(
+                    reqId: request.Id,
+                    errorCode: ErrorCodes.InvalidRequest,
+                    message: "Server is closing",
+                    data: null,
+                    cancellationToken,
+                    stringId: request.StringId).ConfigureAwait(false);
             }
             finally
             {
@@ -169,51 +195,315 @@ internal sealed partial class ServerTestHost
         }
         else
         {
+            bool isInitializeRequest = request.Method == JsonRpcMethods.Initialize;
+            bool rejectRequest;
+            Task<bool>? initializationTask = null;
+            lock (_initializeStateLock)
+            {
+                if (isInitializeRequest)
+                {
+                    rejectRequest = _initializeState != NotInitialized;
+                    if (!rejectRequest)
+                    {
+                        _initializeState = Initializing;
+                        _initializationCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                    }
+                }
+                else
+                {
+                    rejectRequest = _initializeState == NotInitialized;
+                    if (_initializeState == Initializing)
+                    {
+                        RoslynDebug.Assert(_initializationCompletionSource is not null);
+                        initializationTask = _initializationCompletionSource.Task;
+                    }
+                }
+            }
+
+            if (isInitializeRequest && rejectRequest)
+            {
+                try
+                {
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: ErrorCodes.InvalidRequest,
+                        message: "The server has already received an initialize request.",
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
+                }
+                finally
+                {
+                    _requestCounter.Signal();
+                }
+
+                return;
+            }
+
+            RpcInvocationState? rpcState = null;
+            bool requestRegistered = false;
+            if (initializationTask is not null)
+            {
+                rpcState = new RpcInvocationState();
+                requestRegistered = _clientToServerRequests.TryAdd(
+                    GetRequestKey(request.Id, request.StringId),
+                    rpcState);
+                bool initialized = await initializationTask.ConfigureAwait(false);
+                rejectRequest = !initialized;
+            }
+
+            if (!isInitializeRequest && rejectRequest)
+            {
+                try
+                {
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: ErrorCodes.ServerNotInitialized,
+                        message: "The server must be initialized before this request can be processed.",
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (requestRegistered)
+                    {
+                        var exception = new JsonRpcException(
+                            ErrorCodes.ServerNotInitialized,
+                            "The server must be initialized before this request can be processed.");
+                        CompleteRequest(
+                            ref _clientToServerRequests,
+                            GetRequestKey(request.Id, request.StringId),
+                            completion => completion.TrySetException(exception));
+                    }
+                    else
+                    {
+                        _requestCounter.Signal();
+                    }
+                }
+
+                return;
+            }
+
             // We enqueue the request before to "unlink" the current thread so we're sure that we
             // correctly handle the completion also after the "exit"
-            RpcInvocationState rpcState = new();
-            _clientToServerRequests.TryAdd(request.Id, rpcState);
+            rpcState ??= new RpcInvocationState();
+            if (!requestRegistered)
+            {
+                _clientToServerRequests.TryAdd(GetRequestKey(request.Id, request.StringId), rpcState);
+            }
 
             // Note: Yield, so that the main message reading loop can continue.
             await Task.Yield();
 
+            bool testUpdateCompletionSent = false;
             try
             {
+                rpcState.ThrowIfCancellationRequested();
                 object response = await HandleRequestCoreAsync(request, rpcState, cancellationToken).ConfigureAwait(false);
-                await SendResponseAsync(reqId: request.Id, result: response, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetResult(response));
+                testUpdateCompletionSent = await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken).ConfigureAwait(false);
+                await SendResponseAsync(
+                    reqId: request.Id,
+                    result: response,
+                    cancellationToken,
+                    stringId: request.StringId).ConfigureAwait(false);
+                if (isInitializeRequest)
+                {
+                    CompleteInitialization();
+                }
+
+                CompleteRequest(
+                    ref _clientToServerRequests,
+                    GetRequestKey(request.Id, request.StringId),
+                    completion => completion.TrySetResult(response));
             }
             catch (OperationCanceledException e)
             {
-                // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
-                (string errorMessage, int errorCode) = rpcState.CancellationToken.IsCancellationRequested
-                    ? (string.Empty, ErrorCodes.RequestCanceled)
-                    : (e.ToString(), ErrorCodes.RequestCanceled);
+                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+                    ? MakeInitializationRetryable(
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState)
+                    : null;
+                try
+                {
+                    if (!testUpdateCompletionSent)
+                    {
+                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+                    }
 
-                await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
+                    // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
+                    (string errorMessage, int errorCode) = rpcState.IsCancellationRequested
+                        ? (string.Empty, ErrorCodes.RequestCanceled)
+                        : (e.ToString(), ErrorCodes.RequestCanceled);
+
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: errorCode,
+                        message: errorMessage,
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
+                }
+                finally
+                {
+                    failedInitialization?.TrySetResult(false);
+
+                    CompleteFailedRequest(
+                        isInitializeRequest,
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState,
+                        completion => completion.TrySetCanceled());
+                }
             }
             catch (JsonRpcException e)
             {
-                await SendErrorAsync(reqId: request.Id, errorCode: e.ErrorCode, message: e.Message, data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
+                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+                    ? MakeInitializationRetryable(
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState)
+                    : null;
+                try
+                {
+                    if (!testUpdateCompletionSent)
+                    {
+                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+                    }
+
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: e.ErrorCode,
+                        message: e.Message,
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
+                }
+                finally
+                {
+                    failedInitialization?.TrySetResult(false);
+
+                    CompleteFailedRequest(
+                        isInitializeRequest,
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState,
+                        completion => completion.TrySetException(e));
+                }
             }
             catch (Exception e)
             {
-                await SendErrorAsync(reqId: request.Id, errorCode: 0, message: e.ToString(), data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.SetException(e));
+                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+                    ? MakeInitializationRetryable(
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState)
+                    : null;
+                try
+                {
+                    if (!testUpdateCompletionSent)
+                    {
+                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+                    }
+
+                    await SendErrorAsync(
+                        reqId: request.Id,
+                        errorCode: ErrorCodes.InternalError,
+                        message: e.ToString(),
+                        data: null,
+                        cancellationToken,
+                        stringId: request.StringId).ConfigureAwait(false);
+                }
+                finally
+                {
+                    failedInitialization?.TrySetResult(false);
+
+                    CompleteFailedRequest(
+                        isInitializeRequest,
+                        GetRequestKey(request.Id, request.StringId),
+                        rpcState,
+                        completion => completion.TrySetException(e));
+                }
             }
         }
     }
 
+    private void CompleteInitialization()
+    {
+        TaskCompletionSource<bool>? completionSource;
+        lock (_initializeStateLock)
+        {
+            _initializeState = Initialized;
+            completionSource = _initializationCompletionSource;
+            _initializationCompletionSource = null;
+        }
+
+        completionSource?.TrySetResult(true);
+    }
+
+    private TaskCompletionSource<bool>? MakeInitializationRetryable(
+        (int Id, bool IsString) requestKey,
+        RpcInvocationState rpcState)
+    {
+        lock (_initializeStateLock)
+        {
+            RoslynDebug.Assert(_initializeState == Initializing);
+            RoslynDebug.Assert(_initializationCompletionSource is not null);
+            bool requestDetached = ((ICollection<KeyValuePair<(int Id, bool IsString), RpcInvocationState>>)_clientToServerRequests)
+                .Remove(new(requestKey, rpcState));
+            RoslynDebug.Assert(requestDetached);
+            _initializeState = NotInitialized;
+            TaskCompletionSource<bool>? completionSource = _initializationCompletionSource;
+            _initializationCompletionSource = null;
+            return completionSource;
+        }
+    }
+
+    private void CompleteFailedRequest(
+        bool requestWasDetached,
+        (int Id, bool IsString) requestKey,
+        RpcInvocationState rpcState,
+        Action<TaskCompletionSource<object>> completion)
+    {
+        if (!requestWasDetached)
+        {
+            CompleteRequest(ref _clientToServerRequests, requestKey, completion);
+            return;
+        }
+
+        try
+        {
+            completion(rpcState.CompletionSource);
+            rpcState.Dispose();
+            if (_clientToServerRequests.IsEmpty && _serverClosingTokenSource.IsCancellationRequested)
+            {
+                _stopMessageHandler.Cancel();
+            }
+        }
+        finally
+        {
+            _requestCounter.Signal();
+        }
+    }
+
+    private async Task<bool> SendTestUpdateCompleteIfNeededAsync(
+        RequestMessage request,
+        CancellationToken cancellationToken,
+        bool bestEffort = false)
+    {
+        if (request.Params is not RequestArgsBase args)
+        {
+            return false;
+        }
+
+        await SendTestUpdateCompleteAsync(args.RunId, cancellationToken, bestEffort).ConfigureAwait(false);
+        return true;
+    }
+
     private void CompleteRequest(
-        ref ConcurrentDictionary<int, RpcInvocationState> rpcStates,
-        int reqId,
+        ref ConcurrentDictionary<(int Id, bool IsString), RpcInvocationState> rpcStates,
+        (int Id, bool IsString) requestKey,
         Action<TaskCompletionSource<object>> completion)
     {
         try
         {
-            if (rpcStates.TryRemove(reqId, out RpcInvocationState? completedInvocation))
+            if (rpcStates.TryRemove(requestKey, out RpcInvocationState? completedInvocation))
             {
                 completion(completedInvocation.CompletionSource);
                 completedInvocation.Dispose();
@@ -233,6 +523,9 @@ internal sealed partial class ServerTestHost
         }
     }
 
+    private static (int Id, bool IsString) GetRequestKey(int id, string? stringId)
+        => (id, stringId is not null);
+
     private sealed class RpcInvocationState : IDisposable
     {
 #if NET9_0_OR_GREATER
@@ -242,6 +535,7 @@ internal sealed partial class ServerTestHost
 #endif
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
+        private int _cancellationRequested;
 
         /// <remarks>
         /// For outbound requests, this is populated with the response from the client.
@@ -252,6 +546,20 @@ internal sealed partial class ServerTestHost
 
         // We don't expose directly the source because we need to synchronize the complete/cancel
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+
+        public bool IsCancellationRequested
+            => Volatile.Read(ref _cancellationRequested) != 0 || _cancellationTokenSource.IsCancellationRequested;
+
+        public bool TryRequestCancellation()
+            => Interlocked.Exchange(ref _cancellationRequested, 1) == 0;
+
+        public void ThrowIfCancellationRequested()
+        {
+            if (IsCancellationRequested)
+            {
+                throw new OperationCanceledException(CancellationToken);
+            }
+        }
 
         public AggregateException? CancelRequest()
         {

@@ -30,7 +30,7 @@ namespace Microsoft.Testing.Platform.Configurations;
 /// produce.
 /// </para>
 /// </remarks>
-internal sealed class CommandLineConfigurationProvider : IConfigurationProvider
+internal sealed class CommandLineConfigurationProvider : IHierarchicalConfigurationProvider
 {
     private readonly Dictionary<string, string?> _data = [with(StringComparer.OrdinalIgnoreCase)];
 
@@ -67,4 +67,9 @@ internal sealed class CommandLineConfigurationProvider : IConfigurationProvider
     public Task LoadAsync() => Task.CompletedTask;
 
     public bool TryGet(string key, out string? value) => _data.TryGetValue(key, out value);
+
+    public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
+
+    public IEnumerable<string> GetChildKeys(string? parentPath)
+        => ConfigurationProviderHelpers.GetChildKeys(_data.Keys, parentPath);
 }

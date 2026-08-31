@@ -42,6 +42,11 @@
         <target state="translated">擱置傾印檔案</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpDeadlineApproaching">
+        <source>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</source>
+        <target state="translated">CI 截止時間即將到來: 在執行被強制取消前先進行 hang dump 很困難。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">環境變數 '{0}' 已設定為 '{1}' 而不是 '{2}'</target>
@@ -83,8 +88,8 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
-        <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">如果測試程序擱置，則產生傾印檔案</target>
+        <source>Generate a dump file if the test process hangs.</source>
+        <target state="translated">如果測試程序擱置，則產生傾印檔案。</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -136,10 +141,10 @@ The timeout value is specified in one of the following formats:
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</source>
+Default type is 'Full'.</source>
         <target state="translated">指定傾印的類型。
-有效值 {0}。
-預設類型為 'Full'</target>
+有效值為 {0}.
+預設類型為 'Full'。</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">

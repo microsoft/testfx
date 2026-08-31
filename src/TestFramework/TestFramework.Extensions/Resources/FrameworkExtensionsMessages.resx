@@ -125,4 +125,16 @@
     <value>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</value>
     <comment>Do not localize API names {Locked="UITestMethodAttribute.DispatcherQueue"}{Locked="UITestMethodAttribute"}, the product name {Locked="WinUI"}, or the C# keyword {Locked="null"}.</comment>
   </data>
+  <data name="WinUIApplicationFailedToStart" xml:space="preserve">
+    <value>The WinUI application under test exited without initializing. When running unpackaged, this usually means the Windows App SDK runtime could not be resolved for the process.</value>
+    <comment>Do not localize the product names {Locked="WinUI"}{Locked="Windows App SDK"}.</comment>
+  </data>
+  <data name="WinUIApplicationStartupTimedOut" xml:space="preserve">
+    <value>The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</value>
+    <comment>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is a timeout duration.</comment>
+  </data>
+  <data name="WinUIApplicationInitializationAlreadyFailed" xml:space="preserve">
+    <value>The WinUI application under test failed to initialize earlier in this run, and Application.Start cannot be retried in the same process. The original failure was: {0}</value>
+    <comment>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is the message of the original failure.</comment>
+  </data>
 </root>

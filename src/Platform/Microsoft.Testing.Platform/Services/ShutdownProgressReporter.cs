@@ -115,6 +115,14 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         // _watchdogStopSource) cannot turn the Task.Run lambda into an ObjectDisposedException.
         CancellationToken stopToken = _watchdogStopSource.Token;
 
+        // The watchdog is a best-effort diagnostic that reports slow shutdown from a background
+        // thread. Single-threaded wasm runtimes have no thread pool, so Task.Run would never run the
+        // watchdog loop (and awaiting it later would hang); skip it entirely there.
+        if (!RuntimeFeatureHelper.IsMultiThreaded)
+        {
+            return;
+        }
+
         // Fire-and-forget watchdog. The process is shutting down, so we accept the unobserved task.
         _ = Task.Run(() => RunWatchdogAsync(stopToken));
     }

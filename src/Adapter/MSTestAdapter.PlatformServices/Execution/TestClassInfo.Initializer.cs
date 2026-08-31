@@ -279,6 +279,16 @@ internal sealed partial class TestClassInfo
             timeout = localTimeout;
         }
 
+        // One span per class-initialize method (including inherited ones), so a slow or throwing class fixture is
+        // attributable in the trace instead of being folded into the first test of the class.
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.ClassInitialize,
+                "class_initialize",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
+
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             () => methodInfo.InvokeAsFixtureMethodAsync(
                 testContext,
@@ -289,6 +299,11 @@ internal sealed partial class TestClassInfo
             ExecutionContext ?? Parent?.ExecutionContext,
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
 
         return result;
     }

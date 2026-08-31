@@ -14,6 +14,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
+    private int _isGracefulStopRequested;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
@@ -109,7 +111,11 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
-    public bool IsGracefulStopRequested { get; set; }
+    public bool IsGracefulStopRequested
+    {
+        get => Volatile.Read(ref _isGracefulStopRequested) != 0;
+        set => Volatile.Write(ref _isGracefulStopRequested, value ? 1 : 0);
+    }
 
     /// <summary>
     /// Gets or sets the instance for the platform service.

@@ -22,6 +22,7 @@ internal static class MetadataRegistryEmitter
 {
     private const string GeneratedNamespace = "MSTest.SourceGenerated";
     private const string RegistryClassName = "MSTestReflectionMetadata";
+    private const string UnitTestingNamespaceGlobal = "global::" + MSTestAttributeNames.UnitTestingNamespace;
 
     public static string EmitSupportTypes()
     {
@@ -30,6 +31,7 @@ internal static class MetadataRegistryEmitter
 
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
@@ -38,8 +40,16 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
+                // The stored Type flows into the generated Initialize method's direct GetMethods /
+                // GetProperties calls. Annotate the property so the trimmer keeps those members; the
+                // registry assigns typeof(<concrete class>), which satisfies the requirement without
+                // warnings at the assignment site.
+                sb.AppendLine("[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)]");
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public bool AreAttributesComplete { get; set; }");
+                sb.AppendLine("public bool SupportsGeneratedDescriptors { get; set; }");
+                sb.AppendLine("public bool AreGeneratedDescriptorsComplete { get; set; }");
                 sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
@@ -52,16 +62,31 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("/// <summary>True when this method is a <c>[TestMethod]</c> (used to populate the test-method roots); false for fixtures and other registered methods.</summary>");
                 sb.AppendLine("public bool IsTestMethod { get; set; }");
                 sb.AppendLine("public bool IsStatic { get; set; }");
+                sb.AppendLine("public bool IsAsync { get; set; }");
                 sb.AppendLine("public bool ReturnsTask { get; set; }");
                 sb.AppendLine("public bool ReturnsValueTask { get; set; }");
                 sb.AppendLine("public bool ReturnsVoid { get; set; }");
+                sb.AppendLine("public bool IsDescriptorSupported { get; set; }");
                 sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
-                sb.AppendLine("public string[] ParameterNames { get; set; } = Array.Empty<string>();");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
-                sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
-                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
+                sb.AppendLine("public bool AreAttributesComplete { get; set; }");
+                sb.AppendLine("/// <summary>Source-generated accessors for this method's <c>[DynamicData]</c> sources (empty when none were resolved), registered with <c>DynamicDataSourceResolver</c> so the data is read without runtime reflection.</summary>");
+                sb.AppendLine("public IReadOnlyList<DynamicDataSourceReflectionInfo> DynamicDataSources { get; set; } = Array.Empty<DynamicDataSourceReflectionInfo>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
                 sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("/// <summary>A compile-time-resolved <c>[DynamicData]</c> source: the declaring type, the source name, an accessor that returns the raw data object, and (optionally) a custom display-name accessor.</summary>");
+            using (sb.Block("internal sealed class DynamicDataSourceReflectionInfo"))
+            {
+                sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
+                sb.AppendLine("public string SourceName { get; set; } = string.Empty;");
+                sb.AppendLine($"public {UnitTestingNamespaceGlobal}.DynamicDataSourceType SourceType {{ get; set; }}");
+                sb.AppendLine("public Func<object?[], object?> GetData { get; set; } = static _ => null;");
+                sb.AppendLine("public Type? DisplayNameDeclaringType { get; set; }");
+                sb.AppendLine("public string? DisplayNameMethodName { get; set; }");
+                sb.AppendLine("public Func<System.Reflection.MethodInfo, object?[]?, string?>? GetDisplayName { get; set; }");
             }
 
             sb.AppendLine();
@@ -94,6 +119,8 @@ internal static class MetadataRegistryEmitter
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Threading.Tasks;");
+        sb.AppendLine();
+        sb.AppendLine("#pragma warning disable MSTESTEXP");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -133,17 +160,17 @@ internal static class MetadataRegistryEmitter
     {
         if (attributes.Length == 0)
         {
-            sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+            sb.AppendLine("public static object[] AssemblyAttributes { get; } = Array.Empty<object>();");
             return;
         }
 
-        sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        sb.AppendLine("public static object[] AssemblyAttributes { get; } = new object[]");
         using (sb.Block(null))
         {
             for (int i = 0; i < attributes.Length; i++)
             {
                 AttributeApplicationModel attr = attributes[i];
-                sb.Append(BuildAttributeExpression(attr));
+                sb.Append($"(Attribute){BuildAttributeExpression(attr)}");
                 if (i < attributes.Length - 1)
                 {
                     sb.AppendLine(",");
@@ -167,6 +194,9 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine($"Type = typeof({fqn}),");
             EmitAttributesProperty(sb, "Attributes", model.Attributes);
             sb.AppendLine(",");
+            sb.AppendLine($"AreAttributesComplete = {Bool(model.AreAttributesComplete)},");
+            sb.AppendLine($"SupportsGeneratedDescriptors = {Bool(model.SupportsGeneratedDescriptors)},");
+            sb.AppendLine($"AreGeneratedDescriptorsComplete = {Bool(model.AreGeneratedDescriptorsComplete)},");
 
             EmitConstructors(sb, fqn, model);
             sb.AppendLine(",");
@@ -221,16 +251,17 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine($"Name = \"{Escape(method.Name)}\",");
                     sb.AppendLine($"IsTestMethod = {Bool(method.IsTestMethod)},");
                     sb.AppendLine($"IsStatic = {Bool(method.IsStatic)},");
+                    sb.AppendLine($"IsAsync = {Bool(method.IsAsync)},");
                     sb.AppendLine($"ReturnsTask = {Bool(method.ReturnsTask)},");
                     sb.AppendLine($"ReturnsValueTask = {Bool(method.ReturnsValueTask)},");
                     sb.AppendLine($"ReturnsVoid = {Bool(method.ReturnsVoid)},");
+                    sb.AppendLine($"IsDescriptorSupported = {Bool(method.IsDescriptorSupported)},");
                     EmitParameterTypes(sb, method.Parameters);
-                    sb.AppendLine(",");
-                    EmitParameterNames(sb, method.Parameters);
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
                     sb.AppendLine(",");
-                    EmitDataRows(sb, method.DataRows);
+                    sb.AppendLine($"AreAttributesComplete = {Bool(method.AreAttributesComplete)},");
+                    EmitDynamicDataSources(sb, method.DynamicDataSources);
                     sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
                 }
@@ -331,32 +362,38 @@ internal static class MetadataRegistryEmitter
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
     }
 
-    private static void EmitDataRows(IndentedStringBuilder sb, EquatableArray<DataRowModel> dataRows)
+    private static void EmitDynamicDataSources(IndentedStringBuilder sb, EquatableArray<DynamicDataSourceModel> sources)
     {
-        if (dataRows.Length == 0)
+        if (sources.Length == 0)
         {
-            sb.Append("DataRows = Array.Empty<object?[]>()");
+            sb.Append("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
             sb.AppendLine();
             return;
         }
 
-        sb.AppendLine("DataRows = new object?[][]");
+        sb.AppendLine("DynamicDataSources = new DynamicDataSourceReflectionInfo[]");
         using (sb.Block(null))
         {
-            for (int i = 0; i < dataRows.Length; i++)
+            for (int i = 0; i < sources.Length; i++)
             {
-                EquatableArray<TypedConstantModel> args = dataRows[i].Arguments;
-                if (args.Length == 0)
+                DynamicDataSourceModel source = sources[i];
+                sb.AppendLine("new DynamicDataSourceReflectionInfo");
+                using (sb.Block(null))
                 {
-                    sb.Append("Array.Empty<object?>()");
-                }
-                else
-                {
-                    string literals = string.Join(", ", args.AsImmutableArray().Select(BuildConstantExpression));
-                    sb.Append($"new object?[] {{ {literals} }}");
+                    sb.AppendLine($"DeclaringType = typeof({source.DeclaringTypeFullyQualifiedName}),");
+                    sb.AppendLine($"SourceName = \"{Escape(source.SourceName)}\",");
+                    sb.AppendLine($"SourceType = {UnitTestingNamespaceGlobal}.DynamicDataSourceType.{source.RequestedSourceType},");
+                    EmitDataProvider(sb, source);
+
+                    if (source.DisplayNameMethodName is { } displayNameMethod && source.DisplayNameDeclaringTypeFullyQualifiedName is { } displayNameType)
+                    {
+                        sb.AppendLine($"DisplayNameDeclaringType = typeof({displayNameType}),");
+                        sb.AppendLine($"DisplayNameMethodName = \"{Escape(displayNameMethod)}\",");
+                        EmitDisplayNameProvider(sb, displayNameType, EscapeIdentifier(displayNameMethod));
+                    }
                 }
 
-                if (i < dataRows.Length - 1)
+                if (i < sources.Length - 1)
                 {
                     sb.AppendLine(",");
                 }
@@ -366,6 +403,56 @@ internal static class MetadataRegistryEmitter
                 }
             }
         }
+    }
+
+    private static void EmitDataProvider(IndentedStringBuilder sb, DynamicDataSourceModel source)
+    {
+        string member = $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}";
+        switch (source.MemberKind)
+        {
+            // A field read cannot run user code, so it needs no exception translation (and reflection reads
+            // fields via FieldInfo.GetValue without TargetInvocationException wrapping anyway).
+            case DynamicDataMemberKind.Field:
+                sb.AppendLine($"GetData = static args => {member},");
+                break;
+
+            // Property getters and (parameterless) methods can run user code. The reflection fallback invokes
+            // them via PropertyInfo.GetValue / MethodInfo.Invoke, which wrap a thrown user exception in a
+            // TargetInvocationException. Mirror that so a throwing source surfaces the same exception type in
+            // source-generated mode as in reflection mode.
+            case DynamicDataMemberKind.Property:
+                EmitInvocationWrappedLambda(sb, "GetData = static args =>", $"return {member};");
+                break;
+
+            case DynamicDataMemberKind.Method:
+                EmitInvocationWrappedLambda(sb, "GetData = static args =>", $"return {member}();");
+                break;
+        }
+    }
+
+    private static void EmitDisplayNameProvider(IndentedStringBuilder sb, string declaringType, string methodName)
+
+        // The custom display-name method is user code; reflection calls it via MethodInfo.Invoke, which wraps
+        // a thrown exception in TargetInvocationException. Preserve that wrapping here too.
+        => EmitInvocationWrappedLambda(sb, "GetDisplayName = static (methodInfo, data) =>", $"return {declaringType}.{methodName}(methodInfo, data!);");
+
+    private static void EmitInvocationWrappedLambda(IndentedStringBuilder sb, string header, string bodyStatement)
+    {
+        sb.AppendLine(header);
+        using (sb.Block(null))
+        {
+            using (sb.Block("try"))
+            {
+                sb.AppendLine(bodyStatement);
+            }
+
+            using (sb.Block("catch (global::System.Exception ex)"))
+            {
+                sb.AppendLine("throw new global::System.Reflection.TargetInvocationException(ex);");
+            }
+        }
+
+        sb.AppendLine(",");
     }
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
@@ -379,19 +466,6 @@ internal static class MetadataRegistryEmitter
 
         string typesList = string.Join(", ", parameters.AsImmutableArray().Select(p => $"typeof({p.FullyQualifiedType})"));
         sb.AppendLine($"ParameterTypes = new Type[] {{ {typesList} }}");
-    }
-
-    private static void EmitParameterNames(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
-    {
-        if (parameters.Length == 0)
-        {
-            sb.Append("ParameterNames = Array.Empty<string>()");
-            sb.AppendLine();
-            return;
-        }
-
-        string names = string.Join(", ", parameters.AsImmutableArray().Select(p => $"\"{Escape(p.Name)}\""));
-        sb.AppendLine($"ParameterNames = new string[] {{ {names} }}");
     }
 
     private static void EmitAttributesProperty(IndentedStringBuilder sb, string propertyName, EquatableArray<AttributeApplicationModel> attributes)
@@ -510,6 +584,13 @@ internal static class MetadataRegistryEmitter
 
     internal static string Escape(string value)
         => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    // Escapes a member/type identifier so a source name that happens to be a C# reserved keyword (e.g. a
+    // member declared as `@class`) is emitted as a valid identifier rather than breaking the generated code.
+    private static string EscapeIdentifier(string name)
+        => Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(name) != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
+            ? "@" + name
+            : name;
 
     private static void AppendHeader(IndentedStringBuilder sb)
     {

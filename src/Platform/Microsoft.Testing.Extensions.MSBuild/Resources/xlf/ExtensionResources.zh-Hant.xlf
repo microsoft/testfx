@@ -4,13 +4,18 @@
     <body>
       <trans-unit id="MSBuildCommandLineProviderDisplayName">
         <source>MSBuild integration</source>
-        <target state="new">MSBuild integration</target>
+        <target state="translated">MSBuild 整合</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
-        <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">用於從 MSBuild 節點和主機傳遞參數的延伸模組</target>
+        <source>Extension used to pass parameters from MSBuild node and the hosts.</source>
+        <target state="translated">用於從 MSBuild 節點和主機傳遞參數的延伸模組。</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
+      </trans-unit>
+      <trans-unit id="MSBuildNodeOptionDescription">
+        <source>Used to pass the MSBuild node handle.</source>
+        <target state="translated">用來傳遞 MSBuild 節點控制代碼。</target>
+        <note>Do not localize option name {Locked="--internal-msbuild-node"} or {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>
   </file>

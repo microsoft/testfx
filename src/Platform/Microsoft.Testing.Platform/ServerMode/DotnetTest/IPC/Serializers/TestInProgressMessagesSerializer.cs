@@ -42,26 +42,27 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
         string? instanceId = null;
         TestInProgressMessage[]? inProgressMessages = [];
 
-        ReadFields(stream, (fieldId, fieldSize) =>
+        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
+        ushort fieldCount = ReadUShort(stream);
+        for (int f = 0; f < fieldCount; f++)
         {
-            switch (fieldId)
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
             {
-                case TestInProgressMessagesFieldsId.ExecutionId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case TestInProgressMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case TestInProgressMessagesFieldsId.TestInProgressMessageList:
-                    inProgressMessages = ReadInProgressMessagesPayload(stream);
-                    return true;
-
-                default:
-                    return false;
+                continue;
             }
-        });
+
+            if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
+            {
+                inProgressMessages = ReadInProgressMessagesPayload(stream);
+            }
+            else
+            {
+                SetPosition(stream, stream.Position + fieldSize);
+            }
+        }
 
         return new(executionId, instanceId, inProgressMessages);
     }
@@ -75,22 +76,28 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
             string? uid = null;
             string? displayName = null;
 
-            ReadFields(stream, (fieldId, fieldSize) =>
+            // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
+            ushort fieldCount = ReadUShort(stream);
+            for (int f = 0; f < fieldCount; f++)
             {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+
                 switch (fieldId)
                 {
                     case TestInProgressMessageFieldsId.Uid:
                         uid = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case TestInProgressMessageFieldsId.DisplayName:
                         displayName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     default:
-                        return false;
+                        SetPosition(stream, stream.Position + fieldSize);
+                        break;
                 }
-            });
+            }
 
             inProgressMessages[i] = new TestInProgressMessage(uid, displayName);
         }
@@ -100,12 +107,12 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override void SerializeCore(TestInProgressMessages objectToSerialize, Stream stream)
     {
-        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+        WriteExecutionScopedHeader(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)(IsNullOrEmpty(objectToSerialize.InProgressMessages) ? 0 : 1));
 
-        WriteUShort(stream, GetFieldCount(objectToSerialize));
-
-        WriteField(stream, TestInProgressMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
-        WriteField(stream, TestInProgressMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
         WriteInProgressMessagesPayload(stream, objectToSerialize.InProgressMessages);
     }
 
@@ -117,11 +124,6 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
             WriteField(s, TestInProgressMessageFieldsId.Uid, inProgressMessage.Uid);
             WriteField(s, TestInProgressMessageFieldsId.DisplayName, inProgressMessage.DisplayName);
         });
-
-    private static ushort GetFieldCount(TestInProgressMessages inProgressMessages) =>
-        (ushort)((inProgressMessages.ExecutionId is null ? 0 : 1) +
-        (inProgressMessages.InstanceId is null ? 0 : 1) +
-        (IsNullOrEmpty(inProgressMessages.InProgressMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(TestInProgressMessage inProgressMessage) =>
         (ushort)((inProgressMessage.Uid is null ? 0 : 1) +

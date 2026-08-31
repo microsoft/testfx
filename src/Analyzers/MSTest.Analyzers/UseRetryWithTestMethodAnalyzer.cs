@@ -19,12 +19,13 @@ public sealed class UseRetryWithTestMethodAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseRetryWithTestMethodTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseRetryWithTestMethodMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.UseRetryWithTestMethodDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor UseRetryWithTestMethodRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseRetryWithTestMethodRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,

@@ -88,6 +88,13 @@ extends:
         enabled: true
       tsa:
         enabled: true
+      componentgovernance:
+        # .dotnet/ is the repo-local .NET SDK bootstrapped by eng/common/tools.ps1 from global.json,
+        # plus the workloads installed by eng/restore-toolset.ps1. It is not checked in (see .gitignore)
+        # and nothing in it ships. Scanning it surfaces alerts for components we cannot service, such as
+        # the npm packages vendored inside Microsoft.NET.Runtime.Emscripten.*.Sdk/tools/emscripten/node_modules,
+        # which are owned by dotnet/runtime and pinned by the SDK pack.
+        ignoreDirectories: $(Build.SourcesDirectory)/.dotnet
     featureFlags:
       autoBaseline: true
     pool:
@@ -158,6 +165,25 @@ extends:
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+              # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and
+              # CopyFiles@2 hard-fails when SourceFolder does not exist. A Test failure early enough to skip
+              # the suite therefore reported one real problem as three failed steps: Test, Copy binlogs, and
+              # Publish integration tests binlogs all failed in
+              # https://dev.azure.com/dnceng/internal/_build/results?buildId=3045544. Probe for the binlogs so
+              # both steps skip when there are none. When the suite did produce binlogs they are copied and
+              # published exactly as before, including on a failed run, which is why these use always().
+              - pwsh: |
+                  $testsuite = Join-Path '$(Build.SourcesDirectory)' 'artifacts/tmp/$(_BuildConfig)/testsuite'
+                  $hasBinlogs = 'false'
+                  if (Test-Path -LiteralPath $testsuite -PathType Container) {
+                    $binlog = Get-ChildItem -LiteralPath $testsuite -Filter '*.binlog' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($null -ne $binlog) { $hasBinlogs = 'true' }
+                  }
+                  Write-Host "Integration tests binlogs under '$testsuite': $hasBinlogs"
+                  Write-Host "##vso[task.setvariable variable=HasIntegrationTestBinlogs]$hasBinlogs"
+                displayName: 'Check for integration tests binlogs'
+                condition: always()
+
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
                 inputs:
@@ -165,26 +191,43 @@ extends:
                   Contents: |
                     **/*.binlog
                   TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-                condition: always()
+                condition: and(always(), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish integration tests binlogs'
                 inputs:
                   PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
                   ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-                condition: always()
+                condition: and(always(), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
               # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
               - pwsh: |
                   Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
                 displayName: Remove artifacts/tmp
 
+              # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
+              # 1ES.PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies
+              # before the tests run therefore reported one real problem as two failed steps: an Azure
+              # Artifacts outage broke Install MicroBuild plugin, which skipped Build and Test, and this step
+              # then failed with "Not found PathtoPublish" in
+              # https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. Probe for the folder so
+              # the publish skips when there is nothing to publish. When the tests did write results they are
+              # published exactly as before, including on a failed run, which is why this uses always().
+              - pwsh: |
+                  $testResults = Join-Path '$(Build.SourcesDirectory)' 'artifacts/TestResults/$(_BuildConfig)'
+                  $hasTestResults = 'false'
+                  if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
+                  Write-Host "Test results under '$testResults': $hasTestResults"
+                  Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+                displayName: 'Check for Test Results folders'
+                condition: always()
+
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Windows_Attempt$(System.JobAttempt)
-                condition: always()
+                condition: and(always(), eq(variables.HasTestResults, 'true'))
 
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
@@ -257,14 +300,44 @@ extends:
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+              # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
+              # 1ES.PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies
+              # before the tests run therefore reported one real problem as two failed steps, the way the
+              # Windows job did in
+              # https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. Probe for the folder so
+              # the publish skips when there is nothing to publish. When the tests did write results they are
+              # published exactly as before, including on a failed run, which is why this uses always().
+              - pwsh: |
+                  $testResults = Join-Path '$(Build.SourcesDirectory)' 'artifacts/TestResults/$(_BuildConfig)'
+                  $hasTestResults = 'false'
+                  if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
+                  Write-Host "Test results under '$testResults': $hasTestResults"
+                  Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+                displayName: 'Check for Test Results folders'
+                condition: always()
+
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Linux_Attempt$(System.JobAttempt)
-                condition: always()
+                condition: and(always(), eq(variables.HasTestResults, 'true'))
 
-      - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+    # Localization runs in its own stage rather than as a job of `build`.
+    # OneLocBuild hands the resource strings off to the loc service and then opens a PR back into
+    # microsoft/testfx using the shared dnceng `BotAccount-dotnet-bot-repo-PAT` secret. That check-in
+    # step can fail for reasons unrelated to the product (for example the "Microsoft Open Source"
+    # GitHub enterprise rejecting the shared classic PAT). While it was a job of `build`, such a
+    # failure failed the whole stage, which skipped the post-build `Validate Build Assets` and
+    # `Publish using Darc` stages (both depend on `build`) and silently stopped official publishing.
+    # Nothing that ships depends on the loc PR, so the stage stands alone: a break still turns the
+    # build red, but it no longer blocks publishing. Mirrors the dotnet/runtime layout.
+    # See https://github.com/microsoft/testfx/issues/10322 for the current PAT policy breakage.
+    - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+      - stage: Localization
+        # OneLocBuild only needs the sources, so it can run in parallel with `build`.
+        dependsOn: []
+        jobs:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self
           parameters:
             GitHubOrg: microsoft

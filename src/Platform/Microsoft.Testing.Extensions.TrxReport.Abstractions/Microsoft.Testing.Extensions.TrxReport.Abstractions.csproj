@@ -4,6 +4,13 @@
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription><![CDATA[This package provides the abstractions used by extensions that contribute data to, or read data from, TRX test reports. Install Microsoft.Testing.Extensions.TrxReport to generate the reports themselves.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>

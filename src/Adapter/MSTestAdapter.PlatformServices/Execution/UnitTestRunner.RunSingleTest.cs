@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -16,6 +16,15 @@ internal sealed partial class UnitTestRunner
     internal TestResult[] RunSingleTest(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IAdapterMessageLogger messageLogger)
         => RunSingleTestAsync(unitTestElement, testContextProperties, messageLogger).GetAwaiter().GetResult();
 
+    // Task cannot cross app domains.
+    // For now, TestExecutionManager will call this sync method which is hacky.
+    internal TestResult[] RunSingleTest(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger)
+        => RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, messageLogger).GetAwaiter().GetResult();
+
     /// <summary>
     /// Runs a single test.
     /// </summary>
@@ -24,6 +33,77 @@ internal sealed partial class UnitTestRunner
     /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IAdapterMessageLogger messageLogger)
+        => await RunSingleTestAsync(unitTestElement, testContextProperties, testContextProperties, messageLogger).ConfigureAwait(false);
+
+    // Task cannot cross app domains.
+    // For now, TestExecutionManager will call this sync method which is hacky.
+    internal TestResult[] NotifyTestNotRun(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger)
+        => NotifyTestNotRunAsync(unitTestElement, testContextProperties, lifecycleContextProperties, messageLogger).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Tells the runner that a selected test is not going to execute, because the scheduler decided its
+    /// outcome without running it - its prerequisite did not pass, or it is part of a dependency cycle.
+    /// </summary>
+    /// <remarks>
+    /// The class-cleanup countdown is built from every <em>selected</em> test, so a test that never reaches
+    /// <see cref="RunSingleTestAsync(UnitTestElement, IDictionary{string, object?}, IDictionary{string, object?}, IAdapterMessageLogger)"/>
+    /// still owes its decrement. This performs exactly the bookkeeping a filtered-out test does, which is
+    /// the same situation: selected, counted, never run.
+    /// </remarks>
+    /// <param name="unitTestElement">The test that will not run.</param>
+    /// <param name="testContextProperties">Properties scoped to this test.</param>
+    /// <param name="lifecycleContextProperties">Properties scoped to assembly and class lifecycle methods.</param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <returns>
+    /// Any results produced by cleanup that this call triggered - empty unless a <c>[ClassCleanup]</c> or
+    /// <c>[AssemblyCleanup]</c> ran and failed. The test's own "skipped" or "failed" result is reported by
+    /// the caller, which is what decided the outcome.
+    /// </returns>
+    internal async Task<TestResult[]> NotifyTestNotRunAsync(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger)
+    {
+        if (unitTestElement is null)
+        {
+            throw new ArgumentNullException(nameof(unitTestElement));
+        }
+
+        ITestContext? testContextForTestExecution = null;
+        try
+        {
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(unitTestElement.TestMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
+            return await FinishTestThatDidNotRunAsync(
+                unitTestElement.TestMethod,
+                lifecycleContextProperties,
+                messageLogger,
+                [],
+                testContextForTestExecution).ConfigureAwait(false);
+        }
+        finally
+        {
+            (testContextForTestExecution as IDisposable)?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Runs a single test.
+    /// </summary>
+    /// <param name="unitTestElement">The test method.</param>
+    /// <param name="testContextProperties">Properties scoped to this test.</param>
+    /// <param name="lifecycleContextProperties">Properties scoped to assembly and class lifecycle methods.</param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <returns>The <see cref="TestResult"/>.</returns>
+    internal async Task<TestResult[]> RunSingleTestAsync(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger)
     {
         if (unitTestElement is null)
         {
@@ -33,6 +113,11 @@ internal sealed partial class UnitTestRunner
         if (testContextProperties is null)
         {
             throw new ArgumentNullException(nameof(testContextProperties));
+        }
+
+        if (lifecycleContextProperties is null)
+        {
+            throw new ArgumentNullException(nameof(lifecycleContextProperties));
         }
 
         TestMethod testMethod = unitTestElement.TestMethod;
@@ -53,9 +138,9 @@ internal sealed partial class UnitTestRunner
             TestResult[]? filterResult = ApplyTestFilter(unitTestElement);
             if (filterResult is not null)
             {
-                return await FinishFilteredOutTestAsync(
+                return await FinishTestThatDidNotRunAsync(
                     testMethod,
-                    testContextProperties,
+                    lifecycleContextProperties,
                     messageLogger,
                     filterResult,
                     testContextForTestExecution).ConfigureAwait(false);
@@ -83,13 +168,13 @@ internal sealed partial class UnitTestRunner
                 }
                 else
                 {
-                    testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                    testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
                     assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
                 }
 
                 // Remember that assembly initialize ran for this assembly so the end-of-assembly cleanup
                 // guard still fires even when the last test of the assembly is filtered out (and therefore
-                // has no testMethodInfo of its own). See FinishFilteredOutTestAsync.
+                // has no testMethodInfo of its own). See FinishTestThatDidNotRunAsync.
                 _assemblyInitializeWasExecuted |= assemblyInfo.IsAssemblyInitializeExecuted;
 
                 if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
@@ -115,7 +200,7 @@ internal sealed partial class UnitTestRunner
                     }
                     else
                     {
-                        testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
+                        testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, lifecycleContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
                         // Flow properties set during AssemblyInitialize into the class-init context so the
                         // ClassInitialize method observes them.
@@ -158,7 +243,7 @@ internal sealed partial class UnitTestRunner
                                     async () => await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false),
                                     result)).ConfigureAwait(false);
 
-                            result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
+                            result = CombineRetryAttempts(result, retryResult);
                         }
                     }
                 }
@@ -169,7 +254,7 @@ internal sealed partial class UnitTestRunner
             {
                 // Defer TestContextImplementation allocation to only the last test in each class,
                 // saving one dict-copy + CancellationTokenRegistration per non-last test.
-                testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
                 if (testMethodInfo is not null)
                 {
@@ -190,7 +275,7 @@ internal sealed partial class UnitTestRunner
                             cleanupResult.AssociatedUnitTestElement = lastRunnableUnitTest;
                         }
 
-                        result = [.. result, cleanupResult];
+                        result = [.. result, AlignAttemptNumber(cleanupResult, result)];
                     }
                 }
 
@@ -207,7 +292,7 @@ internal sealed partial class UnitTestRunner
                 // testContextForClassCleanup is guaranteed non-null here: ShouldRunEndOfAssemblyCleanup
                 // becomes true only after MarkClassComplete, which is called exclusively inside the
                 // isLastTestInClass block above — where testContextForClassCleanup is allocated.
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, lifecycleContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)
@@ -218,7 +303,7 @@ internal sealed partial class UnitTestRunner
                         assemblyCleanupResult.AssociatedUnitTestElement = _lastRunnableTestInWholeAssembly;
                     }
 
-                    result = [.. result, assemblyCleanupResult];
+                    result = [.. result, AlignAttemptNumber(assemblyCleanupResult, result)];
                 }
             }
 
@@ -244,6 +329,92 @@ internal sealed partial class UnitTestRunner
             (testContextForClassCleanup as IDisposable)?.Dispose();
             (testContextForAssemblyCleanup as IDisposable)?.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Flattens an in-process retry sequence into the single result array the rest of the pipeline works with:
+    /// <c>[...attempt 1, ...attempt 2, ..., ...attempt N]</c>, where every attempt but the last is marked as
+    /// superseded.
+    /// </summary>
+    /// <remarks>
+    /// Historically only the last attempt survived, which made an in-process retry invisible to every consumer -
+    /// the terminal, the reports, and notably CTRF's <c>flaky</c> flag (see
+    /// https://github.com/microsoft/testfx/issues/10292). The earlier attempts are kept here and tagged so each
+    /// recorder can decide what to do with them: the Microsoft.Testing.Platform recorder reports them all (tagged
+    /// with <c>RetryAttemptProperty</c>), while VSTest - which has no notion of attempts - drops the superseded
+    /// ones and keeps its historical single-result-per-test behavior.
+    /// <para>
+    /// The final attempt stays last so callers that look at <c>results[^1]</c> (class and assembly cleanup) and
+    /// consumers that collapse per test node uid keep observing the test's real outcome.
+    /// </para>
+    /// </remarks>
+    internal static TestResult[] CombineRetryAttempts(TestResult[] firstAttempt, RetryResult retryResult)
+    {
+        IReadOnlyList<TestResult[]> retryAttempts = retryResult.AllResults;
+        if (retryAttempts.Count == 0)
+        {
+            // A RetryBaseAttribute implementation is expected to add at least one attempt.
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        // An attempt that produced no result at all is an execution error, which the pipeline signals by an empty
+        // array (SendTestResultsAsync turns it into RecordEmptyResultAsync). Returning the earlier attempts here
+        // would hide that: the array would be non-empty, so the empty-result path would be skipped, every entry
+        // would then be filtered out as superseded, and AllPassed would vacuously return true - reporting a missing
+        // result as a passing test and unblocking its dependents. Preserve the empty-result contract instead.
+        if (retryAttempts[retryAttempts.Count - 1].Length == 0)
+        {
+            return [];
+        }
+
+        int totalCount = firstAttempt.Length;
+        foreach (TestResult[] attempt in retryAttempts)
+        {
+            totalCount += attempt.Length;
+        }
+
+        var combined = new List<TestResult>(totalCount);
+        AddAttempt(combined, firstAttempt, attemptNumber: 1, isSuperseded: true);
+        for (int i = 0; i < retryAttempts.Count; i++)
+        {
+            AddAttempt(combined, retryAttempts[i], attemptNumber: i + 2, isSuperseded: i != retryAttempts.Count - 1);
+        }
+
+        return [.. combined];
+
+        static void AddAttempt(List<TestResult> combined, TestResult[] attempt, int attemptNumber, bool isSuperseded)
+        {
+            foreach (TestResult result in attempt)
+            {
+                result.RetryAttemptNumber = attemptNumber;
+                result.IsSupersededRetryAttempt = isSuperseded;
+                combined.Add(result);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Stamps a result produced outside the retry sequence (a class or assembly cleanup failure appended after the
+    /// test itself completed) with the attempt the test finished on.
+    /// </summary>
+    /// <remarks>
+    /// Cleanup results are reported under the same test node uid as the test, so a cleanup result left at the
+    /// default attempt 1 would look like an <em>earlier</em> attempt than a test that finished on attempt 2+. The
+    /// terminal's attempt ordering treats that as out-of-order arrival and throws, so the attempt number is carried
+    /// over here. The result is not marked superseded: it is part of the test's final outcome.
+    /// </remarks>
+    private static TestResult AlignAttemptNumber(TestResult result, TestResult[] precedingResults)
+    {
+        for (int i = precedingResults.Length - 1; i >= 0; i--)
+        {
+            if (!precedingResults[i].IsSupersededRetryAttempt)
+            {
+                result.RetryAttemptNumber = precedingResults[i].RetryAttemptNumber;
+                break;
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

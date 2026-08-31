@@ -1,0 +1,76 @@
+# Strict build, test, diagnostics, and cleanup steps for the real Windows application-model acceptance tests.
+# The consuming job must use an interactive, elevated Windows agent and define _BuildConfig=Release.
+steps:
+- task: PowerShell@2
+  displayName: 'Preflight Windows application-model agent'
+  inputs:
+    targetType: filePath
+    filePath: ./eng/pipelines/test-windows-app-model-preflight.ps1
+    arguments: -Mode Preflight -RemoveStaleTestPackages
+    failOnStderr: true
+    showWarnings: true
+
+- pwsh: |
+    New-Item "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)" -ItemType Directory -Force | Out-Null
+    New-Item "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)" -ItemType Directory -Force | Out-Null
+    & .\build.cmd -pack -configuration $(_BuildConfig)
+    exit $LASTEXITCODE
+  displayName: 'Pack app-model acceptance dependencies'
+
+- script: dotnet build test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-incremental -bl:artifacts\log\$(_BuildConfig)\MSTestWindowsApplicationModel.binlog
+  displayName: 'Build UWP and package-contract acceptance tests'
+
+- script: dotnet build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-incremental -bl:artifacts\log\$(_BuildConfig)\PackagedWinUI.binlog
+  displayName: 'Build packaged WinUI acceptance tests'
+
+- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "FullyQualifiedName~WindowsApplicationModelPackageTests" -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\WindowsApplicationModelPackageContracts
+  displayName: 'Test packed Windows application-model contracts'
+
+- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true
+  displayName: 'Test real Modern and classic UWP applications'
+  env:
+    TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
+
+- script: dotnet test test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true
+  displayName: 'Test real full-trust packaged WinUI application'
+  env:
+    TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
+
+# This check intentionally runs after a test failure. A successful cleanup check cannot change the
+# existing failed job result, while a leaked registration adds an actionable cleanup failure.
+- task: PowerShell@2
+  displayName: 'Verify app-model package cleanup'
+  condition: always()
+  inputs:
+    targetType: filePath
+    filePath: ./eng/pipelines/test-windows-app-model-preflight.ps1
+    arguments: -Mode LeakCheck
+    failOnStderr: true
+    showWarnings: true
+
+- pwsh: New-Item '$(Build.ArtifactStagingDirectory)/windows-app-model' -ItemType Directory -Force | Out-Null
+  displayName: 'Ensure app-model diagnostics directory exists'
+  condition: always()
+
+- task: CopyFiles@2
+  displayName: 'Collect app-model diagnostics'
+  condition: always()
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: |
+      artifacts/log/$(_BuildConfig)/**
+      artifacts/TestResults/$(_BuildConfig)/**
+      artifacts/tmp/$(_BuildConfig)/testsuite/**/*.binlog
+      artifacts/tmp/$(_BuildConfig)/testsuite/**/*.trx
+      artifacts/tmp/$(_BuildConfig)/testsuite/**/*.build.appxrecipe
+      artifacts/tmp/$(_BuildConfig)/testsuite/**/AppxManifest.xml
+      artifacts/tmp/$(_BuildConfig)/testsuite/**/resolved-mstest-assets.txt
+      artifacts/tmp/$(_BuildConfig)/testsuite/**/*.log
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/windows-app-model'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish app-model diagnostics'
+  condition: always()
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/windows-app-model'
+    ArtifactName: Windows_App_Model_Diagnostics_Attempt$(System.JobAttempt)

@@ -59,7 +59,45 @@ internal sealed class PassiveNode : IDisposable
             await _logger.LogTraceAsync(message.ToString()).ConfigureAwait(false);
         }
 
-        var requestMessage = (RequestMessage)message;
+        if (message is not RequestMessage requestMessage)
+        {
+            return false;
+        }
+
+        if (requestMessage.Method != JsonRpcMethods.Initialize)
+        {
+            await SendErrorAsync(
+                requestMessage.Id,
+                ErrorCodes.ServerNotInitialized,
+                "The server must be initialized before this request can be processed.",
+                _testApplicationCancellationTokenSource.CancellationToken,
+                requestMessage.StringId).ConfigureAwait(false);
+            return false;
+        }
+
+        if (requestMessage.Params is not InitializeRequestArgs initializeRequest)
+        {
+            await SendErrorAsync(
+                requestMessage.Id,
+                ErrorCodes.InvalidParams,
+                "The initialize request params are invalid.",
+                _testApplicationCancellationTokenSource.CancellationToken,
+                requestMessage.StringId).ConfigureAwait(false);
+            return false;
+        }
+
+        string? negotiatedProtocolVersion = JsonRpcProtocolVersions.Negotiate(initializeRequest.ProtocolVersions);
+        if (negotiatedProtocolVersion is null)
+        {
+            await SendErrorAsync(
+                requestMessage.Id,
+                ErrorCodes.ProtocolVersionNotSupported,
+                $"None of the client's protocol versions are supported. Server versions: {string.Join(", ", JsonRpcProtocolVersions.Supported)}.",
+                _testApplicationCancellationTokenSource.CancellationToken,
+                requestMessage.StringId).ConfigureAwait(false);
+            return false;
+        }
+
         var responseObject = new InitializeResponseArgs(
                         ProcessId: _environment.ProcessId,
                         ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
@@ -71,17 +109,44 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we push attachments
                                 SupportsAttachments: true,
                                 // This means we're a push node
-                                MultiConnectionProvider: true)));
+                                MultiConnectionProvider: true)))
+        {
+            ProtocolVersion = negotiatedProtocolVersion,
+        };
 
-        await SendResponseAsync(requestMessage.Id, responseObject, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        await SendResponseAsync(
+            requestMessage.Id,
+            responseObject,
+            _testApplicationCancellationTokenSource.CancellationToken,
+            requestMessage.StringId).ConfigureAwait(false);
         return true;
     }
 
-    private async Task SendResponseAsync(int reqId, object result, CancellationToken cancellationToken)
+    private async Task SendErrorAsync(
+        int reqId,
+        int errorCode,
+        string message,
+        CancellationToken cancellationToken,
+        string? stringId)
     {
         AssertInitialized();
 
-        ResponseMessage response = new(reqId, result);
+        ErrorMessage error = new(reqId, errorCode, message, Data: null) { StringId = stringId };
+        using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await _messageHandler.WriteRequestAsync(error, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task SendResponseAsync(
+        int reqId,
+        object result,
+        CancellationToken cancellationToken,
+        string? stringId)
+    {
+        AssertInitialized();
+
+        ResponseMessage response = new(reqId, result) { StringId = stringId };
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
             await _messageHandler.WriteRequestAsync(response, cancellationToken).ConfigureAwait(false);

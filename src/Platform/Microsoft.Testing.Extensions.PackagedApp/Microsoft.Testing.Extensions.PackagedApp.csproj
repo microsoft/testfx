@@ -3,25 +3,32 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.Testing.Extensions.PackagedApp</RootNamespace>
     <!-- The packaged-app launcher uses modern Process APIs (ArgumentList, WaitForExitAsync,
-         Kill(entireProcessTree)) and targets runtime hosts, so it ships only for .NET. -->
-    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
+         Kill(entireProcessTree)) and targets runtime hosts, so it ships only for .NET. The
+         net*-windows10.0.19041.0 flavors additionally light up the packaged (MSIX) register-and-
+         activate path via the PackageManager WinRT projection; the plain flavors keep the loose-layout
+         deployment and fail fast for a packaged layout. NuGet serves the Windows asset to a consumer
+         that targets a matching Windows TFM and the plain asset to everyone else. -->
+    <TargetFrameworks>$(SupportedNetFrameworks);net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Allow the Windows TFMs to build (restore the Windows targeting packs) on non-Windows CI legs;
+         the produced Windows assets are just compiled there, not run. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
-    <!-- This extension consumes the experimental ITestHostLauncher extension point. -->
+    <!-- This stable package consumes the still-experimental ITestHostLauncher extension point. -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
-    <!-- Early preview/experimental package: keep an experimental (alpha) version even in official builds. -->
-    <VersionPrefix>$(MicrosoftTestingExtensionsPackagedAppVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+  </PropertyGroup>
+
+  <!-- The register-and-activate path (PackageManager + IApplicationActivationManager) only compiles for
+       the Windows TFMs where the WinRT projection is available. -->
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <DefineConstants>$(DefineConstants);PACKAGEDAPP_WINRT</DefineConstants>
   </PropertyGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[This package provides extensions to Microsoft Testing Platform intended to extend base functionalities.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to start Windows test hosts that cannot simply be Process.Started. In its Windows build (net*-windows) it registers a packaged MSIX app layout with the PackageManager and activates it by Application User Model ID, delivering platform arguments through argv for packagedClassicApp/win32App hosts or a reusable OnLaunched bootstrap for windowsApp/UWP hosts. When the selected application runs in AppContainer, the launcher also authorizes its exact package SID on the controller pipe with minimum client rights. A non-packaged (loose-layout) Windows test host can optionally be deployed to an isolated directory and launched from there. The launcher enables itself only for a packaged layout, so referencing it from an unpackaged app does not change how that app runs. These communication primitives do not change the current SDK/platform routing limitation: true UWP/AppContainer projects are still selected for VSTest rather than started as MTP test hosts.
 
-This package extends Microsoft Testing Platform to deploy and launch a packaged Windows (UWP/WinUI) test host through a custom mechanism instead of starting it in place.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,10 +37,15 @@ This package extends Microsoft Testing Platform to deploy and launch a packaged 
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
     <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
     <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
+    <!-- Internal API surface that only exists in the Windows build (register-and-activate path). -->
+    <AdditionalFiles Include="InternalAPI/Windows/InternalAPI.Unshipped.txt" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Reuse the platform's Windows command-line quoting so the activation-argument round-trip cannot
+         diverge from the rest of the product (same helper the Retry extension source-links). -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs" Link="Helpers\PasteArguments.cs" />
   </ItemGroup>
 
   <!-- NuGet package layout -->
@@ -53,6 +65,10 @@ This package extends Microsoft Testing Platform to deploy and launch a packaged 
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
 </Project>

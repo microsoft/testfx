@@ -17,6 +17,18 @@ internal sealed partial class VideoRecorderSessionHandler
             return Task.CompletedTask;
         }
 
+        string testUid = update.TestNode.Uid.Value;
+        if (update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
+        {
+            lock (_stateGate)
+            {
+                _inFlight.Remove(testUid);
+            }
+
+            TryPruneOldSegments();
+            return Task.CompletedTask;
+        }
+
         // A node carries a single state property in practice; use FirstOrDefault rather than
         // SingleOrDefault so a malformed producer can't throw out of the consumer pump.
         TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
@@ -24,8 +36,6 @@ internal sealed partial class VideoRecorderSessionHandler
         {
             return Task.CompletedTask;
         }
-
-        string testUid = update.TestNode.Uid.Value;
 
         if (state is InProgressTestNodeStateProperty)
         {
@@ -47,6 +57,17 @@ internal sealed partial class VideoRecorderSessionHandler
             return Task.CompletedTask;
         }
 
+        // A test framework that retries in-process reports every attempt under the same test node uid. A superseded
+        // attempt is not the test's outcome, so it must not mark the session as failed or contribute a failing
+        // TestRecord: otherwise a fail-then-pass [Retry] test would retain failure-only video artifacts (the whole
+        // session under --video-recorder-mode on-failure, or its own per-test clip) despite having passed.
+        // Returning before the _inFlight removal is deliberate: the entry stays until the final attempt, so the
+        // retained clip spans the whole retry sequence rather than starting at the last attempt.
+        if (update.TestNode.IsSupersededRetryAttempt())
+        {
+            return Task.CompletedTask;
+        }
+
         bool isFailure = state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty;
 
         // Prefer the authoritative wall-clock timing the framework publishes on the terminal
@@ -56,12 +77,19 @@ internal sealed partial class VideoRecorderSessionHandler
         lock (_stateGate)
         {
             _inFlight.Remove(testUid);
+            _testRecords.Add(new TestRecord(update.TestNode.DisplayName, start, end, isFailure, OutcomeText(state)));
             if (isFailure)
             {
                 _anyTestFailed = true;
+                DateTimeOffset? recordingStart = _recorder.RecordingStartUtc;
+                if (recordingStart is not null)
+                {
+                    _failedWindows = new FailedWindow(
+                        (start - recordingStart.Value).TotalSeconds,
+                        (end - recordingStart.Value).TotalSeconds,
+                        _failedWindows);
+                }
             }
-
-            _testRecords.Add(new TestRecord(update.TestNode.DisplayName, start, end, isFailure, OutcomeText(state)));
         }
 
         TryPruneOldSegments();

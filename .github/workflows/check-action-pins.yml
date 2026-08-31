@@ -1,0 +1,54 @@
+name: Check action pins
+
+# Guards against corrupted GitHub Actions pins in the generated agentic-workflow
+# files. A locally installed `gh aw` build can silently rewrite pins in every
+# `.lock.yml` it touches -- downgrading an action or replacing an immutable SHA
+# with a mutable tag -- and the damage rides along unnoticed in unrelated PRs
+# because reviewers rarely read generated files line by line.
+# See https://github.com/microsoft/testfx/issues/10258.
+#
+# The check is fully offline and deterministic: it compares every `uses:`
+# reference against `.github/aw/actions-lock.json` and against the other
+# workflows in the repository.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - '.github/aw/actions-lock.json'
+      - '.github/scripts/check_action_pins.py'
+      - '.github/scripts/check-action-pins-requirements.txt'
+  push:
+    branches:
+      - main
+      - 'rel/*'
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - '.github/aw/actions-lock.json'
+      - '.github/scripts/check_action_pins.py'
+      - '.github/scripts/check-action-pins-requirements.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-action-pins-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Audit action pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install PyYAML
+        run: python -m pip install --disable-pip-version-check --require-hashes -r .github/scripts/check-action-pins-requirements.txt
+      - name: Audit action pins
+        run: python .github/scripts/check_action_pins.py

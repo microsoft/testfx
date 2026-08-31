@@ -12,6 +12,10 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Exten
 dotnet add package Microsoft.Testing.Extensions.VSTestBridge
 ```
 
+## Usage
+
+Framework and adapter authors derive their Microsoft.Testing.Platform framework implementation from `VSTestBridgedTestFrameworkBase`, or from `SynchronizedSingleSessionVSTestBridgedTestFramework` when discovery and execution must share one synchronized VSTest session. Register the derived implementation as the test framework for the application.
+
 ## About
 
 This package provides:

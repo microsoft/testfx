@@ -111,6 +111,23 @@ internal sealed class SystemConsole : IConsole
         }
     }
 
+    public void Write(StringBuilder value)
+    {
+        if (_suppressOutput)
+        {
+            return;
+        }
+
+#if NETCOREAPP
+        // TextWriter.Write(StringBuilder) walks the builder's chunks and writes each one as a span, so the
+        // batched output never has to be copied into a temporary string.
+        CaptureConsoleOutWriter.Write(value);
+#else
+        // netstandard2.0 / .NET Framework have no StringBuilder overload, so the string copy is unavoidable there.
+        CaptureConsoleOutWriter.Write(value.ToString());
+#endif
+    }
+
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]

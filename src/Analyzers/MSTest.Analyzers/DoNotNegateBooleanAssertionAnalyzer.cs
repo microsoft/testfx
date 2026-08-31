@@ -22,6 +22,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.DoNotNegateBooleanAssertionTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DoNotNegateBooleanAssertionMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.DoNotNegateBooleanAssertionDescription), Resources.ResourceManager, typeof(Resources));
 
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
 
@@ -29,7 +30,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
         DiagnosticIds.DoNotNegateBooleanAssertionRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);

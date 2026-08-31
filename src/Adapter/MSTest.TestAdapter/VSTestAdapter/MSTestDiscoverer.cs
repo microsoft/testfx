@@ -94,33 +94,26 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             throw new ArgumentNullException(nameof(logger));
         }
 
-        // Initialize telemetry collection if not already set (e.g. first call in the session).
+        // Unwrap the VSTest discovery context into neutral inputs at this boundary and hand them to the
+        // platform-agnostic engine. The engine owns telemetry lifetime and the calls into the platform-services
+        // discovery pipeline; it never depends on the VSTest object model.
+        IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
+        IUnitTestElementSink unitTestElementSink = elementSink ?? discoverySink!.ToUnitTestElementSink();
+
 #if !WINDOWS_UWP && !WIN_UI
-        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
-        {
-            _ = MSTestTelemetryDataCollector.EnsureInitialized();
-        }
+        var engine = new MSTestEngine(CancellationToken.None, _telemetrySender);
+#else
+        var engine = new MSTestEngine(CancellationToken.None);
 #endif
 
-        try
-        {
-            IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
-            IUnitTestElementSink unitTestElementSink = elementSink ?? discoverySink!.ToUnitTestElementSink();
-            if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext?.RunSettings?.SettingsXml, adapterLogger, configuration, _testSourceHandler))
-            {
-                await new UnitTestDiscoverer(_testSourceHandler).DiscoverTestsAsync(sources, adapterLogger, unitTestElementSink, discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-#if !WINDOWS_UWP && !WIN_UI
-            // Send the discovery telemetry event ('mstest/discovery'). This always runs at the
-            // end of discovery — for discover-only sessions it is the only event; for sessions
-            // where a run follows, MSTestExecutor will send a separate 'mstest/sessionexit' event
-            // carrying assertion usage. Keeping the two events distinct avoids settings/attribute
-            // duplication and lets each event be self-contained.
-            await MSTestTelemetryDataCollector.SendDiscoveryTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
-#endif
-        }
+        await engine.DiscoverAsync(
+            sources,
+            discoveryContext?.RunSettings?.SettingsXml,
+            adapterLogger,
+            unitTestElementSink,
+            new TestElementFilterProvider(discoveryContext),
+            configuration,
+            _testSourceHandler,
+            isMTP).ConfigureAwait(false);
     }
 }

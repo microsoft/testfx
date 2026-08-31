@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -72,6 +73,96 @@ public partial class TypeEnumeratorTests : TestContainer
 
         tests.Should().NotBeNull();
         tests.Should().HaveCount(0);
+    }
+
+    public void EnumerateShouldUseCompleteGeneratedDescriptorsWithoutLegacyMethodValidation()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false);
+        MethodInfo method = typeof(DescriptorTestClass).GetMethod(nameof(DescriptorTestClass.PlainTest))!;
+        SetGeneratedDescriptorOperations(
+            typeof(DescriptorTestClass),
+            [method],
+            areAllTestMethodsSupported: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DescriptorTestClass), Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings, useGeneratedDescriptors: true);
+
+        tests.Should().ContainSingle();
+        tests[0].TestMethod.MethodInfo.Should().BeSameAs(method);
+        tests[0].IsFromGeneratedDescriptor.Should().BeTrue();
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
+    }
+
+    public void EnumerateShouldFallBackPerMethodWhenGeneratedDescriptorsAreIncomplete()
+    {
+        _mockTypeValidator.Setup(validator => validator.IsValidTestClass(It.IsAny<Type>(), It.IsAny<List<string>>()))
+            .Returns(true);
+        _mockTestMethodValidator.Setup(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()))
+            .Returns((MethodInfo method, Type _, ICollection<string> _) => method.Name == nameof(DescriptorTestClass.FallbackTest));
+        MethodInfo descriptorMethod = typeof(DescriptorTestClass).GetMethod(nameof(DescriptorTestClass.PlainTest))!;
+        SetGeneratedDescriptorOperations(
+            typeof(DescriptorTestClass),
+            [descriptorMethod],
+            areAllTestMethodsSupported: false);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DescriptorTestClass), Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings, useGeneratedDescriptors: true);
+
+        tests.Should().HaveCount(2);
+        tests.Single(test => test.TestMethod.Name == nameof(DescriptorTestClass.PlainTest))
+            .IsFromGeneratedDescriptor.Should().BeTrue();
+        tests.Single(test => test.TestMethod.Name == nameof(DescriptorTestClass.FallbackTest))
+            .IsFromGeneratedDescriptor.Should().BeFalse();
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(descriptorMethod, It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
+    }
+
+    public void EnumerateShouldIgnoreGeneratedDescriptorsOutsideNativeMtp()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        MethodInfo descriptorMethod = typeof(DescriptorTestClass).GetMethod(nameof(DescriptorTestClass.PlainTest))!;
+        SetGeneratedDescriptorOperations(
+            typeof(DescriptorTestClass),
+            [descriptorMethod],
+            areAllTestMethodsSupported: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DescriptorTestClass), Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
+
+        tests.Should().NotBeEmpty();
+        tests.Should().OnlyContain(test => !test.IsFromGeneratedDescriptor);
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(descriptorMethod, It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Once);
+    }
+
+    public void EnumerateShouldSelectPlainAndDataRowDescriptorsWhenComplete()
+    {
+        Type type = typeof(DescriptorCompleteTestClass);
+        MethodInfo[] methods =
+        [
+            type.GetMethod(nameof(DescriptorCompleteTestClass.PlainTest))!,
+            type.GetMethod(nameof(DescriptorCompleteTestClass.DataRowTest))!,
+        ];
+        SetGeneratedDescriptorOperations(type, methods, areAllTestMethodsSupported: true);
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(type, Assembly.GetExecutingAssembly().Location);
+
+        List<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings, useGeneratedDescriptors: true);
+
+        tests.Should().HaveCount(2);
+        tests.Should().OnlyContain(test => test.IsFromGeneratedDescriptor);
+        tests.Select(test => test.TestMethod.Name)
+            .Should().BeEquivalentTo(nameof(DescriptorCompleteTestClass.PlainTest), nameof(DescriptorCompleteTestClass.DataRowTest));
+        tests.Select(test => test.TestMethod.Name)
+            .Should().NotContain(nameof(DescriptorCompleteTestClass.FallbackOnlyTest));
+        _mockTestMethodValidator.Verify(
+            validator => validator.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>()),
+            Times.Never);
     }
 
     #endregion
@@ -227,6 +318,101 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.TestMethod.Name.Should().Be("MethodWithVoidReturnType");
         testElement.TestMethod.FullClassName.Should().Be(typeof(DummyTestClass).FullName);
         testElement.TestMethod.AssemblyName.Should().Be("DummyAssemblyName");
+    }
+
+    /// <summary>
+    /// A class-level <c>[DependsOn(nameof(Setup))]</c> is expanded onto every method of the class, including
+    /// <c>Setup</c> itself. That generated self-edge is dropped, because the declaration plainly means "every
+    /// *other* test waits for Setup"; keeping it would make the graph report a cycle the user never wrote,
+    /// fail <c>Setup</c>, and cascade a skip over the whole class.
+    /// </summary>
+    public void GetTestFromMethodShouldNotMakeAClassLevelDependencyTargetTargetItself()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassWithClassLevelDependsOn), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement target = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassWithClassLevelDependsOn).GetMethod(nameof(DummyTestClassWithClassLevelDependsOn.Setup))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        target.Dependencies.Should().BeNull();
+
+        // Every other method of the class still gets the dependency.
+        MSTest.TestAdapter.ObjectModel.UnitTestElement dependent = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassWithClassLevelDependsOn).GetMethod(nameof(DummyTestClassWithClassLevelDependsOn.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        dependent.Dependencies.Should().ContainSingle();
+        dependent.Dependencies![0].TargetMethodName.Should().Be(nameof(DummyTestClassWithClassLevelDependsOn.Setup));
+    }
+
+    /// <summary>
+    /// When the same prerequisite is declared at both class and method scope with different
+    /// <c>ProceedOnFailure</c> values, the conservative value must win - matching the rule applied across
+    /// distinct prerequisites. Merging permissively would let a class-level opt-out silently override a
+    /// method-level default and run a test whose precondition did not hold.
+    /// </summary>
+    public void GetTestFromMethodShouldMergeDuplicateDependenciesConservatively()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassWithConflictingDependsOn), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement element = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassWithConflictingDependsOn).GetMethod(nameof(DummyTestClassWithConflictingDependsOn.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        // One edge, because both declarations name the same prerequisite - and it must not proceed on
+        // failure, because the method-level declaration did not ask to.
+        element.Dependencies.Should().ContainSingle();
+        element.Dependencies![0].TargetMethodName.Should().Be(nameof(DummyTestClassWithConflictingDependsOn.Setup));
+        element.Dependencies[0].ProceedOnFailure.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// A test method declared on a base class runs as a test of every derived test class, so the dependency
+    /// it declares has to travel with it: the edge resolves against the <em>derived</em> class, where both
+    /// the dependent and its prerequisite exist. Dropping it there would silently discard the declared
+    /// ordering in every concrete test class - the same silent-loss failure mode as an unmatched edge.
+    /// This is unrelated to <c>Inherited = false</c>, which governs override chains (see the test below).
+    /// </summary>
+    public void GetTestFromMethodShouldResolveAnInheritedDependencyAgainstTheDerivedClass()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassInheritingADependency), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement element = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassInheritingADependency).GetMethod(nameof(DummyTestClassInheritingADependency.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        element.Dependencies.Should().ContainSingle();
+
+        // A null target class is what keeps the edge inside the derived class: it is resolved against the
+        // dependent's own class, so DerivedA.PlaceOrder waits for DerivedA.Setup rather than the base's.
+        element.Dependencies![0].TargetClassFullName.Should().BeNull();
+        element.Dependencies[0].TargetMethodName.Should().Be(nameof(DummyTestClassBaseDeclaringADependency.Setup));
+        element.TestMethod.FullClassName.Should().Be(typeof(DummyTestClassInheritingADependency).FullName);
+    }
+
+    /// <summary>
+    /// This is what <c>Inherited = false</c> buys: an override that does not re-declare the attribute does
+    /// not pick up the base method's dependency. Re-pointing a prerequisite onto a method the author
+    /// rewrote is exactly the unintended edge the attribute opts out of.
+    /// </summary>
+    public void GetTestFromMethodShouldNotCarryADependencyOntoAnOverrideThatDoesNotRedeclareIt()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassOverridingADependentTest), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement element = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassOverridingADependentTest).GetMethod(nameof(DummyTestClassOverridingADependentTest.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        element.Dependencies.Should().BeNull();
     }
 
     public void GetTestFromMethodShouldUseClosedFullClassNameAndOpenManagedTypeNameForGenericTypes()
@@ -497,6 +683,27 @@ public partial class TypeEnumeratorTests : TestContainer
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object);
 
+    private void SetGeneratedDescriptorOperations(Type type, MethodInfo[] descriptorMethods, bool areAllTestMethodsSupported)
+    {
+        Attribute[] typeAttributes = type.GetCustomAttributes(inherit: true).OfType<Attribute>().ToArray();
+        var methodAttributes = new Dictionary<MethodInfo, Attribute[]>();
+        foreach (MethodInfo method in type.GetMethods())
+        {
+            methodAttributes[method] = method.GetCustomAttributes(inherit: true).OfType<Attribute>().ToArray();
+        }
+
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            TypeAttributes = new Dictionary<Type, Attribute[]> { [type] = typeAttributes },
+            TypeMethodAttributes = methodAttributes,
+            DescriptorTestMethods = new Dictionary<Type, MethodInfo[]> { [type] = descriptorMethods },
+            DescriptorCompleteTypes = areAllTestMethodsSupported
+                ? new Dictionary<Type, bool> { [type] = true }
+                : [],
+        };
+        _testablePlatformServiceProvider.SetReflectionOperations(new SourceGeneratedReflectionOperations(provider));
+    }
+
     #endregion
 }
 
@@ -546,10 +753,104 @@ public class DummySecondHidingTestClass : DummyOverridingTestClass
 }
 
 [TestClass]
+public class DescriptorTestClass
+{
+    [TestMethod]
+    public void PlainTest()
+    {
+    }
+
+    [TestMethod]
+    [TestCategory("fallback")]
+    public void FallbackTest()
+    {
+    }
+}
+
+[TestClass]
+public class DescriptorCompleteTestClass
+{
+    [TestMethod]
+    public void PlainTest()
+    {
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    public void DataRowTest(int value)
+    {
+    }
+
+    [TestMethod]
+    public void FallbackOnlyTest()
+    {
+    }
+}
+
+[TestClass]
 internal class DummyGenericTestClass<T>
 {
     [TestMethod]
     public void GenericTestMethod()
+    {
+    }
+}
+
+[TestClass]
+[DependsOn(nameof(Setup))]
+internal class DummyTestClassWithClassLevelDependsOn
+{
+    [TestMethod]
+    public void Setup()
+    {
+    }
+
+    [TestMethod]
+    public void PlaceOrder()
+    {
+    }
+}
+
+[TestClass]
+[DependsOn(nameof(Setup), ProceedOnFailure = true)]
+internal class DummyTestClassWithConflictingDependsOn
+{
+    [TestMethod]
+    public void Setup()
+    {
+    }
+
+    [TestMethod]
+    [DependsOn(nameof(Setup))]
+    public void PlaceOrder()
+    {
+    }
+}
+
+internal class DummyTestClassBaseDeclaringADependency
+{
+    [TestMethod]
+    public void Setup()
+    {
+    }
+
+    [TestMethod]
+    [DependsOn(nameof(Setup))]
+    public virtual void PlaceOrder()
+    {
+    }
+}
+
+[TestClass]
+internal class DummyTestClassInheritingADependency : DummyTestClassBaseDeclaringADependency
+{
+}
+
+[TestClass]
+internal class DummyTestClassOverridingADependentTest : DummyTestClassBaseDeclaringADependency
+{
+    [TestMethod]
+    public override void PlaceOrder()
     {
     }
 }

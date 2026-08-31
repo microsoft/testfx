@@ -62,6 +62,15 @@ internal static class TestResultRecorderExtensions
 
         public Task<bool> RecordResultAsync(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
         {
+            // VSTest has no notion of in-process retry attempts: it keys results by test case and would show a
+            // [Retry]-decorated test's earlier attempts as duplicate results in Test Explorer and in the TRX it
+            // produces. Only the final attempt - the test's actual outcome - is recorded here, which is exactly
+            // what MSTest reported before the attempts were surfaced to Microsoft.Testing.Platform.
+            if (unitTestResult.IsSupersededRetryAttempt)
+            {
+                return Task.FromResult(false);
+            }
+
             TestCase testCase = testElement.GetOrCreateHostTestCase();
             var testResult = unitTestResult.ToTestResult(testCase, startTime, endTime, _computerName, _settings);
 

@@ -14,6 +14,19 @@
     <TestingPlatformNextMajorVersion Condition=" '$(TestingPlatformNextMajorVersion)' == '' ">$([MSBuild]::Add($(TestingPlatformVersionPrefix.Split('.')[0]), 1)).0.0</TestingPlatformNextMajorVersion>
   </PropertyGroup>
 
+  <!-- Pack config -->
+  <PropertyGroup>
+    <!-- Shared closing sentence of every Microsoft.Testing.Platform package description, replacing the MSTest
+         one from src/Directory.Build.props. Projects reference it inline, the way they reference
+         $(CommonPackageTags), so each project still shows its whole published description. -->
+    <CommonProductDescription>Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.</CommonProductDescription>
+
+    <!-- Platform and extensions have their own changelog, distinct from MSTest's. The anchor uses the
+         platform version so extension packages (which have their own VersionPrefix) still land on the
+         right changelog entry. -->
+    <PackageReleaseNotes>See the release notes at https://github.com/microsoft/testfx/blob/main/docs/Changelog-Platform.md#$(TestingPlatformVersionPrefix).</PackageReleaseNotes>
+  </PropertyGroup>
+
   <!-- Build config -->
   <PropertyGroup>
     <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsTrimmable>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Note: System.Text.Json is only available in .NET 6.0 and above.
@@ -19,7 +19,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = req.Id,
+                [JsonRpcStrings.Id] = req.StringId ?? (object)req.Id,
                 [JsonRpcStrings.Method] = req.Method,
                 [JsonRpcStrings.Params] = req.Params is null ? null : SerializeObject(req.Params),
             };
@@ -32,7 +32,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = res.Id,
+                [JsonRpcStrings.Id] = res.StringId ?? (object)res.Id,
                 [JsonRpcStrings.Result] = res.Result is null ? null : SerializeObject(res.Result),
             };
 
@@ -56,7 +56,7 @@ internal static partial class SerializerUtilities
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
-                [JsonRpcStrings.Id] = error.Id,
+                [JsonRpcStrings.Id] = error.StringId ?? (object)error.Id,
                 [JsonRpcStrings.Error] = new Dictionary<string, object?>
                 {
                     [JsonRpcStrings.Code] = error.ErrorCode,
@@ -76,6 +76,11 @@ internal static partial class SerializerUtilities
                 [JsonRpcStrings.ServerInfo] = Serialize(res.ServerInfo),
                 [JsonRpcStrings.Capabilities] = Serialize(res.Capabilities),
             };
+
+            if (res.ProtocolVersion is not null)
+            {
+                values[JsonRpcStrings.ProtocolVersion] = res.ProtocolVersion;
+            }
 
             return values;
         });
@@ -103,6 +108,7 @@ internal static partial class SerializerUtilities
             [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
             [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
             [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
+            [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
         });
 
         Serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>
@@ -120,7 +126,7 @@ internal static partial class SerializerUtilities
         {
             Dictionary<string, object?> values = new()
             {
-                [JsonRpcStrings.Id] = ev.CancelRequestId,
+                [JsonRpcStrings.Id] = ev.StringId ?? (object)ev.CancelRequestId,
             };
 
             return values;

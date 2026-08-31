@@ -22,10 +22,160 @@
         <target state="translated">正在取消測試工作階段...</target>
         <note />
       </trans-unit>
+      <trans-unit id="CodeCoverageSummary">
+        <source>Code Coverage Summary:</source>
+        <target state="translated">程式碼涵蓋範圍摘要:</target>
+        <note>Heading printed before the per-scope code coverage percentages in the run summary.</note>
+      </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
         <target state="translated">主控台已處於批次處理模式。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationAverage">
+        <source>Average</source>
+        <target state="translated">平均值</target>
+        <note>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMaximum">
+        <source>Maximum</source>
+        <target state="translated">最大值</target>
+        <note>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMinimum">
+        <source>Minimum</source>
+        <target state="translated">最小值</target>
+        <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationOver">
+        <source>{0} over {1}</source>
+        <target state="translated">{0} 超過 {1}</target>
+        <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationTotal">
+        <source>Total</source>
+        <target state="translated">總計</target>
+        <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBlock">
+        <source>Block</source>
+        <target state="translated">封鎖</target>
+        <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBranch">
+        <source>Branch</source>
+        <target state="translated">分支</target>
+        <note>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricClass">
+        <source>Class</source>
+        <target state="translated">類別</target>
+        <note>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricComplexity">
+        <source>Complexity</source>
+        <target state="translated">複雜度</target>
+        <note>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricCondition">
+        <source>Condition</source>
+        <target state="translated">條件</target>
+        <note>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricFunction">
+        <source>Function</source>
+        <target state="translated">函式</target>
+        <note>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricInstruction">
+        <source>Instruction</source>
+        <target state="translated">指示</target>
+        <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricLine">
+        <source>Line</source>
+        <target state="translated">線</target>
+        <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricMethod">
+        <source>Method</source>
+        <target state="translated">方法</target>
+        <note>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricRegion">
+        <source>Region</source>
+        <target state="translated">地區</target>
+        <note>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricStatement">
+        <source>Statement</source>
+        <target state="translated">陳述式</target>
+        <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricWithProducer">
+        <source>{0} [{1}]</source>
+        <target state="translated">{0} [{1}]</target>
+        <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
+      </trans-unit>
+      <trans-unit id="CoverageNoData">
+        <source>N/A</source>
+        <target state="translated">N/A</target>
+        <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeAssembly">
+        <source>Assembly</source>
+        <target state="translated">組件</target>
+        <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeFile">
+        <source>File</source>
+        <target state="translated">檔案</target>
+        <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeModule">
+        <source>Module</source>
+        <target state="translated">模組</target>
+        <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeNamespace">
+        <source>Namespace</source>
+        <target state="translated">命名空間</target>
+        <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeOverall">
+        <source>Total</source>
+        <target state="translated">總計</target>
+        <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeType">
+        <source>Type</source>
+        <target state="translated">類型</target>
+        <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailed">
+        <source>{0}% &lt; {1}% threshold</source>
+        <target state="translated">{0}% &lt; {1}% 閾值</target>
+        <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataFailed">
+        <source>No coverable data (failed by policy)</source>
+        <target state="translated">沒有可涵蓋的資料 (原則視為失敗)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataPassed">
+        <source>No coverable data (passed by policy)</source>
+        <target state="translated">沒有可涵蓋的資料 (原則視為通過)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdPassed">
+        <source>{0}% &gt;= {1}% threshold</source>
+        <target state="translated">{0}% &gt;= {1}% 閾值</target>
+        <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdResults">
+        <source>Coverage Threshold Results:</source>
+        <target state="translated">涵蓋範圍閾值結果:</target>
+        <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
@@ -59,7 +209,7 @@
       </trans-unit>
       <trans-unit id="ErroredAssembliesHeader">
         <source>Errored assemblies:</source>
-        <target state="new">Errored assemblies:</target>
+        <target state="translated">發生錯誤的組件:</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -86,6 +236,26 @@
         <source>failed with {0} error(s)</source>
         <target state="translated">失敗，有 {0} 個錯誤</target>
         <note>{0} is the number of errors in an assembly summary line</note>
+      </trans-unit>
+      <trans-unit id="FlakyAttempts">
+        <source>{0} attempts</source>
+        <target state="translated">{0} 次嘗試</target>
+        <note>{0} is the total number of times the test ran (first run plus retries), shown next to a flaky test's name.</note>
+      </trans-unit>
+      <trans-unit id="FlakyLowercase">
+        <source>flaky: {0} (passed after retry)</source>
+        <target state="translated">不穩定: {0} (重試後通過)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTests">
+        <source>Flaky tests:</source>
+        <target state="translated">不穩定的測試:</target>
+        <note>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTransition">
+        <source>failed -&gt; passed</source>
+        <target state="translated">失敗 -&gt; 通過</target>
+        <note>Describes the outcome change of a flaky test, shown next to its name in the 'Flaky tests:' section. The arrow reads left (first outcome) to right (final outcome).</note>
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
@@ -140,7 +310,12 @@
       <trans-unit id="Retried">
         <source>retried</source>
         <target state="translated">已重試</target>
-        <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
+        <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
+      </trans-unit>
+      <trans-unit id="RetriedTestsAndRuns">
+        <source>{0} test(s), {1} extra run(s)</source>
+        <target state="translated">{0} 個測試，{1} 次額外執行</target>
+        <note>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
@@ -150,6 +325,11 @@
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
         <target state="translated">已跳過</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SlowestTests">
+        <source>Slowest tests:</source>
+        <target state="translated">最慢的測試:</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
@@ -204,16 +384,16 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">報告測試時的輸出詳細程度。
-有效值為 'Normal'、'Detailed'。預設為 'Normal'。</target>
-        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
+        <target state="translated">預設終端機中顯示的每個測試結果區塊。
+有效值為 'Minimal'、'Normal'、'Detailed'。預設為 'Normal'。使用 '--show-test-results' 以精確選取結果。</target>
+        <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">--output 需要值為 'Normal' 或 'Detailed' 的單一參數。</target>
-        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
+        <target state="translated">--output 需要值為 'Minimal'、'Normal' 或 'Detailed' 的單一參數。</target>
+        <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -246,10 +426,34 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <target state="translated">[slow] 在 {0} 後仍執行中: {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
       </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionDescription">
+        <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</source>
+        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</target>
+        <note>Do not localize the values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
+        <source>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</source>
+        <target state="translated">--show-flaky-tests` 不接受任何參數，或只接受單一的 'on' 或 'off' 參數。</target>
+        <note>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</note>
+      </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
         <target state="translated">--show-stdout 和 --show-stderr 需接收一個參數，其值必須為「All」、「Failed」或「None」。</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionDescription">
+        <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
+        <target state="translated">顯示執行摘要中指定的最慢測試數目 (依照報告的執行持續時間)。應該是正整數。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
+        <source>--show-slowest-tests expects a single positive integer parameter.</source>
+        <target state="translated">--show-slowest-tests 應該是單一正整數參數。</target>
+        <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
@@ -264,6 +468,30 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
         <target state="translated">決定何時顯示測試擷取到的標準輸出。
 有效值為 'All'、'Failed'、'None'。預設值為 'All' (或偵測到 LLM/AI 代理程式環境時為 'Failed')。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="translated">--show-test-results 的值 'all' 或 'none' 不能與任何其他值組合。</target>
+        <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
+        <target state="translated">選取哪些測試結果會在終端機中顯示每個測試的結果區塊，以及其說明詳細資料、堆疊追蹤和擷取的輸出。
+有效值為 'passed'、'failed' (也包含發生錯誤、逾時和已取消的測試)、'skipped'、'all' 和 'none'。您可以將多個值組合成以逗號或空格分隔的清單，或重複使用此選項；'all' 和 'none' 不能與任何其他值組合。
+當 '--output' 為 'Minimal' 時，預設值為 'failed'；當為 'Normal' 或未指定時，預設值為 'failed' 和 'skipped'；當為 'Detailed' 時，預設值為 'all'。無論傳遞順序為何，明確指定的 '--show-test-results' 一律優先於 '--output'。</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results 至少需要一個值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
+        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results 接受一或多個以逗號或空格分隔的值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
+        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>

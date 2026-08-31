@@ -3,8 +3,10 @@
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
@@ -40,9 +42,16 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetEnvironment(),
                     serviceProvider.GetFileSystem(),
+                    serviceProvider.GetMessageBus(),
                     serviceProvider.GetOutputDevice(),
                     serviceProvider.GetTestApplicationModuleInfo(),
-                    serviceProvider.GetLoggerFactory()));
+                    serviceProvider.GetTestApplicationProcessExitCode(),
+                    serviceProvider.GetRequiredService<ITestCoverageResult>(),
+                    serviceProvider.GetLoggerFactory(),
+                    () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
+                    {
+                        IsRequiredArtifactPostProcessingSupported: true,
+                    }));
 
         var compositeSlowTestReporter =
             new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
@@ -71,6 +80,7 @@ public static class AzureDevOpsExtensions
                    serviceProvider.GetConfiguration(),
                    serviceProvider.GetEnvironment(),
                    serviceProvider.GetFileSystem(),
+                   serviceProvider.GetOutputDevice(),
                    serviceProvider.GetTestApplicationModuleInfo(),
                    serviceProvider.GetTestApplicationProcessExitCode(),
                    new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
@@ -105,7 +115,33 @@ public static class AzureDevOpsExtensions
         // Registered last so its OnTestSessionFinishingAsync (the closing ##[endgroup]) runs after
         // the other AzDO handlers' finishing callbacks, ensuring the group wraps all their output.
         builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
+
+        // A test run must span every process an orchestrator launches (e.g. each --retry-failed-tests
+        // attempt), so its lifetime belongs to the orchestrator process rather than to any single test
+        // host. This is only built when an orchestrator is active, and is inert otherwise.
+        builder.TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(serviceProvider =>
+            new AzureDevOpsTestRunOrchestratorLifetime(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetConfiguration(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+                serviceProvider.GetTask(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetLoggerFactory()));
+
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
+
+        if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
+                new AzureDevOpsSummaryArtifactPostProcessor(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice()));
+        }
     }
 
     private static AzureDevOpsHistoryService CreateHistoryService(IServiceProvider serviceProvider)

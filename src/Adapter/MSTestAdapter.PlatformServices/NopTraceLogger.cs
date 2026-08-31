@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
+using System.Security;
+#endif
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -24,6 +28,11 @@ internal sealed class NopTraceLogger :
     public bool IsWarningEnabled => false;
 
     public bool IsErrorEnabled => false;
+
+#if NETFRAMEWORK
+    [SecurityCritical]
+    public override object? InitializeLifetimeService() => null;
+#endif
 
     public void Verbose(string format, params object?[] args)
     {

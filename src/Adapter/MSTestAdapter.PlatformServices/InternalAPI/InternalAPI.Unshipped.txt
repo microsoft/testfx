@@ -1,1 +1,150 @@
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.get -> System.Reflection.Assembly!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleErr(char value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleErr(char[]! buffer, int index, int count) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleErr(string? value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleOut(char value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleOut(char[]! buffer, int index, int count) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleOut(string? value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteTrace(char value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteTrace(string? value) -> void
 #nullable enable
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.AssemblyCleanup = "MSTest.AssemblyCleanup" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.AssemblyInitialize = "MSTest.AssemblyInitialize" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.ClassCleanup = "MSTest.ClassCleanup" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.ClassInitialize = "MSTest.ClassInitialize" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.Discovery = "MSTest.Discovery" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.TestCleanup = "MSTest.TestCleanup" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.TestInitialize = "MSTest.TestInitialize" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.TestMethod = "MSTest.TestMethod" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.DataRowIndex = "test.case.data_row.index" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.FixtureKind = "test.fixture.kind" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.RetryAttempt = "test.case.retry.attempt" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TestAssembly = "test.assembly.name" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TestClass = "test.suite.name" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TestMethod = "test.case.name" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TimeoutMilliseconds = "test.case.timeout" -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock.AcquireReaderAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.IDisposable!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock.AcquireWriterAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.IDisposable!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock.AsyncReaderWriterLock() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ResourceLockManager
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ResourceLockManager.ExecuteWithLocksAsync(System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo!>! locks, System.Func<System.Threading.Tasks.Task!>! action, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ResourceLockManager.ResourceLockManager() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyCoordinator
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyCoordinator.RecordNotRun(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! test) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyCoordinator.RecordOutcome(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! test, bool passed) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyCoordinator.ShouldSkip(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! test, out string? reason) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyCoordinator.TestDependencyCoordinator(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph! graph) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.Dependent.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.Prerequisite.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.ProceedOnFailure.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.TestDependencyDeclaration(string! dependent, string! prerequisite, bool proceedOnFailure) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest.BrokenTest(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, string! cycleMessage) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest.CycleMessage.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest.Element.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTests.get -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.Errors.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.ParallelChunkPrerequisites.get -> int[]![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.ParallelChunks.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement![]![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.ProceedOnFailure.get -> bool[]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.SequentialTests.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.TestPrerequisites.get -> int[]![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.Tests.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter(System.IO.TextWriter! console, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.NotifyTestNotRun(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! unitTestElement, System.Collections.Generic.IDictionary<string!, object?>! testContextProperties, System.Collections.Generic.IDictionary<string!, object?>! lifecycleContextProperties, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.NotifyTestNotRunAsync(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! unitTestElement, System.Collections.Generic.IDictionary<string!, object?>! testContextProperties, System.Collections.Generic.IDictionary<string!, object?>! lifecycleContextProperties, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.RunSingleTest(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! unitTestElement, System.Collections.Generic.IDictionary<string!, object?>! testContextProperties, System.Collections.Generic.IDictionary<string!, object?>! lifecycleContextProperties, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.RunSingleTestAsync(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! unitTestElement, System.Collections.Generic.IDictionary<string!, object?>! testContextProperties, System.Collections.Generic.IDictionary<string!, object?>! lifecycleContextProperties, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestCleanup = 7 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestInitialize = 6 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity.RecordException(System.Exception! exception) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity.SetTag(string! key, object? value) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity.SetFailed(string? description) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.DeclaredDependencies.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration![]?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestCleanupTimeout.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestInitializeTimeout.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.OutputCaptureMode.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.AdapterSettingsException.AdapterSettingsException(string? message, System.Exception? innerException) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Resource.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.ResourceLockInfo(string! resource, Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode mode) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.DescribeTarget() -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.ProceedOnFailure.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.TargetClassFullName.get -> string?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.TargetMethodName.get -> string?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.TestDependencyInfo(string? targetClassFullName, string? targetMethodName, bool proceedOnFailure) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.FullyQualifiedName.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.get -> System.Guid?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.Dependencies.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo![]?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.Dependencies.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.ResourceLocks.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo![]?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.ResourceLocks.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Live = 2 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.None = 0 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Result = 1 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerator.EnumerateAssembly(string! assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerationResult!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.TypeEnumerator.GetTestFromMethod(System.Reflection.MethodInfo! method, bool classDisablesParallelization, System.Collections.Generic.ICollection<string!>! warnings, bool isFromGeneratedDescriptor) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.IsFromGeneratedDescriptor.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.IsFromGeneratedDescriptor.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IReflectionOperations.TryGetTestMethodDescriptors(System.Type! type, out System.Reflection.MethodInfo![]? methods, out bool areAllTestMethodsSupported) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ReflectionOperations.TryGetTestMethodDescriptors(System.Type! type, out System.Reflection.MethodInfo![]? methods, out bool areAllTestMethodsSupported) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorCompleteTypes.get -> System.Collections.Generic.IReadOnlyDictionary<System.Type!, bool>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorCompleteTypes.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorTestMethods.get -> System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Reflection.MethodInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.DescriptorTestMethods.init -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations.TryGetTestMethodDescriptors(System.Type! type, out System.Reflection.MethodInfo![]? methods, out bool areAllTestMethodsSupported) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.get -> System.Reflection.Assembly?
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardErrorBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardOutputBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TraceBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.NopTraceLogger.InitializeLifetimeService() -> object?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestTempDirectory.get -> string?
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ResourceLockManager.GetChunkLocks(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! testSet) -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo!>!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.ApplyAll(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration!>! declarations, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement![]! tests, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger? adapterMessageLogger) -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.ReportUnmatchedDeclarations(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration!>! declarations, System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! allTests, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger? logger) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.Build(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement![]! tests, Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope scope, bool parallelizationEnabled) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph?
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.CombineRetryAttempts(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! firstAttempt, Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult! retryResult) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.CreateLiveOutputWriter(System.IO.Stream! standardOutput, System.Text.Encoding! encoding) -> System.IO.TextWriter!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscovererHelpers.GetSettingsExceptionMessage(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.AdapterSettingsException! ex) -> string!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.IsEnabled.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.SetActivityFactory(System.Func<string!, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>?, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity?>? activityFactory) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.StartActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity?
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.StartFixtureActivity(string! name, string! fixtureKind, string? owningType, string? assemblyName = null) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity?
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Decode(string! encoded) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Encode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo! info) -> string!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.Decode(string! encoded) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.Encode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo! info) -> string!
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetAttributes<TAttribute>(System.Attribute![]! attributes) -> System.Collections.Generic.IEnumerable<TAttribute!>!
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(System.Attribute![]! attributes) -> TAttribute?
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(System.Attribute![]! attributes) -> TAttribute?
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.IsAttributeDefined<TAttribute>(System.Attribute![]! attributes) -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.PerformActionOnAttribute<TAttribute, TState>(System.Attribute![]! attributes, System.Action<TAttribute!, TState?>! action, TState? state) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetLiveOutputWriterForTesting(System.IO.TextWriter! liveOutputWriter) -> System.IDisposable!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TypeCache.IsTestFilterProviderMarkerType(System.Type? attributeType) -> bool
+virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.TypeEnumerator.Enumerate(System.Collections.Generic.List<string!>! warnings, bool useGeneratedDescriptors) -> System.Collections.Generic.List<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?

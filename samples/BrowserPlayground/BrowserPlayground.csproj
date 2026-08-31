@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <!--
+      Publishing browser-wasm must be self-contained so the mono browser-wasm runtime
+      pack is resolved; targeting net10.0 under an 11.0 SDK does not infer this on its own.
+    -->
+    <SelfContained>true</SelfContained>
+
+    <!--
+      The JS boot module that the WebAssembly runtime loads first. It creates the
+      .NET runtime via dotnet.js and invokes the sample's Program.Main (defined by the
+      top-level statements in Program.cs). See wwwroot/main.js.
+    -->
+    <WasmMainJSPath>wwwroot\main.js</WasmMainJSPath>
+
+    <!-- Use the pre-built dotnet.native.wasm (no emscripten / wasm-sdk relink required). -->
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+
+    <Nullable>enable</Nullable>
+    <!--
+      Marks this as a Microsoft.Testing.Platform application. It is intentionally NOT set
+      when running under 'dotnet test' (CI's Debug Test step on TestFx.slnx passes
+      -p:UsingDotNetTest=true): the browser-wasm output can only be launched through a JS
+      host (a browser or node importing dotnet.js), which is not wired into 'dotnet test'.
+      The entry point is this sample's own Program.cs (top-level statements), not an
+      MTP-generated one.
+    -->
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Only the diagnostic capability is advertised. TestingPlatformServer / TestContainer are
+      intentionally omitted: browser-wasm cannot use server mode or the 'dotnet test' pipe (both
+      need TCP/named-pipe IPC — see the IsTestingPlatformApplication comment above and the README
+      feature matrix), and advertising them would let Test Explorer pick an unsupported launch path
+      when the project is opened directly.
+    -->
+    <ProjectCapability Include="DiagnoseCapabilities" />
+  </ItemGroup>
+
+  <!--
+    Ship the node headless runner and the browser page inside the published AppBundle.
+    The wasm SDK copies the WasmMainJSPath module (wwwroot/main.js) into the AppBundle;
+    WasmExtraFilesToDeploy places additional files (the node runner and index.html) next
+    to it so 'node runtests.mjs' / a browser can boot the app from the bundle (see README).
+  -->
+  <ItemGroup>
+    <WasmExtraFilesToDeploy Include="wwwroot\runtests.mjs" />
+    <WasmExtraFilesToDeploy Include="wwwroot\index.html" />
+  </ItemGroup>
+
+</Project>

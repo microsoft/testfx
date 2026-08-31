@@ -61,13 +61,23 @@ public partial class UnitTestApp : Application
                 .Where(arg => !arg.Contains("EnableMSTestRunner"))
                 .ToArray();
             ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
+
+            // Registers all MSBuild-contributed extensions, including the Microsoft.Testing.Extensions.PackagedApp
+            // launcher (from the PackageReference in the csproj). Because this app is packaged (MSIX), that
+            // launcher registers the layout with the OS and activates it by Application User Model ID through
+            // the platform's ITestHostLauncher extension point, instead of a plain Process.Start.
             builder.AddSelfRegisteredExtensions(cliArgs);
             using ITestApplication app = await builder.BuildAsync();
-            await app.RunAsync();
+
+            // The WinUI-generated entry point is 'void', so the run's exit code has to be published through
+            // Environment.ExitCode. Without this the app would always exit 0 and failing tests would never
+            // fail the build.
+            Environment.ExitCode = await app.RunAsync();
         }
         finally
         {
             _window.Close();
+            Exit();
         }
 #else
         Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(Environment.CommandLine);

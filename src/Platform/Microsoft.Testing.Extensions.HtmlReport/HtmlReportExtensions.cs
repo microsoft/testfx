@@ -18,9 +18,18 @@ public static class HtmlReportExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddHtmlReportProvider(this ITestApplicationBuilder builder)
-        => ReportProviderRegistration.AddReportProvider(
+    {
+        if (builder is not IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
+        }
+
+        ReportProviderRegistration.AddReportProvider(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
             () => new HtmlReportGeneratorCommandLine(),
             serviceProvider => new HtmlReportGenerator(serviceProvider));
+
+        artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new HtmlArtifactPostProcessor());
+    }
 }

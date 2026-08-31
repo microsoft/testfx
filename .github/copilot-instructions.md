@@ -52,6 +52,8 @@ For acceptance tests that drive generated assets, prefer running them through th
 
 You MUST follow all code-formatting and naming conventions defined in [`.editorconfig`](../.editorconfig).
 
+All C# and Visual Basic code files (`*.cs`, `*.csx`, `*.vb`, and `*.vbx`) MUST be encoded as UTF-8 with BOM, as required by `.editorconfig`. When creating or rewriting one of these files, preserve or add the BOM; do not emit BOM-less UTF-8.
+
 In addition to the rules enforced by `.editorconfig`, you SHOULD:
 
 - Favor style and conventions that are consistent with the existing codebase.
@@ -71,6 +73,15 @@ In addition to the rules enforced by `.editorconfig`, you SHOULD:
 
 You MUST minimize adding public API surface area but any newly added public API MUST be declared in the related `PublicAPI.Unshipped.txt` file.
 
+## NuGet package metadata guidelines
+
+Every packable project must carry the metadata that nuget.org renders on the package page. This is enforced at pack time by the `_ValidatePackageMetadata` target in the root [`Directory.Build.targets`](../Directory.Build.targets), which fails the build when a packable project is missing either piece — including packages that are `IsShipping=false`, because those still reach nuget.org.
+
+- Write `<PackageDescription>` so it **leads with what the package does**, and close it with `$(CommonProductDescription)` — the shared product sentence, defaulted per product area in [`src/Directory.Build.props`](../src/Directory.Build.props) (MSTest) and [`src/Platform/Directory.Build.props`](../src/Platform/Directory.Build.props) (Microsoft.Testing.Platform). nuget.org truncates the description in search results, so the package-specific sentence has to come first.
+- Wrap the value in `<![CDATA[ ... ]]>` and keep its continuation lines unindented. MSBuild trims a property value but not the indentation of its inner lines, so an indented multi-line description leaks the .csproj whitespace into the published text. Property references such as `$(CommonProductDescription)` are still expanded inside CDATA.
+- NEVER leave the description unset. NuGet's pack targets substitute the literal placeholder `Package Description` during evaluation, which is why Arcade's own "PackageDescription must be specified" check cannot catch it and why the repo-level guard exists.
+- Add a `PACKAGE.md` next to the project file. It is picked up automatically as `PackageReadmeFile` and packed into the root of the `.nupkg`.
+
 ## Localization Guidelines
 
 When making change to resource files, you MUST:
@@ -78,6 +89,10 @@ When making change to resource files, you MUST:
 - Add a corresponding entry in the resource file (`.resx`).
 - NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/TestFramework/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
 - A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
+- `{Locked="…"}` markers in a resource `<comment>` are matched as **substrings, not whole words**. A short locked token therefore also freezes every longer word that contains it, which blocks a legitimately translatable word. For example, `{Locked="const"}` on a message that also contains the English word *constant* locks `const` inside `constant`, so translators cannot localize it. Make each locked token unambiguous:
+  - Include the punctuation that surrounds the token in the message — usually the single quotes the message already uses — e.g. write `{Locked="'const'"}` rather than `{Locked="const"}`.
+  - Prefer the longest form that identifies the token (`{Locked="Assert.AreEqual"}`, `{Locked="[TestClass]"}`) over a bare fragment.
+  - Before adding a marker, re-read the whole message and confirm the locked text does not appear as a substring of another word that should stay translatable.
 
 ## Public API guidelines
 
@@ -100,6 +115,8 @@ When making change to resource files, you MUST:
 
 When you add a new CLI option, rename an existing one, or change the description/arguments of an existing one (typically by editing an `ICommandLineOptionsProvider` implementation such as `PlatformCommandLineProvider`, `TerminalTestReporterCommandLineOptionsProvider`, `MSTestExtension`'s options provider, or a `*CommandLineOptionsProvider`), you MUST update the corresponding `--help` and `--info` acceptance test expectations so they keep matching the actual output.
 
+All CLI option and extension descriptions must end with terminal punctuation (normally a period).
+
 The wildcard-match expectations live in:
 
 - [`test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs`](../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs) — MTP help/info with no extensions registered.
@@ -117,6 +134,7 @@ Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are comp
   - NEVER add `strict: false` to a workflow's frontmatter.
   - When in doubt, pass `--strict` explicitly to `gh aw compile` to enforce strict-mode validation across all workflows (action pinning, network config, safe-outputs, no write permissions, no deprecated fields).
 - After editing any agentic workflow `.md` source (or its frontmatter), run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change. NEVER hand-edit `.lock.yml` files.
+- Always review the `.lock.yml` diff after compiling. A locally installed `gh aw` build can silently rewrite action pins — downgrading `actions/checkout` or replacing an immutable SHA with a mutable tag — even when its `compiler_version` header matches CI ([#10258](https://github.com/microsoft/testfx/issues/10258)). Any unintended change to a `uses:` line means the local toolchain is not aligned; recompile on the pinned `github/gh-aw-actions/setup-cli` toolchain instead. Run `python .github/scripts/check_action_pins.py` to verify before pushing; CI enforces the same audit via `.github/workflows/check-action-pins.yml`.
 
 ## TODO comment policy
 

@@ -1,1 +1,57 @@
 #nullable enable
+const Microsoft.Testing.Extensions.CtrfReport.CtrfReportGenerator.CtrfArtifactKind = "microsoft.testing.ctrf" -> string!
+virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.CapturedAttachment() -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.ContentType.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.ContentType.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Description.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Description.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Name.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Name.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Path.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment.Path.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Attachments.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.CtrfReport.CapturedAttachment!>?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Attachments.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.CtrfArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportedModes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingMode>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Version.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode
+Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode.CollapseRetryAttempts = 1 -> Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode
+Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode.Concatenate = 0 -> Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode
+Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.CreateDeterministicId(System.Collections.Generic.IReadOnlyList<string!>! values) -> System.Guid
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeAllToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeAllToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports) -> string!
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports, Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode mode) -> string!
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
+Microsoft.Testing.Extensions.MergeOutputFileHelper
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ArtifactPostProcessingHelper
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.IsReparsePoint(string! path) -> bool
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.OrderInputs(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, bool includeModuleMetadata) -> System.Linq.IOrderedEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!

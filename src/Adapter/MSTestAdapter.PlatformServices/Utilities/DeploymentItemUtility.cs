@@ -123,7 +123,7 @@ internal sealed class DeploymentItemUtility
 
             IList<DeploymentItem>? deploymentItemsToBeAdded = FromKeyValuePairs(items);
 
-            // TODO: Check if we can avoid potential NRE here.
+            // deploymentItemsToBeAdded is never null here: items is non-empty (filtered above) and FromKeyValuePairs only returns null for an empty array.
             foreach (DeploymentItem deploymentItemToBeAdded in deploymentItemsToBeAdded!)
             {
                 AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);

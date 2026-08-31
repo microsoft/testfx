@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 
@@ -101,19 +102,18 @@ internal sealed partial class TerminalOutputDevice
         // --progress <auto|on|off> is the modern, positive form. When present it wins over the legacy
         // --no-progress flag. --no-progress keeps working as a deprecated alias for --progress off and
         // emits a single deprecation warning per process.
-        bool noProgress;
-        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ProgressOption, out string[]? progressArguments)
-            && progressArguments is { Length: > 0 })
-        {
-            // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
-            // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
-            // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
-            noProgress = CommandLineOptionArgumentValidator.IsOffValue(progressArguments[0]);
-        }
-        else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
-        {
-            noProgress = true;
+        bool progressOptionSet = _commandLineOptions.TryGetOptionArgumentList(
+            TerminalTestReporterCommandLineOptionsProvider.ProgressOption,
+            out string[]? progressArguments)
+            && progressArguments is { Length: > 0 };
 
+        // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
+        // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
+        // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
+        bool noProgress = !TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(_commandLineOptions);
+        if (!progressOptionSet
+            && _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
+        {
             // The deprecation warning is a nudge for interactive users to move to --progress off. We deliberately
             // do not emit it in CI: it is invisible noise there, and build infrastructure (e.g. the Arcade SDK test
             // runner) passes --no-progress unconditionally, so emitting to stderr would surface as a build error in
@@ -123,25 +123,11 @@ internal sealed partial class TerminalOutputDevice
                 await WriteToStandardErrorAsync(PlatformResources.TerminalNoProgressDeprecatedWarning).ConfigureAwait(false);
             }
         }
-        else
-        {
-            noProgress = false;
-        }
-
-        // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
-        // we need to postpone that decision until the first test result.
-        //
-        // This works but is NOT USED, we prefer to have the same experience of not showing passed tests in hotReload mode as in normal mode.
-        // Func<bool> showPassed = () => _runtimeFeature.IsHotReloadEnabled;
-        Func<bool> showPassed = () => false;
-        bool outputOption = _commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? arguments);
-        if (outputOption && arguments?.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
-        {
-            showPassed = () => true;
-        }
 
         OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
         OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
+        int slowestTestsCount = GetSlowestTestsCount(_commandLineOptions);
+        TestResultVisibility showTestResults = GetShowTestResultsVisibility(_commandLineOptions);
 
         Func<bool?> shouldShowProgress = noProgress
             // User preference is to not show progress.
@@ -160,7 +146,7 @@ internal sealed partial class TerminalOutputDevice
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_console, () => _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested, new()
         {
-            ShowPassedTests = showPassed,
+            ShowTestResults = showTestResults,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             ZeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions),
             AnsiMode = ansiMode,
@@ -168,23 +154,43 @@ internal sealed partial class TerminalOutputDevice
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
             ShowStderr = showStderr,
-            HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
-            SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
-        });
+            HeartbeatSilenceThreshold = ProgressReportingConfiguration.GetThreshold(
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
+            SlowTestThreshold = ProgressReportingConfiguration.GetThreshold(
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
+            SlowestTestsCount = slowestTestsCount,
+            ShowFlakyTests = TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(_commandLineOptions),
+            ShowRunSummary = !IsRetryAttemptAfterTheFirst(_environment),
+        }, _loggerFactory.CreateLogger<TestProgressStateAwareTerminal>());
     }
 
-    // Reads an integer number of seconds from the given environment variable, falling back to
-    // <paramref name="defaultSeconds"/> when unset or invalid. A value of 0 disables the related
-    // heartbeat rule (returns TimeSpan.Zero). Negative or non-integer values are ignored.
-    private static TimeSpan GetProgressThreshold(IEnvironment environment, string variableName, int defaultSeconds)
+    /// <summary>
+    /// Returns whether this process is a <em>retry</em> attempt of a <c>--retry-failed-tests</c> run, that is the
+    /// second or a later one. The retry orchestrator stamps the 1-based attempt number on every test host it
+    /// launches, so anything above 1 re-runs only the tests that failed previously. Such an attempt must not print
+    /// a run summary: its counts describe that filtered subset, not the run, and the orchestrator reconciles every
+    /// attempt into a single retry summary at the end. The first attempt executes the whole suite, so its summary
+    /// is accurate and is left alone — as is every run that is not orchestrated at all.
+    /// </summary>
+    private static bool IsRetryAttemptAfterTheFirst(IEnvironment environment)
     {
-        string? raw = environment.GetEnvironmentVariable(variableName);
-        return !RoslynString.IsNullOrWhiteSpace(raw)
-            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds)
-            && seconds >= 0
-            ? TimeSpan.FromSeconds(seconds)
-            : TimeSpan.FromSeconds(defaultSeconds);
+        string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
+        return !RoslynString.IsNullOrEmpty(value)
+            && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int attemptNumber)
+            && attemptNumber > 1;
     }
+
+    // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the
+    // summary. Returns 0 (feature off) when the option is absent. The value has already been validated to be a
+    // positive integer by TerminalTestReporterCommandLineOptionsProvider. Internal for unit testing the parse seam
+    // that feeds TerminalTestReporterOptions.SlowestTestsCount.
+    internal static int GetSlowestTestsCount(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption, out string[]? arguments)
+            && arguments is [string value]
+            && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int count)
+            && count >= 1
+                ? count
+                : 0;
 
     // When the option is absent, default to OutputShowMode.Failed when running under a known
     // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.
@@ -199,6 +205,33 @@ internal sealed partial class TerminalOutputDevice
                 _ => OutputShowMode.All,
             }
             : isLLMEnvironment ? OutputShowMode.Failed : OutputShowMode.All;
+
+    // Resolves which per-test terminal blocks are rendered. An explicit --show-test-results always wins over
+    // --output, regardless of the order the two options appear on the command line (only --show-test-results is
+    // consulted for the override, via TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility).
+    // Absent --show-test-results, 'minimal' shows only failed results, 'detailed' shows every outcome, and
+    // everything else (including no --output at all) shows failed and skipped results (passed tests stay hidden).
+    // Internal for unit testing the parse seam that feeds
+    // TerminalTestReporterOptions.ShowTestResults.
+    internal static TestResultVisibility GetShowTestResultsVisibility(ICommandLineOptions commandLineOptions)
+    {
+        if (TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(commandLineOptions) is { } explicitVisibility)
+        {
+            return explicitVisibility;
+        }
+
+        string? outputArgument = commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? outputArguments)
+            && outputArguments is { Length: > 0 }
+                ? outputArguments[0]
+                : null;
+
+        return outputArgument switch
+        {
+            string s when TerminalTestReporterCommandLineOptionsProvider.OutputOptionMinimalArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => TestResultVisibility.Failed,
+            string s when TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => TestResultVisibility.All,
+            _ => TestResultVisibility.Failed | TestResultVisibility.Skipped,
+        };
+    }
 
     private enum AnsiOverride
     {

@@ -13,6 +13,8 @@
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
+    <!-- MSTest.TestAdapter bundles this assembly into its buildTransitive folder, so this project is never packed on its own. -->
+    <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);EXCLUDE_OS_POLYFILL</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -37,7 +39,8 @@
 
   <ItemGroup>
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
-    <!-- Span/MemoryMarshal used by the linked XxHash code below live in System.Memory on these TFMs.
+    <!-- Span/MemoryMarshal used by the linked XxHash code below, and Span<T>.Fill used by
+         Execution\TestDependencyGraph.*, live in System.Memory on these TFMs.
          Referenced explicitly so the compiled assembly binds the System.Memory assembly version 4.0.5.0
          (see SystemMemoryVersion in Directory.Packages.props) instead of the transitive 4.5.5 (4.0.1.2). -->
     <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
@@ -60,7 +63,8 @@
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="PlatformServices.Desktop.IntegrationTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Performance.Benchmarks" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>

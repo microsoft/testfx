@@ -40,9 +40,9 @@ public sealed class MSBuildTests
 namespace SomeNamespace
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class MicrosoftTestingPlatformEntryPoint
+    internal static class MicrosoftTestingPlatformApplication
     {
-        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
+        public static async global::System.Threading.Tasks.Task<int> RunAsync(string[] args)
         {
             global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
             global::SomeNamespace.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
@@ -52,10 +52,61 @@ namespace SomeNamespace
             }
         }
     }
+
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal sealed class MicrosoftTestingPlatformEntryPoint
+    {
+        public static global::System.Threading.Tasks.Task<int> Main(string[] args)
+            => MicrosoftTestingPlatformApplication.RunAsync(args);
+    }
 }
 """;
 
         Assert.AreEqual(expectedSourceOrder, inMemoryFileSystem.Files["obj/entryPointFile"]);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void EntryPointTask_Generates_Reusable_Application_Helper_Without_Main()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile"),
+            Language = new CustomTaskItem("C#"),
+            RootNamespace = "SomeNamespace",
+            GenerateEntryPoint = false,
+        };
+
+        Assert.IsTrue(testingPlatformEntryPoint.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files["obj/applicationHelperFile"]!;
+        Assert.Contains("internal static class MicrosoftTestingPlatformApplication", generatedSource);
+        Assert.Contains("RunAsync(string[] args)", generatedSource);
+        Assert.DoesNotContain("class MicrosoftTestingPlatformEntryPoint", generatedSource);
+        Assert.DoesNotContain(" Main(", generatedSource);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void EntryPointTask_Preserves_Global_FSharp_EntryPoint_Without_RootNamespace()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile.fs"),
+            Language = new CustomTaskItem("F#"),
+        };
+
+        Assert.IsTrue(testingPlatformEntryPoint.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files["obj/applicationHelperFile.fs"]!;
+        Assert.Contains("module internal MicrosoftTestingPlatformApplication", generatedSource);
+        Assert.Contains("module MicrosoftTestingPlatformEntryPoint", generatedSource);
+        Assert.Contains("[<EntryPoint>]", generatedSource);
+        Assert.DoesNotContain("namespace Microsoft.TestingPlatform", generatedSource);
         Assert.IsEmpty(_errors);
     }
 

@@ -29,6 +29,41 @@ internal sealed partial class ServerTestHost
             => _stateChanges.Add(stateChangedMessage);
 
         public TestNodeStateChangedEventArgs BuildAggregatedChange()
-            => new(RunId, [.. _stateChanges]);
+        {
+            HashSet<TestNodeUid>? terminalTestNodeUids = null;
+            foreach (TestNodeUpdateMessage stateChange in _stateChanges)
+            {
+                TestNodeStateProperty? state = stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+                if (IsTerminalState(state))
+                {
+                    (terminalTestNodeUids ??= []).Add(stateChange.TestNode.Uid);
+                }
+            }
+
+            TestNodeUpdateMessage[] changes = terminalTestNodeUids is null
+                ? [.. _stateChanges]
+                : FilterStateChanges(_stateChanges, terminalTestNodeUids);
+
+            return new(RunId, changes);
+        }
+
+        // Keep the captured LINQ predicate out of BuildAggregatedChange so batches without terminal states
+        // do not allocate its closure.
+        private static TestNodeUpdateMessage[] FilterStateChanges(
+            List<TestNodeUpdateMessage> stateChanges,
+            HashSet<TestNodeUid> terminalTestNodeUids)
+            => [.. stateChanges.Where(stateChange =>
+                stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not InProgressTestNodeStateProperty
+                || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid))];
+
+#pragma warning disable CS0618, MTP0001
+        private static bool IsTerminalState(TestNodeStateProperty? state)
+            => state is PassedTestNodeStateProperty
+                or SkippedTestNodeStateProperty
+                or FailedTestNodeStateProperty
+                or ErrorTestNodeStateProperty
+                or TimeoutTestNodeStateProperty
+                or CancelledTestNodeStateProperty;
+#pragma warning restore CS0618, MTP0001
     }
 }

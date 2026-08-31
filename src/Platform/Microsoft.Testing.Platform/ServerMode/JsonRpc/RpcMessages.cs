@@ -12,7 +12,10 @@ internal abstract record RpcMessage;
 /// A request is a message for which the server should return a corresponding
 /// <see cref="ErrorMessage"/> or <see cref="ResponseMessage"/>.
 /// </summary>
-internal sealed record RequestMessage(int Id, string Method, object? Params) : RpcMessage;
+internal sealed record RequestMessage(int Id, string Method, object? Params) : RpcMessage
+{
+    public string? StringId { get; init; }
+}
 
 /// <summary>
 /// A notification message is a message that notifies the server of an event.
@@ -24,7 +27,10 @@ internal sealed record NotificationMessage(string Method, object? Params) : RpcM
 /// <summary>
 /// An error message is sent if some exception was thrown when processing the request.
 /// </summary>
-internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, object? Data) : RpcMessage;
+internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, object? Data) : RpcMessage
+{
+    public string? StringId { get; init; }
+}
 
 /// <summary>
 /// An response message is sent if a request is handled successfully.
@@ -33,11 +39,20 @@ internal sealed record ErrorMessage(int Id, int ErrorCode, string Message, objec
 /// If the RPC handler returns a <see cref="Task"/> the <paramref name="Result"/>
 /// will be returned as <c>null</c>.
 /// </remarks>
-internal sealed record ResponseMessage(int Id, object? Result) : RpcMessage;
+internal sealed record ResponseMessage(int Id, object? Result) : RpcMessage
+{
+    public string? StringId { get; init; }
+}
 
-internal sealed record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities);
+internal sealed record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities)
+{
+    public string[]? ProtocolVersions { get; init; }
+}
 
-internal sealed record InitializeResponseArgs(int? ProcessId, ServerInfo ServerInfo, ServerCapabilities Capabilities);
+internal sealed record InitializeResponseArgs(int? ProcessId, ServerInfo ServerInfo, ServerCapabilities Capabilities)
+{
+    public string? ProtocolVersion { get; init; }
+}
 
 internal record RequestArgsBase(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter);
 
@@ -77,7 +92,10 @@ internal sealed record RunResponseArgs(Artifact[] Artifacts) : ResponseArgsBase
 
 internal sealed record Artifact(string Uri, string Producer, string Type, string DisplayName, string? Description = null);
 
-internal sealed record CancelRequestArgs(int CancelRequestId);
+internal sealed record CancelRequestArgs(int CancelRequestId)
+{
+    public string? StringId { get; init; }
+}
 
 internal sealed record ExitRequestArgs;
 
@@ -101,7 +119,12 @@ internal sealed record ServerTestingCapabilities(
     bool MultiRequestSupport,
     bool VSTestProviderSupport,
     bool SupportsAttachments,
-    bool MultiConnectionProvider);
+    bool MultiConnectionProvider)
+{
+    // This capability describes JSON-RPC wire forwarding, not in-process coverage-message consumption.
+    // Keep it false until server mode forwards the first-class messages defined by RFC 019.
+    public static bool SupportsTestCoverageMessages => false;
+}
 
 internal sealed record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes)
 {

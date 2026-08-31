@@ -101,6 +101,56 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">Hata Ayıklama İzleyici:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">'mstest:execution:dependencies' yapılandırma bölümü, bu çalıştırmadaki hiçbir testle eşleşmeyen '{0}' için bağımlılıklar bildiriyor. Bunlar yoksayılır.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">'mstest:execution:dependencies:chains' yapılandırma bölümünün {0} dizinindeki zincir boş ve hiçbir bağımlılık bildirmiyor. Bu zinciri kaldırın: Bir zincirin sıralama düzeni ifade etmesi için en az iki test gerekir.</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">'mstest:execution:dependencies' yapılandırma bölümündeki '{0}' test başvurusu geçerli değil. Bir sınıftaki her testler için 'Namespace.Class.Method' veya 'Namespace.Class.*' kullanın.</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">'mstest:execution:dependencies' yapılandırma bölümü, 'dependsOn' girişi olmayan '{0}' için bir düğüm bildiriyor ve bu durumun hiçbir etkisi yok.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="translated">'mstest:execution:dependencies:nodes' yapılandırma bölümünün {0} dizinindeki bağımlılık düğümünde 'test' değeri yok ve yoksayıldı.</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">Sınıflar birbirine bağımlı olduğundan aşağıdaki test sınıfları arasındaki bağımlılıklar sınıf düzeyinde paralelleştirme ile zamanlanamaz: {0}. Testler bağımlılık sırasına göre sırayla çalıştırıldığından bildirilen sıraya uyulmaya devam edilir. Her testi ayrı olarak zamanlamak ve yeniden paralel olarak çalıştırmak için &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (veya [Parallelize(Scope = ExecutionScope.MethodLevel)]) kullanın.</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">Testler arasında algılanan bağımlılık döngüsü: {0}. Döngüdeki testler sıralanamaz ve başarısız olarak bildirilir. Döngüyü sonlandırmak için bağımlılık bildirimlerinden birini kaldırın.</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">Başarılı olmayan '{0}' değerine bağımlı olduğundan test atlandı.</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">'{0}' testi bu test kaynağındaki hiçbir testle eşleşmeyen '{1}' öğesine bağımlılık bildiriyor. Bağımlılıklar tek bir kaynak içinde çözüldüğünden başka bir test derlemesindeki bir hedef desteklenmez. Bağımlılık yoksayılır.</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">Test Çalıştırması dağıtım sorunu: Derleme veya modül '{0}' yüklenemedi. Neden: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">Test Çalıştırması dağıtım sorunu: '{0}' dağıtım öğesi hatalı: '{1}' çıktı dizininde öğenin dağıtım kök dizini dışında dağıtılması gerektiği belirtilmiş, ancak buna izin verilmiyor.</target>
@@ -117,9 +167,9 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Test Çalıştırması dağıtım sorunu: '{0}' dosyası '{1}' hedefine kopyalanamadı: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="translated">Test Çalıştırması dağıtım sorunu: '{0}' dosyası '{1}' hedefine kopyalanamadı: {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -228,6 +278,26 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">'{0}' genel parametresi için iki çakışan tür bulundu. Çakışan türler '{1}' ile '{2}'.</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">'{0}.{1}' genel test temizleme yöntemi {2} ms sonra zaman aşımına uğradı</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">'{0}.{1}' genel test temizleme yöntemi iptal edildi</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">'{0}.{1}' genel test başlatma yöntemi {2} ms sonra zaman aşımına uğradı</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">'{0}.{1}' genel test başlatma yöntemi iptal edildi</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">'Scope' için geçersiz '{0}' değeri belirtildi. Desteklenen kapsamlar {1}.</target>
@@ -237,6 +307,11 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">'Workers' için geçersiz '{0}' değeri belirtildi. Değer negatif olmayan bir tamsayı olmalıdır.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">MSTestAdapter, runsettings XML'ini ayrıştıramadı.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

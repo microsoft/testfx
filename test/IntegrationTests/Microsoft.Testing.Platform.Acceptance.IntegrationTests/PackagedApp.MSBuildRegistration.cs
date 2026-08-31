@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using SL = Microsoft.Build.Logging.StructuredLogger;
@@ -26,7 +26,7 @@ public sealed class PackagedAppMSBuildRegistrationTests : AcceptanceTestBase<Nop
             $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath} -v:n",
             cancellationToken: TestContext.CancellationToken);
 
-        SL.Build binLog = SL.Serialization.Read(result.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(result.BinlogPath!);
         SL.Target generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateSelfRegisteredExtensions");
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
         SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
@@ -53,8 +53,6 @@ public sealed class PackagedAppMSBuildRegistrationTests : AcceptanceTestBase<Nop
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <OutputType>Exe</OutputType>
-    <!-- The PackagedApp package is an experimental package with a downgraded (alpha) version. -->
-    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

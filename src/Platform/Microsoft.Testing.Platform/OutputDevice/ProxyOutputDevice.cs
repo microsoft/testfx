@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal sealed class ProxyOutputDevice : IOutputDevice
+internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 {
     private readonly ServerModePerCallOutputDevice? _serverModeOutputDevice;
 
@@ -71,4 +71,7 @@ internal sealed class ProxyOutputDevice : IOutputDevice
             await _serverModeOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
         }
     }
+
+    public void Dispose()
+        => _serverModeOutputDevice?.Dispose();
 }

@@ -10,6 +10,10 @@ Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platf
 dotnet add package Microsoft.Testing.Platform.MSBuild
 ```
 
+## Usage
+
+No manual API call is required. Referencing the package imports its MSBuild integration, which generates the test application entry point and copies `testconfig.json` to the output directory. Test framework packages normally reference this package transitively.
+
 ## About
 
 This package provides:

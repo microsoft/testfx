@@ -17,4 +17,10 @@ internal sealed class CapturedTestResult : CapturedTestResultBase
     public string? FilePath { get; init; }
 
     public int? Line { get; init; }
+
+    public IReadOnlyList<CapturedAttachment>? Attachments { get; init; }
+
+    public int? RetryAttemptNumber { get; init; }
+
+    public bool IsSupersededRetryAttempt { get; init; }
 }

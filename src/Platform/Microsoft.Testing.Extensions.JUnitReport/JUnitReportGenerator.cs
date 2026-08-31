@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Extensions.JUnitReport;
 
 internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGenerator, CapturedTestResult>
 {
+    internal const string JUnitArtifactKind = "microsoft.testing.junit";
+
     // Parent chain for ALL TestNodeUpdateMessages (including Discovered / InProgress).
     // Keyed by the TestNodeUid value after truncation to TestResultCaptureHelper.MaxIdentityFieldLength
     // so it matches the capped RawUid / ParentRawUid keys used everywhere else in capture
@@ -33,6 +35,8 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
 
     protected override string ArtifactDisplayName => ExtensionResources.JUnitReportArtifactDisplayName;
 
+    protected override string? ArtifactKind => JUnitArtifactKind;
+
     protected override string ArtifactDescription => ExtensionResources.JUnitReportArtifactDescription;
 
     protected override string GetGenerationLogMessage(int testResultCount)
@@ -55,7 +59,13 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
     }
 
     protected override CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
-        => TestResultCapture.TryCapture(update);
+        // A test framework that retries a test in-process reports every attempt under the same test node uid.
+        // JUnit has no notion of attempts: keeping the superseded ones would add extra <testcase> elements (renamed
+        // "[attempt N]" by JUnitSuiteBuilder) and inflate the suite totals, so only the final attempt is captured.
+        // CTRF and the HTML report deliberately do the opposite and keep the whole history.
+        => update.TestNode.IsSupersededRetryAttempt()
+            ? null
+            : TestResultCapture.TryCapture(update);
 
     protected override Task<(string FileName, string? Warning)> GenerateReportAsync(
         CapturedTestResult[] tests,

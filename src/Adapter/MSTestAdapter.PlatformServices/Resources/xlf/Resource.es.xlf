@@ -101,6 +101,56 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Seguimiento de depuración:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">La sección de configuración "mstest:execution:dependencies" declara dependencias para ''{0}", que no coincide con ninguna prueba de esta ejecución. Se omiten.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">La cadena en el índice {0} de la sección de configuración "mstest:execution:dependencies:chains" está vacía y no declara ninguna dependencia. Elimínela: una cadena necesita al menos dos pruebas para expresar un orden.</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">La referencia de prueba "{0}" de la sección de configuración "mstest:execution:dependencies" no es válida. Use "Namespace.Class.Method" o "Namespace.Class.*" para cada prueba de una clase.</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">La sección de configuración "mstest:execution:dependencies" declara un nodo para "{0}" sin entradas "dependsOn", lo que no tiene ningún efecto.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">Las dependencias entre las siguientes clases de prueba no se pueden programar con la paralelización de nivel de clase porque las clases dependen unas de otras: {0}. Sus pruebas se ejecutan secuencialmente, en orden de dependencia, por lo que se sigue respetando el orden declarado. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (o [Parallelize(Scope = ExecutionScope.MethodLevel)]) para programar cada prueba por separado y volver a ejecutarlas en paralelo.</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">Ciclo de dependencia detectado entre pruebas: {0}. Las pruebas del ciclo no se pueden ordenar y se notifican como erróneas. Quite una de las declaraciones de dependencia para interrumpir el ciclo.</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">Se omitió la prueba porque depende de "{0}", que no se superó.</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">La prueba "{0}" declara una dependencia en ''{1}", que no coincide con ninguna prueba de este origen de pruebas. Las dependencias se resuelven dentro de un único origen, por lo que no se admite un destino en otro ensamblado de pruebas. Se omite la dependencia.</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">Problema de implementación de serie de pruebas: no se pudo cargar el ensamblado o módulo "{0}". Motivo: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">Problema de implementación en la serie de pruebas: elemento de implementación incorrecto '{0}': el directorio de salida '{1}' especifica el elemento que se va a implementar fuera del directorio raíz de implementación, lo cual no está permitido.</target>
@@ -117,9 +167,9 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problema de implementación en la serie de pruebas: no se pudo copiar el archivo '{0}' en '{1}': {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="translated">Problema de implementación de serie de pruebas: no se pudo copiar el archivo "{0}" en "{1}": {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -228,6 +278,26 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Se encontraron dos tipos en conflicto para el parámetro genérico '{0}'. Los tipos en conflicto son '{1}' y ''{2}.</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">El método global de limpieza de pruebas "{0}.{1}" superó el tiempo de espera después de {2}ms</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">Se canceló el método global de limpieza de pruebas "{0}.{1}"</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">El método global de inicialización de pruebas "{0}.{1}" superó el tiempo de espera después de {2}ms</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">Se canceló el método global de inicialización de pruebas "{0}.{1}"</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">Valor no válido "{0}" especificado para "Scope". Los ámbitos admitidos son {1}.</target>
@@ -237,6 +307,11 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">Valor no válido "{0}" especificado para "Workers". El valor debe ser un entero no negativo.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">MSTestAdapter no pudo analizar el XML runsettings.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

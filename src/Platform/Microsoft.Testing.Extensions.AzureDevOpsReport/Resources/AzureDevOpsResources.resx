@@ -149,6 +149,10 @@
     <value>'--report-azdo-groups' requires '--report-azdo' to be enabled</value>
     <comment>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</comment>
   </data>
+  <data name="AzureDevOpsLivePublishingAttachmentsDropped" xml:space="preserve">
+    <value>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</value>
+    <comment>{0} is the number of attachments that could not be uploaded.</comment>
+  </data>
   <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to complete the test run.</value>
   </data>
@@ -157,6 +161,12 @@
   </data>
   <data name="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile" xml:space="preserve">
     <value>Azure DevOps live publishing failed to delete coordination file</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingFailedToReadCoordinationFile" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to read coordination file</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingFailedToWriteCoordinationFile" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to write coordination file</value>
   </data>
   <data name="AzureDevOpsLivePublishingFinalizeWaitTimedOut" xml:space="preserve">
     <value>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</value>
@@ -191,12 +201,29 @@
   <data name="AzureDevOpsLivePublishingResultIdParseFailedWarning" xml:space="preserve">
     <value>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</value>
   </data>
+  <data name="AzureDevOpsLivePublishingResultMapHandoffFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to update the result map handoff.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingResultsDropped" xml:space="preserve">
+    <value>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</value>
+    <comment>{0} is the number of test results that could not be published.</comment>
+  </data>
   <data name="AzureDevOpsLivePublishingRunAttachmentFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to upload a test run attachment.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingRunCreated" xml:space="preserve">
+    <value>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</value>
+    <comment>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</comment>
   </data>
   <data name="AzureDevOpsLivePublishingRunIdFileMismatch" xml:space="preserve">
     <value>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</value>
     <comment>{Locked="azdo-runid.&lt;buildId&gt;.json"}</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingRunIdHandoffFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to update the test run id handoff.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingRunLeftInProgress" xml:space="preserve">
+    <value>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</value>
   </data>
   <data name="AzureDevOpsLivePublishingTimeoutErrorMessage" xml:space="preserve">
     <value>Timeout</value>
@@ -204,6 +231,9 @@
   <data name="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason" xml:space="preserve">
     <value>Timeout: {0}</value>
     <comment>{0} is the timeout reason.</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingWarningDisplayFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing could not display a warning on the output device.</value>
   </data>
   <data name="AzureDevOpsQuarantineFileRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</value>
@@ -263,7 +293,7 @@
     <comment>{0} is the Azure DevOps run URL. {1} is the maximum number of pages.</comment>
   </data>
   <data name="GroupsOptionDescription" xml:space="preserve">
-    <value>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</value>
+    <value>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</value>
     <comment>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="InvalidArtifactUploadGlob" xml:space="preserve">
@@ -308,7 +338,7 @@
     <comment>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</comment>
   </data>
   <data name="PublishAzdoTestResultsOptionDescription" xml:space="preserve">
-    <value>Publish test results live to the Azure DevOps Tests tab.</value>
+    <value>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</value>
   </data>
   <data name="QuarantinedAnnotation" xml:space="preserve">
     <value>[quarantined]</value>

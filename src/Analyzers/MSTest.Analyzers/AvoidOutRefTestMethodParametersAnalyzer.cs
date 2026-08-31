@@ -61,9 +61,18 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzer : DiagnosticAnalyzer
         }
 
         // Check for out/ref parameters
-        if (methodSymbol.Parameters.Any(p => p.RefKind is RefKind.Out or RefKind.Ref))
+        if (methodSymbol.Parameters.Any(parameter => IsOutOrRefParameter(parameter, context.CancellationToken)))
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(AvoidOutRefParametersRule, methodSymbol.Name));
         }
     }
+
+    private static bool IsOutOrRefParameter(IParameterSymbol parameter, CancellationToken cancellationToken)
+        => parameter.RefKind is RefKind.Out or RefKind.Ref
+        || parameter.DeclaringSyntaxReferences.Any(reference =>
+        {
+            SyntaxNode parameterSyntax = reference.GetSyntax(cancellationToken);
+            return parameterSyntax.ChildTokens().Any(token => token.Text is "ref")
+                && parameterSyntax.ChildTokens().Any(token => token.Text is "readonly");
+        });
 }

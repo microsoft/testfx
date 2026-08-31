@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">Test selhal: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,142 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Generátor sestav GitHub Actions pro odesílání příkazů pracovního postupu, aby testovací běhy v GitHub Actions poskytovaly plnohodnotné prostředí.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">Generátor sestav GitHub Actions</target>
         <note />
+      </trans-unit>
+      <trans-unit id="EmptyStepSummarySections">
+        <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
+        <target state="translated">Je vyžadováno alespoň jedno oddělení souhrnu úlohy GitHub Actions. Platné hodnoty jsou 'test-results', 'slow-tests', 'coverage' nebo 'all'.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="translated">Spuštění testů se nepovedlo (ukončovací kód {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="translated">Ukončovací kód {0} – {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Nejméně jeden test se nepovedl.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Nebylo dosaženo minimálně jedné prahové hodnoty pokrytí kódu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Závislý proces se neočekávaně ukončil.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">Spuštění testů se nepovedlo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Vyjednala se nekompatibilní verze protokolu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Argumenty příkazového řádku nejsou platné.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">Nastavení testovací platformy není platné.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Spustilo se méně testů, než vyžaduje parametr --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">Spuštění testů proběhlo úspěšně.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">Testovací adaptér oznámil selhání testovací relace.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">Provádění testů bylo předčasně zastaveno, protože se blížil časový limit stanovený systémem CI.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">Spouštění testů se zastavilo po dosažení limitu nastaveného parametrem --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">Proces hostitele testů se ukončil nestandardně.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">Testovací relace byla přerušená.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">Spuštění testů vrátilo neúspěšný ukončovací kód.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Nenašly se žádné testy ke spuštění. Často to znamená, že filtru testů nic nevyhovovalo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureDetailExceptionLabel">
+        <source>Exception</source>
+        <target state="translated">Výjimka</target>
+        <note>Label preceding the exception type of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailLocationLabel">
+        <source>Location</source>
+        <target state="translated">Umístění</target>
+        <note>Label preceding the source file and line of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailTruncated">
+        <source>[... truncated]</source>
+        <target state="translated">[... zkráceno]</target>
+        <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOmitted">
+        <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
+        <target state="translated">Podrobnosti o chybě u {0} uvedených testů byly vynechány, protože zabírají příliš mnoho místa.</target>
+        <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOptionDescription">
+        <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">Povolte nebo zakažte rozbalení každého neúspěšného testu v souhrnu úlohy do sbalitelné části se zprávou o chybě, typem výjimky, umístěním zdroje a trasováním zásobníku. Platné hodnoty jsou 'on' (přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0'). Při spuštění na GitHub Actions je výchozí hodnota 'on'.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
+      </trans-unit>
+      <trans-unit id="FailureListTruncated">
+        <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
+        <target state="translated">Zobrazuje se prvních {0} z {1} neúspěšných testů. Zbývající chyby najdete v protokolu pracovního postupu nebo v sestavě testu.</target>
+        <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">Testy: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -32,9 +157,64 @@
         <target state="new">Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
+      <trans-unit id="HistoryDurationContext">
+        <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
+        <target state="translated">Historická doba trvání: p95 {0}, p99 {1} z {2} předchozích vzorků.</target>
+        <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFailureContext">
+        <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
+        <target state="translated">Historický kontext: selhání při {0} a nestabilita při {1} z {2} předchozích spuštění v okně historie za {3} dnů.</target>
+        <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFlakyContext">
+        <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
+        <target state="translated">Historický kontext: nestabilita při {0} z {1} předchozích spuštění v okně historie za {2} dnů.</target>
+        <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryLoadFailedWarning">
+        <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
+        <target state="translated">Nepovedlo se načíst snímek historie testů GitHub Actions z {0}: {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="HistoryOptionDescription">
+        <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
+        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <note>{Locked="'--report-gh'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryRegressionContext">
+        <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
+        <target state="translated">Historický kontext: všech {0} předchozích spuštění v okně historie za {1} dnů proběhlo úspěšně.</target>
+        <note>{0} is the total prior result count, {1} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowOptionDescription">
+        <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
+        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <note>{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowRequiresHistory">
+        <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
+        <target state="new">The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</target>
+        <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWriteFailedWarning">
+        <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
+        <target state="translated">Nepovedlo se zapsat snímek historie testů GitHub Actions do {0}: {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="InvalidHistoryPath">
+        <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
+        <target state="translated">Cesta ke snímku historie testů GitHub Actions musí být platná a nesmí být prázdná.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHistoryWindow">
+        <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
+        <target state="translated">Neplatné okno historie testů GitHub Actions {0}. Zadejte celé číslo dnů od 1 do 90.</target>
+        <note>{0} is the invalid history window.</note>
+      </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Neplatná hodnota {0}. Platné hodnoty jsou on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -42,29 +222,49 @@
         <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="InvalidStepSummarySection">
+        <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
+        <target state="translated">Neplatná část souhrnu úlohy GitHub Actions '{0}'. Platné hodnoty jsou 'test-results', 'slow-tests', 'coverage' nebo 'all'. Hodnoty se můžou opakovat a můžou být oddělené mezerami nebo čárkami.</target>
+        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidStepSummaryValue">
+        <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
+        <target state="translated">Neplatná hodnota '{0}'. Platné hodnoty jsou 'on' (nebo 'true', 'enable', '1'), 'off' (nebo 'false', 'disable', '0') nebo 'on-failure'.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+      </trans-unit>
+      <trans-unit id="ModuleDetailsOmitted">
+        <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
+        <target state="translated">Podrobnosti o chybě byly vynechány u {0} z {1} testovacích projektů, protože už zabírají příliš mnoho místa. Úplnou diagnostiku najdete v protokolu pracovního postupu nebo v sestavě testu.</target>
+        <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
+      </trans-unit>
+      <trans-unit id="ModulesNotListed">
+        <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
+        <target state="translated">Dalších {0} testovacích projektů není uvedeno, protože bylo dosaženo limitu velikosti souhrnu úlohy. GitHub souhrn úlohy větší než 1 MB celý zahodí, místo aby ho zkrátil. Jejich výsledky najdete v protokolu pracovního postupu nebo v sestavě testu.</target>
+        <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">Test neproběhl úspěšně bez poskytnutí zprávy o chybě.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">Test byl přeskočen bez poskytnutí důvodu.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Povolte generátor sestav GitHub Actions pro odesílání příkazů pracovního postupu, aby testovací běhy v GitHub Actions poskytovaly plnohodnotné prostředí.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">Test byl přeskočen: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">Pomalý test: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +274,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} po uplynutí {1} s stále běží</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -82,15 +282,40 @@
         <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
+      <trans-unit id="StepSummaryLimitExceededWarning">
+        <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
+        <target state="translated">Soubor souhrnu úlohy GitHub má {0} bajtů a připojením této části sestavy by se překročil limit {1} bajtů, který GitHub uplatňuje na jeden krok. GitHub příliš velký souhrn úlohy celý zahodí, místo aby ho zkrátil, takže připojením by se ztratily všechny části včetně těch, které už zapsaly jiné testovací projekty. Tato část byla přeskočena, aby zbytek souhrnu zůstal zachovaný. To obvykle znamená, že do stejného souhrnu úlohy zapisuje mnoho testovacích projektů nebo jiných nástrojů. Tyto výsledky najdete v protokolu pracovního postupu nebo v sestavě testu.</target>
+        <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
+      </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
-        <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="new">Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+      </trans-unit>
+      <trans-unit id="StepSummarySectionsOptionDescription">
+        <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
+        <target state="translated">Vyberte obsah zahrnutý do souhrnu úlohy GitHub Actions. Zadejte jednu nebo více hodnot, opakovaně, oddělených mezerami nebo čárkami: 'test-results', 'slow-tests', 'coverage' nebo 'all'. Výchozí hodnota je 'all'. Vyžaduje '--report-gh'.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">Zápis souhrnu úlohy GitHub Actions do {0} se nezdařil: {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="SubOptionsRequireReportGh">
+        <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
+        <target state="translated">Dílčí možnosti sestavy GitHub Actions vyžadují zadání parametru '--{0}'.</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryCondensed">
+        <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
+        <target state="translated">zkráceno na jeden řádek, protože souhrn už zabírá příliš mnoho místa. Úplné výsledky najdete v protokolu pracovního postupu nebo v sestavě testu.</target>
+        <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
+      </trans-unit>
+      <trans-unit id="SummaryTruncatedNotice">
+        <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
+        <target state="translated">Tento souhrn úlohy byl příliš dlouhý, proto byl zkrácený: obsahuje úplné výsledky prvních {0} testovacích projektů a u projektů uvedených níže na jednom řádku byly výsledky vynechány. GitHub souhrn úlohy větší než 1 MB celý zahodí, místo aby ho zkrátil. Kompletní výsledky najdete v protokolu pracovního postupu nebo v sestavě testu.</target>
+        <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>
   </file>

@@ -19,19 +19,17 @@
     <IsTestProject>false</IsTestProject>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest</PackageId>
-    <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2</PackageTags>
+    <PackageDescription><![CDATA[This package is a meta package to simplify test projects. It includes MSTest.TestFramework and MSTest.TestAdapter.
 
-      This package is a meta package to simplify test projects. It includes MSTest.TestFramework and MSTest.TestAdapter.
+Supported platforms:
+- .NET 4.6.2+
+- .NET 8.0+
+- .NET 8.0 Windows.18362+ (WinUI)
+- UWP 10.0.16299
+- UWP 10.0.17763 with .NET 9+
 
-      Supported platforms:
-      - .NET 4.6.2+
-      - .NET 8.0+
-      - .NET 8.0 Windows.18362+ (WinUI)
-      - UWP 10.0.16299
-      - UWP 10.0.17763 with .NET 9+
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
 
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddEmptyTfmDirectoryInLib</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>

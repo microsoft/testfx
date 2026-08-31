@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.OleDb;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -65,7 +66,13 @@ internal sealed class CsvDataConnection : TestDataConnection
         {
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(exception.Message + " for CSV data source " + _fileName);
+                // Retain the full exception type/chain (not just the top-level message) along with
+                // the data source path, so the underlying cause (e.g. a missing table/column or a
+                // provider-specific failure) can be diagnosed.
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "CsvDataConnection.GetColumns: {0} for CSV data source '{1}'.",
+                    exception.GetFormattedExceptionMessage(),
+                    _fileName);
             }
         }
 

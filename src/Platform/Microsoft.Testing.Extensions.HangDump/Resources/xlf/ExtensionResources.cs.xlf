@@ -42,6 +42,11 @@
         <target state="translated">Soubor výpisu paměti při zablokování</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpDeadlineApproaching">
+        <source>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</source>
+        <target state="translated">Blíží se konečný termín CI: před nuceným zrušením spuštění se pořizuje výpis zablokování.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">Proměnná prostředí {0} je nastavená na {1} místo na {2}.</target>
@@ -83,8 +88,8 @@ Podporuje následující zástupné symboly: {pname} (název testovací aplikace
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
-        <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Vygeneruje soubor výpisu paměti, pokud testovací proces přestane reagovat.</target>
+        <source>Generate a dump file if the test process hangs.</source>
+        <target state="translated">Vygenerujte soubor výpisu paměti, pokud testovací proces přestane reagovat.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -136,10 +141,10 @@ Hodnota časového limitu se zadává v jednom z následujících formátů:
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</source>
+Default type is 'Full'.</source>
         <target state="translated">Určete typ výpisu paměti.
 Platné hodnoty jsou: {0}.
-Výchozí typ je Full</target>
+Výchozí typ je Full.</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">

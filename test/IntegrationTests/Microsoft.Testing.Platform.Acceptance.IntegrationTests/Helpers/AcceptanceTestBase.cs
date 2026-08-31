@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Combinatorial.MSTest;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+
+internal sealed record BoundedCommandLineResult(int ExitCode, string StandardOutput, string ErrorOutput);
 
 public abstract class AcceptanceTestBase
 {
@@ -13,6 +17,14 @@ public abstract class AcceptanceTestBase
     {
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
+        MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
+
+        using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
+        MSBuildSdkExtrasVersion = globalJson.RootElement
+            .GetProperty("msbuild-sdks")
+            .GetProperty("MSBuild.Sdk.Extras")
+            .GetString()
+            ?? throw new InvalidOperationException("The repository global.json does not define a non-empty MSBuild.Sdk.Extras version.");
 
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
@@ -22,6 +34,7 @@ public abstract class AcceptanceTestBase
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
         MicrosoftTestingExtensionsGitHubActionsReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
         MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
+        MicrosoftTestingExtensionsRetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Retry.");
         MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
         MicrosoftTestingExtensionsAzureFoundryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesNonShipping, "Microsoft.Testing.Extensions.AzureFoundry.");
     }
@@ -35,11 +48,55 @@ public abstract class AcceptanceTestBase
                     ? "osx-x64"
                     : throw new NotSupportedException("Current OS is not supported");
 
+    protected static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string assetName, string tfm)
+    {
+        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        const string FileNamePlaceholder = "__DIAG_FILENAME__";
+        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
+        return combinedPath.Replace(FileNamePlaceholder, $@"{assetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}(?:_\d+_\d+)?\.diag");
+    }
+
+    protected static string GetTestExecutablePath(Microsoft.Testing.TestInfrastructure.TestHost testHost)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? testHost.FullName
+            : testHost.FullName + ".dll";
+
+    protected static async Task<Microsoft.Testing.TestInfrastructure.TestHost> CloneTestHostAsync(
+        Microsoft.Testing.TestInfrastructure.TestHost testHost,
+        TempDirectory clone,
+        string assetName)
+    {
+        await clone.CopyDirectoryAsync(
+            testHost.DirectoryName,
+            clone.Path,
+            retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+        return Microsoft.Testing.TestInfrastructure.TestHost.LocateFrom(clone.Path, assetName);
+    }
+
     public static string MSTestVersion { get; private set; }
 
     public static string MSTestSourceGenerationVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
+
+    public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
+
+    public static string MSBuildSdkExtrasVersion { get; private set; }
+
+    // Keep this known-working Windows App SDK/BuildTools pair together. Generated WinUI assets use
+    // these shared values rather than adding independent package-version literals.
+    public const string WindowsAppSdkPackageVersion = "1.8.251106002";
+
+    public const string WindowsSdkBuildToolsPackageVersion = "10.0.26100.7175";
+
+    public static TimeSpan WindowsApplicationModelExecutionTimeout { get; } = TimeSpan.FromMinutes(5);
+
+    public static bool IsWindowsApplicationModelTestEnvironment
+        => string.Equals(
+            Environment.GetEnvironmentVariable("TESTFX_RUN_WINDOWS_APP_MODEL_TESTS"),
+            "1",
+            StringComparison.Ordinal);
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
@@ -52,6 +109,8 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftTestingExtensionsGitHubActionsReportVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsRetryVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
 
@@ -165,14 +224,78 @@ public abstract class AcceptanceTestBase
     private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
     {
         string vswherePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
-        string path = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken);
+        string path = await RunAndGetSingleLineStandardOutputAsync(
+            vswherePath,
+            "-latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe",
+            "Visual Studio with Microsoft.Component.MSBuild",
+            cancellationToken);
         return path;
     }
 
-    private static async Task<string> RunAndGetSingleLineStandardOutputAsync(string vswherePath, string arg, CancellationToken cancellationToken)
+    internal static async Task<string> FindVisualStudioWithUwpToolsAsync(CancellationToken cancellationToken)
     {
-        var commandLine = new TestInfrastructure.CommandLine();
-        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild {arg}", cancellationToken: cancellationToken);
+        string vswherePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio",
+            "Installer",
+            "vswhere.exe");
+        return await RunAndGetSingleLineStandardOutputAsync(
+            vswherePath,
+            "-latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -property installationPath",
+            "a prerelease-capable Visual Studio installation with Microsoft.Component.MSBuild, Microsoft.VisualStudio.Workload.Universal, and Microsoft.VisualStudio.ComponentGroup.UWP.Support",
+            cancellationToken);
+    }
+
+    internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
+        string command,
+        string? workingDirectory,
+        CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(WindowsApplicationModelExecutionTimeout);
+        using var commandLine = new TestInfrastructure.CommandLine();
+
+        try
+        {
+            int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+                command,
+                workingDirectory: workingDirectory,
+                cancellationToken: timeout.Token);
+            return new(exitCode, commandLine.StandardOutput, commandLine.ErrorOutput);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"Command did not exit within {WindowsApplicationModelExecutionTimeout}: {command}{Environment.NewLine}" +
+                $"Standard output:{Environment.NewLine}{commandLine.StandardOutput}{Environment.NewLine}" +
+                $"Standard error:{Environment.NewLine}{commandLine.ErrorOutput}");
+        }
+    }
+
+    private static async Task<string> RunAndGetSingleLineStandardOutputAsync(
+        string vswherePath,
+        string arguments,
+        string requiredCapability,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(vswherePath))
+        {
+            throw new FileNotFoundException(
+                $"Visual Studio discovery requires vswhere.exe at '{vswherePath}'. Install Visual Studio Installer and {requiredCapability}.",
+                vswherePath);
+        }
+
+        using var commandLine = new TestInfrastructure.CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{vswherePath}\" {arguments}",
+            cancellationToken: cancellationToken);
+        if (exitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"vswhere.exe failed while locating {requiredCapability} (exit code {exitCode}).{Environment.NewLine}" +
+                $"Standard output:{Environment.NewLine}{commandLine.StandardOutput}{Environment.NewLine}" +
+                $"Standard error:{Environment.NewLine}{commandLine.ErrorOutput}");
+        }
 
         string? path = null;
         using (var stringReader = new StringReader(commandLine.StandardOutput))
@@ -182,14 +305,20 @@ public abstract class AcceptanceTestBase
             {
                 if (path != null)
                 {
-                    throw new Exception("vswhere returned more than 1 line");
+                    throw new InvalidOperationException(
+                        $"vswhere.exe returned more than one path while locating {requiredCapability}:{Environment.NewLine}{commandLine.StandardOutput}");
                 }
 
-                path = line;
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    path = line.Trim();
+                }
             }
         }
 
-        return path!;
+        return path
+            ?? throw new InvalidOperationException(
+                $"vswhere.exe did not find {requiredCapability}. Install the required Visual Studio workload/components and retry.");
     }
 }
 

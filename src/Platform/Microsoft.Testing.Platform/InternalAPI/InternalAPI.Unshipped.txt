@@ -1,9 +1,277 @@
 #nullable enable
+abstract Microsoft.Testing.Platform.Hosts.CommonHost.InternalRunAsync(System.Threading.CancellationToken cancellationToken, System.Collections.Generic.List<object!>! alreadyDisposed) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetChildren(string? parentPath) -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.TryGetSectionValue(string! key, out string? value) -> bool
+Microsoft.Testing.Platform.Configurations.CommandLineConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Platform.Configurations.CommandLineConfigurationProvider.TryGetScalar(string! key, out string? value) -> bool
+Microsoft.Testing.Platform.Configurations.ConfigurationProviderHelpers
+Microsoft.Testing.Platform.Configurations.ConfigurationSection
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.ConfigurationSection(Microsoft.Testing.Platform.Configurations.AggregatedConfiguration! root, string! path) -> void
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.HasValue.get -> bool
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.Key.get -> string!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.Path.get -> string!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.Value.get -> string?
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.this[string! key].get -> string?
+Microsoft.Testing.Platform.Configurations.EnvironmentVariablesConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Platform.Configurations.EnvironmentVariablesConfigurationProvider.TryGetScalar(string! key, out string? value) -> bool
+Microsoft.Testing.Platform.Configurations.JsonConfigurationSource.JsonConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+static Microsoft.Testing.Platform.Configurations.ConfigurationProviderHelpers.GetChildKeys(System.Collections.Generic.IEnumerable<string!>! keys, string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Platform.Helpers.IConsole.Write(System.Text.StringBuilder! value) -> void
+Microsoft.Testing.Platform.Helpers.IFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
+Microsoft.Testing.Platform.Helpers.SystemConsole.Write(System.Text.StringBuilder! value) -> void
+Microsoft.Testing.Platform.Helpers.SystemFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
+Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.DeferDisposalUntilExit() -> void
+Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
+Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.IsConsumerRunning.get -> bool
+Microsoft.Testing.Platform.Messages.BlockingConsumerDataProcessor.BlockingConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
+Microsoft.Testing.Platform.Messages.BlockingConsumerDataProcessor.IsConsumerRunning.get -> bool
+Microsoft.Testing.Platform.Messages.IAsyncConsumerDataProcessor.IsConsumerRunning.get -> bool
+Microsoft.Testing.Platform.Messages.ShutdownTimeouts
+Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.ConsoleTestExecutionRequestFactory(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineService, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory! testExecutionFilterFactory, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider!>! testExecutionFilterProviders) -> void
+Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
+Microsoft.Testing.Platform.Requests.ITestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
+Microsoft.Testing.Platform.Requests.ServerTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
+Microsoft.Testing.Platform.Requests.ServerTestExecutionRequestFactory.ServerTestExecutionRequestFactory(System.Func<Microsoft.Testing.Platform.TestHost.TestSessionContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!>! factory) -> void
+Microsoft.Testing.Platform.Requests.TestExecutionFilterComposer
+Microsoft.Testing.Platform.TestHost.TestHostManager.AddTestExecutionFilterProvider(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider!>! providerFactory) -> void
+Microsoft.Testing.Platform.TestHost.TestHostManager.BuildTestExecutionFilterProvidersAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider![]!>!
+static Microsoft.Testing.Platform.Requests.TestExecutionFilterComposer.ComposeAsync(Microsoft.Testing.Platform.Requests.ITestExecutionFilter! requestFilter, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider!>! providers, Microsoft.Testing.Platform.Requests.TestExecutionFilterContext! context, bool allowProviderContributions, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+static Microsoft.Testing.Platform.Requests.TestExecutionFilterComposer.GetLeafFilters(Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter) -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+override Microsoft.Testing.Platform.Messages.AsynchronousMessageBus.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
+override Microsoft.Testing.Platform.Messages.MessageBusProxy.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
+static Microsoft.Testing.Platform.Hosts.CommonHost.EnsureMessageBusDisabledAsync(Microsoft.Testing.Platform.Messages.BaseMessageBus! baseMessageBus, System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetCanceledConsumerCompletion(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetControllerFinalization(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static readonly Microsoft.Testing.Platform.Messages.ShutdownTimeouts.DefaultCanceledConsumerCompletion -> System.TimeSpan
+static readonly Microsoft.Testing.Platform.Messages.ShutdownTimeouts.DefaultControllerFinalization -> System.TimeSpan
+virtual Microsoft.Testing.Platform.Hosts.CommonHost.DisposeProcessShutdownServiceAsync(object! service) -> System.Threading.Tasks.Task!
+virtual Microsoft.Testing.Platform.Messages.BaseMessageBus.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
+*REMOVED*Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.ConsoleTestExecutionRequestFactory(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineService, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory! testExecutionFilterFactory) -> void
+*REMOVED*abstract Microsoft.Testing.Platform.Hosts.CommonHost.InternalRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+*REMOVED*Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
+*REMOVED*Microsoft.Testing.Platform.Requests.ITestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
+*REMOVED*Microsoft.Testing.Platform.Requests.ServerTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
+*REMOVED*Microsoft.Testing.Platform.Requests.ServerTestExecutionRequestFactory.ServerTestExecutionRequestFactory(System.Func<Microsoft.Testing.Platform.TestHost.TestSessionContext!, Microsoft.Testing.Platform.Requests.TestExecutionRequest!>! factory) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.AddArtifactPostProcessor(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! factory) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.ArtifactPostProcessingManager() -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.BuildAsync(System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>!>!
+Microsoft.Testing.Platform.Hosts.ITestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+static Microsoft.Testing.Platform.Hosts.CommonHost.SupportsArtifactPostProcessing(string! hostType) -> bool
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!
+Microsoft.Testing.Platform.Hosts.TestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy = 15 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorKinds = 14 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy = 17 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds = 16 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.RequiredPostProcessingSupported = 19 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.RequiredPostProcessorKinds = 18 -> byte
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties.Create(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<byte, string!>?
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ArtifactPostProcessingDispatcherTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors, Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol? protocol, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Name.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Version.get -> string!
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact! output, string! outputDirectory, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ArtifactPostProcessingDispatcherToolCommandLine() -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ToolName.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Version.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.ArtifactPostProcessingManifest(string! outputDirectory, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Context.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Inputs.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.OutputDirectory.get -> string!
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Load(string! path) -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest!
+Microsoft.Testing.Platform.DotnetTestConnection.IsRequiredArtifactPostProcessingSupported.get -> bool
+const Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ToolName = "internal-merge-artifacts" -> string!
+const Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName = "manifest" -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessageExecutionModes.Tool = "tool" -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessageHostTypes.ArtifactPostProcessor = "ArtifactPostProcessor" -> string!
+Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.InstanceId.get -> string!
+Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.SendMessageAsync(Microsoft.Testing.Platform.IPC.IRequest! message) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Hosts.ToolsHost.AggregateArguments(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>! optionRecords) -> string![]!
+static Microsoft.Testing.Platform.Hosts.ToolsHost.ValidateCommandLineOptionsAsync(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider!>! providers, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsValidator.ValidateToolProviders(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider!>! toolProviders, System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! systemProviders) -> Microsoft.Testing.Platform.Extensions.ValidationResult
+Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame.Render(Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame! previousFrame, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages, Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal! terminal) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.SilenceDrivenHeartbeatRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.SilenceDrivenHeartbeatRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.SimpleTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Id.get -> long
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.TerminalProgressMessageState(long id, long version, string! text) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Text.get -> string!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Version.get -> long
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.ClearProgressMessages() -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TestCompletedWithoutResult(string! executionId, string! testNodeUid) -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyExecutionCompleted(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> void
+virtual Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.DisplayActiveTestProgress.get -> bool
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.MaximumVisibleProgressMessages = 5 -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.ClearProgressMessages() -> void
+Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.Dispose() -> void
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Dispose() -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame.Render(Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame! previousFrame, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal! terminal) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.SilenceDrivenHeartbeatRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.SilenceDrivenHeartbeatRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write) -> void
+*REMOVED*Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider
+*REMOVED*Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider.ToolName.get -> string!
+*REMOVED*Microsoft.Testing.Platform.Tools.ITool
+*REMOVED*Microsoft.Testing.Platform.Tools.ITool.Name.get -> string!
+*REMOVED*Microsoft.Testing.Platform.Tools.ITool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+*REMOVED*Microsoft.Testing.Platform.Tools.IToolsManager
+*REMOVED*Microsoft.Testing.Platform.Tools.IToolsManager.AddTool(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Tools.ITool!>! toolFactory) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.SimpleTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress) -> void
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.InputArtifactPaths = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.CreateFileArtifactMessages(string? executionId, Microsoft.Testing.Platform.Extensions.Messages.FileArtifact! fileArtifact) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.CreateFileArtifactMessages(string? executionId, Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact! sessionFileArtifact) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind, out string![]? InputArtifactPaths) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? Kind, string![]? InputArtifactPaths = null) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.InputArtifactPaths.get -> string![]?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.InputArtifactPaths.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.init -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid) -> void
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS = "TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS" -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.AttemptNumber = 13 -> byte
+const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunStarted(string! assembly, string? targetFramework, string? architecture, string! executionId, string! instanceId, int attemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetAttemptNumber(string! instanceId) -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetOrCreateTestNodeResultsState(System.Func<Microsoft.Testing.Platform.OutputDevice.Terminal.TestNodeResultsState!>! factory) -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestNodeResultsState!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.NotifyHandshake(string! instanceId, int attemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportDiscoveredTest(string? displayName) -> void
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Services.IStopPoliciesService.IsDeadlineTriggered.get -> bool
+Microsoft.Testing.Platform.Services.IStopPoliciesService.RegisterDeadlineStopFallback(System.Func<System.Threading.Tasks.Task<bool>!>! callback) -> void
+Microsoft.Testing.Platform.Services.IStopPoliciesService.RegisterOnDeadlineCallbackAsync(System.Func<System.Threading.Tasks.Task!>! callback) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Services.IStopPoliciesService.ExecuteDeadlineCallbacksAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Services.IStopPoliciesService.IsTestExecutionCompleted.get -> bool
+Microsoft.Testing.Platform.Services.IStopPoliciesService.NotifyTestExecutionStarting() -> void
+Microsoft.Testing.Platform.Services.IStopPoliciesService.NotifyTestExecutionCompleted() -> void
+Microsoft.Testing.Platform.Services.IStopPoliciesService.TryExecuteDeadlineStopFallbackAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Services.StopPoliciesService.IsTestExecutionCompleted.get -> bool
+Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionStarting() -> void
+Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionCompleted() -> void
+Microsoft.Testing.Platform.Services.ServiceProvider.TestHostControllerAuthorizedSecurityIdentities.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Microsoft.Testing.Platform.Services.ServiceProvider.TestHostControllerAuthorizedSecurityIdentities.set -> void
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetTestHostControllerAuthorizedSecurityIdentities(this System.IServiceProvider! serviceProvider) -> System.Collections.Generic.IReadOnlyList<string!>?
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(this System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher? testHostLauncher, string! testHostFileName, Microsoft.Testing.Platform.Logging.ILogger! logger, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>?>!
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.NamedPipeServerEndpoint(string! pipeName) -> void
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.PipeName.get -> string!
+Microsoft.Testing.Platform.TestHostControllers.NamedPipeServerEndpoint.PipeName.set -> void
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.BuildTestHostLauncherAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher?>!
+Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostControllerConnectionAuthorizationConsumer
+static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler!>! lifetimeHandlers, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider!>! environmentVariableProviders, Microsoft.Testing.Platform.TestHostControllers.EnvironmentVariables! environmentVariables, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Services.StopPoliciesService.IsDeadlineTriggered.get -> bool
+Microsoft.Testing.Platform.Services.StopPoliciesService.RegisterDeadlineStopFallback(System.Func<System.Threading.Tasks.Task<bool>!>! callback) -> void
+Microsoft.Testing.Platform.Services.StopPoliciesService.Dispose() -> void
+Microsoft.Testing.Platform.Services.StopPoliciesService.RegisterOnDeadlineCallbackAsync(System.Func<System.Threading.Tasks.Task!>! callback) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Services.StopPoliciesService.ExecuteDeadlineCallbacksAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Services.StopPoliciesService.TryExecuteDeadlineStopFallbackAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AppendCoverageSummary(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>! scopes, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! thresholds) -> void
+Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerInfo! testHostControllerInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Logging.IFileLoggerInformation? fileLoggerInformation, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.Services.ITestCoverageResult! testCoverageResult) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerInfo! testHostControllerInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Logging.IFileLoggerInformation? fileLoggerInformation, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource) -> void
+Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy
+Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverableCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverageCounts() -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverageCounts(long coveredCount, long coverableCount) -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoveredCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.HasCoverableData.get -> bool
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.Percentage.get -> double
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCounts(long coveredCount, long coverableCount) -> void
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCustomMetricName(Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, string? customMetricName) -> void
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateProducerId(string! producerId) -> void
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper.Validate(string! path, string! pathParameterName, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName) -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.EnabledProducerUids.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.RegisterProducer(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! producer) -> void
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.RegisterProducers(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>! dataConsumers) -> void
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.SupportsTestCoverageMessages.get -> bool
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.TestCoverageCapabilities() -> void
+static Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.SupportsTestCoverageMessages.get -> bool
+Microsoft.Testing.Platform.Services.TestCoverageResult.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Services.TestCoverageResult.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Platform.Services.TestCoverageResult.Description.get -> string!
+Microsoft.Testing.Platform.Services.TestCoverageResult.DisplayName.get -> string!
+Microsoft.Testing.Platform.Services.TestCoverageResult.HasThresholdFailure.get -> bool
+Microsoft.Testing.Platform.Services.TestCoverageResult.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Services.TestCoverageResult.GetOverall(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid) -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
+Microsoft.Testing.Platform.Services.TestCoverageResult.Reports.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageReportReference!>!
+Microsoft.Testing.Platform.Services.TestCoverageResult.Reset() -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.Scopes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>!
+Microsoft.Testing.Platform.Services.TestCoverageResult.TestCoverageResult() -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.TestCoverageResult(Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.Thresholds.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!
+Microsoft.Testing.Platform.Services.TestCoverageResult.Uid.get -> string!
+Microsoft.Testing.Platform.Services.TestCoverageResult.Version.get -> string!
+Microsoft.Testing.Platform.Services.TestApplicationResult.TestApplicationResult(Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputService, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService? otelService, Microsoft.Testing.Platform.Services.ITestCoverageResult? testCoverageResult) -> void
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
+static Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy.Apply(int exitCode, System.IServiceProvider! serviceProvider) -> int
+static Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy.Apply(int exitCode, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> int
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+Microsoft.Testing.Platform.Helpers.IdentityKeyBuilder
+Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void
+Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
+Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
+static Microsoft.Testing.Platform.Helpers.IdentityKeyBuilder.AppendLengthPrefixedComponent(System.Text.StringBuilder! builder, string? component) -> void
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.SupportsTestCoverageMessages = "supportsTestCoverageMessages" -> string!
+Microsoft.Testing.Platform.Hosts.TestHostControlledHost.TestHostControlledHost(Microsoft.Testing.Platform.IPC.NamedPipeClient! testHostControllerPipeClient, Microsoft.Testing.Platform.Hosts.IHost! innerHost, System.Threading.CancellationToken cancellationToken, Microsoft.Testing.Platform.Services.TestApplicationResult? testApplicationResult = null) -> void
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.TestHostCompletedRequest(int returnCode, int unfilteredReturnCode) -> void
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.UnfilteredExitCode.get -> int
+Microsoft.Testing.Platform.Services.TestApplicationResult.GetProcessExitCodeWithoutIgnore() -> int
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.init -> void
+Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer
+Microsoft.Testing.Platform.Services.ArtifactNamingService
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ArtifactNamingService(Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ResolveFileName(string! template) -> string!
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.<Clone>$() -> Microsoft.Testing.Platform.Services.ClientCapabilitiesService!
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool IsStateful) -> void
@@ -11,6 +279,26 @@ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bo
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? other) -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.init -> void
+Microsoft.Testing.Platform.ServerMode.InitializeRequestArgs.ProtocolVersions.get -> string![]?
+Microsoft.Testing.Platform.ServerMode.InitializeRequestArgs.ProtocolVersions.init -> void
+Microsoft.Testing.Platform.ServerMode.InitializeResponseArgs.ProtocolVersion.get -> string?
+Microsoft.Testing.Platform.ServerMode.InitializeResponseArgs.ProtocolVersion.init -> void
+Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions
+const Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.V1 = "1.0.0" -> string!
+static Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.Current.get -> string!
+static Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.Negotiate(System.Collections.Generic.IReadOnlyCollection<string!>? clientSupportedVersions) -> string?
+static Microsoft.Testing.Platform.ServerMode.JsonRpcProtocolVersions.Supported.get -> System.Collections.Generic.IReadOnlyList<string!>!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ProtocolVersion = "protocolVersion" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ProtocolVersions = "protocolVersions" -> string!
+static readonly Microsoft.Testing.Platform.ServerMode.ErrorCodes.ProtocolVersionNotSupported -> int
+Microsoft.Testing.Platform.ServerMode.RequestMessage.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.RequestMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.ResponseMessage.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.ResponseMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.ErrorMessage.StringId.init -> void
+Microsoft.Testing.Platform.ServerMode.CancelRequestArgs.StringId.get -> string?
+Microsoft.Testing.Platform.ServerMode.CancelRequestArgs.StringId.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void
@@ -18,11 +306,407 @@ Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.GetHashCode() -> int
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ToString() -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey = "dotnet-test-http-endpoint" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey = "dotnet-test-http-token" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestTransportHttpArgument = "http" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestTransportOptionKey = "dotnet-test-transport" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestTransportPipeArgument = "pipe" -> string!
+Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor
+Microsoft.Testing.Platform.DotnetTestTransportKind
+Microsoft.Testing.Platform.DotnetTestTransportKind.Http = 1 -> Microsoft.Testing.Platform.DotnetTestTransportKind
+Microsoft.Testing.Platform.DotnetTestTransportKind.NamedPipe = 0 -> Microsoft.Testing.Platform.DotnetTestTransportKind
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.Dispose() -> void
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.DotnetTestHttpClient(System.Uri! endpoint, string! authToken, System.Net.Http.HttpClient! httpClient, bool disposeHttpClient) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.DotnetTestHttpClient(System.Uri! endpoint, string! authToken) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.IsConnected.get -> bool
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.RequestReplyAsync<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Stream! stream, System.Threading.CancellationToken cancellationToken, int maximumFrameSize = 2147483647) -> System.Threading.Tasks.Task<object?>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Stream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.Redact(string![]! args) -> string!
+static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.RedactArgument(string![]! args, int index) -> string!
+static ResponseFileHelper.TryReadResponseFile(string! rspFilePath, string! diagnosticPath, System.Collections.Generic.ICollection<string!>! errors, out string![]? newArguments) -> bool
+static Microsoft.Testing.Platform.DotnetTestHelper.TryGetDotnetTestTransport(this Microsoft.Testing.Platform.CommandLine.CommandLineHandler! commandLineHandler, out Microsoft.Testing.Platform.DotnetTestTransportKind transport) -> bool
+*REMOVED*Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+*REMOVED*Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsureDirectoryIsWritable(string! directory) -> void
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsurePathLengthWithinLimit(string! path) -> void
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.ResolvePipeDirectory(string? overrideDirectory, string? tempPath) -> (string! Directory, bool IsExplicitOverride)
+static Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer.ReplaceInvalidFileNameChars(string! fileName) -> string!
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator !=(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator ==(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider) -> void
+*REMOVED*Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id, out string! Version) -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Expected = 10 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Actual = 11 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.RetryAttemptNumber = 12 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.IsSuperseded = 13 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.RetryAttemptNumber = 9 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.IsSuperseded = 10 -> ushort
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Expected.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Expected.init -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Actual.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Actual.init -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.RetryAttemptNumber.init -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.IsSuperseded.get -> bool?
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.IsSuperseded.init -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.FailedTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? ErrorOutput, string? SessionUid, string? Expected, string? Actual, int? RetryAttemptNumber = null, bool? IsSuperseded = null) -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid, out string? Expected, out string? Actual, out int? RetryAttemptNumber, out bool? IsSuperseded) -> void
+Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.RetryAttemptNumber.init -> void
+Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.IsSuperseded.get -> bool?
+Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.IsSuperseded.init -> void
+Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.SuccessfulTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, string? StandardOutput, string? ErrorOutput, string? SessionUid, int? RetryAttemptNumber = null, bool? IsSuperseded = null) -> void
+Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid, out int? RetryAttemptNumber, out bool? IsSuperseded) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Expected.get -> string?
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Expected.init -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Actual.get -> string?
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Actual.init -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.RetryAttemptNumber.init -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.IsSuperseded.get -> bool?
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.IsSuperseded.init -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.TestNodeDetails(byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? StandardError, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits, string? Expected, string? Actual, int? RetryAttemptNumber, bool? IsSuperseded) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Deconstruct(out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? StandardError, out Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, out Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits, out string? Expected, out string? Actual, out int? RetryAttemptNumber, out bool? IsSuperseded) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.FailedTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? ErrorOutput, string? SessionUid) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.TestNodeDetails(byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? StandardError, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Deconstruct(out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? StandardError, out Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, out Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.SuccessfulTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, string? StandardOutput, string? ErrorOutput, string? SessionUid) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.SuccessfulTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid) -> void
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption = "show-slowest-tests" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.OutputOptionMinimalArgument = "minimal" -> string!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RecordTestDuration(string! testNodeUid, string! displayName, System.TimeSpan? duration) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetSlowestTests(int count) -> System.Collections.Generic.IReadOnlyList<(string! DisplayName, System.TimeSpan Duration)>!
+static Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.GetSlowestTestsCount(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> int
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(string! uid, string! version, string! displayName, string! description, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Description.get -> string!
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.DisplayName.get -> string!
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Uid.get -> string!
+*REMOVED*Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Version.get -> string!
+*REMOVED*Microsoft.Testing.Platform.Helpers.IClock
+*REMOVED*Microsoft.Testing.Platform.Helpers.IClock.UtcNow.get -> System.DateTimeOffset
+*REMOVED*static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string! mainOptionName, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
+*REMOVED*static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string![]! mainOptionNames, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
+*REMOVED*static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateAllowedValuesAsync(string! value, string![]! allowedValues, string! formatString) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+*REMOVED*static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetSystemClock(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IClock!
+*REMOVED*virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+*REMOVED*virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!
+Microsoft.Testing.Platform.Helpers.DeadlineHelper
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.TryGetDeadline(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, out System.DateTimeOffset deadlineUtc) -> bool
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetStopMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetDumpMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetTimerDueTime(System.DateTimeOffset deadline, System.DateTimeOffset now) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.SubtractSaturating(System.DateTimeOffset instant, System.TimeSpan margin) -> System.DateTimeOffset
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.AbortAtDeadlineExtension(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability? capability, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! cancellationTokenSource, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, System.TimeSpan? reportTimeout = null, bool isHangDumpEnabled = false) -> void
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.WaitForDeadlineHandlingAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Dispose() -> void
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.NotifyTestExecutionCompleted() -> void
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Version.get -> string!
+Microsoft.Testing.Platform.Hosts.CommonHost.RegisterActiveGracefulStopCapabilityAsync(Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability! capability) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Hosts.CommonHost.RequestGracefulSessionStopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Hosts.CommonHost.ExecuteRequestAsync(Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionInfo, Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, Microsoft.Testing.Platform.Messages.BaseMessageBus! baseMessageBus, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFramework, Microsoft.Testing.Platform.TestHost.ClientInfo! client, bool isDiscoveryRequest) -> System.Threading.Tasks.Task!
+*REMOVED*static Microsoft.Testing.Platform.Hosts.CommonHost.ExecuteRequestAsync(Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionInfo, Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, Microsoft.Testing.Platform.Messages.BaseMessageBus! baseMessageBus, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFramework, Microsoft.Testing.Platform.TestHost.ClientInfo! client) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Hosts.CommonHost.UnregisterActiveGracefulStopCapability(Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability! capability) -> void
+Microsoft.Testing.Platform.Hosts.TestFrameworkBuilderData.IsServerRequest.get -> bool
+Microsoft.Testing.Platform.Hosts.TestFrameworkBuilderData.TestFrameworkBuilderData(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider, Microsoft.Testing.Platform.Requests.ITestExecutionRequestFactory! testExecutionRequestFactory, Microsoft.Testing.Platform.Requests.ITestFrameworkInvoker! testExecutionRequestInvoker, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory! testExecutionFilterFactory, Microsoft.Testing.Platform.OutputDevice.IPlatformOutputDevice! platformOutputDisplayService, System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>! serverPerCallConsumers, Microsoft.Testing.Internal.Framework.TestFrameworkManager! testFrameworkManager, Microsoft.Testing.Platform.TestHost.TestHostManager! testSessionManager, Microsoft.Testing.Platform.Messages.MessageBusProxy! messageBusProxy, bool isForDiscoveryRequest, bool isServerRequest) -> void
+Microsoft.Testing.Platform.DotnetTestConnection.DotnetTestConnection(Microsoft.Testing.Platform.CommandLine.CommandLineHandler! commandLineHandler, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! cancellationTokenSource, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TerminalTestReporter(Microsoft.Testing.Platform.Helpers.IConsole! console, System.Func<bool>! isCancellationRequested, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions! options, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.TestProgressStateAwareTerminal(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, System.Func<bool?>! showProgress, Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer! renderer, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.TcpMessageHandler(System.Net.Sockets.TcpClient! client, System.IO.Stream! clientToServerStream, System.IO.Stream! serverToClientStream, Microsoft.Testing.Platform.ServerMode.IMessageFormatter! formatter, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+const Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS = "MTP_PROGRESS_SILENCE_SECONDS" -> string!
+const Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS = "MTP_PROGRESS_SLOW_TEST_SECONDS" -> string!
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.ActiveTestTracker(System.TimeSpan slowTestThreshold, System.Func<Microsoft.Testing.Platform.Helpers.IStopwatch!>! createStopwatch) -> void
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Clear() -> void
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Complete(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid) -> void
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.GetDueDiagnostics() -> Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic![]!
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsActive(Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic! diagnostic) -> bool
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsEnabled.get -> bool
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Start(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName) -> void
+Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration
+Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.ReportSlowTestsOnceAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.SimplifiedConsoleOutputDeviceBase(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, System.TimeSpan slowTestThreshold, System.Func<Microsoft.Testing.Platform.Helpers.IStopwatch!>! createStopwatch, System.TimeSpan slowTestPollInterval) -> void
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.DisplayName.get -> string!
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Elapsed.get -> System.TimeSpan
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Generation.get -> long
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.SlowTestDiagnostic(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName, System.TimeSpan elapsed, long generation) -> void
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Uid.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.IsDue(System.TimeSpan elapsed) -> bool
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.SlowTestThresholdState(System.TimeSpan initialThreshold) -> void
+static Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.GetThreshold(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! variableName, int defaultSeconds) -> System.TimeSpan
+Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty
+static Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty!
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptPropertyExtensions
+static Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptPropertyExtensions.IsSupersededRetryAttempt(this Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
+Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions
+const Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.ShowFlakyTestsOptionName = "show-flaky-tests" -> string!
+static Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.IsEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! instanceId) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! instanceId) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! displayName, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! displayName, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! displayName, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.FlakyTests.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RetriedExecutions.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RetriedTests.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetFlakyTests() -> System.Collections.Generic.IReadOnlyList<(string! DisplayName, int Attempts)>!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowFlakyTests.get -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowFlakyTests.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.get -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.init -> void
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowFlakyTestsOption = "show-flaky-tests" -> string!
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TestCompleted(string! executionId, string! testNodeUid, string! displayName, Microsoft.Testing.Platform.OutputDevice.Terminal.TestOutcome outcome, System.TimeSpan? duration, string? informativeMessage, string? errorMessage, System.Exception? exception, string? expected, string? actual, string? standardOutput, string? errorOutput, Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty? retryAttempt) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
+static Microsoft.Testing.Platform.Helpers.ExtensionHelper.ConfigureOTelLegacyAttributes(Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+static Microsoft.Testing.Platform.Helpers.ExtensionHelper.EmitLegacyOTelAttributes.get -> bool
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities.TestFramework = "TestFramework" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities.TestHostBuilder = "TestHostBuilder" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsCompleted = "tests.completed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsDiscovered = "tests.discovered" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsDuration = "tests.duration" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsFailed = "tests.failed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsPassed = "tests.passed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsSkipped = "tests.skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsStarted = "tests.started" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsUnknown = "tests.unknown" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestCaseResultCount = "test.case.result.count" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestRetryCount = "test.case.retry.count" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestRunActiveCases = "test.case.active" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestRunDuration = "test.run.duration" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Units.Count = "{test}" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Units.Seconds = "s" -> string!
+Microsoft.Testing.Platform.Telemetry.ICounter<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Platform.Telemetry.IHistogram<T>.Record(T value, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.AddEvent(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, System.DateTimeOffset timestamp = default(System.DateTimeOffset)) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.IsRecording.get -> bool
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.RecordException(System.Exception! exception, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? additionalTags = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.SetStatus(Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode statusCode, string? description = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.SpanId.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceId.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.CreateObservableGauge<T>(string! name, System.Func<T>! observeValue, string? unit = null, string? description = null) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.CreateUpDownCounter<T>(string! name, string? unit = null, string? description = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>!
+Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.OpenTelemetryResultHandler(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService! otelService, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.AttributeValueLengthLimit.get -> int
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.CaptureTestOutput.get -> bool
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.EmitLegacyAttributes.get -> bool
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.Truncate(string? value) -> string?
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Units
+static Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext.IsValidTraceParent(string? traceParent) -> bool
+static Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext.TryGetParentId(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string?
+static Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext.TryGetTraceState(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string?
+static Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.Default.get -> Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions!
+static Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.FromEnvironment(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions!
+const Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.DefaultAttributeValueLengthLimit = 8192 -> int
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeFilePath = "code.file.path" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeFunctionName = "code.function.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeLineNumber = "code.line.number" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeStacktrace = "code.stacktrace" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.ErrorType = "error.type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly = "test.assembly" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestClass = "test.class" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestDuration = "test.duration.ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestFilePath = "test.file.path" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestId = "test.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestLineEnd = "test.line.end" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestLineStart = "test.line.start" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix = "test.metadataProperty." -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestMethod = "test.method" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestName = "test.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestNamespace = "test.namespace" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestParentId = "test.parent.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResult = "test.result" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage = "test.result.exception.message" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace = "test.result.exception.stacktrace" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType = "test.result.exception.type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation = "test.result.explanation" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout = "test.result.timeout.ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestStderr = "test.stderr" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestStdout = "test.stdout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestAssemblyName = "test.assembly.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseId = "test.case.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseName = "test.case.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseParentId = "test.case.parent.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation = "test.case.result.explanation" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus = "test.case.result.status" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseRetryAttempt = "test.case.retry.attempt" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseTimeoutMilliseconds = "test.case.timeout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestExtensionDisplayName = "test.extension.display_name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestExtensionUid = "test.extension.uid" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestExtensionVersion = "test.extension.version" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestFrameworkName = "test.framework.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestFrameworkVersion = "test.framework.version" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestHostType = "test.host.type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix = "test.metadata." -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestOutputStderr = "test.output.stderr" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestOutputStdout = "test.output.stdout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunExitCode = "test.run.exit_code" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunRequestType = "test.run.request_type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestSessionId = "test.session.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestStepPrefix = "test.step." -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestSuiteName = "test.suite.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestCaseDuration = "test.case.duration" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Cancelled = "cancelled" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Error = "error" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Skipped = "skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Timeout = "timeout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Unknown = "unknown" -> string!
+Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext
+Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Error = 2 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Ok = 1 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Unset = 0 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.HasCurrentActivity.get -> bool
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds = "test.case.duration_ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunFailedCount = "test.run.failed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunResultStatus = "test.run.result.status" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunSkippedCount = "test.run.skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunTotalCount = "test.run.total" -> string!
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity = null) -> void
+Microsoft.Testing.Platform.Services.TestApplicationResult.ReportRunTelemetry(Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity, int exitCode) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceState.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceState.set -> void
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Fail = "fail" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Pass = "pass" -> string!
+static Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(string! status) -> string!
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.StartNonAmbientActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.AssemblyPathPropertyName = "assemblyPath" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.DisplayNamePropertyName = "displayName" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.EnabledPropertyName = "enabled" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ExtensionsPropertyName = "extensions" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.HookMethodName = "AddExtensions" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.IdPropertyName = "id" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ManifestFileSuffix = ".testingplatformextensions.json" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ManifestSearchPattern = "*.testingplatformextensions.json" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.SharedPlatformAssemblyName = "Microsoft.Testing.Platform" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.TypeFullNamePropertyName = "typeFullName" -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.DynamicExtensionAssemblyLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.IsIsolated.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.LoadAssembly(string! assemblyPath) -> System.Reflection.Assembly!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.AssemblyPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DisplayName.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.Id.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.Index.get -> int
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.IsEnabled.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.ManifestPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.ResolvedAssemblyPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.TypeFullName.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionJsonReader
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.LoadAsync(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, string![]! args) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.DynamicExtensionManifest(string! manifestPath, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry!>! extensions, System.Collections.Generic.IReadOnlyList<string!>! unknownProperties) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.Extensions.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry!>!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.ManifestPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.UnknownProperties.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifestParser
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader.IsIsolated.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader.LoadAssembly(string! assemblyPath) -> System.Reflection.Assembly!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.AssemblyPath.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.AssemblyPath.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DisplayName.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DisplayName.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Enabled.get -> bool?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Enabled.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Id.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Id.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.InvalidProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.TypeFullName.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.TypeFullName.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.UnknownProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.Entries.get -> System.Collections.Generic.List<Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry?>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.HasExtensionsProperty.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.HasExtensionsProperty.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.IsExtensionsPropertyAnArray.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.IsExtensionsPropertyAnArray.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.UnknownProperties.get -> System.Collections.Generic.List<string!>!
+static Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionJsonReader.Read(string! manifestPath, string! content) -> Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest!
+static Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifestParser.Parse(string! manifestPath, string! content) -> Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.RawExtensionEntry() -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.RawExtensionManifest() -> void
+static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.SharedContractAssemblyNames -> string![]!
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard.EnterDynamicExtensionScope(string! displayName, string! manifestPath) -> System.IDisposable!
+static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparer -> System.StringComparer!
+static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparison -> System.StringComparison
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey = "enable-dynamic-extensions" -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DynamicExtensionEntry(string! manifestPath, int index, string! id, bool hasExplicitId, string! displayName, string! assemblyPath, string! resolvedAssemblyPath, string! typeFullName, bool isEnabled) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DeduplicationKey.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.HasExplicitId.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DuplicateProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.DuplicateProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, int maxNumberOfServerInstances, System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, System.Threading.CancellationToken cancellationToken) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowPassedTests.get -> System.Func<bool>!
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowPassedTests.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowTestResults.get -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowTestResults.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.All = 7 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.Failed = 2 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.None = 0 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.Passed = 1 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility.Skipped = 4 -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption = "show-test-results" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsPassedArgument = "passed" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsFailedArgument = "failed" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsSkippedArgument = "skipped" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsAllArgument = "all" -> string!
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsNoneArgument = "none" -> string!
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility?
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.TryParseShowTestResultsArguments(string![]! arguments, out Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility visibility, out Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError error) -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.AllOrNoneCombinedWithOtherValues = 3 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.EmptySelection = 2 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.None = 0 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError.UnknownValue = 1 -> Microsoft.Testing.Platform.OutputDevice.Terminal.ShowTestResultsValidationError
+static Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.GetShowTestResultsVisibility(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Platform.OutputDevice.Terminal.TestResultVisibility

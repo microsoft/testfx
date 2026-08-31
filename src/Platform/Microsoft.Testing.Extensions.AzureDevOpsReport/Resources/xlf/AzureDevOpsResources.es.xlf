@@ -42,6 +42,11 @@
         <target state="translated">"--report-azdo-groups" requiere que se habilite "--report-azdo"</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
+        <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo cargar {0} los datos adjuntos; faltarán en la serie de pruebas Azure DevOps.</target>
+        <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">La publicación en directo de Azure DevOps no pudo completar la ejecución de pruebas.</target>
@@ -55,6 +60,16 @@
       <trans-unit id="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile">
         <source>Azure DevOps live publishing failed to delete coordination file</source>
         <target state="translated">La publicación en directo de Azure DevOps no pudo eliminar el archivo de coordinación</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo leer el archivo de coordinación</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
+        <source>Azure DevOps live publishing failed to write coordination file</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo escribir el archivo de coordinación</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -102,15 +117,40 @@
         <target state="translated">La publicación en tiempo real de Azure DevOps aceptó un lote de resultados de pruebas, pero no pudo analizar los identificadores de resultado asignados; se omitirán los datos adjuntos de nivel de resultado para este lote.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo actualizar la entrega del mapa de resultados.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
+        <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo publicar {0} resultado(s) de prueba; faltarán en la serie de pruebas de Azure DevOps.</target>
+        <note>{0} is the number of test results that could not be published.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
         <target state="translated">La publicación en tiempo real de Azure DevOps no pudo cargar un dato adjunto de una ejecución de prueba.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunCreated">
+        <source>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps está transmitiendo los resultados a la serie de pruebas {0}, que puede seguir mientras las pruebas siguen ejecutándose en {1}. La pestaña Pruebas de la compilación muestra la ejecución una vez que se completa.</target>
+        <note>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">La publicación en directo de Azure DevOps encontró un archivo azdo-runid.&lt;buildId&gt;.json para otro proyecto de Azure DevOps.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
+        <target state="translated">La publicación en directo de Azure DevOps no pudo actualizar la entrega del identificador de ejecución de pruebas.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
+        <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
+        <target state="translated">La serie de pruebas de Azure DevOps no se marcó como completada y es posible que no aparezca en la pestaña Pruebas de la compilación.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>
@@ -121,6 +161,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">Tiempo de espera: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
+        <source>Azure DevOps live publishing could not display a warning on the output device.</source>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo mostrar una advertencia en el dispositivo de salida.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
@@ -213,8 +258,8 @@
         <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
-        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">Habilite o deshabilite los grupos de registros de Azure DevOps por ensamblado ("on" o "off"). El valor predeterminado es "on". Requiere "--report-azdo".</target>
+        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
+        <target state="translated">Habilite o deshabilite los grupos de registros de Azure DevOps por ensamblado ("on" o "off"). El valor predeterminado es "off". Requiere "--report-azdo".</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -288,8 +333,8 @@
         <note>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
-        <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="translated">Publique los resultados de las pruebas en directo en la pestaña pruebas de Azure DevOps.</target>
+        <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
+        <target state="translated">Publique los resultados de las pruebas en una serie de pruebas de Azure DevOps a medida que se completan. La ejecución aparece en la pestaña Pruebas de la compilación una vez que finaliza la sesión de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

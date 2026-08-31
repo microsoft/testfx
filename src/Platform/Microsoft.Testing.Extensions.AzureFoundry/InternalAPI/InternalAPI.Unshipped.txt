@@ -1,1 +1,5 @@
 #nullable enable
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey = 1 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.None = 0 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.TokenCredential = 2 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AzureOpenAIChatClientProvider(Azure.Core.TokenCredential! credential) -> void

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
@@ -38,7 +38,7 @@ internal sealed partial class VideoRecorderSessionHandler :
     private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
 
     private readonly bool _enabled;
-    private readonly FfmpegVideoRecorder? _recorder;
+    private readonly IVideoRecorder? _recorder;
     private readonly VideoRecorderOptions _options;
     private readonly VideoRecorderPersistenceMode _persistMode;
     private readonly VideoCaptureGranularity _granularity;
@@ -55,6 +55,9 @@ internal sealed partial class VideoRecorderSessionHandler :
     private readonly List<TestRecord> _testRecords = [];
     private readonly Dictionary<string, DateTimeOffset> _inFlight = [];
 
+    // A persistent stack keeps both failure insertion and pruning snapshots O(1).
+    private FailedWindow? _failedWindows;
+
     private SessionUid? _sessionUid;
     private bool _anyTestFailed;
     private int _bufferDropWarned;
@@ -67,6 +70,19 @@ internal sealed partial class VideoRecorderSessionHandler :
         IOutputDevice outputDevice,
         IClock clock,
         ILogger<VideoRecorderSessionHandler> logger)
+        : this(options, configuration, commandLineOptions, messageBus, outputDevice, clock, logger, recorder: null)
+    {
+    }
+
+    internal VideoRecorderSessionHandler(
+        VideoRecorderOptions options,
+        IConfiguration configuration,
+        ICommandLineOptions commandLineOptions,
+        IMessageBus messageBus,
+        IOutputDevice outputDevice,
+        IClock clock,
+        ILogger<VideoRecorderSessionHandler> logger,
+        IVideoRecorder? recorder)
     {
         _messageBus = messageBus;
         _outputDevice = outputDevice;
@@ -91,7 +107,7 @@ internal sealed partial class VideoRecorderSessionHandler :
         string outputDirectory = options.OutputDirectory
             ?? Path.Combine(configuration.GetTestResultDirectory(), "VideoRecordings");
 
-        _recorder = new FfmpegVideoRecorder(
+        _recorder = recorder ?? new FfmpegVideoRecorder(
             options,
             outputDirectory,
             clock,
@@ -168,5 +184,21 @@ internal sealed partial class VideoRecorderSessionHandler :
         {
             DeleteDirectoryQuietly(_recorder.SegmentDirectory);
         }
+    }
+
+    private sealed class FailedWindow
+    {
+        public FailedWindow(double startSeconds, double endSeconds, FailedWindow? next)
+        {
+            StartSeconds = startSeconds;
+            EndSeconds = endSeconds;
+            Next = next;
+        }
+
+        public double StartSeconds { get; }
+
+        public double EndSeconds { get; }
+
+        public FailedWindow? Next { get; }
     }
 }

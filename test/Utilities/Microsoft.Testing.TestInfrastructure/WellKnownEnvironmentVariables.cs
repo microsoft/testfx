@@ -98,6 +98,11 @@ public static class WellKnownEnvironmentVariables
         "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
         "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
 
+        // Logical run correlation. A CI job may set this to tie several modules or machines into one
+        // logical run, so it must not bleed into child test hosts and make a test observe an id it did
+        // not choose. Tests that exercise run correlation inject it explicitly.
+        "TESTINGPLATFORM_LOGICAL_RUN_ID",
+
         // Isolate from the skip banner in case of parent, children tests
         "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER",
 

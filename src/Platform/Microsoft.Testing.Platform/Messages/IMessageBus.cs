@@ -16,5 +16,9 @@ public interface IMessageBus
     /// <param name="dataProducer">The data producer.</param>
     /// <param name="data">The data to be published.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
+    /// <remarks>
+    /// The data is not dispatched to consumers whose <see cref="Microsoft.Testing.Platform.Extensions.IExtension.Uid"/> matches the
+    /// <paramref name="dataProducer"/>'s UID.
+    /// </remarks>
     Task PublishAsync(IDataProducer dataProducer, IData data);
 }

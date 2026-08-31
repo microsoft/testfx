@@ -26,7 +26,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task MTP_RunTests_SendsTelemetryWithSettingsAndAttributes(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.MTPProjectPath, "bin", "Release", tfm, TestResultsFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, MTPAssetName, tfm);
 
         var testHost = TestHost.LocateFrom(AssetFixture.MTPProjectPath, MTPAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -50,6 +50,8 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.attribute_usage"), $"Expected attribute_usage in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.config_source"), $"Expected config_source in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.assertion_usage"), $"Expected assertion_usage in telemetry.\n{content}");
+        Assert.IsTrue(Regex.IsMatch(content, "\"Assert\\.HasCount\":1(?:,|})"), $"Expected exactly one Assert.HasCount telemetry call.\n{content}");
+        Assert.IsTrue(Regex.IsMatch(content, "\"Assert\\.IsEmpty\":1(?:,|})"), $"Expected exactly one Assert.IsEmpty telemetry call.\n{content}");
 
         // Regression guard: discovery + execution data must ship in a single sessionexit event,
         // not split across two (an earlier iteration of this code did the latter).
@@ -66,7 +68,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task MTP_DiscoverTests_SendsTelemetryEvent(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.MTPProjectPath, "bin", "Release", tfm, TestResultsFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, MTPAssetName, tfm);
 
         var testHost = TestHost.LocateFrom(AssetFixture.MTPProjectPath, MTPAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -92,7 +94,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task MTP_WhenTelemetryDisabled_DoesNotSendMSTestEvent(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.MTPProjectPath, "bin", "Release", tfm, TestResultsFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, MTPAssetName, tfm);
 
         var testHost = TestHost.LocateFrom(AssetFixture.MTPProjectPath, MTPAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -195,17 +197,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         return (Regex.IsMatch(content, pattern), content);
     }
 
-    // Build a regex matching the deterministic default diagnostic file name shape:
-    // "<asset-name>_<tfm>_<arch>_<yyMMddHHmmssfff>.diag". The arch token is taken from the
-    // current process (the testhost runs on the same machine, so its ProcessArchitecture matches).
-    private static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string tfm)
-    {
-        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        const string FileNamePlaceholder = "__DIAG_FILENAME__";
-        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
-        return combinedPath.Replace(FileNamePlaceholder, $@"{MTPAssetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
-    }
-
     #endregion
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -286,6 +277,9 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file UnitTest1.cs
+using System;
+using System.Collections;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -308,6 +302,34 @@ public class UnitTest1
     [Timeout(30000)]
     public void TestWithTimeout()
     {
+    }
+
+    [TestMethod]
+    public void NonGenericCountAssertions()
+    {
+        IEnumerable populated = new ArrayList { 1 };
+        IEnumerable empty = new ArrayList();
+
+        Assert.HasCount(1, populated);
+        Assert.IsEmpty(empty);
+
+        try
+        {
+            Assert.HasCount(0, (IEnumerable)null!);
+            throw new InvalidOperationException("Assert.HasCount should reject a null collection.");
+        }
+        catch (ArgumentNullException ex) when (ex.ParamName == "source")
+        {
+        }
+
+        try
+        {
+            Assert.IsEmpty((IEnumerable)null!);
+            throw new InvalidOperationException("Assert.IsEmpty should reject a null collection.");
+        }
+        catch (ArgumentNullException ex) when (ex.ParamName == "source")
+        {
+        }
     }
 }
 

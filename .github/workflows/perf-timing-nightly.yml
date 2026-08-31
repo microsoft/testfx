@@ -1,9 +1,10 @@
 name: Perf timing nightly
 
-# Artifact-only perf timing collection for microsoft/testfx#9312.
-# This workflow does not gate PRs and only uploads PlainProcess Result.json
-# files for trend tracking. Runs on both Windows and Linux so results can be
-# compared across platforms (Linux runners tend to have more consistent timing).
+# Performance collection and non-blocking regression detection for
+# microsoft/testfx#9312 and microsoft/testfx#10549. Runs on both Windows and
+# Linux, but uses Linux results for the rolling baseline because hosted Linux
+# runners tend to have more consistent timing. Allocation microbenchmarks are
+# collected on Linux without gating pull requests.
 
 on:
   schedule:
@@ -12,6 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -22,10 +24,10 @@ jobs:
   collect-windows:
     name: Collect PlainProcess timing (Windows)
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build packages
         shell: pwsh
@@ -34,6 +36,7 @@ jobs:
       - name: Run PlainProcess timing pipeline
         shell: pwsh
         env:
+          MSTEST_PERFORMANCE_SKIP_ARCHIVE: '1'
           Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup: '0'
         run: |
           $startTime = (Get-Date).ToUniversalTime().AddMinutes(-5).ToString("O")
@@ -41,6 +44,7 @@ jobs:
           & "$env:GITHUB_WORKSPACE\.dotnet\dotnet.exe" run --project test\Performance\MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
 
       - name: Stage Result.json files
+        if: ${{ always() }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -48,7 +52,7 @@ jobs:
           New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
 
           $startTime = [DateTimeOffset]::Parse($env:PERF_TIMING_STARTED).UtcDateTime
-          $resultRoot = Join-Path $env:GITHUB_WORKSPACE "artifacts\tmp\Release\testsuite"
+          $resultRoot = Join-Path $env:GITHUB_WORKSPACE "Results"
           $results = @(
             Get-ChildItem -Path $resultRoot -Filter Result.json -Recurse -File -ErrorAction SilentlyContinue |
               Where-Object { $_.LastWriteTimeUtc -ge $startTime }
@@ -67,6 +71,7 @@ jobs:
           }
 
       - name: Upload Result.json
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: perf-timing-result-json-windows
@@ -77,10 +82,10 @@ jobs:
   collect-linux:
     name: Collect PlainProcess timing (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build packages
         run: ./build.sh -pack -c Release
@@ -88,19 +93,26 @@ jobs:
       - name: Mark timing start
         run: touch "$RUNNER_TEMP/perf_timing_start"
 
+      - name: Install NativeAOT prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes clang zlib1g-dev
+
       - name: Run PlainProcess timing pipeline
         env:
+          MSTEST_PERFORMANCE_SKIP_ARCHIVE: '1'
           Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup: '0'
         run: |
           "$GITHUB_WORKSPACE/.dotnet/dotnet" run --project test/Performance/MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
 
       - name: Stage Result.json files
+        if: ${{ always() }}
         run: |
           set -euo pipefail
           STAGING_DIR="$GITHUB_WORKSPACE/artifacts/perf-results"
           mkdir -p "$STAGING_DIR"
 
-          RESULT_ROOT="$GITHUB_WORKSPACE/artifacts/tmp/Release/testsuite"
+          RESULT_ROOT="$GITHUB_WORKSPACE/Results"
           mapfile -d '' -t RESULTS < <(find "$RESULT_ROOT" -name "Result.json" -type f -newer "$RUNNER_TEMP/perf_timing_start" -print0 2>/dev/null)
 
           if [ "${#RESULTS[@]}" -eq 0 ]; then
@@ -117,9 +129,105 @@ jobs:
           done
 
       - name: Upload Result.json
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: perf-timing-result-json-linux
           path: artifacts/perf-results/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Download previous rolling baseline
+        id: previous-baseline
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BASELINE_ZIP: ${{ runner.temp }}/perf-baseline.zip
+        with:
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const repository = await github.rest.repos.get({ owner, repo });
+            const workflowRuns = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: 'perf-timing-nightly.yml',
+              status: 'completed',
+              branch: repository.data.default_branch,
+              per_page: 100,
+            });
+
+            for (const run of workflowRuns.data.workflow_runs) {
+              if (run.id === context.runId) {
+                continue;
+              }
+
+              const workflowArtifacts =
+                await github.rest.actions.listWorkflowRunArtifacts({
+                  owner,
+                  repo,
+                  run_id: run.id,
+                  per_page: 100,
+                });
+              const baseline = workflowArtifacts.data.artifacts.find(
+                artifact => artifact.name === 'perf-timing-baseline-linux' && !artifact.expired);
+              if (!baseline) {
+                continue;
+              }
+
+              const download = await github.rest.actions.downloadArtifact({
+                owner,
+                repo,
+                artifact_id: baseline.id,
+                archive_format: 'zip',
+              });
+              fs.writeFileSync(process.env.BASELINE_ZIP, Buffer.from(download.data));
+              core.info(`Using baseline artifact ${baseline.id} from run ${run.id}.`);
+              core.setOutput('found', 'true');
+              return;
+            }
+
+            core.info('No previous rolling baseline was found; this run will initialize it.');
+            core.setOutput('found', 'false');
+
+      - name: Extract previous rolling baseline
+        if: steps.previous-baseline.outputs.found == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/perf-baseline"
+          unzip -q "$RUNNER_TEMP/perf-baseline.zip" -d "$RUNNER_TEMP/perf-baseline"
+
+      - name: Compare with rolling baseline
+        run: |
+          python .github/scripts/compare_perf_timings.py \
+            --current-dir artifacts/perf-results \
+            --baseline "$RUNNER_TEMP/perf-baseline/Baseline.json" \
+            --output artifacts/perf-baseline/Baseline.json \
+            --summary artifacts/perf-baseline/Summary.md \
+            --run-id "$GITHUB_RUN_ID"
+          cat artifacts/perf-baseline/Summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload rolling baseline
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-timing-baseline-linux
+          path: artifacts/perf-baseline/
+
+      - name: Run allocation microbenchmarks
+        if: ${{ always() }}
+        run: |
+          "$GITHUB_WORKSPACE/.dotnet/dotnet" run \
+            --project test/Performance/MSTest.Performance.Benchmarks \
+            -c Release -- \
+            --filter "*" \
+            --buildTimeout 600 \
+            --generateBinLog \
+            --artifacts "$GITHUB_WORKSPACE/artifacts/perf-microbenchmarks"
+
+      - name: Upload allocation microbenchmarks
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-microbenchmarks-linux
+          path: artifacts/perf-microbenchmarks/
           if-no-files-found: error
           retention-days: 90

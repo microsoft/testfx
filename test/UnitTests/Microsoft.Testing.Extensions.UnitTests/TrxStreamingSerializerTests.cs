@@ -31,6 +31,7 @@ public class TrxStreamingSerializerTests
                 new TrxStreamMessage { Kind = TrxStreamMessageKind.DebugOrTrace, Message = null },
             ],
             Categories = ["cat-a", "cat-b"],
+            WorkItemIds = ["123", "456"],
             Metadata = [new TrxTestMetadata { Key = "k", Value = "v" }],
             FileArtifacts = [new TrxTestFileArtifact { FullPath = @"c:\artifact.txt" }],
         };
@@ -58,7 +59,9 @@ public class TrxStreamingSerializerTests
         Assert.AreEqual(TrxStreamMessageKind.DebugOrTrace, round.Messages[2].Kind);
         Assert.IsNull(round.Messages[2].Message);
         Assert.IsNotNull(round.Categories);
-        Assert.AreSequenceEqual(new[] { "cat-a", "cat-b" }, round.Categories.ToArray());
+        Assert.AreSequenceEqual(["cat-a", "cat-b"], round.Categories.ToArray());
+        Assert.IsNotNull(round.WorkItemIds);
+        Assert.AreSequenceEqual(["123", "456"], round.WorkItemIds.ToArray());
         Assert.IsNotNull(round.Metadata);
         Assert.AreEqual("k", round.Metadata[0].Key);
         Assert.AreEqual("v", round.Metadata[0].Value);
@@ -84,6 +87,7 @@ public class TrxStreamingSerializerTests
         TrxTestResult round = WriteAndReadOne(original);
         Assert.IsNull(round.Messages);
         Assert.IsNull(round.Categories);
+        Assert.IsNull(round.WorkItemIds);
         Assert.IsNull(round.Metadata);
         Assert.IsNull(round.FileArtifacts);
         Assert.IsNull(round.TestMethodIdentifier);
@@ -105,6 +109,7 @@ public class TrxStreamingSerializerTests
             Outcome = TrxTestOutcome.Passed,
             Messages = [],
             Categories = [],
+            WorkItemIds = [],
             Metadata = [],
             FileArtifacts = [],
         };
@@ -112,6 +117,7 @@ public class TrxStreamingSerializerTests
         TrxTestResult round = WriteAndReadOne(original);
         Assert.IsNull(round.Messages);
         Assert.IsNull(round.Categories);
+        Assert.IsNull(round.WorkItemIds);
         Assert.IsNull(round.Metadata);
         Assert.IsNull(round.FileArtifacts);
     }

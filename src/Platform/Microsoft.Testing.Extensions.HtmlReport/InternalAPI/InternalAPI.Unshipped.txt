@@ -1,1 +1,41 @@
 #nullable enable
+const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.HtmlArtifactKind = "microsoft.testing.html" -> string!
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.init -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.HtmlArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedModes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingMode>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Version.get -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.CreateMergeId(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.ExtractReportJson(string! html) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.RenderReport(string! json) -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode.CollapseRetryAttempts = 1 -> Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode.Concatenate = 0 -> Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports, Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode mode) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputPath, Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.MergeOutputFileHelper
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ArtifactPostProcessingHelper
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.IsReparsePoint(string! path) -> bool
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.OrderInputs(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, bool includeModuleMetadata) -> System.Linq.IOrderedEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
+virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!

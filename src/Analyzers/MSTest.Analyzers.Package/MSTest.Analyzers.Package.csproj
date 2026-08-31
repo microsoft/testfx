@@ -9,12 +9,10 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Analyzers</PackageId>
-    <PackageTags>MSTest Analyzers TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageTags>$(CommonPackageTags) MSTest Analyzers Roslyn TestFramework MSTestV2 Framework</PackageTags>
+    <PackageDescription><![CDATA[This package includes code analyzers and code fixes for MSTest.
 
-      This package includes code analyzers and code fixes for MSTest.
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>

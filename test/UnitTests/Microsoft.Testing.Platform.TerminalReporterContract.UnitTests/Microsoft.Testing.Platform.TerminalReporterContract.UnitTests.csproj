@@ -10,6 +10,12 @@
     <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 
+  <!-- Exercise both contract consumption modes: net8 compiles fully standalone, while net9 references the
+       platform and verifies duplicate public abstractions are removed from the shared-source set. -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
   <!--
     The shared terminal-reporter contract types are [Microsoft.CodeAnalysis.Embedded], which resolves to a
     polyfill (not a framework type). The terminal source also needs the other src/Polyfills shims on down-level
@@ -21,7 +27,7 @@
   </ItemGroup>
 
   <!--
-    This project intentionally does NOT reference Microsoft.Testing.Platform's terminal reporter types. It compiles
+    The net8 target intentionally does NOT reference Microsoft.Testing.Platform's terminal reporter types. It compiles
     the shared terminal reporter source (reporter + rendering + state + the small platform abstractions, and the
     TerminalResources.resx) into its own assembly via the shared .props, proving the reporter can live in testfx
     and be consumed by an independent assembly (e.g. dotnet/sdk's 'dotnet test') with a single source of truth.

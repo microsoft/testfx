@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 using DebuggerLaunchMode = Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode;
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
@@ -31,7 +33,7 @@ internal sealed partial class MSTestSettings
     /// </summary>
     public MSTestSettings()
     {
-        CaptureDebugTraces = true;
+        OutputCaptureMode = TestOutputCaptureMode.Result;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
@@ -44,6 +46,8 @@ internal sealed partial class MSTestSettings
         ClassCleanupTimeout = 0;
         TestInitializeTimeout = 0;
         TestCleanupTimeout = 0;
+        GlobalTestInitializeTimeout = 0;
+        GlobalTestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
         RandomizeTestOrder = false;
@@ -78,7 +82,12 @@ internal sealed partial class MSTestSettings
     /// <summary>
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
-    public bool CaptureDebugTraces { get; private set; }
+    public bool CaptureDebugTraces => OutputCaptureMode != TestOutputCaptureMode.None;
+
+    /// <summary>
+    /// Gets a value indicating how Console/Trace output produced during test execution is handled.
+    /// </summary>
+    internal TestOutputCaptureMode OutputCaptureMode { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
@@ -144,14 +153,24 @@ internal sealed partial class MSTestSettings
     internal int ClassCleanupTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global TestInitializeTimeout timeout.
+    ///  Gets specified TestInitialize timeout.
     /// </summary>
     internal int TestInitializeTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global TestCleanupTimeout timeout.
+    ///  Gets specified TestCleanup timeout.
     /// </summary>
     internal int TestCleanupTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified GlobalTestInitialize timeout. Falls back to <see cref="TestInitializeTimeout"/> when not set.
+    /// </summary>
+    internal int GlobalTestInitializeTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified GlobalTestCleanup timeout. Falls back to <see cref="TestCleanupTimeout"/> when not set.
+    /// </summary>
+    internal int GlobalTestCleanupTimeout { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether all timeouts should be cooperative.
@@ -162,6 +181,19 @@ internal sealed partial class MSTestSettings
     /// Gets a value indicating whether tests should be ordered by name in the class.
     /// </summary>
     internal bool OrderTestsByNameInClass { get; private set; }
+
+    /// <summary>
+    /// Gets the test dependencies declared in <c>testconfig.json</c> under
+    /// <c>mstest:execution:dependencies</c>, as an alternative to the <c>[DependsOn]</c> attribute, or
+    /// <see langword="null"/> when none are declared. Configured edges are merged with attribute-declared
+    /// ones.
+    /// </summary>
+    /// <remarks>
+    /// This is only populated on the Microsoft.Testing.Platform path: <c>testconfig.json</c> is not supplied
+    /// to the VSTest entry points, which pass a null configuration. Tests running under VSTest declare
+    /// dependencies with the attribute.
+    /// </remarks>
+    internal TestDependencyDeclaration[]? DeclaredDependencies { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether tests should be executed in a random order to help expose hidden dependencies between tests.

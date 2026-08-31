@@ -9,15 +9,28 @@ internal sealed partial class Json
 {
     private static (string Name, object? Value)[] BuildTestNodeProperties(TestNode message)
     {
-        List<(string Name, object? Value)> properties =
-        [
-            with(capacity: 16),
+        // IDE0028 would rewrite this to a collection expression [with(capacity: 16), ...], but the
+        // 'with(...)' collection-expression-argument is a C# *preview* feature. The source-package
+        // consumer compiles this file with LangVersion=latest (supplied by build/*.targets), where
+        // preview features are unsupported, so keep the explicit capacity-ctor + initializer form.
+#pragma warning disable IDE0028 // Collection initialization can be simplified
+        List<(string Name, object? Value)> properties = new(capacity: 16)
+        {
             (JsonRpcStrings.Uid, message.Uid.Value),
-            (JsonRpcStrings.DisplayName, message.DisplayName)
-        ];
+            (JsonRpcStrings.DisplayName, message.DisplayName),
+        };
+#pragma warning restore IDE0028 // Collection initialization can be simplified
 
         List<KeyValuePair<string, string>>? traits = null;
         bool hasActionNodeType = false;
+
+        // Collected up-front because the assertion values are rendered inside the failed-state branch below,
+        // and property order inside the bag is not guaranteed. The state lookup is O(1) (it is a dedicated
+        // PropertyBag field), so non-failed nodes — discovery, in-progress, passed, which are the vast
+        // majority — never pay for the linked-list walk.
+        AssertionFailureProperty? assertionFailure = message.Properties.SingleOrDefault<TestNodeStateProperty>() is FailedTestNodeStateProperty
+            ? message.Properties.SingleOrDefault<AssertionFailureProperty>()
+            : null;
 
         int attachmentIndex = 0;
         foreach (IProperty property in message.Properties)
@@ -67,6 +80,16 @@ internal sealed partial class Json
                 properties.Add(("standardError", standardErrorProperty.StandardError));
             }
 
+            if (property is TestNodeExecutionCompletedProperty)
+            {
+                // The server protocol has no outcome-less terminal state. Return the action to discovered
+                // so clients clear in-progress state without recording a test outcome.
+                properties.Add(("node-type", "action"));
+                properties.Add(("execution-state", "discovered"));
+                hasActionNodeType = true;
+                continue;
+            }
+
             if (property is TestNodeStateProperty testNodeStateProperty)
             {
                 properties.Add(("node-type", "action"));
@@ -110,6 +133,18 @@ internal sealed partial class Json
                             if (exception is not null)
                             {
                                 properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
+                            }
+
+                            // AssertionFailureProperty is the supported channel; Exception.Data is the legacy
+                            // fallback for producers that have not been updated yet. The choice is
+                            // all-or-nothing so the two halves of a diff always come from the same producer.
+                            if (assertionFailure is not null)
+                            {
+                                properties.Add(("assert.actual", assertionFailure.Actual ?? string.Empty));
+                                properties.Add(("assert.expected", assertionFailure.Expected ?? string.Empty));
+                            }
+                            else if (exception is not null)
+                            {
                                 properties.Add(("assert.actual", exception.Data["assert.actual"] ?? string.Empty));
                                 properties.Add(("assert.expected", exception.Data["assert.expected"] ?? string.Empty));
                             }
@@ -168,6 +203,17 @@ internal sealed partial class Json
             if (property is TimingProperty timingProperty)
             {
                 properties.Add(("time.duration-ms", timingProperty.GlobalTiming.Duration.TotalMilliseconds));
+                continue;
+            }
+
+            // In-process retry attribution (MSTest's [Retry], ...). Kept in sync with
+            // SerializerUtilities.TestNodeSerializers.cs: an unhandled property falls through this chain and is
+            // silently dropped, which would leave a server-mode client unable to tell repeated updates for the same
+            // test node uid apart, or to know which one is the test's final outcome.
+            if (property is RetryAttemptProperty retryAttemptProperty)
+            {
+                properties.Add(("retry.attempt", retryAttemptProperty.AttemptNumber));
+                properties.Add(("retry.is-superseded", retryAttemptProperty.IsSuperseded));
                 continue;
             }
 

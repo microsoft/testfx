@@ -221,17 +221,66 @@ internal sealed class JUnitXmlWriter(
             WriteAttribute(writer, "message", result.ErrorMessage!);
         }
 
-        if (!RoslynString.IsNullOrEmpty(result.ExceptionType))
-        {
-            WriteAttribute(writer, "type", result.ExceptionType!);
-        }
+        // The Ant/windyroad JUnit.xsd marks `type` as use="required" (Surefire relaxes it to
+        // optional). MTP only gives us an exception type when the state property carried an
+        // actual Exception; frameworks that report a failure through `Explanation` alone leave
+        // it null. Fall back to the element name so the document stays valid under the stricter
+        // schema without inventing a bogus exception type name.
+        WriteAttribute(writer, "type", RoslynString.IsNullOrEmpty(result.ExceptionType) ? elementName : result.ExceptionType!);
 
-        if (!RoslynString.IsNullOrEmpty(result.StackTrace))
+        string? body = BuildFailureBody(result);
+        if (!RoslynString.IsNullOrEmpty(body))
         {
-            await writer.WriteStringAsync(XmlSafeText(result.StackTrace)).ConfigureAwait(false);
+            await writer.WriteStringAsync(XmlSafeText(body)).ConfigureAwait(false);
         }
 
         await writer.WriteEndElementAsync().ConfigureAwait(false);
+    }
+
+    // Mirrors the shape Java's Throwable.printStackTrace() produces, which is what genuine
+    // Surefire reports put in the <failure>/<error> body:
+    //
+    //     com.example.AssertionError: expected:<1> but was:<2>
+    //        at ...
+    //
+    // .NET's Exception.StackTrace omits that leading "type: message" header (only ToString()
+    // includes it), so writing StackTrace alone would drop the single most useful piece of
+    // diagnostic information. Consumers that render the body rather than the `message`
+    // attribute — GitLab and CircleCI most notably — would otherwise show only a stack trace.
+    // The `message` and `type` attributes are still written, so consumers reading those
+    // directly are unaffected by the duplication.
+    internal static string? BuildFailureBody(CapturedTestResult result)
+    {
+        bool hasExceptionType = !RoslynString.IsNullOrEmpty(result.ExceptionType);
+        bool hasErrorMessage = !RoslynString.IsNullOrEmpty(result.ErrorMessage);
+        bool hasStackTrace = !RoslynString.IsNullOrEmpty(result.StackTrace);
+
+        if (!hasExceptionType && !hasErrorMessage)
+        {
+            return hasStackTrace ? result.StackTrace : null;
+        }
+
+        var builder = new StringBuilder();
+        if (hasExceptionType)
+        {
+            builder.Append(result.ExceptionType);
+            if (hasErrorMessage)
+            {
+                builder.Append(": ");
+            }
+        }
+
+        if (hasErrorMessage)
+        {
+            builder.Append(result.ErrorMessage);
+        }
+
+        if (hasStackTrace)
+        {
+            builder.Append('\n').Append(result.StackTrace);
+        }
+
+        return builder.ToString();
     }
 
     private static async Task WritePropertiesAsync(XmlWriter writer, TestCase tc)

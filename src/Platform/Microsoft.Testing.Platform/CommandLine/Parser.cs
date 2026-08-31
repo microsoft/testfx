@@ -47,10 +47,18 @@ internal static class CommandLineParser
         {
             string? currentArg = args[i];
 
-            if (currentArg.StartsWith("@", StringComparison.Ordinal) && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
+            if (currentArg.StartsWith("@", StringComparison.Ordinal))
             {
-                args.InsertRange(i + 1, newArguments);
-                continue;
+                string responseFilePath = currentArg.Substring(1);
+                string redactedResponseFileArgument = CommandLineArgumentsRedactor.RedactArgument([.. args], i);
+                string diagnosticPath = redactedResponseFileArgument.StartsWith("@", StringComparison.Ordinal)
+                    ? redactedResponseFileArgument.Substring(1)
+                    : redactedResponseFileArgument;
+                if (ResponseFileHelper.TryReadResponseFile(responseFilePath, diagnosticPath, errors, out string[]? newArguments))
+                {
+                    args.InsertRange(i + 1, newArguments);
+                    continue;
+                }
             }
 
             // If it's the first argument and it doesn't start with - then it's the tool name
@@ -80,7 +88,11 @@ internal static class CommandLineParser
             {
                 if (currentOption is null)
                 {
-                    errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedArgument, args[i]));
+                    errors.Add(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            PlatformResources.CommandLineParserUnexpectedArgument,
+                            CommandLineArgumentsRedactor.RedactArgument([.. args], i)));
                 }
                 else
                 {
@@ -125,9 +137,15 @@ internal static class CommandLineParser
             {
                 if (input.IndexOf('\'', 1, input.Length - 2) != -1)
                 {
+                    const string redactedPlaceholder = "***REDACTED***";
+                    string displayInput =
+                        PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(option, StringComparison.OrdinalIgnoreCase)
+                        || PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(option, StringComparison.OrdinalIgnoreCase)
+                            ? redactedPlaceholder
+                            : input;
                     error = option is null
-                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgument, input)
-                        : string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgumentForOption, input, option);
+                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgument, displayInput)
+                        : string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgumentForOption, displayInput, option);
                     return false;
                 }
 

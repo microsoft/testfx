@@ -252,4 +252,56 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenNonTestClassHasExplicitParameterlessCtor_NoDiagnostic()
+    {
+        // The analyzer only fires for classes with [TestClass]; a plain class with
+        // an explicit parameterless constructor should never be flagged.
+        string code = """
+            public class MyPlainClass
+            {
+                public MyPlainClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedTestClassAttributeAndExplicitParameterlessCtor_Diagnostic()
+    {
+        // Custom attributes that inherit from [TestClass] should also trigger the diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestClassAttribute : TestClassAttribute { }
+
+            [CustomTestClass]
+            public class MyTestClass
+            {
+                public [|MyTestClass|]()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestClassAttribute : TestClassAttribute { }
+
+            [CustomTestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

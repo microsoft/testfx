@@ -2,14 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -21,13 +18,32 @@ namespace Microsoft.Testing.Platform.Hosts;
 /// This doesn't represent an orchestrator host.
 /// </summary>
 [StackTraceHidden]
-internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
+internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IHost
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _activeGracefulStopCapabilitiesSync = new();
+#else
+    private readonly object _activeGracefulStopCapabilitiesSync = new();
+#endif
+    private readonly List<IGracefulStopTestExecutionCapability> _activeGracefulStopCapabilities = [];
+    private CancellationToken _gracefulSessionStopCancellationToken;
+    private bool _isGracefulSessionStopRequested;
+
     public ServiceProvider ServiceProvider => serviceProvider;
 
     protected IPushOnlyProtocol? PushOnlyProtocol => ServiceProvider.GetService<IPushOnlyProtocol>();
 
     protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether this host is the one that observes the test results, and therefore owns the
+    /// run-level verdict reported to telemetry.
+    /// </summary>
+    /// <remarks>
+    /// The test host controller shares the application's <c>TestApplicationResult</c> but never consumes a test node
+    /// update: the tests run in the child test host it launches.
+    /// </remarks>
+    private bool OwnsRunVerdict => this is not TestHostControllersTestHost;
 
     public async Task<int> RunAsync()
     {
@@ -40,8 +56,29 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         try
         {
             platformOTelService = ServiceProvider.GetPlatformOTelService();
+            if (platformOTelService is not null)
+            {
+                ExtensionHelper.ConfigureOTelLegacyAttributes(
+                    PlatformOpenTelemetryOptions.FromEnvironment(ServiceProvider.GetEnvironment()));
+            }
+
             string hostType = GetHostType();
-            activity = platformOTelService?.StartActivity(hostType);
+
+            // When the builder activity has already been closed (or OTel was configured late) there is no ambient
+            // parent, so fall back to the W3C trace context published by the process that started this run.
+            string? environmentParentId = platformOTelService is not null && !platformOTelService.HasCurrentActivity
+                ? EnvironmentTraceContext.TryGetParentId(ServiceProvider.GetEnvironment())
+                : null;
+
+            if (environmentParentId is not null && platformOTelService!.RootTraceState is null)
+            {
+                platformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(ServiceProvider.GetEnvironment());
+            }
+
+            activity = platformOTelService?.StartActivity(
+                hostType,
+                tags: [new(TestingPlatformSemanticConventions.Attributes.TestHostType, hostType)],
+                parentId: environmentParentId);
 
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
@@ -59,7 +96,11 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             {
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
-                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType).ConfigureAwait(false);
+                IReadOnlyDictionary<byte, string>? additionalHandshakeProperties =
+                    SupportsArtifactPostProcessing(hostType)
+                        ? ArtifactPostProcessingHandshakeProperties.Create(ServiceProvider.GetServicesInternal<IArtifactPostProcessor>())
+                        : null;
+                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType, additionalHandshakeProperties).ConfigureAwait(false);
 
                 if (isValidProtocol && PushOnlyProtocol.IsServerControlChannelSupported)
                 {
@@ -86,21 +127,65 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
         finally
         {
+            // Normalize the cancellation verdict *before* the span and the run telemetry read it. The
+            // post-finally adjustment below runs too late for them, so without this a cancelled run was traced
+            // as a generic failure and test.run.exit_code did not match the code the process exits with.
+            if (testApplicationCancellationToken.IsCancellationRequested)
+            {
+                exitCode = (int)ExitCode.TestSessionAborted;
+            }
+
+            // Emit the run-level telemetry while the OpenTelemetry providers and the root span are still alive.
+            // DisposeServiceProviderAsync below tears the providers down in registration order, and they are
+            // registered before TestApplicationResult, so anything recorded after this point would be dropped.
+            //
+            // Only the host that actually observed the results owns the verdict. The test host controller shares
+            // the same TestApplicationResult instance but consumes no TestNodeUpdateMessage (the tests run in the
+            // child process), so reporting from there would emit a second, contradictory run record with zero
+            // counts and a ZeroTests exit code.
+            if (OwnsRunVerdict
+                && ServiceProvider.GetService<ITestApplicationProcessExitCode>() is TestApplicationResult testApplicationResult)
+            {
+                testApplicationResult.ReportRunTelemetry(activity, exitCode);
+            }
+
+            // Record the run verdict on the root span before closing it, so a trace search on
+            // test.run.exit_code finds failing runs without having to open them.
+            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode);
+            activity?.SetStatus(
+                exitCode == (int)ExitCode.Success ? PlatformActivityStatusCode.Ok : PlatformActivityStatusCode.Error);
+
             // Dispose the activity
             activity?.Dispose();
 
-            await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed, isProcessShutdown: true).ConfigureAwait(false);
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
+            await DisposeServiceProviderCoreAsync(
+                ServiceProvider,
+                filter: null,
+                alreadyDisposed: alreadyDisposed,
+                isProcessShutdown: true,
+                disposeServiceAsync: DisposeProcessShutdownServiceAsync).ConfigureAwait(false);
+            if (ServiceProvider.GetService<FileLoggerProvider>() is { } fileLoggerProvider
+                && !alreadyDisposed.Contains(fileLoggerProvider))
+            {
+                await DisposeProcessShutdownServiceAsync(fileLoggerProvider).ConfigureAwait(false);
+                alreadyDisposed.Add(fileLoggerProvider);
+            }
 
             // Dispose the LoggerFactoryProxy last so that all user-registered logger providers
             // (e.g., Microsoft.Extensions.Logging providers added via the Microsoft.Testing.Extensions.Logging
             // bridge such as Serilog, Application Insights, OpenTelemetry) get a chance to flush their buffers.
             // The proxy is skipped by DisposeServiceProviderAsync for ordering reasons.
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<LoggerFactoryProxy>()).ConfigureAwait(false);
+            if (ServiceProvider.GetService<LoggerFactoryProxy>() is { } loggerFactoryProxy
+                && !alreadyDisposed.Contains(loggerFactoryProxy))
+            {
+                await DisposeProcessShutdownServiceAsync(loggerFactoryProxy).ConfigureAwait(false);
+                alreadyDisposed.Add(loggerFactoryProxy);
+            }
 
             if (PushOnlyProtocol is not null && !alreadyDisposed.Contains(PushOnlyProtocol))
             {
-                await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
+                await DisposeProcessShutdownServiceAsync(PushOnlyProtocol).ConfigureAwait(false);
+                alreadyDisposed.Add(PushOnlyProtocol);
             }
 
             // This is intentional that we are not disposing the CTS.
@@ -116,6 +201,11 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         return exitCode;
     }
+
+    internal static bool SupportsArtifactPostProcessing(string hostType)
+        => hostType is HandshakeMessageHostTypes.TestHost
+            or HandshakeMessageHostTypes.ServerTestHost
+            or HandshakeMessageHostTypes.TestHostController;
 
     protected virtual string HostType
         => this switch
@@ -139,14 +229,52 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     // stop so the framework stops scheduling new tests but still emits trx/logs/artifacts for whatever completed
     // (mirroring the local '--maximum-failed-tests' behavior). Fall back to hard cancellation when the running
     // framework has no graceful-stop capability (e.g. the test host controller), which is the only lever left.
-    private async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    protected Task RegisterActiveGracefulStopCapabilityAsync(IGracefulStopTestExecutionCapability capability)
     {
-        IGracefulStopTestExecutionCapability? capability =
+        CancellationToken cancellationToken;
+        bool stopCapability;
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            stopCapability = _isGracefulSessionStopRequested && !_activeGracefulStopCapabilities.Contains(capability);
+            cancellationToken = _gracefulSessionStopCancellationToken;
+            _activeGracefulStopCapabilities.Add(capability);
+        }
+
+        return stopCapability
+            ? capability.StopTestExecutionAsync(cancellationToken)
+            : Task.CompletedTask;
+    }
+
+    protected void UnregisterActiveGracefulStopCapability(IGracefulStopTestExecutionCapability capability)
+    {
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            _activeGracefulStopCapabilities.Remove(capability);
+        }
+    }
+
+    protected async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    {
+        IGracefulStopTestExecutionCapability[] capabilities;
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            _isGracefulSessionStopRequested = true;
+            _gracefulSessionStopCancellationToken = cancellationToken;
+            capabilities = [.. _activeGracefulStopCapabilities.Distinct()];
+        }
+
+        if (capabilities.Length > 0)
+        {
+            await Task.WhenAll(capabilities.Select(capability => capability.StopTestExecutionAsync(cancellationToken))).ConfigureAwait(false);
+            return;
+        }
+
+        IGracefulStopTestExecutionCapability? applicationCapability =
             ServiceProvider.GetService<ITestFrameworkCapabilities>()?.GetCapability<IGracefulStopTestExecutionCapability>();
 
-        if (capability is not null)
+        if (applicationCapability is not null)
         {
-            await capability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
+            await applicationCapability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -172,7 +300,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         int exitCode;
         using (platformOTelService?.StartActivity("Run"))
         {
-            exitCode = await InternalRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+            exitCode = await InternalRunAsync(testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false);
         }
 
         if (RunTestApplicationLifeCycleCallbacks)
@@ -192,226 +320,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         return exitCode;
     }
 
-    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken);
+    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed);
 
-    protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
-        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
-    {
-        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
-        CancellationToken cancellationToken = testSessionInfo.CancellationToken;
-        try
-        {
-            IPlatformOpenTelemetryService? otelService = serviceProvider.GetPlatformOTelService();
-            using (otelService?.StartActivity("OnTestSessionStarting"))
-            {
-                await NotifyTestSessionStartAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
-            }
-
-            using (otelService?.StartActivity("TestFrameworkInvoker"))
-            {
-                await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
-            }
-
-            using (otelService?.StartActivity("OnTestSessionEnding"))
-            {
-                await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Do nothing we're canceled
-        }
-
-        // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
-        // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
-        await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
-    }
-
-    private static async Task DisplayBeforeSessionStartAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
-    {
-        // Display before session start
-        await outputDevice.DisplayBeforeSessionStartAsync(sessionInfo.CancellationToken).ConfigureAwait(false);
-
-        if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandler)
-        {
-            await testSessionLifetimeHandler.OnTestSessionStartingAsync(sessionInfo).ConfigureAwait(false);
-        }
-    }
-
-    private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
-    {
-        // Display after session end even when the session cancellation token is canceled.
-        // We intentionally pass a non-cancelable token so final output/cleanup notifications are not skipped.
-        await outputDevice.DisplayAfterSessionEndRunAsync(CancellationToken.None).ConfigureAwait(false);
-
-        // We want to ensure that the output service is the last one to run
-        if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
-        {
-            await testSessionLifetimeHandlerFinishing.OnTestSessionFinishingAsync(sessionInfo).ConfigureAwait(false);
-        }
-    }
-
-    private static async Task NotifyTestSessionStartAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, IPlatformOpenTelemetryService? otelService)
-    {
-        TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
-        if (testSessionLifetimeHandlersContainer is null)
-        {
-            return;
-        }
-
-        foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
-        {
-            using IPlatformActivity? activity = otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags());
-            await testSessionLifetimeHandler.OnTestSessionStartingAsync(testSessionContext).ConfigureAwait(false);
-        }
-
-        // Drain messages generated by the session start notification before to start test execution.
-        await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
-    }
-
-    private static async Task NotifyTestSessionEndAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, IPlatformOpenTelemetryService? otelService)
-    {
-        // Drain messages generated by the test session execution before to process the session end notification.
-        await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
-
-        TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
-        if (testSessionLifetimeHandlersContainer is null)
-        {
-            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here? Tracked by https://github.com/microsoft/testfx/issues/8086.
-            return;
-        }
-
-        IShutdownProgressReporter? shutdownProgressReporter = serviceProvider.GetService<IShutdownProgressReporter>();
-
-        // First, we call OnTestSessionFinishingAsync on all non-consumers.
-        bool hasNonDataConsumers = false;
-        foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
-        {
-            if (testSessionLifetimeHandler is IDataConsumer)
-            {
-                // At first, we don't call this for data consumers.
-                // We want to do this for potentially publishers-only handlers.
-                // The order here matters, because one handler can produce a message that is consumed by another.
-                // By making the consumers last, we reduce the likelihood of issues related to ordering.
-                // One case where this is important is the dependency between Code Coverage's ITestSessionLifetimeHandler and TRX's ITestSessionLifetimeHandler.
-                // We must run Code Coverage ITestSessionLifetimeHandler implementation first, as it will publish SessionFileArtifact.
-                // The SessionFileArtifact is expected to be consumed by TRX's implementation of ITestSessionLifetimeHandler.
-                // In that case, ITestSessionLifetimeHandler of CC is a producer-only handler which we will run first.
-                // Then we will drain the message bus to ensure TRX handler have consumed the SessionFileArtifact.
-                // Then we run TRX OnTestSessionFinishingAsync.
-                continue;
-            }
-
-            hasNonDataConsumers = true;
-
-            using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
-            using (shutdownProgressReporter?.Track(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.DisplayName, nameof(ITestSessionLifetimeHandler.OnTestSessionFinishingAsync)))
-            {
-                await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
-            }
-        }
-
-        if (hasNonDataConsumers)
-        {
-            // At this point, we called all non-consumer handlers.
-            // Now, we want to make sure to drain the message bus before calling the consumer handlers.
-            // Messages produced by non-consumer handlers could be consumed by consumer handlers.
-            await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
-        }
-
-        foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
-        {
-            if (testSessionLifetimeHandler is not IDataConsumer)
-            {
-                // We already called this for non-consumers.
-                continue;
-            }
-
-            using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
-            using (shutdownProgressReporter?.Track(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.DisplayName, nameof(ITestSessionLifetimeHandler.OnTestSessionFinishingAsync)))
-            {
-                await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
-            }
-
-            // OnTestSessionFinishingAsync could produce information that needs to be handled by others.
-            // While in many cases we already handled this by calling all non-consumers first, it's possible that
-            // two consumers might depend on each other. In that case, we solely rely on registration order.
-            // And we drain in between.
-            await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
-        }
-
-        // We disable after the drain because it's possible that the drain will produce more messages
-        await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
-        await baseMessageBus.DisableAsync().ConfigureAwait(false);
-    }
-
-    protected static async Task DisposeServiceProviderAsync(ServiceProvider serviceProvider, Func<object, bool>? filter = null, List<object>? alreadyDisposed = null, bool isProcessShutdown = false)
-    {
-        alreadyDisposed ??= [];
-        foreach (object service in serviceProvider.Services)
-        {
-            // Logger is the most special service and we dispose it manually as last one, we want to be able to
-            // collect logs till the end of the process.
-            if (service is FileLoggerProvider)
-            {
-                continue;
-            }
-
-            // The LoggerFactoryProxy owns the real ILoggerFactory and is disposed manually after the rest of
-            // the services so that providers registered through it (including bridges to
-            // Microsoft.Extensions.Logging) can flush at the very end of the process.
-            if (service is LoggerFactoryProxy)
-            {
-                continue;
-            }
-
-            // The ITestApplicationCancellationTokenSource contains the cancellation token and can be used by other services during the shutdown
-            // we will collect manually in the correct moment.
-            if (service is ITestApplicationCancellationTokenSource)
-            {
-                continue;
-            }
-
-            if (filter is not null && !filter(service))
-            {
-                continue;
-            }
-
-            // We need to ensure that we won't dispose special services till the shutdown
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (!isProcessShutdown &&
-                service is ITelemetryCollector or
-                 ITestHostApplicationLifetime or
-                 IPushOnlyProtocol or
-                 IPlatformOpenTelemetryService or
-                 IOpenTelemetryProvider)
-            {
-                continue;
-            }
-#pragma warning restore CS0618 // Type or member is obsolete
-
-            if (!alreadyDisposed.Contains(service))
-            {
-                await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
-                alreadyDisposed.Add(service);
-            }
-
-            if (service is BaseMessageBus messageBus)
-            {
-                foreach (IDataConsumer dataConsumer in messageBus.DataConsumerServices)
-                {
-                    if (filter is not null && !filter(dataConsumer))
-                    {
-                        continue;
-                    }
-
-                    if (!alreadyDisposed.Contains(dataConsumer))
-                    {
-                        await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
-                        alreadyDisposed.Add(service);
-                    }
-                }
-            }
-        }
-    }
+    protected virtual Task DisposeProcessShutdownServiceAsync(object service)
+        => DisposeHelper.DisposeAsync(service);
 }

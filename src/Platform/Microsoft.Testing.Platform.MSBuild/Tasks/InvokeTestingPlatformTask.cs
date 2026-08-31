@@ -1,7 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
 
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
@@ -39,6 +37,8 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     private string? _outputFileName;
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
+    private bool _captureOutput;
+    private bool _showTestsFailure;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InvokeTestingPlatformTask"/> class.
@@ -50,17 +50,19 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
         {
             Debugger.Launch();
         }
-
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
     }
 
-    internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
+    internal InvokeTestingPlatformTask(IFileSystem fileSystem)
+    {
+        _fileSystem = fileSystem;
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+    }
 
     /// <summary>
     /// Gets or sets the target path.
     /// </summary>
     [Required]
-    public ITaskItem TargetPath { get; set; }
+    public required ITaskItem TargetPath { get; set; }
 
     // -------- BEGIN the following properties shouldn't be used. See https://github.com/microsoft/testfx/issues/5091 --------
 
@@ -95,42 +97,47 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     /// Gets or sets the target framework.
     /// </summary>
     [Required]
-    public ITaskItem TargetFramework { get; set; }
+    public required ITaskItem TargetFramework { get; set; }
 
     /// <summary>
     /// Gets or sets the test architecture.
     /// </summary>
     [Required]
-    public ITaskItem TestArchitecture { get; set; }
+    public required ITaskItem TestArchitecture { get; set; }
 
     /// <summary>
     /// Gets or sets the target framework identifier.
     /// </summary>
     [Required]
-    public ITaskItem TargetFrameworkIdentifier { get; set; }
+    public required ITaskItem TargetFrameworkIdentifier { get; set; }
 
     /// <summary>
     /// Gets or sets the testing platform show tests failure.
     /// </summary>
     [Required]
-    public ITaskItem TestingPlatformShowTestsFailure { get; set; }
+    public required ITaskItem TestingPlatformShowTestsFailure { get; set; }
 
     /// <summary>
     /// Gets or sets the testing platform capture output.
     /// </summary>
     [Required]
-    public ITaskItem TestingPlatformCaptureOutput { get; set; }
+    public required ITaskItem TestingPlatformCaptureOutput { get; set; }
 
     /// <summary>
     /// Gets or sets the project full path.
     /// </summary>
     [Required]
-    public ITaskItem ProjectFullPath { get; set; }
+    public required ITaskItem ProjectFullPath { get; set; }
 
     /// <summary>
     /// Gets or sets the dotnet host path.
     /// </summary>
     public ITaskItem? DotnetHostPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether automatic DOTNET_ROOT_&lt;ARCH&gt; configuration is disabled for apphost launches.
+    /// </summary>
+    public bool TestingPlatformDisableAppHostDotnetRoot { get; set; }
 
     /// <summary>
     /// Gets or sets the testing platform command line arguments.

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!--
+    Dependabot anchors for the packages bundled by MSTest.Sdk (Microsoft.Playwright.MSTest.v4
+    and Aspire.Hosting.Testing). Dependabot expands TestFx.slnx and restores each project
+    independently, so these references make the matching Central Package Management versions
+    discoverable.
+
+    TestFx.slnx marks this project Build="false", and SolutionPath keeps the references out of
+    solution restores even though MSBuild evaluates projects excluded from the build. Dependabot
+    invokes project discovery directly (it only supplies a synthetic SolutionDir), so SolutionPath
+    remains empty and the anchors are restored there. This is important:
+    ExcludeAssets="all" prevents package assets from flowing into a project, but NuGet would still
+    download the packages and their transitive dependencies, including the large Playwright payload.
+
+    A PackageDownload does not work as the anchor because Dependabot does not read PackageDownload
+    items (dependabot/dependabot-core#2502). See #9362 and #9452.
+  -->
+  <ItemGroup Condition="'$(SolutionPath)' == ''">
+    <PackageReference Include="Aspire.Hosting.Testing" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
+  </ItemGroup>
+
+</Project>

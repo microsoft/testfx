@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">Falha no teste: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,142 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">O gerador de relatórios do GitHub Actions emite comandos de fluxo de trabalho para que as execuções de teste proporcionem uma experiência de primeira classe no GitHub Actions.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">Gerador de relatório do GitHub Actions</target>
         <note />
+      </trans-unit>
+      <trans-unit id="EmptyStepSummarySections">
+        <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
+        <target state="translated">É necessária pelo menos uma seção de resumo de trabalho do GitHub Actions. Os valores válidos são 'test-results', 'slow-tests', 'coverage' ou 'all'.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="translated">A execução de teste falhou (código de saída {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="translated">Código de saída {0} — {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Pelo menos um teste falhou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Um ou mais limites de cobertura de código não foram atingidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Um processo dependente foi encerrado inesperadamente.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">A execução de teste falhou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Foi negociada uma versão de protocolo incompatível.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Os argumentos da linha de comando são inválidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">A configuração da plataforma de teste é inválida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Menos testes foram executados do que o exigido por --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">A execução de teste foi concluída com êxito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">O adaptador de teste relatou uma falha na sessão de teste.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">A execução do teste foi interrompida antecipadamente porque uma data limite imposta pela CI estava se aproximando.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">A execução de teste foi interrompida após atingir o limite definido por --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">O processo de host de teste foi encerrado de forma não normal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">A sessão de teste foi anulada.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">A execução de teste relatou um código de saída diferente de êxito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Nenhum teste foi encontrado para execução. Isso geralmente significa que um filtro de teste não encontrou correspondências.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailureDetailExceptionLabel">
+        <source>Exception</source>
+        <target state="translated">Exceção</target>
+        <note>Label preceding the exception type of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailLocationLabel">
+        <source>Location</source>
+        <target state="translated">Localização</target>
+        <note>Label preceding the source file and line of a failed test in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailTruncated">
+        <source>[... truncated]</source>
+        <target state="translated">[... truncado]</target>
+        <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOmitted">
+        <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
+        <target state="translated">Os detalhes da falha dos {0} testes listados foram omitidos porque os detalhes do erro ocupam muito espaço.</target>
+        <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
+      </trans-unit>
+      <trans-unit id="FailureDetailsOptionDescription">
+        <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">Habilite ou desabilite a expansão de cada teste com falha no resumo do trabalho em uma seção recolhível com sua mensagem de falha, tipo de exceção, localização de origem e rastreamento de pilha. Os valores válidos são 'on' (também aceita 'true', 'enable', '1') ou 'off' (também aceita 'false', 'disable', '0'). O padrão é 'on' durante a execução no GitHub Actions.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
+      </trans-unit>
+      <trans-unit id="FailureListTruncated">
+        <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
+        <target state="translated">Mostrando os primeiros {0} de {1} testes com falha. Confira o log do fluxo de trabalho ou o relatório de teste para ver as falhas restantes.</target>
+        <note>{0} is the number of listed failures, {1} is the total number of failed tests.</note>
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">Testes: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -32,9 +157,64 @@
         <target state="new">Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
+      <trans-unit id="HistoryDurationContext">
+        <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
+        <target state="translated">Duração histórica: p95 {0}, p99 {1} em {2} amostras anteriores.</target>
+        <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFailureContext">
+        <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
+        <target state="translated">Contexto histórico: {0} com falha e {1} com instabilidade de {2} execuções anteriores na janela de histórico de {3} dias.</target>
+        <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryFlakyContext">
+        <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
+        <target state="translated">Contexto histórico: {0} de {1} execuções anteriores apresentaram instabilidade na janela de histórico de {2} dias.</target>
+        <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryLoadFailedWarning">
+        <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
+        <target state="translated">Não foi possível carregar o instantâneo do histórico de testes do GitHub Actions em '{0}': {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="HistoryOptionDescription">
+        <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
+        <target state="translated">Ler e atualizar um instantâneo limitado do histórico de testes do GitHub Actions no caminho especificado. O fluxo de trabalho é responsável por baixar o instantâneo anterior antes da execução do teste e enviar o arquivo atualizado depois. Requer '--report-gh'.</target>
+        <note>{Locked="'--report-gh'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryRegressionContext">
+        <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
+        <target state="translated">Contexto histórico: passou todas as {0} anteriores na janela do histórico de {1} dias.</target>
+        <note>{0} is the total prior result count, {1} is the history window in days.</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowOptionDescription">
+        <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
+        <target state="translated">Número de dias do histórico de testes a serem mantidos e usados no contexto de testes instáveis (1 a 90). O padrão é 30. Requer '--report-gh-history'.</target>
+        <note>{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWindowRequiresHistory">
+        <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
+        <target state="translated">A opção '--report-gh-history-window' exige que '--report-gh-history' seja especificado.</target>
+        <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
+      </trans-unit>
+      <trans-unit id="HistoryWriteFailedWarning">
+        <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
+        <target state="translated">Não foi possível gravar o instantâneo do histórico de testes do GitHub Actions em '{0}': {1}</target>
+        <note>{0} is the snapshot path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="InvalidHistoryPath">
+        <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
+        <target state="translated">O caminho do instantâneo do histórico de testes do GitHub Actions deve ser um caminho válido e não vazio.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHistoryWindow">
+        <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
+        <target state="translated">Janela do histórico de testes do GitHub Actions inválida '{0}'. Especifique um número inteiro de dias entre 1 e 90.</target>
+        <note>{0} is the invalid history window.</note>
+      </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Valor inválido ‘{0}’. Os valores válidos são 'on' (ou 'true', 'enable', '1') ou 'off' (ou 'false', 'disable' e '0').</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -42,29 +222,49 @@
         <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="InvalidStepSummarySection">
+        <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
+        <target state="translated">Seção de resumo de trabalho do GitHub Actions inválida: '{0}'. Os valores válidos são 'test-results', 'slow-tests', 'coverage' ou 'all'. Os valores podem ser repetidos, separados por espaços ou por vírgulas.</target>
+        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidStepSummaryValue">
+        <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
+        <target state="translated">Valor inválido: '{0}'. Os valores válidos são 'on' (ou 'true', 'enable', '1'), 'off' (ou 'false', 'disable', '0') ou 'on-failure'.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+      </trans-unit>
+      <trans-unit id="ModuleDetailsOmitted">
+        <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
+        <target state="translated">Os detalhes da falha foram omitidos para {0} de {1} projetos de teste porque os detalhes do erro já ocupam muito espaço. Confira o log do fluxo de trabalho ou o relatório de teste para ver os diagnósticos completos deles.</target>
+        <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
+      </trans-unit>
+      <trans-unit id="ModulesNotListed">
+        <source>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</source>
+        <target state="translated">{0} outros projetos de teste não estão listados porque o limite de tamanho do resumo do trabalho foi atingido. GitHub descarta por completo um resumo de trabalho maior que 1 MB em vez de encurtá-lo. Confira o log do fluxo de trabalho ou o relatório de teste para ver os resultados deles.</target>
+        <note>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">O teste falhou sem fornecer uma mensagem de falha.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">O teste foi ignorado sem fornecer um motivo.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Habilite o gerador de relatórios do GitHub Actions para emitir comandos de fluxo de trabalho para que as execuções de teste proporcionem uma experiência de primeira classe no GitHub Actions.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">Teste ignorado: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">Teste lento: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +274,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} ainda em execução após {1}s</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -82,15 +282,40 @@
         <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
+      <trans-unit id="StepSummaryLimitExceededWarning">
+        <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>
+        <target state="translated">O arquivo de resumo do trabalho do GitHub tem {0} bytes, e acrescentar esta seção do relatório excederia o limite de {1} bytes imposto pelo GitHub por etapa. GitHub descarta por completo um resumo de trabalho muito grande em vez de truncá-lo, portanto, acrescentar o conteúdo teria feito com que todas as seções fossem perdidas, incluindo aquelas que outros projetos de teste já haviam escrito. Esta seção foi ignorada para manter o restante do resumo intacto. Isso geralmente significa que muitos projetos de teste ou outras ferramentas estão gravando no mesmo resumo do trabalho; confira o log do fluxo de trabalho ou o relatório de teste para ver esses resultados.</target>
+        <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
+      </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
-        <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="translated">Controla a gravação de um resumo do trabalho em Markdown no arquivo GITHUB_STEP_SUMMARY. Os valores válidos são 'on' (também aceita 'true', 'enable', '1'), 'off' (também aceita 'false', 'disable', '0') ou 'on-failure' para gravar somente quando a invocação de teste falhar. O padrão é 'on' ao executar no GitHub Actions.</target>
+        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+      </trans-unit>
+      <trans-unit id="StepSummarySectionsOptionDescription">
+        <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
+        <target state="translated">Selecione o conteúdo incluído no resumo do trabalho do GitHub Actions. Especifique um ou mais valores, repetidos, separados por espaços ou por vírgulas: 'test-results', 'slow-tests', 'coverage' ou 'all'. O padrão é 'all'. Requer '--report-gh'.</target>
+        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">Falha ao gravar o resumo do trabalho do GitHub Actions em '{0}': {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="SubOptionsRequireReportGh">
+        <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
+        <target state="translated">As subopções de relatório do GitHub Actions exigem que '--{0}' seja especificado.</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryCondensed">
+        <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
+        <target state="translated">condensado em uma linha porque o resumo já ocupa muito espaço. Confira o log do fluxo de trabalho ou o relatório de teste para ver os resultados completos.</target>
+        <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
+      </trans-unit>
+      <trans-unit id="SummaryTruncatedNotice">
+        <source>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</source>
+        <target state="translated">Este resumo do trabalho estava ficando longo, por isso foi encurtado: ele contém os resultados completos dos primeiros {0} projetos de teste, e os resultados daqueles relatados abaixo em uma única linha foram omitidos. GitHub descarta por completo um resumo de trabalho maior que 1 MB em vez de encurtá-lo. Confira o log do fluxo de trabalho ou o relatório de teste para ver os resultados completos.</target>
+        <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</note>
       </trans-unit>
     </body>
   </file>

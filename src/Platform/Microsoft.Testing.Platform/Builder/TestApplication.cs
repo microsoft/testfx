@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.DynamicExtensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
@@ -113,7 +114,55 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
+        TestApplicationBuilder builder = new(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
+
+        // Register dynamically declared extensions as the last thing before handing the builder back. Note this
+        // still puts them *ahead* of statically registered ones: the caller only invokes
+        // AddSelfRegisteredExtensions after this method returns. Doing it here rather than in BuildAsync is what
+        // makes the behaviour identical for the MSBuild-generated entry point and a hand-written Main. See
+        // docs/RFCs/023-Dynamic-Extension-Loading.md.
+        SystemFileSystem fileSystem = new();
+        DynamicExtensionLoader dynamicExtensionLoader = new(
+            fileSystem,
+            testApplicationModuleInfo,
+            new DynamicExtensionAssemblyLoader(fileSystem),
+            systemConsole,
+            parseResult,
+            loggingState.FileLoggerProvider?.CreateLogger(typeof(DynamicExtensionLoader).ToString()));
+
+        try
+        {
+            await dynamicExtensionLoader.LoadAsync(builder, args).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // The failure escapes CreateBuilderAsync, so nothing downstream will ever flush the diagnostic log
+            // — and its trace of which manifests were read and which extension failed is the whole point of
+            // having written it. Flush it before the exception reaches the entry point.
+            //
+            // Flushing is best-effort: DisposeAsync performs fallible stream work, and letting that failure
+            // escape would replace the manifest-aware error we are trying to preserve with one about the log
+            // file. Losing the log is bad; losing the reason the run failed is worse.
+            if (loggingState.FileLoggerProvider is { } fileLoggerProvider)
+            {
+                try
+                {
+                    await DisposeHelper.DisposeAsync(fileLoggerProvider).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // Intentionally empty: there is no sink left to report this to. The file logger is the
+                    // thing that just failed, and standard output cannot be used here because it is a
+                    // protocol channel under --server and holds a single JSON document under
+                    // --list-tests json, so writing would corrupt a machine-readable stream. The original
+                    // failure is rethrown below, which is what the user actually needs.
+                }
+            }
+
+            throw;
+        }
+
+        return builder;
     }
 
     private static async Task LogInformationAsync(
@@ -186,7 +235,7 @@ public sealed class TestApplication : ITestApplication
 
         string moduleName = testApplicationModuleInfo.GetDisplayName();
         await logger.LogInformationAsync($"Test module: {moduleName}").ConfigureAwait(false);
-        await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'").ConfigureAwait(false);
+        await logger.LogInformationAsync($"Command line arguments: '{CommandLineArgumentsRedactor.Redact(args)}'").ConfigureAwait(false);
 
         StringBuilder machineInfo = new();
 #pragma warning disable RS0030 // Do not use banned APIs

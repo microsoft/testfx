@@ -337,4 +337,29 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenCancellationTokenSourceIsUsedWithCancelMethod_ShouldReportDiagnosticWithNoFix()
+    {
+        // The analyzer fires on any access to TestContext.CancellationTokenSource (not just .Token).
+        // The fixer only handles the .CancellationTokenSource.Token pattern, so calling .Cancel()
+        // produces a diagnostic but no code fix is offered.
+        const string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void MyTest()
+                {
+                    [|TestContext.CancellationTokenSource|].Cancel();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

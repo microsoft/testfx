@@ -1,8 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Azure.Core;
+
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Extensions.AzureFoundry;
+
+using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -41,13 +45,26 @@ public sealed class AzureFoundryChatClientProviderTests
     }
 
     [TestMethod]
-    public void IsAvailable_WhenEndpointAndDeploymentSetWithoutApiKey_ReturnsTrue()
+    public void IsAvailable_WhenEndpointAndDeploymentSetWithoutApiKeyOrCredential_ReturnsFalse()
     {
         Environment.SetEnvironmentVariable(EndpointVariable, "https://contoso.openai.azure.com");
         Environment.SetEnvironmentVariable(DeploymentVariable, "gpt-4o");
 
         var provider = new AzureOpenAIChatClientProvider();
 
+        // Without an API key and without an injected credential, the provider cannot authenticate.
+        Assert.IsFalse(provider.IsAvailable);
+    }
+
+    [TestMethod]
+    public void IsAvailable_WhenEndpointAndDeploymentSetWithCredential_ReturnsTrue()
+    {
+        Environment.SetEnvironmentVariable(EndpointVariable, "https://contoso.openai.azure.com");
+        Environment.SetEnvironmentVariable(DeploymentVariable, "gpt-4o");
+
+        var provider = new AzureOpenAIChatClientProvider(Mock.Of<TokenCredential>());
+
+        // An injected credential makes the provider available even without an API key.
         Assert.IsTrue(provider.IsAvailable);
     }
 
@@ -67,6 +84,7 @@ public sealed class AzureFoundryChatClientProviderTests
     public void IsAvailable_WhenEndpointMissing_ReturnsFalse()
     {
         Environment.SetEnvironmentVariable(DeploymentVariable, "gpt-4o");
+        Environment.SetEnvironmentVariable(ApiKeyVariable, "secret");
 
         var provider = new AzureOpenAIChatClientProvider();
 
@@ -77,6 +95,7 @@ public sealed class AzureFoundryChatClientProviderTests
     public void IsAvailable_WhenDeploymentMissing_ReturnsFalse()
     {
         Environment.SetEnvironmentVariable(EndpointVariable, "https://contoso.openai.azure.com");
+        Environment.SetEnvironmentVariable(ApiKeyVariable, "secret");
 
         var provider = new AzureOpenAIChatClientProvider();
 
@@ -119,7 +138,7 @@ public sealed class AzureFoundryChatClientProviderTests
         var provider = new AzureOpenAIChatClientProvider();
 
         // The selection logic must resolve to the API-key path when a key is present...
-        Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret"));
+        Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret", null));
 
         // ...and the client must be constructed without throwing.
         IChatClient client = await provider.CreateChatClientAsync(CancellationToken.None);
@@ -128,15 +147,16 @@ public sealed class AzureFoundryChatClientProviderTests
     }
 
     [TestMethod]
-    public async Task CreateChatClientAsync_WithoutApiKey_UsesEntraPathAndReturnsClient()
+    public async Task CreateChatClientAsync_WithCredentialAndNoApiKey_UsesCredentialPathAndReturnsClient()
     {
         Environment.SetEnvironmentVariable(EndpointVariable, "https://contoso.openai.azure.com");
         Environment.SetEnvironmentVariable(DeploymentVariable, "gpt-4o");
 
-        var provider = new AzureOpenAIChatClientProvider();
+        TokenCredential credential = Mock.Of<TokenCredential>();
+        var provider = new AzureOpenAIChatClientProvider(credential);
 
-        // No AZURE_OPENAI_API_KEY is set, so the provider must fall back to DefaultAzureCredential.
-        Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(null));
+        // No AZURE_OPENAI_API_KEY is set, so the provider must use the injected credential.
+        Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.TokenCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(null, credential));
 
         // Credential resolution is lazy, so client construction must not throw even without a live identity.
         IChatClient client = await provider.CreateChatClientAsync(CancellationToken.None);
@@ -145,16 +165,47 @@ public sealed class AzureFoundryChatClientProviderTests
     }
 
     [TestMethod]
+    public async Task CreateChatClientAsync_WithoutApiKeyOrCredential_Throws()
+    {
+        Environment.SetEnvironmentVariable(EndpointVariable, "https://contoso.openai.azure.com");
+        Environment.SetEnvironmentVariable(DeploymentVariable, "gpt-4o");
+
+        var provider = new AzureOpenAIChatClientProvider();
+
+        // Neither an API key nor a credential is available, so the provider cannot authenticate.
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => provider.CreateChatClientAsync(CancellationToken.None));
+
+        Assert.Contains(ApiKeyVariable, exception.Message);
+    }
+
+    [TestMethod]
+    public void Constructor_WithNullCredential_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => new AzureOpenAIChatClientProvider(null!));
+
+    [TestMethod]
     public void GetAuthenticationMode_WithApiKey_ReturnsApiKey()
-        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret"));
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret", null));
 
     [TestMethod]
-    public void GetAuthenticationMode_WithoutApiKey_ReturnsDefaultAzureCredential()
-        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(null));
+    public void GetAuthenticationMode_WithApiKeyAndCredential_ReturnsApiKey()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret", Mock.Of<TokenCredential>()));
 
     [TestMethod]
-    public void GetAuthenticationMode_WithEmptyApiKey_ReturnsDefaultAzureCredential()
-        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(string.Empty));
+    public void GetAuthenticationMode_WithCredentialAndNoApiKey_ReturnsTokenCredential()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.TokenCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(null, Mock.Of<TokenCredential>()));
+
+    [TestMethod]
+    public void GetAuthenticationMode_WithEmptyApiKeyAndCredential_ReturnsTokenCredential()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.TokenCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(string.Empty, Mock.Of<TokenCredential>()));
+
+    [TestMethod]
+    public void GetAuthenticationMode_WithoutApiKeyOrCredential_ReturnsNone()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.None, AzureOpenAIChatClientProvider.GetAuthenticationMode(null, null));
+
+    [TestMethod]
+    public void GetAuthenticationMode_WithEmptyApiKeyAndNoCredential_ReturnsNone()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.None, AzureOpenAIChatClientProvider.GetAuthenticationMode(string.Empty, null));
 
     [TestMethod]
     public async Task CreateChatClientAsync_WhenEndpointMissing_Throws()

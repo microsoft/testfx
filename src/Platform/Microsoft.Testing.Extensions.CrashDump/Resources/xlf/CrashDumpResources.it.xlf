@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[solo net6.0+] Generazione di file di dump di arresto anomalo quando il processo di esecuzione del test si arresta in modo imprevisto</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="translated">[solo net6.0+] Generazione di file di dump di arresto anomalo quando il processo di esecuzione del test si arresta in modo imprevisto.</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -50,8 +50,8 @@ Supporta i seguenti segnaposto: {pname} (nome eseguibile del processo, inviato a
         <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
-        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="translated">[solo net6.0+ ] Generazione di un file di dump in caso di arresto anomalo del processo di test</target>
+        <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
+        <target state="translated">[solo net6.0+ ] Generazione di un file di dump in caso di arresto anomalo del processo di test.</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -84,10 +84,20 @@ Supporta i seguenti segnaposto: {pname} (nome eseguibile del processo, inviato a
         <target state="translated">File di sequenza di arresto anomalo del sistema</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileOpenError">
+        <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
+        <target state="translated">Inizializzazione del file di sequenza di arresto anomalo '{0}' non riuscita: {1}. Le informazioni sulla sequenza di test non saranno disponibili se l'host di test si arresta in modo anomalo.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
+      </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Non è possibile leggere il file della sequenza di arresto anomalo ''{0}'': {1}</target>
         <note>{0} is the crash sequence file path. {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileWriteError">
+        <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
+        <target state="translated">Scrittura nel file della sequenza di arresto anomalo '{0}' non riuscita: {1}. Il file di sequenza di arresto anomalo potrebbe essere incompleto.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -97,10 +107,10 @@ Supporta i seguenti segnaposto: {pname} (nome eseguibile del processo, inviato a
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
         <target state="translated">Specificare il tipo di dump.
 I valori validi sono 'Mini', 'Heap', 'Triage' o 'Full'. Il tipo predefinito è 'Full'.
-Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">

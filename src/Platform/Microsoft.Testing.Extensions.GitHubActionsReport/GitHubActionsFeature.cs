@@ -26,6 +26,11 @@ internal static class GitHubActionsFeature
             && arguments is [string value]
             && CommandLineOptionArgumentValidator.IsOffValue(value));
 
+    public static bool IsStepSummaryOnFailureOnly(ICommandLineOptions commandLine)
+        => commandLine.TryGetOptionArgumentList(GitHubActionsCommandLineOptions.GitHubActionsStepSummary, out string[]? arguments)
+            && arguments is [string value]
+            && value.Equals(GitHubActionsCommandLineOptions.StepSummaryOnFailureValue, StringComparison.OrdinalIgnoreCase);
+
     public static bool IsEnabled(ICommandLineOptions commandLine, IEnvironment environment, string knobOptionName)
         => IsMasterEnabled(commandLine, environment) && IsKnobEnabled(commandLine, knobOptionName);
 }

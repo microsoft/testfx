@@ -54,7 +54,8 @@ public static class CrashDumpExtensions
             => new CrashDumpSequenceLogger(
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetClock(),
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                serviceProvider.GetOutputDevice()));
 
         builder.TestHost.AddDataConsumer(sequenceLoggerComposite);
         builder.TestHost.AddTestSessionLifetimeHandler(sequenceLoggerComposite);

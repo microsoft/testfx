@@ -45,6 +45,12 @@ public sealed class ConfigurationManagerTests
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions:0", "1");
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions:1", "2");
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions", "[1,2]");
+        yield return ("{// Configure crash dumps\n\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{// Comment containing \0 a null character\n\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {/* Configure crash dumps */\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {/* Comment containing \0 a null character */\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {\"Count\": 1 /* Number of retries */}}", "platformOptions:Count", "1");
+        yield return ("{\"platformOptions\": {\"Url\": \"https://example.com\"}}", "platformOptions:Url", "https://example.com");
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0", null);
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0:Key", "Value");
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:1:Key", "3");
@@ -256,6 +262,45 @@ public sealed class ConfigurationManagerTests
         Assert.AreEqual("42", entries.Single(e => e.Key == "COUNT").Value);
         // The parser titlecases booleans on both runtimes.
         Assert.AreEqual("True", entries.Single(e => e.Key == "ENABLED").Value);
+    }
+
+    [TestMethod]
+    public async ValueTask ConfigurationSection_TraversesCommentedJsonWithoutExposingRawJson()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            """
+            {
+              "codeCoverage": {
+                "Configuration": {
+                  "IncludeTestAssembly": true, // Include the test assembly.
+                  "CodeCoverage": {
+                    "CollectFromChildProcesses": true,
+                  },
+                },
+              },
+            }
+            """);
+
+        IConfigurationSection coverageConfiguration = configuration
+            .GetSection("codeCoverage")
+            .GetSection("Configuration");
+
+        Assert.AreEqual("Configuration", coverageConfiguration.Key);
+        Assert.AreEqual("codeCoverage:Configuration", coverageConfiguration.Path);
+        Assert.IsFalse(coverageConfiguration.HasValue);
+        Assert.IsNull(coverageConfiguration.Value);
+        Assert.AreEqual("True", coverageConfiguration["IncludeTestAssembly"]);
+        Assert.IsNull(coverageConfiguration["CodeCoverage"]);
+
+        IConfigurationSection includeTestAssembly = coverageConfiguration.GetSection("IncludeTestAssembly");
+        Assert.IsTrue(includeTestAssembly.HasValue);
+        Assert.AreEqual("True", includeTestAssembly.Value);
+
+        IConfigurationSection codeCoverage = Assert.ContainsSingle(
+            coverageConfiguration.GetChildren().Where(child => child.Key == "CodeCoverage"));
+        Assert.AreEqual(
+            "True",
+            codeCoverage.GetSection("CollectFromChildProcesses").Value);
     }
 
     private static async Task<AggregatedConfiguration> BuildAggregatedConfigurationAsync(string jsonFileContent)

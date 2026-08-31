@@ -15,32 +15,80 @@ namespace Microsoft.Testing.Extensions.Policy;
 internal sealed class RetryFailedTestsPipeServer : IDisposable
 {
     private readonly NamedPipeServer _singleConnectionNamedPipeServer;
-    private readonly PipeNameDescription _pipeNameDescription;
     private readonly string[] _failedTests;
 
     public RetryFailedTestsPipeServer(IServiceProvider serviceProvider, string[] failedTests, ILogger logger)
     {
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-        logger.LogTrace($"Retry server pipe name: '{_pipeNameDescription.Name}'");
-        _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, CallbackAsync,
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        logger.LogTrace($"Retry server pipe name: '{pipeNameDescription.Name}'");
+        _singleConnectionNamedPipeServer = new NamedPipeServer(
+            pipeNameDescription,
+            CallbackAsync,
             serviceProvider.GetEnvironment(),
             serviceProvider.GetLoggerFactory().CreateLogger<RetryFailedTestsPipeServer>(),
             serviceProvider.GetTask(),
+            maxNumberOfServerInstances: 1,
+            serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities(),
             serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
 
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new TestRunCountsRequestSerializer(), typeof(TestRunCountsRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new ArtifactRequestSerializer(), typeof(ArtifactRequest));
         _failedTests = failedTests;
     }
 
-    public string PipeName => _pipeNameDescription.Name;
+    public string PipeName => _singleConnectionNamedPipeServer.PipeName.Name;
 
-    public List<string>? FailedUID { get; private set; }
+    /// <summary>
+    /// Gets the distinct uids of the tests that failed in this attempt, mapped to their display name.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately a dictionary keyed by uid rather than a flat list of every failed result: a folded data-driven
+    /// test reports several results under a single uid, and the retry filter, the threshold policy and the summary
+    /// all reason in terms of tests, not results. Counting results here inflated all three.
+    /// </remarks>
+    public Dictionary<string, string> FailedTests { get; } = [];
 
+    /// <summary>
+    /// Gets the number of test <em>results</em> that executed (skipped excluded) in this attempt.
+    /// </summary>
+    /// <remarks>
+    /// Counted per result rather than per uid, matching the platform run summary, so that a folded data-driven test
+    /// contributes one unit per data row. <see cref="FailedTests"/> is keyed by uid because it drives the retry
+    /// filter; the two must therefore never be combined into a single ratio without care — see
+    /// <see cref="FailedTestResults"/>.
+    /// </remarks>
     public int TotalTestRan { get; private set; }
+
+    /// <summary>
+    /// Gets the number of failing test <em>results</em> in this attempt, i.e. the same unit as
+    /// <see cref="TotalTestRan"/>. The failure-threshold policy uses this pair so its percentage stays consistent.
+    /// </summary>
+    public int FailedTestResults { get; private set; }
+
+    /// <summary>
+    /// Gets the number of skipped test results in this attempt. Reported separately from <see cref="TotalTestRan"/>
+    /// (which counts only executed tests, as the failure-threshold policy requires) so the summary's "total" can
+    /// include them and match the platform run summary.
+    /// </summary>
+    public int SkippedTests { get; private set; }
+
+    /// <summary>
+    /// Gets the uids of the tests this attempt was asked to retry which genuinely passed.
+    /// </summary>
+    public IReadOnlyList<string> RecoveredTests { get; private set; } = [];
+
+    /// <summary>
+    /// Gets a value indicating whether the attempt reported its counts at all. An attempt that dies before its test
+    /// session finishes (crash, FailFast, abort) never sends them, leaving the counts at zero — which must not be
+    /// mistaken for "a run of zero tests".
+    /// </summary>
+    public bool CountsReported { get; private set; }
+
+    public List<ArtifactRequest> Artifacts { get; } = [];
 
     public Task WaitForConnectionAsync(CancellationToken cancellationToken)
         => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken);
@@ -52,8 +100,8 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     {
         if (request is FailedTestRequest failed)
         {
-            FailedUID ??= [];
-            FailedUID.Add(failed.Uid);
+            // Last writer wins on the display name; every result sharing a uid describes the same test node.
+            FailedTests[failed.Uid] = failed.DisplayName;
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 
@@ -62,9 +110,19 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             return Task.FromResult((IResponse)new GetListOfFailedTestsResponse(_failedTests));
         }
 
-        if (request is TotalTestsRunRequest totalTestsRunRequest)
+        if (request is TestRunCountsRequest testRunCounts)
         {
-            TotalTestRan = totalTestsRunRequest.TotalTests;
+            TotalTestRan = testRunCounts.ExecutedTests;
+            FailedTestResults = testRunCounts.FailedTests;
+            SkippedTests = testRunCounts.SkippedTests;
+            RecoveredTests = testRunCounts.RecoveredTestUids;
+            CountsReported = true;
+            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+        }
+
+        if (request is ArtifactRequest artifact)
+        {
+            Artifacts.Add(artifact);
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 

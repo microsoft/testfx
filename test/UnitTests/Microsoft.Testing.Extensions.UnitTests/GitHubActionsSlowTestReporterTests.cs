@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias ghactions;
@@ -82,6 +82,39 @@ public sealed class GitHubActionsSlowTestReporterTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_ExecutionCompleted_StopsTrackingAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", TestNodeExecutionCompletedProperty.CachedInstance), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(120), CancellationToken.None).ConfigureAwait(false);
+        Assert.IsEmpty(outputDevice.Lines);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_KeepsTrackingAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            null!,
+            CreateMessage("u1", "Ns.T1", new FailedTestNodeStateProperty(), retryAttempt: new RetryAttemptProperty(1, isSuperseded: true)),
+            CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("Ns.T1 still running after", outputDevice.Lines[0]);
+    }
+
+    [TestMethod]
     public async Task ScanOnce_WhenDisabled_DoesNotEmitAsync()
     {
         CapturingOutputDevice outputDevice = new();
@@ -113,7 +146,70 @@ public sealed class GitHubActionsSlowTestReporterTests
         Assert.HasCount(1, outputDevice.Lines);
     }
 
-    private static GitHubActionsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null)
+    [TestMethod]
+    public async Task ScanOnce_StepSummarySelectionDoesNotSuppressNoticesAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        Dictionary<string, string[]> options = new(StringComparer.OrdinalIgnoreCase)
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections] = ["test-results"],
+        };
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true, options);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("::notice title=Slow test%3A Ns.T1", outputDevice.Lines[0]);
+    }
+
+    [TestMethod]
+    public async Task ScanOnce_ParameterizedTests_EmitDistinctLabelsAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        // Two data-driven instances that share one fully-qualified name but differ by display name.
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T.M", new InProgressTestNodeStateProperty(), displayName: "M (net8.0)"), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u2", "Ns.T.M", new InProgressTestNodeStateProperty(), displayName: "M (net9.0)"), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(2, outputDevice.Lines);
+        string joined = string.Join("\n", outputDevice.Lines);
+        Assert.Contains("Ns.T.M (net8.0) still running after", joined);
+        Assert.Contains("Ns.T.M (net9.0) still running after", joined);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStarting_WhenActivatedOnMultiThreadedRuntime_StartsBackgroundScanLoopAsync()
+    {
+        // The scan loop is only started when RuntimeFeatureHelper.IsMultiThreaded is true, because
+        // ITask.RunLongRunning throws PlatformNotSupportedException on single-threaded WebAssembly
+        // runtimes. Unit tests never run on wasm, so here the loop must actually be started — this
+        // pins the wiring and fails if the guard is inverted or the loop is dropped altogether.
+        NonRunningTask task = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(new CapturingOutputDevice(), githubActions: true, task: task);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        Assert.AreEqual(1, task.RunLongRunningCallCount);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStarting_WhenNotOnGitHubActions_DoesNotStartBackgroundScanLoopAsync()
+    {
+        NonRunningTask task = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(new CapturingOutputDevice(), githubActions: false, task: task);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        Assert.AreEqual(0, task.RunLongRunningCallCount);
+    }
+
+    private static GitHubActionsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null, NonRunningTask? task = null)
     {
         Mock<IEnvironment> environmentMock = new();
         environmentMock.Setup(x => x.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
@@ -129,21 +225,30 @@ public sealed class GitHubActionsSlowTestReporterTests
             new FakeCommandLineOptions(commandLineOptions),
             environmentMock.Object,
             outputDevice,
-            new NonRunningTask(),
+            task ?? new NonRunningTask(),
             new FixedClock(Start),
             new StubLoggerFactory());
     }
 
-    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, TestNodeStateProperty state)
+    private static TestNodeUpdateMessage CreateMessage(
+        string uid,
+        string fullyQualifiedName,
+        IProperty property,
+        string? displayName = null,
+        RetryAttemptProperty? retryAttempt = null)
     {
         PropertyBag propertyBag = new();
-        propertyBag.Add(state);
+        propertyBag.Add(property);
         propertyBag.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", fullyQualifiedName));
+        if (retryAttempt is not null)
+        {
+            propertyBag.Add(retryAttempt);
+        }
 
         return new TestNodeUpdateMessage(new SessionUid("session"), new TestNode
         {
             Uid = uid,
-            DisplayName = fullyQualifiedName,
+            DisplayName = displayName ?? fullyQualifiedName,
             Properties = propertyBag,
         });
     }
@@ -186,6 +291,8 @@ public sealed class GitHubActionsSlowTestReporterTests
 
     private sealed class NonRunningTask : ITask
     {
+        public int RunLongRunningCallCount { get; private set; }
+
         public Task Delay(int millisecondDelay)
             => Task.CompletedTask;
 
@@ -205,7 +312,10 @@ public sealed class GitHubActionsSlowTestReporterTests
             => function()!;
 
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            RunLongRunningCallCount++;
+            return Task.CompletedTask;
+        }
 
         public Task WhenAll(params Task[] tasks)
             => Task.WhenAll(tasks);

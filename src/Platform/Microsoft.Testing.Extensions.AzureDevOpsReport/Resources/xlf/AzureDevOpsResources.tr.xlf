@@ -42,6 +42,11 @@
         <target state="translated">'--report-azdo-groups' öğesinin etkinleştirilmesi için '--report-azdo' öğesinin etkin olması gerekir</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
+        <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">Azure DevOps canlı yayımlama {0} eki karşıya yükleyemedi; bu ekler Azure DevOps test çalıştırmasında eksik olacak.</target>
+        <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps canlı yayımlama test çalıştırmasını tamamlayamadı.</target>
@@ -55,6 +60,16 @@
       <trans-unit id="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile">
         <source>Azure DevOps live publishing failed to delete coordination file</source>
         <target state="translated">Azure DevOps canlı yayımlama koordinasyon dosyasını silemedi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="translated">Azure DevOps canlı yayımlama koordinasyon dosyasını okuyamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
+        <source>Azure DevOps live publishing failed to write coordination file</source>
+        <target state="translated">Azure DevOps canlı yayımlama koordinasyon dosyasını yazamadı</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -102,15 +117,40 @@
         <target state="translated">Azure DevOps canlı yayımlama bir grup test sonucunu kabul etti ancak atanan sonuç kimliklerini ayrıştıramadı. Bu grup için sonuç düzeyi ekler atlanacak.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="translated">Azure DevOps canlı yayımlama, sonuç eşleme iletimini güncelleştiremedi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
+        <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">Azure DevOps canlı yayımlama {0} test sonucunu yayımlayamadı; bu ekler Azure DevOps test çalıştırmasında eksik olacak.</target>
+        <note>{0} is the number of test results that could not be published.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
         <target state="translated">Azure DevOps canlı yayımlama, test çalıştırması ekini karşıya yükleyemedi.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunCreated">
+        <source>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</source>
+        <target state="translated">Azure DevOps canlı yayımlama, sonuçları {0} test çalıştırmasına akışla aktarıyor; testler {1} adresinde hala çalışırken bunu takip edebilirsiniz. Çalıştırma tamamlandığında derlemenin Testler sekmesinde listelenir.</target>
+        <note>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps canlı yayımlama, farklı bir Azure DevOps projesi için azdo-runid.&lt;buildId&gt;.json dosyası buldu.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
+        <target state="translated">Azure DevOps canlı yayımlama, test çalıştırması iletimini güncelleştiremedi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
+        <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
+        <target state="translated">Azure DevOps test çalıştırması tamamlandı olarak işaretlenmedi ve derlemenin Testler sekmesinde görünmeyebilir.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>
@@ -121,6 +161,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">Zaman aşımı: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
+        <source>Azure DevOps live publishing could not display a warning on the output device.</source>
+        <target state="translated">Azure DevOps canlı yayımlama çıkış cihazında bir uyarı görüntüleyemedi.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
@@ -213,8 +258,8 @@
         <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
-        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">Derleme başına Azure DevOps günlük gruplarını ('on' veya 'off') etkinleştirin veya devre dışı bırakın. Varsayılan olarak 'on'. '--report-azdo' gerektirir.</target>
+        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
+        <target state="translated">Derleme başına Azure DevOps günlük gruplarını ('on' veya 'off') etkinleştirin veya devre dışı bırakın. Varsayılan olarak 'off'. '--report-azdo' gerektirir.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -288,8 +333,8 @@
         <note>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
-        <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="translated">Test sonuçlarını Azure DevOps Tests sekmesinde canlı olarak yayımlayın.</target>
+        <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
+        <target state="translated">Test sonuçlarını, testler tamamlandıkça bir Azure DevOps test çalıştırmasında yayımlayın. Test oturumu tamamlandığında, çalıştırma derlemenin Testler sekmesinde listelenir.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

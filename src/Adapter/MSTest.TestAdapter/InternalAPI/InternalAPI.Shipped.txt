@@ -242,9 +242,6 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.Xml
 Microsoft.VisualStudio.TestPlatform.TestExtensionTypesAttribute
 Microsoft.VisualStudio.TestPlatform.TestExtensionTypesAttribute.TestExtensionTypesAttribute(params System.Type![]! types) -> void
 Microsoft.VisualStudio.TestPlatform.TestExtensionTypesAttribute.Types.get -> System.Type![]!
-Microsoft.VisualStudio.TestTools.UnitTesting.BridgedConfiguration
-Microsoft.VisualStudio.TestTools.UnitTesting.BridgedConfiguration.BridgedConfiguration(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.BridgedConfiguration.this[string! key].get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestBannerCapability
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestBannerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestBannerCapability.MSTestBannerCapability(Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation) -> void

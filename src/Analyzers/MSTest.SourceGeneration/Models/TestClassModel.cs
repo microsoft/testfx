@@ -39,10 +39,29 @@ internal enum ConstantValueKind
 internal sealed record TestParameterModel(string FullyQualifiedType, string Name);
 
 /// <summary>
-/// One row of arguments from a <c>[DataRow]</c> attribute, materialized at compile time so
-/// the consumer can iterate without re-reading <c>DataRowAttribute.Data</c> via reflection.
+/// The kind of member a <c>[DynamicData]</c> source resolves to at compile time, so the generator can
+/// emit the right accessor (property/field read vs. method call).
 /// </summary>
-internal sealed record DataRowModel(EquatableArray<TypedConstantModel> Arguments);
+internal enum DynamicDataMemberKind
+{
+    Property,
+    Method,
+    Field,
+}
+
+/// <summary>
+/// A <c>[DynamicData]</c> source resolved at compile time so the generator can register a reflection-free
+/// accessor with <c>DynamicDataSourceResolver</c>. The source member (and optional custom display-name
+/// method) are resolved to concrete symbols so the emitted delegate reads them directly instead of the
+/// runtime reflecting over the declaring type.
+/// </summary>
+internal sealed record DynamicDataSourceModel(
+    string DeclaringTypeFullyQualifiedName,
+    string SourceName,
+    DynamicDataMemberKind MemberKind,
+    string RequestedSourceType,
+    string? DisplayNameDeclaringTypeFullyQualifiedName,
+    string? DisplayNameMethodName);
 
 internal sealed record TestMethodModel(
     string Name,
@@ -52,9 +71,11 @@ internal sealed record TestMethodModel(
     bool ReturnsValueTask,
     bool ReturnsVoid,
     bool IsTestMethod,
+    bool IsDescriptorSupported,
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
-    EquatableArray<DataRowModel> DataRows);
+    bool AreAttributesComplete,
+    EquatableArray<DynamicDataSourceModel> DynamicDataSources);
 
 internal sealed record TestPropertyModel(
     string Name,
@@ -85,4 +106,7 @@ internal sealed record TestClassModel(
     EquatableArray<TestMethodModel> Methods,
     EquatableArray<TestPropertyModel> Properties,
     EquatableArray<AttributeApplicationModel> Attributes,
+    bool AreAttributesComplete,
+    bool SupportsGeneratedDescriptors,
+    bool AreGeneratedDescriptorsComplete,
     EquatableArray<string> BaseTypeFullyQualifiedNames);

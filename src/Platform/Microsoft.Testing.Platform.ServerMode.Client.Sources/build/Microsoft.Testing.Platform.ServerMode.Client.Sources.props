@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Set the package's minimum only when the consumer has not chosen a language version. Because NuGet
+         imports build/*.props before the consuming project body, an explicit consumer value wins later. -->
+    <LangVersion Condition="'$(LangVersion)' == ''">12.0</LangVersion>
+  </PropertyGroup>
+</Project>

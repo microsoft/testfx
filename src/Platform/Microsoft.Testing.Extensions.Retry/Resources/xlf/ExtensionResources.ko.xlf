@@ -22,10 +22,15 @@
         <target state="translated">실패한 임계값 백분율은 {0}%이며 {1}% 테스트에 실패했습니다({2}/{3}).</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
-      <trans-unit id="RetryArtifactsMoved">
-        <source>Retry: moved {0} result file(s) to '{1}'</source>
-        <target state="translated">다시 시도: 결과 파일 {0}개를 '{1}'(으)로 이동</target>
-        <note>{0} is the number of files moved. {1} is the destination result directory.</note>
+      <trans-unit id="RetryArtifactPostProcessorFailed">
+        <source>Retry artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">아티팩트 후처리기 '{0}'을(를) 다시 시도하지 못함: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="RetryArtifactsPublished">
+        <source>Retry: published {0} result file(s) to '{1}'</source>
+        <target state="translated">다시 시도: 결과 파일 {0}개를 '{1}'에 게시함</target>
+        <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
         <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>
@@ -63,8 +68,8 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
-        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
+        <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 비활성화합니다.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
@@ -73,8 +78,8 @@
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
-        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
+        <target state="translated">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 비활성화합니다.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -88,8 +93,8 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Retry failed tests the given number of times</source>
-        <target state="translated">지정된 횟수만큼 테스트 다시 시도 실패</target>
+        <source>Retry failed tests the given number of times.</source>
+        <target state="translated">지정된 횟수만큼 테스트를 다시 시도하지 못했습니다.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
@@ -122,10 +127,25 @@
         <target state="translated">  실패: {0}</target>
         <note>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</note>
       </trans-unit>
+      <trans-unit id="RetrySummaryFailedStoppedEarly">
+        <source>Retry summary: Failed! after {0} attempt(s) (retrying stopped early)</source>
+        <target state="translated">다시 시도 요약: 실패! {0}번 시도 후(다시 시도가 조기에 중지됨)</target>
+        <note>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
+      </trans-unit>
       <trans-unit id="RetrySummaryFlakyLine">
-        <source>  flaky: {0}</source>
-        <target state="translated">  불안정: {0}</target>
-        <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</note>
+        <source>  flaky: {0} (passed after retry)</source>
+        <target state="translated">  불안정: {0} (다시 시도 후 통과)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces mirror the platform run summary. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestLine">
+        <source>  {0} (failed -&gt; passed)</source>
+        <target state="translated">  {0} (실패 -&gt; 통과)</target>
+        <note>{0} is the display name of a flaky test. The arrow reads left (first outcome) to right (final outcome). Two leading spaces indent the entry under the 'Flaky tests:' header.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestsHeader">
+        <source>Flaky tests:</source>
+        <target state="translated">불안정한 테스트:</target>
+        <note>Header of the section that lists, by name, the tests which failed at least once but eventually passed.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryPassed">
         <source>Retry summary: Passed! after {0}/{1} attempts</source>
@@ -137,10 +157,20 @@
         <target state="translated">재시도 요약: 첫 번째 시도 후 통과(다시 시도할 필요 없음)</target>
         <note>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
       </trans-unit>
-      <trans-unit id="RetrySummaryRetriedSuffix">
-        <source> (+{0} retried)</source>
-        <target state="translated"> (+{0}회 다시 시도)</target>
-        <note>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</note>
+      <trans-unit id="RetrySummaryRetriedLine">
+        <source>  retried: {0} test(s), {1} extra run(s)</source>
+        <target state="translated">  다시 시도됨: 테스트 {0}개, 추가 실행 {1}개</target>
+        <note>{0} is the number of distinct tests that were re-run. {1} is the number of extra executions those retries cost. Two leading spaces and the lowercase 'retried:' label mirror the platform run summary. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummarySkippedLine">
+        <source>  skipped: {0}</source>
+        <target state="translated">  건너뜀: {0}</target>
+        <note>{0} is the number of skipped tests. Two leading spaces and the lowercase 'skipped:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummarySucceededLine">
+        <source>  succeeded: {0}</source>
+        <target state="translated">  성공: {0}</target>
+        <note>{0} is the number of tests that ended up passing, counting those rescued by a retry. Two leading spaces and the lowercase 'succeeded:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryTotalLine">
         <source>  total: {0}</source>

@@ -2,14 +2,24 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pl" original="../PlatformAdapterResources.resx">
     <body>
+      <trans-unit id="MSTestExtensionDescription">
+        <source>MSTest Framework for Microsoft Testing Platform.</source>
+        <target state="translated">MSTest Framework dla Microsoft Testing Platform.</target>
+        <note>Do not localize {Locked="MSTest"} or {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
       <trans-unit id="MissingRunSettingsAttribute">
         <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
         <target state="translated">Nieprawidłowy plik .runsettings, brak atrybutu „&lt;RunSettings&gt;”</target>
         <note>Do not localize file extension {Locked=".runsettings"} or element {Locked="&lt;RunSettings&gt;"}.</note>
       </trans-unit>
+      <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
+        <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
+        <target state="translated">Sekcja runsettings „EnvironmentVariables” nie jest obsługiwana na platformach przeglądarki/zestawu WebAssembly, ponieważ jej zastosowanie wymaga ponownego uruchomienia procesu hosta testowego. Usuń sekcję do uruchomienia w module browser-wasm.</target>
+        <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
+      </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
-        <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
-        <target state="translated">Ścieżka względna lub bezwzględna pliku .runsettings. Aby uzyskać więcej informacji i przykładów dotyczących konfigurowania przebiegu testu, zobacz: https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
+        <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</source>
+        <target state="translated">Ścieżka, względna lub bezwzględna, pliku .runsettings. Więcej informacji oraz przykłady dotyczące sposobu konfiguracji przebiegu testu można znaleźć na stronie https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</target>
         <note>Do not localize file extension {Locked=".runsettings"} or link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file"}.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
@@ -33,8 +43,8 @@
         <note>0 is the invalid argument. Do not localize pattern {Locked="key=value"}.</note>
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
-        <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
-        <target state="translated">Określ lub zastąp parametr pary klucz-wartość. Aby uzyskać więcej informacji i przykładów, zobacz stronę https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
+        <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</source>
+        <target state="translated">Określ lub zastąp parametr pary klucz-wartość. Więcej informacji i przykładów znajdziesz na stronie https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunconfigurationSetting">
@@ -51,6 +61,11 @@
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
         <target state="translated">Rejestratory Runsettings nie są obsługiwane przez element Microsoft.Testing.Platform i będą ignorowane.</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilter">
+        <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
+        <target state="translated">Typ filtru wykonywania testu „{0}” nie jest obsługiwany przez „{1}”. Obsługiwane typy filtrów to NopFilter, TestNodeUidListFilter oraz złożony filtr wykonania testu And CompositeTestExecutionFilter.</target>
+        <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>

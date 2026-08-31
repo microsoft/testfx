@@ -25,9 +25,9 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
         // The always-failing test still fails, so the overall exit code is non-success.
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
-        // MSTest's [Retry] attribute only surfaces the FINAL outcome to MTP (see UnitTestRunner — only
-        // the last attempt is returned). Each test should therefore appear once in the JUnit report
-        // with its eventual outcome — no per-attempt disambiguation.
+        // MSTest's [Retry] attribute reports every attempt to MTP (tagged with RetryAttemptProperty), but the
+        // JUnit report deliberately keeps only the final one: JUnit has no notion of attempts, so extra rows
+        // would inflate the suite totals. Each test therefore appears once with its eventual outcome.
         string junitFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
         var document = XDocument.Load(junitFile);
         Assert.IsNotNull(document.Root);
@@ -51,7 +51,7 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
         Assert.DoesNotContain(
             tc => tc.Element("properties")?.Elements("property").Any(p => p.Attribute("name")?.Value is "attempt-index" or "attempt-of" or "original-name") == true,
             testcases,
-            "No <testcase> should carry retry-disambiguation properties when MSTest's [Retry] is used (only the final outcome is surfaced).");
+            "No <testcase> should carry retry-disambiguation properties when MSTest's [Retry] is used (superseded attempts are filtered out of the JUnit report).");
     }
 
     private static void AssertSingleOutcome(IReadOnlyCollection<XElement> testcases, string name, bool expectFailure)
@@ -174,7 +174,7 @@ public class UnitTest1
 public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnitReportMTPRetryExtensionTests.TestAssetFixture>
 {
     [TestMethod]
-    public async Task JUnitReport_WithMTPRetryFailedTestsExtension_EmitsOneReportPerAttempt()
+    public async Task JUnitReport_WithMTPRetryFailedTestsExtension_PublishesConsolidatedReport()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
@@ -193,17 +193,29 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
 
-        // Each attempt is a separate test-host child process and produces its own JUnit XML file.
-        string[] junitFiles = Directory.GetFiles(resultDirectory, "*.xml", SearchOption.AllDirectories);
-        Assert.HasCount(2, junitFiles, $"Expected 2 JUnit XML files (one per attempt) but found {junitFiles.Length}.");
+        string[] perAttemptFiles = Directory.GetFiles(
+            Path.Combine(resultDirectory, "Retries"),
+            "*.xml",
+            SearchOption.AllDirectories);
+        Assert.HasCount(2, perAttemptFiles);
 
-        foreach (string file in junitFiles)
-        {
-            var document = XDocument.Load(file);
-            Assert.IsNotNull(document.Root);
-            Assert.AreEqual("testsuites", document.Root!.Name.LocalName);
-            Assert.IsNotEmpty(document.Descendants("testcase"), $"File '{file}' contains no <testcase> elements.");
-        }
+        XElement firstAttempt = XDocument.Load(perAttemptFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "1")).Root!;
+        Assert.AreEqual("2", firstAttempt.Attribute("tests")!.Value);
+        Assert.AreEqual("1", firstAttempt.Attribute("failures")!.Value);
+
+        XElement finalAttempt = XDocument.Load(perAttemptFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "2")).Root!;
+        Assert.AreEqual("1", finalAttempt.Attribute("tests")!.Value);
+        Assert.AreEqual("0", finalAttempt.Attribute("failures")!.Value);
+
+        string topLevelFile = Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single();
+        XElement consolidated = XDocument.Load(topLevelFile).Root!;
+        Assert.AreEqual("2", consolidated.Attribute("tests")!.Value);
+        Assert.AreEqual("0", consolidated.Attribute("failures")!.Value);
+        Assert.AreSequenceEqual(
+            new[] { "AlwaysPasses", "Flaky_FailsOnceThenPasses" },
+            consolidated.Descendants("testcase")
+                .Select(testCase => testCase.Attribute("name")!.Value)
+                .OrderBy(name => name, StringComparer.Ordinal));
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -220,8 +232,8 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
         // Uses the MTP --retry-failed-tests orchestrator (different from MSTest's [Retry] attribute).
-        // The orchestrator re-runs the test-host process when at least one test fails, so each
-        // attempt produces its OWN JUnit XML file under the --results-directory subdirectories.
+        // The orchestrator re-runs the test-host process when at least one test fails. Every attempt keeps its
+        // own JUnit XML file, and the top-level report collapses them to each logical test's final outcome.
         private const string SourceCode = """
 #file MSTestJUnitReportMTPRetry.csproj
 <Project Sdk="Microsoft.NET.Sdk">

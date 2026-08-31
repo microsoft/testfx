@@ -28,6 +28,12 @@ public class CtrfReportEngineTests
     private static readonly int MaxStandardStreamLength =
         (int)CaptureHelperType.GetField(nameof(MaxStandardStreamLength), BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
 
+    private static readonly int MaxIdentityFieldLength =
+        (int)CaptureHelperType.GetField(nameof(MaxIdentityFieldLength), BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
+
+    private static readonly int MaxMessageLength =
+        (int)CaptureHelperType.GetField(nameof(MaxMessageLength), BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -125,6 +131,20 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public void TestResultCapture_CapturesRetryAttemptMetadata()
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new RetryAttemptProperty(2, isSuperseded: false));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.AreEqual(2, result.RetryAttemptNumber);
+        Assert.IsFalse(result.IsSupersededRetryAttempt);
+    }
+
+    [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
         string huge = new('a', MaxStandardStreamLength + 7);
@@ -140,6 +160,124 @@ public class CtrfReportEngineTests
         Assert.StartsWith(new string('a', MaxStandardStreamLength), result.StandardOutput!);
         Assert.Contains("[truncated, original length:", result.StandardOutput);
         Assert.Contains((MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
+    }
+
+    [TestMethod]
+    public async Task TestResultCapture_CapturesAndSerializesFileArtifacts()
+    {
+        string screenshotPath = Path.Combine(Path.GetTempPath(), "screenshot.png");
+        string diagnosticsPath = Path.Combine(Path.GetTempPath(), "diagnostics.unknown");
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new FileArtifactProperty(new FileInfo(screenshotPath), "Screenshot", "Browser failure"));
+        bag.Add(new FileArtifactProperty(new FileInfo(diagnosticsPath), string.Empty));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.Attachments);
+        Assert.HasCount(2, result.Attachments);
+        CapturedAttachment screenshot = result.Attachments.Single(a => a.Name == "Screenshot");
+        CapturedAttachment diagnostics = result.Attachments.Single(a => a.Name == "diagnostics.unknown");
+        Assert.AreEqual("image/png", screenshot.ContentType);
+        Assert.AreEqual(new FileInfo(screenshotPath).FullName, screenshot.Path);
+        Assert.AreEqual("Browser failure", screenshot.Description);
+        Assert.AreEqual("application/octet-stream", diagnostics.ContentType);
+
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        await engine.GenerateReportAsync([result]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement attachments = document.RootElement.GetProperty("results").GetProperty("tests")[0].GetProperty("attachments");
+        Assert.AreEqual(2, attachments.GetArrayLength());
+        JsonElement screenshotJson = attachments.EnumerateArray().Single(a => a.GetProperty("name").GetString() == "Screenshot");
+        JsonElement diagnosticsJson = attachments.EnumerateArray().Single(a => a.GetProperty("name").GetString() == "diagnostics.unknown");
+        Assert.AreEqual("image/png", screenshotJson.GetProperty("contentType").GetString());
+        Assert.AreEqual(new FileInfo(screenshotPath).FullName, screenshotJson.GetProperty("path").GetString());
+        Assert.AreEqual("Browser failure", screenshotJson.GetProperty("extra").GetProperty("description").GetString());
+        Assert.AreEqual("application/octet-stream", diagnosticsJson.GetProperty("contentType").GetString());
+        Assert.IsFalse(diagnosticsJson.TryGetProperty("extra", out _));
+    }
+
+    [TestMethod]
+    public void TestResultCapture_InvalidAttachmentPath_IsSkippedWithoutLosingValidAttachments()
+    {
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new FileArtifactProperty(new FileInfo("valid.log"), "Valid"));
+        bag.Add(new FileArtifactProperty(new FileInfo("invalid.log"), "Invalid"));
+        Func<FileInfo, string> resolveFullPath = fileInfo
+            => fileInfo.Name == "invalid.log"
+                ? throw new IOException("Invalid path")
+                : fileInfo.FullName;
+
+        IReadOnlyList<CapturedAttachment>? attachments = CaptureAttachmentsForTest(bag, resolveFullPath);
+
+        Assert.IsNotNull(attachments);
+        Assert.HasCount(1, attachments);
+        Assert.AreEqual("Valid", attachments[0].Name);
+        Assert.EndsWith("valid.log", attachments[0].Path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_TruncatesAttachmentFieldsWithoutSplittingSurrogatePairs()
+    {
+        string name = new string('n', MaxIdentityFieldLength - 1) + "\U0001F642-name";
+        string path = new string('p', MaxIdentityFieldLength - 1) + "\U0001F642-path.json";
+        string description = new string('d', MaxMessageLength - 1) + "\U0001F642-description";
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new FileArtifactProperty(new FileInfo("artifact.json"), name, description));
+
+        IReadOnlyList<CapturedAttachment>? attachments = CaptureAttachmentsForTest(bag, _ => path);
+
+        Assert.IsNotNull(attachments);
+        Assert.HasCount(1, attachments);
+        AssertTruncated(attachments[0].Name, MaxIdentityFieldLength - 1);
+        AssertTruncated(attachments[0].Path, MaxIdentityFieldLength - 1);
+        Assert.IsNotNull(attachments[0].Description);
+        AssertTruncated(attachments[0].Description!, MaxMessageLength - 1);
+
+        static void AssertTruncated(string value, int expectedPrefixLength)
+        {
+            Assert.AreEqual(expectedPrefixLength, value.IndexOf('\n'));
+            Assert.DoesNotContain(char.IsSurrogate, value);
+            Assert.DoesNotContain("\uFFFD", value);
+            Assert.Contains("[truncated, original length:", value);
+        }
+    }
+
+    [DataRow("artifact.BMP", "image/bmp")]
+    [DataRow("artifact.csv", "text/csv")]
+    [DataRow("artifact.gif", "image/gif")]
+    [DataRow("artifact.htm", "text/html")]
+    [DataRow("artifact.HTML", "text/html")]
+    [DataRow("artifact.jpeg", "image/jpeg")]
+    [DataRow("artifact.jpg", "image/jpeg")]
+    [DataRow("artifact.json", "application/json")]
+    [DataRow("artifact.log", "text/plain")]
+    [DataRow("artifact.txt", "text/plain")]
+    [DataRow("artifact.pdf", "application/pdf")]
+    [DataRow("artifact.png", "image/png")]
+    [DataRow("artifact.svg", "image/svg+xml")]
+    [DataRow("artifact.tif", "image/tiff")]
+    [DataRow("artifact.tiff", "image/tiff")]
+    [DataRow("artifact.webp", "image/webp")]
+    [DataRow("artifact.xml", "application/xml")]
+    [DataRow("artifact.zip", "application/zip")]
+    [DataRow("artifact.unknown", "application/octet-stream")]
+    [TestMethod]
+    public void TestResultCapture_MapsAttachmentExtensionToContentType(string fileName, string expectedContentType)
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new FileArtifactProperty(new FileInfo(fileName), "Artifact"));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.Attachments);
+        Assert.HasCount(1, result.Attachments);
+        Assert.AreEqual(expectedContentType, result.Attachments[0].ContentType);
     }
 
     [TestMethod]
@@ -177,7 +315,7 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_CollapsesDuplicateUidsIntoRetryAttempts_AndFlagsFlaky()
+    public async Task GenerateReportAsync_PreservesDuplicateUidsAsDistinctResults()
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
@@ -195,54 +333,157 @@ public class CtrfReportEngineTests
         JsonElement results = document.RootElement.GetProperty("results");
         JsonElement testArray = results.GetProperty("tests");
 
-        // Duplicate-UID captures must collapse into a single CTRF test entry; the
-        // earlier attempts are recorded as nested retryAttempts[]. Top-level
-        // entries should therefore equal the number of unique UIDs.
-        Assert.AreEqual(2, testArray.GetArrayLength(), "Duplicate UIDs must collapse to one tests[] row.");
+        Assert.AreEqual(4, testArray.GetArrayLength(), "MTP permits distinct executions to share a UID.");
 
         JsonElement summary = results.GetProperty("summary");
-        Assert.AreEqual(2, summary.GetProperty("tests").GetInt32(), "summary.tests must count unique UIDs only.");
+        Assert.AreEqual(4, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(2, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(2, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
+        Assert.AreSequenceEqual(
+            ["Row A", "Row B", "Row C", "Solo"],
+            testArray.EnumerateArray().Select(t => t.GetProperty("name").GetString()!).ToArray());
+        Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
+        Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
+        Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesExplicitRetryAttemptsAndFlagsFlaky()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedAttachment priorAttachment = new()
+        {
+            Name = "first.log",
+            ContentType = "text/plain",
+            Path = "artifacts/first.log",
+            Description = "First attempt diagnostics",
+        };
+        CapturedTestResult[] tests =
+        [
+            Captured(
+                "retry",
+                "Retrying",
+                "failed",
+                errorMessage: "first failure",
+                retryAttemptNumber: 1,
+                isSupersededRetryAttempt: true,
+                attachments: [priorAttachment]),
+            Captured(
+                "retry",
+                "Retrying",
+                "failed",
+                errorMessage: "second failure",
+                retryAttemptNumber: 2,
+                isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "passed", retryAttemptNumber: 3),
+            Captured("unique", "Solo", "passed"),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(2, summary.GetProperty("tests").GetInt32());
         Assert.AreEqual(2, summary.GetProperty("passed").GetInt32());
         Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
         Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
 
-        JsonElement dupRow = default;
-        JsonElement soloRow = default;
-        foreach (JsonElement t in testArray.EnumerateArray())
-        {
-            if (t.GetProperty("name").GetString() == "Row C")
-            {
-                dupRow = t;
-            }
-            else if (t.GetProperty("name").GetString() == "Solo")
-            {
-                soloRow = t;
-            }
-        }
+        JsonElement retry = results.GetProperty("tests")[0];
+        Assert.AreEqual("passed", retry.GetProperty("status").GetString());
+        Assert.AreEqual(2, retry.GetProperty("retries").GetInt32());
+        Assert.IsTrue(retry.GetProperty("flaky").GetBoolean());
+        JsonElement[] priorAttempts = [.. retry.GetProperty("retryAttempts").EnumerateArray()];
+        Assert.HasCount(2, priorAttempts);
+        Assert.AreSequenceEqual(
+            [1, 2],
+            priorAttempts.Select(attempt => attempt.GetProperty("attempt").GetInt32()).ToArray());
+        Assert.AreSequenceEqual(
+            ["first failure", "second failure"],
+            priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
 
-        Assert.AreNotEqual(JsonValueKind.Undefined, dupRow.ValueKind, "Final attempt name must surface as the collapsed test name.");
-        Assert.AreEqual("passed", dupRow.GetProperty("status").GetString());
-        Assert.AreEqual(2, dupRow.GetProperty("retries").GetInt32(), "retries must equal the number of prior attempts.");
-        Assert.IsTrue(dupRow.GetProperty("flaky").GetBoolean(), "passed-after-failed runs must be marked flaky.");
+        JsonElement attachment = Assert.ContainsSingle(priorAttempts[0].GetProperty("attachments").EnumerateArray());
+        Assert.AreEqual("first.log", attachment.GetProperty("name").GetString());
+        Assert.AreEqual("text/plain", attachment.GetProperty("contentType").GetString());
+        Assert.AreEqual("artifacts/first.log", attachment.GetProperty("path").GetString());
+        Assert.AreEqual("First attempt diagnostics", attachment.GetProperty("extra").GetProperty("description").GetString());
+    }
 
-        JsonElement retryAttempts = dupRow.GetProperty("retryAttempts");
-        Assert.AreEqual(2, retryAttempts.GetArrayLength(), "retryAttempts must record every prior attempt.");
+    [TestMethod]
+    public async Task GenerateReportAsync_PreservesIncompleteExplicitRetrySequence()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 2, isSupersededRetryAttempt: true),
+            Captured("unique", "Solo", "passed"),
+        ];
 
-        var attemptNumbers = new List<int>();
-        var attemptStatuses = new List<string>();
-        foreach (JsonElement a in retryAttempts.EnumerateArray())
-        {
-            attemptNumbers.Add(a.GetProperty("attempt").GetInt32());
-            attemptStatuses.Add(a.GetProperty("status").GetString()!);
-        }
+        await engine.GenerateReportAsync(tests);
 
-        Assert.AreSequenceEqual(new[] { 1, 2 }, attemptNumbers);
-        Assert.AreSequenceEqual(new[] { "failed", "failed" }, attemptStatuses);
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(3, results.GetProperty("tests").GetArrayLength());
+        Assert.DoesNotContain(
+            test => test.TryGetProperty("retryAttempts", out _),
+            results.GetProperty("tests").EnumerateArray());
+    }
 
-        // Single-attempt entries must not surface retry metadata.
-        Assert.IsFalse(soloRow.TryGetProperty("retries", out _));
-        Assert.IsFalse(soloRow.TryGetProperty("retryAttempts", out _));
-        Assert.IsFalse(soloRow.TryGetProperty("flaky", out _));
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesAlwaysFailingRetryWithoutFlaggingFlaky()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("retry", "Retrying", "failed", retryAttemptNumber: 2),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(1, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
+
+        JsonElement retry = Assert.ContainsSingle(results.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("failed", retry.GetProperty("status").GetString());
+        Assert.AreEqual(1, retry.GetProperty("retries").GetInt32());
+        Assert.IsFalse(retry.TryGetProperty("flaky", out _));
+        Assert.HasCount(1, retry.GetProperty("retryAttempts").EnumerateArray());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_PreservesAmbiguousOverlappingRetrySequences()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("same", "A", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("same", "B", "failed", retryAttemptNumber: 1, isSupersededRetryAttempt: true),
+            Captured("same", "B", "passed", retryAttemptNumber: 2),
+            Captured("same", "A", "passed", retryAttemptNumber: 2),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement testArray = results.GetProperty("tests");
+        Assert.AreEqual(4, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(
+            ["A", "B", "B", "A"],
+            testArray.EnumerateArray().Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.DoesNotContain(test => test.TryGetProperty("retryAttempts", out _), testArray.EnumerateArray());
     }
 
     [TestMethod]
@@ -570,8 +811,15 @@ public class CtrfReportEngineTests
         Assert.AreEqual(1, callCount);
     }
 
-    private static CapturedTestResult Captured(string uid, string name, string status,
-        TimeSpan? duration = null, string? errorMessage = null)
+    private static CapturedTestResult Captured(
+        string uid,
+        string name,
+        string status,
+        TimeSpan? duration = null,
+        string? errorMessage = null,
+        int? retryAttemptNumber = null,
+        bool isSupersededRetryAttempt = false,
+        IReadOnlyList<CapturedAttachment>? attachments = null)
         => new()
         {
             Uid = uid,
@@ -579,6 +827,9 @@ public class CtrfReportEngineTests
             Status = status,
             Duration = duration ?? TimeSpan.Zero,
             ErrorMessage = errorMessage,
+            RetryAttemptNumber = retryAttemptNumber,
+            IsSupersededRetryAttempt = isSupersededRetryAttempt,
+            Attachments = attachments,
         };
 
     private static CapturedTestResult CapturedRaw(string uid, string name, string status, string rawStatus)
@@ -590,6 +841,17 @@ public class CtrfReportEngineTests
             RawStatus = rawStatus,
             Duration = TimeSpan.Zero,
         };
+
+    private static IReadOnlyList<CapturedAttachment>? CaptureAttachmentsForTest(
+        PropertyBag properties,
+        Func<FileInfo, string>? resolveFullPath = null)
+    {
+        MethodInfo captureAttachments = typeof(TestResultCapture).GetMethod(
+            "CaptureAttachments",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+        resolveFullPath ??= static fileInfo => fileInfo.FullName;
+        return (IReadOnlyList<CapturedAttachment>?)captureAttachments.Invoke(null, [properties, resolveFullPath]);
+    }
 
     [TestMethod]
     public async Task GenerateReportAsync_Environment_HasSchemaCompliantShape()
@@ -617,7 +879,7 @@ public class CtrfReportEngineTests
 
         // `osPlatform` is one of the short identifiers, not the descriptive name.
         string osPlatform = env.GetProperty("osPlatform").GetString()!;
-        Assert.Contains(osPlatform, new[] { "win32", "linux", "darwin", "freebsd", "unknown" });
+        Assert.Contains(osPlatform, ["win32", "linux", "darwin", "freebsd", "unknown"]);
 
         // Descriptive OS string goes into `osVersion`.
         Assert.IsGreaterThan(0, env.GetProperty("osVersion").GetString()!.Length);
@@ -828,6 +1090,61 @@ public class CtrfReportEngineTests
         JsonElement stdout = test.GetProperty("stdout");
         Assert.AreEqual(1, stdout.GetArrayLength());
         Assert.AreEqual("only-line", stdout[0].GetString());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RunId_UsesTheSharedLogicalRunId()
+    {
+        // ctrf-io/ctrf#58: every process of one logical run — notably the successive attempts of
+        // --retry-failed-tests — must stamp the same runId so consumers can tie those documents back
+        // together. The retry orchestrator publishes that id through this environment variable.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("run-42");
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
+
+        await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        Assert.AreEqual("run-42", document.RootElement.GetProperty("runId").GetString());
+
+        // The run and the document are different things: a correlated run must not leak into the artifact id.
+        Assert.AreNotEqual("run-42", document.RootElement.GetProperty("reportId").GetString());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
+    {
+        // The execution id identifies this test application's own process tree. It is per root test application,
+        // not per 'dotnet test' invocation, so it correlates a module with its child processes — not with the
+        // sibling modules of a multi-project run, which legitimately report different logical runs.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
+
+        await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+        Assert.AreNotEqual("execution-7", document.RootElement.GetProperty("reportId").GetString());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RunId_IsGenerated_WhenNothingCorrelatedTheProcess()
+    {
+        // A standalone run is its own logical run, and CTRF requires runId to be a non-empty string when present.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns((string?)null);
+
+        await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        string runId = document.RootElement.GetProperty("runId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(runId, out _), $"Expected a generated id, got '{runId}'.");
+        Assert.AreNotEqual(document.RootElement.GetProperty("reportId").GetString(), runId);
     }
 
     private CtrfReportEngine CreateEngine(MemoryFileStream stream)

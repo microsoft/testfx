@@ -117,12 +117,20 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="TrxArtifactPostProcessorDescription" xml:space="preserve">
+    <value>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</value>
+    <comment>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</comment>
+  </data>
   <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
-    <value>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
-    <comment>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</comment>
+    <value>TRX report generation and merge tools require a test application builder that supports artifact post-processing</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxArtifactPostProcessorDisplayName" xml:space="preserve">
+    <value>TRX report merger</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolBaselineFileOptionDescription" xml:space="preserve">
-    <value>The baseline TRX file</value>
+    <value>The baseline TRX file.</value>
     <comment>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolBothFilesMustBeSpecified" xml:space="preserve">
@@ -130,7 +138,7 @@
     <comment>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</comment>
   </data>
   <data name="TrxComparerToolDescription" xml:space="preserve">
-    <value>This tool allows to compare and highlights differences between 2 TRX reports</value>
+    <value>This tool allows to compare and highlights differences between 2 TRX reports.</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolDisplayName" xml:space="preserve">
@@ -142,12 +150,52 @@
     <comment>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</comment>
   </data>
   <data name="TrxComparerToolOtherFileOptionDescription" xml:space="preserve">
-    <value>The TRX file to compare with the baseline</value>
+    <value>The TRX file to compare with the baseline.</value>
     <comment>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxAttachmentCopyFailed" xml:space="preserve">
+    <value>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</value>
+    <comment>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</comment>
   </data>
   <data name="TrxFileExistsAndWillBeOverwritten" xml:space="preserve">
     <value>Warning: Trx file '{0}' already exists and will be overwritten.</value>
     <comment>{0} is the {Locked="TRX"} report file path.</comment>
+  </data>
+  <data name="TrxMergeToolDescription" xml:space="preserve">
+    <value>Merges multiple TRX files into one from the command line.</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolDisplayName" xml:space="preserve">
+    <value>TRX report merge tool</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolInputOptionDescription" xml:space="preserve">
+    <value>Two or more input TRX file paths.</value>
+    <comment>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolInvalidInputs" xml:space="preserve">
+    <value>'--input' expects two or more existing TRX file paths</value>
+    <comment>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolInvalidOutput" xml:space="preserve">
+    <value>'--output-trx' expects one TRX file path</value>
+    <comment>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolOutputOptionDescription" xml:space="preserve">
+    <value>The output TRX file path.</value>
+    <comment>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergedArtifactDescription" xml:space="preserve">
+    <value>{0} TRX files merged</value>
+    <comment>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergedArtifactDisplayName" xml:space="preserve">
+    <value>TRX report (merged)</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergedRunName" xml:space="preserve">
+    <value>Merged TRX report</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportArtifactDescription" xml:space="preserve">
     <value>Test session</value>
@@ -163,8 +211,8 @@
   <data name="TrxReportFileNameOptionDescription" xml:space="preserve">
     <value>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: MyReport_{tfm}.trx</value>
-    <comment>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</comment>
+Example: 'MyReport_{tfm}.trx'.</value>
+    <comment>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</comment>
   </data>
   <data name="TrxReportFileNameRequiresTrxReport" xml:space="preserve">
     <value>'--report-trx-filename' requires '--report-trx' to be enabled</value>
@@ -191,7 +239,7 @@ Example: MyReport_{tfm}.trx</value>
     <comment>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</comment>
   </data>
   <data name="TrxReportGeneratorDescription" xml:space="preserve">
-    <value>Produce a TRX report for the current test session</value>
+    <value>Produce a TRX report for the current test session.</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportGeneratorDisplayName" xml:space="preserve">
@@ -207,7 +255,7 @@ Example: MyReport_{tfm}.trx</value>
     <comment>Do not localize option names {Locked="--report-trx"}{Locked="--list-tests"}.</comment>
   </data>
   <data name="TrxReportOptionDescription" xml:space="preserve">
-    <value>Enable generating TRX report</value>
+    <value>Enable generating TRX report.</value>
     <comment>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</comment>
   </data>
   <data name="UnsupportedRequestTypeErrorMessage" xml:space="preserve">

@@ -2,9 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
+using System.Runtime.Remoting;
+
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -184,6 +190,31 @@ public class AssemblyResolverTests : TestContainer
         // The below assertions ensure that a cached version is not returned out because it actually Reflection only loads the assembly.
         isAssemblyLoaded.Should().BeFalse();
         isAssemblyReflectionOnlyLoaded.Should().BeTrue();
+    }
+
+    public void OnResolveShouldIgnoreTraceLoggerFailures()
+    {
+        var platformServiceProvider = new TestablePlatformServiceProvider();
+        platformServiceProvider.MockTraceLogger
+            .Setup(logger => logger.IsInfoEnabled)
+            .Throws(new RemotingException());
+        PlatformServiceProvider.Instance = platformServiceProvider;
+
+        try
+        {
+            using var assemblyResolver = new TestableAssemblyResolver([@"c:\dummy"]);
+            Assembly expectedAssembly = typeof(AssemblyResolverTests).Assembly;
+            assemblyResolver.SearchAssemblySetter = (_, _, _) => expectedAssembly;
+            Assembly? resolvedAssembly = null;
+            Action act = () => resolvedAssembly = assemblyResolver.OnResolve(null, new ResolveEventArgs("DummyTestDllForTest"));
+
+            act.Should().NotThrow();
+            resolvedAssembly.Should().BeSameAs(expectedAssembly);
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = null;
+        }
     }
 }
 

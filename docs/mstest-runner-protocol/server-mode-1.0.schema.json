@@ -1,0 +1,756 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/mstest-runner-protocol/server-mode-1.0.schema.json",
+  "title": "Microsoft.Testing.Platform JSON-RPC server-mode protocol 1.0",
+  "description": "Machine-readable envelope and payload contract for the MTP JSON-RPC server-mode protocol.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/initializeRequest"
+    },
+    {
+      "$ref": "#/$defs/discoverRequest"
+    },
+    {
+      "$ref": "#/$defs/runRequest"
+    },
+    {
+      "$ref": "#/$defs/cancelNotification"
+    },
+    {
+      "$ref": "#/$defs/exitNotification"
+    },
+    {
+      "$ref": "#/$defs/testUpdateNotification"
+    },
+    {
+      "$ref": "#/$defs/attachmentNotification"
+    },
+    {
+      "$ref": "#/$defs/logNotification"
+    },
+    {
+      "$ref": "#/$defs/telemetryNotification"
+    },
+    {
+      "$ref": "#/$defs/successResponse"
+    },
+    {
+      "$ref": "#/$defs/errorResponse"
+    }
+  ],
+  "$defs": {
+    "rpcId": {
+      "description": "Protocol 1.0 normalizes signed 32-bit integer IDs and their canonical decimal string representation.",
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        {
+          "type": "string",
+          "oneOf": [
+            {
+              "pattern": "^(?:0|[1-9][0-9]{0,8}|1[0-9]{9}|20[0-9]{8}|21[0-3][0-9]{7}|214[0-6][0-9]{6}|2147[0-3][0-9]{5}|21474[0-7][0-9]{4}|214748[0-2][0-9]{3}|2147483[0-5][0-9]{2}|21474836[0-3][0-9]|214748364[0-7])$"
+            },
+            {
+              "pattern": "^-(?:[1-9][0-9]{0,8}|1[0-9]{9}|20[0-9]{8}|21[0-3][0-9]{7}|214[0-6][0-9]{6}|2147[0-3][0-9]{5}|21474[0-7][0-9]{4}|214748[0-2][0-9]{3}|2147483[0-5][0-9]{2}|21474836[0-3][0-9]|214748364[0-8])$"
+            }
+          ]
+        }
+      ]
+    },
+    "requestEnvelope": {
+      "type": "object",
+      "required": [
+        "jsonrpc",
+        "id",
+        "method"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "$ref": "#/$defs/rpcId"
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "notificationEnvelope": {
+      "type": "object",
+      "required": [
+        "jsonrpc",
+        "method"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "not": {
+        "required": [
+          "id"
+        ]
+      },
+      "additionalProperties": true
+    },
+    "clientCapabilities": {
+      "type": "object",
+      "required": [
+        "testing"
+      ],
+      "properties": {
+        "testing": {
+          "type": "object",
+          "required": [
+            "debuggerProvider"
+          ],
+          "properties": {
+            "debuggerProvider": {
+              "type": "boolean"
+            },
+            "isStateful": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "serverCapabilities": {
+      "type": "object",
+      "required": [
+        "testing"
+      ],
+      "properties": {
+        "testing": {
+          "type": "object",
+          "required": [
+            "supportsDiscovery",
+            "experimental_multiRequestSupport",
+            "vstestProvider",
+            "attachmentsSupport",
+            "multipleConnectionProvider",
+            "supportsTestCoverageMessages"
+          ],
+          "properties": {
+            "supportsDiscovery": {
+              "type": "boolean"
+            },
+            "experimental_multiRequestSupport": {
+              "type": "boolean"
+            },
+            "vstestProvider": {
+              "type": "boolean"
+            },
+            "attachmentsSupport": {
+              "type": "boolean"
+            },
+            "multipleConnectionProvider": {
+              "type": "boolean"
+            },
+            "supportsTestCoverageMessages": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "initializeRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/requestEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "initialize"
+            },
+            "params": {
+              "type": "object",
+              "required": [
+                "processId",
+                "clientInfo",
+                "capabilities"
+              ],
+              "properties": {
+                "processId": {
+                  "type": "integer",
+                  "minimum": -2147483648,
+                  "maximum": 2147483647
+                },
+                "clientInfo": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "version"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "capabilities": {
+                  "$ref": "#/$defs/clientCapabilities"
+                },
+                "protocolVersions": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "testSelectionParams": {
+      "type": "object",
+      "required": [
+        "runId"
+      ],
+      "properties": {
+        "runId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "tests": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/testNode"
+          }
+        },
+        "filter": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "discoverRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/requestEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "testing/discoverTests"
+            },
+            "params": {
+              "$ref": "#/$defs/testSelectionParams"
+            }
+          }
+        }
+      ]
+    },
+    "runRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/requestEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "testing/runTests"
+            },
+            "params": {
+              "$ref": "#/$defs/testSelectionParams"
+            }
+          }
+        }
+      ]
+    },
+    "cancelNotification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notificationEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "$/cancelRequest"
+            },
+            "params": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/rpcId"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "exitNotification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notificationEnvelope"
+        },
+        {
+          "properties": {
+            "method": {
+              "const": "exit"
+            },
+            "params": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "maxProperties": 0
+            }
+          }
+        }
+      ]
+    },
+    "testNode": {
+      "type": "object",
+      "required": [
+        "uid",
+        "display-name"
+      ],
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "display-name": {
+          "type": "string"
+        },
+        "node-type": {
+          "enum": [
+            "action",
+            "group"
+          ]
+        },
+        "execution-state": {
+          "enum": [
+            "discovered",
+            "in-progress",
+            "passed",
+            "skipped",
+            "failed",
+            "timed-out",
+            "error",
+            "canceled"
+          ]
+        },
+        "location.file": {
+          "type": "string"
+        },
+        "location.line-start": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "location.line-end": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "time.duration-ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "retry.attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retry.is-superseded": {
+          "type": "boolean"
+        }
+      },
+      "dependentRequired": {
+        "location.file": [
+          "location.line-start",
+          "location.line-end"
+        ],
+        "location.line-start": [
+          "location.file",
+          "location.line-end"
+        ],
+        "location.line-end": [
+          "location.file",
+          "location.line-start"
+        ]
+      },
+      "additionalProperties": true
+    },
+    "testUpdateNotification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notificationEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "testing/testUpdates/tests"
+            },
+            "params": {
+              "type": "object",
+              "required": [
+                "runId",
+                "changes"
+              ],
+              "properties": {
+                "runId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "changes": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "node"
+                        ],
+                        "properties": {
+                          "parent": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "node": {
+                            "$ref": "#/$defs/testNode"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "uri",
+        "producer",
+        "type",
+        "display-name",
+        "description"
+      ],
+      "properties": {
+        "uri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "producer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "display-name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "attachmentNotification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notificationEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "testing/testUpdates/attachments"
+            },
+            "params": {
+              "type": "object",
+              "required": [
+                "attachments"
+              ],
+              "properties": {
+                "attachments": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/artifact"
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "logNotification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notificationEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "client/log"
+            },
+            "params": {
+              "type": "object",
+              "required": [
+                "level",
+                "message"
+              ],
+              "properties": {
+                "level": {
+                  "enum": [
+                    "Trace",
+                    "Debug",
+                    "Information",
+                    "Warning",
+                    "Error",
+                    "Critical",
+                    "None"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "telemetryNotification": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notificationEnvelope"
+        },
+        {
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "method": {
+              "const": "telemetry/update"
+            },
+            "params": {
+              "type": "object",
+              "required": [
+                "eventName",
+                "metrics"
+              ],
+              "properties": {
+                "eventName": {
+                  "type": "string"
+                },
+                "metrics": {
+                  "type": "object"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "successResponse": {
+      "type": "object",
+      "required": [
+        "jsonrpc",
+        "id",
+        "result"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "$ref": "#/$defs/rpcId"
+        },
+        "result": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "processId": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "serverInfo": {
+              "type": "object",
+              "required": [
+                "name",
+                "version"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            },
+            "protocolVersion": {
+              "oneOf": [
+                {
+                  "const": "1.0.0"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "capabilities": {
+              "$ref": "#/$defs/serverCapabilities"
+            },
+            "attachments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/artifact"
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "not": {
+        "required": [
+          "method"
+        ]
+      },
+      "additionalProperties": true
+    },
+    "errorResponse": {
+      "type": "object",
+      "required": [
+        "jsonrpc",
+        "id",
+        "error"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "$ref": "#/$defs/rpcId"
+        },
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "message": {
+              "type": "string"
+            },
+            "data": true
+          },
+          "additionalProperties": true
+        }
+      },
+      "not": {
+        "required": [
+          "method"
+        ]
+      },
+      "additionalProperties": true
+    }
+  }
+}

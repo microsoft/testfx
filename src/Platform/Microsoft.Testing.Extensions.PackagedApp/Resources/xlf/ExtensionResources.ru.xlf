@@ -2,14 +2,99 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../ExtensionResources.resx">
     <body>
-      <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</source>
-        <target state="translated">Развертывает упакованный узел тестирования Windows (UWP/WinUI) в изолированном каталоге и запускает его оттуда.</target>
+      <trans-unit id="ActivationArgumentsInvalidArgumentCount">
+        <source>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</source>
+        <target state="translated">Полезная нагрузка аргумента активации Microsoft Testing Platform содержит недопустимое количество аргументов.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidArgumentLength">
+        <source>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</source>
+        <target state="translated">Полезная нагрузка аргумента активации Microsoft Testing Platform содержит недопустимую длину аргумента.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidFileKey">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</source>
+        <target state="translated">Аргументы активации Microsoft Testing Platform содержат недопустимый ключ полезной нагрузки файла.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidFileReference">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</source>
+        <target state="translated">Аргументы активации Microsoft Testing Platform содержат недопустимую ссылку на полезную нагрузку файла.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidInlinePayload">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</source>
+        <target state="translated">Аргументы активации Microsoft Testing Platform содержат недопустимую встроенную полезную нагрузку.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsMissingPayload">
+        <source>The launch activation does not contain Microsoft Testing Platform arguments.</source>
+        <target state="translated">Активация запуска не содержит аргументы Microsoft Testing Platform.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadAuthenticationFailed">
+        <source>The Microsoft Testing Platform activation-argument payload failed authentication.</source>
+        <target state="translated">Проверка подлинности полезной нагрузки аргумента активации Microsoft Testing Platform завершилась сбоем.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadReadFailed">
+        <source>The Microsoft Testing Platform activation-argument payload could not be read.</source>
+        <target state="translated">Не удалось прочитать полезную нагрузку аргумента активации Microsoft Testing Platform.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadTooLarge">
+        <source>The Microsoft Testing Platform activation-argument payload is too large.</source>
+        <target state="translated">Полезная нагрузка аргумента активации Microsoft Testing Platform слишком велика.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadTruncated">
+        <source>The Microsoft Testing Platform activation-argument payload is truncated.</source>
+        <target state="translated">Полезная нагрузка аргумента активации Microsoft Testing Platform усечена.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsTrailingData">
+        <source>The Microsoft Testing Platform activation-argument payload contains trailing data.</source>
+        <target state="translated">Полезная нагрузка аргумента активации Microsoft Testing Platform содержит конечные данные.</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="AmbiguousAppxManifestApplication">
+        <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
+        <target state="translated">Манифест упакованного приложения объявляет несколько приложений, и ни одно из них не соответствует однозначно исполняемому файлу "{0}". Идентификаторы пользовательской модели приложений-кандидатов: {1}.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="translated">Манифест упакованного приложения не объявляет приложение для исполняемого файла "{0}", поэтому он описывает другое приложение, и при его активации будет выбран неверный Application User Model ID. Объявленные исполняемые файлы приложения: {1}.</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
+      <trans-unit id="InvalidAppxManifestMissingIdentity">
+        <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
+        <target state="translated">Манифест упакованного приложения не объявляет допустимый элемент &lt;Identity Name="..." Publisher="..." /&gt;.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppExtensionDescription">
+        <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
+        <target state="translated">Регистрирует упакованный тестовый узел MSIX и активирует его по Application User Model ID (сборка Windows), предоставляя аргументы Microsoft Testing Platform посредством argv для узлов packagedClassicApp/win32App (включая классические узлы AppContainer) или запуская активацию запуска для узлов windowsApp/UWP. Если предоставлено согласие через TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, также развертывает неупакованный (со свободной компоновкой) тестовый узел Windows в изолированном каталоге и запускает его оттуда. По умолчанию это включено только для упакованной компоновки, поэтому для неупакованного приложения остается путь запуска по умолчанию. Для сквозного выполнения AppContainer дополнительно требуется авторизация конвейера контроллера. Сведения: https://github.com/microsoft/testfx/issues/10486.</target>
+        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>
         <target state="translated">Средство запуска узла тестирования упакованных приложений</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppLaunchNotSupported">
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">Не удается запустить упакованное приложение Windows "{0}" (найдено "{1}"). Для регистрации и активации упакованного (MSIX) приложения требуется сборка этого расширения для Windows, которая поставляется для net8.0-windows10.0.19041.0 и более поздних версий. Укажите в качестве цели "net8.0-windows10.0.19041.0" (или более поздний моникер целевой платформы net*-windows с версией платформы 10.0.19041.0 или выше), чтобы NuGet выбрал этот ресурс. Текущая сборка запускает только неупакованные (со свободной компоновкой) тестовые узлы. Сведения: https://github.com/microsoft/testfx/issues/9933.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppNoApplicationToActivate">
+        <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
+        <target state="translated">Не удается активировать упакованное приложение Windows "{0}" (обнаружено "{1}"): в его манифесте не объявлено &lt;Application&gt;, поэтому отсутствует идентификатор пользовательской модели приложения для активации.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationFailed">
+        <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
+        <target state="translated">Не удалось зарегистрировать макет упакованного приложения Windows "{0}". Для регистрации неподписанного макета выходных файлов сборки необходимо включить режим разработчика (или загрузку неопубликованных приложений). Ошибка: {1}</target>
         <note />
       </trans-unit>
     </body>

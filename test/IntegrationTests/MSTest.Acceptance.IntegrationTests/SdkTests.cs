@@ -75,15 +75,27 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
+        // 'dotnet test' runs the target frameworks in parallel and writes each framework's summary as two separate
+        // writes: the 'Passed!  - Failed: ...' counts, then the ' - MSTestSdk.dll (<tfm>)' suffix. Those writes
+        // interleave, so the two halves of one framework's summary are not guaranteed to share an output line. Assert
+        // the two independent facts instead: every expected framework ran, and every framework reported a clean result.
+        List<string> expectedTargetFrameworks = ["net10.0"];
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
+        expectedTargetFrameworks.Add("net8.0");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
+            expectedTargetFrameworks.Add("net462");
         }
+
+        foreach (string targetFramework in expectedTargetFrameworks)
+        {
+            compilationResult.AssertOutputContains($" - MSTestSdk.dll ({targetFramework})");
+        }
+
+        compilationResult.AssertOutputMatchesRegexTimes("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1", expectedTargetFrameworks.Count);
+        compilationResult.AssertOutputDoesNotContain("Failed!");
     }
 
     [TestMethod]
@@ -351,14 +363,10 @@ namespace MSTestSdkTest
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
-            warnAsError: false,
+            warnAsError: true,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 
-        // MSTest.TestAdapter (referenced via MSTest.Sdk's NativeAOT runner) transitively pulls in
-        // vstest Microsoft.TestPlatform.ObjectModel and System.Private.DataContractSerialization which
-        // produce trim/AOT warnings outside this repo's control. Instead of failing on those warnings,
-        // we assert MSTest-owned source files do not appear in publish output. See TrimAndAotAssertions.
         foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
         {
             compilationResult.AssertOutputDoesNotContain(fileName);
@@ -369,6 +377,37 @@ namespace MSTestSdkTest
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
+    }
+
+    [TestMethod]
+    public async Task PublishReadyToRun_Smoke_Test()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <PublishReadyToRun>true</PublishReadyToRun>
+                <SelfContained>false</SelfContained>
+                <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                """),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
+            warnAsError: true,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, RID, Verb.publish);
+
+        string publishedAssemblyPath = Path.Combine(testHost.DirectoryName, $"{AssetName}.dll");
+        ReadyToRunAssertions.AssertIsReadyToRunImage(publishedAssemblyPath);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [TestMethod]
@@ -385,7 +424,7 @@ namespace MSTestSdkTest
 
         compilationResult.AssertExitCodeIs(0);
 
-        SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath);
+        SL.Build binLog = BinlogReader.Read(compilationResult.BinlogPath!);
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
@@ -399,6 +438,91 @@ namespace MSTestSdkTest
 
         // It's not an executable
         Assert.DoesNotContain(p => p.Value == "Exe", binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType"));
+    }
+
+    [TestMethod]
+    public async Task TestApplicationRunsTestsFromReferencedMSTestSdkTestLibrary()
+    {
+        const string TestApplicationWithReferencedTestLibrary = """
+            #file MSTestSdkTestApplication.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+
+              <PropertyGroup>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <PlatformTarget>x64</PlatformTarget>
+              </PropertyGroup>
+
+              <ItemGroup>
+                <ProjectReference Include="TestLibrary/TestLibrary.csproj" />
+                <Compile Remove="TestLibrary/**" />
+              </ItemGroup>
+
+            </Project>
+
+            #file ReferencedLibraryTests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            using TestLibrary;
+
+            namespace MSTestSdkTestApplication;
+
+            [TestClass]
+            public sealed class ReferencedLibraryTests : LibraryTests;
+
+            #file TestLibrary/TestLibrary.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+
+              <PropertyGroup>
+                <IsTestApplication>false</IsTestApplication>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+              </PropertyGroup>
+
+            </Project>
+
+            #file TestLibrary/LibraryTests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestLibrary;
+
+            [TestClass]
+            public abstract class LibraryTests
+            {
+                [TestMethod]
+                public void TestFromReferencedLibrary()
+                {
+                    Assert.AreEqual("TestLibrary", typeof(LibraryTests).Assembly.GetName().Name);
+                }
+            }
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "MSTestSdkTestApplicationWithReferencedTestLibrary",
+            TestApplicationWithReferencedTestLibrary
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(
+            testAsset.TargetAssetPath,
+            "MSTestSdkTestApplication",
+            TargetFrameworks.NetCurrent,
+            buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        string libraryAssets = await File.ReadAllTextAsync(
+            Path.Combine(testAsset.TargetAssetPath, "TestLibrary", "obj", "project.assets.json"),
+            TestContext.CancellationToken);
+        Assert.DoesNotContain("\"MSTest.TestAdapter/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.NET.Test.Sdk/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Platform/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Platform.MSBuild/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Extensions.", libraryAssets);
     }
 
     [TestMethod]
@@ -738,5 +862,151 @@ namespace MSTestWebTest
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, MixedAssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
+    public async Task MSTestSdk_ModernUwp_DefaultsToVSTestAndUsesAppContainerHost()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ModernUwpSdk",
+            """
+            <UseUwp>true</UseUwp>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=true");
+        result.AssertOutputContains("Microsoft.NET.Test.Sdk");
+        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputContains("MSTest.TestFramework");
+        result.AssertOutputContains("TestContainer");
+        result.AssertOutputContains("IsTestProject=true");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
+    public async Task MSTestSdk_ModernUwp_RejectsExplicitMtpSelection()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ModernUwpMtpSdk",
+            """
+            <UseUwp>true</UseUwp>
+            <UseVSTest>false</UseVSTest>
+            """,
+            failIfReturnValueIsNotZero: false,
+            target: "Build");
+
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts.");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUI_DefaultsToMtpWithoutPackagedAppLauncher()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUISdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false");
+        result.AssertOutputContains("OutputType=Exe");
+        result.AssertOutputContains("Capabilities=TestingPlatformServer");
+        result.AssertOutputContains("TestContainer");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUI_RejectsVSTest()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIVSTestSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <UseVSTest>true</UseVSTest>
+            """,
+            failIfReturnValueIsNotZero: false,
+            target: "Build");
+
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("VSTest does not support unpackaged WinUI test applications.");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_PackagedWinUI_DefaultsToMtpWithPackagedAppLauncher()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "PackagedWinUISdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("OutputType=Exe");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_WinUISeparateHost_KeepsGeneratedEntryPoint()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "SeparateHostWinUISdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false");
+        result.AssertOutputContains("OutputType=Exe");
+    }
+
+    private async Task<DotnetMuxerResult> EvaluateWindowsApplicationModelAsync(
+        string assetName,
+        string applicationModelProperties,
+        bool failIfReturnValueIsNotZero = true,
+        string target = "PrintWindowsTestContract")
+    {
+        const string Source = """
+            #file $AssetName$.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <NoWarn>$(NoWarn);NETSDK1201;NU1507</NoWarn>
+                $ApplicationModelProperties$
+              </PropertyGroup>
+
+              <ItemGroup Condition=" '$(_IncludeApplicationDefinition)' == 'true' ">
+                <ApplicationDefinition Include="App.xaml" />
+              </ItemGroup>
+
+              <Target Name="PrintWindowsTestContract"
+                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
+                <Message Importance="high"
+                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject)" />
+                <Message Importance="high"
+                         Text="PackageReferences=@(PackageReference->'%(Identity)')" />
+                <Message Importance="high"
+                         Text="Capabilities=@(ProjectCapability->'%(Identity)')" />
+              </Target>
+            </Project>
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            assetName,
+            Source
+                .PatchCodeWithReplace("$AssetName$", assetName)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
+
+        return await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath} -restore -t:{target}",
+            failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
+            cancellationToken: TestContext.CancellationToken);
     }
 }

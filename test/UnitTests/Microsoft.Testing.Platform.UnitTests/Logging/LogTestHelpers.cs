@@ -26,7 +26,7 @@ internal static class LogTestHelpers
 
         for (int i = 0; i < logLevels.Length; i++)
         {
-            for (int j = 0; i < logLevels.Length; i++)
+            for (int j = 0; j < logLevels.Length; j++)
             {
                 logLevelCombinations.Add((logLevels[i], logLevels[j]));
             }

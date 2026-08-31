@@ -537,9 +537,19 @@ Actual: {2}</source>
         <target state="translated">현재 테스트와 관련된 'TestContext.{0}' 속성은 어셈블리나 클래스 픽스처 실행 중에는 사용할 수 없습니다.</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
+      <trans-unit id="InvalidDependsOnTestMethodName">
+        <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
+        <target state="translated">[DependsOn]의 테스트 메서드 이름은 비어 있지 않고 공백만으로 이루어진 문자열이 아니어야 합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidResourceLockResource">
+        <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
+        <target state="translated">[ResourceLock]의 리소스 키는 비어 있지 않고 공백이 아닌 문자열이어야 합니다. 빈 키를 사용하면 마찬가지로 빈 키를 사용하는 관련 없는 테스트까지 자동으로 직렬화됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">
@@ -680,8 +690,7 @@ Actual: {2}</source>
     </source>
         <target state="translated">
       지정한 멤버({0})를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
-      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식
-을 전달해야 합니다.
+      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식을 전달해야 합니다.
       PrivateObject의 생성자에 전달해야 합니다.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
@@ -694,8 +703,7 @@ Actual: {2}</source>
     </source>
         <target state="translated">
       지정한 서명을 가진 생성자를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
-      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식
-을 전달해야 합니다.
+      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식을 전달해야 합니다.
       PrivateObject의 생성자에 전달해야 합니다.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>

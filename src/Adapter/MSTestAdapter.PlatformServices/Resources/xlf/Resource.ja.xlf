@@ -51,10 +51,9 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="translated">テスト メソッド '{0}.{1}' を実行できません: テスト データがメソッド パラメーターと一致しません。カウントまたは型が異なります。
-型 '{3}'、
- を持つ、予期された {2} パラメーターをテストします
-ただし、型 '{5}' の引数 {4} を受け取りました。</target>
+        <target state="translated">テスト メソッド '{0}.{1}' を実行できません: テスト データがメソッドのパラメーターと一致しません。数または型が異なります。
+テストでは、{2} 個の型 '{3}' のパラメーターが想定されていますが、
+{4} 個の型 '{5}' の引数を受け取りました。</target>
         <note>{0} is the declaring type full name. {1} is the method name. {2} is the expected parameter count. {3} is the expected parameter type list. {4} is the received argument count. {5} is the received argument type list.</note>
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
@@ -102,6 +101,56 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">デバッグ トレース:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">'mstest:execution:dependencies' 構成セクションでは、'{0}' の依存関係が宣言されていますが、この実行では一致するテストがありません。これらは無視されます。</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">'mstest:execution:dependencies:chains' 構成セクションのインデックス {0} にあるチェーンは空で、依存関係が宣言されていません。削除してください。順序を表すには、チェーンには少なくとも 2 つのテストが必要です。</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">'mstest:execution:dependencies' 構成セクションのテスト参照 '{0}' は無効です。クラス内のすべてのテストには 'Namespace.Class.Method'、または 'Namespace.Class.*' を使用してください。</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">'mstest:execution:dependencies' 構成セクションでは、'{0}' のノードが宣言されていますが、'dependsOn' エントリがないため、効果はありません。</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="translated">'mstest:execution:dependencies:nodes' 構成セクションのインデックス {0} の依存関係ノードには 'test' 値がないため、無視されます。</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">次のテスト クラス間の依存関係は、クラス レベルの並列実行ではスケジュールできません。これらのクラスが相互に依存しているためです: {0}。これらのテストは依存関係の順序に従って順次実行されるため、宣言した順序は引き続き維持されます。各テストを個別にスケジュールして再び並列実行するには、&lt;Scope&gt;MethodLevel&lt;/Scope&gt; (または [Parallelize(Scope = ExecutionScope.MethodLevel)]) を使用してください。</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">テスト間で依存関係の循環が検出されました: {0}。循環に含まれるテストは実行順序を決定できないため、失敗として報告されます。循環を解消するには、依存関係の宣言を 1 つ削除してください。</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">依存先のテスト '{0}' が成功しなかったため、このテストはスキップされました。</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">テスト '{0}' では、'{1}' への依存関係が宣言されていますが、このテスト ソース内に一致するテストがありません。依存関係は単一のソース内で解決されるため、別のテスト アセンブリ内にあるターゲットはサポートされません。依存関係は無視されます。</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">テスト実行の展開に関する問題: アセンブリまたはモジュール '{0}' を読み込めませんでした。理由: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">テストの実行の配置問題です: 配置項目が正しくありません: '{0}': 出力ディレクトリ '{1}' は、項目が配置ルート ディレクトリ外に配置されるように指定していますが、それは許可されません。</target>
@@ -118,9 +167,9 @@ but received {4} argument(s), with types '{5}'.</source>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">テストの実行の配置問題です: ファイル '{0}' を '{1}' にコピーできませんでした: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="translated">テスト実行の展開に関する問題: ファイル '{0}' を '{1}' にコピーできませんでした: {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -229,6 +278,26 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">ジェネリック パラメーター '{0}' に 2 つの競合する型が見つかりました。競合する型は '{1}' および '{2}' です。</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">グローバル テスト クリーンアップ メソッド '{0}.{1}' は {2} ミリ秒後にタイムアウトしました</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">グローバル テスト クリーンアップ メソッド '{0}.{1}' が取り消されました</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">グローバル テスト初期化メソッド '{0}.{1}' は {2} ミリ秒後にタイムアウトしました</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">グローバル テスト初期化メソッド '{0}.{1}' が取り消されました</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">無効な値 '{0}' が 'Scope' に指定されました。サポートされているスコープは {1} です。</target>
@@ -238,6 +307,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">無効な値 '{0}' が 'Workers' に指定されました。値は負ではない整数である必要があります。</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">MSTestAdapter で runsettings XML を解析できませんでした。</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

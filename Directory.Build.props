@@ -11,6 +11,41 @@
     <ExtrasEnableEmbeddedResourceCodeGenerator>false</ExtrasEnableEmbeddedResourceCodeGenerator>
   </PropertyGroup>
 
+  <!-- MSBuildCache only supports clean, Windows graph builds. Keep it opt-in so regular and incremental builds are unchanged. -->
+  <PropertyGroup>
+    <MSBuildCacheEnabled Condition="'$(MSBuildCacheEnabled)' == ''">false</MSBuildCacheEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildCacheEnabled)' == 'true'">
+    <!-- Change this value to invalidate all existing testfx cache entries. -->
+    <!--
+      Azure Pipeline cache entries are immutable. Debug and Release are built in parallel in CI, and some
+      configuration-independent projects otherwise race to publish the same selector/output entries. Keep the
+      configurations in separate universes so one seed cannot fail the other with PipelineCacheItemAlreadyExists.
+    -->
+    <MSBuildCacheCacheUniverse Condition="'$(MSBuildCacheCacheUniverse)' == ''">testfx-v1-$(Configuration)</MSBuildCacheCacheUniverse>
+    <MSBuildCacheLocalCacheRootPath Condition="'$(MSBuildCacheLocalCacheRootPath)' == ''">$(RepoRoot)artifacts\msbuild-cache</MSBuildCacheLocalCacheRootPath>
+    <MSBuildCacheLocalCacheSizeInMegabytes Condition="'$(MSBuildCacheLocalCacheSizeInMegabytes)' == ''">20480</MSBuildCacheLocalCacheSizeInMegabytes>
+    <!--
+      By default MSBuildCache hardlinks every output into its content-addressable store and marks it read-only,
+      both when it materializes a cache hit and when it ingests the outputs of a cache miss. That leaves the whole
+      output tree read-only, so the Arcade restore/sign/pack pass that runs after the cached graph build cannot
+      rewrite files such as artifacts\bin\**\*.deps.json or the generated src\Package\MSTest.Sdk\Sdk\Sdk.props,
+      and fails with UnauthorizedAccessException. Clearing the read-only attribute is not a valid workaround: the
+      output file and the cache entry share an inode, so writing through it corrupts the cache and can silently
+      rewrite a same-content output belonging to another project.
+
+      Matching every output with '\**' switches MSBuildCache to CopyNoVerify, which copies instead of hardlinking
+      and leaves the outputs writable. It costs extra I/O, and it relaxes duplicate-output detection so that two
+      projects may write the same path when the content is identical - producing that path with different content
+      is still an error. The pattern participates in the fingerprint, so changing it invalidates every cache entry
+      until the next main-branch seed repopulates them.
+    -->
+    <MSBuildCacheIdenticalDuplicateOutputPatterns>$(MSBuildCacheIdenticalDuplicateOutputPatterns);\**</MSBuildCacheIdenticalDuplicateOutputPatterns>
+    <!-- Visual Studio telemetry writes outside the repository after the project that launched it has finished. -->
+    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);$(WinDir)\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**;\**\AppData\Local\Microsoft\Windows\INetCache\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
+  </PropertyGroup>
+
   <!-- Language configuration -->
   <PropertyGroup>
     <!-- default to allowing all language features -->
@@ -47,25 +82,30 @@
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <!-- PDB -->
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>embedded</DebugType>
+    <!--
+      Let Arcade's ProjectDefaults.props decide the DebugType: 'portable' for official builds
+      (so a separate PDB is emitted, which Arcade's publishing pipeline pushes to the symbol
+      servers) and 'embedded' for local/non-official builds. This matches dotnet/roslyn and
+      dotnet/sdk. We intentionally do NOT force 'embedded' here, which would bake symbols into
+      shipped assemblies and prevent symbols from being published to the symbol servers.
+    -->
     <!-- Needs to be part of the building of prod code -->
     <MoqPublicKey>0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7</MoqPublicKey>
 
     <!-- Experimental test API usages are allowed inside this solution -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- Infrastructure APIs (marked [Experimental("TPINTERNAL")]) are public only so first-party
+         extensions can consume them across the assembly boundary. External consumers still hit the
+         diagnostic; inside this solution the usage is expected, so suppress it centrally. -->
+    <NoWarn>$(NoWarn);TPINTERNAL</NoWarn>
     <!-- netfx and netstandard don't have nullability info so the IDE0370 warning should be suppressed -->
     <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0' OR $(TargetFramework.StartsWith('net4')) OR '$(TargetFramework)' == '$(UwpMinimum)'">$(NoWarn);IDE0370</NoWarn>
+    <!-- Only upgrade NuGetAudit warnings to errors for official builds. -->
+    <WarningsNotAsErrors Condition="'$(OfficialBuild)' != 'true'">$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
   </PropertyGroup>
 
   <!-- Versioning -->
   <PropertyGroup>
-    <MSTestSourceGenerationPreReleaseVersionLabel>alpha</MSTestSourceGenerationPreReleaseVersionLabel>
-
-    <!--
-      This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
-
     <MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
 
     <!--
@@ -79,27 +119,6 @@
     This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
-
-    <MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix>
-
-    <MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
-
-    <MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsPackagedAppVersionPrefix>1.0.0</MicrosoftTestingExtensionsPackagedAppVersionPrefix>
 
     <MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>
 
@@ -118,6 +137,7 @@
   <!-- Sign config -->
   <PropertyGroup>
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
+    <StrongNameKeyId Condition="'$(MutationTesting)' == 'true' and ('$(MSBuildProjectName)' == 'Microsoft.Testing.Platform.ServerMode.Client.Sources' or '$(MSBuildProjectName)' == 'Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests')">Open</StrongNameKeyId>
   </PropertyGroup>
 
   <!-- Test config -->

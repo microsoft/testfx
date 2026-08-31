@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -231,12 +231,12 @@ public sealed class SilenceDrivenHeartbeatRendererTests
         asm.NotifyHandshake("inst-1");
         for (int i = 0; i < failedTests; i++)
         {
-            asm.ReportFailedTest($"fail-{i}", "inst-1");
+            asm.ReportFailedTest($"fail-{i}", $"fail-{i}", "inst-1");
         }
 
         for (int i = 0; i < totalTests - failedTests; i++)
         {
-            asm.ReportPassingTest($"pass-{i}", "inst-1");
+            asm.ReportPassingTest($"pass-{i}", $"pass-{i}", "inst-1");
         }
 
         if (activeTestName is not null)
@@ -303,7 +303,7 @@ public sealed class SilenceDrivenHeartbeatRendererTests
 
         public void EraseProgress() => EraseProgressCalled = true;
 
-        public void RenderProgress(TestProgressState?[] progress) => RenderProgressCalled = true;
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => RenderProgressCalled = true;
 
         public void HideCursor()
         {

@@ -1,0 +1,216 @@
+# Windows Release full-test and coverage steps plus Debug unit tests, shared by PR validation and main-branch cache seeding.
+#
+# Assumes the consuming job declares:
+#   - the matrix variable `_BuildConfig` (Debug or Release)
+#   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
+parameters:
+- name: enableAffectedTests
+  type: boolean
+  default: false
+- name: affectedTestsMode
+  type: string
+  default: disabled
+  values:
+  - disabled
+  - collect
+  - run
+- name: affectedTestsCacheVersion
+  type: string
+  default: v1
+- name: acceptanceTestCacheMode
+  type: string
+  default: disabled
+  values:
+  - disabled
+  - read
+  - write
+
+steps:
+# Because the build step is using -ci, restore is done in a local .packages directory.
+# NUGET_PACKAGES must point to that directory so test project evaluation imports the restored package props/targets.
+#
+# -p:TestingPlatformCaptureOutput=false streams each test executable's output to the AzDO console instead of
+# buffering it until failure, preserving live progress during long-running test sessions.
+- ${{ if eq(parameters.enableAffectedTests, false) }}:
+  - script: |
+      echo ##vso[task.setvariable variable=PublishCoverageReport]true
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+    name: Test
+    displayName: Test
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    env:
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
+      # Secret variables are not automatically exposed to scripts. Fork PR builds do not receive this token,
+      # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+# These branches are intentionally disabled at their call sites. They can be enabled only after the affected-test
+# extension package and its local-filesystem storage schema have flowed into this repository. The SDK owns
+# DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
+  - task: Cache@2
+    displayName: Restore and publish affected-test map
+    inputs:
+      key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
+      restoreKeys: |
+        "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
+      path: '$(Pipeline.Workspace)\affected-test-map'
+      cacheHitVar: AffectedTestsMapCacheRestored
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
+  - script: |
+      echo ##vso[task.setvariable variable=PublishCoverageReport]true
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --collect-test-map
+    name: Test
+    displayName: Test and collect affected-test map
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    env:
+      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
+  - task: Cache@2
+    displayName: Restore affected-test map
+    inputs:
+      key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
+      restoreKeys: |
+        "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
+      path: '$(Pipeline.Workspace)\affected-test-map'
+      cacheHitVar: AffectedTestsMapCacheRestored
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
+
+  - pwsh: |
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --affected-tests
+      $exitCode = $LASTEXITCODE
+      if ($exitCode -eq 0) {
+        Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
+        exit 0
+      }
+
+      if ($exitCode -in 2, 8) {
+        Write-Host "##vso[task.logissue type=error]Affected-test execution failed with exit code $exitCode."
+        exit $exitCode
+      }
+
+      Write-Host "##vso[task.logissue type=warning]Affected-test selection failed; running the full test suite."
+      exit 0
+    name: TestAffected
+    displayName: Test affected changes
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
+    env:
+      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  # Scheduled and manual runs keep their full-validation contract. PRs also fall back when the cache is absent or the
+  # extension rejects a missing, stale, or incompatible map.
+  - pwsh: |
+      Write-Host "##vso[task.setvariable variable=PublishCoverageReport]true"
+
+      $testResultsDirectory = "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)"
+      if (Test-Path $testResultsDirectory) {
+        Get-ChildItem $testResultsDirectory -Filter *.coverage -File -ErrorAction SilentlyContinue |
+          Remove-Item -Force
+      }
+
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+      exit $LASTEXITCODE
+    name: Test
+    displayName: Test (affected-test fallback)
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
+    env:
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
+      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'disabled')) }}:
+  - pwsh: throw "affectedTestsMode must be 'collect' or 'run' when enableAffectedTests is true."
+    displayName: Reject invalid affected-test configuration
+
+# A cache hit materializes compiled outputs but does not run Arcade's restore phase, which installs the .NET runtimes
+# declared in global.json. Release gets those runtimes from its sign/pack preparation; initialize them explicitly for
+# the cached Debug leg before launching its unit-test apphosts. This template is only included when tests are enabled.
+- pwsh: |
+    & ./eng/common/build.ps1 `
+      -ci `
+      -disablePipelineSetResult `
+      -configuration $(_BuildConfig) `
+      -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\PrepareTestRuntime.binlog" `
+      -restore `
+      -prepareMachine `
+      /p:ContinuousIntegrationBuild=true `
+      /p:FastAcceptanceTest=true `
+      /p:NoBuild=true `
+      /p:MSBuildCachePackageEnabled=true `
+      /p:MSBuildCacheEnabled=false
+    exit $LASTEXITCODE
+  displayName: Prepare cached Debug test runtime
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
+
+# The Debug leg exists to exercise DEBUG-conditional product code and tests. The Release integration suite
+# already creates child test assets in both configurations, so repeating that suite in Debug is redundant.
+# --test-modules bypasses MSBuild evaluation, so explicitly provide the reporting and diagnostics arguments.
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
+  name: TestDebug
+  displayName: Test (unit tests only)
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+# Publish a portable, compact report separately from the large TestResults artifact so external consumers can
+# retrieve it without downloading every test result and binary .coverage file.
+- task: PowerShell@2
+  displayName: 'Merge coverage as Cobertura'
+  inputs:
+    targetType: 'inline'
+    script: |
+      dotnet tool restore
+      if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+      }
+
+      $testResultsDirectory = "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)"
+      $coverageFiles = @()
+      if (Test-Path $testResultsDirectory) {
+        $coverageFiles = @(Get-ChildItem $testResultsDirectory -Filter *.coverage -File)
+      }
+      if ($coverageFiles.Count -eq 0) {
+        Write-Host "##vso[task.logissue type=error]No coverage files were produced; every Windows Release run must publish coverage."
+        exit 1
+      }
+
+      $coverageOutputDirectory = "$(Build.ArtifactStagingDirectory)\coverage"
+      New-Item -Path $coverageOutputDirectory -ItemType Directory -Force | Out-Null
+
+      $mergeArguments = @("coverage", "merge") + $coverageFiles.FullName + @("--output", "$coverageOutputDirectory\coverage.cobertura.xml", "--output-format", "cobertura")
+      & dotnet @mergeArguments
+      if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+      }
+
+      Write-Host "##vso[task.setvariable variable=CoverageReportReady]true"
+  condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Release'), eq(variables['PublishCoverageReport'], 'true'))
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Cobertura coverage report'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/coverage'
+    ArtifactName: Coverage_Windows_Release_Attempt$(System.JobAttempt)
+  condition: and(succeededOrFailed(), eq(variables['CoverageReportReady'], 'true'))
+
+# Use the merged Cobertura report for the Azure DevOps Code Coverage tab and summary. This is the same portable
+# report saved above, avoiding a second merge of the binary .coverage inputs inside the publishing task.
+- task: PublishCodeCoverageResults@2
+  displayName: 'Publish coverage to Azure DevOps'
+  inputs:
+    summaryFileLocation: '$(Build.ArtifactStagingDirectory)/coverage/coverage.cobertura.xml'
+    pathToSources: '$(Build.SourcesDirectory)/src'
+  condition: and(succeededOrFailed(), eq(variables['CoverageReportReady'], 'true'))

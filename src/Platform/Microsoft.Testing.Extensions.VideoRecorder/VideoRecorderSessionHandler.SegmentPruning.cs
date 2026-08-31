@@ -27,7 +27,7 @@ internal sealed partial class VideoRecorderSessionHandler
         }
 
         double nowOffset = (_clock.UtcNow - recordingStart).TotalSeconds;
-        double[] failedWindows;
+        FailedWindow? failedWindows;
         double watermark;
         lock (_stateGate)
         {
@@ -35,10 +35,7 @@ internal sealed partial class VideoRecorderSessionHandler
                 ? nowOffset
                 : _inFlight.Values.Min(start => (start - recordingStart).TotalSeconds);
 
-            failedWindows = _testRecords
-                .Where(record => record.IsFailure)
-                .SelectMany(record => new[] { (record.Start - recordingStart).TotalSeconds, (record.End - recordingStart).TotalSeconds })
-                .ToArray();
+            failedWindows = _failedWindows;
         }
 
         double ageCutoff = cap is { } c ? nowOffset - c.TotalSeconds : double.NegativeInfinity;
@@ -87,11 +84,11 @@ internal sealed partial class VideoRecorderSessionHandler
         }
     }
 
-    private static bool OverlapsAnyFailedWindow(VideoSegment segment, double[] failedWindows)
+    private static bool OverlapsAnyFailedWindow(VideoSegment segment, FailedWindow? failedWindow)
     {
-        for (int i = 0; i + 1 < failedWindows.Length; i += 2)
+        for (; failedWindow is not null; failedWindow = failedWindow.Next)
         {
-            if (segment.Overlaps(failedWindows[i], failedWindows[i + 1]))
+            if (segment.Overlaps(failedWindow.StartSeconds, failedWindow.EndSeconds))
             {
                 return true;
             }

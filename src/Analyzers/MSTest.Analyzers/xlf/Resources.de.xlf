@@ -47,6 +47,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">AssemblyCleanup-Methoden müssen über ein gültiges Layout verfügen.</target>
         <note>{Locked="AssemblyCleanup"}</note>
       </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotDescription">
+        <source>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</source>
+        <target state="translated">Die Ermittlung von "[AssemblyFixtureProvider]" basiert auf dem Durchlaufen des Laufzeitassemblyverweisdiagramms. Dies wird nicht unterstützt, wenn die Laufzeit keinen dynamischen Code generieren kann (z. B. unter Native AOT oder Blazor WebAssembly AOT). Das Attribut wird in solchen Builds ignoriert, sodass die bereitgestellten Assemblyinitialisierungs- und Bereinigungsmethoden nicht ausgeführt werden. Deklarieren Sie die Methoden "[AssemblyInitialize]" und "[AssemblyCleanup]" stattdessen direkt in der Testassembly.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
+      </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat">
+        <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</source>
+        <target state="translated">"[AssemblyFixtureProvider]" wird bei der Vorabkompilierung (z. B. Native AOT oder Blazor WebAssembly AOT) nicht unterstützt und zur Laufzeit ignoriert.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
+      </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotTitle">
+        <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</source>
+        <target state="translated">"[AssemblyFixtureProvider]" wird bei der Vorabkompilierung nicht unterstützt.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}</note>
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
 -it can't be declared on a generic class
@@ -91,6 +106,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>AssemblyInitialize methods should have valid layout</source>
         <target state="translated">AssemblyInitialize-Methoden müssen über ein gültiges Layout verfügen.</target>
         <note>{Locked="AssemblyInitialize"}</note>
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessDescription">
+        <source>Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</source>
+        <target state="translated">Der bedingte Zugriff fügt einer Assertion einen impliziten null-Branch hinzu, wodurch ausgeblendet werden kann, ob das Objekt unerwartet null war. Eine separate null-Assertion bewirkt, dass Fehler die verletzte Bedingung identifizieren.</target>
+        <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
@@ -146,6 +166,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
         <target state="translated">Verwenden Sie "Assert.AreSame" oder "Assert.AreNotSame" nicht mit Werttypen.</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
+        <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
+        <target state="translated">Seit MSTest 3.8 ist 'DynamicDataSourceType.AutoDetect' die Standardeinstellung und identifiziert automatisch Eigenschaften, Methoden und Felder, wodurch die Ausführlichkeit und die Kopplung mit der Memberart reduziert werden.</target>
+        <note>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
@@ -255,25 +280,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Methoden, die mit „[ClassInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– kann nicht für eine generische class deklariert werden, ohne dass der Modus „InheritanceBehavior“ auf 
- festgelegt ist.
+        <target state="translated">Methoden, die mit „[ClassInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout entsprechen, um gültig zu sein:
+– kann nicht für eine generische class deklariert werden, ohne dass der Modus „InheritanceBehavior“ festgelegt ist
 – muss „public“ sein
 – muss „static“ sein
 – darf nicht „async void“ sein
-– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf keine spezielle Methode sein (Finalizer, Operator...).
 – darf nicht „generic“ sein
 – muss einen Parameter vom Typ „TestContext“ annehmen
 – der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
 – der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die class „abstract“ ist
-– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die class „sealed“ ist.
+– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die class „sealed“ ist
 
 Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
-– Der Typ sollte eine class sein.
+– Der Typ sollte eine class sein
 – Die class muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
-– Die class darf nicht „static“ sein.
-– Wenn die class „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
-- die class darf nicht generisch sein.</target>
+– Die class darf nicht „static“ sein
+– Wenn die class „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden
+– die class darf nicht generisch sein.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -286,6 +310,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">ClassInitialize-Methoden müssen über ein gültiges Layout verfügen.</target>
         <note>{Locked="ClassInitialize"}</note>
       </trans-unit>
+      <trans-unit id="CollectionAssertToAssertDescription">
+        <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
+        <target state="translated">'CollectionAssert'-Methoden verfügen über entsprechende 'Assert'-Gegenstücke. Die Verwendung einer Assertions-API verbessert die Konsistenz und Auffindbarkeit.</target>
+        <note>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+      </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
         <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „CollectionAssert.{1}“</target>
@@ -295,6 +324,116 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Use 'Assert' instead of 'CollectionAssert'</source>
         <target state="translated">Verwenden Sie „Assert“ anstelle von „CollectionAssert“</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="CultureMutationUnderParallelizationDescription">
+        <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
+        <target state="translated">„CultureInfo.DefaultThreadCurrentCulture“ und „DefaultThreadCurrentUICulture“ legen die Standardkultur für den gesamten Prozess fest, sodass jeder gleichzeitig ausgeführte Test die Änderung und Formatierung oder Analyse unter Parallelisierung der Assembly beschädigt werden kann. Die Pro-Thread- und Ambient-Formulare sind absichtlich nicht gekennzeichnet: In modernen .NET weisen die Setter „Thread.CurrentThread.CurrentCulture“, „CurrentUICulture“ und „CultureInfo.CurrentCulture“ / „CurrentUICulture“ alle einen AsyncLocal-gestützten Wert zu, der mit dem Ausführungskontext fließt, sodass sie keine nebengeordneten Tests beschädigen oder in Threads mit späteren Pools weitergegeben werden. Da die gekennzeichneten Setter prozessweit sind, hilft das Wiederherstellen des vorherigen Werts in einem „finally“ nicht. Gleichzeitig ausgeführte Tests beachten weiterhin die geänderte Kultur für die Dauer der Mutation. deklarieren Sie „[DoNotParallelize]“ im Test, oder vermeiden Sie stattdessen die Mutierung der prozessweiten Kultur.</target>
+        <note>{Locked="CultureInfo.DefaultThreadCurrentCulture"}{Locked="DefaultThreadCurrentUICulture"}{Locked="Thread.CurrentThread.CurrentCulture"}{Locked="CurrentUICulture"}{Locked="CultureInfo.CurrentCulture"}{Locked="AsyncLocal"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="CultureMutationUnderParallelizationMessageFormat">
+        <source>'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</source>
+        <target state="translated">„{0}“ legt die Standardkultur für den gesamten Prozess fest, sodass jeder gleichzeitig ausgeführte Test die Änderung beachten kann, wodurch die Formatierung und Analyse in parallel ausgeführten Tests beschädigt werden kann. Vermeiden Sie die Mutierung in einer parallelisierten Testsammlung, oder deklarieren Sie „[DoNotParallelize]“</target>
+        <note>{0} is the mutated API (for example 'CultureInfo.DefaultThreadCurrentCulture'). {Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="CultureMutationUnderParallelizationTitle">
+        <source>Avoid mutating process-wide culture in a parallelized test</source>
+        <target state="translated">Vermeiden der Mutierung der prozessweiten Kultur in einem parallelisierten Test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CurrentDirectoryMutationUnderParallelizationDescription">
+        <source>The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</source>
+        <target state="translated">Das aktuelle Verzeichnis ist auf jedem Betriebssystem prozessweit und verfügt im Gegensatz zur Kultur nicht über ein Thread-bezogenes oder asynchrones Äquivalent. Ein Test, der es ändert, beschädigt das Arbeitsverzeichnis jedes Tests, der gleichzeitig ausgeführt wird, und relative Pfade, die an anderer Stelle in der Suite aufgelöst werden, deuten im Hintergrund auf die falsche Position. Ein „[ResourceLock]“ serialisiert die konkurrierenden Tests und macht die Mutation sicher, bleibt aber ein Designproblem in einer parallelen Suite: Übergeben Sie lieber absolute Pfade, damit sich das aktuelle Verzeichnis nie ändern muss.</target>
+        <note>{Locked="[ResourceLock]"}</note>
+      </trans-unit>
+      <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
+        <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
+        <target state="translated">„{0}“ ändert das prozessübergreifende aktuelle Verzeichnis, das keine threadbezogene Entsprechung aufweist und von jedem gleichzeitig ausgeführten Test beachtet wird. Vermeiden Sie es, es in einer parallelisierten Testsammlung zu ändern (deklarieren Sie „[ResourceLock(WellKnownResources.CurrentDirectory)]“ auf mindestens eine Koordinate oder „[DoNotParallelize]“)</target>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
+        <source>Avoid changing the current directory in a parallelized test</source>
+        <target state="translated">Vermeiden Sie das Ändern des aktuellen Verzeichnisses in einem parallelisierten Test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidDescription">
+        <source>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</source>
+        <target state="translated">Ein [DependsOn]-Attribut verweist anhand des Namens auf einen Test. Ein Verweis, der keinem Test entspricht, verursacht zur Laufzeit absichtlich keinen schwerwiegenden Fehler, sodass das Ausführen einer Teilmenge der Suite möglich bleibt. Das bedeutet, dass die deklarierte Reihenfolge durch einen Tippfehler oder eine Umbenennung automatisch gelöscht wird. Dieses Analysetool meldet die Probleme, die zur Buildzeit entschieden werden können: eine Methode, die beim Referenztyp nicht vorhanden ist, ein Ziel, das kein Test ist, ein Test, der von sich selbst abhängt, ein in der Kompilierung sichtbarer Abhängigkeitszyklus, ein Verweis auf einen Typ aus einer anderen Assembly (Abhängigkeiten werden innerhalb einer einzelnen Testquelle aufgelöst) und ein Attribut, das dort angewendet wird, wo es keine Auswirkungen hat.</target>
+        <note>{Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_AbstractTarget">
+        <source>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</source>
+        <target state="translated">„[DependsOn]“ verweist auf den abstrakten Typ „{0}“. Die Tests werden unter jeder abgeleiteten Testklasse und nicht unter „{0}“ ausgeführt, sodass die Abhängigkeit zur Laufzeit ignoriert wird.</target>
+        <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_Cycle">
+        <source>'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</source>
+        <target state="translated">„[DependsOn]“ deklariert den Abhängigkeitszyklus „{0}“, der bei jedem Test im Zyklus zur Laufzeit fehlschlägt.</target>
+        <note>{0} is the cycle path, for example 'MyTests.A &gt; MyTests.B &gt; MyTests.A'. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_MethodNotFound">
+        <source>'[DependsOn]' references method '{1}', which does not exist on type '{0}'</source>
+        <target state="translated">„[DependsOn]“ verweist auf die Methode „{1}“, die für den Typ „{0}“ nicht vorhanden ist.</target>
+        <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffect">
+        <source>'[DependsOn]' has no effect because '{0}' is not a test method</source>
+        <target state="translated">„[DependsOn]“ hat keine Auswirkung, da „{0}“ keine Testmethode ist.</target>
+        <note>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffectOnClass">
+        <source>'[DependsOn]' has no effect because discovery runs no test under '{0}'</source>
+        <target state="translated">„[DependsOn]“ hat keine Auswirkungen, da die Ermittlung keinen Test unter „{0}“ ausführt.</target>
+        <note>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestClass">
+        <source>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</source>
+        <target state="translated">„[DependsOn]“ verweist auf den Typ „{0}“, bei dem es sich nicht um eine Testklasse handelt, sodass die Abhängigkeit zur Laufzeit ignoriert wird.</target>
+        <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestMethod">
+        <source>'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</source>
+        <target state="translated">„[DependsOn]“ verweist auf „{0}.{1}“, was keine Testmethode ist, sodass die Abhängigkeit zur Laufzeit ignoriert wird.</target>
+        <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_OtherAssembly">
+        <source>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</source>
+        <target state="translated">„[DependsOn]“ verweist auf den Typ „{0}“ aus einer anderen Assembly. Abhängigkeiten werden innerhalb einer einzelnen Testquelle aufgelöst, sodass die Abhängigkeit zur Laufzeit ignoriert wird.</target>
+        <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_SelfReference">
+        <source>'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</source>
+        <target state="translated">„[DependsOn]“ macht „{0}“ von sich selbst abhängig. Dies ist ein Abhängigkeitszyklus, bei dem der Test zur Laufzeit fehlschlägt.</target>
+        <note>{0} is the test method name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidTitle">
+        <source>'[DependsOn]' arguments should be valid</source>
+        <target state="translated">[DependsOn]-Argumente müssen gültig sein.</target>
+        <note>{Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionDescription">
+        <source>Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</source>
+        <target state="translated">Die direkte Verwendung der entgegengesetzten Assertion erleichtert das Lesen des Tests und liefert eine klarere Fehlerdiagnose.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
+        <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
+        <target state="translated">Der an die Assembly- oder Klasseninitialisierung übergebene TestContext ist spezifisch für diesen Kontext und wird nicht für jede Testausführung aktualisiert. Durch die Wiederverwendung in einem 'static' Member kann veralteter Kontext verfügbar gemacht werden.</target>
+        <note>{Locked="TestContext"}{Locked="'static'"}</note>
+      </trans-unit>
+      <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
+        <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
+        <target state="translated">MSTest löst die geerbten Lebenszyklusattribute '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' und '[ClassCleanup]' sowie die Testattribute '[TestMethod]' und '[DataTestMethod]' anhand ihrer exakten Frameworktypidentität auf. Die Frameworkassembly wurde von 'Microsoft.VisualStudio.TestPlatform.TestFramework' in 'MSTest.TestFramework' umbenannt, sodass eine Basisklasse, die gegen eine andere MSTest-Hauptversion kompiliert wurde, diese Attribute mit einer anderen Typidentität bereitstellt. Wenn eine solche Basisklasse von einer Testklasse geerbt wird, die gegen eine andere Version kompiliert wird, werden die geerbten Setup- und Bereinigungsprozeduren nicht ausgeführt und die geerbten Testmethoden nicht erkannt, ohne dass dabei ein Buildfehler oder ein Ermittlungsfehler auftritt. Kompilieren Sie die Basisassembly und, bei benutzerdefinierten Attributen, die Assembly, die das Attribut definiert, mit derselben MSTest-Version wie das Testprojekt neu.</target>
+        <note>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</note>
+      </trans-unit>
+      <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
+        <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' and, for custom attributes, the assembly that defines '[{2}]', against the same MSTest version as the test project.</source>
+        <target state="translated">Der geerbte Member '{1}.{0}' ist mit dem Attribut '[{2}]' versehen, das in '{3}' in ein kanonisches MSTest-Attribut aufgelöst wird, also in eine andere MSTest-Framework-Assembly als die, die dieses Testprojekt verwendet. MSTest gleicht diese Attribute anhand der exakten Typidentität ab. Deshalb wird das geerbte '[{2}]' zur Laufzeit ohne Hinweis ignoriert. Kompilieren Sie die Assembly, die '{1}' deklariert, und bei benutzerdefinierten Attributen auch die Assembly, die '[{2}]' definiert, mit derselben MSTest-Version wie das Testprojekt neu.</target>
+        <note>{0} is the inherited member name, {1} is the declaring base type name, {2} is the attribute name (for example TestInitialize), {3} is the MSTest framework assembly the attribute's type resolves to. {Locked="MSTest"}</note>
+      </trans-unit>
+      <trans-unit id="InheritedMemberFromDifferentMSTestVersionTitle">
+        <source>A test class inherits a lifecycle or test method from a different MSTest version</source>
+        <target state="translated">Eine Testklasse erbt einen Lebenszyklus oder eine Testmethode aus einer anderen MSTest-Version</target>
+        <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
@@ -564,21 +703,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Methoden, die mit „[GlobalTestInitialize]“ oder „[GlobalTestCleanup]“ gekennzeichnet sind, sollten dem folgenden Layout entsprechen, um gültig zu sein:
+– kann nicht für eine generische class deklariert werden
+– muss „public“ sein
+– muss „static“ sein
+– darf nicht „async void“ sein
+– darf keine spezielle Methode sein (Finalizer, Operator...).
+– darf nicht „generic“ sein
+– muss einen Parameter vom Typ „TestContext“ annehmen
+– der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
+– Der Typ sollte eine class sein
+– Die class sollte „public“ sein
+– Die class muss mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert sein
+– die class darf nicht generisch sein.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -621,6 +760,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Rückgabewert von Zeichenfolgenmethoden nicht ignorieren</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
+        <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
+        <target state="translated">'Assert.Fail' macht einen absichtlichen Fehler explizit und ermöglicht es, anhand der Fehlermeldung zu dokumentieren, warum der Test nicht fortgesetzt werden kann.</target>
+        <note>{Locked="'Assert.Fail'"}</note>
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung „Assert.{0}“, bei der immer ein Fehler auftritt.</target>
@@ -634,7 +778,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
         <target state="translated">Wenn Sie Ausnahmen von asynchronem Code überprüfen, verwenden Sie die asynchronen Assertionsmethoden, anstatt den asynchronen Vorgang mit GetAwaiter().GetResult() zu blockieren..</target>
-        <note>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</note>
+        <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
@@ -645,6 +789,41 @@ The type declaring these methods should also respect the following rules:
         <source>Prefer async assertion methods</source>
         <target state="translated">asynchrone Assertionsmethoden bevorzugen</target>
         <note>{Locked="async"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstantForResourceLockDescription">
+        <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
+        <target state="translated">„[ResourceLock]“ gleicht Tests anhand der exakten Zeichenfolge des Ressourcenschlüssels ab. Beim Öffnen eines reinen Zeichenfolgenliterals tritt ein Fehler auf: Ein Tippfehler erzeugt einen anderen Schlüssel, sodass in Konflikt stehende Tests nicht mehr serialisiert werden und im Hintergrund ausgeführt werden, anstatt einen Fehler zu verursachen. Wenn Sie auf eine freigegebene Konstante verweisen, wird der Tippfehler zu einem Kompilierungsfehler, und der Compiler kann erzwingen, dass alle Tests, die um dieselbe Ressource konkurrieren, denselben Schlüssel verwenden.</target>
+        <note>{Locked="[ResourceLock]"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstantForResourceLockMessageFormat">
+        <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
+        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
+        <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstantForResourceLockTitle">
+        <source>Prefer a named constant for the '[ResourceLock]' resource key</source>
+        <target state="translated">Bevorzugen Sie eine benannte Konstante für den „[ResourceLock]“-Ressourcenschlüssel.</target>
+        <note>{Locked="[ResourceLock]"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeDescription">
+        <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
+        <target state="translated">Konstruktoren ermöglichen die Initialisierung über 'readonly'-Felder und bieten stärkeres Compilerfeedback, insbesondere bei Verweistypen, die NULL-Werte zulassen. Diese Opt-In-Stilregel und MSTEST0019 schließen sich gegenseitig aus.</target>
+        <note>{Locked="'readonly'"}{Locked="MSTEST0019"}</note>
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupDescription">
+        <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
+        <target state="translated">'Dispose' und 'DisposeAsync' folgen standardmäßigen .NET-Lebensdauermustern, sodass die Testbereinigung mit Produktionscode konsistent ist. Diese Opt-In-Stilregel und MSTEST0022 schließen sich gegenseitig aus.</target>
+        <note>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeDescription">
+        <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
+        <target state="translated">'[TestCleanup]' unterstützt die asynchrone Bereinigung für Zielframeworks, in denen 'IAsyncDisposable' nicht verfügbar ist. Diese Opt-In-Stilregel und MSTEST0021 schließen sich gegenseitig aus.</target>
+        <note>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</note>
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorDescription">
+        <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
+        <target state="translated">'[TestInitialize]' unterstützt sowohl die synchrone als auch die asynchrone Initialisierung, auf Konstruktoren kann dagegen nicht gewartet werden. Diese Opt-In-Stilregel und MSTEST0020 schließen sich gegenseitig aus.</target>
+        <note>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
@@ -674,6 +853,11 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="RedundantTestMethodDisplayNameTitle">
         <source>Test method should not specify a display name equal to its name</source>
         <target state="translated">Die Testmethode sollte keinen Anzeigenamen angeben, der dem Namen entspricht</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerDescription">
+        <source>An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</source>
+        <target state="translated">Eine Assertion, die nie fehlschlagen kann, verifiziert das Verhalten nicht und verdeckt die Bedingung, die der Test überprüfen soll.</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -756,6 +940,26 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Öffentliche Typen sollten Testklassen sein.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SharedFileSystemPathInTestDescription">
+        <source>Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</source>
+        <target state="translated">Das direkte Übergeben eines hartcodierten absoluten Pfads oder eines relativen Pfadliterals an eine dateisystemveränderende „File.*“/„Directory.*“-Methode (z. B. „File.WriteAllText“ oder „Directory.CreateDirectory“) zielt auf einen Speicherort ab, der von jedem anderen Test in der Assembly gemeinsam verwendet wird. Relative Pfade werden zusätzlich für das prozessübergreifende aktuelle Verzeichnis aufgelöst. Bei der Parallelisierung der Assembly können dann zwei Tests gleichzeitig an denselben Speicherort schreiben. Nur statisch konstante Pfade, die an eine mutierende API übergeben werden, werden gekennzeichnet. Lesevorgänge, Pfadkonstruktionen und Pfade, die aus Variablen erstellt wurden, bleiben dem Audit-Skill für parallele Sicherheit überlassen. Stattdessen ein eindeutiges Verzeichnis pro Test verwenden, etwa „TestContext.TestTempDirectory“.</target>
+        <note>{Locked="File.*"}{Locked="Directory.*"}{Locked="TestContext.TestTempDirectory"}</note>
+      </trans-unit>
+      <trans-unit id="SharedFileSystemPathInTestMessageFormat">
+        <source>The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</source>
+        <target state="translated">Der Pfad „{0}“ ist ein fester Speicherort, der von jedem Test in der Assembly gemeinsam verwendet wird (und, wenn relativ, für das prozessübergreifende aktuelle Verzeichnis aufgelöst wird), sodass parallele Tests, die in das Verzeichnis schreiben, zu einem Konflikt führen können. Verwenden Sie einen eindeutigen Testspeicherort wie „TestContext.TestTempDirectory“</target>
+        <note>{0} is the offending path literal. {Locked="TestContext.TestTempDirectory"}</note>
+      </trans-unit>
+      <trans-unit id="SharedFileSystemPathInTestTitle">
+        <source>Avoid hardcoded or shared filesystem paths in a parallelized test</source>
+        <target state="translated">Vermeiden hartcodierter oder freigegebener Dateisystempfade in einem parallelisierten Test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertDescription">
+        <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
+        <target state="translated">'StringAssert'-Methoden verfügen über entsprechende 'Assert'-Gegenstücke. Die Verwendung einer Assertions-API verbessert die Konsistenz und Auffindbarkeit.</target>
+        <note>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+      </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
         <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „StringAssert.{1}“.</target>
@@ -776,6 +980,51 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Die Eigenschaft „TestContext“ muss gültig sein</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidDescription">
+        <source>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</source>
+        <target state="translated">„[assembly: TestFilterProvider(typeof(MyFilter))]“ übergibt den Filtertyp als „Type“, sodass der Compiler bei „all“ jeden Typ akzeptiert. Der Adapter überprüft ihn nur, wenn er den Filter materialisiert, und dann schlägt die gesamte Ausführung fehl. Der Referenztyp muss nicht generisch und instanziierbar sein, „ITestFilter“ implementieren und einen öffentlichen parameterlosen Konstruktor verfügbar machen. Pro Testassembly kann höchstens ein Anbieter registriert werden. Bei der Ausrichtung auf .NET erzwingt die generische Form „[assembly: TestFilterProvider&lt;MyFilter&gt;]“ stattdessen die Schnittstellen- und Konstruktoranforderungen durch generische Einschränkungen.</target>
+        <note>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Generic">
+        <source>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</source>
+        <target state="translated">„[TestFilterProvider]“ verweist auf den generischen Typ „{0}“. Der Testfiltertyp darf nicht generisch sein.</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Multiple">
+        <source>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</source>
+        <target state="translated">Die Assembly registriert mehrere „[TestFilterProvider]“; es ist höchstens einer pro Testassembly zulässig, erstellen Sie daher die Filterstrategien innerhalb einer einzelnen "ITestFilter"-Implementierung.</target>
+        <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor">
+        <source>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</source>
+        <target state="translated">„[TestFilterProvider]“ verweist auf den Typ „{0}“, der keinen öffentlichen parameterlosen Konstruktor deklariert.</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter">
+        <source>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</source>
+        <target state="translated">„[TestFilterProvider]“ verweist auf den Typ „{0}“, der „ITestFilter“ nicht implementiert.</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable">
+        <source>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</source>
+        <target state="translated">„[TestFilterProvider]“ verweist auf den Typ „{0}“, der nicht instanziiert werden kann.</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Null">
+        <source>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</source>
+        <target state="translated">„[TestFilterProvider]“ erhält einen NULL-Filtertyp. Übergeben Sie die auszuführende „ITestFilter“-Implementierung, z. B. „typeof(MyFilter)“.</target>
+        <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidTitle">
+        <source>'[TestFilterProvider]' should reference a valid test filter type</source>
+        <target state="translated">„[TestFilterProvider]“ sollte auf einen gültigen Testfiltertyp verweisen.</target>
+        <note>{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationDescription">
+        <source>Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</source>
+        <target state="translated">Durch die Weitergabe der Quelldatei und der Zeilennummer kann MSTest genaue Diagnosen, Testergebnisse und die Navigation im Test Explorer bereitstellen.</target>
+        <note>{Locked="MSTest"}{Locked="Test Explorer"}</note>
+      </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
         <target state="translated">Die abgeleitete TestMethodAttribute-class „{0}“ sollte dem Konstruktor die Parameter „CallerFilePath“ und „CallerLineNumber“ hinzufügen.</target>
@@ -785,6 +1034,11 @@ The type declaring these methods should also respect the following rules:
         <source>TestMethodAttribute derived class should propagate source information</source>
         <target state="translated">Die abgeleitete TestMethodAttribute-class sollte Quellinformationen weitergeben.</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription">
+        <source>In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</source>
+        <target state="translated">In MSTest 4 und höher steht das Argument des String-Konstruktors für den Dateipfad des Aufrufers und nicht für den Anzeigenamen des Tests.</target>
+        <note>{Locked="MSTest 4"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
@@ -800,6 +1054,56 @@ The type declaring these methods should also respect the following rules:
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Signatur der Testmethode "{0}" ist ungültig</target>
         <note>{0} is the method name.</note>
+      </trans-unit>
+      <trans-unit id="UndeclaredProcessGlobalStateMutationDescription">
+        <source>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</source>
+        <target state="translated">Das Mutieren des globalen Prozesszustands (z. B. Umgebungsvariablen oder die Konsolenumleitung) aus einem Test ist unsicher, sobald die Parallelisierung in der Assembly aktiviert ist, da ein parallel ausgeführter, nebengeordneter Test die Mutation beachtet. Im Gegensatz zu „[ResourceLock]“, das beim Öffnen fehlschlägt, wenn ein Schlüssel vergessen wird, kennzeichnet diese Regel die Mutation zur Kompilierzeit. Deklarieren Sie „[ResourceLock]“ mit dem übereinstimmenden Schlüssel „WellKnownResources“, um konkurrierende Tests zu serialisieren, oder „[DoNotParallelize]“, um die Parallelisierung des Tests zu deaktivieren.</target>
+        <note>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
+        <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
+        <target state="translated">„{0}“ mutiert den prozessübergreifenden Zustand und ist unsicher, wenn Tests parallel ausgeführt werden. Deklarieren Sie „[ResourceLock(WellKnownResources.{1})]“ für den Test (oder „[DoNotParallelize]“)</target>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
+        <source>Test mutating process-global state should declare a resource lock</source>
+        <target state="translated">Beim Testmutieren des globalen Prozessstatus sollte eine Ressourcensperre deklariert werden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</source>
+        <target state="translated">Testmethoden, die „RuntimeInformation.ProcessArchitecture“ vergleichen und dann frühzeitig „Assert.Inconclusive“ zurückgeben oder aufrufen, sollten stattdessen das Attribut „[ArchitectureCondition]“ verwenden. Dieses Attribut bietet eine deklarative und auffindbare Möglichkeit, architekturspezifische Testanforderungen anzugeben, und meldet den Test als übersprungen und nicht bestanden, was bei einer frühen Rückgabe nicht möglich ist.</target>
+        <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Verwenden Sie das Attribut „[ArchitectureCondition]“ anstelle von „RuntimeInformation.ProcessArchitecture“-Überprüfungen mit frühzeitiger Rückgabe oder „Assert.Inconclusive“.</target>
+        <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Verwenden Sie das Attribut „[ArchitectureCondition]“ anstelle von „RuntimeInformation.ProcessArchitecture“-Überprüfungen mit frühzeitiger Rückgabe oder „Assert.Inconclusive“.</target>
+        <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerDescription">
+        <source>MSTest ignores these attributes outside a test context.</source>
+        <target state="translated">MSTest ignoriert diese Attribute außerhalb eines Testkontexts.</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
+      <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
+        <source>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</source>
+        <target state="translated">Testmethoden, die die Umgebungsvariable „CI“ auf NULL überprüfen und dann frühzeitig „Assert.Inconclusive“ zurückgeben oder aufrufen, sollten stattdessen das Attribut „[CICondition]“ verwenden. Dieses Attribut erkennt alle Continuous Integration-Anbieter, die MSTest kennt, analysiert ihre Werte und meldet den Test als übersprungen statt bestanden, was bei einer frühen Rückgabe nicht geschieht.</target>
+        <note>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat">
+        <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Das Attribut „[CICondition]“ anstelle von „Environment.GetEnvironmentVariable“-Überprüfungen mit früher Rückgabe oder „Assert.Inconclusive“ verwenden</target>
+        <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle">
+        <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Das Attribut „[CICondition]“ anstelle von „Environment.GetEnvironmentVariable“-Überprüfungen mit früher Rückgabe oder „Assert.Inconclusive“ verwenden</target>
+        <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
@@ -1028,6 +1332,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">[{0}] kann nur für Methoden festgelegt werden, die mit [TestMethod] markiert sind.</target>
         <note>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</note>
       </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassDescription">
+        <source>When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</source>
+        <target state="translated">Wenn MSTest auf eine Klasse angewendet wird, wertet MSTest Bedingungsattribute nur aus, wenn es sich bei der Klasse um eine Testklasse handelt; die Anwendung auf eine Nicht-Testklasse hat daher keine Auswirkung.</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
         <target state="translated">Das Attribut '{0}', das von "ConditionBaseAttribute" abgeleitet wird, darf nur für Klassen verwendet werden, die mit "TestClassAttribute" markiert sind.</target>
@@ -1053,6 +1362,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Verwenden Sie „CooperativeCancellation = true“ mit „[Timeout]“.</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
+      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
+        <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
+        <target state="translated">MSTest ignoriert '[DeploymentItem]', wenn es außerhalb einer Testklasse oder Testmethode angewendet wird.</target>
+        <note>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</note>
+      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">„[DeploymentItem]“ kann nur für die Test class oder Testmethode angegeben werden.</target>
@@ -1062,6 +1376,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">„[DeploymentItem]“ kann nur für die Test class oder Testmethode angegeben werden.</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
+      </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
+        <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
+        <target state="translated">Testmethoden, die „File.Exists“ verwenden, um einen Test zu überspringen, bevor dieselbe ausführbare Datei mit „Process.Start“ gestartet wird, sollten stattdessen das Attribut „[ExecutableCondition]“ verwenden. Dieses Attribut stellt eine deklarative und auffindbare Toolanforderung bereit und meldet eine frühe Rückgabe als übersprungenen Test anstelle eines bestandenen Tests.</target>
+        <note>{Locked="File.Exists"}{Locked="Process.Start"}{Locked="[ExecutableCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
+        <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
+        <target state="translated">Verwenden Sie das Attribut „[ExecutableCondition]“, anstatt vor dem Starten auf die ausführbare Datei „{0}“ zu prüfen.</target>
+        <note>{0} is the executable path. {Locked="[ExecutableCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
+        <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
+        <target state="translated">Verwenden Sie das Attribut „[ExecutableCondition]“ anstelle von „File.Exists“-Überprüfungen vor „Process.Start“</target>
+        <note>{Locked="[ExecutableCondition]"}{Locked="File.Exists"}{Locked="Process.Start"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
@@ -1078,6 +1407,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Parallelisierung von Tests explizit aktivieren oder deaktivieren</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsDescription">
+        <source>Specialized assertion methods improve readability and provide more precise failure diagnostics.</source>
+        <target state="translated">Spezialisierte Assertionsmethoden verbessern die Lesbarkeit und bieten eine genauere Fehlerdiagnose.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
         <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
         <target state="translated">Verwenden Sie "Assert.{0}" anstelle von "Assert.{1}".</target>
@@ -1087,6 +1421,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Use proper 'Assert' methods</source>
         <target state="translated">Geeignete Assert-Methoden verwenden</target>
         <note>{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodDescription">
+        <source>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</source>
+        <target state="translated">Wiederholungsattribute haben keine Auswirkungen auf Methoden oder Klassen, die MSTest nicht als Tests erkennt.</target>
+        <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
@@ -1216,7 +1555,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
         <target state="translated">Test class müssen einen public Konstruktor haben, der entweder keine Parameter besitzt oder genau einen Parameter vom Typ TestContext akzeptiert. So kann das Testframework die Test class korrekt instanziieren.</target>
-        <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
+        <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>
   </file>

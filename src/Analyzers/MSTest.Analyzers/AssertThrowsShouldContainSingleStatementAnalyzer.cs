@@ -100,7 +100,7 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzer : Diagnosti
             // Skip implicit return/labeled operations.
             // Implicit returns don't represent user code.
             // Implicit labeled operations seem to be created for lambdas only under VB. But we don't do a language check.
-            // TODO: Should we bail-out for any implicit operation?
+            // It is unclear whether we should bail out for any implicit operation.
             if (operation is IReturnOperation or ILabeledOperation && operation.IsImplicit)
             {
                 continue;

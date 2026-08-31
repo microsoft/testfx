@@ -101,6 +101,56 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <target state="translated">Ślad debugowania:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">Sekcja konfiguracji „mstest:execution:dependencies” deklaruje zależności dla „{0}”, które nie pasują do żadnego testu w tym przebiegu. Są ignorowane.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">Łańcuch pod indeksem {0} w sekcji konfiguracji „mstest:execution:dependencies:chains” jest pusty i nie deklaruje żadnej zależności. Usuń go: łańcuch musi zawierać co najmniej dwa testy, aby określić kolejność.</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">Odwołanie do testu „{0}” w sekcji konfiguracji „mstest:execution:dependencies” jest nieprawidłowe. Użyj „Namespace.Class.Method” albo „Namespace.Class.*” dla każdego testu w klasie.</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">Sekcja konfiguracji 'mstest:execution:dependencies' deklaruje węzeł dla „{0}” bez wpisów „dependsOn”, więc nie ma to żadnego wpływu.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">Zależności między następującymi klasami testowymi nie mogą być zaplanowane przy równoległości na poziomie klasy, ponieważ klasy zależą od siebie nawzajem: {0}. Ich testy są uruchamiane sekwencyjnie, zgodnie z kolejnością zależności, więc zadeklarowana kolejność nadal jest zachowana. Użyj &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (lub [Parallelize(Scope = ExecutionScope.MethodLevel)]), aby zaplanować każdy test osobno i ponownie uruchomić je równolegle.</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">Wykryto cykl zależności między testami: {0}. Testów w cyklu nie można uporządkować i są zgłaszane jako niezaliczone. Usuń jedną z deklaracji zależności, aby przerwać cykl.</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">Test został pominięty, ponieważ zależy od „{0}”, który nie został zaliczony.</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">Test „{0}” deklaruje zależność od „{1}”, która nie pasuje do żadnego testu w tym źródle testów. Zależności są rozwiązywane w ramach jednego źródła, więc cel w innym zestawie testów nie jest obsługiwany. Zależność jest ignorowana.</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">Problem z wdrożeniem przebiegu testu: nie można załadować zestawu lub modułu „{0}”. Przyczyna: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">Problem wdrażania przebiegu testu: nieprawidłowy element wdrożenia: „{0}”: katalog wyjściowy „{1}” określa element do wdrożenia poza głównym katalogiem wdrożenia. Taka sytuacja jest niedozwolona.</target>
@@ -117,9 +167,9 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problem wdrażania przebiegu testu: nie można skopiować pliku „{0}” do „{1}”: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="translated">Problem wdrażania przebiegu testu: nie można skopiować pliku „{0}” do „{1}”: {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -228,6 +278,26 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <target state="translated">Znaleziono dwa typy powodujące konflikt dla parametru ogólnego „{0}”. Typy powodujące konflikt to „{1}” i „{2}”.</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">Metoda globalnego czyszczenia testów „{0}.{1}” przekroczyła limit czasu po {2}ms</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">Metoda globalnego czyszczenia testów „{0}.{1}” została anulowana</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">Globalna metoda inicjowania testu „{0}.{1}” przekroczyła limit czasu po {2}ms</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">Globalna metoda inicjowania testu „{0}.{1}” została anulowana</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">Określono nieprawidłową wartość „{0}” dla właściwości „Scope”. Obsługiwane zakresy to {1}.</target>
@@ -237,6 +307,11 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">Określono nieprawidłową wartość „{0}” dla właściwości „Workers”. Wartość musi być nieujemną liczbą całkowitą.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">Narzędzie MSTestAdapter nie może przeanalizować pliku XML runsettings.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

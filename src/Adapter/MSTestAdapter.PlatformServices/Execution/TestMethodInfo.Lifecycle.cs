@@ -260,7 +260,15 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
-        return await InvokeFixtureMethodAsync(
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.TestInitialize,
+                "test_initialize",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
+
+        TestFailedException? result = await InvokeFixtureMethodAsync(
             methodInfo,
             classInstance,
             arguments: null,
@@ -268,6 +276,13 @@ internal partial class TestMethodInfo
             timeoutTokenSource,
             Resource.TestInitializeWasCancelled,
             Resource.TestInitializeTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
+
+        return result;
     }
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
@@ -277,8 +292,8 @@ internal partial class TestMethodInfo
             arguments: [TestContext],
             timeoutInfo,
             timeoutTokenSource,
-            Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut).ConfigureAwait(false);
+            Resource.GlobalTestInitializeWasCancelled,
+            Resource.GlobalTestInitializeTimedOut).ConfigureAwait(false);
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
@@ -288,7 +303,15 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
-        return await InvokeFixtureMethodAsync(
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.TestCleanup,
+                "test_cleanup",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
+
+        TestFailedException? result = await InvokeFixtureMethodAsync(
             methodInfo,
             classInstance,
             arguments: null,
@@ -296,6 +319,13 @@ internal partial class TestMethodInfo
             timeoutTokenSource,
             Resource.TestCleanupWasCancelled,
             Resource.TestCleanupTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
+
+        return result;
     }
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
@@ -305,8 +335,8 @@ internal partial class TestMethodInfo
             arguments: [TestContext],
             timeoutInfo,
             timeoutTokenSource,
-            Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut).ConfigureAwait(false);
+            Resource.GlobalTestCleanupWasCancelled,
+            Resource.GlobalTestCleanupTimedOut).ConfigureAwait(false);
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeFixtureMethodAsync(
         MethodInfo methodInfo,

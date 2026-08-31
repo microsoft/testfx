@@ -8,11 +8,22 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
-    <OutputType>Exe</OutputType>
+    <OutputType Condition=" '$(UseWinUI)' != 'true' ">Exe</OutputType>
+    <OutputType Condition=" '$(UseWinUI)' == 'true' AND '$(OutputType)' == 'Library' ">Exe</OutputType>
     <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
     <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>
     <TestingPlatformDotnetTestSupport Condition=" '$(TestingPlatformDotnetTestSupport)' == '' AND '$(_SupportsGlobalJsonTestRunner)' != 'true' ">true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
+
+  <Target Name="_MSTestSDKConfigureWinUIEntryPoint"
+          BeforeTargets="_CalculateGenerateTestingPlatformEntryPoint"
+          Condition=" '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '@(ApplicationDefinition)' != '' ">
+    <PropertyGroup>
+      <!-- A self-hosted WinUI app owns Main through ApplicationDefinition but still needs the reusable MTP runner helper. -->
+      <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">false</GenerateTestingPlatformEntryPoint>
+      <GenerateTestingPlatformApplicationHelper Condition=" '$(GenerateTestingPlatformApplicationHelper)' == '' ">true</GenerateTestingPlatformApplicationHelper>
+    </PropertyGroup>
+  </Target>
 
   <Target Name="_MSTestSDKValidateTestingExtensionsProfile" BeforeTargets="Build">
     <Error Condition=" '$(TestingExtensionsProfile)' != 'Default' and '$(TestingExtensionsProfile)' != 'AllMicrosoft' and '$(TestingExtensionsProfile)' != 'None' " Text="Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'." />
@@ -25,6 +36,12 @@
     <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsTrxReport>
     <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
 
+    <!-- Packaged WinUI applications must be registered and activated by AUMID. -->
+    <MicrosoftTestingExtensionsPackagedAppVersion Condition=" '$(MicrosoftTestingExtensionsPackagedAppVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsPackagedAppVersion>
+    <EnableMicrosoftTestingExtensionsPackagedApp
+      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None' ">true</EnableMicrosoftTestingExtensionsPackagedApp>
+    <EnableMicrosoftTestingExtensionsPackagedApp Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' ">false</EnableMicrosoftTestingExtensionsPackagedApp>
+
     <!-- MS Code Coverage -->
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != 'false' and '$(TestingExtensionsProfile)' == 'Default' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
@@ -33,6 +50,14 @@
 
   <ItemGroup>
     <AssemblyMetadata Include="MSTest.Extension.Uid" Value="MSTest.Sdk" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(IsTestApplication)' == 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true' ">
+    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsPackagedAppVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.PackagedApp" Version="$(MicrosoftTestingExtensionsPackagedAppVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
 </Project>

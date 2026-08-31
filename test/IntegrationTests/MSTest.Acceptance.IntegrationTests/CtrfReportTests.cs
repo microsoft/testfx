@@ -102,3 +102,94 @@ public class UnitTest1
 
     public TestContext TestContext { get; set; } = null!;
 }
+
+[TestClass]
+[DoNotParallelize]
+public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfReportRetryAttributeTests.TestAssetFixture>
+{
+    [TestMethod]
+    public async Task CtrfReport_WithMSTestRetryAttribute_MarksRetriedTestAsFlaky()
+    {
+        string fileName = Guid.NewGuid().ToString("N") + ".ctrf.json";
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename {fileName}",
+            cancellationToken: TestContext.CancellationToken);
+
+        // The retried test ends up passing, so the run succeeds.
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        string ctrfFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
+        string ctrfContent = File.ReadAllText(ctrfFile);
+
+        // One logical test, collapsed from its two explicitly tagged attempts, counted once and reported as flaky.
+        Assert.Contains(@"""tests"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""passed"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""failed"": 0", ctrfContent, ctrfContent);
+        Assert.Contains(@"""flaky"": 1", ctrfContent, ctrfContent);
+
+        // The per-test entry carries the earlier failed attempt.
+        Assert.Contains(@"""retries"": 1", ctrfContent, ctrfContent);
+        Assert.Contains(@"""retryAttempts""", ctrfContent, ctrfContent);
+        Assert.Contains(@"""flaky"": true", ctrfContent, ctrfContent);
+        Assert.Contains("Failing on the first attempt", ctrfContent, ctrfContent);
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "MSTestCtrfReportRetry";
+
+        public string TargetAssetPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+        private const string SourceCode = """
+#file MSTestCtrfReportRetry.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestCtrfReportRetry;
+
+[TestClass]
+public class UnitTest1
+{
+    private static int _attempts;
+
+    [TestMethod]
+    [Retry(3)]
+    public void FlakyTest()
+    {
+        _attempts++;
+        if (_attempts <= 1)
+        {
+            Assert.Fail("Failing on the first attempt");
+        }
+    }
+}
+""";
+    }
+
+    public TestContext TestContext { get; set; } = null!;
+}

@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMSTestFromSource>true</UseMSTestFromSource>
+    <!-- TestContext properties are assigned by MSTest after construction. Building against the
+         source framework exposes their nullability and otherwise reports CS8618 for existing tests. -->
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
     <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
@@ -19,8 +23,8 @@
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceAssert.cs" Link="Helpers\AcceptanceAssert.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="Helpers\AcceptanceFixture.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceTestBase.cs" Link="Helpers\AcceptanceTestBase.cs" />
+    <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\BinlogReader.cs" Link="Helpers\BinlogReader.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
-    <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\VSTestConsoleLocator.cs" Link="Helpers\VSTestConsoleLocator.cs" />
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="Helpers\RootFinder.cs" />
   </ItemGroup>
 
@@ -39,32 +43,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
-  </ItemGroup>
-
-  <!--
-    Dependabot anchors for the packages bundled by MSTest.Sdk (Microsoft.Playwright.MSTest.v4,
-    Aspire.Hosting.Testing). These are baked into the shipped SDK templates (Sdk/Features/*.targets)
-    and are otherwise referenced only there (which Dependabot doesn't restore), so their Central
-    Package Management PackageVersion entries in Directory.Packages.props are "orphans" that
-    Dependabot ignores unless a project references them.
-
-    The PackageReference (with ExcludeAssets="all") is the Dependabot ANCHOR: Dependabot reads the
-    PackageReference XML node to discover the dependency and bump its CPM PackageVersion.
-    ExcludeAssets="all" only stops the package's assets (compile/runtime/build, e.g. Playwright's
-    browser install) from flowing into this test project - it does NOT hide the reference from
-    Dependabot. A PackageDownload does NOT work as the anchor: Dependabot does not read
-    PackageDownload items at all (dependabot/dependabot-core#2502). Using PackageDownload as the
-    anchor is exactly why Playwright silently stopped updating - see #9362 / #9452.
-
-    Dependabot only bumps the literal PackageVersion in Directory.Packages.props, not the matching
-    *Version property the build consumes; the _ValidateBundledSdkFeatureVersions target in
-    Directory.Build.targets fails the build if the two drift apart, so a maintainer reconciles the
-    property in the Dependabot PR.
-  -->
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" ExcludeAssets="all" />
-    <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
+    <!-- The MTP server-mode client under test (P4). Referenced through the `serverclient` extern alias so
+         its internal TestNode/TestNodeUpdateMessage (same namespaces as the platform's public types) stay
+         out of the global namespace and never clash in the non-aliased files of this assembly. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerMode.Client.Sources\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" Aliases="serverclient" />
   </ItemGroup>
 
   <!-- Packages needed to stage nupkgs for the generated test assets (see

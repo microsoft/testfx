@@ -259,4 +259,41 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenDerivedTestClassAttributeAndDispose_Diagnostic()
+    {
+        // Custom attributes that inherit from [TestClass] should also trigger the diagnostic.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestClassAttribute : TestClassAttribute { }
+
+            [CustomTestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void [|Dispose|]()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestClassAttribute : TestClassAttribute { }
+
+            [CustomTestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

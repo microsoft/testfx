@@ -54,11 +54,9 @@
   <PropertyGroup>
     <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
     <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides MSBuild integration of the platform, its extensions and configuration files.
 
-This package provides MSBuild integration of the platform, its extensions and configuration files.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->
@@ -101,10 +99,10 @@ This package provides MSBuild integration of the platform, its extensions and co
     </ItemGroup>
 
     <Message Text="MSBuildAssetsBuildTargeting tests: @(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildAssetsBuildTargeting)" DestinationFiles="@(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTargeting)" DestinationFiles="@(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
 
     <Message Text="MSBuildAssetsBuildTransitive tests: @(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildAssetsBuildTransitive)" DestinationFiles="@(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTransitive)" DestinationFiles="@(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
 
     <Message Text="MSBuildAssetsBuild tests: @(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildAssetsBuild)" DestinationFiles="@(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />

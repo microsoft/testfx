@@ -511,6 +511,15 @@ public class ReflectionOperationsTests : TestContainer
         action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
     }
 
+    public void GetAttributesShouldValidateProviderEagerlyWithoutEnumerating()
+    {
+        // GetAttributes resolves the attribute array eagerly and only defers the filtering, so
+        // argument validation surfaces at call time rather than on the first MoveNext.
+        var rh = new ReflectionOperations();
+        Action action = () => _ = rh.GetAttributes<DummyAAttribute>(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
+    }
+
     public void GetCustomAttributesCachedShouldThrowWhenProviderIsNull()
     {
         var rh = new ReflectionOperations();

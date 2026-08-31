@@ -1,7 +1,7 @@
 # Test + publish steps shared by the Linux and macOS jobs in azure-pipelines.yml.
 #
 # Assumes the consuming job declares:
-#   - the matrix variable `_BuildConfig` (Debug or Release)
+#   - the matrix variable `_BuildConfig` (Release)
 #   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
 parameters:
 - name: osName
@@ -9,6 +9,17 @@ parameters:
   values:
   - Linux
   - MacOS
+# Shell trailer appended (with an explicit separating space) to the `dotnet test` command below.
+# Defaults to empty so Linux fails the job (and thus the run) on any test failure, keeping it a hard PR
+# blocker. The macOS job passes $(_MacOSNonBlockingTrailer) ("|| { ... }"), which swallows the exit code
+# ONLY on PR runs (BUILD_REASON = PullRequest) so a macOS test failure keeps the overall run "Succeeded" —
+# the only way to make macOS non-blocking, because job/step-level continueOnError only produces
+# "PartiallySucceeded", which Azure Repos build-validation policies still treat as a block. macOS failures
+# remain visible via --report-azdo (Tests tab) and the published TestResults artifact. This only converts
+# exit codes; timeout/agent-loss/publish failures are not covered (see _MacOSNonBlockingTrailer).
+- name: testFailureTrailer
+  type: string
+  default: ''
 
 steps:
 # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -20,10 +31,10 @@ steps:
 # by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
 # output is buffered into a per-module .log file and only surfaced on failure, so no live progress
 # is visible during long-running test sessions.
-- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false ${{ parameters.testFailureTrailer }}
   name: Test
   displayName: Test
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
   env:
     # Expose the build's OAuth token so the report-azdo history options (slow-test-history / flaky-history
     # injected by test/Directory.Build.targets) can query this pipeline's own test-result history. Secret
@@ -31,42 +42,45 @@ steps:
     # receive the secret, so the history service simply no-ops there; trusted branch builds run it end-to-end.
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-# Integration tests are redundant in Release—they spawn child processes that already cover
-# both Debug and Release configurations. Use --test-modules to run only unit tests.
-#
-# --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
-# any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
-# options that makes sense in Release. The OS-agnostic report/dump flags (TRX + CTRF + JUnit +
-# AzDO + hangdump) come from the $(_ReleaseUnitTestReportArgs) variable defined in azure-pipelines.yml
-# (the pipeline that consumes this template) so the Windows and Linux/MacOS commands stay in sync;
-# see that variable for the per-flag documentation. Only the test-module glob, --results-directory,
-# and --diagnostic-output-directory are inlined here because they differ per OS (path separators +
-# .exe vs .dll).
-# We intentionally do NOT pass:
-#   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
-#     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
-#     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs).
-#     Skipped here too for cross-platform parity with the Windows script (mixed net4x+netcoreapp glob).
-#   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
-#     Azure DevOps" steps in azure-pipelines.yml), so collecting coverage in Release would just
-#     write unused .coverage files.
-- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
-  name: TestRelease
-  displayName: Test (unit tests only)
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
-  env:
-    # Expose the build's OAuth token so the report-azdo history options (slow-test-history / flaky-history in
-    # $(_ReleaseUnitTestReportArgs)) can query this pipeline's own test-result history. Secret variables are
-    # not auto-exposed to scripts, so the explicit mapping is required. Fork PR builds don't receive the
-    # secret, so the history service simply no-ops there; trusted branch builds run it end-to-end.
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+# artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
+# PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the tests run
+# therefore reported one real problem as two failed steps, the way the official build did in
+# https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. This template is shared by the Linux
+# and MacOS jobs, so the probe covers both. When the tests did write results they are published exactly as
+# before, including on a failed run, which is why this uses always().
+- pwsh: |
+    $testResults = Join-Path '$(Build.SourcesDirectory)' 'artifacts/TestResults/$(_BuildConfig)'
+    $hasTestResults = 'false'
+    if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
+    Write-Host "Test results under '$testResults': $hasTestResults"
+    Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+  displayName: 'Check for Test Results folders'
+  condition: always()
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Test Results folders'
   inputs:
     PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
     ArtifactName: TestResults_${{ parameters.osName }}_$(_BuildConfig)_Attempt$(System.JobAttempt)
-  condition: always()
+  condition: and(always(), eq(variables.HasTestResults, 'true'))
+
+# The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and CopyFiles@2
+# hard-fails when SourceFolder does not exist. A Test failure early enough to skip the suite therefore
+# reported one real problem as three failed steps: Test, Copy binlogs, and Publish integration tests binlogs
+# all failed in https://dev.azure.com/dnceng/internal/_build/results?buildId=3045544. Probe for the binlogs so
+# both steps skip when there are none. When the suite did produce binlogs they are copied and published
+# exactly as before, including on a failed run, which is why these use always().
+- pwsh: |
+    $testsuite = Join-Path '$(Build.SourcesDirectory)' 'artifacts/tmp/$(_BuildConfig)/testsuite'
+    $hasBinlogs = 'false'
+    if (Test-Path -LiteralPath $testsuite -PathType Container) {
+      $binlog = Get-ChildItem -LiteralPath $testsuite -Filter '*.binlog' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+      if ($null -ne $binlog) { $hasBinlogs = 'true' }
+    }
+    Write-Host "Integration tests binlogs under '$testsuite': $hasBinlogs"
+    Write-Host "##vso[task.setvariable variable=HasIntegrationTestBinlogs]$hasBinlogs"
+  displayName: 'Check for integration tests binlogs'
+  condition: and(always(), eq(variables._BuildConfig, 'Release'))
 
 - task: CopyFiles@2
   displayName: 'Copy binlogs'
@@ -75,11 +89,11 @@ steps:
     Contents: |
       **/*.binlog
     TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-  condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(always(), eq(variables._BuildConfig, 'Release'), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish integration tests binlogs'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
     ArtifactName: Integration_Tests_${{ parameters.osName }}_Binlogs_$(_BuildConfig)
-  condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(always(), eq(variables._BuildConfig, 'Release'), eq(variables.HasIntegrationTestBinlogs, 'true'))

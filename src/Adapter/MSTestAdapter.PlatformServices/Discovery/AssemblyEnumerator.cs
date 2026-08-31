@@ -70,6 +70,16 @@ internal class AssemblyEnumerator
     /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <returns>A collection of Test Elements.</returns>
     internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
+        => EnumerateAssembly(assemblyFileName, mustSerialize, useGeneratedDescriptors: false);
+
+    /// <summary>
+    /// Enumerates through all types in the assembly in search of valid test methods.
+    /// </summary>
+    /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
+    /// <param name="useGeneratedDescriptors">Whether native MTP discovery may consume complete source-generated descriptors.</param>
+    /// <returns>A collection of Test Elements.</returns>
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -97,7 +107,7 @@ internal class AssemblyEnumerator
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, mustSerialize);
+                dataSourcesUnfoldingStrategy, mustSerialize, useGeneratedDescriptors);
             tests.AddRange(testsInType);
         }
 
@@ -161,7 +171,8 @@ internal class AssemblyEnumerator
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        bool mustSerialize)
+        bool mustSerialize,
+        bool useGeneratedDescriptors)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -170,7 +181,9 @@ internal class AssemblyEnumerator
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
-            List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
+            List<UnitTestElement>? unitTestCases = useGeneratedDescriptors
+                ? testTypeEnumerator.Enumerate(warningMessages, useGeneratedDescriptors: true)
+                : testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
             {
@@ -247,7 +260,7 @@ internal class AssemblyEnumerator
                 isDataDriven = true;
                 if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
-                    // TODO: Improve multi-source design!
+                    // The multi-source design could be improved.
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
                     // we will run all sources from the given method so we need to bail-out "globally".
                     return false;

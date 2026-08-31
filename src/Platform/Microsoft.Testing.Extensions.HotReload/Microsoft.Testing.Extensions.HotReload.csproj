@@ -15,11 +15,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[This package provides extensions to Microsoft Testing Platform intended to extend base functionalities.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to provide Hot Reload support.
 
-This package extends Microsoft Testing Platform to provide Hot Reload support.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.IPC;
@@ -81,6 +81,13 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.ExecutionMode] = nameof(HandshakeMessagePropertyNames.ExecutionMode),
             [HandshakeMessagePropertyNames.OrchestratorFeature] = nameof(HandshakeMessagePropertyNames.OrchestratorFeature),
             [HandshakeMessagePropertyNames.ServerControlPipeName] = nameof(HandshakeMessagePropertyNames.ServerControlPipeName),
+            [HandshakeMessagePropertyNames.AttemptNumber] = nameof(HandshakeMessagePropertyNames.AttemptNumber),
+            [HandshakeMessagePropertyNames.SupportedPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds),
+            [HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy),
+            [HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds),
+            [HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy),
+            [HandshakeMessagePropertyNames.RequiredPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds),
+            [HandshakeMessagePropertyNames.RequiredPostProcessingSupported] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -96,16 +103,24 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ExecutionMode), properties[10]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.OrchestratorFeature), properties[11]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlPipeName), properties[12]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds), properties[16]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
     }
 
     [TestMethod]
     public void HandshakeMessageExecutionModes_AreStable()
     {
-        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover];
+        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover, HandshakeMessageExecutionModes.Tool];
 
         Assert.AreEqual("run", modes[0]);
         Assert.AreEqual("help", modes[1]);
         Assert.AreEqual("discover", modes[2]);
+        Assert.AreEqual("tool", modes[3]);
     }
 
     [TestMethod]

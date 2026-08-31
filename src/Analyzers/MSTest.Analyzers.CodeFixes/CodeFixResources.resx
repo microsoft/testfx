@@ -132,6 +132,10 @@
     <value>Add '[TestClass]'</value>
     <comment>{Locked="[TestClass]"}</comment>
   </data>
+  <data name="AddResourceLockFix" xml:space="preserve">
+    <value>Add '[ResourceLock(WellKnownResources.{0})]'</value>
+    <comment>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</comment>
+  </data>
   <data name="ChangeStructToClassAndAddTestClassFix" xml:space="preserve">
     <value>Change to 'class' and add '[TestClass]'</value>
     <comment>{Locked="[TestClass]"}{Locked="class"}</comment>
@@ -241,6 +245,18 @@
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
     <value>Use '[OSCondition]' attribute</value>
     <comment>{Locked="[OSCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute</value>
+    <comment>{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckFix" xml:space="preserve">
+    <value>Use '[CICondition]' attribute</value>
+    <comment>{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckFix" xml:space="preserve">
+    <value>Use '[ExecutableCondition]' attribute</value>
+    <comment>{Locked="[ExecutableCondition]"}</comment>
   </data>
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>

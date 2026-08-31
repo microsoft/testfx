@@ -171,6 +171,10 @@ The type declaring these methods should also respect the following rules:
     <value>AssemblyInitialize methods should have valid layout</value>
     <comment>{Locked="AssemblyInitialize"}</comment>
   </data>
+  <data name="AssertionArgsShouldAvoidConditionalAccessDescription" xml:space="preserve">
+    <value>Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</value>
+    <comment>{Locked="null"}</comment>
+  </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessMessageFormat" xml:space="preserve">
     <value>Prefer adding an additional assertion that checks for null</value>
     <comment>{Locked="null"}</comment>
@@ -274,11 +278,18 @@ The type declaring these methods should also respect the following rules:
     <value>DataRow should be valid</value>
     <comment>{Locked="DataRow"}</comment>
   </data>
+  <data name="DoNotNegateBooleanAssertionDescription" xml:space="preserve">
+    <value>Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</value>
+  </data>
   <data name="DoNotNegateBooleanAssertionMessageFormat" xml:space="preserve">
     <value>Do not negate boolean assertions, instead use the opposite assertion</value>
   </data>
   <data name="DoNotNegateBooleanAssertionTitle" xml:space="preserve">
     <value>Do not negate boolean assertions</value>
+  </data>
+  <data name="DoNotStoreStaticTestContextAnalyzerDescription" xml:space="preserve">
+    <value>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</value>
+    <comment>{Locked="TestContext"}{Locked="'static'"}</comment>
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerMessageFormat" xml:space="preserve">
     <value>Do not store TestContext in a static member</value>
@@ -288,6 +299,10 @@ The type declaring these methods should also respect the following rules:
     <value>Do not store TestContext in a static member</value>
     <comment>{Locked="TestContext"}{Locked="static"}</comment>
   </data>
+  <data name="PreferAssertFailOverAlwaysFalseConditionsDescription" xml:space="preserve">
+    <value>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</value>
+    <comment>{Locked="'Assert.Fail'"}</comment>
+  </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</value>
     <comment>{0} is the assert method name. {Locked="Assert.Fail"}{Locked="Assert"}</comment>
@@ -295,6 +310,10 @@ The type declaring these methods should also respect the following rules:
   <data name="PreferAssertFailOverAlwaysFalseConditionsTitle" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing assert</value>
     <comment>{Locked="Assert.Fail"}</comment>
+  </data>
+  <data name="PreferConstructorOverTestInitializeDescription" xml:space="preserve">
+    <value>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</value>
+    <comment>{Locked="'readonly'"}{Locked="MSTEST0019"}</comment>
   </data>
   <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
@@ -304,6 +323,10 @@ The type declaring these methods should also respect the following rules:
     <value>Prefer constructors over TestInitialize methods</value>
     <comment>{Locked="TestInitialize"}</comment>
   </data>
+  <data name="PreferDisposeOverTestCleanupDescription" xml:space="preserve">
+    <value>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</value>
+    <comment>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</comment>
+  </data>
   <data name="PreferDisposeOverTestCleanupMessageFormat" xml:space="preserve">
     <value>Prefer 'Dispose' over TestCleanup methods</value>
     <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
@@ -312,6 +335,10 @@ The type declaring these methods should also respect the following rules:
     <value>Prefer 'Dispose' over TestCleanup methods</value>
     <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
+  <data name="PreferTestCleanupOverDisposeDescription" xml:space="preserve">
+    <value>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</value>
+    <comment>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</comment>
+  </data>
   <data name="PreferTestCleanupOverDisposeMessageFormat" xml:space="preserve">
     <value>Prefer TestCleanup over 'Dispose' methods</value>
     <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
@@ -319,6 +346,10 @@ The type declaring these methods should also respect the following rules:
   <data name="PreferTestCleanupOverDisposeTitle" xml:space="preserve">
     <value>Prefer TestCleanup over 'Dispose' methods</value>
     <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
+  </data>
+  <data name="PreferTestInitializeOverConstructorDescription" xml:space="preserve">
+    <value>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</value>
+    <comment>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</comment>
   </data>
   <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
@@ -479,6 +510,10 @@ The type declaring these methods should also respect the following rules:
     <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
     <comment>{Locked="AssemblyInitialize"}{Locked="ClassInitialize"}{Locked="TestContext"}{Locked="MSTest"}</comment>
   </data>
+  <data name="UseAttributeOnTestMethodAnalyzerDescription" xml:space="preserve">
+    <value>MSTest ignores these attributes outside a test context.</value>
+    <comment>{Locked="MSTest"}</comment>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
     <comment>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</comment>
@@ -520,6 +555,9 @@ The type declaring these methods should also respect the following rules:
   <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
     <comment>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}{Locked="System.ComponentModel.DescriptionAttribute"}</comment>
+  </data>
+  <data name="ReviewAlwaysTrueAssertConditionAnalyzerDescription" xml:space="preserve">
+    <value>An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</value>
   </data>
   <data name="ReviewAlwaysTrueAssertConditionAnalyzerTitle" xml:space="preserve">
     <value>Assertion condition is always true</value>
@@ -580,6 +618,10 @@ The type declaring these methods should also respect the following rules:
     <value>'[DynamicData]' data member '{0}.{1}' signature is invalid</value>
     <comment>{0} is the containing type name. {1} is the data member name. {Locked="[DynamicData]"}</comment>
   </data>
+  <data name="UseDeploymentItemWithTestMethodOrTestClassDescription" xml:space="preserve">
+    <value>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</value>
+    <comment>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</comment>
+  </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
     <comment>{Locked="[DeploymentItem]"}{Locked="class"}</comment>
@@ -602,6 +644,9 @@ The type declaring these methods should also respect the following rules:
   <data name="DoNotUseShadowingTitle" xml:space="preserve">
     <value>Do not use shadowing</value>
   </data>
+  <data name="UseProperAssertMethodsDescription" xml:space="preserve">
+    <value>Specialized assertion methods improve readability and provide more precise failure diagnostics.</value>
+  </data>
   <data name="UseProperAssertMethodsTitle" xml:space="preserve">
     <value>Use proper 'Assert' methods</value>
     <comment>{Locked="Assert"}</comment>
@@ -610,6 +655,10 @@ The type declaring these methods should also respect the following rules:
     <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
     <comment>{0} is the preferred assert method name. {1} is the current assert method name. {Locked="Assert"}</comment>
   </data>
+  <data name="StringAssertToAssertDescription" xml:space="preserve">
+    <value>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</value>
+    <comment>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</comment>
+  </data>
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'StringAssert'</value>
     <comment>{Locked="StringAssert"}{Locked="Assert"}</comment>
@@ -617,6 +666,10 @@ The type declaring these methods should also respect the following rules:
   <data name="StringAssertToAssertMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'StringAssert.{1}'</value>
     <comment>{0} is the preferred Assert method name. {1} is the current StringAssert method name. {Locked="StringAssert"}{Locked="Assert"}</comment>
+  </data>
+  <data name="CollectionAssertToAssertDescription" xml:space="preserve">
+    <value>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</value>
+    <comment>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</comment>
   </data>
   <data name="CollectionAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'CollectionAssert'</value>
@@ -678,6 +731,10 @@ The type declaring these methods should also respect the following rules:
     <value>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</value>
     <comment>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</comment>
   </data>
+  <data name="UseConditionBaseWithTestClassDescription" xml:space="preserve">
+    <value>When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</value>
+    <comment>{Locked="MSTest"}</comment>
+  </data>
   <data name="UseConditionBaseWithTestClassTitle" xml:space="preserve">
     <value>Use 'ConditionBaseAttribute' on test classes</value>
     <comment>{Locked="ConditionBaseAttribute"}</comment>
@@ -693,6 +750,10 @@ The type declaring these methods should also respect the following rules:
   <data name="DuplicateDataRowMessageFormat" xml:space="preserve">
     <value>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</value>
     <comment>{0} is the first duplicate attribute index. {1} is the second duplicate attribute index. {Locked="DataRow"}</comment>
+  </data>
+  <data name="UseRetryWithTestMethodDescription" xml:space="preserve">
+    <value>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</value>
+    <comment>{Locked="MSTest"}</comment>
   </data>
   <data name="UseRetryWithTestMethodTitle" xml:space="preserve">
     <value>Use retry attribute on test method or test class</value>
@@ -788,6 +849,10 @@ The type declaring these methods should also respect the following rules:
 -the class should not be generic.</value>
     <comment>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</comment>
   </data>
+  <data name="AvoidExplicitDynamicDataSourceTypeDescription" xml:space="preserve">
+    <value>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</value>
+    <comment>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</comment>
+  </data>
   <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
     <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
     <comment>{Locked="DynamicDataSourceType"}</comment>
@@ -796,6 +861,10 @@ The type declaring these methods should also respect the following rules:
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
     <comment>{Locked="DynamicDataSourceType"}</comment>
   </data>
+  <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription" xml:space="preserve">
+    <value>In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</value>
+    <comment>{Locked="MSTest 4"}</comment>
+  </data>
   <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle" xml:space="preserve">
     <value>TestMethodAttribute should set DisplayName correctly</value>
     <comment>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</comment>
@@ -803,6 +872,10 @@ The type declaring these methods should also respect the following rules:
   <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat" xml:space="preserve">
     <value>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</value>
     <comment>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</comment>
+  </data>
+  <data name="TestMethodAttributeShouldPropagateSourceInformationDescription" xml:space="preserve">
+    <value>Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</value>
+    <comment>{Locked="MSTest"}{Locked="Test Explorer"}</comment>
   </data>
   <data name="TestMethodAttributeShouldPropagateSourceInformationTitle" xml:space="preserve">
     <value>TestMethodAttribute derived class should propagate source information</value>
@@ -879,6 +952,42 @@ The type declaring these methods should also respect the following rules:
     <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
     <comment>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</comment>
   </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
+    <value>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle" xml:space="preserve">
+    <value>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat" xml:space="preserve">
+    <value>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription" xml:space="preserve">
+    <value>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</value>
+    <comment>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckTitle" xml:space="preserve">
+    <value>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</value>
+    <comment>{Locked="[ExecutableCondition]"}{Locked="File.Exists"}{Locked="Process.Start"}</comment>
+  </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat" xml:space="preserve">
+    <value>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</value>
+    <comment>{0} is the executable path. {Locked="[ExecutableCondition]"}</comment>
+  </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckDescription" xml:space="preserve">
+    <value>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</value>
+    <comment>{Locked="File.Exists"}{Locked="Process.Start"}{Locked="[ExecutableCondition]"}</comment>
+  </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>
   </data>
@@ -911,7 +1020,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="TestClassConstructorShouldBeValidDescription" xml:space="preserve">
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
-    <comment>{Locked="TestContext"}{Locked="public"}{Locked="class"}</comment>
+    <comment>{Locked="TestContext"}{Locked="public"}</comment>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsTitle" xml:space="preserve">
     <value>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</value>
@@ -935,7 +1044,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferAsyncAssertionDescription" xml:space="preserve">
     <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</value>
-    <comment>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</comment>
+    <comment>{Locked="GetAwaiter().GetResult()"}</comment>
   </data>
   <data name="IgnoreShouldHaveJustificationTitle" xml:space="preserve">
     <value>'[Ignore]' should specify a justification</value>
@@ -952,6 +1061,50 @@ The type declaring these methods should also respect the following rules:
   <data name="MemberConditionShouldBeValidTitle" xml:space="preserve">
     <value>'[MemberCondition]' arguments should be valid</value>
     <comment>{Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidTitle" xml:space="preserve">
+    <value>'[DependsOn]' arguments should be valid</value>
+    <comment>{Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidDescription" xml:space="preserve">
+    <value>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</value>
+    <comment>{Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_MethodNotFound" xml:space="preserve">
+    <value>'[DependsOn]' references method '{1}', which does not exist on type '{0}'</value>
+    <comment>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_NotATestMethod" xml:space="preserve">
+    <value>'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</value>
+    <comment>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_NotATestClass" xml:space="preserve">
+    <value>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</value>
+    <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_OtherAssembly" xml:space="preserve">
+    <value>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</value>
+    <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_AbstractTarget" xml:space="preserve">
+    <value>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</value>
+    <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_SelfReference" xml:space="preserve">
+    <value>'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</value>
+    <comment>{0} is the test method name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_Cycle" xml:space="preserve">
+    <value>'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</value>
+    <comment>{0} is the cycle path, for example 'MyTests.A &gt; MyTests.B &gt; MyTests.A'. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_NoEffect" xml:space="preserve">
+    <value>'[DependsOn]' has no effect because '{0}' is not a test method</value>
+    <comment>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_NoEffectOnClass" xml:space="preserve">
+    <value>'[DependsOn]' has no effect because discovery runs no test under '{0}'</value>
+    <comment>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</comment>
   </data>
   <data name="MemberConditionShouldBeValidDescription" xml:space="preserve">
     <value>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</value>
@@ -995,5 +1148,117 @@ The type declaring these methods should also respect the following rules:
   <data name="RedundantTestMethodDisplayNameDescription" xml:space="preserve">
     <value>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</value>
     <comment>{Locked="DisplayName"}</comment>
+  </data>
+  <data name="AssemblyFixtureProviderNotSupportedWithNativeAotTitle" xml:space="preserve">
+    <value>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</value>
+    <comment>{Locked="[AssemblyFixtureProvider]"}</comment>
+  </data>
+  <data name="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat" xml:space="preserve">
+    <value>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</value>
+    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</comment>
+  </data>
+  <data name="AssemblyFixtureProviderNotSupportedWithNativeAotDescription" xml:space="preserve">
+    <value>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</value>
+    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</comment>
+  </data>
+  <data name="PreferConstantForResourceLockTitle" xml:space="preserve">
+    <value>Prefer a named constant for the '[ResourceLock]' resource key</value>
+    <comment>{Locked="[ResourceLock]"}</comment>
+  </data>
+  <data name="PreferConstantForResourceLockMessageFormat" xml:space="preserve">
+    <value>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</value>
+    <comment>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</comment>
+  </data>
+  <data name="PreferConstantForResourceLockDescription" xml:space="preserve">
+    <value>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</value>
+    <comment>{Locked="[ResourceLock]"}</comment>
+  </data>
+  <data name="UndeclaredProcessGlobalStateMutationTitle" xml:space="preserve">
+    <value>Test mutating process-global state should declare a resource lock</value>
+  </data>
+  <data name="UndeclaredProcessGlobalStateMutationMessageFormat" xml:space="preserve">
+    <value>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</value>
+    <comment>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="UndeclaredProcessGlobalStateMutationDescription" xml:space="preserve">
+    <value>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</value>
+    <comment>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="CurrentDirectoryMutationUnderParallelizationTitle" xml:space="preserve">
+    <value>Avoid changing the current directory in a parallelized test</value>
+  </data>
+  <data name="CurrentDirectoryMutationUnderParallelizationMessageFormat" xml:space="preserve">
+    <value>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</value>
+    <comment>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="CurrentDirectoryMutationUnderParallelizationDescription" xml:space="preserve">
+    <value>The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</value>
+    <comment>{Locked="[ResourceLock]"}</comment>
+  </data>
+  <data name="CultureMutationUnderParallelizationTitle" xml:space="preserve">
+    <value>Avoid mutating process-wide culture in a parallelized test</value>
+  </data>
+  <data name="CultureMutationUnderParallelizationMessageFormat" xml:space="preserve">
+    <value>'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</value>
+    <comment>{0} is the mutated API (for example 'CultureInfo.DefaultThreadCurrentCulture'). {Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="CultureMutationUnderParallelizationDescription" xml:space="preserve">
+    <value>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</value>
+    <comment>{Locked="CultureInfo.DefaultThreadCurrentCulture"}{Locked="DefaultThreadCurrentUICulture"}{Locked="Thread.CurrentThread.CurrentCulture"}{Locked="CurrentUICulture"}{Locked="CultureInfo.CurrentCulture"}{Locked="AsyncLocal"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="SharedFileSystemPathInTestTitle" xml:space="preserve">
+    <value>Avoid hardcoded or shared filesystem paths in a parallelized test</value>
+  </data>
+  <data name="SharedFileSystemPathInTestMessageFormat" xml:space="preserve">
+    <value>The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</value>
+    <comment>{0} is the offending path literal. {Locked="TestContext.TestTempDirectory"}</comment>
+  </data>
+  <data name="SharedFileSystemPathInTestDescription" xml:space="preserve">
+    <value>Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</value>
+    <comment>{Locked="File.*"}{Locked="Directory.*"}{Locked="TestContext.TestTempDirectory"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidTitle" xml:space="preserve">
+    <value>'[TestFilterProvider]' should reference a valid test filter type</value>
+    <comment>{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidDescription" xml:space="preserve">
+    <value>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</value>
+    <comment>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Generic" xml:space="preserve">
+    <value>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable" xml:space="preserve">
+    <value>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter" xml:space="preserve">
+    <value>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor" xml:space="preserve">
+    <value>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Multiple" xml:space="preserve">
+    <value>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</value>
+    <comment>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Null" xml:space="preserve">
+    <value>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</value>
+    <comment>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</comment>
+  </data>
+  <data name="InheritedMemberFromDifferentMSTestVersionTitle" xml:space="preserve">
+    <value>A test class inherits a lifecycle or test method from a different MSTest version</value>
+    <comment>{Locked="MSTest"}</comment>
+  </data>
+  <data name="InheritedMemberFromDifferentMSTestVersionMessageFormat" xml:space="preserve">
+    <value>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' and, for custom attributes, the assembly that defines '[{2}]', against the same MSTest version as the test project.</value>
+    <comment>{0} is the inherited member name, {1} is the declaring base type name, {2} is the attribute name (for example TestInitialize), {3} is the MSTest framework assembly the attribute's type resolves to. {Locked="MSTest"}</comment>
+  </data>
+  <data name="InheritedMemberFromDifferentMSTestVersionDescription" xml:space="preserve">
+    <value>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</value>
+    <comment>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</comment>
   </data>
 </root>

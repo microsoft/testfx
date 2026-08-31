@@ -94,12 +94,12 @@ internal sealed partial class TypeCache
 
                     if (isValid && isGlobalTestInitialize)
                     {
-                        assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                        assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.GlobalTestInitialize)));
                     }
 
                     if (isValid && isGlobalTestCleanup)
                     {
-                        assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                        assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.GlobalTestCleanup)));
                     }
                 }
             }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -18,6 +18,17 @@ internal static class StackTraceSourceLocationResolver
     private const string DeterministicBuildRoot = "/_/";
 
     private static readonly char[] NewlineCharacters = ['\r', '\n'];
+
+    // Path containment must follow the running platform's filesystem semantics. Windows paths compare
+    // case-insensitively, but elsewhere '/tmp/Repo' and '/tmp/repo' are distinct directories, so an
+    // ignore-case containment test would accept a case-distinct sibling as being inside the workspace.
+    // Mirrors the PathComparison helper in the Azure DevOps extension, which is not linked into this shared
+    // file. Runtime check on purpose: this ships as netstandard2.0, so a compile-time '#if' would not reflect
+    // the platform the assembly actually runs on.
+    private static readonly StringComparison PathComparison =
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
     // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose 'code' starts
     // with any of these is treated as framework internals and skipped when looking for the user's call site to
@@ -100,28 +111,12 @@ internal static class StackTraceSourceLocationResolver
                 continue;
             }
 
-            string relativePath;
-            if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                relativePath = file.Substring(DeterministicBuildRoot.Length);
-            }
-            else if (file.StartsWith(repoRoot!, StringComparison.OrdinalIgnoreCase))
-            {
-                relativePath = file.Substring(repoRoot!.Length);
-            }
-            else
+            string? relativeNormalizedPath = TryMakeWorkspaceRelative(file, repoRoot, fileSystem);
+            if (relativeNormalizedPath is null)
             {
                 continue;
             }
 
-            string fullPath = Path.Combine(repoRoot!, relativePath);
-            if (!fileSystem.ExistFile(fullPath))
-            {
-                continue;
-            }
-
-            // Annotations expect a workspace-relative path with forward slashes.
-            string relativeNormalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Resolved source location '{relativeNormalizedPath}' (line {location.Value.LineNumber}).");
@@ -131,6 +126,134 @@ internal static class StackTraceSourceLocationResolver
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Turns an absolute (or deterministic-build) source file path into a workspace-relative, forward-slash
+    /// path suitable for a host annotation, or returns <see langword="null"/> when the file is outside
+    /// <paramref name="repoRoot"/> or does not exist on disk.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the stack-trace walk above and by callers that resolve a location from test-node metadata
+    /// (e.g. <c>TestFileLocationProperty</c>) rather than from an exception, so both paths relativize and
+    /// validate identically.
+    /// </remarks>
+    /// <param name="filePath">The absolute or deterministic-build source file path, or <see langword="null"/>.</param>
+    /// <param name="repoRoot">The repository root used to relativize absolute paths (should end with a separator), or <see langword="null"/>.</param>
+    /// <param name="fileSystem">File system used to verify the candidate file exists on disk.</param>
+    public static string? TryMakeWorkspaceRelative(string? filePath, string? repoRoot, IFileSystem fileSystem)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(filePath) || RoslynString.IsNullOrEmpty(repoRoot))
+        {
+            return null;
+        }
+
+        if (!TryGetFullPath(repoRoot!, out string canonicalRepoRoot))
+        {
+            return null;
+        }
+
+        canonicalRepoRoot = EnsureTrailingDirectorySeparator(canonicalRepoRoot);
+
+        string canonicalCandidate;
+        if (filePath!.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            string relativePath = filePath.Substring(DeterministicBuildRoot.Length);
+            if (!TryGetFullPath(canonicalRepoRoot, relativePath, out canonicalCandidate))
+            {
+                return null;
+            }
+        }
+        else
+        {
+            if (!TryIsPathRooted(filePath, out bool isPathRooted))
+            {
+                return null;
+            }
+
+            // A test framework may report a path that is already workspace-relative: TestFileLocationProperty
+            // does not require an absolute path, and the VSTest bridge copies TestCase.CodeFilePath verbatim.
+            // Resolve such a path against the workspace root rather than dropping it; the containment and
+            // existence checks below still reject traversal segments and files that are not on disk.
+            bool resolved = isPathRooted
+                ? TryGetFullPath(filePath, out canonicalCandidate)
+                : TryGetFullPath(canonicalRepoRoot, filePath, out canonicalCandidate);
+
+            if (!resolved)
+            {
+                return null;
+            }
+        }
+
+        if (!IsUnderDirectory(canonicalCandidate, canonicalRepoRoot) || !fileSystem.ExistFile(canonicalCandidate))
+        {
+            return null;
+        }
+
+        // Annotations expect a workspace-relative path with forward slashes.
+        return canonicalCandidate.Substring(canonicalRepoRoot.Length).Replace('\\', '/').TrimStart('/');
+    }
+
+    private static bool IsUnderDirectory(string path, string directory)
+        => path.StartsWith(directory, PathComparison);
+
+    private static string EnsureTrailingDirectorySeparator(string path)
+    {
+        char lastChar = path[path.Length - 1];
+        return lastChar == Path.DirectorySeparatorChar || lastChar == Path.AltDirectorySeparatorChar
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static bool TryIsPathRooted(string path, out bool isPathRooted)
+    {
+        try
+        {
+            isPathRooted = Path.IsPathRooted(path);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or System.Security.SecurityException)
+        {
+            isPathRooted = false;
+            return false;
+        }
+    }
+
+    private static bool TryGetFullPath(string path, out string fullPath)
+    {
+        try
+        {
+            fullPath = Path.GetFullPath(path);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or System.Security.SecurityException)
+        {
+            fullPath = string.Empty;
+            return false;
+        }
+    }
+
+    private static bool TryGetFullPath(string basePath, string relativePath, out string fullPath)
+    {
+        try
+        {
+            fullPath = Path.GetFullPath(Path.Combine(basePath, relativePath));
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or System.Security.SecurityException)
+        {
+            fullPath = string.Empty;
+            return false;
+        }
     }
 
     private static bool IsAssertionImplementationFrame(string code)

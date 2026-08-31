@@ -7,5 +7,5 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal interface ITestExecutionRequestFactory
 {
-    Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session);
+    Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session, CancellationToken cancellationToken);
 }

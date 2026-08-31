@@ -165,6 +165,25 @@
   <data name="SkippedLowercase" xml:space="preserve">
     <value>skipped</value>
   </data>
+  <data name="SlowestTests" xml:space="preserve">
+    <value>Slowest tests:</value>
+  </data>
+  <data name="FlakyTests" xml:space="preserve">
+    <value>Flaky tests:</value>
+    <comment>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</comment>
+  </data>
+  <data name="FlakyLowercase" xml:space="preserve">
+    <value>flaky: {0} (passed after retry)</value>
+    <comment>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</comment>
+  </data>
+  <data name="FlakyTransition" xml:space="preserve">
+    <value>failed -&gt; passed</value>
+    <comment>Describes the outcome change of a flaky test, shown next to its name in the 'Flaky tests:' section. The arrow reads left (first outcome) to right (final outcome).</comment>
+  </data>
+  <data name="FlakyAttempts" xml:space="preserve">
+    <value>{0} attempts</value>
+    <comment>{0} is the total number of times the test ran (first run plus retries), shown next to a flaky test's name.</comment>
+  </data>
   <data name="TotalLowercase" xml:space="preserve">
     <value>total</value>
   </data>
@@ -237,13 +256,13 @@ This option takes precedence over the deprecated --no-progress flag.</value>
     <value>Terminal test reporter</value>
   </data>
   <data name="TerminalOutputOptionDescription" xml:space="preserve">
-    <value>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
-    <comment>{Locked="Normal"}{Locked="Detailed"}</comment>
+    <value>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</value>
+    <comment>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</comment>
   </data>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
-    <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
-    <comment>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</comment>
+    <value>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</value>
+    <comment>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</comment>
   </data>
   <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
     <value>Determines when to show captured standard output of a test.
@@ -258,6 +277,41 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   <data name="TerminalShowOutputOptionInvalidArgument" xml:space="preserve">
     <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
     <comment>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</comment>
+  </data>
+  <data name="TerminalShowSlowestTestsOptionDescription" xml:space="preserve">
+    <value>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</value>
+  </data>
+  <data name="TerminalShowSlowestTestsOptionInvalidArgument" xml:space="preserve">
+    <value>--show-slowest-tests expects a single positive integer parameter.</value>
+    <comment>{Locked="--show-slowest-tests"}</comment>
+  </data>
+  <data name="TerminalShowFlakyTestsOptionDescription" xml:space="preserve">
+    <value>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</value>
+    <comment>Do not localize the values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</comment>
+  </data>
+  <data name="TerminalShowFlakyTestsOptionInvalidArgument" xml:space="preserve">
+    <value>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</value>
+    <comment>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionDescription" xml:space="preserve">
+    <value>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</value>
+    <comment>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionUnknownValueInvalidArgument" xml:space="preserve">
+    <value>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
+    <comment>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionEmptySelectionInvalidArgument" xml:space="preserve">
+    <value>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
+    <comment>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument" xml:space="preserve">
+    <value>--show-test-results value 'all' or 'none' cannot be combined with any other value.</value>
+    <comment>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</comment>
   </data>
   <data name="StandardError" xml:space="preserve">
     <value>Error output</value>
@@ -299,7 +353,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   </data>
   <data name="Retried" xml:space="preserve">
     <value>retried</value>
-    <comment>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</comment>
+    <comment>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</comment>
+  </data>
+  <data name="RetriedTestsAndRuns" xml:space="preserve">
+    <value>{0} test(s), {1} extra run(s)</value>
+    <comment>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</comment>
   </data>
   <data name="RunningTestsFrom" xml:space="preserve">
     <value>Running tests from</value>
@@ -324,5 +382,125 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   <data name="DiscoveredTestsSummary" xml:space="preserve">
     <value>Discovered {0} tests in {1} assemblies.</value>
     <comment>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</comment>
+  </data>
+  <data name="CodeCoverageSummary" xml:space="preserve">
+    <value>Code Coverage Summary:</value>
+    <comment>Heading printed before the per-scope code coverage percentages in the run summary.</comment>
+  </data>
+  <data name="CoverageThresholdResults" xml:space="preserve">
+    <value>Coverage Threshold Results:</value>
+    <comment>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</comment>
+  </data>
+  <data name="CoverageThresholdPassed" xml:space="preserve">
+    <value>{0}% &gt;= {1}% threshold</value>
+    <comment>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
+  </data>
+  <data name="CoverageThresholdFailed" xml:space="preserve">
+    <value>{0}% &lt; {1}% threshold</value>
+    <comment>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
+  </data>
+  <data name="CoverageThresholdNoDataFailed" xml:space="preserve">
+    <value>No coverable data (failed by policy)</value>
+    <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</comment>
+  </data>
+  <data name="CoverageThresholdNoDataPassed" xml:space="preserve">
+    <value>No coverable data (passed by policy)</value>
+    <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</comment>
+  </data>
+  <data name="CoverageScopeOverall" xml:space="preserve">
+    <value>Total</value>
+    <comment>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</comment>
+  </data>
+  <data name="CoverageScopeModule" xml:space="preserve">
+    <value>Module</value>
+    <comment>Label for the module scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeAssembly" xml:space="preserve">
+    <value>Assembly</value>
+    <comment>Label for the assembly scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeNamespace" xml:space="preserve">
+    <value>Namespace</value>
+    <comment>Label for the namespace scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeType" xml:space="preserve">
+    <value>Type</value>
+    <comment>Label for the type scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeFile" xml:space="preserve">
+    <value>File</value>
+    <comment>Label for the file scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageNoData" xml:space="preserve">
+    <value>N/A</value>
+    <comment>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</comment>
+  </data>
+  <data name="CoverageMetricLine" xml:space="preserve">
+    <value>Line</value>
+    <comment>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricStatement" xml:space="preserve">
+    <value>Statement</value>
+    <comment>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricBranch" xml:space="preserve">
+    <value>Branch</value>
+    <comment>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricMethod" xml:space="preserve">
+    <value>Method</value>
+    <comment>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricWithProducer" xml:space="preserve">
+    <value>{0} [{1}]</value>
+    <comment>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</comment>
+  </data>
+  <data name="CoverageMetricFunction" xml:space="preserve">
+    <value>Function</value>
+    <comment>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricBlock" xml:space="preserve">
+    <value>Block</value>
+    <comment>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricInstruction" xml:space="preserve">
+    <value>Instruction</value>
+    <comment>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricRegion" xml:space="preserve">
+    <value>Region</value>
+    <comment>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricClass" xml:space="preserve">
+    <value>Class</value>
+    <comment>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricCondition" xml:space="preserve">
+    <value>Condition</value>
+    <comment>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricComplexity" xml:space="preserve">
+    <value>Complexity</value>
+    <comment>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</comment>
+  </data>
+  <data name="CoverageAggregationTotal" xml:space="preserve">
+    <value>Total</value>
+    <comment>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</comment>
+  </data>
+  <data name="CoverageAggregationMinimum" xml:space="preserve">
+    <value>Minimum</value>
+    <comment>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</comment>
+  </data>
+  <data name="CoverageAggregationAverage" xml:space="preserve">
+    <value>Average</value>
+    <comment>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</comment>
+  </data>
+  <data name="CoverageAggregationMaximum" xml:space="preserve">
+    <value>Maximum</value>
+    <comment>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</comment>
+  </data>
+  <data name="CoverageAggregationOver" xml:space="preserve">
+    <value>{0} over {1}</value>
+    <comment>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</comment>
   </data>
 </root>

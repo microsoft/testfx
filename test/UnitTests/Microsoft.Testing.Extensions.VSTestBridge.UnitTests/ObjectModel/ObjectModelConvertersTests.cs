@@ -19,6 +19,11 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 public sealed class ObjectModelConvertersTests
 {
     private static readonly IClientInfo ClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(IsStateful: false));
+    private static readonly TestProperty OriginalExecutorUriProperty = TestProperty.Register(
+        VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
+        VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
+        typeof(Uri),
+        typeof(TestCase));
 
     [TestMethod]
     [DataRow(true)]
@@ -289,6 +294,58 @@ public sealed class ObjectModelConvertersTests
         StandardErrorProperty[] standardErrorProperties = [.. testNode.Properties.OfType<StandardErrorProperty>()];
         Assert.HasCount(1, standardErrorProperties);
         Assert.AreEqual($"message1{Environment.NewLine}message2", standardErrorProperties[0].StandardError);
+    }
+
+    [TestMethod]
+    public void FixUpTestCase_WhenOriginalExecutorUriPropertyExists_DoesNotOverwriteIt()
+    {
+        var originalExecutorUri = new Uri("executor://original");
+        var testCase = new TestCase("SomeFqn", new("executor://current"), "source.cs");
+        testCase.SetPropertyValue(OriginalExecutorUriProperty, originalExecutorUri);
+
+        testCase.FixUpTestCase();
+
+        Assert.AreEqual(originalExecutorUri, testCase.GetPropertyValue(OriginalExecutorUriProperty));
+    }
+
+    [TestMethod]
+    public void FixUpTestCase_WhenOriginalExecutorUriPropertyIsMissing_CapturesItExactlyOnce()
+    {
+        var originalExecutorUri = new Uri("executor://original");
+        var testCase = new TestCase("SomeFqn", originalExecutorUri, "source.cs");
+
+        testCase.FixUpTestCase();
+        testCase.FixUpTestCase();
+
+        KeyValuePair<TestProperty, object?>[] originalExecutorUriProperties =
+            [.. testCase.GetProperties().Where(static property => property.Key.Id == VSTestTestNodeProperties.OriginalExecutorUriPropertyName)];
+        Assert.HasCount(1, originalExecutorUriProperties);
+        Assert.AreEqual(originalExecutorUri, originalExecutorUriProperties[0].Value);
+    }
+
+    [TestMethod]
+    public void FixUpTestCase_ReplacesExecutorUriWithVSTestBridgeExecutorUri()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://original"), "source.cs");
+
+        testCase.FixUpTestCase();
+
+        Assert.AreEqual(new Uri(Constants.ExecutorUri), testCase.ExecutorUri);
+    }
+
+    [TestMethod]
+    public void FixUpTestCase_WhenOriginalExecutorUriPropertyHasNullValue_StillTreatsItAsExisting()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://original"), "source.cs");
+        object? nullValue = null;
+        testCase.SetPropertyValue(OriginalExecutorUriProperty, nullValue);
+
+        testCase.FixUpTestCase();
+
+        KeyValuePair<TestProperty, object?>[] originalExecutorUriProperties =
+            [.. testCase.GetProperties().Where(static property => property.Key.Id == VSTestTestNodeProperties.OriginalExecutorUriPropertyName)];
+        Assert.HasCount(1, originalExecutorUriProperties);
+        Assert.IsNull(originalExecutorUriProperties[0].Value);
     }
 
     private sealed class NamedFeatureCapabilityWithVSTestProvider : INamedFeatureCapability

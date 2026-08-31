@@ -1,19 +1,19 @@
 {
   "tools": {
-    "dotnet": "11.0.100-preview.5.26302.115",
+    "dotnet": "11.0.100-rc.2.26425.121",
     "runtimes": {
       "dotnet": [
-        "8.0.28",
-        "9.0.17",
-        "10.0.9"
+        "8.0.29",
+        "9.0.18",
+        "10.0.10"
       ],
       "dotnet/x86": [
-        "9.0.17",
-        "10.0.9"
+        "9.0.18",
+        "10.0.10"
       ],
       "aspnetcore": [
-        "9.0.17",
-        "10.0.9"
+        "9.0.18",
+        "10.0.10"
       ]
     },
     "vs": {
@@ -24,7 +24,7 @@
     }
   },
   "sdk": {
-    "version": "11.0.100-preview.5.26302.115",
+    "version": "11.0.100-rc.2.26425.121",
     "paths": [
       ".dotnet",
       "$host$"
@@ -34,10 +34,46 @@
     "rollForward": "latestFeature"
   },
   "test": {
-    "runner": "Microsoft.Testing.Platform"
+    "runner": "Microsoft.Testing.Platform",
+    "affectedTests": {
+      "changes": {
+        "ignore": [
+          ".github/**",
+          "docs/**",
+          "**/*.md"
+        ],
+        "forceAllTests": [
+          "global.json",
+          "Directory.Build.*",
+          "Directory.Packages.props",
+          "NuGet.config",
+          "TestFx.slnx",
+          "*.slnf",
+          "Build.cmd",
+          "Test.cmd",
+          "build.sh",
+          "test.sh",
+          "eng/**",
+          "src/**/Directory.Build.*",
+          "test/**/Directory.Build.*"
+        ]
+      },
+      "instrumentation": {
+        "include": [
+          "src/**"
+        ],
+        "exclude": [
+          "artifacts/**",
+          "samples/**",
+          "test/**",
+          "**/bin/**",
+          "**/obj/**"
+        ]
+      }
+    }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.26330.1",
+    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.26430.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

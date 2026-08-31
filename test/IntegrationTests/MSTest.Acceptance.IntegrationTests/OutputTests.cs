@@ -19,6 +19,12 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
         // Assert
         testHostResult.AssertOutputContains("Assertion failed. Expected values to be equal.");
         testHostResult.AssertOutputContains("Assert.AreEqual(1, 2)");
+
+        // The structured expected/actual block. MSTest reports results through a synthetic exception that
+        // carries no Exception.Data, so this block only renders because the adapter publishes an
+        // AssertionFailureProperty. Matched with a whitespace-tolerant regex to stay independent of the
+        // renderer's indentation.
+        testHostResult.AssertOutputMatchesRegex(@"Expected\s+1\s+Actual\s+2");
         testHostResult.AssertOutputContains("""
               Standard output
                 Console message

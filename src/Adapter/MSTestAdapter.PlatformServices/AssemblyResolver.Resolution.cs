@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
@@ -214,7 +214,8 @@ internal partial class AssemblyResolver
     /// </summary>
     /// <param name="assemblyName">The assembly being resolved.</param>
     /// <param name="loggerAction">The logger function.</param>
-    private static void SafeLog(string? assemblyName, Action loggerAction)
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Diagnostic logging must not affect assembly resolution.")]
+    private void SafeLog(string? assemblyName, Action loggerAction)
     {
         // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
         if (!StringEx.IsNullOrEmpty(assemblyName)
@@ -222,8 +223,37 @@ internal partial class AssemblyResolver
             && !assemblyName.StartsWith(LoggerAssemblyNameLegacy, StringComparison.Ordinal)
             && !assemblyName.StartsWith(PlatformServicesResourcesName, StringComparison.Ordinal))
         {
-            loggerAction.Invoke();
+            try
+            {
+                loggerAction.Invoke();
+            }
+            catch (Exception ex)
+            {
+                if (Interlocked.Exchange(ref _traceLoggingFailureReported, 1) == 0)
+                {
+                    try
+                    {
+                        // Bypass MSTest's Console.Error router so this infrastructure failure is not attributed to the active test.
+                        StandardErrorWriter.Value.WriteLine(
+                            $"[MSTest.AssemblyResolver] Trace logging failed while resolving '{assemblyName}'. Exception: {ex}");
+                    }
+                    catch (Exception)
+                    {
+                        // Assembly resolution must not fail because diagnostic output is unavailable.
+                    }
+                }
+            }
         }
+    }
+
+    private static TextWriter CreateStandardErrorWriter()
+    {
+        var writer = new StreamWriter(Console.OpenStandardError(), Console.OutputEncoding)
+        {
+            AutoFlush = true,
+        };
+
+        return TextWriter.Synchronized(writer);
     }
 }
 #endif

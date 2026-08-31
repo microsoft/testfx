@@ -20,6 +20,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal sealed partial class TestMethodRunner
 {
     /// <summary>
+    /// The aggregate outcome names reported on the span, matching the OpenTelemetry
+    /// <c>test.case.result.status</c> enum.
+    /// </summary>
+    private const string FailedOutcomeName = "fail";
+    private const string PassedOutcomeName = "pass";
+    private const string SkippedOutcomeName = "skipped";
+
+    /// <summary>
     /// Test context which needs to be passed to the various methods of the test.
     /// </summary>
     private readonly ITestContext _testContext;
@@ -73,7 +81,23 @@ internal sealed partial class TestMethodRunner
     {
         _testContext.Context.TestRunCount++;
 
-        TestResult[]? result = null;
+        // Never null once the try/catch below has run, but the compiler cannot prove that inside finally.
+        // Starting from an empty array keeps the null analysis honest without changing behavior on any
+        // reachable path (see the earlier review thread on this line).
+        TestResult[] result = [];
+        bool exceptionRecorded = false;
+
+        // The engine-level span for the whole test method: it wraps test initialize, the body, test cleanup and any
+        // data-row expansion, so the platform's test-case span gains an explanation of where the time went.
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartActivity(
+                MSTestInstrumentation.ActivityNames.TestMethod,
+                [
+                    new(MSTestInstrumentation.Attributes.TestMethod, _test.DisplayName ?? _test.Name),
+                    new(MSTestInstrumentation.Attributes.TestClass, _test.FullClassName),
+                    new(MSTestInstrumentation.Attributes.TestAssembly, _test.AssemblyName),
+                ])
+            : null;
 
         try
         {
@@ -84,6 +108,12 @@ internal sealed partial class TestMethodRunner
             // NOTE: We intentionally don't have any special casing for TestFailedException in this code path.
             // It's handled down by TestMethodInfo which also unwraps TargetInvocationException.
             // RunTestMethodAsync is not supposed to throw any exceptions. So it's always an **error** if we got an exception here.
+            if (activity is not null)
+            {
+                activity.RecordException(ex);
+                exceptionRecorded = true;
+            }
+
             result =
             [
                 new TestResult
@@ -96,15 +126,102 @@ internal sealed partial class TestMethodRunner
         finally
         {
             // Assembly initialize and class initialize logs are pre-pended to the first result.
-            TestResult firstResult = result![0];
+            TestResult firstResult = result[0];
             firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
             firstResult.LogError = initializationErrorLogs + firstResult.LogError;
             firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
             firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+
+            if (activity is not null)
+            {
+                // A folded data-driven test produces several results for a single method invocation; reporting the
+                // count makes that visible in the trace instead of looking like a single test.
+                // Note the name deliberately differs from the platform's `test.case.result.count` *metric*, which
+                // counts test cases per outcome across the run.
+                activity.SetTag("test.case.data_row.count", result.Length);
+                string aggregateOutcomeName = GetAggregateOutcomeName(result);
+                activity.SetTag("test.case.result.status", aggregateOutcomeName);
+
+                // An ordinary assertion failure is returned in the TestResult rather than thrown, so nothing above
+                // recorded it. Without this the span for a failed test would stay Unset and look green in a trace.
+                if (!exceptionRecorded && aggregateOutcomeName == FailedOutcomeName)
+                {
+                    MarkActivityFailed(activity, result);
+                }
+            }
         }
 
         return result;
     }
+
+    /// <summary>
+    /// Marks the span for a test whose failure was returned rather than thrown, preferring the recorded exception
+    /// so the trace carries the assertion message.
+    /// </summary>
+    private static void MarkActivityFailed(IMSTestActivity activity, TestResult[] results)
+    {
+        MSTestSettings settings = MSTestSettings.CurrentSettings;
+        foreach (TestResult testResult in results)
+        {
+            if (MapOutcomeName(testResult.Outcome, settings) != FailedOutcomeName)
+            {
+                continue;
+            }
+
+            if (testResult.TestFailureException is { } failureException)
+            {
+                activity.RecordException(failureException);
+            }
+            else
+            {
+                activity.SetFailed(testResult.Outcome.ToString());
+            }
+
+            return;
+        }
+    }
+
+    private static string GetAggregateOutcomeName(TestResult[] results)
+    {
+        bool anyFailed = false;
+        bool allSkipped = true;
+        MSTestSettings settings = MSTestSettings.CurrentSettings;
+        foreach (TestResult testResult in results)
+        {
+            switch (MapOutcomeName(testResult.Outcome, settings))
+            {
+                case FailedOutcomeName:
+                    anyFailed = true;
+                    allSkipped = false;
+                    break;
+                case SkippedOutcomeName:
+                    break;
+                default:
+                    allSkipped = false;
+                    break;
+            }
+        }
+
+        return anyFailed ? FailedOutcomeName : allSkipped ? SkippedOutcomeName : PassedOutcomeName;
+    }
+
+    /// <summary>
+    /// Maps a single outcome onto the span's result status using the same rules the adapter applies when it
+    /// reports the result, so a span never disagrees with the reported outcome.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors <c>UnitTestOutcomeHelper.ToTestOutcome</c>, which lives in the adapter layer above and cannot be
+    /// referenced from here: this assembly is deliberately free of the VSTest object model. Keep the two in sync.
+    /// </remarks>
+    private static string MapOutcomeName(UnitTestOutcome outcome, MSTestSettings settings)
+        => outcome switch
+        {
+            UnitTestOutcome.Passed => PassedOutcomeName,
+            UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout or UnitTestOutcome.Aborted or UnitTestOutcome.Unknown => FailedOutcomeName,
+            UnitTestOutcome.NotRunnable => settings.MapNotRunnableToFailed ? FailedOutcomeName : SkippedOutcomeName,
+            UnitTestOutcome.Inconclusive => settings.MapInconclusiveToFailed ? FailedOutcomeName : SkippedOutcomeName,
+            _ => SkippedOutcomeName,
+        };
 
     /// <summary>
     /// Runs the test method.

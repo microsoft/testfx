@@ -113,6 +113,15 @@ internal sealed class AzureDevOpsReporter :
         }
 
         EnsureEnabledConfigurationLoaded();
+
+        // A test framework that retries a test in-process reports every attempt under the same test node uid. An
+        // attempt that a later one supersedes is not a build failure, so it must not raise an Azure DevOps error
+        // annotation: only the final attempt is annotated.
+        if (nodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
+        {
+            return;
+        }
+
         TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
 
@@ -184,34 +193,36 @@ internal sealed class AzureDevOpsReporter :
 
         if (exception?.StackTrace is { } stackTrace)
         {
-            string repoRoot = RootFinder.Find();
-            if (logger.IsEnabled(LogLevel.Trace))
+            // A missing repository root only means source locations cannot be made repo-relative, so it
+            // must degrade to the message-only annotation below rather than fault the data consumer.
+            // This happens whenever the test application runs outside a git checkout — including on
+            // browser-wasm, whose virtual filesystem has no '.git' anywhere. The GitHub Actions reporter
+            // makes the same allowance in GitHubActionsRepositoryRoot.FindGitRoot.
+            if (TryFindRepoRoot(logger) is { } repoRoot)
             {
-                logger.LogTrace($"Found repo root '{repoRoot}'");
-            }
+                (string RelativeNormalizedPath, int LineNumber)? location = StackTraceSourceLocationResolver.TryResolve(
+                    stackTrace,
+                    repoRoot,
+                    fileSystem,
+                    logger,
+                    skipAssertionFrames,
+                    code => IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger));
 
-            (string RelativeNormalizedPath, int LineNumber)? location = StackTraceSourceLocationResolver.TryResolve(
-                stackTrace,
-                repoRoot,
-                fileSystem,
-                logger,
-                skipAssertionFrames,
-                code => IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger));
-
-            if (location is not null)
-            {
-                string line = $"##vso[task.logissue type={severity};sourcepath={location.Value.RelativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
-                if (logger.IsEnabled(LogLevel.Trace))
+                if (location is not null)
                 {
-                    logger.LogTrace($"Reported full message '{line}'.");
+                    string line = $"##vso[task.logissue type={severity};sourcepath={location.Value.RelativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Reported full message '{line}'.");
+                    }
+
+                    return line;
                 }
 
-                return line;
-            }
-
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace("No stack trace line matched criteria, falling back to a message-only annotation.");
+                if (logger.IsEnabled(LogLevel.Trace))
+                {
+                    logger.LogTrace("No stack trace line matched criteria, falling back to a message-only annotation.");
+                }
             }
         }
         else if (logger.IsEnabled(LogLevel.Trace))
@@ -233,6 +244,34 @@ internal sealed class AzureDevOpsReporter :
         }
 
         return fallbackLine;
+    }
+
+    /// <summary>
+    /// Resolves the repository root used to turn an absolute stack-frame path into a repo-relative
+    /// <c>sourcepath</c>, or <see langword="null"/> when the test application does not run inside a git
+    /// checkout (a published app, a container, or the browser-wasm virtual filesystem).
+    /// </summary>
+    private static string? TryFindRepoRoot(ILogger logger)
+    {
+        try
+        {
+            string repoRoot = RootFinder.Find();
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace($"Found repo root '{repoRoot}'");
+            }
+
+            return repoRoot;
+        }
+        catch (InvalidOperationException)
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace("No repository root was found, emitting a message-only annotation.");
+            }
+
+            return null;
+        }
     }
 
     private string GetConfiguredSeverity()

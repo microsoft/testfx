@@ -15,6 +15,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
 public class TestCaseExtensionsTests : TestContainer
 {
+    public void GetTestNameShouldRemoveTestClassNamePrefix()
+    {
+        TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
+
+        string testName = testCase.GetTestName("DummyClass");
+
+        testName.Should().Be("DummyMethod");
+    }
+
+    public void GetTestNameShouldNotRemovePartialTestClassNamePrefix()
+    {
+        TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
+
+        string testName = testCase.GetTestName("Dummy");
+
+        testName.Should().Be("DummyClass.DummyMethod");
+    }
+
+    public void GetTestNameShouldHandleFullyQualifiedNameEqualToTestClassName()
+    {
+        TestCase testCase = new("DummyClass", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
+
+        string testName = testCase.GetTestName("DummyClass");
+
+        testName.Should().Be("DummyClass");
+    }
+
+    public void GetTestNameShouldPreserveNullTestClassNameBehavior()
+    {
+        TestCase testCase = new(".DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
+
+        string testName = testCase.GetTestName(null);
+
+        testName.Should().Be("DummyMethod");
+    }
+
     public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()
     {
         TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!)

@@ -15,7 +15,7 @@ internal sealed partial class Json
         serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request =>
         [
             (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Id, request.Id),
+                 (JsonRpcStrings.Id, request.StringId ?? (object)request.Id),
                  (JsonRpcStrings.Method, request.Method),
                  (JsonRpcStrings.Params, request.Params)
         ]);
@@ -23,7 +23,7 @@ internal sealed partial class Json
         serializers[typeof(ResponseMessage)] = new JsonObjectSerializer<ResponseMessage>(response =>
         [
             (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Id, response.Id),
+                 (JsonRpcStrings.Id, response.StringId ?? (object)response.Id),
                  (JsonRpcStrings.Result, response.Result)
         ]);
 
@@ -46,17 +46,26 @@ internal sealed partial class Json
             return
             [
                 (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Id, error.Id),
+                 (JsonRpcStrings.Id, error.StringId ?? (object)error.Id),
                  (JsonRpcStrings.Error, errorMsg)
             ];
         });
 
         serializers[typeof(InitializeResponseArgs)] = new JsonObjectSerializer<InitializeResponseArgs>(response =>
-        [
-            (JsonRpcStrings.ProcessId, response.ProcessId),
-                (JsonRpcStrings.ServerInfo, response.ServerInfo),
-                (JsonRpcStrings.Capabilities, response.Capabilities)
-        ]);
+            response.ProtocolVersion is null
+                ?
+                [
+                    (JsonRpcStrings.ProcessId, response.ProcessId),
+                    (JsonRpcStrings.ServerInfo, response.ServerInfo),
+                    (JsonRpcStrings.Capabilities, response.Capabilities)
+                ]
+                :
+                [
+                    (JsonRpcStrings.ProcessId, response.ProcessId),
+                    (JsonRpcStrings.ServerInfo, response.ServerInfo),
+                    (JsonRpcStrings.Capabilities, response.Capabilities),
+                    (JsonRpcStrings.ProtocolVersion, response.ProtocolVersion)
+                ]);
 
         serializers[typeof(ServerInfo)] = new JsonObjectSerializer<ServerInfo>(info =>
         [
@@ -75,7 +84,8 @@ internal sealed partial class Json
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
                 (JsonRpcStrings.AttachmentsSupport, capabilities.SupportsAttachments),
-                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider)
+                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider),
+                (JsonRpcStrings.SupportsTestCoverageMessages, ServerTestingCapabilities.SupportsTestCoverageMessages)
         ]);
 
         serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>
@@ -116,7 +126,7 @@ internal sealed partial class Json
 
         serializers[typeof(CancelRequestArgs)] = new JsonObjectSerializer<CancelRequestArgs>(request =>
         [
-            (JsonRpcStrings.Id, request.CancelRequestId)
+            (JsonRpcStrings.Id, request.StringId ?? (object)request.CancelRequestId)
         ]);
 
         serializers[typeof(TelemetryEventArgs)] = new JsonObjectSerializer<TelemetryEventArgs>(ev =>

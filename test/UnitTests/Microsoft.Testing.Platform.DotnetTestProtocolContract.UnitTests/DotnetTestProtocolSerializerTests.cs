@@ -117,7 +117,7 @@ public sealed class DotnetTestProtocolSerializerTests
     public void TestResultMessages_RoundTrips()
     {
         var success = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
-        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
+        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid", "expectedValue", "actualValue");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
@@ -126,6 +126,79 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.AreEqual("uid", actual.SuccessfulTestMessages[0].Uid);
         Assert.AreEqual("errorMessage", actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
+        Assert.AreEqual("expectedValue", actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual("actualValue", actual.FailedTestMessages[0].Actual);
+
+        // RetryAttemptNumber/IsSuperseded were not supplied above (they default to null); confirm they round-trip
+        // as absent rather than as some default sentinel value.
+        Assert.IsNull(actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.IsNull(actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_RoundTripsWithRetryAttemptMetadata()
+    {
+        // A superseded (non-final) retry attempt that failed, followed by the final attempt that passed - the
+        // typical shape produced by MSTest's [Retry] attribute for a flaky test that eventually succeeds.
+        var supersededFail = new FailedTestResultMessage("uid", "displayName", TestStates.Failed, 100, "reason", null, "standardOutput", "errorOutput", "sessionUid", null, null, RetryAttemptNumber: 1, IsSuperseded: true);
+        var finalSuccess = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 120, "reason", "standardOutput", "errorOutput", "sessionUid", RetryAttemptNumber: 2, IsSuperseded: false);
+        var message = new TestResultMessages("executionId", "instanceId", [finalSuccess], [supersededFail]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.AreEqual(2, actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsFalse(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.AreEqual(1, actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsTrue(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
+    public void FailedTestResultMessageFieldIds_Expected_And_Actual_AreStable()
+    {
+        // These are externally shared wire ids: the SDK decodes them with its own vendored copy of the same
+        // numbers, so renumbering either one would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literals here.
+        // The declared values are read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)10, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Expected)));
+        Assert.AreEqual((ushort)11, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Actual)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FailedTestResultMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
+    public void TestResultMessageFieldIds_RetryAttempt_AreStable()
+    {
+        // Externally shared wire ids for the retry-attempt metadata added on top of Expected/Actual; renumbering
+        // any of these would silently break cross-process decoding without failing the round-trip tests (which
+        // use the same constant on both writer and reader). Pin the literals here, read via reflection (a runtime
+        // read, not a compile-time constant) so that renumbering is actually caught rather than folded away.
+        Assert.AreEqual((ushort)9, GetConstantValue(typeof(SuccessfulTestResultMessageFieldsId), nameof(SuccessfulTestResultMessageFieldsId.RetryAttemptNumber)));
+        Assert.AreEqual((ushort)10, GetConstantValue(typeof(SuccessfulTestResultMessageFieldsId), nameof(SuccessfulTestResultMessageFieldsId.IsSuperseded)));
+        Assert.AreEqual((ushort)12, GetConstantValue(typeof(FailedTestResultMessageFieldsId), nameof(FailedTestResultMessageFieldsId.RetryAttemptNumber)));
+        Assert.AreEqual((ushort)13, GetConstantValue(typeof(FailedTestResultMessageFieldsId), nameof(FailedTestResultMessageFieldsId.IsSuperseded)));
+
+        static ushort GetConstantValue(Type declaringType, string fieldName)
+            => (ushort)declaringType.GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
+    public void FileArtifactMessageFieldIds_AreStable()
+    {
+        // These are externally shared wire ids (the SDK decodes them with its own vendored copy of the same
+        // numbers), so renumbering them would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literal here.
+        // The declared value is read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)6, GetConstantValue(nameof(FileArtifactMessageFieldsId.SessionUid)));
+        Assert.AreEqual((ushort)7, GetConstantValue(nameof(FileArtifactMessageFieldsId.Kind)));
+        Assert.AreEqual((ushort)8, GetConstantValue(nameof(FileArtifactMessageFieldsId.InputArtifactPaths)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FileArtifactMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
     }
 
     [TestMethod]
@@ -155,7 +228,7 @@ public sealed class DotnetTestProtocolSerializerTests
 
         DiscoveredTestMessage second = actual.DiscoveredMessages[1];
         Assert.AreEqual("Uid2", second.Uid);
-        Assert.HasCount(0, second.Traits);
+        Assert.IsEmpty(second.Traits);
     }
 
     [TestMethod]
@@ -211,8 +284,24 @@ public sealed class DotnetTestProtocolSerializerTests
             "executionId",
             "instanceId",
             [
-                new FileArtifactMessage("full/path.txt", "artifact", "desc", "testUid", "testDisplay", "sessionUid"),
-                new FileArtifactMessage("other.txt", "other", null, null, null, null),
+                new FileArtifactMessage(
+                    "full/path.txt",
+                    "artifact",
+                    "desc",
+                    "testUid",
+                    "testDisplay",
+                    "sessionUid",
+                    "microsoft.testing.trx",
+                    ["input/first.txt", "input/second.txt"]),
+                new FileArtifactMessage(
+                    "other.txt",
+                    "other",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "microsoft.testing.coverage",
+                    ["input/coverage.txt"]),
             ]);
 
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
@@ -221,8 +310,14 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.HasCount(2, actual.FileArtifacts);
         Assert.AreEqual("full/path.txt", actual.FileArtifacts[0].FullPath);
         Assert.AreEqual("sessionUid", actual.FileArtifacts[0].SessionUid);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
+        Assert.AreSequenceEqual(
+            ["input/first.txt", "input/second.txt"],
+            actual.FileArtifacts[0].InputArtifactPaths);
         Assert.AreEqual("other.txt", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
+        Assert.AreEqual("microsoft.testing.coverage", actual.FileArtifacts[1].Kind);
+        Assert.AreSequenceEqual(["input/coverage.txt"], actual.FileArtifacts[1].InputArtifactPaths);
     }
 
     [TestMethod]

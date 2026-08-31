@@ -38,9 +38,9 @@
     <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
-    <!-- GitHub Actions (early preview / alpha - has its own pre-release version line
-         seeded by Sdk.props.template and flowed through MSTest.Sdk.csproj). -->
+    <!-- GitHub Actions -->
     <EnableMicrosoftTestingExtensionsGitHubActionsReport Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
+    <MicrosoftTestingExtensionsGitHubActionsReportVersion Condition=" '$(MicrosoftTestingExtensionsGitHubActionsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsGitHubActionsReportVersion>
 
     <!-- HTML report -->
     <EnableMicrosoftTestingExtensionsHtmlReport Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHtmlReport>
@@ -53,14 +53,9 @@
       and seeded by Sdk.props.template).
     -->
 
-    <!--
-      OpenTelemetry (experimental / opt-in only).
-      API-only extension - has no CLI flag; user activates it from Program.cs via
-      builder.AddOpenTelemetryProvider(...). The Enable property only opts the
-      package into the build. Has its own pre-release version line
-      (see MicrosoftTestingExtensionsOpenTelemetryVersion flowed through MSTest.Sdk.csproj
-      and seeded by Sdk.props.template).
-    -->
+    <!-- OpenTelemetry is API-only and opt-in. The Enable property adds the package; users activate
+         it from Program.cs via builder.AddOpenTelemetryProvider(...). -->
+    <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsOpenTelemetryVersion>
 
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>

@@ -1,1 +1,37 @@
 #nullable enable
+const Microsoft.Testing.Extensions.JUnitReport.JUnitReportGenerator.JUnitArtifactKind = "microsoft.testing.junit" -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.JUnitArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportedModes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingMode>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.Version.get -> string!
+static Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.CreateMergeId(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> string!
+virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
+Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger
+Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode
+Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode.Concatenate = 0 -> Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode
+Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode.CollapseRetryAttempts = 1 -> Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode
+static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, string! reportName) -> System.Xml.Linq.XDocument!
+static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, string! reportName, Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode mode) -> System.Xml.Linq.XDocument!
+static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, string! reportName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, string! reportName, Microsoft.Testing.Extensions.JUnitReport.JUnitMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
+Microsoft.Testing.Extensions.MergeOutputFileHelper
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ArtifactPostProcessingHelper
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.IsReparsePoint(string! path) -> bool
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.OrderInputs(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, bool includeModuleMetadata) -> System.Linq.IOrderedEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
+static Microsoft.Testing.Extensions.JUnitReport.JUnitXmlWriter.BuildFailureBody(Microsoft.Testing.Extensions.JUnitReport.CapturedTestResult! result) -> string?

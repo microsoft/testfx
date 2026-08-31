@@ -26,6 +26,18 @@ internal sealed class SystemFileSystem : IFileSystem
     }
 #endif
 
+    public void ReplaceFile(string sourceFileName, string destFileName)
+    {
+        if (File.Exists(destFileName))
+        {
+            File.Replace(sourceFileName, destFileName, destinationBackupFileName: null);
+        }
+        else
+        {
+            File.Move(sourceFileName, destFileName);
+        }
+    }
+
     public IFileStream NewFileStream(string path, FileMode mode) => new SystemFileStream(path, mode);
 
     public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => new SystemFileStream(path, mode, access);

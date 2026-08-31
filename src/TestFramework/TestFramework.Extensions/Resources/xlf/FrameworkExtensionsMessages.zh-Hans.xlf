@@ -12,6 +12,21 @@
         <target state="translated">UITestMethodAttribute.DispatcherQueue 不应为 null。若要在 WinUI 桌面应用中使用 UITestMethodAttribute，请在测试初始化期间设置静态 UITestMethodAttribute.DispatcherQueue。</target>
         <note>Do not localize API names {Locked="UITestMethodAttribute.DispatcherQueue"}{Locked="UITestMethodAttribute"}, the product name {Locked="WinUI"}, or the C# keyword {Locked="null"}.</note>
       </trans-unit>
+      <trans-unit id="WinUIApplicationFailedToStart">
+        <source>The WinUI application under test exited without initializing. When running unpackaged, this usually means the Windows App SDK runtime could not be resolved for the process.</source>
+        <target state="translated">受测 WinUI 应用程序在未初始化的状态下退出。以未打包方式运行时，这通常意味着无法为进程解析 Windows App SDK 运行时。</target>
+        <note>Do not localize the product names {Locked="WinUI"}{Locked="Windows App SDK"}.</note>
+      </trans-unit>
+      <trans-unit id="WinUIApplicationInitializationAlreadyFailed">
+        <source>The WinUI application under test failed to initialize earlier in this run, and Application.Start cannot be retried in the same process. The original failure was: {0}</source>
+        <target state="translated">受测 WinUI 应用程序在此次运行的早期初始化失败，且无法在同一进程中重试 Application.Start。原始失败为: {0}</target>
+        <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is the message of the original failure.</note>
+      </trans-unit>
+      <trans-unit id="WinUIApplicationStartupTimedOut">
+        <source>The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</source>
+        <target state="translated">受测 WinUI 应用程序未能在 {0} 内完成初始化。已调用 Application.Start，但其初始化未完成。</target>
+        <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is a timeout duration.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

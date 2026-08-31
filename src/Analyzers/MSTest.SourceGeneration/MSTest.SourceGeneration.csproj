@@ -19,19 +19,14 @@
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
 
-    <VersionPrefix>$(MSTestSourceGenerationVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MSTestSourceGenerationPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[MSTest is Microsoft supported Test Framework.
+    <PackageDescription><![CDATA[This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.
 
-This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

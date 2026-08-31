@@ -21,6 +21,7 @@ internal sealed class TestHostManager : ITestHostManager
     private readonly List<Func<IServiceProvider, ITestHostApplicationLifetime>> _testApplicationLifecycleCallbacksFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
+    private readonly List<Func<IServiceProvider, ITestExecutionFilterProvider>> _testExecutionFilterProviderFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
     private readonly List<ICompositeExtensionFactory> _testSessionLifetimeHandlerCompositeFactories = [];
 
@@ -38,25 +39,8 @@ internal sealed class TestHostManager : ITestHostManager
         _testFrameworkInvokerFactory = testFrameworkInvokerFactory ?? throw new ArgumentNullException(nameof(testFrameworkInvokerFactory));
     }
 
-    internal async Task<ActionResult<ITestFrameworkInvoker>> TryBuildTestAdapterInvokerAsync(ServiceProvider serviceProvider)
-    {
-        if (_testFrameworkInvokerFactory is null)
-        {
-            return ActionResult.Fail<ITestFrameworkInvoker>();
-        }
-
-        ITestFrameworkInvoker testAdapterInvoke = _testFrameworkInvokerFactory(serviceProvider);
-
-        // We initialize only if enabled
-        if (await testAdapterInvoke.IsEnabledAsync().ConfigureAwait(false))
-        {
-            await testAdapterInvoke.TryInitializeAsync().ConfigureAwait(false);
-
-            return ActionResult.Ok(testAdapterInvoke);
-        }
-
-        return ActionResult.Fail<ITestFrameworkInvoker>();
-    }
+    internal Task<ActionResult<ITestFrameworkInvoker>> TryBuildTestAdapterInvokerAsync(ServiceProvider serviceProvider)
+        => TryBuildSingletonExtensionAsync(_testFrameworkInvokerFactory, serviceProvider);
 
     public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
     {
@@ -68,24 +52,42 @@ internal sealed class TestHostManager : ITestHostManager
         _testExecutionFilterFactory = testExecutionFilterFactory ?? throw new ArgumentNullException(nameof(testExecutionFilterFactory));
     }
 
-    internal async Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
+    internal Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
+        => TryBuildSingletonExtensionAsync(_testExecutionFilterFactory, serviceProvider);
+
+    internal void AddTestExecutionFilterProvider(Func<IServiceProvider, ITestExecutionFilterProvider> providerFactory)
+        => _testExecutionFilterProviderFactories.Add(providerFactory ?? throw new ArgumentNullException(nameof(providerFactory)));
+
+    internal async Task<ITestExecutionFilterProvider[]> BuildTestExecutionFilterProvidersAsync(ServiceProvider serviceProvider)
     {
-        if (_testExecutionFilterFactory is null)
+        List<ITestExecutionFilterProvider> providers = [];
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(
+            _testExecutionFilterProviderFactories,
+            serviceProvider,
+            providers).ConfigureAwait(false);
+
+        return [.. providers];
+    }
+
+    private static async Task<ActionResult<T>> TryBuildSingletonExtensionAsync<T>(Func<IServiceProvider, T>? factory, ServiceProvider serviceProvider)
+        where T : class, IExtension
+    {
+        if (factory is null)
         {
-            return ActionResult.Fail<ITestExecutionFilterFactory>();
+            return ActionResult.Fail<T>();
         }
 
-        ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
+        T extension = factory(serviceProvider);
 
         // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync().ConfigureAwait(false))
+        if (await extension.IsEnabledAsync().ConfigureAwait(false))
         {
-            await testExecutionFilterFactory.TryInitializeAsync().ConfigureAwait(false);
+            await extension.TryInitializeAsync().ConfigureAwait(false);
 
-            return ActionResult.Ok(testExecutionFilterFactory);
+            return ActionResult.Ok(extension);
         }
 
-        return ActionResult.Fail<ITestExecutionFilterFactory>();
+        return ActionResult.Fail<T>();
     }
 
     public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)

@@ -34,6 +34,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// out of scope; layer such checks on top of this attribute or author your own <see cref="ConditionBaseAttribute"/>.
 /// </para>
 /// <para>
+/// Executable availability depends on the runtime environment, including its <c>PATH</c>, so a missing or misspelled
+/// executable cannot be validated statically and is evaluated immediately before the test executes.
+/// </para>
+/// <para>
 /// Each distinct executable-and-arguments combination forms its own condition group (see <see cref="GroupName"/>).
 /// As a result, applying the attribute multiple times with different commands requires <em>all</em> of them to be
 /// satisfied (logical AND), while applying it multiple times with the same command requires only one to match

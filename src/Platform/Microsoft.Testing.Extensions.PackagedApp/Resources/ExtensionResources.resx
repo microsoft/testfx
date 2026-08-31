@@ -118,9 +118,73 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="PackagedAppExtensionDescription" xml:space="preserve">
-    <value>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</value>
+    <value>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</value>
+    <comment>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</comment>
   </data>
   <data name="PackagedAppExtensionDisplayName" xml:space="preserve">
     <value>Packaged app test host launcher</value>
+  </data>
+  <data name="AmbiguousAppxManifestApplication" xml:space="preserve">
+    <value>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</value>
+  </data>
+  <data name="AppxManifestApplicationExecutableMismatch" xml:space="preserve">
+    <value>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</value>
+    <comment>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</comment>
+  </data>
+  <data name="InvalidAppxManifestMissingIdentity" xml:space="preserve">
+    <value>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</value>
+  </data>
+  <data name="PackagedAppLaunchNotSupported" xml:space="preserve">
+    <value>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</value>
+  </data>
+  <data name="PackagedAppNoApplicationToActivate" xml:space="preserve">
+    <value>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</value>
+  </data>
+  <data name="PackagedAppRegistrationFailed" xml:space="preserve">
+    <value>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</value>
+  </data>
+  <data name="ActivationArgumentsInvalidArgumentCount" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidArgumentLength" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidFileKey" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidFileReference" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidInlinePayload" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsMissingPayload" xml:space="preserve">
+    <value>The launch activation does not contain Microsoft Testing Platform arguments.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadAuthenticationFailed" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload failed authentication.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadReadFailed" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload could not be read.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadTooLarge" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload is too large.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadTruncated" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload is truncated.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsTrailingData" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload contains trailing data.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
   </data>
 </root>

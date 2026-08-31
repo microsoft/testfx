@@ -7,6 +7,11 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
+    internal readonly struct CommandSlot : IDisposable
+    {
+        public void Dispose() => s_maxOutstandingCommands_semaphore.Release();
+    }
+
     private static readonly string[] CodeCoverageEnvironmentVariables =
     [
         "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
@@ -56,68 +61,83 @@ public static class DotnetCli
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
+        using CommandSlot commandSlot = await AcquireCommandSlotAsync(cancellationToken);
+        environmentVariables = CreateEnvironmentVariables(environmentVariables, disableTelemetry, disableCodeCoverage);
+
+        string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
+        extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
+        if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+        {
+            args = args.Insert(platformArgsIndex, extraArgs + " ");
+        }
+        else
+        {
+            args += extraArgs;
+        }
+
+        return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+    }
+
+    internal static async Task<CommandSlot> AcquireCommandSlotAsync(CancellationToken cancellationToken)
+    {
         await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
-        try
+        return default;
+    }
+
+    internal static Dictionary<string, string?> CreateEnvironmentVariables(
+        Dictionary<string, string?>? environmentVariables = null,
+        bool disableTelemetry = true,
+        bool disableCodeCoverage = true)
+    {
+        environmentVariables ??= [];
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
-            environmentVariables ??= [];
-            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+            // Skip all unwanted environment variables.
+            string? key = entry.Key.ToString();
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                // Skip all unwanted environment variables.
-                string? key = entry.Key.ToString();
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                if (disableCodeCoverage)
-                {
-                    // Disable the code coverage during the build.
-                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-                }
-
-                // We use TryAdd to let tests "overwrite" existing environment variables.
-                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
-                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
-                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
+                continue;
             }
 
-            if (disableTelemetry)
+            if (disableCodeCoverage
+                && CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+                continue;
             }
 
-            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
-            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
-            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
-            {
-                args = args.Insert(platformArgsIndex, extraArgs + " ");
-            }
-            else
-            {
-                args += extraArgs;
-            }
-
-            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+            // We use TryAdd to let tests "overwrite" existing environment variables.
+            // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+            // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+            // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+            environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
         }
-        finally
+
+        if (disableTelemetry)
         {
-            s_maxOutstandingCommands_semaphore.Release();
+            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
         }
+
+        return environmentVariables;
     }
 
     private static bool IsDotNetTestWithExeOrDll(string args)
         => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
 
-    // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
-            .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
+            .Handle<InvalidOperationException>(IsRetriableBuildFailure)
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
             .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
+
+    // Some build failures are transient tooling/environment issues rather than real product failures, so retrying
+    // the whole muxer invocation (which regenerates the binlog file name, see CallTheMuxerCoreAsync) is safe:
+    // - MSB4236: NuGet SDK-resolver flakiness (https://github.com/NuGet/Home/issues/14064).
+    // - MSB4166 "... exited prematurely. Shutting down.": an MSBuild worker node crashes mid-build (e.g. an
+    //   intermittent BinaryLogger ObjectDisposedException on the logging thread), which cancels the whole build.
+    // Both surface as an InvalidOperationException whose message embeds the captured build output.
+    private static bool IsRetriableBuildFailure(InvalidOperationException ex)
+        => ex.Message.Contains("MSB4236")
+            || ex.Message.Contains("exited prematurely. Shutting down.");
 
     private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
     {

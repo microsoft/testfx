@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -14,7 +15,14 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal abstract class ContextAdapterBase
 {
+    private const string EmptyUidFilterExpression = "FullyQualifiedName=__MTP_EMPTY_UID_FILTER__&FullyQualifiedName!=__MTP_EMPTY_UID_FILTER__";
+
     protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
+        : this(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid: false)
+    {
+    }
+
+    protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, bool useFullyQualifiedNameAsUid)
     {
         RunSettings = runSettings;
 
@@ -31,7 +39,7 @@ internal abstract class ContextAdapterBase
             filterFromCommandLineOption = filterExpressions[0];
         }
 
-        HandleFilter(filter, filterFromRunsettings, filterFromCommandLineOption);
+        HandleFilter(filter, filterFromRunsettings, filterFromCommandLineOption, useFullyQualifiedNameAsUid);
     }
 
     public IRunSettings? RunSettings { get; }
@@ -76,7 +84,7 @@ internal abstract class ContextAdapterBase
         return new BridgeFilterExpression(new TestCaseFilterExpression(FilterExpressionWrapper));
     }
 
-    private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption)
+    private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption, bool useFullyQualifiedNameAsUid)
     {
         // No filters at all, we can return immediately as there is nothing to do.
         if (filter is null or NopFilter
@@ -91,11 +99,38 @@ internal abstract class ContextAdapterBase
         AppendFilter(filterFromRunsettings, filterBuilder);
         AppendFilter(filterFromCommandLineOption, filterBuilder);
 
-        if (filter is TestNodeUidListFilter testNodeUidListFilter)
+        if (filter is not null)
         {
-            StartFilter(filterBuilder);
-            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
-            EndFilter(filterBuilder);
+            foreach (ITestExecutionFilter leafFilter in TestExecutionFilterComposer.GetLeafFilters(filter))
+            {
+                switch (leafFilter)
+                {
+                    case NopFilter:
+                        break;
+
+                    case TestNodeUidListFilter testNodeUidListFilter:
+                        StartFilter(filterBuilder);
+                        if (testNodeUidListFilter.TestNodeUids.Length == 0)
+                        {
+                            filterBuilder.Append(EmptyUidFilterExpression);
+                        }
+                        else
+                        {
+                            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder, useFullyQualifiedNameAsUid);
+                        }
+
+                        EndFilter(filterBuilder);
+                        break;
+
+                    default:
+                        throw new NotSupportedException(
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                ExtensionResources.UnsupportedTestExecutionFilter,
+                                leafFilter.GetType().FullName,
+                                "VSTestBridge"));
+                }
+            }
         }
 
         if (filterBuilder.Length > 0)
@@ -132,9 +167,13 @@ internal abstract class ContextAdapterBase
             => builder.Append(')');
     }
 
-    // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
-    // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
-    private static void BuildFilter(TestNodeUid[] testNodesUid, StringBuilder filter)
+    // The UID value is produced by ObjectModelConverters.ToTestNode, which sets it to either
+    // TestCase.FullyQualifiedName or TestCase.Id depending on useFullyQualifiedNameAsUid. We use that
+    // same discriminator here to decide the clause type, rather than guessing from the value with
+    // Guid.TryParse. Guessing is wrong for a FullyQualifiedName that happens to be GUID-shaped (e.g. a
+    // data-driven test whose display name is exactly a GUID string), which would then be emitted as an
+    // Id= clause and select the wrong test (or no test).
+    private static void BuildFilter(TestNodeUid[] testNodesUid, StringBuilder filter, bool useFullyQualifiedNameAsUid)
     {
         for (int i = 0; i < testNodesUid.Length; i++)
         {
@@ -143,7 +182,7 @@ internal abstract class ContextAdapterBase
                 filter.Append('|');
             }
 
-            if (Guid.TryParse(testNodesUid[i].Value, out Guid guid))
+            if (!useFullyQualifiedNameAsUid && Guid.TryParse(testNodesUid[i].Value, out Guid guid))
             {
                 filter.Append("Id=");
                 filter.Append(guid.ToString());
@@ -152,33 +191,11 @@ internal abstract class ContextAdapterBase
 
             TestNodeUid currentTestNodeUid = testNodesUid[i];
             filter.Append("FullyQualifiedName=");
-            for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
-            {
-                char currentChar = currentTestNodeUid.Value[k];
-                switch (currentChar)
-                {
-                    case '\\':
-                    case '(':
-                    case ')':
-                    case '&':
-                    case '|':
-                    case '=':
-                    case '!':
-                    case '~':
-                        // If the symbol is not escaped, add an escape character.
-                        if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
-                        {
-                            filter.Append('\\');
-                        }
 
-                        filter.Append(currentChar);
-                        break;
-
-                    default:
-                        filter.Append(currentChar);
-                        break;
-                }
-            }
+            // Use VSTest's canonical escaper rather than a hand-rolled loop. It escapes every filter
+            // operator ('\', '(', ')', '&', '|', '=', '!', '~') unconditionally, which is exactly what
+            // we need for a raw (un-escaped) test-node UID.
+            filter.Append(FilterHelper.Escape(currentTestNodeUid.Value));
         }
     }
 }

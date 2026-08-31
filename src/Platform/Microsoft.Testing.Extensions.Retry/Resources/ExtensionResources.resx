@@ -132,9 +132,13 @@
     <value>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</value>
     <comment>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</comment>
   </data>
-  <data name="RetryArtifactsMoved" xml:space="preserve">
-    <value>Retry: moved {0} result file(s) to '{1}'</value>
-    <comment>{0} is the number of files moved. {1} is the destination result directory.</comment>
+  <data name="RetryArtifactsPublished" xml:space="preserve">
+    <value>Retry: published {0} result file(s) to '{1}'</value>
+    <comment>{0} is the number of files published. {1} is the destination result directory.</comment>
+  </data>
+  <data name="RetryArtifactPostProcessorFailed" xml:space="preserve">
+    <value>Retry artifact post-processor '{0}' failed: {1}</value>
+    <comment>{0} is the processor UID. {1} is the exception message.</comment>
   </data>
   <data name="RetryAttemptFailedWillRetry" xml:space="preserve">
     <value>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</value>
@@ -156,21 +160,41 @@
     <value>Retry summary: Failed! after {0}/{1} attempts</value>
     <comment>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</comment>
   </data>
+  <data name="RetrySummaryFailedStoppedEarly" xml:space="preserve">
+    <value>Retry summary: Failed! after {0} attempt(s) (retrying stopped early)</value>
+    <comment>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</comment>
+  </data>
   <data name="RetrySummaryFailedLine" xml:space="preserve">
     <value>  failed: {0}</value>
     <comment>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</comment>
   </data>
   <data name="RetrySummaryFlakyLine" xml:space="preserve">
-    <value>  flaky: {0}</value>
-    <comment>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</comment>
+    <value>  flaky: {0} (passed after retry)</value>
+    <comment>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces mirror the platform run summary. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</comment>
+  </data>
+  <data name="RetrySummaryFlakyTestsHeader" xml:space="preserve">
+    <value>Flaky tests:</value>
+    <comment>Header of the section that lists, by name, the tests which failed at least once but eventually passed.</comment>
+  </data>
+  <data name="RetrySummaryFlakyTestLine" xml:space="preserve">
+    <value>  {0} (failed -&gt; passed)</value>
+    <comment>{0} is the display name of a flaky test. The arrow reads left (first outcome) to right (final outcome). Two leading spaces indent the entry under the 'Flaky tests:' header.</comment>
   </data>
   <data name="RetrySummaryTotalLine" xml:space="preserve">
     <value>  total: {0}</value>
     <comment>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</comment>
   </data>
-  <data name="RetrySummaryRetriedSuffix" xml:space="preserve">
-    <value> (+{0} retried)</value>
-    <comment>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</comment>
+  <data name="RetrySummarySucceededLine" xml:space="preserve">
+    <value>  succeeded: {0}</value>
+    <comment>{0} is the number of tests that ended up passing, counting those rescued by a retry. Two leading spaces and the lowercase 'succeeded:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummarySkippedLine" xml:space="preserve">
+    <value>  skipped: {0}</value>
+    <comment>{0} is the number of skipped tests. Two leading spaces and the lowercase 'skipped:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummaryRetriedLine" xml:space="preserve">
+    <value>  retried: {0} test(s), {1} extra run(s)</value>
+    <comment>{0} is the number of distinct tests that were re-run. {1} is the number of extra executions those retries cost. Two leading spaces and the lowercase 'retried:' label mirror the platform run summary. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</comment>
   </data>
   <data name="RetrySummaryDurationLine" xml:space="preserve">
     <value>  duration: {0}</value>
@@ -190,11 +214,11 @@
     <value>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</value>
   </data>
   <data name="RetryFailedTestsMaxPercentageOptionDescription" xml:space="preserve">
-    <value>Disable retry mechanism if the percentage of failed tests is greater than the specified value</value>
+    <value>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</value>
     <comment>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</comment>
   </data>
   <data name="RetryFailedTestsMaxTestsOptionDescription" xml:space="preserve">
-    <value>Disable retry mechanism if the number of failed tests is greater than the specified value</value>
+    <value>Disable retry mechanism if the number of failed tests is greater than the specified value.</value>
     <comment>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</comment>
   </data>
   <data name="RetryFailedTestsNotSupportedInHotReloadErrorMessage" xml:space="preserve">
@@ -212,7 +236,7 @@
     <comment>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</comment>
   </data>
   <data name="RetryFailedTestsOptionDescription" xml:space="preserve">
-    <value>Retry failed tests the given number of times</value>
+    <value>Retry failed tests the given number of times.</value>
     <comment>Do not localize option name {Locked="--retry-failed-tests"}.</comment>
   </data>
   <data name="RetryFailedTestsOptionIsMissingErrorMessage" xml:space="preserve">

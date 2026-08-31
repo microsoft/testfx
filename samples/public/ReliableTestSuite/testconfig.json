@@ -1,0 +1,8 @@
+{
+  "mstest": {
+    "execution": {
+      "randomizeTestOrder": true,
+      "randomTestOrderSeed": 12345
+    }
+  }
+}

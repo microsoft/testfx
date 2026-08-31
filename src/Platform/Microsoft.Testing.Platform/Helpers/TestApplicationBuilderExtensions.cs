@@ -4,6 +4,8 @@
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
@@ -20,6 +22,16 @@ public static class TestApplicationBuilderExtensions
     /// <param name="extension">The extension owner of the tree node filter service.</param>
     public static void AddTreeNodeFilterService(this ITestApplicationBuilder testApplicationBuilder, IExtension extension)
         => testApplicationBuilder.CommandLine.AddProvider(() => new TreeNodeFilterCommandLineOptionsProvider(extension));
+
+    /// <summary>
+    /// Registers a provider that can contribute an additional test execution filter constraint.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    /// <param name="providerFactory">The factory method for creating the provider.</param>
+    public static void AddTestExecutionFilterProvider(
+        this ITestApplicationBuilder builder,
+        Func<IServiceProvider, ITestExecutionFilterProvider> providerFactory)
+        => ((TestHostManager)builder.TestHost).AddTestExecutionFilterProvider(providerFactory);
 
     /// <summary>
     /// Registers the command-line options provider for '--maximum-failed-tests'.

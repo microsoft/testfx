@@ -42,6 +42,11 @@
         <target state="translated">'--report-azdo-groups'를 사용하려면 '--report-azdo'를 사용하도록 설정해야 합니다</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
+        <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 {0} 첨부 파일을 업로드할 수 없습니다. 해당 첨부 파일은 Azure DevOps 테스트 실행에서 누락됩니다.</target>
+        <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps 라이브 게시에서 테스트 실행을 완료하지 못했습니다.</target>
@@ -55,6 +60,16 @@
       <trans-unit id="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile">
         <source>Azure DevOps live publishing failed to delete coordination file</source>
         <target state="translated">Azure DevOps 라이브 게시에서 조정 파일을 삭제하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 조정 파일을 읽지 못함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
+        <source>Azure DevOps live publishing failed to write coordination file</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 조정 파일을 쓰지 못함</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -102,15 +117,40 @@
         <target state="translated">Azure DevOps 라이브 게시에서 테스트 결과 일괄 처리를 수락했지만 할당된 결과 ID를 구문 분석할 수 없습니다. 이 일괄 처리의 결과 수준 첨부 파일은 건너뜁니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 결과 맵 핸드오프를 업데이트하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
+        <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 {0} 테스트 결과를 게시할 수 없습니다. 해당 결과는 Azure DevOps 테스트 실행에서 누락됩니다.</target>
+        <note>{0} is the number of test results that could not be published.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
         <target state="translated">Azure DevOps 라이브 게시에서 테스트 실행 첨부 파일을 업로드하지 못했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunCreated">
+        <source>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 테스트 실행 {0}(으)로 결과를 스트리밍하고 있습니다. 테스트가 계속 실행되는 동안 {1}에서 확인할 수 있습니다. 실행이 완료되면 빌드의 테스트 탭에 나열됩니다.</target>
+        <note>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps 라이브 게시에서 다른 Azure DevOps 프로젝트에 대한 azdo-runid.&lt;buildId&gt;.json 파일을 찾았습니다.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 테스트 실행 ID 핸드오프를 업데이트하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
+        <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
+        <target state="translated">Azure DevOps 테스트 실행이 완료된 것으로 표시되지 않았으며 빌드의 테스트 탭에 표시되지 않을 수 있습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>
@@ -121,6 +161,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">시간 제한: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
+        <source>Azure DevOps live publishing could not display a warning on the output device.</source>
+        <target state="translated">Azure DevOps 라이브 게시에서 출력 장치에 경고를 표시할 수 없습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
@@ -213,8 +258,8 @@
         <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
-        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">어셈블리별 Azure DevOps 로그 그룹을 사용하거나 사용하지 않도록 설정합니다('on' 또는 'off'). 기본값은 'on'입니다. '--report-azdo'가 필요합니다.</target>
+        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
+        <target state="translated">어셈블리별 Azure DevOps 로그 그룹을 활성화하거나 비활성화합니다('on' 또는 'off'). 기본값은 'off'입니다. '--report-azdo'가 필요합니다.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -288,8 +333,8 @@
         <note>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
-        <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="translated">테스트 결과를 Azure DevOps Tests 탭에 실시간으로 게시합니다.</target>
+        <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
+        <target state="translated">테스트가 완료되면 테스트 결과를 Azure DevOps 테스트 실행에 게시합니다. 테스트 세션이 완료되면 해당 실행이 빌드의 테스트 탭에 나열됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

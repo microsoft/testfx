@@ -253,10 +253,15 @@ public sealed class CommandLineConfigurationProviderTests
         Assert.IsFalse(configuration.TryGetCommandLineOptionArguments("hangdump", out _));
     }
 
-    private sealed class InMemoryConfigurationProvider(Dictionary<string, string?> entries) : IConfigurationProvider
+    private sealed class InMemoryConfigurationProvider(Dictionary<string, string?> entries) : IHierarchicalConfigurationProvider
     {
         public Task LoadAsync() => Task.CompletedTask;
 
         public bool TryGet(string key, out string? value) => entries.TryGetValue(key, out value);
+
+        public IEnumerable<string> GetChildKeys(string? parentPath)
+            => ConfigurationProviderHelpers.GetChildKeys(entries.Keys, parentPath);
+
+        public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
     }
 }

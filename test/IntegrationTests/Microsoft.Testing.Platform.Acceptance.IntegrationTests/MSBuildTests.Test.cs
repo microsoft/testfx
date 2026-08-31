@@ -213,7 +213,19 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
             if (OperatingSystem.IsWindows())
             {
-                result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+                // Launching an incompatible-architecture apphost can surface with different native
+                // error text depending on the exact Windows build/runtime path:
+                //   1) CreateProcess fails with ERROR_BAD_EXE_FORMAT / ERROR_EXE_MACHINE_TYPE_MISMATCH
+                //      and .NET wraps it with the friendly "not a valid application for this OS platform".
+                //   2) CreateProcess fails but GetLastError() reports 0, so the raw Win32Exception message
+                //      is "The operation completed successfully." (HResult 0x80004005).
+                // Both prove we attempted to launch the incompatible-arch apphost and failed. The MSB6003 +
+                // "An error occurred trying to start process" assertions above already establish that.
+                bool hasInvalidApplication = result.StandardOutput.Contains("The specified executable is not a valid application for this OS platform.", StringComparison.Ordinal);
+                bool hasOperationCompleted = result.StandardOutput.Contains("The operation completed successfully.", StringComparison.Ordinal);
+                Assert.IsTrue(
+                    hasInvalidApplication || hasOperationCompleted,
+                    $"Expected output to contain either \"The specified executable is not a valid application for this OS platform.\" or \"The operation completed successfully.\". Actual output: {result.StandardOutput}");
             }
             else if (OperatingSystem.IsMacOS())
             {
@@ -325,6 +337,103 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
     }
 
+    [TestMethod]
+    public async Task InvokeTestingPlatform_Target_Should_Pass_EnvironmentVariables_To_TestProcess()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        // TestingPlatformCaptureOutput=False routes the test process stdout through the MSBuild log so the values the
+        // test process actually observed can be asserted on.
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:AddTestingPlatformEnvironmentVariableItem=true \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                // Deliberately NOT declared as a TestingPlatformEnvironmentVariable item: it only reaches the test
+                // process by inheritance from the MSBuild process.
+                ["MTP_ENV_INHERITED"] = "inherited-value",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        compilationResult.AssertOutputContains("[env] MTP_ENV_SIMPLE=simple-value");
+
+        // The value is carried by item metadata, which MSBuild does not split on ';', so it must arrive intact.
+        compilationResult.AssertOutputContains("[env] MTP_ENV_WITH_SEMICOLON=first;second");
+
+        // ToolTask layers EnvironmentVariables on top of the inherited environment rather than replacing it. This is
+        // the load-bearing half of the feature: if it ever became replace semantics, declaring a single variable would
+        // strip PATH / DOTNET_ROOT / ... from every test process, so pin it here alongside the declared values.
+        compilationResult.AssertOutputContains("[env] MTP_ENV_INHERITED=inherited-value");
+    }
+
+    [TestMethod]
+    public async Task InvokeTestingPlatform_Target_Should_Set_DotnetRoot_For_AppHost()
+    {
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString();
+        string dotnetRootVariableName = $"DOTNET_ROOT_{architecture.ToUpperInvariant()}";
+        string dotnetRoot = Path.Combine(RootFinder.Find(), ".dotnet");
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", $"<PlatformTarget>{architecture.ToLowerInvariant()}</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        Dictionary<string, string?> CreateEnvironmentVariables()
+            => new()
+            {
+                [dotnetRootVariableName] = null,
+            };
+
+        DotnetMuxerResult derivedResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: CreateEnvironmentVariables(),
+            cancellationToken: TestContext.CancellationToken);
+
+        string dotnetRootOutputPrefix = $"[env] {dotnetRootVariableName}=";
+        string? dotnetRootOutput = derivedResult.StandardOutputLines
+            .Select(line => line.TrimStart())
+            .FirstOrDefault(line => line.StartsWith(dotnetRootOutputPrefix, StringComparison.Ordinal));
+        Assert.IsNotNull(dotnetRootOutput, derivedResult.ToString());
+        // DOTNET_HOST_PATH can preserve different drive-letter casing than RootFinder on Windows.
+        Assert.AreEqual(
+            dotnetRoot,
+            dotnetRootOutput[dotnetRootOutputPrefix.Length..],
+            ignoreCase: OperatingSystem.IsWindows(),
+            derivedResult.ToString());
+
+        DotnetMuxerResult explicitResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:ExplicitDotnetRoot=\"{dotnetRoot}\" \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                // An inherited architecture-specific root has higher apphost precedence than DOTNET_ROOT. Use an
+                // existing directory without a dotnet installation to prove the explicit item clears this override.
+                [dotnetRootVariableName] = Path.GetTempPath(),
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        explicitResult.AssertOutputContains($"[env] DOTNET_ROOT={dotnetRoot}");
+        explicitResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
+
+        DotnetMuxerResult disabledResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:TestingPlatformDisableAppHostDotnetRoot=true \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: CreateEnvironmentVariables(),
+            cancellationToken: TestContext.CancellationToken);
+
+        disabledResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
+    }
+
     private const string SourceCode = """
 #file MSBuild Tests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -342,6 +451,16 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(AddTestingPlatformEnvironmentVariableItem)' == 'true'">
+        <TestingPlatformEnvironmentVariable Include="MTP_ENV_SIMPLE" Value="simple-value" />
+        <!-- The value intentionally contains a ';' to prove item metadata is not subject to MSBuild's ';' splitting. -->
+        <TestingPlatformEnvironmentVariable Include="MTP_ENV_WITH_SEMICOLON" Value="first;second" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT" Value="$(ExplicitDotnetRoot)" Condition="'$(ExplicitDotnetRoot)' != ''" />
     </ItemGroup>
 
     <Import Project="UserDefinedTestTarget.targets" Condition="'$(ImportUserDefinedTestTarget)' == 'true'" />
@@ -370,11 +489,18 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Services;
+using System.Runtime.InteropServices;
 
 public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        string dotnetRootArchVariableName = $"DOTNET_ROOT_{RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}";
+        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON", "MTP_ENV_INHERITED", "DOTNET_ROOT", dotnetRootArchVariableName })
+        {
+            Console.WriteLine($"[env] {name}={Environment.GetEnvironmentVariable(name)}");
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         MyExtension myExtension = new();
         builder.RegisterTestFramework(

@@ -44,9 +44,10 @@
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
 
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestSourceGenerationVersion)</Version>
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestSourceGenerationVersion)"
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

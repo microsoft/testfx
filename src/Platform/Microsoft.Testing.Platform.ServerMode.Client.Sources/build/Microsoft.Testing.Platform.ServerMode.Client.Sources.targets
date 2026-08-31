@@ -1,0 +1,42 @@
+<Project>
+
+  <!--
+    Microsoft.Testing.Platform.ServerMode.Client.Sources - consumer build customization
+    ================================================================================
+    This source-only package injects (as internal source) the MTP server-mode JSON-RPC client. The
+    injected files are the exact protocol + serialization source the platform (server) compiles, so
+    they expect the same compilation context the platform gives them. This targets file supplies that
+    context to the consuming project. The companion .props establishes the default language version before
+    the consuming project body, so an explicit consumer value can override it.
+
+    Imported for the DIRECT consumer only (every consumer compiles the source into its own assembly).
+    It is a .targets (imported after the consumer's own PropertyGroups) so the values below always
+    append, even if the consumer sets DefineConstants without $(DefineConstants).
+  -->
+  <PropertyGroup>
+    <!--
+      Several linked platform files switch on IS_CORE_MTP (e.g. Helpers/ObjectPool.cs selects the
+      Microsoft.Testing.Platform.Helpers namespace under IS_CORE_MTP, which Json.cs imports). The
+      platform defines it while compiling; the injected source needs the same branch, so define it here.
+      It is a platform-internal switch name that consuming code does not otherwise use.
+    -->
+    <DefineConstants>$(DefineConstants);IS_CORE_MTP;IS_MTP_SERVER_MODE_CLIENT</DefineConstants>
+    <DefineConstants Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and !$([MSBuild]::VersionLessThan('$(TargetFrameworkVersion)', 'v8.0'))">$(DefineConstants);MTP_CLIENT_USE_MODERN_DOTNET</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    Note on .NET Framework (net462+) consumers:
+    The injected source is authored for netstandard2.0, which includes some surface that is not in the
+    in-box .NET Framework reference assemblies before 4.7.1 - notably
+    System.Runtime.InteropServices.RuntimeInformation / OSPlatform. When a consumer REFERENCES a compiled
+    netstandard2.0 DLL those types are satisfied by the netstandard facade + runtime shims; but a
+    source-only package compiles its .cs directly into the consumer, and the net462 targeting pack has NO
+    facade that forwards RuntimeInformation / OSPlatform (they simply do not exist on net462). Adding a
+    <Reference Include="netstandard" /> does NOT help - a facade can only forward types the target
+    framework actually has. So the two source sites that used those APIs are guarded with #if NETFRAMEWORK
+    and fall back to net462-safe equivalents (Environment.OSVersion.Platform for the Windows check; constant
+    false for the never-on-.NET-Framework OperatingSystem.IsWasi/IsAndroid/IsIOS/IsTvOS/IsBrowser checks).
+    That keeps the package dependency-free and lets it compile clean on net462 with no extra references.
+  -->
+
+</Project>

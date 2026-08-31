@@ -38,6 +38,47 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             IsBCLSymbol(type, objectTypeSymbol);
 
     /// <summary>
+    /// Returns <see langword="true"/> when the invoked <c>Contains</c> method is the non-generic
+    /// <see cref="System.Collections.IDictionary.Contains(object)"/> (or an implementation of it).
+    /// That method checks for a matching <em>key</em>, whereas <c>Assert.Contains</c> enumerates the
+    /// dictionary (yielding <see cref="System.Collections.DictionaryEntry"/> items), so the two are not
+    /// equivalent and the code fix would silently change behavior.
+    /// </summary>
+    private static bool IsNonGenericDictionaryContains(IMethodSymbol containsMethod, INamedTypeSymbol? iDictionaryTypeSymbol)
+    {
+        if (iDictionaryTypeSymbol is null)
+        {
+            return false;
+        }
+
+        INamedTypeSymbol containingType = containsMethod.ContainingType;
+
+        // Direct call through the interface, e.g. 'IDictionary dict; dict.Contains(key)'.
+        if (SymbolEqualityComparer.Default.Equals(containingType.OriginalDefinition, iDictionaryTypeSymbol))
+        {
+            return true;
+        }
+
+        // Call through a concrete type that implements IDictionary (e.g. Hashtable), where the invoked
+        // 'Contains' is the implementation of 'IDictionary.Contains'.
+        if (!containingType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, iDictionaryTypeSymbol)))
+        {
+            return false;
+        }
+
+        foreach (IMethodSymbol dictionaryContains in iDictionaryTypeSymbol.GetMembers("Contains").OfType<IMethodSymbol>())
+        {
+            if (containingType.FindImplementationForInterfaceMember(dictionaryContains) is IMethodSymbol implementation &&
+                SymbolEqualityComparer.Default.Equals(implementation.OriginalDefinition, containsMethod.OriginalDefinition))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Returns <see langword="true"/> when <paramref name="type"/> is one of <see cref="System.Span{T}"/>,
     /// <see cref="System.ReadOnlySpan{T}"/>, <see cref="System.Memory{T}"/> or <see cref="System.ReadOnlyMemory{T}"/>.
     /// These types expose <c>Length</c> and have <c>Assert.HasCount</c> overloads, but cannot satisfy
@@ -69,6 +110,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         IOperation operation,
         INamedTypeSymbol objectTypeSymbol,
         INamedTypeSymbol? enumerableTypeSymbol,
+        INamedTypeSymbol? iDictionaryTypeSymbol,
         out SyntaxNode? collectionExpression,
         out SyntaxNode? itemExpression,
         out SyntaxNode? comparerExpression)
@@ -88,6 +130,17 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 {
                     ITypeSymbol? enumerableElementType = invocation.TargetMethod.ContainingType.OriginalDefinition.AllInterfaces.FirstOrDefault(
                         i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)?.TypeArguments[0];
+
+                    if (enumerableElementType is null && IsNonGenericDictionaryContains(invocation.TargetMethod, iDictionaryTypeSymbol))
+                    {
+                        // Non-generic 'System.Collections.IDictionary.Contains(object key)' checks for a matching *key*,
+                        // whereas 'Assert.Contains' enumerates the dictionary (yielding 'DictionaryEntry' items).
+                        // These have different semantics, so suggesting 'Assert.Contains' here would change behavior.
+                        collectionExpression = null;
+                        itemExpression = null;
+                        comparerExpression = null;
+                        return CollectionCheckStatus.Unknown;
+                    }
 
                     if (enumerableElementType is null || enumerableElementType.Equals(containsParameterType, SymbolEqualityComparer.Default))
                     {

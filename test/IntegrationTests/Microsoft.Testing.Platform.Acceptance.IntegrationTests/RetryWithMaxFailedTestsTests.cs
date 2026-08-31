@@ -35,11 +35,18 @@ public class RetryWithMaxFailedTestsTests : AcceptanceTestBase<RetryWithMaxFaile
         // The child must have produced the standard max-failed-tests stop diagnostic.
         testHostResult.AssertOutputContains("Test session is aborting due to reaching failures ('2') specified by the '--maximum-failed-tests' option.");
 
-        // The retry orchestrator must NOT launch a second attempt, and because the child stopped with an
-        // unexpected exit code the orchestrator bails out before printing any retry summary verdict.
+        // The retry orchestrator must NOT launch a second attempt: retrying after the user asked the run to stop
+        // would defeat the point of --maximum-failed-tests.
         testHostResult.AssertOutputDoesNotContain("Retry: attempt 2/");
-        testHostResult.AssertOutputDoesNotContain("Retry summary: Failed!");
-        testHostResult.AssertOutputDoesNotContain("Retry summary: Passed!");
+
+        // It must still print a summary. Reporting nothing (the previous behaviour) left the user with no
+        // orchestrator-level account of a run that did execute tests. The verdict uses the "stopped early" wording
+        // rather than "1/4 attempts", which would wrongly imply the remaining attempts ran and failed.
+        testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)");
+
+        // Nothing was ever retried here, so the retry accounting lines must be absent.
+        testHostResult.AssertOutputDoesNotContain("  retried:");
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
 
         // TODO(https://github.com/microsoft/testfx/issues/6914): the retry orchestrator
         // emits "Test suite failed with and exit code different that 2 (failed tests)..."

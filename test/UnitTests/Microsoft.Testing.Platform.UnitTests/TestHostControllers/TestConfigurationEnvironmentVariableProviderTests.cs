@@ -83,6 +83,78 @@ public sealed class TestConfigurationEnvironmentVariableProviderTests
         Assert.IsTrue(result.IsValid);
     }
 
+    [TestMethod]
+    public async Task SystemProviderLocksDeadlineSnapshotAgainstChildOnlyOverrides()
+    {
+        var sourceVariables = new Hashtable
+        {
+            [EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE] = "2030-01-01T00:00:00Z",
+        };
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariables()).Returns(sourceVariables);
+        var systemProvider = new SystemEnvironmentVariableProvider(environment.Object);
+        EnvironmentVariables environmentVariables = new(new TestLoggerFactory())
+        {
+            CurrentProvider = systemProvider,
+        };
+
+        await systemProvider.UpdateAsync(environmentVariables);
+
+        Assert.IsTrue(environmentVariables.TryGetVariable(
+            EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE,
+            out OwnedEnvironmentVariable? deadline));
+        Assert.AreEqual("2030-01-01T00:00:00Z", deadline!.Value);
+        Assert.IsTrue(deadline.IsLocked);
+
+        Assert.IsTrue(environmentVariables.TryGetVariable(
+            EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN,
+            out OwnedEnvironmentVariable? stopMargin));
+        Assert.AreEqual(string.Empty, stopMargin!.Value);
+        Assert.IsTrue(stopMargin.IsLocked);
+
+        TestConfigurationEnvironmentVariableProvider testConfigurationProvider = await CreateProviderAsync(
+            $"{{\"environmentVariables\": {{\"{EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE}\": \"2040-01-01T00:00:00Z\"}}}}");
+        Assert.IsTrue(await testConfigurationProvider.IsEnabledAsync());
+        environmentVariables.CurrentProvider = testConfigurationProvider;
+
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => testConfigurationProvider.UpdateAsync(environmentVariables));
+        Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE, exception.Message);
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows)]
+    public async Task SystemProviderLocksDeadlineSnapshotCaseInsensitivelyOnWindows()
+    {
+        string lowerCaseDeadline = EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE.ToLowerInvariant();
+        var sourceVariables = new Hashtable
+        {
+            [lowerCaseDeadline] = "2030-01-01T00:00:00Z",
+        };
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariables()).Returns(sourceVariables);
+        var systemProvider = new SystemEnvironmentVariableProvider(environment.Object);
+        EnvironmentVariables environmentVariables = new(new TestLoggerFactory())
+        {
+            CurrentProvider = systemProvider,
+        };
+        await systemProvider.UpdateAsync(environmentVariables);
+
+        Assert.IsTrue(environmentVariables.TryGetVariable(
+            EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE,
+            out OwnedEnvironmentVariable? deadline));
+        Assert.AreEqual("2030-01-01T00:00:00Z", deadline!.Value);
+        Assert.IsTrue(deadline.IsLocked);
+
+        TestConfigurationEnvironmentVariableProvider testConfigurationProvider = await CreateProviderAsync(
+            $"{{\"environmentVariables\": {{\"{EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE}\": \"2040-01-01T00:00:00Z\"}}}}");
+        Assert.IsTrue(await testConfigurationProvider.IsEnabledAsync());
+        environmentVariables.CurrentProvider = testConfigurationProvider;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => testConfigurationProvider.UpdateAsync(environmentVariables));
+    }
+
     private static async Task<TestConfigurationEnvironmentVariableProvider> CreateProviderAsync(string jsonFileContent)
     {
         Mock<IFileSystem> fileSystem = new();

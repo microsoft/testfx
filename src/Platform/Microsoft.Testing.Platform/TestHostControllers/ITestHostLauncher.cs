@@ -8,22 +8,20 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// platform's default <c>Process.Start</c> behavior.
 /// </summary>
 /// <remarks>
-/// The platform keeps owning everything around the launch — argument and environment preparation,
-/// the controller-to-host IPC pipe, the PID handshake, <see cref="ITestHostProcessLifetimeHandler"/>
-/// callbacks, and exit-code reconciliation — and delegates only the single "create and start the
-/// test host" step to the registered launcher. The launcher does not have to start a local OS
-/// process: it can deploy and activate a packaged application, launch a container, or start the
-/// host on a remote machine, as long as it returns an <see cref="ITestHostHandle"/> the platform
-/// can monitor.
+/// The platform keeps owning argument and environment preparation, connection handshakes, lifecycle
+/// callbacks, and exit-code reconciliation, and delegates only the single "create and start the test host"
+/// step. A controller launch carries the controller IPC/PID handshake; an orchestrator launch can instead
+/// carry extension-specific connection metadata such as Retry. Launchers must forward the supplied context
+/// opaquely rather than require one specific handshake. The launcher does not have to start a local OS
+/// process as long as it returns an <see cref="ITestHostHandle"/> the platform can monitor.
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostLauncher : ITestHostControllersExtension
 {
     /// <summary>
     /// Creates and starts the test host. The platform has already prepared the file name,
-    /// arguments, and environment variables (including the controller IPC pipe name) carried by
-    /// <paramref name="context"/>. The implementation must return a handle the platform can
-    /// monitor for completion.
+    /// arguments, and environment variables carried by <paramref name="context"/> for the active controller
+    /// or orchestrator mode. The implementation must return a handle the platform can monitor for completion.
     /// </summary>
     /// <param name="context">The fully prepared launch information.</param>
     /// <param name="cancellationToken">The cancellation token.</param>

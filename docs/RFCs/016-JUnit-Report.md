@@ -63,11 +63,11 @@ We target the **Jenkins/Surefire** JUnit XML flavor (the schema published at `je
         <property name="uid" value="..."/>
         <property name="trait.Category" value="..."/>
       </properties>
-      <skipped message="..."/>             <!-- 0..1 -->
-      <error message="..." type="..."/>    <!-- 0..n -->
-      <failure message="..." type="..."/>  <!-- 0..n -->
-      <system-out>...</system-out>         <!-- 0..n -->
-      <system-err>...</system-err>         <!-- 0..n -->
+      <skipped message="..."/>                  <!-- 0..1 -->
+      <error message="..." type="...">...</error>      <!-- 0..n -->
+      <failure message="..." type="...">...</failure>  <!-- 0..n -->
+      <system-out>...</system-out>              <!-- 0..n -->
+      <system-err>...</system-err>              <!-- 0..n -->
     </testcase>
     <system-out>...</system-out>
     <system-err>...</system-err>
@@ -90,7 +90,7 @@ We target the **Jenkins/Surefire** JUnit XML flavor (the schema published at `je
 | **xUnit.net's `--report-junit`** | `<testsuites>`   | No            | Per-testcase only                        | None                                          | Single file                | Targets the Jenkins/Surefire shape but skips some optional metadata (no per-suite `<properties>`, no `<system-out>` mirror at suite level). Will be renamed to `--report-xunit-junit` in xUnit 4.0. |
 | **pytest's `--junitxml`**       | `<testsuites>` (with `junit_family=xunit2`) or `<testsuite>` (legacy `xunit1`) | No | Per-testcase | None native — flaky output via `<system-out>` / properties | Single file                | The default `xunit2` family is functionally a Jenkins/Surefire dialect with a few pytest-specific extras (`<properties>` for fixtures, `file`/`line` attributes).    |
 | **NUnit 2 XML**                 | `<test-results>` | Yes           | n/a (different schema)                   | None                                          | Single file                | Predates the JUnit consensus. Some parsers accept it via auto-detection; most do not. Out of scope for an interop format.                                            |
-| **testmoapp / testmo-junit**    | `<testsuites>`   | No            | Per-testcase (rich, opinionated)         | Vendor-specific `<flaky>`                     | Single file                | A vendor-specific superset. Strict supersets of Jenkins/Surefire are safe; we do not adopt their extensions.                                                         |
+| **testmoapp / testmo-junit**    | `<testsuites>`   | No            | Per-testcase (rich, opinionated)         | None documented                               | Single file                | A vendor-specific superset. Its [JUnit XML reference](https://github.com/testmoapp/junitxml) documents no rerun/flaky element — flakiness is derived by the service from run history, not encoded in the XML. Strict supersets of Jenkins/Surefire are safe; we do not adopt their extensions. |
 
 The trade-offs in one line: **portability ↔ expressiveness**. Jenkins/Surefire is the largest-common-denominator that every mainstream CI ingests verbatim; everything else either loses a chunk of consumers or carries data the consumer will not display anyway. Where MTP needs to express something the flat schema lacks (test tree, retry, traits), we encode it via standard `<property>` children so portable consumers see uniform `<testcase>` rows while richer consumers can dig deeper.
 
@@ -130,16 +130,39 @@ The root `<testsuites>` `name` attribute is the module file name without extensi
 | MTP `TestNodeStateProperty`                    | JUnit element                                  |
 | ---------------------------------------------- | ---------------------------------------------- |
 | `PassedTestNodeStateProperty`                  | *(no child element)*                            |
-| `SkippedTestNodeStateProperty`                 | `<skipped message="..."/>` + reason as text     |
-| `FailedTestNodeStateProperty`                  | `<failure message="..." type="..."/>` + stack   |
-| `TimeoutTestNodeStateProperty`                 | `<error message="..." type="..."/>` + stack     |
-| `ErrorTestNodeStateProperty`                   | `<error message="..." type="..."/>` + stack     |
-| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="..."/>` + stack     |
-| Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="..."/>`  |
+| `SkippedTestNodeStateProperty`                 | `<skipped message="..."/>` *(no body)*          |
+| `FailedTestNodeStateProperty`                  | `<failure message="..." type="...">body</failure>` |
+| `TimeoutTestNodeStateProperty`                 | `<error message="..." type="...">body</error>`  |
+| `ErrorTestNodeStateProperty`                   | `<error message="..." type="...">body</error>`  |
+| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="...">body</error>`  |
+| Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="...">body</failure>` |
 | `DiscoveredTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 | `InProgressTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 
+`body` is the composed failure text described in [Failure and error body format](#failure-and-error-body-format); the element is written with explicit start/end tags whenever that text is non-empty.
+
 `Cancelled` becomes `<error>` rather than `<failure>` because cancellation indicates an interruption, not an assertion failure — `<error>` is the schema-correct bucket for "the test could not be evaluated".
+
+### Failure and error body format
+
+The body of `<failure>`/`<error>` mirrors the shape Java's `Throwable.printStackTrace()` produces, which is what genuine Surefire reports contain:
+
+```text
+System.InvalidOperationException: The expected condition was not met.
+   at MyProject.MyTests.MyTest()
+```
+
+That is, the exception type and message form a header line, followed by the stack trace. Neither the Ant/windyroad `JUnit.xsd` nor Surefire's `surefire-test-report.xsd` constrains this body — both declare it as free-form text — so the header line is schema-valid in every flavor.
+
+Writing the stack trace alone would **not** be equivalent to Java's output: .NET's `Exception.StackTrace` omits the leading `type: message` header that `Throwable.printStackTrace()` (and `Exception.ToString()`) include. Consumers that render the body rather than the `message` attribute — GitLab CI and CircleCI most notably — would then show a stack trace with no indication of *why* the test failed. This is especially damaging for fluent assertion libraries, whose stack traces are largely framework frames while the assertion message carries the actual diagnosis.
+
+The `message` and `type` attributes are still written, so consumers that read them directly are unaffected. The resulting duplication between the `message` attribute and the body is exactly what every Maven/Surefire report already exhibits, so consumers that render both have long handled it.
+
+Each part degrades gracefully: a missing exception type drops the header prefix, a missing message drops the colon-space separator, and a missing stack trace yields a header-only body.
+
+### The `type` attribute
+
+`type` is **always** emitted on `<failure>`/`<error>`. The Ant/windyroad `JUnit.xsd` marks it `use="required"` (Surefire relaxes it to optional), but MTP only supplies an exception type when the state property carried an actual `Exception` — frameworks that report a failure through `Explanation` alone leave it null. In that case the element name (`failure` or `error`) is used as the value, keeping the document valid under the stricter schema without inventing a bogus exception type name.
 
 ## Per-testcase metadata
 
@@ -192,9 +215,9 @@ When the same `(classname, name)` pair is emitted more than once (parameterized 
 
 Different retry mechanisms publish attempts to MTP differently, and the engine reflects that faithfully:
 
-- **MSTest `[Retry]` attribute** — The MSTest adapter retries internally and surfaces only the **final** attempt as a `TestNodeUpdateMessage`. The JUnit report therefore contains a single `<testcase>` row per logical test, with its eventual outcome. No per-attempt disambiguation is applied.
-- **`Microsoft.Testing.Extensions.Retry` (MTP-level orchestrator, `--retry-failed-tests`)** — The orchestrator re-runs the entire test-host child process on failure. Each attempt is a separate process and therefore produces **its own JUnit XML file** under the run's results directory. No special handling is required inside the report engine.
-- **Per-attempt `TestNodeUpdateMessage`s within a single run** (e.g. some 3rd-party test frameworks, or future MSTest behavior that exposes each attempt) — The Jenkins/Surefire flavor has no native rerun element, but consumers require `(classname, name)` pairs to be unique within a suite (see [Duplicate test identities](#duplicate-test-identities) above). When the engine sees two or more nodes with the same `(classname, name)` pair within one report it:
+- **MSTest `[Retry]` attribute** — The MSTest adapter retries in-process and publishes **every** attempt as a `TestNodeUpdateMessage` under the same test node uid, tagged with `RetryAttemptProperty`. The JUnit report generator drops the attempts marked `IsSuperseded` (JUnit has no notion of attempts, so keeping them would inflate the suite totals), so the report still contains a single `<testcase>` row per logical test with its eventual outcome. No per-attempt disambiguation is applied.
+- **`Microsoft.Testing.Extensions.Retry` (MTP-level orchestrator, `--retry-failed-tests`)** — The orchestrator re-runs the entire test-host child process on failure, and each re-run is filtered down to the tests that failed in the previous attempt. Every attempt keeps its own immutable JUnit XML file under `<results>/Retries/<id>/<n>/`. After the final attempt, the JUnit post-processor writes the top-level report as one row per logical test using each test's final outcome. JUnit XML has no portable retry vocabulary, so earlier failure history remains available only in the per-attempt files; the consolidated top-level report deliberately favors correct CI gating and suite totals over inflating failures with superseded attempts.
+- **Per-attempt `TestNodeUpdateMessage`s that are *not* tagged with `RetryAttemptProperty`** (e.g. some 3rd-party test frameworks) — A producer that tags its attempts has its superseded ones filtered out above, so this case covers only *unattributed* duplicates. The Jenkins/Surefire flavor has no native rerun element, but consumers require `(classname, name)` pairs to be unique within a suite (see [Duplicate test identities](#duplicate-test-identities) above). When the engine sees two or more such nodes with the same `(classname, name)` pair within one report it:
   - Preserves every attempt as its own `<testcase>` row (never drops history) so flaky-test dashboards can compute pass-rate over the run.
   - Disambiguates each row by appending `[attempt 1]`, `[attempt 2]`, … to `name` (preceded by a single space), so portable consumers see distinct entries.
   - Emits two `<property>` children per disambiguated attempt — `attempt-index` (`1`, `2`, …) and `attempt-of` (total attempts for that logical test) — so retry-aware consumers can collapse the rows back into a single logical test.
@@ -278,3 +301,4 @@ A fresh GUID is generated for the `<TestingPlatformBuilderHook Include>` attribu
   - Parent-chain resolution with missing intermediate parents.
   - Counters at the suite and root level.
   - Outcome mapping (skipped/failed/error/timeout/cancelled).
+  - Failure/error body composition across every combination of present/absent exception type, message and stack trace, plus the `type` attribute fallback to the element name.

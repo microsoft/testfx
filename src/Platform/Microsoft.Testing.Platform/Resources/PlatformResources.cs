@@ -32,7 +32,15 @@ internal static partial class PlatformResources
 
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
+    internal static string @NamedPipePathTooLongErrorMessage => GetResourceString("NamedPipePathTooLongErrorMessage");
+
+    internal static string @NamedPipeDirectoryNotWritableErrorMessage => GetResourceString("NamedPipeDirectoryNotWritableErrorMessage");
+
 #if IS_MTP_UNIT_TESTS
+    internal static string @ArtifactPostProcessingManifestInvalid => GetResourceString("ArtifactPostProcessingManifestInvalid");
+
+    internal static string @ArtifactPostProcessingManifestRunSummaryInvalid => GetResourceString("ArtifactPostProcessingManifestRunSummaryInvalid");
+
     internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
 
     internal static string @ActiveTestsRunning_MoreTestsCount => GetResourceString("ActiveTestsRunning_MoreTestsCount");
@@ -46,6 +54,24 @@ internal static partial class PlatformResources
     internal static string @PlatformCommandLineZeroTestsPolicyInvalidArgument => GetResourceString("PlatformCommandLineZeroTestsPolicyInvalidArgument");
 
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
+
+    internal static string @PlatformCommandLineDotnetTestTransportInvalid => GetResourceString("PlatformCommandLineDotnetTestTransportInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestHttpEndpointInvalid => GetResourceString("PlatformCommandLineDotnetTestHttpEndpointInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestHttpTokenInvalid => GetResourceString("PlatformCommandLineDotnetTestHttpTokenInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestTransportConflict => GetResourceString("PlatformCommandLineDotnetTestTransportConflict");
+
+    internal static string @PlatformCommandLineDotnetTestHttpOptionsRequireTransport => GetResourceString("PlatformCommandLineDotnetTestHttpOptionsRequireTransport");
+
+    internal static string @PlatformCommandLineDotnetTestCliRequiresTransport => GetResourceString("PlatformCommandLineDotnetTestCliRequiresTransport");
+
+    internal static string @PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken => GetResourceString("PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnBrowser => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnBrowser");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnWasi => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnWasi");
 
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");
 

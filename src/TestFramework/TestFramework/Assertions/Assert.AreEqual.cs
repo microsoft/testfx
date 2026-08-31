@@ -145,9 +145,6 @@ public sealed partial class Assert
     private static bool AreEqualFailing<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
         => !(comparer ?? EqualityComparer<T>.Default).Equals(expected!, actual!);
 
-    private static void AppendStringDiffSummary(StructuredAssertionMessage structured, string expected, string actual)
-        => AppendStringDiffSummary(structured, expected, actual, FindFirstStringDifference(expected, actual));
-
     private static void AppendStringDiffSummary(StructuredAssertionMessage structured, string expected, string actual, int diffIndex)
     {
         if (diffIndex == -1)
@@ -162,29 +159,13 @@ public sealed partial class Assert
         structured.WithAdditionalSummaryLine(diffSummary);
     }
 
-    private static int FindFirstStringDifference(string expected, string actual)
-    {
-        int minLength = Math.Min(expected.Length, actual.Length);
-
-        for (int i = 0; i < minLength; i++)
-        {
-            if (expected[i] != actual[i])
-            {
-                return i;
-            }
-        }
-
-        // If we reach here, one string is a prefix of the other
-        return expected.Length != actual.Length ? minLength : -1;
-    }
-
     [DoesNotReturn]
     private static void ReportAssertAreEqualFailed(object? expected, object? actual, string? message, string expectedExpression, string actualExpression)
     {
         string expectedRendered = AssertionValueRenderer.RenderValue(expected);
         string actualRendered = AssertionValueRenderer.RenderValue(actual);
 
-        EvidenceBlock evidence;
+        EvidenceBlock? evidence;
         StructuredAssertionMessage structured;
 
         if (actual is not null && expected is not null && !actual.GetType().Equals(expected.GetType()))
@@ -200,11 +181,29 @@ public sealed partial class Assert
         }
         else if (expected is string expectedString && actual is string actualString)
         {
-            evidence = EvidenceBlock.Create()
-                .AddLine("expected:", expectedRendered)
-                .AddLine("actual:", actualRendered);
+            StringDifference difference = FindFirstStringDifference(expectedString, actualString);
+            evidence = null;
             structured = new(FrameworkMessages.AreEqualStringsFailedSummary);
-            AppendStringDiffSummary(structured, expectedString, actualString);
+            if (difference.Exists)
+            {
+                AppendStringDiffSummary(structured, expectedString, actualString, difference.SummaryIndex);
+                AddStringComparisonEvidence(
+                    structured,
+                    expectedString,
+                    actualString,
+                    expectedRendered,
+                    actualRendered,
+                    difference,
+                    ignoreCase: false,
+                    CultureInfo.InvariantCulture,
+                    cultureExplicit: false);
+            }
+            else
+            {
+                evidence = EvidenceBlock.Create()
+                    .AddLine("expected:", expectedRendered)
+                    .AddLine("actual:", actualRendered);
+            }
         }
         else
         {
@@ -215,7 +214,11 @@ public sealed partial class Assert
         }
 
         structured.WithUserMessage(message);
-        structured.WithEvidence(evidence);
+        if (evidence is not null)
+        {
+            structured.WithEvidence(evidence);
+        }
+
         structured.WithExpectedAndActual(expectedRendered, actualRendered);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression, "<expected>", "<actual>"));
 

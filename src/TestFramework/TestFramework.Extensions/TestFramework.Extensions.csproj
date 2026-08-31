@@ -18,19 +18,17 @@
     -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestFramework</PackageId>
-    <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework MSTestV2 Framework</PackageTags>
+    <PackageDescription><![CDATA[This package includes the libraries for writing tests with MSTest. To ensure discovery and execution of your tests, install the MSTest.TestAdapter package.
 
-      This package includes the libraries for writing tests with MSTest. To ensure discovery and execution of your tests, install the MSTest.TestAdapter package.
+Supported platforms:
+- .NET 4.6.2+
+- .NET 8.0+
+- .NET 8.0 Windows.18362+ (WinUI)
+- UWP 10.0.16299
+- UWP 10.0.17763 with .NET 9+
 
-      Supported platforms:
-      - .NET 4.6.2+
-      - .NET 8.0+
-      - .NET 8.0 Windows.18362+ (WinUI)
-      - UWP 10.0.16299
-      - UWP 10.0.17763 with .NET 9+
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
     <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
   </PropertyGroup>
 
