@@ -20,7 +20,13 @@ internal static class CombinatorialValuesUtilities
             0 => null,
             1 => valueSources[0],
             _ => throw new ArgumentException(
-                $"Parameter '{parameter.Name}' on '{parameter.Member.Name}' has multiple combinatorial value providers: {string.Join(", ", valueSources.Select(provider => provider.GetType().Name))}. Apply exactly one attribute that implements {nameof(ICombinatorialValuesProvider)}.",
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialMultipleValueProviders,
+                    parameter.Name,
+                    parameter.Member.Name,
+                    string.Join(", ", valueSources.Select(provider => provider.GetType().Name)),
+                    nameof(ICombinatorialValuesProvider)),
                 nameof(parameter)),
         };
         return valuesSource is null
@@ -38,7 +44,12 @@ internal static class CombinatorialValuesUtilities
         object?[] freshValues = valuesSource.GetValues(parameter);
         return freshValues.Length != candidateValues.Length
             ? throw new InvalidOperationException(
-                $"The value provider for parameter '{parameter.Name}' returned {candidateValues.Length} values when determining combinations, but {freshValues.Length} values when creating a test case.")
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialProviderValueCountChanged,
+                    parameter.Name,
+                    candidateValues.Length,
+                    freshValues.Length))
             : freshValues[candidateIndex];
     }
 
@@ -72,7 +83,11 @@ internal static class CombinatorialValuesUtilities
         else
         {
             throw new NotSupportedException(
-                $"Unable to automatically generate values for parameter of type {dataType}. Apply an attribute that implements {nameof(ICombinatorialValuesProvider)} to specify the values.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialUnableToInferValues,
+                    dataType,
+                    nameof(ICombinatorialValuesProvider)));
         }
     }
 }

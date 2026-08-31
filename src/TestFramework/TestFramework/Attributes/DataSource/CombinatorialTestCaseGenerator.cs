@@ -112,7 +112,7 @@ public static class CombinatorialTestCaseGenerator
         {
             if (dimensions[i] < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(dimensionSizes), dimensions[i], "Dimension sizes cannot be negative.");
+                throw new ArgumentOutOfRangeException(nameof(dimensionSizes), dimensions[i], FrameworkMessages.CombinatorialNegativeDimensionSize);
             }
         }
 

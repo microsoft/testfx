@@ -54,12 +54,12 @@ public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesP
     {
         if (Count < 1)
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "{0} must be positive.", nameof(Count)));
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialRandomCountMustBePositive, nameof(Count)));
         }
 
         if (Minimum > Maximum)
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "{0} must not be greater than {1}.", nameof(Minimum), nameof(Maximum)));
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialRandomMinimumExceedsMaximum, nameof(Minimum), nameof(Maximum)));
         }
 
         long maxPossibleValues = (long)Maximum - Minimum + 1;
@@ -68,7 +68,7 @@ public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesP
             throw new InvalidOperationException(
                 string.Format(
                     CultureInfo.CurrentCulture,
-                    "{0} requests more unique random values than the range between {1} and {2} contains.",
+                    FrameworkMessages.CombinatorialRandomCountExceedsRange,
                     nameof(Count),
                     nameof(Minimum),
                     nameof(Maximum)));

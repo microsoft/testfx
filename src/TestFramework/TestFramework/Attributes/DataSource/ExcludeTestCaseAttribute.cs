@@ -36,7 +36,7 @@ public class ExcludeTestCaseAttribute : Attribute
             if (exclusion.Arguments.Length != parameterCount)
             {
                 throw new ArgumentException(
-                    $"The number of arguments in {nameof(ExcludeTestCaseAttribute)} must match the number of test method parameters.",
+                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialExcludeArgumentCountMismatch, nameof(ExcludeTestCaseAttribute)),
                     nameof(testMethod));
             }
         }
@@ -101,7 +101,7 @@ public class ExcludeTestCaseAttribute : Attribute
             if (candidateValues.Length != exclusion.Arguments.Length)
             {
                 throw new ArgumentException(
-                    $"Expected to have same array length as {nameof(exclusion.Arguments)}.",
+                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialArrayLengthMismatch, nameof(exclusion.Arguments)),
                     nameof(candidateValues));
             }
 
@@ -141,7 +141,7 @@ public class ExcludeTestCaseAttribute : Attribute
             if (_matchingValueIndices.Length != testCase.Length)
             {
                 throw new ArgumentException(
-                    $"Expected to have same array length as {nameof(_matchingValueIndices)}.",
+                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialArrayLengthMismatch, nameof(_matchingValueIndices)),
                     nameof(testCase));
             }
 

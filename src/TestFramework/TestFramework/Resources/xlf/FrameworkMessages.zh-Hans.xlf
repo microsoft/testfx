@@ -353,6 +353,146 @@
         <target state="translated">{0}。{1}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</note>
       </trans-unit>
+      <trans-unit id="CombinatorialArrayLengthMismatch">
+        <source>Expected to have same array length as {0}.</source>
+        <target state="new">Expected to have same array length as {0}.</target>
+        <note>{0} is the name of the array being compared.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialAtLeastOneRowRequired">
+        <source>At least one row is required.</source>
+        <target state="new">At least one row is required.</target>
+        <note>Error message shown when no base rows are supplied to a combinatorial data builder.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialAtLeastOneValueRequired">
+        <source>At least one value is required.</source>
+        <target state="new">At least one value is required.</target>
+        <note>Error message shown when no values are supplied for a generated combinatorial column.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialBaseRowValueCountMismatch">
+        <source>Expected a base row with {0} values, but found {1}.</source>
+        <target state="new">Expected a base row with {0} values, but found {1}.</target>
+        <note>{0} is the expected value count. {1} is the actual value count.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialBaseRowsCannotBeNull">
+        <source>Base rows cannot be null.</source>
+        <target state="new">Base rows cannot be null.</target>
+        <note>Error message shown when a combinatorial data builder receives a null base row. Do not localize the C# keyword {Locked="null"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialClassDataActivationFailed">
+        <source>Failed to create an instance of {0}. Please make sure the type has a public constructor and the arguments match.</source>
+        <target state="new">Failed to create an instance of {0}. Please make sure the type has a public constructor and the arguments match.</target>
+        <note>{0} is the class data source type.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialClassDataSourceTypeInvalid">
+        <source>The values source {0} must be assignable to {1}.</source>
+        <target state="new">The values source {0} must be assignable to {1}.</target>
+        <note>{0} is the class data source type. {1} is the required enumerable type.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialExcludeArgumentCountMismatch">
+        <source>The number of arguments in {0} must match the number of test method parameters.</source>
+        <target state="new">The number of arguments in {0} must match the number of test method parameters.</target>
+        <note>{0} is the exclusion attribute type name.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialExplicitTestCaseValueCountMismatch">
+        <source>Expected explicit test cases to have {0} values, but found {1}.</source>
+        <target state="new">Expected explicit test cases to have {0} values, but found {1}.</target>
+        <note>{0} is the expected value count. {1} is the actual value count.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberEnumerableArrayUnsupported">
+        <source>Member {0} on {1} returned an IEnumerable&lt;{2}&gt;, which is not supported.</source>
+        <target state="new">Member {0} on {1} returned an IEnumerable&lt;{2}&gt;, which is not supported.</target>
+        <note>{0} is the member name. {1} is the declaring type name. {2} is the array element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberMethodAmbiguous">
+        <source>Multiple public static methods named '{0}' accept the supplied arguments.</source>
+        <target state="new">Multiple public static methods named '{0}' accept the supplied arguments.</target>
+        <note>{0} is the member name. Do not localize the C# signature tokens {Locked="public static"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberMustReturnGenericEnumerable">
+        <source>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</source>
+        <target state="new">Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</target>
+        <note>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberNestedEnumerableUnsupported">
+        <source>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</source>
+        <target state="new">Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</target>
+        <note>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberNotFound">
+        <source>Could not find public static member (property, field, or method) named '{0}' on {1}.</source>
+        <target state="new">Could not find public static member (property, field, or method) named '{0}' on {1}.</target>
+        <note>{0} is the member name. {1} is the declaring type name. Do not localize the C# signature tokens {Locked="public static"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberNotFoundWithParameterTypes">
+        <source>Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</source>
+        <target state="new">Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</target>
+        <note>{0} is the member name. {1} is the declaring type name. {2} is the comma-separated list of supplied argument types. Do not localize the C# signature tokens {Locked="public static"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberReturnedNull">
+        <source>Member {0} on {1} returned null.</source>
+        <target state="new">Member {0} on {1} returned null.</target>
+        <note>{0} is the member name. {1} is the declaring type name. Do not localize the C# keyword {Locked="null"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMemberTypeIncompatible">
+        <source>Parameter type {0} is not compatible with returned member type {1}.</source>
+        <target state="new">Parameter type {0} is not compatible with returned member type {1}.</target>
+        <note>{0} is the test method parameter type. {1} is the member data element type.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialMultipleValueProviders">
+        <source>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</source>
+        <target state="new">Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</target>
+        <note>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialNegativeDimensionSize">
+        <source>Dimension sizes cannot be negative.</source>
+        <target state="new">Dimension sizes cannot be negative.</target>
+        <note>Error message shown when a combinatorial dimension size is negative.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialProviderValueCountChanged">
+        <source>The value provider for parameter '{0}' returned {1} values when determining combinations, but {2} values when creating a test case.</source>
+        <target state="new">The value provider for parameter '{0}' returned {1} values when determining combinations, but {2} values when creating a test case.</target>
+        <note>{0} is the parameter name. {1} is the initial value count. {2} is the refreshed value count.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRandomCountExceedsRange">
+        <source>{0} requests more unique random values than the range between {1} and {2} contains.</source>
+        <target state="new">{0} requests more unique random values than the range between {1} and {2} contains.</target>
+        <note>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRandomCountMustBePositive">
+        <source>{0} must be positive.</source>
+        <target state="new">{0} must be positive.</target>
+        <note>{0} is the random data count property name.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRandomMinimumExceedsMaximum">
+        <source>{0} must not be greater than {1}.</source>
+        <target state="new">{0} must not be greater than {1}.</target>
+        <note>{0} is the minimum property name. {1} is the maximum property name.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRangeExceedsInt32">
+        <source>The range exceeds the maximum integer value.</source>
+        <target state="new">The range exceeds the maximum integer value.</target>
+        <note>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRangeExceedsUInt32">
+        <source>The range exceeds the maximum unsigned integer value.</source>
+        <target state="new">The range exceeds the maximum unsigned integer value.</target>
+        <note>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRangeTooManyValues">
+        <source>The range contains too many values.</source>
+        <target state="new">The range contains too many values.</target>
+        <note>Error message shown when a combinatorial range cannot be represented in an array.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialRowsMustPrecedeValues">
+        <source>{0} must be called before {1}.</source>
+        <target state="new">{0} must be called before {1}.</target>
+        <note>{0} is the method that adds base rows. {1} is the method that adds generated column values.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialUnableToInferValues">
+        <source>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</source>
+        <target state="new">Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</target>
+        <note>{0} is the parameter type. {1} is the provider interface name.</note>
+      </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">
         <source>Expected collection to contain all specified items.</source>
         <target state="translated">预期集合包含所有指定项。</target>

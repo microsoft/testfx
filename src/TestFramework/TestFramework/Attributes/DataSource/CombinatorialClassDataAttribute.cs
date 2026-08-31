@@ -28,7 +28,11 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
         if (!typeof(IEnumerable<object[]>).IsAssignableFrom(valuesSourceType))
         {
             throw new InvalidOperationException(
-                $"The values source {valuesSourceType} must be assignable to {typeof(IEnumerable<object[]>)}.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialClassDataSourceTypeInvalid,
+                    valuesSourceType,
+                    typeof(IEnumerable<object[]>)));
         }
 
         _arguments = arguments is null ? null : [.. arguments];
@@ -55,7 +59,7 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
         catch (Exception ex)
         {
             throw new InvalidOperationException(
-                $"Failed to create an instance of {valuesSourceType}. Please make sure the type has a public constructor and the arguments match.",
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialClassDataActivationFailed, valuesSourceType),
                 ex);
         }
 

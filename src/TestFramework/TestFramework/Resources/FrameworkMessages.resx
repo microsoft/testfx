@@ -466,6 +466,118 @@ Actual: {2}</value>
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
     <comment>{0} is the dynamic data source member name. {1} is the declaring type name.</comment>
   </data>
+  <data name="CombinatorialAtLeastOneRowRequired" xml:space="preserve">
+    <value>At least one row is required.</value>
+    <comment>Error message shown when no base rows are supplied to a combinatorial data builder.</comment>
+  </data>
+  <data name="CombinatorialAtLeastOneValueRequired" xml:space="preserve">
+    <value>At least one value is required.</value>
+    <comment>Error message shown when no values are supplied for a generated combinatorial column.</comment>
+  </data>
+  <data name="CombinatorialBaseRowsCannotBeNull" xml:space="preserve">
+    <value>Base rows cannot be null.</value>
+    <comment>Error message shown when a combinatorial data builder receives a null base row. Do not localize the C# keyword {Locked="null"}.</comment>
+  </data>
+  <data name="CombinatorialExplicitTestCaseValueCountMismatch" xml:space="preserve">
+    <value>Expected explicit test cases to have {0} values, but found {1}.</value>
+    <comment>{0} is the expected value count. {1} is the actual value count.</comment>
+  </data>
+  <data name="CombinatorialBaseRowValueCountMismatch" xml:space="preserve">
+    <value>Expected a base row with {0} values, but found {1}.</value>
+    <comment>{0} is the expected value count. {1} is the actual value count.</comment>
+  </data>
+  <data name="CombinatorialRowsMustPrecedeValues" xml:space="preserve">
+    <value>{0} must be called before {1}.</value>
+    <comment>{0} is the method that adds base rows. {1} is the method that adds generated column values.</comment>
+  </data>
+  <data name="CombinatorialClassDataSourceTypeInvalid" xml:space="preserve">
+    <value>The values source {0} must be assignable to {1}.</value>
+    <comment>{0} is the class data source type. {1} is the required enumerable type.</comment>
+  </data>
+  <data name="CombinatorialClassDataActivationFailed" xml:space="preserve">
+    <value>Failed to create an instance of {0}. Please make sure the type has a public constructor and the arguments match.</value>
+    <comment>{0} is the class data source type.</comment>
+  </data>
+  <data name="CombinatorialMemberNotFound" xml:space="preserve">
+    <value>Could not find public static member (property, field, or method) named '{0}' on {1}.</value>
+    <comment>{0} is the member name. {1} is the declaring type name. Do not localize the C# signature tokens {Locked="public static"}.</comment>
+  </data>
+  <data name="CombinatorialMemberNotFoundWithParameterTypes" xml:space="preserve">
+    <value>Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</value>
+    <comment>{0} is the member name. {1} is the declaring type name. {2} is the comma-separated list of supplied argument types. Do not localize the C# signature tokens {Locked="public static"}.</comment>
+  </data>
+  <data name="CombinatorialMemberReturnedNull" xml:space="preserve">
+    <value>Member {0} on {1} returned null.</value>
+    <comment>{0} is the member name. {1} is the declaring type name. Do not localize the C# keyword {Locked="null"}.</comment>
+  </data>
+  <data name="CombinatorialMemberMethodAmbiguous" xml:space="preserve">
+    <value>Multiple public static methods named '{0}' accept the supplied arguments.</value>
+    <comment>{0} is the member name. Do not localize the C# signature tokens {Locked="public static"}.</comment>
+  </data>
+  <data name="CombinatorialMemberMustReturnGenericEnumerable" xml:space="preserve">
+    <value>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</value>
+    <comment>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</comment>
+  </data>
+  <data name="CombinatorialMemberEnumerableArrayUnsupported" xml:space="preserve">
+    <value>Member {0} on {1} returned an IEnumerable&lt;{2}&gt;, which is not supported.</value>
+    <comment>{0} is the member name. {1} is the declaring type name. {2} is the array element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;"}.</comment>
+  </data>
+  <data name="CombinatorialMemberNestedEnumerableUnsupported" xml:space="preserve">
+    <value>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</value>
+    <comment>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</comment>
+  </data>
+  <data name="CombinatorialMemberTypeIncompatible" xml:space="preserve">
+    <value>Parameter type {0} is not compatible with returned member type {1}.</value>
+    <comment>{0} is the test method parameter type. {1} is the member data element type.</comment>
+  </data>
+  <data name="CombinatorialMultipleValueProviders" xml:space="preserve">
+    <value>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</value>
+    <comment>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</comment>
+  </data>
+  <data name="CombinatorialProviderValueCountChanged" xml:space="preserve">
+    <value>The value provider for parameter '{0}' returned {1} values when determining combinations, but {2} values when creating a test case.</value>
+    <comment>{0} is the parameter name. {1} is the initial value count. {2} is the refreshed value count.</comment>
+  </data>
+  <data name="CombinatorialUnableToInferValues" xml:space="preserve">
+    <value>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</value>
+    <comment>{0} is the parameter type. {1} is the provider interface name.</comment>
+  </data>
+  <data name="CombinatorialExcludeArgumentCountMismatch" xml:space="preserve">
+    <value>The number of arguments in {0} must match the number of test method parameters.</value>
+    <comment>{0} is the exclusion attribute type name.</comment>
+  </data>
+  <data name="CombinatorialArrayLengthMismatch" xml:space="preserve">
+    <value>Expected to have same array length as {0}.</value>
+    <comment>{0} is the name of the array being compared.</comment>
+  </data>
+  <data name="CombinatorialNegativeDimensionSize" xml:space="preserve">
+    <value>Dimension sizes cannot be negative.</value>
+    <comment>Error message shown when a combinatorial dimension size is negative.</comment>
+  </data>
+  <data name="CombinatorialRangeExceedsInt32" xml:space="preserve">
+    <value>The range exceeds the maximum integer value.</value>
+    <comment>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</comment>
+  </data>
+  <data name="CombinatorialRangeExceedsUInt32" xml:space="preserve">
+    <value>The range exceeds the maximum unsigned integer value.</value>
+    <comment>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</comment>
+  </data>
+  <data name="CombinatorialRangeTooManyValues" xml:space="preserve">
+    <value>The range contains too many values.</value>
+    <comment>Error message shown when a combinatorial range cannot be represented in an array.</comment>
+  </data>
+  <data name="CombinatorialRandomCountMustBePositive" xml:space="preserve">
+    <value>{0} must be positive.</value>
+    <comment>{0} is the random data count property name.</comment>
+  </data>
+  <data name="CombinatorialRandomMinimumExceedsMaximum" xml:space="preserve">
+    <value>{0} must not be greater than {1}.</value>
+    <comment>{0} is the minimum property name. {1} is the maximum property name.</comment>
+  </data>
+  <data name="CombinatorialRandomCountExceedsRange" xml:space="preserve">
+    <value>{0} requests more unique random values than the range between {1} and {2} contains.</value>
+    <comment>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</comment>
+  </data>
   <data name="ContainsSingleMatchFailMsg" xml:space="preserve">
     <value>Expected exactly one item to match the predicate but found {1} item(s). {0}</value>
     <comment>{0} is the user-provided assertion message. {1} is the number of items matching the predicate.</comment>

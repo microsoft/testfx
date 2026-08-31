@@ -37,7 +37,7 @@ public sealed class CombinatorialTheoryDataBuilder
     {
         if (rows.Length == 0)
         {
-            throw new ArgumentException("At least one row is required.", nameof(rows));
+            throw new ArgumentException(FrameworkMessages.CombinatorialAtLeastOneRowRequired, nameof(rows));
         }
 
         EnsureBaseRowsMayBeAdded();
@@ -45,7 +45,7 @@ public sealed class CombinatorialTheoryDataBuilder
         {
             if (rows[i] is null)
             {
-                throw new ArgumentException("Base rows cannot be null.", nameof(rows));
+                throw new ArgumentException(FrameworkMessages.CombinatorialBaseRowsCannotBeNull, nameof(rows));
             }
 
             AddBaseRow(rows[i]);
@@ -72,7 +72,7 @@ public sealed class CombinatorialTheoryDataBuilder
         {
             if (row is null)
             {
-                throw new ArgumentException("Base rows cannot be null.", nameof(rows));
+                throw new ArgumentException(FrameworkMessages.CombinatorialBaseRowsCannotBeNull, nameof(rows));
             }
 
             any = true;
@@ -86,7 +86,7 @@ public sealed class CombinatorialTheoryDataBuilder
         }
 
         return !any
-            ? throw new ArgumentException("At least one row is required.", nameof(rows))
+            ? throw new ArgumentException(FrameworkMessages.CombinatorialAtLeastOneRowRequired, nameof(rows))
             : this;
     }
 
@@ -100,7 +100,7 @@ public sealed class CombinatorialTheoryDataBuilder
     {
         if (values.Length == 0)
         {
-            throw new ArgumentException("At least one value is required.", nameof(values));
+            throw new ArgumentException(FrameworkMessages.CombinatorialAtLeastOneValueRequired, nameof(values));
         }
 
         object?[] valuesCopy = new object?[values.Length];
@@ -129,7 +129,7 @@ public sealed class CombinatorialTheoryDataBuilder
         object?[] valuesCopy = values.Cast<object?>().ToArray();
         if (valuesCopy.Length == 0)
         {
-            throw new ArgumentException("At least one value is required.", nameof(values));
+            throw new ArgumentException(FrameworkMessages.CombinatorialAtLeastOneValueRequired, nameof(values));
         }
 
         _generatedColumns.Add(valuesCopy);
@@ -175,7 +175,11 @@ public sealed class CombinatorialTheoryDataBuilder
             if (testCase.Length != totalColumns)
             {
                 throw new InvalidOperationException(
-                    $"Expected explicit test cases to have {totalColumns} values, but found {testCase.Length}.");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.CombinatorialExplicitTestCaseValueCountMismatch,
+                        totalColumns,
+                        testCase.Length));
             }
         }
 
@@ -210,7 +214,9 @@ public sealed class CombinatorialTheoryDataBuilder
     {
         if (_baseColumnCount is int expectedWidth && row.Length != expectedWidth)
         {
-            throw new ArgumentException($"Expected a base row with {expectedWidth} values, but found {row.Length}.", nameof(row));
+            throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialBaseRowValueCountMismatch, expectedWidth, row.Length),
+                nameof(row));
         }
 
         _baseColumnCount ??= row.Length;
@@ -221,7 +227,8 @@ public sealed class CombinatorialTheoryDataBuilder
     {
         if (_generatedColumns.Count > 0)
         {
-            throw new InvalidOperationException($"{nameof(AddRows)} must be called before {nameof(AddValues)}.");
+            throw new InvalidOperationException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialRowsMustPrecedeValues, nameof(AddRows), nameof(AddValues)));
         }
     }
 

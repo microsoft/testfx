@@ -23,7 +23,7 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
 
         if ((long)from + count - 1 > int.MaxValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), "The range exceeds the maximum integer value.");
+            throw new ArgumentOutOfRangeException(nameof(count), FrameworkMessages.CombinatorialRangeExceedsInt32);
         }
 
         Values = new object[count];
@@ -63,7 +63,7 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
         long valueCount = (((long)to - from) / step) + 1;
         if (valueCount > int.MaxValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(to), "The range contains too many values.");
+            throw new ArgumentOutOfRangeException(nameof(to), FrameworkMessages.CombinatorialRangeTooManyValues);
         }
 
         int count = (int)valueCount;
@@ -89,12 +89,12 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
 
         if ((ulong)from + count - 1 > uint.MaxValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), "The range exceeds the maximum unsigned integer value.");
+            throw new ArgumentOutOfRangeException(nameof(count), FrameworkMessages.CombinatorialRangeExceedsUInt32);
         }
 
         if (count > int.MaxValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), "The range contains too many values.");
+            throw new ArgumentOutOfRangeException(nameof(count), FrameworkMessages.CombinatorialRangeTooManyValues);
         }
 
         int valueCount = (int)count;
@@ -124,7 +124,7 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
         ulong count = (difference / step) + 1;
         if (count > int.MaxValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(to), "The range contains too many values.");
+            throw new ArgumentOutOfRangeException(nameof(to), FrameworkMessages.CombinatorialRangeTooManyValues);
         }
 
         Values = new object[(int)count];

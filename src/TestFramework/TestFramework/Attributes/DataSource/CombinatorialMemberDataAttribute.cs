@@ -56,15 +56,20 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             ?? GetFieldAccessor(type, parameter);
         if (accessor is null)
         {
-            string parameterText = Arguments?.Length > 0
-                ? $" with parameter types: {string.Join(", ", Arguments.Select(p => p?.GetType().FullName ?? "(null)"))}"
-                : string.Empty;
-            throw new ArgumentException(
-                $"Could not find public static member (property, field, or method) named '{MemberName}' on {type.FullName}{parameterText}.");
+            string message = Arguments?.Length > 0
+                ? string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialMemberNotFoundWithParameterTypes,
+                    MemberName,
+                    type.FullName,
+                    string.Join(", ", Arguments.Select(p => p?.GetType().FullName ?? FrameworkMessages.Common_NullInMessages)))
+                : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberNotFound, MemberName, type.FullName);
+            throw new ArgumentException(message);
         }
 
         IEnumerable values = accessor() as IEnumerable
-            ?? throw new ArgumentException($"Member {MemberName} on {type.FullName} returned null.");
+            ?? throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberReturnedNull, MemberName, type.FullName));
 
         return values is IEnumerable<object[]> rows
             ? rows.SelectMany(row => row).ToArray()
@@ -206,7 +211,8 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             .ToArray();
         return mostSpecificMethods.Length == 1
             ? mostSpecificMethods[0]
-            : throw new ArgumentException($"Multiple public static methods named '{MemberName}' accept the supplied arguments.");
+            : throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberMethodAmbiguous, MemberName));
     }
 
     private static bool IsMoreSpecific(MethodInfo candidate, MethodInfo other)
@@ -256,24 +262,39 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         }
 
         TypeInfo enumeratedType = GetEnumeratedType(enumerableType)
-            ?? throw new ArgumentException($"Member {MemberName} on {declaringType.FullName} must return a type that implements IEnumerable<T>.");
+            ?? throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberMustReturnGenericEnumerable, MemberName, declaringType.FullName));
 
         if (enumeratedType.IsArray)
         {
             throw new ArgumentException(
-                $"Member {MemberName} on {declaringType.FullName} returned an IEnumerable<{enumeratedType.Name}>, which is not supported.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialMemberEnumerableArrayUnsupported,
+                    MemberName,
+                    declaringType.FullName,
+                    enumeratedType.Name));
         }
 
         if (enumeratedType.IsGenericType && enumeratedType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
         {
             throw new ArgumentException(
-                $"Member {MemberName} on {declaringType.FullName} returned an IEnumerable<IEnumerable<{enumeratedType.GenericTypeArguments[0].Name}>>, which is not supported.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialMemberNestedEnumerableUnsupported,
+                    MemberName,
+                    declaringType.FullName,
+                    enumeratedType.GenericTypeArguments[0].Name));
         }
 
         if (!parameterInfo.ParameterType.GetTypeInfo().IsAssignableFrom(enumeratedType))
         {
             throw new ArgumentException(
-                $"Parameter type {parameterInfo.ParameterType.FullName} is not compatible with returned member type {enumeratedType.FullName}.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.CombinatorialMemberTypeIncompatible,
+                    parameterInfo.ParameterType.FullName,
+                    enumeratedType.FullName));
         }
     }
 }
