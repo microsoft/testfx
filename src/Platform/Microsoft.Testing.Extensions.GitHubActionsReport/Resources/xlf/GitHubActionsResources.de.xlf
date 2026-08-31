@@ -139,7 +139,7 @@
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">Aktivieren oder deaktivieren Sie, dass jeder fehlgeschlagene Test in der Jobzusammenfassung in einen einklappbaren Abschnitt mit Fehlermeldung, Ausnahmetyp, Quellposition und Stacktrace erweitert wird. Gültige Werte sind 'on' (akzeptiert auch 'true', 'enable', '1') oder 'off' (akzeptiert auch 'false', 'disable', '0'). Der Standardwert ist 'on', wenn die Ausführung auf GitHub Actions erfolgt.</target>
         <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
@@ -159,57 +159,57 @@
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
         <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
-        <target state="new">Historical duration: p95 {0}, p99 {1} across {2} prior samples.</target>
+        <target state="translated">Historische Dauer: p95 {0}, p99 {1} über {2} vorherige Stichproben hinweg.</target>
         <note>{0} is the p95 duration, {1} is the p99 duration, {2} is the duration sample count.</note>
       </trans-unit>
       <trans-unit id="HistoryFailureContext">
         <source>Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</source>
-        <target state="new">Historical context: failed {0} and flaked {1} of {2} prior runs within the {3}-day history window.</target>
+        <target state="translated">Historischer Kontext: {0} ist fehlgeschlagen und {1} von {2} früheren Ausführungen waren instabil innerhalb des {3}-Tage-Verlaufsfensters.</target>
         <note>{0} is the failure count, {1} is the flaky count, {2} is the total prior run count, {3} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryFlakyContext">
         <source>Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</source>
-        <target state="new">Historical context: flaked {0} of {1} prior runs within the {2}-day history window.</target>
+        <target state="translated">Historischer Kontext: {0} von {1} früheren Ausführungen waren instabil innerhalb des {2}-Tage-Verlaufsfensters.</target>
         <note>{0} is the flaky count, {1} is the total prior run count, {2} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryLoadFailedWarning">
         <source>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</source>
-        <target state="new">Failed to load the GitHub Actions test history snapshot from '{0}': {1}</target>
+        <target state="translated">Fehler beim Laden der Momentaufnahme des GitHub Actions Testverlaufs aus „{0}“: {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">Liest eine begrenzte Momentaufnahme des GitHub Actions Testverlaufs am angegebenen Pfad und aktualisiert ihn. Der Workflow ist dafür verantwortlich, die vorherige Momentaufnahme vor dem Testlauf herunterzuladen und die aktualisierte Datei anschließend hochzuladen. Erfordert '--report-gh'.</target>
         <note>{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
-        <target state="new">Historical context: passed all {0} prior runs within the {1}-day history window.</target>
+        <target state="translated">Historischer Kontext: alle {0} früheren Ausführungen innerhalb des {1}-Tage-Verlaufsfensters waren erfolgreich.</target>
         <note>{0} is the total prior result count, {1} is the history window in days.</note>
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">Anzahl der Tage des Testverlaufs, die aufbewahrt und für den Kontext zu instabilen Tests verwendet werden sollen (1–90). Standardwert ist 30. Erfordert '--report-gh-history'.</target>
         <note>{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
-        <target state="new">The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</target>
+        <target state="translated">Die Option '--report-gh-history-window' erfordert, dass '--report-gh-history' angegeben wird.</target>
         <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions test history snapshot to '{0}': {1}</target>
+        <target state="translated">Fehler beim Schreiben der Momentaufnahme des GitHub Actions Testverlaufs in „{0}“: {1}</target>
         <note>{0} is the snapshot path, {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="InvalidHistoryPath">
         <source>The GitHub Actions test history snapshot path must be a valid, non-empty path.</source>
-        <target state="new">The GitHub Actions test history snapshot path must be a valid, non-empty path.</target>
+        <target state="translated">Der Pfad für die Momentaufnahme des GitHub Actions Testverlaufs muss ein gültiger, nicht leerer Pfad sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHistoryWindow">
         <source>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</source>
-        <target state="new">Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</target>
+        <target state="translated">Ungültiges GitHub Actions Testverlaufsfenster „{0}“. Geben Sie eine ganze Zahl von Tagen zwischen 1 und 90 an.</target>
         <note>{0} is the invalid history window.</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">

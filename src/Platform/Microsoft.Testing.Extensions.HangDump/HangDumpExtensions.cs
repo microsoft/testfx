@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -44,7 +43,7 @@ public static class HangDumpExtensions
             throw new PlatformNotSupportedException("Hang dump extension is not available on wasi");
         }
 
-        var endpoint = new NamedPipeServerEndpoint(NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N")).Name);
+        NamedPipeServerEndpoint endpoint = NamedPipeServerFactory.CreateEndpoint();
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(

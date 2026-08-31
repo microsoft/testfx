@@ -15,7 +15,6 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
@@ -168,16 +167,14 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
             await _logger.LogInformationAsync($"Hang dump deadline setup {_deadlineDumpAt:o}.").ConfigureAwait(false);
         }
 
-        _singleConnectionNamedPipeServer = new(
-            new PipeNameDescription(_endpoint.PipeName),
+        _singleConnectionNamedPipeServer = NamedPipeServerFactory.CreateAndBind(
+            _endpoint,
             CallbackAsync,
             _environment,
             _logger,
             _task,
-            maxNumberOfServerInstances: 1,
-            _serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities(),
+            _serviceProvider,
             cancellationToken);
-        _endpoint.PipeName = _singleConnectionNamedPipeServer.PipeName.Name;
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));

@@ -386,13 +386,13 @@ Hem --ansi hem de --no-ansi birlikte sağlandığında --ansi öncelikli olur.</
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="new">Preset the per-test result blocks shown in the terminal.
-Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</target>
+        <target state="translated">Terminalde gösterilen test başına sonuç bloklarını önceden ayarlayın.
+Geçerli değerler: 'Minimal', 'Normal', 'Detailed'. Varsayılan değer: 'Normal'. Kesin sonuç seçimi için '--show-test-results' kullanın.</target>
         <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</target>
+        <target state="translated">--output 'Minimal', 'Normal' veya 'Detailed' değerine sahip tek bir parametre bekliyor.</target>
         <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">

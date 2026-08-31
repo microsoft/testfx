@@ -128,7 +128,9 @@ stages:
   jobs:
   - job: Windows
     displayName: Windows
-    timeoutInMinutes: 90
+    # The Release writer must survive the same completely cold generated-fixture builds as
+    # validation; otherwise broad invalidations can time out before publishing remote entries.
+    timeoutInMinutes: 120
     pool:
       name: NetCore-Public
       demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
@@ -291,6 +293,7 @@ stages:
           # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
           enableAffectedTests: false
           affectedTestsMode: collect
+          acceptanceTestCacheMode: write
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cache seed build binlogs'
@@ -431,7 +434,10 @@ stages:
         # XML-documentation-only PRs use it only for compiler and package validation. Debug remains
         # skippable for samples-only and XML-doc-only PRs.
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
-        timeoutInMinutes: 90
+        # A completely cold acceptance cache builds every generated fixture. Keep enough headroom
+        # for that bootstrap path; warm PR runs remain substantially faster and the test command
+        # retains its existing failure semantics.
+        timeoutInMinutes: 120
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
@@ -763,6 +769,7 @@ stages:
               # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
               enableAffectedTests: false
               affectedTestsMode: run
+              acceptanceTestCacheMode: read
 
           # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
           # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the
