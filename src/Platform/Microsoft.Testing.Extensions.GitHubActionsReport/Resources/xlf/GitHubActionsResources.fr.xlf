@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">Lire et mettre à jour un instantané limité de l'historique des tests GitHub Actions au chemin spécifié. Le flux de travail est chargé de télécharger l’instantané précédent avant la série de tests et de charger le fichier mis à jour par la suite. Nécessite '--report-gh'.</target>
         <note>{Locked="'--report-gh'"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">Nombre de jours d'historique de tests à conserver et à utiliser pour le contexte des tests instables (1 à 90). La valeur par défaut est 30. Nécessite '--report-gh-history'.</target>
         <note>{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
