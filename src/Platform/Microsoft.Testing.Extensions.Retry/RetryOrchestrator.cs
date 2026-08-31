@@ -246,17 +246,19 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 retryFailedTestsPipeServer.Artifacts,
                 logger);
 
-            if (attemptResult.ExitedBeforeConnect)
-            {
-                return (int)ExitCode.GenericFailure;
-            }
-
             attemptArtifacts.AddRange(RetryArtifactProcessor.SnapshotAttemptArtifacts(
                 fileSystem,
                 retryFailedTestsPipeServer.Artifacts,
                 attemptCount,
                 currentTryResultFolder,
                 retryRootFolder));
+
+            if (attemptResult.ExitedBeforeConnect)
+            {
+                exitCodes.Add((int)ExitCode.GenericFailure);
+                retryInterrupted = true;
+                break;
+            }
 
             exitCodes.Add(attemptResult.ExitCode);
 

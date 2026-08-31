@@ -253,7 +253,7 @@ public sealed class JUnitReportMergerTests
             .Elements("testsuite")
             .Last();
 
-        Assert.AreEqual("137", ReadSuiteProperty(suite, "exit-code"));
+        Assert.AreEqual("0", ReadSuiteProperty(suite, "exit-code"));
         Assert.AreEqual("aborted", ReadSuiteProperty(suite, "run-status"));
         Assert.AreEqual("true", ReadSuiteProperty(suite, "incomplete"));
     }

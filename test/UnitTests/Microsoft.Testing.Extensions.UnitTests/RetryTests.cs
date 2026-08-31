@@ -292,17 +292,21 @@ public class RetryTests
     public void CollectRecoveredArtifacts_RecordLimit_IsEnforcedAndManifestIsDeleted()
     {
         const string manifestPath = "recovered-artifacts.txt";
+        const string recoveredArtifactPath = "recovered.xml";
         int maxRecords = (int)typeof(RetryOrchestrator)
             .GetField("MaxRecoveredArtifactManifestRecords", BindingFlags.Static | BindingFlags.NonPublic)!
             .GetRawConstantValue()!;
         var manifest = new StringBuilder();
-        for (int i = 0; i <= maxRecords; i++)
+        for (int i = 0; i < maxRecords; i++)
         {
             manifest.AppendLine("malformed");
         }
 
+        manifest.AppendLine(CreateManifestLine(recoveredArtifactPath, "microsoft.testing.junit"));
+
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(fs => fs.ExistFile(manifestPath)).Returns(true);
+        fileSystem.Setup(fs => fs.ExistFile(recoveredArtifactPath)).Returns(true);
         fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             .Returns(new ReadOnlyMemoryFileStream(manifest.ToString()));
         List<ArtifactRequest> artifacts = [];

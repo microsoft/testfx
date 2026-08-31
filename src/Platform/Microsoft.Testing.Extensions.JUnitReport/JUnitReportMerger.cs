@@ -351,7 +351,6 @@ internal static class JUnitReportMerger
                 if (ReadSuiteProperty(properties, "incomplete") == "true")
                 {
                     var recoveryProperties = new XElement("properties");
-                    CopyProperty(properties, recoveryProperties, "exit-code");
                     recoveryProperties.Add(
                         new XElement("property", new XAttribute("name", "run-status"), new XAttribute("value", "aborted")),
                         new XElement("property", new XAttribute("name", "incomplete"), new XAttribute("value", "true")));
@@ -391,16 +390,6 @@ internal static class JUnitReportMerger
             .FirstOrDefault(property => property.Attribute("name")?.Value == name)
             ?.Attribute("value")
             ?.Value;
-
-    private static void CopyProperty(XElement source, XElement destination, string name)
-    {
-        XElement? property = source.Elements("property")
-            .FirstOrDefault(candidate => candidate.Attribute("name")?.Value == name);
-        if (property is not null)
-        {
-            destination.Add(new XElement(property));
-        }
-    }
 
     private static string BuildSuiteIdentity(XElement suite)
         => BuildIdentity(
