@@ -49,6 +49,16 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         attribute.GetValues(IntParameter).Should().Equal([2]);
     }
 
+    public void IgnoresOpenGenericMethodsAndFindsInheritedSource()
+    {
+        var attribute = new CombinatorialMemberDataAttribute(nameof(GenericMethodValues.GetValues))
+        {
+            MemberType = typeof(GenericMethodValues),
+        };
+
+        attribute.GetValues(IntParameter).Should().Equal([3, 4]);
+    }
+
     public void AllowsNullForNullableMethodParameter()
     {
         var attribute = new CombinatorialMemberDataAttribute(nameof(GetValuesForNullable), [null]);
@@ -164,6 +174,16 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         public static IEnumerable<int> GetValues(object value) => [1];
 
         public static IEnumerable<int> GetValues(string value) => [2];
+    }
+
+    public class BaseMethodValues
+    {
+        public static IEnumerable<int> GetValues() => [3, 4];
+    }
+
+    public sealed class GenericMethodValues : BaseMethodValues
+    {
+        public static IEnumerable<int> GetValues<T>() => [5, 6];
     }
 
     public class BaseMembers

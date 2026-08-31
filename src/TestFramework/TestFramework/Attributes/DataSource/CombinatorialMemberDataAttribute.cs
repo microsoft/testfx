@@ -45,7 +45,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             throw new ArgumentNullException(nameof(parameter));
         }
 
-        Type? type = MemberType ?? parameter.Member.DeclaringType;
+        Type? type = GetMemberType(parameter);
         if (type is null)
         {
             return [];
@@ -90,10 +90,10 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         return null;
     }
 
-    private Func<object?>? GetPropertyAccessor(Type type, ParameterInfo parameterInfo)
+    private Func<object?>? GetPropertyAccessor([DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type type, ParameterInfo parameterInfo)
     {
         PropertyInfo? propertyInfo = null;
-        for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
+        for (Type? reflectionType = type; reflectionType is not null; reflectionType = GetBaseType(reflectionType))
         {
             propertyInfo = reflectionType.GetTypeInfo().DeclaredProperties.FirstOrDefault(property =>
                 property.Name == MemberName
@@ -114,16 +114,17 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         return () => propertyInfo.GetValue(null, null);
     }
 
-    private Func<object?>? GetMethodAccessor(Type type, ParameterInfo parameterInfo)
+    private Func<object?>? GetMethodAccessor([DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type type, ParameterInfo parameterInfo)
     {
         MethodInfo? methodInfo = null;
-        for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
+        for (Type? reflectionType = type; reflectionType is not null; reflectionType = GetBaseType(reflectionType))
         {
             MethodInfo[] compatibleMethods = reflectionType.GetTypeInfo().DeclaredMethods
                 .Where(method =>
                     method.Name == MemberName
                     && method.IsPublic
                     && method.IsStatic
+                    && !method.ContainsGenericParameters
                     && ParameterTypesCompatible(method.GetParameters(), Arguments))
                 .ToArray();
             if (compatibleMethods.Length > 0)
@@ -142,10 +143,10 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         return () => methodInfo.Invoke(null, Arguments);
     }
 
-    private Func<object?>? GetFieldAccessor(Type type, ParameterInfo parameterInfo)
+    private Func<object?>? GetFieldAccessor([DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type type, ParameterInfo parameterInfo)
     {
         FieldInfo? fieldInfo = null;
-        for (Type? reflectionType = type; reflectionType is not null; reflectionType = reflectionType.GetTypeInfo().BaseType)
+        for (Type? reflectionType = type; reflectionType is not null; reflectionType = GetBaseType(reflectionType))
         {
             fieldInfo = reflectionType.GetTypeInfo().DeclaredFields.FirstOrDefault(field =>
                 field.Name == MemberName
@@ -231,6 +232,20 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
 
         return isStrictlyMoreSpecific;
     }
+
+    [return: DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
+    private Type? GetMemberType(ParameterInfo parameter)
+        => MemberType ?? GetParameterDeclaringType(parameter);
+
+    [return: DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
+    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "DynamicallyAccessedMemberTypes.All on the derived type preserves its inherited members, so the base type is rooted with the same member set.")]
+    private static Type? GetBaseType([DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type type)
+        => type.GetTypeInfo().BaseType;
+
+    [return: DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
+    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "In supported trimming and NativeAOT configurations, MSTest.SourceGeneration roots each test class and its base types with DynamicallyAccessedMemberTypes.All.")]
+    private static Type? GetParameterDeclaringType(ParameterInfo parameter)
+        => parameter.Member.DeclaringType;
 
     private void EnsureValidMemberDataType(Type enumerableType, Type declaringType, ParameterInfo parameterInfo)
     {
