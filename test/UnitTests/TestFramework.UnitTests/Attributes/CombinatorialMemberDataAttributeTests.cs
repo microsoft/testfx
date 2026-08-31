@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 public class CombinatorialMemberDataAttributeTests : TestContainer
 {
     private static readonly ParameterInfo IntParameter = GetParameter(nameof(IntParameterStub));
+    private static readonly ParameterInfo NullableIntParameter = GetParameter(nameof(NullableIntParameterStub));
     private static readonly ParameterInfo StringParameter = GetParameter(nameof(StringParameterStub));
 
     public void ReadsValuesFromPropertyFieldAndMethod()
@@ -41,12 +42,17 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void SelectsMostSpecificCompatibleMethod()
     {
-        var attribute = new CombinatorialMemberDataAttribute(nameof(SpecificOverloads.GetValues), "value")
+        var stringAttribute = new CombinatorialMemberDataAttribute(nameof(SpecificOverloads.GetValues), "value")
+        {
+            MemberType = typeof(SpecificOverloads),
+        };
+        var intAttribute = new CombinatorialMemberDataAttribute(nameof(SpecificOverloads.GetValues), 1)
         {
             MemberType = typeof(SpecificOverloads),
         };
 
-        attribute.GetValues(IntParameter).Should().Equal([2]);
+        stringAttribute.GetValues(IntParameter).Should().Equal([2]);
+        intAttribute.GetValues(IntParameter).Should().Equal([3]);
     }
 
     public void IgnoresOpenGenericMethodsAndFindsInheritedSource()
@@ -72,6 +78,11 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
         attribute.GetValues(IntParameter).Should().Equal([2]);
     }
+
+    public void AllowsNonNullableMemberValuesForNullableParameter()
+        => new CombinatorialMemberDataAttribute(nameof(IntProperty))
+            .GetValues(NullableIntParameter)
+            .Should().Equal([1, 2]);
 
     public void FindsEligibleInheritedMembersHiddenByInstanceMembers()
     {
@@ -160,6 +171,10 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     {
     }
 
+    private static void NullableIntParameterStub(int? value)
+    {
+    }
+
     private static void StringParameterStub(string value)
     {
     }
@@ -181,6 +196,10 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         public static IEnumerable<int> GetValues(object value) => [1];
 
         public static IEnumerable<int> GetValues(string value) => [2];
+
+        public static IEnumerable<int> GetValues(int value) => [3];
+
+        public static IEnumerable<int> GetValues(int? value) => [4];
     }
 
     public class BaseMethodValues

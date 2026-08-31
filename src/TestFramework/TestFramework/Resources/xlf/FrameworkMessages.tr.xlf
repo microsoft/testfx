@@ -354,8 +354,8 @@
         <note>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</note>
       </trans-unit>
       <trans-unit id="CombinatorialArrayLengthMismatch">
-        <source>Expected to have same array length as {0}.</source>
-        <target state="new">Expected to have same array length as {0}.</target>
+        <source>Expected to have the same array length as {0}.</source>
+        <target state="new">Expected to have the same array length as {0}.</target>
         <note>{0} is the name of the array being compared.</note>
       </trans-unit>
       <trans-unit id="CombinatorialAtLeastOneRowRequired">

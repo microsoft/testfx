@@ -191,8 +191,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             {
                 Type parameterType = parameters[i].ParameterType;
                 Type argumentType = argument.GetType();
-                if (!parameterType.GetTypeInfo().IsAssignableFrom(argumentType.GetTypeInfo())
-                    && Nullable.GetUnderlyingType(parameterType) != argumentType)
+                if (!IsParameterTypeCompatible(parameterType, argumentType))
                 {
                     return false;
                 }
@@ -232,7 +231,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
                 continue;
             }
 
-            if (!otherType.GetTypeInfo().IsAssignableFrom(candidateType.GetTypeInfo()))
+            if (!IsParameterTypeCompatible(otherType, candidateType))
             {
                 return false;
             }
@@ -242,6 +241,10 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
 
         return isStrictlyMoreSpecific;
     }
+
+    private static bool IsParameterTypeCompatible(Type parameterType, Type valueType)
+        => parameterType.GetTypeInfo().IsAssignableFrom(valueType.GetTypeInfo())
+            || Nullable.GetUnderlyingType(parameterType) == valueType;
 
     [return: DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
     private Type? GetMemberType(ParameterInfo parameter)
@@ -290,7 +293,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
                     enumeratedType.GenericTypeArguments[0].Name));
         }
 
-        if (!parameterInfo.ParameterType.GetTypeInfo().IsAssignableFrom(enumeratedType))
+        if (!IsParameterTypeCompatible(parameterInfo.ParameterType, enumeratedType.AsType()))
         {
             throw new ArgumentException(
                 string.Format(

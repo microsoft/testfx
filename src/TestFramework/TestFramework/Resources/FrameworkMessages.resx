@@ -547,7 +547,7 @@ Actual: {2}</value>
     <comment>{0} is the exclusion attribute type name.</comment>
   </data>
   <data name="CombinatorialArrayLengthMismatch" xml:space="preserve">
-    <value>Expected to have same array length as {0}.</value>
+    <value>Expected to have the same array length as {0}.</value>
     <comment>{0} is the name of the array being compared.</comment>
   </data>
   <data name="CombinatorialNegativeDimensionSize" xml:space="preserve">
