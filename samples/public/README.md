@@ -18,6 +18,10 @@ tests, see [Testing UWP and WinUI apps with MSTest](../../docs/winui-testing.md)
 
 Run commands from a sample directory and select a concrete architecture:
 
+The MTP `dotnet test --project` syntax and the per-sample `global.json` runner selection require
+.NET SDK 10 or later. The projects target .NET 8, but that target framework does not determine the
+SDK version used by `dotnet test`.
+
 ```powershell
 # MTP samples
 dotnet build -p:Platform=x64 -bl:{{}}
