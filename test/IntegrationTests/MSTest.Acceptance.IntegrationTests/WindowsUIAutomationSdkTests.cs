@@ -411,12 +411,27 @@ public class EarlyExitTests : WindowTest
 [STATestClass]
 public class StartupTimeoutTests : WindowTest
 {
+    private bool _pidRecorded;
+
     protected override ProcessStartInfo CreateProcessStartInfo()
         => new(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
-            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
 
     protected override TimeSpan WindowDiscoveryTimeout => TimeSpan.FromSeconds(3);
+
+    protected override AutomationElement? FindWindow(Process applicationProcess)
+    {
+        if (!_pidRecorded)
+        {
+            string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
+                ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
+            File.WriteAllText(pidFile, applicationProcess.Id.ToString(CultureInfo.InvariantCulture));
+            _pidRecorded = true;
+        }
+
+        return null;
+    }
 
     [TestMethod]
     public void TestMethod()
@@ -476,12 +491,15 @@ public class CancellationDuringWindowDiscoveryTests : WindowTest
     protected override ProcessStartInfo CreateProcessStartInfo()
         => new(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
-            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
 
     protected override AutomationElement? FindWindow(Process applicationProcess)
     {
         if (!_cancellationScheduled)
         {
+            string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
+                ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
+            File.WriteAllText(pidFile, applicationProcess.Id.ToString(CultureInfo.InvariantCulture));
             TestContext.CancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(2));
             _cancellationScheduled = true;
         }
