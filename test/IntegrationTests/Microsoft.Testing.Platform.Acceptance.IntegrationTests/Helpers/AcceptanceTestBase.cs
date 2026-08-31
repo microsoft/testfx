@@ -98,6 +98,12 @@ public abstract class AcceptanceTestBase
             "1",
             StringComparison.Ordinal);
 
+    public static bool IsWinAppCliInteropTestEnvironment
+        => string.Equals(
+            Environment.GetEnvironmentVariable("TESTFX_RUN_WINAPP_CLI_INTEROP_TESTS"),
+            "1",
+            StringComparison.Ordinal);
+
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
