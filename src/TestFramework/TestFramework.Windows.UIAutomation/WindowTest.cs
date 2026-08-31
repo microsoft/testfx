@@ -86,6 +86,10 @@ public abstract class WindowTest : ApplicationTest
         {
             return null;
         }
+        catch (ArgumentException)
+        {
+            return null;
+        }
     }
 
     /// <summary>

@@ -275,6 +275,27 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
         await AssertProcessExitedAsync(childPidFile);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task ApplicationSetup_WhenShutdownTimeoutIsInvalid_DoesNotLaunchProcess(string tfm)
+    {
+        string launchMarker = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.launch");
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=InvalidShutdownTimeoutTests",
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["MSTEST_UI_AUTOMATION_LAUNCH_MARKER"] = launchMarker,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("The application shutdown timeout must be non-negative");
+        Assert.IsFalse(File.Exists(launchMarker), "The application must not launch when its shutdown timeout is invalid.");
+    }
+
     private async Task AssertProcessExitedAsync(string pidFile)
     {
         int pid = int.Parse(await File.ReadAllTextAsync(pidFile, TestContext.CancellationToken), CultureInfo.InvariantCulture);
@@ -592,6 +613,27 @@ public class LauncherChildWindowTests : WindowTest
         {
             return null;
         }
+    }
+}
+
+[STATestClass]
+public class InvalidShutdownTimeoutTests : ApplicationTest
+{
+    protected override TimeSpan ApplicationShutdownTimeout => TimeSpan.FromMilliseconds(-2);
+
+    protected override ProcessStartInfo CreateProcessStartInfo()
+    {
+        string launchMarker = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_LAUNCH_MARKER")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_LAUNCH_MARKER must be set.");
+        File.WriteAllText(launchMarker, string.Empty);
+        return new ProcessStartInfo(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
     }
 }
 

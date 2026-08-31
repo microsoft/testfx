@@ -15,6 +15,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;
 public abstract class ApplicationTest : IDisposable
 {
     private Process? _appProcess;
+    private int _shutdownTimeoutMilliseconds;
 
     /// <summary>
     /// Gets or sets the test context populated by MSTest before each test runs.
@@ -46,6 +47,7 @@ public abstract class ApplicationTest : IDisposable
     public void ApplicationSetup()
     {
         TestContext.CancellationToken.ThrowIfCancellationRequested();
+        _shutdownTimeoutMilliseconds = GetShutdownTimeoutMilliseconds();
 
         ProcessStartInfo startInfo = CreateProcessStartInfo();
         _appProcess = Process.Start(startInfo)
@@ -88,15 +90,13 @@ public abstract class ApplicationTest : IDisposable
             return;
         }
 
-        int shutdownTimeoutMilliseconds = GetShutdownTimeoutMilliseconds();
-
         try
         {
-            _ = applicationProcess.CloseMainWindow();
-            if (!applicationProcess.WaitForExit(shutdownTimeoutMilliseconds))
+            bool closeRequested = applicationProcess.CloseMainWindow();
+            if (!closeRequested || !applicationProcess.WaitForExit(_shutdownTimeoutMilliseconds))
             {
                 applicationProcess.Kill(entireProcessTree: true);
-                if (!applicationProcess.WaitForExit(shutdownTimeoutMilliseconds))
+                if (!applicationProcess.WaitForExit(_shutdownTimeoutMilliseconds))
                 {
                     throw new TimeoutException(
                         $"Application process {applicationProcess.Id} did not exit within {ApplicationShutdownTimeout} after termination was requested.");
