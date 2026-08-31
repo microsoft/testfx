@@ -139,7 +139,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
 
     private static async Task WaitForFileAsync(string path, TimeSpan timeout, CancellationToken cancellationToken)
     {
-        using CancellationTokenSource timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutSource.CancelAfter(timeout);
         try
         {
@@ -156,7 +156,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
 
     private static async Task WaitForProcessExitAsync(MtpServerClient client, TimeSpan timeout, CancellationToken cancellationToken)
     {
-        using CancellationTokenSource timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutSource.CancelAfter(timeout);
         try
         {
