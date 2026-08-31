@@ -179,11 +179,6 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
             }
 
             ReportJournalReadResult<TCapturedTestResult> journal = ReadJournal(path, testHostProcessInformation);
-            if (journal.Completed)
-            {
-                return;
-            }
-
             TGenerator generator = _generatorFactory(_serviceProvider, journal.Metadata);
             (string fileName, string? warning) = await generator.GenerateRecoveredReportAsync(
                 journal,
@@ -197,7 +192,9 @@ internal sealed class ReportProcessLifetimeHandler<TGenerator, TCapturedTestResu
 
             await _outputDevice.DisplayAsync(
                 this,
-                new WarningMessageOutputDeviceData($"The test host terminated before report generation completed. Recovered {journal.Results.Count} terminal test result(s); the generated report is marked incomplete."),
+                new WarningMessageOutputDeviceData(journal.Completed
+                    ? $"The test host terminated before report artifact delivery was confirmed. Re-generated the report from {journal.Results.Count} journaled terminal test result(s) and marked it incomplete."
+                    : $"The test host terminated before report generation completed. Recovered {journal.Results.Count} terminal test result(s); the generated report is marked incomplete."),
                 cancellationToken).ConfigureAwait(false);
             if (journal.IsPartial)
             {

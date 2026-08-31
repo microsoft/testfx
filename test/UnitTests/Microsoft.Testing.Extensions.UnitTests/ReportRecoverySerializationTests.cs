@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq.Expressions;
 using System.Reflection;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -123,7 +124,7 @@ public sealed class ReportRecoverySerializationTests
     }
 
     [TestMethod]
-    public async Task OnTestHostProcessExitedAsync_CompletionRecord_SkipsRegenerationAndDeletesJournalAsync()
+    public async Task OnTestHostProcessExitedAsync_CompletionRecord_RegeneratesAndPublishesReportAsync()
     {
         const string journal = """
             {"Type":0,"StartTime":"2026-08-31T12:00:00+00:00","ProcessId":42,"FrameworkUid":"framework","FrameworkVersion":"1.0","FrameworkDisplayName":"Framework"}
@@ -131,10 +132,14 @@ public sealed class ReportRecoverySerializationTests
 
             """;
         var fileSystem = new Mock<IFileSystem>();
-        _ = fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        _ = fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>()))
+            .Returns<string>(path => path.EndsWith(".jsonl", StringComparison.Ordinal));
         _ = fileSystem
             .Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             .Returns(() => new MemoryFileStream(journal));
+        _ = fileSystem
+            .Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create))
+            .Returns(() => new WritableMemoryFileStream());
         object handler = CreateHandler(
             typeof(CtrfReportEngine),
             fileSystem.Object,
@@ -145,13 +150,18 @@ public sealed class ReportRecoverySerializationTests
             new TestHostProcessInformation(314, 1, hasExitedGracefully: false),
             CancellationToken.None);
 
-        messageBus.Verify(bus => bus.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()), Times.Never);
+        messageBus.Verify(
+            bus => bus.PublishAsync(
+                It.IsAny<IDataProducer>(),
+                It.Is<FileArtifact>(artifact => artifact.Kind == "microsoft.testing.ctrf")),
+            Times.Once);
         outputDevice.Verify(
             device => device.DisplayAsync(
                 It.IsAny<IOutputDeviceDataProducer>(),
-                It.IsAny<IOutputDeviceData>(),
+                It.Is<WarningMessageOutputDeviceData>(message =>
+                    message.Message.Contains("before report artifact delivery was confirmed", StringComparison.Ordinal)),
                 It.IsAny<CancellationToken>()),
-            Times.Never);
+            Times.Once);
         fileSystem.Verify(fs => fs.DeleteFile(It.IsAny<string>()), Times.Once);
     }
 
@@ -190,7 +200,16 @@ public sealed class ReportRecoverySerializationTests
         var configuration = new Mock<IConfiguration>();
         _ = configuration.SetupGet(c => c[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("results");
         messageBus = new Mock<IMessageBus>();
+        _ = messageBus
+            .Setup(bus => bus.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
+            .Returns(Task.CompletedTask);
         outputDevice = new Mock<IOutputDevice>();
+        _ = outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var loggerFactory = new Mock<ILoggerFactory>();
         _ = loggerFactory.Setup(factory => factory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
 
@@ -201,21 +220,38 @@ public sealed class ReportRecoverySerializationTests
         serviceProvider.AddService(messageBus.Object);
         serviceProvider.AddService(outputDevice.Object);
         serviceProvider.AddService(Mock.Of<IClock>(clock => clock.UtcNow == DateTimeOffset.UtcNow));
-        serviceProvider.AddService(Mock.Of<IEnvironment>());
+        serviceProvider.AddService(Mock.Of<IEnvironment>(environment => environment.MachineName == "machine"));
+        serviceProvider.AddService(Mock.Of<ITestApplicationModuleInfo>(
+            module => module.GetCurrentTestApplicationFullPath() == "testhost.dll"));
+        serviceProvider.AddService(Mock.Of<ITestApplicationProcessExitCode>(
+            exitCode => exitCode.GetProcessExitCode() == 1));
         serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
 
         MethodInfo deserializeMethod = generatorType.GetMethod(
             "DeserializeJournalRecord",
             BindingFlags.Static | BindingFlags.NonPublic)!;
         Type deserializerType = handlerType.GetConstructors().Single().GetParameters()[4].ParameterType;
         var deserializer = Delegate.CreateDelegate(deserializerType, deserializeMethod);
+        Type factoryType = handlerType.GetConstructors().Single().GetParameters()[3].ParameterType;
+        Type[] factoryArguments = factoryType.GetGenericArguments();
+        ParameterExpression serviceProviderParameter = Expression.Parameter(factoryArguments[0], "serviceProvider");
+        ParameterExpression metadataParameter = Expression.Parameter(factoryArguments[1], "metadata");
+        ConstructorInfo recoveredConstructor = generatorType
+            .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Single(constructor => constructor.GetParameters().Length == 2);
+        Delegate generatorFactory = Expression.Lambda(
+            factoryType,
+            Expression.New(recoveredConstructor, serviceProviderParameter, metadataParameter),
+            serviceProviderParameter,
+            metadataParameter).Compile();
 
         return Activator.CreateInstance(
             handlerType,
             serviceProvider,
             "report",
             journalConfiguration,
-            null,
+            generatorFactory,
             deserializer)!;
     }
 
@@ -231,6 +267,21 @@ public sealed class ReportRecoverySerializationTests
     private sealed class MemoryFileStream(string content) : IFileStream
     {
         private readonly MemoryStream _stream = new(Encoding.UTF8.GetBytes(content));
+
+        Stream IFileStream.Stream => _stream;
+
+        string IFileStream.Name => string.Empty;
+
+        void IDisposable.Dispose() => _stream.Dispose();
+
+#if NETCOREAPP
+        ValueTask IAsyncDisposable.DisposeAsync() => _stream.DisposeAsync();
+#endif
+    }
+
+    private sealed class WritableMemoryFileStream : IFileStream
+    {
+        private readonly MemoryStream _stream = new();
 
         Stream IFileStream.Stream => _stream;
 
