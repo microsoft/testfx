@@ -446,13 +446,11 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             Constants.Root,
             "samples",
             "public",
-            "mstest-runner",
-            "MSTestRunnerWinUI",
-            "MSTestRunnerWinUI",
+            "WinUIMtpPackagedApp",
             "Assets");
         Assert.IsTrue(
             Directory.Exists(sourceAssets),
-            $"The canonical packaged MSTestRunnerWinUI assets were not found at '{sourceAssets}'.");
+            $"The canonical packaged WinUIMtpPackagedApp assets were not found at '{sourceAssets}'.");
 
         string destinationAssets = Path.Combine(targetAssetPath, "Assets");
         Directory.CreateDirectory(destinationAssets);

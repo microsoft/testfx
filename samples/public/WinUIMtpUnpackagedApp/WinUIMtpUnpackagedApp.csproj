@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>WinUIMtpUnpackagedApp</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <Nullable>enable</Nullable>
+
+    <!--
+      Run unpackaged: no MSIX package identity, so there is no AppxManifest.xml, no Package.appxmanifest
+      and no package logo assets to author. The produced .exe is an ordinary Windows executable.
+      This is the setting VSTest cannot handle (see https://github.com/microsoft/testfx/issues/2784);
+      it works under Microsoft.Testing.Platform because the app itself hosts the test platform.
+    -->
+    <WindowsPackageType>None</WindowsPackageType>
+
+    <!-- Unpackaged apps do not need any of the MSIX packaging tooling. -->
+    <EnableMsixTooling>false</EnableMsixTooling>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <!--
+      A WinUI app already owns its entry point (generated from the ApplicationDefinition below), so the
+      testing platform must not generate a competing one. UnitTestApp.OnLaunched hosts the platform instead.
+    -->
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Page Remove="UnitTestApp.xaml" />
+    <ApplicationDefinition Include="UnitTestApp.xaml" />
+    <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
+    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
+    <!--
+      NOTE: Microsoft.Testing.Extensions.PackagedApp is deliberately NOT referenced here. It exists to
+      register and AUMID-activate a *packaged* (MSIX) app, which an unpackaged app does not need — the
+      executable is simply started. Referencing it anyway would be harmless (the launcher detects that
+      this layout has no AppxManifest.xml and stays disabled), but there is nothing for it to do.
+    -->
+  </ItemGroup>
+
+  <!-- Publish Properties -->
+  <PropertyGroup>
+    <PublishReadyToRun>False</PublishReadyToRun>
+    <PublishTrimmed>False</PublishTrimmed>
+  </PropertyGroup>
+</Project>

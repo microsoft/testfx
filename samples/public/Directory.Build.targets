@@ -1,2 +1,58 @@
 <Project>
+
+  <Target Name="_PrepareWindowsAppVSTestRecipe"
+          BeforeTargets="_VSTestConsole;_VSTestMSBuild"
+          Condition="'$(UseWindowsAppVSTestRecipe)' == 'true'">
+    <PropertyGroup>
+      <_VSWherePath>$(MSBuildProgramFiles32)\Microsoft Visual Studio\Installer\vswhere.exe</_VSWherePath>
+    </PropertyGroup>
+
+    <Error Condition="!Exists('$(_VSWherePath)')"
+           Text="Running this Windows application test requires Visual Studio Installer's vswhere.exe at '$(_VSWherePath)'." />
+
+    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" ItemName="_WindowsAppVSTestConsole" />
+    </Exec>
+    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -find MSBuild\Current\Bin\MSBuild.exe"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" ItemName="_WindowsAppMSBuild" />
+    </Exec>
+
+    <Error Condition="'@(_WindowsAppVSTestConsole)' == ''"
+           Text="Running this Windows application test requires Visual Studio with the Universal Windows Platform workload and test tools." />
+    <Error Condition="'@(_WindowsAppMSBuild)' == ''"
+           Text="Building this Windows application test requires Visual Studio with the Universal Windows Platform workload." />
+
+    <Exec Command="&quot;@(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; /restore /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:IsTestProject=false /p:UseUwpTools=$(UseUwp) /nologo" />
+
+    <ItemGroup>
+      <_WindowsAppVSTestRecipe Include="$(MSBuildProjectDirectory)\bin\$(Platform)\$(Configuration)\**\*.build.appxrecipe" />
+    </ItemGroup>
+
+    <Error Condition="'@(_WindowsAppVSTestRecipe)' == ''"
+           Text="The Visual Studio build did not produce an AppX test recipe under '$(MSBuildProjectDirectory)\bin\$(Platform)\$(Configuration)'." />
+
+    <PropertyGroup>
+      <!-- Suppress the SDK's DLL-based VSTest task; the AppX recipe is run directly below. -->
+      <IsTestProject>false</IsTestProject>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_RunWindowsAppVSTestRecipe"
+          AfterTargets="_VSTestConsole;_VSTestMSBuild"
+          Condition="'$(UseWindowsAppVSTestRecipe)' == 'true'">
+    <PropertyGroup>
+      <_WindowsAppVSTestArguments>&quot;@(_WindowsAppVSTestRecipe)&quot; /Platform:$(PlatformTarget) /Framework:FrameworkUap10</_WindowsAppVSTestArguments>
+      <_WindowsAppVSTestArguments Condition="'$(VSTestTestCaseFilter)' != ''">$(_WindowsAppVSTestArguments) /TestCaseFilter:&quot;$(VSTestTestCaseFilter)&quot;</_WindowsAppVSTestArguments>
+      <_WindowsAppVSTestArguments Condition="'$(VSTestLogger)' != ''">$(_WindowsAppVSTestArguments) /Logger:&quot;$(VSTestLogger)&quot;</_WindowsAppVSTestArguments>
+      <_WindowsAppVSTestArguments Condition="'$(VSTestResultsDirectory)' != ''">$(_WindowsAppVSTestArguments) /ResultsDirectory:&quot;$(VSTestResultsDirectory)&quot;</_WindowsAppVSTestArguments>
+      <_WindowsAppVSTestArguments Condition="'$(VSTestListTests)' == 'true'">$(_WindowsAppVSTestArguments) /ListTests</_WindowsAppVSTestArguments>
+    </PropertyGroup>
+
+    <Exec Command="&quot;@(_WindowsAppVSTestConsole)&quot; $(_WindowsAppVSTestArguments)" />
+  </Target>
+
 </Project>

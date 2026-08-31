@@ -249,7 +249,7 @@ internal static class WindowsApplicationModelTestTools
 
     public static void CopySampleAssets(string targetAssetPath)
     {
-        string sourceAssets = Path.Combine(Constants.Root, "samples", "public", "BlankUwpNet9App", "Assets");
+        string sourceAssets = Path.Combine(Constants.Root, "samples", "public", "UwpVSTestApp", "Assets");
         Assert.IsTrue(Directory.Exists(sourceAssets), $"Canonical UWP sample assets were not found at '{sourceAssets}'.");
 
         string destinationAssets = Path.Combine(targetAssetPath, "Assets");

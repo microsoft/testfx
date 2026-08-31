@@ -325,7 +325,7 @@ builder.TestHostControllers.AddTestHostLauncher(sp => new MyLauncher(sp));
 ### 1. Packaged WinUI / MSIX (the motivating case)
 
 Deploy the loose layout (Developer Mode) and activate the packaged app by AUMID instead of starting
-an exe. The activated app self-hosts MTP (as the `MSTestRunnerWinUI` sample already does for the
+an exe. The activated app self-hosts MTP (as the `WinUIMtpPackagedApp` sample already does for the
 in-process case); the launcher is responsible for getting the controller pipe name and correlation
 id to it so it can connect back, since AUMID activation does not flow per-launch environment
 variables on its own.
