@@ -209,12 +209,13 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         }
         else if (request is ActivitySignalRequest)
         {
+            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
+
             if (_traceEnabled)
             {
                 await _logger.LogTraceAsync($"Activity signal received by the test host '{_clock.UtcNow}'").ConfigureAwait(false);
             }
 
-            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
             return VoidResponse.CachedInstance;
         }
         else
