@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <target state="translated">Führen Sie '--help' aus, um die von dieser Testanwendung registrierten Optionen anzuzeigen. Wenn die Option zu einer Erweiterung gehört, stellen Sie sicher, dass das zugehörige Paket als Verweis eingebunden ist und die Erweiterung registriert ist.</target>
         <note>{Locked="'--help'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
