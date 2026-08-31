@@ -12,12 +12,17 @@ internal static class CombinatorialValuesUtilities
             throw new ArgumentNullException(nameof(parameter));
         }
 
-        ICombinatorialValuesProvider? valuesSource = parameter.GetCustomAttributes()
+        ICombinatorialValuesProvider[] valueSources = parameter.GetCustomAttributes()
             .OfType<ICombinatorialValuesProvider>()
-            .SingleOrDefault();
-        return valuesSource is not null
-            ? valuesSource.GetValues(parameter)
-            : GetValuesFor(parameter.ParameterType);
+            .ToArray();
+        return valueSources.Length switch
+        {
+            0 => GetValuesFor(parameter.ParameterType),
+            1 => valueSources[0].GetValues(parameter),
+            _ => throw new ArgumentException(
+                $"Parameter '{parameter.Name}' on '{parameter.Member.Name}' has multiple combinatorial value providers: {string.Join(", ", valueSources.Select(provider => provider.GetType().Name))}. Apply exactly one attribute that implements {nameof(ICombinatorialValuesProvider)}.",
+                nameof(parameter)),
+        };
     }
 
     internal static object? GetValueForTestCase(ParameterInfo parameter, object?[] candidateValues, int candidateIndex)

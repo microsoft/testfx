@@ -100,6 +100,14 @@ public class CombinatorialDataAttributeTests : TestContainer
             .WithMessage($"*{nameof(ICombinatorialValuesProvider)}*");
     }
 
+    public void GetDataReportsConflictingValueProviders()
+    {
+        Action action = () => GetData(nameof(ConflictingValueProviders));
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage($"*'value'*multiple combinatorial value providers*{nameof(CombinatorialValuesAttribute)}*{nameof(CombinatorialRangeAttribute)}*{nameof(ICombinatorialValuesProvider)}*");
+    }
+
     public void MemberDataValuesAreUniquePerTestCase()
     {
         object?[][] rows = GetData(nameof(MutableMemberData));
@@ -170,6 +178,13 @@ public class CombinatorialDataAttributeTests : TestContainer
     }
 
     private static void UnsupportedParameter(Guid value)
+    {
+    }
+
+    private static void ConflictingValueProviders(
+        [CombinatorialValues(1)]
+        [CombinatorialRange(1, 2)]
+        int value)
     {
     }
 
