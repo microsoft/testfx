@@ -96,9 +96,11 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
             {
                 _ = await runTask.WaitAsync(WaitTimeout, testTimeoutToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex) when (ex.CancellationToken == runCancellation.Token)
             {
-                // Expected: the pending 'testing/runTests' request was canceled client-side.
+                // Expected: the pending 'testing/runTests' request was canceled client-side. Filtered on the
+                // run's own token so a harness-level testTimeoutToken cancellation (a genuine hang) is never
+                // misreported as this expected cancellation.
             }
 
             // The crux of this E2E test: assert that the executing MSTest test itself observed
@@ -122,9 +124,11 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
                 snapshot,
                 $"Expected exactly one 'in-progress' update for '{ExpectedTestDisplayName}'. Collected: {Describe(snapshot)}");
 
-            // Server and client must shut down cleanly and promptly: Exit + Dispose (via the 'using' above) must
-            // not hang or leave the process running.
+            // Server and client must shut down cleanly and promptly: the server must actually exit on its own
+            // in response to 'exit' - not merely be force-killed by Dispose() below (MtpServerProcess.Dispose
+            // kills the process if it is still alive, which would let a server that ignores 'exit' still pass).
             await client.ExitAsync(testTimeoutToken).WaitAsync(WaitTimeout, testTimeoutToken);
+            await WaitForProcessExitAsync(client, WaitTimeout, testTimeoutToken);
         }
         finally
         {
@@ -143,9 +147,29 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
                 await Task.Delay(TimeSpan.FromMilliseconds(50), timeoutSource.Token);
             }
         }
-        catch (OperationCanceledException) when (timeoutSource.Token.IsCancellationRequested)
+        catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
             throw new TimeoutException($"Timed out after {timeout} waiting for signal file '{path}' to appear.");
+        }
+    }
+
+    private static async Task WaitForProcessExitAsync(MtpServerClient client, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        using CancellationTokenSource timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutSource.CancelAfter(timeout);
+        try
+        {
+            // ProcessId returns 0 once the launched process has exited (see MtpServerProcess.ProcessId), so
+            // polling it proves the server exited naturally in response to 'exit' rather than merely being
+            // force-killed by the Dispose() that runs when the caller's 'using' block ends.
+            while (client.ProcessId != 0)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50), timeoutSource.Token);
+            }
+        }
+        catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Server process did not exit naturally within {timeout} after 'exit' was sent.");
         }
     }
 
