@@ -26,6 +26,7 @@ public sealed class TerminalReporterContractTests
         // Microsoft.Testing.Platform. A missing/renamed string would fail the build, not just this test.
         Assert.IsFalse(string.IsNullOrEmpty(TerminalResources.TestRunSummary));
         Assert.IsFalse(string.IsNullOrEmpty(TerminalResources.Passed));
+        Assert.IsFalse(string.IsNullOrEmpty(TerminalResources.TestRunExitCode));
     }
 
     [TestMethod]
