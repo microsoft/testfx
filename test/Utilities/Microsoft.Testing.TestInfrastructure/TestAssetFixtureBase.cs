@@ -355,7 +355,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         }
     }
 
-    private static bool TryReadCacheCount(IReadOnlyList<string> outputLines, string label, out int count)
+    internal static bool TryReadCacheCount(IReadOnlyList<string> outputLines, string label, out int count)
     {
         string? line = outputLines.LastOrDefault(line => line.TrimStart().StartsWith(label, StringComparison.Ordinal));
         if (line is null)
@@ -374,14 +374,20 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         return int.TryParse(value, out count);
     }
 
-    private static bool TryReadSavedProjectSeconds(IReadOnlyList<string> outputLines, out double savedSeconds)
+    internal static bool TryReadSavedProjectSeconds(IReadOnlyList<string> outputLines, out double savedSeconds)
     {
         const string SavedPrefix = "(saved ";
         const string ProjectUnitPrefix = " project-";
 
         string? line = outputLines.LastOrDefault(line => line.Contains(SavedPrefix, StringComparison.Ordinal));
-        int start = line?.IndexOf(SavedPrefix, StringComparison.Ordinal) ?? -1;
-        int end = line?.IndexOf(ProjectUnitPrefix, StringComparison.Ordinal) ?? -1;
+        if (line is null)
+        {
+            savedSeconds = 0;
+            return false;
+        }
+
+        int start = line.IndexOf(SavedPrefix, StringComparison.Ordinal);
+        int end = line.IndexOf(ProjectUnitPrefix, StringComparison.Ordinal);
         if (start < 0 || end <= start)
         {
             savedSeconds = 0;
@@ -405,15 +411,31 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             return false;
         }
 
-        string unit = line.AsSpan(end + ProjectUnitPrefix.Length).TrimEnd(')').ToString();
-        savedSeconds = unit switch
+        if (!double.IsFinite(savedValue) || savedValue < 0)
         {
-            "seconds" => savedValue,
-            "minutes" => savedValue * 60,
-            "hours" => savedValue * 60 * 60,
-            _ => 0,
-        };
-        return savedSeconds > 0 || savedValue == 0;
+            savedSeconds = 0;
+            return false;
+        }
+
+        string unit = line.AsSpan(end + ProjectUnitPrefix.Length).TrimEnd(')').ToString();
+        switch (unit)
+        {
+            case "seconds":
+                savedSeconds = savedValue;
+                return true;
+
+            case "minutes":
+                savedSeconds = savedValue * 60;
+                return true;
+
+            case "hours":
+                savedSeconds = savedValue * 60 * 60;
+                return true;
+
+            default:
+                savedSeconds = 0;
+                return false;
+        }
     }
 
     private static void CleanCacheOutputs(string assetPath, string cacheVariant)

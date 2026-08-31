@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Polyfills" />
   </ItemGroup>
 
