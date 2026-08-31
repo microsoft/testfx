@@ -73,6 +73,14 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <inheritdoc />
     public int ProcessId => _process?.ProcessId ?? 0;
 
+    internal int ServerExitCode => GetOwnedProcess().ExitCode;
+
+    internal Task WaitForServerExitAsync(CancellationToken cancellationToken = default)
+    {
+        EnsureStarted();
+        return GetOwnedProcess().WaitForExitAsync(cancellationToken);
+    }
+
     /// <inheritdoc />
     public MtpServerCapabilities? Capabilities { get; private set; }
 
@@ -347,6 +355,9 @@ internal sealed class MtpServerClient : IMtpServerClient
 
     private void EnsureStarted()
         => _connection.Start();
+
+    private MtpServerProcess GetOwnedProcess()
+        => _process ?? throw new InvalidOperationException("This client does not own a launched server process.");
 
     private void OnNotificationReceived(NotificationMessage notification)
     {
