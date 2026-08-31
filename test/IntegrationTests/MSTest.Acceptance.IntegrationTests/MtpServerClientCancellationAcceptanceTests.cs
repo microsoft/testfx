@@ -133,6 +133,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         finally
         {
             File.Delete(signalFilePath);
+            File.Delete(signalFilePath + ".tmp");
         }
     }
 
@@ -254,7 +255,12 @@ public class UnitTest1
             string? signalFilePath = Environment.GetEnvironmentVariable("MTP_CANCELLATION_SIGNAL_FILE");
             if (signalFilePath is not null)
             {
-                File.WriteAllText(signalFilePath, $"{nameof(LongRunningCancellableTest)} observed TestContext.CancellationToken");
+                // Write to a sibling temp file and rename into place so the acceptance test - which polls via
+                // File.Exists - never observes an empty or partially written marker file. File.Move onto the
+                // final path is atomic on both Windows and Unix.
+                string tempSignalFilePath = signalFilePath + ".tmp";
+                File.WriteAllText(tempSignalFilePath, $"{nameof(LongRunningCancellableTest)} observed TestContext.CancellationToken");
+                File.Move(tempSignalFilePath, signalFilePath);
             }
 
             throw;
