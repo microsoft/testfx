@@ -188,14 +188,19 @@ steps:
     Write-Host "Acceptance MSBuild cache [${{ parameters.acceptanceTestCacheMode }}]: $($records.Count) generated build attempt(s), $hits hit node(s), $misses miss node(s), $($hitRatio.ToString('P1')) hit ratio, $($savedProjectSeconds.ToString('F1')) project-seconds saved, $fallbacks fallback(s), $missingStatistics successful attempt(s) without statistics."
 
     $summaryPath = "$(Agent.TempDirectory)\AcceptanceMSBuildCacheSummary-$(_BuildConfig).md"
-    @"
-    # Acceptance MSBuild cache
-
-    | Mode | Generated build attempts | Hit nodes | Miss nodes | Hit ratio | Saved project time | Fallbacks | Successful attempts missing statistics |
-    | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-    | ${{ parameters.acceptanceTestCacheMode }} | $($records.Count) | $hits | $misses | $($hitRatio.ToString('P1')) | $([TimeSpan]::FromSeconds($savedProjectSeconds).ToString()) | $fallbacks | $missingStatistics |
-    "@ | Set-Content -LiteralPath $summaryPath
-    Write-Host "##vso[task.uploadsummary]$summaryPath"
+    try {
+      @(
+        '# Acceptance MSBuild cache'
+        ''
+        '| Mode | Generated build attempts | Hit nodes | Miss nodes | Hit ratio | Saved project time | Fallbacks | Successful attempts missing statistics |'
+        '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+        "| ${{ parameters.acceptanceTestCacheMode }} | $($records.Count) | $hits | $misses | $($hitRatio.ToString('P1')) | $([TimeSpan]::FromSeconds($savedProjectSeconds).ToString()) | $fallbacks | $missingStatistics |"
+      ) | Set-Content -LiteralPath $summaryPath
+      Write-Host "##vso[task.uploadsummary]$summaryPath"
+    }
+    catch {
+      Write-Host "##vso[task.logissue type=warning]Could not publish acceptance MSBuild cache summary: $($_.Exception.Message)"
+    }
   displayName: Report acceptance MSBuild cache usage
   condition: and(always(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
 

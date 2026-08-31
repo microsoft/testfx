@@ -24,6 +24,7 @@ public sealed class TestAssetFixtureBaseTests
     [DataRow("unrelated output")]
     [DataRow("Cache Hit Count: invalid")]
     [DataRow("Cache Hit Count:")]
+    [DataRow("Cache Hit Count: -1")]
     public void TryReadCacheCount_MissingOrMalformedStatistic_ReturnsFalse(string line)
     {
         bool result = TryReadCacheCount([line], "Cache Hit Count:", out int count);
@@ -51,6 +52,7 @@ public sealed class TestAssetFixtureBaseTests
     [DataRow("(saved 2 project-days)")]
     [DataRow("(saved 0 project-days)")]
     [DataRow("(saved -1 project-seconds)")]
+    [DataRow("(saved 1E308 project-hours)")]
     public void TryReadSavedProjectSeconds_MissingOrMalformedStatistic_ReturnsFalse(string line)
     {
         bool result = TryReadSavedProjectSeconds([line], out double savedSeconds);

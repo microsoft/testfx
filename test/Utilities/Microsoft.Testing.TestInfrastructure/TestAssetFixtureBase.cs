@@ -388,7 +388,13 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             value = value[..separator];
         }
 
-        return int.TryParse(value, out count);
+        if (!int.TryParse(value, out count) || count < 0)
+        {
+            count = 0;
+            return false;
+        }
+
+        return true;
     }
 
     private static bool TryReadSavedProjectSeconds(IReadOnlyList<string> outputLines, out double savedSeconds)
@@ -439,20 +445,28 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         {
             case "seconds":
                 savedSeconds = savedValue;
-                return true;
+                break;
 
             case "minutes":
                 savedSeconds = savedValue * 60;
-                return true;
+                break;
 
             case "hours":
                 savedSeconds = savedValue * 60 * 60;
-                return true;
+                break;
 
             default:
                 savedSeconds = 0;
                 return false;
         }
+
+        if (!double.IsFinite(savedSeconds))
+        {
+            savedSeconds = 0;
+            return false;
+        }
+
+        return true;
     }
 
     private static void CleanCacheOutputs(string assetPath, string cacheVariant)
