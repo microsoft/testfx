@@ -26,10 +26,11 @@ public class CombinatorialDataAttribute : Attribute, ITestDataSource
         }
 
         object?[][] values = new object?[parameters.Length][];
+        var valueSources = new ICombinatorialValuesProvider?[parameters.Length];
         int[] dimensionSizes = new int[parameters.Length];
         for (int i = 0; i < parameters.Length; i++)
         {
-            values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i]).ToArray();
+            values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i], out valueSources[i]).ToArray();
             dimensionSizes[i] = values[i].Length;
         }
 
@@ -38,7 +39,7 @@ public class CombinatorialDataAttribute : Attribute, ITestDataSource
         int[][] testCases = CombinatorialTestCaseGenerator.GenerateCombinations(dimensionSizes, isTestCaseAllowed);
         return testCases.Select(indices =>
             indices.Select((valueIndex, parameterIndex) =>
-                CombinatorialValuesUtilities.GetValueForTestCase(parameters[parameterIndex], values[parameterIndex], valueIndex))
+                CombinatorialValuesUtilities.GetValueForTestCase(parameters[parameterIndex], valueSources[parameterIndex], values[parameterIndex], valueIndex))
                 .ToArray());
     }
 

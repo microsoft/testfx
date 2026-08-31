@@ -5,7 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 internal static class CombinatorialValuesUtilities
 {
-    internal static IEnumerable<object?> GetValuesFor(ParameterInfo parameter)
+    internal static IEnumerable<object?> GetValuesFor(ParameterInfo parameter, out ICombinatorialValuesProvider? valuesSource)
     {
         if (parameter is null)
         {
@@ -15,30 +15,30 @@ internal static class CombinatorialValuesUtilities
         ICombinatorialValuesProvider[] valueSources = parameter.GetCustomAttributes()
             .OfType<ICombinatorialValuesProvider>()
             .ToArray();
-        return valueSources.Length switch
+        valuesSource = valueSources.Length switch
         {
-            0 => GetValuesFor(parameter.ParameterType),
-            1 => valueSources[0].GetValues(parameter),
+            0 => null,
+            1 => valueSources[0],
             _ => throw new ArgumentException(
                 $"Parameter '{parameter.Name}' on '{parameter.Member.Name}' has multiple combinatorial value providers: {string.Join(", ", valueSources.Select(provider => provider.GetType().Name))}. Apply exactly one attribute that implements {nameof(ICombinatorialValuesProvider)}.",
                 nameof(parameter)),
         };
+        return valuesSource is null
+            ? GetValuesFor(parameter.ParameterType)
+            : valuesSource.GetValues(parameter);
     }
 
-    internal static object? GetValueForTestCase(ParameterInfo parameter, object?[] candidateValues, int candidateIndex)
+    internal static object? GetValueForTestCase(ParameterInfo parameter, ICombinatorialValuesProvider? valuesSource, object?[] candidateValues, int candidateIndex)
     {
-        CombinatorialMemberDataAttribute? memberData = parameter.GetCustomAttributes()
-            .OfType<CombinatorialMemberDataAttribute>()
-            .SingleOrDefault();
-        if (memberData is null)
+        if (valuesSource is not (CombinatorialMemberDataAttribute or CombinatorialClassDataAttribute))
         {
             return candidateValues[candidateIndex];
         }
 
-        object?[] freshValues = memberData.GetValues(parameter);
+        object?[] freshValues = valuesSource.GetValues(parameter);
         return freshValues.Length != candidateValues.Length
             ? throw new InvalidOperationException(
-                $"Member data for parameter '{parameter.Name}' returned {candidateValues.Length} values when determining combinations, but {freshValues.Length} values when creating a test case.")
+                $"The value provider for parameter '{parameter.Name}' returned {candidateValues.Length} values when determining combinations, but {freshValues.Length} values when creating a test case.")
             : freshValues[candidateIndex];
     }
 

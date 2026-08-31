@@ -104,7 +104,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     public void ClassDataRejectsInvalidTypesAndConstructorArguments()
     {
         Action invalidType = () => _ = new CombinatorialClassDataAttribute(typeof(object));
-        Action invalidArguments = () => _ = new CombinatorialClassDataAttribute(typeof(IntegerRows), "wrong");
+        Action invalidArguments = () => new CombinatorialClassDataAttribute(typeof(IntegerRows), "wrong").GetValues(IntParameter);
 
         invalidType.Should().Throw<InvalidOperationException>().WithMessage("*IEnumerable*");
         invalidArguments.Should().Throw<InvalidOperationException>().WithMessage("*Failed to create*");
@@ -112,7 +112,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void ClassDataDoesNotReportEnumerationFailuresAsConstructorFailures()
     {
-        Action action = () => _ = new CombinatorialClassDataAttribute(typeof(ThrowingRows));
+        Action action = () => new CombinatorialClassDataAttribute(typeof(ThrowingRows)).GetValues(IntParameter);
 
         action.Should().Throw<NotSupportedException>().WithMessage("Enumeration failed.");
     }

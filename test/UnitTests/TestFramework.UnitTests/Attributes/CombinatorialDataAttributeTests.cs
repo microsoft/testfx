@@ -124,6 +124,32 @@ public class CombinatorialDataAttributeTests : TestContainer
         }
     }
 
+    public void ClassDataValuesAreUniquePerTestCase()
+    {
+        object?[][] rows = GetData(nameof(MutableClassData));
+        MutableValue[] values = rows.Select(row => (MutableValue)row[0]!).ToArray();
+
+        values.Should().HaveCount(4);
+        values.Select(value => value.Value).Should().BeEquivalentTo([1, 1, 2, 2]);
+        for (int i = 0; i < values.Length; i++)
+        {
+            for (int j = i + 1; j < values.Length; j++)
+            {
+                values[i].Should().NotBeSameAs(values[j]);
+            }
+        }
+    }
+
+    public void ValueProviderAttributeIsResolvedOnce()
+    {
+        CountingValuesAttribute.ConstructionCount = 0;
+
+        object?[][] rows = GetData(nameof(CountingProviderData));
+
+        rows.Should().HaveCount(4);
+        CountingValuesAttribute.ConstructionCount.Should().Be(1);
+    }
+
     public void GetDisplayNameUsesMSTestFormatting()
     {
         MethodInfo method = GetMethod(nameof(ExplicitParameters));
@@ -194,6 +220,16 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
+    private static void MutableClassData(
+        [CombinatorialClassData(typeof(MutableClassDataSource))] MutableValue value,
+        bool flag)
+    {
+    }
+
+    private static void CountingProviderData([CountingValues] int value, bool flag)
+    {
+    }
+
     public static IEnumerable<MutableValue> GetMutableValues()
     {
         yield return new MutableValue(1);
@@ -203,5 +239,26 @@ public class CombinatorialDataAttributeTests : TestContainer
     public sealed class MutableValue(int value)
     {
         public int Value { get; } = value;
+    }
+
+    public sealed class MutableClassDataSource : IEnumerable<object[]>
+    {
+        public IEnumerator<object[]> GetEnumerator()
+        {
+            yield return [new MutableValue(1)];
+            yield return [new MutableValue(2)];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    [AttributeUsage(AttributeTargets.Parameter)]
+    private sealed class CountingValuesAttribute : Attribute, ICombinatorialValuesProvider
+    {
+        public CountingValuesAttribute() => ConstructionCount++;
+
+        public static int ConstructionCount { get; set; }
+
+        public object?[] GetValues(ParameterInfo parameter) => [1, 2];
     }
 }

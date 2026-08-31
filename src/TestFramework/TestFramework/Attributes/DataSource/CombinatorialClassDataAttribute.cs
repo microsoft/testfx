@@ -10,7 +10,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [CLSCompliant(false)]
 public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesProvider
 {
-    private readonly object?[] _values;
+    private readonly object[]? _arguments;
+    private readonly Type _valuesSourceType;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CombinatorialClassDataAttribute"/> class.
@@ -20,26 +21,24 @@ public class CombinatorialClassDataAttribute : Attribute, ICombinatorialValuesPr
     public CombinatorialClassDataAttribute(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
         params object[]? arguments)
-        => _values = GetValues(valuesSourceType, arguments);
-
-    /// <inheritdoc />
-    public object?[] GetValues(ParameterInfo parameter) => _values;
-
-    private static object?[] GetValues(
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
-        object[]? arguments)
     {
-        if (valuesSourceType is null)
-        {
-            throw new ArgumentNullException(nameof(valuesSourceType));
-        }
-
+        _valuesSourceType = valuesSourceType ?? throw new ArgumentNullException(nameof(valuesSourceType));
         if (!typeof(IEnumerable<object[]>).IsAssignableFrom(valuesSourceType))
         {
             throw new InvalidOperationException(
                 $"The values source {valuesSourceType} must be assignable to {typeof(IEnumerable<object[]>)}.");
         }
 
+        _arguments = arguments is null ? null : [.. arguments];
+    }
+
+    /// <inheritdoc />
+    public object?[] GetValues(ParameterInfo parameter) => GetValues(_valuesSourceType, _arguments);
+
+    private static object?[] GetValues(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type valuesSourceType,
+        object[]? arguments)
+    {
         IEnumerable values;
         try
         {
