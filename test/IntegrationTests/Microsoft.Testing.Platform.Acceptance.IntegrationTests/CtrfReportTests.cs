@@ -383,6 +383,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         {
             string journalPath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_CTRFREPORT_JOURNAL")
                 ?? throw new InvalidOperationException("CTRF report recovery journal was not configured.");
+            bool journalReady = false;
             for (int i = 0; i < 100; i++)
             {
                 using FileStream stream = File.Open(journalPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -395,10 +396,16 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
                 if (lineCount == 3)
                 {
+                    journalReady = true;
                     break;
                 }
 
                 await Task.Delay(50);
+            }
+
+            if (!journalReady)
+            {
+                throw new TimeoutException("CTRF report recovery journal did not contain the expected results before the crash deadline.");
             }
 
             Console.WriteLine($"CRASHED_CHILD_PID={System.Diagnostics.Process.GetCurrentProcess().Id}");

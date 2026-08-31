@@ -222,16 +222,23 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         {
             string journalPath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_HTMLREPORT_JOURNAL")
                 ?? throw new InvalidOperationException("HTML report recovery journal was not configured.");
+            bool journalReady = false;
             for (int i = 0; i < 100; i++)
             {
                 using FileStream stream = File.Open(journalPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var reader = new StreamReader(stream);
                 if (reader.ReadLine() is not null && reader.ReadLine() is not null)
                 {
+                    journalReady = true;
                     break;
                 }
 
                 await Task.Delay(50);
+            }
+
+            if (!journalReady)
+            {
+                throw new TimeoutException("HTML report recovery journal did not contain the expected result before the crash deadline.");
             }
 
             Console.WriteLine($"CRASHED_CHILD_PID={System.Diagnostics.Process.GetCurrentProcess().Id}");
