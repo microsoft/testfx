@@ -38,6 +38,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Add `--show-test-results <outcomes>` to filter which passed, failed, skipped, error and timeout result blocks the terminal reporter displays without changing progress or summary counts, by @Evangelink in [#10737](https://github.com/microsoft/testfx/pull/10737)
 * Add an opt-in prototype for deadline-aware cancellation so CI can request a graceful test-framework stop before a hard job deadline, leaving time for reports to finalize and for HangDump to capture a wedged test host, by @nohwnd and @Evangelink in [#10018](https://github.com/microsoft/testfx/pull/10018)
 * Suggest uniquely matching command-line options for likely typos and identify the extension package that provides a known but unregistered option, by @Evangelink in [#10798](https://github.com/microsoft/testfx/pull/10798)
+* Preserve MSTest `[WorkItem]` and `[GitHubWorkItem]` metadata as schema-compatible work-item definitions in MTP-generated TRX reports, by @Evangelink in [#10861](https://github.com/microsoft/testfx/pull/10861)
 
 ### Changed
 
