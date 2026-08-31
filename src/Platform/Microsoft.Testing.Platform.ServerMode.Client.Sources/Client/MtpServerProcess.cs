@@ -96,14 +96,12 @@ internal sealed class MtpServerProcess : IMtpServerHost
     }
 
     /// <summary>
-    /// Tears the process down. Killing a child process is already a bounded, non-awaiting operation, so this
-    /// completes the synchronous teardown; it exists so both hosts expose one shutdown contract.
+    /// Tears the process down without blocking the caller. Killing a child process is bounded but still
+    /// synchronous (it waits for the OS to release the executable's file locks), so it is moved off the
+    /// calling thread to honour the same non-blocking contract the in-process host provides.
     /// </summary>
     public Task ShutdownAsync()
-    {
-        Dispose();
-        return Task.CompletedTask;
-    }
+        => Task.Run(Dispose);
 
     /// <summary>
     /// Launches the MTP application at <paramref name="source"/> and waits for it to connect back.

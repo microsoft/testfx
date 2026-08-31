@@ -317,6 +317,32 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task Dispose_WhileShutdownAsyncIsInFlight_WaitsForTheSameTeardown()
+    {
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var server = new InProcessServerFixture(onDisconnected: () => release.Task.GetAwaiter().GetResult());
+
+        MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        // Teardown is now blocked inside the callback, so ShutdownAsync cannot complete yet.
+        Task shutdown = client.ShutdownAsync();
+        Assert.IsFalse(shutdown.IsCompleted);
+
+        // A Dispose that races an in-flight ShutdownAsync must join it, not report success while the
+        // application is still stopping.
+        var dispose = Task.Run(client.Dispose, TestContext.CancellationToken);
+        await Task.Delay(200, TestContext.CancellationToken);
+        Assert.IsFalse(dispose.IsCompleted, "Dispose must not return while the shared teardown is still running.");
+
+        _ = release.TrySetResult(true);
+
+        await WithTimeoutAsync(shutdown);
+        await WithTimeoutAsync(dispose);
+        Assert.AreEqual(1, server.CompletionCount, "Both entry points must share one teardown.");
+    }
+
+    [TestMethod]
     public async Task Dispose_IsIdempotent()
     {
         using var server = new InProcessServerFixture();

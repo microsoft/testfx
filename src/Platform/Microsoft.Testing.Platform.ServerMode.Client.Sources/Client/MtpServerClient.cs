@@ -28,7 +28,6 @@ internal sealed class MtpServerClient : IMtpServerClient
     private readonly IMtpServerHost? _host;
 
     private Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? _serverRequestHandler;
-    private int _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MtpServerClient"/> class over an existing connection.
@@ -257,17 +256,15 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <inheritdoc />
     public void Dispose()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
-        {
-            return;
-        }
-
         DetachHandlers();
 
+        // No early-return guard here: both teardown paths are themselves idempotent AND join a teardown
+        // already in flight, so a Dispose that follows or races ShutdownAsync still returns only once the
+        // server has actually stopped, instead of reporting success while teardown is still running.
         if (_host is not null)
         {
-            // The host owns the connection: its Dispose closes the transport in the order the launched server
-            // expects and then tears the server itself down.
+            // The host owns the connection: its teardown closes the transport in the order the launched
+            // server expects and then tears the server itself down.
             _host.Dispose();
         }
         else
@@ -277,23 +274,18 @@ internal sealed class MtpServerClient : IMtpServerClient
     }
 
     /// <inheritdoc />
-    public async Task ShutdownAsync()
+    public Task ShutdownAsync()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
-        {
-            return;
-        }
-
         DetachHandlers();
 
         if (_host is not null)
         {
-            await _host.ShutdownAsync().ConfigureAwait(false);
+            return _host.ShutdownAsync();
         }
-        else
-        {
-            _connection.Dispose();
-        }
+
+        // No launched server to await: the client only wraps a caller-supplied transport.
+        _connection.Dispose();
+        return Task.CompletedTask;
     }
 
     private void DetachHandlers()
