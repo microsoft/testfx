@@ -233,3 +233,16 @@ Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole 
 - Task 4: No other open `[test-improver]` PRs needed maintenance this run (PR #10860 ReportGeneratorBase remains open with clean automated reviews, no action needed).
 - Task 5: Confirmed 0 open issues labeled `testing` — nothing actionable.
 - Task 7 done: issue #10389 updated with new Run History entry for run 33340422292, new PR added to Suggested Actions, backlog note about exhausted SharedExtensionHelpers vein refreshed.
+
+## Run 2026-08-31 (run 33448413858) — AzureDevOpsPublishConfigurationFactory
+
+- Task 2/3: `SharedExtensionHelpers` vein confirmed exhausted (per prior run note); pivoted to `Microsoft.Testing.Extensions.AzureDevOpsReport` area. Found `AzureDevOpsPublishConfigurationFactory` (env-var validation, run-name build/sanitize/truncate, pipeline-reference construction, `BuildTestRunUrl`) had zero direct tests — only indirectly exercised via `AzureDevOpsTestResultsPublisher` tests in `AzureDevOpsLivePublishingTests.cs`.
+- Added `test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsPublishConfigurationFactoryTests.cs` (11 tests): missing-env-var aggregation warning, non-numeric BUILD_BUILDID warning, happy path + assembly-name fallback, `--publish-azdo-run-name` single-arg override, run-name truncation to 256 chars, unsafe-character sanitization, pipeline-reference null/populated/phase-only cases, `BuildTestRunUrl` trailing-slash trim + URL escaping.
+- **Gotcha**: `AzureDevOpsCommandLineOptions` (referenced by the factory for the run-name CLI option) lives in namespace `Microsoft.Testing.Extensions.Reporting`, NOT `Microsoft.Testing.Extensions.AzureDevOpsReport` (despite the factory itself being in the latter) — needed an extra `using Microsoft.Testing.Extensions.Reporting;`.
+- **Gotcha**: run-name sanitization joins sanitized stage/job with a literal `/` separator (e.g. `stage_with_slashes/job__with_control`) — a test asserting "no `/` anywhere in RunName" is wrong; assert the sanitized joined value directly and check `\`, `\r`, `\n`, control chars are gone instead.
+- Build succeeded; targeted 11/11 passed; full `AzureDevOps*`-filtered suite in `Microsoft.Testing.Extensions.UnitTests`: 315/315 passed, 0 failed (no regressions). `dotnet format whitespace TestFx.slnx --verify-no-changes --include <file>` clean.
+- Created draft PR "Add unit tests for AzureDevOpsPublishConfigurationFactory" on branch `test-assist/azdo-publish-config-factory`.
+- Task 4: PR #10860 (ReportGeneratorBase) and PR (RunSettingsCommandLineOptionsProviderBase, `test-assist/run-settings-provider-browser-guard`) status not re-verified this run — recommend checking merge status at start of next run.
+- Task 5: no open issues labeled `testing` found needing comment this run.
+- Remaining `AzureDevOpsReport`-area candidates for future runs: `AzureDevOpsCommandLineProvider` (validation logic), other report-provider base classes not yet swept.
+- Task 7 done: issue #10389 updated with new Run History entry for run 33448413858, new PR added to Suggested Actions.
