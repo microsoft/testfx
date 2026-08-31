@@ -229,6 +229,7 @@ internal sealed partial class TestHostBuilder
         serviceProvider.AddService(context.TestFrameworkCapabilities);
 
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;
+        IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptionDefaults;
         try
         {
             // Normalize JSON-sourced scalar option entries to the indexed shape for arg-bearing
@@ -262,6 +263,7 @@ internal sealed partial class TestHostBuilder
             context.Configuration.NormalizeJsonCommandLineOptionScalars(optionByName);
 
             jsonCommandLineOptions = context.Configuration.EnumerateJsonCommandLineOptions();
+            jsonCommandLineOptionDefaults = context.Configuration.EnumerateJsonCommandLineOptionDefaults();
         }
         catch (FormatException ex) when (!loggingState.CommandLineParseResult.HasTool)
         {
@@ -281,6 +283,7 @@ internal sealed partial class TestHostBuilder
             // A tool such as --info or --version is being invoked. Degrade gracefully by treating
             // the malformed testconfig.json as empty so the tool can still complete its job.
             jsonCommandLineOptions = [];
+            jsonCommandLineOptionDefaults = [];
         }
 
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
@@ -288,7 +291,8 @@ internal sealed partial class TestHostBuilder
             context.CommandLineHandler.SystemCommandLineOptionsProviders,
             context.CommandLineHandler.ExtensionsCommandLineOptionsProviders,
             context.CommandLineHandler,
-            jsonCommandLineOptions).ConfigureAwait(false);
+            jsonCommandLineOptions,
+            jsonCommandLineOptionDefaults).ConfigureAwait(false);
 
         if (!commandLineValidationResult.IsValid)
         {

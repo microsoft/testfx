@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsExtensions
+static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsExtensions.TryGetOptionArgumentListOrDefault(this Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, string! optionName, out string![]? arguments) -> bool
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability.TryStopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.Configurations.IConfigurationRoot

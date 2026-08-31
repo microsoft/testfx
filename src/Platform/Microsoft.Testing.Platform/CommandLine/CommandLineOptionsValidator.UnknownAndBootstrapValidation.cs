@@ -112,6 +112,7 @@ internal static partial class CommandLineOptionsValidator
     private static ValidationResult ValidateNoUnknownOptions(
         CommandLineParseResult parseResult,
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
@@ -135,24 +136,8 @@ internal static partial class CommandLineOptionsValidator
             }
         }
 
-        // Also surface unknown entries under the testconfig.json "commandLineOptions" section.
-        // We intentionally validate even when the CLI provides a matching option of the same name
-        // (which would shadow the JSON value at lookup time): a JSON typo silently overridden by
-        // the CLI is still a typo that the user wants to know about.
-        if (jsonCommandLineOptions is { Count: > 0 })
-        {
-            foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
-            {
-                if (!validOptionNames.Contains(entry.OptionName))
-                {
-                    stringBuilder ??= new();
-                    StringBuilder innerErrorBuilder = new();
-                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, entry.Arguments, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
-                    string innerError = innerErrorBuilder.ToTrimmedString();
-                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
-                }
-            }
-        }
+        ValidateJsonEntries(jsonCommandLineOptions, PlatformConfigurationConstants.CommandLineOptionsSectionName);
+        ValidateJsonEntries(jsonCommandLineOptionDefaults, PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName);
 
         if (stringBuilder?.Length > 0)
         {
@@ -162,6 +147,26 @@ internal static partial class CommandLineOptionsValidator
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
+
+        void ValidateJsonEntries(IReadOnlyList<JsonCommandLineOptionEntry>? entries, string sectionName)
+        {
+            if (entries is null)
+            {
+                return;
+            }
+
+            foreach (JsonCommandLineOptionEntry entry in entries)
+            {
+                if (!validOptionNames.Contains(entry.OptionName))
+                {
+                    stringBuilder ??= new();
+                    StringBuilder innerErrorBuilder = new();
+                    AppendUnknownOptionError(innerErrorBuilder, entry.OptionName, entry.Arguments, validOptionNames, visibleOptionNames, includeKnownExtensionOptions);
+                    string innerError = innerErrorBuilder.ToTrimmedString();
+                    stringBuilder.AppendLine(FormatJsonValidationError(sectionName, innerError));
+                }
+            }
+        }
     }
 
     private static void CollectOptionNames(
@@ -470,28 +475,45 @@ internal static partial class CommandLineOptionsValidator
     }
 
     private static ValidationResult ValidateNoBootstrapOnlyOptionsInJson(
-        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions)
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults)
     {
-        if (jsonCommandLineOptions is not { Count: > 0 })
+        if (jsonCommandLineOptions is not { Count: > 0 }
+            && jsonCommandLineOptionDefaults is not { Count: > 0 })
         {
             return ValidationResult.Valid();
         }
 
         StringBuilder? stringBuilder = null;
-        foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
-        {
-            if (!BootstrapOnlyOptions.Contains(entry.OptionName))
-            {
-                continue;
-            }
-
-            stringBuilder ??= new();
-            string innerError = string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionIsBootstrapOnlyErrorMessage, entry.OptionName);
-            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
-        }
+        ValidateEntries(jsonCommandLineOptions, PlatformConfigurationConstants.CommandLineOptionsSectionName);
+        ValidateEntries(jsonCommandLineOptionDefaults, PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName);
 
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
+
+        void ValidateEntries(IReadOnlyList<JsonCommandLineOptionEntry>? entries, string sectionName)
+        {
+            if (entries is null)
+            {
+                return;
+            }
+
+            foreach (JsonCommandLineOptionEntry entry in entries)
+            {
+                if (!BootstrapOnlyOptions.Contains(entry.OptionName))
+                {
+                    continue;
+                }
+
+                stringBuilder ??= new();
+                string innerError = string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.JsonCommandLineOptionIsBootstrapOnlyErrorMessage,
+                    entry.OptionName,
+                    sectionName);
+                stringBuilder.AppendLine(FormatJsonValidationError(sectionName, innerError));
+            }
+        }
     }
 }

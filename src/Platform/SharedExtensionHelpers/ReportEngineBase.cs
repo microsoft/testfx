@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -94,7 +94,7 @@ internal abstract class ReportEngineBase
     {
         _cancellationToken.ThrowIfCancellationRequested();
 
-        bool wasExplicit = _commandLineOptions.TryGetOptionArgumentList(fileNameOptionName, out string[]? providedFileName);
+        bool wasExplicit = _commandLineOptions.TryGetOptionArgumentListOrDefault(fileNameOptionName, out string[]? providedFileName);
         string fileName = wasExplicit
             ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
             : defaultFileNameFactory();

@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineOptionsProxy : ICommandLineOptions
+internal sealed class CommandLineOptionsProxy : ICommandLineOptions, ICommandLineOptionsWithDefaults
 {
     private ICommandLineOptions? _commandLineOptions;
 
@@ -15,6 +15,11 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions
         => _commandLineOptions is null
             ? throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady)
             : _commandLineOptions.TryGetOptionArgumentList(optionName, out arguments);
+
+    bool ICommandLineOptionsWithDefaults.TryGetOptionArgumentListOrDefault(string optionName, [NotNullWhen(true)] out string[]? arguments)
+        => _commandLineOptions is null
+            ? throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady)
+            : _commandLineOptions.TryGetOptionArgumentListOrDefault(optionName, out arguments);
 
     public void SetCommandLineOptions(ICommandLineOptions commandLineOptions)
         => _commandLineOptions = commandLineOptions;

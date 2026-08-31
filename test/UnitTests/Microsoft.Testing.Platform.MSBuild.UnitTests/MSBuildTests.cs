@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Microsoft.Build.Framework;
 
 using Moq;
@@ -158,19 +160,134 @@ namespace SomeNamespace
         Assert.Contains("Duplicate 'TestingPlatformBuilderHook' item with Include 'hook' has conflicting metadata.", _errors[0].Message ?? string.Empty);
     }
 
+    [TestMethod]
+    public void ConfigurationFileTask_MergesOptionDefaultsAndPreservesJsonOverrides()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        string sourcePath = Path.Combine(projectDirectory, "testconfig.json");
+        string outputPath = Path.Combine(projectDirectory, "bin", "Tests.testconfig.json");
+        InMemoryFileSystem fileSystem = new();
+        fileSystem.Files[sourcePath] =
+            """
+            {
+              "platformOptions": {
+                "exitProcessOnUnhandledException": true
+              },
+              "commandLineOptionDefaults": {
+                "report-trx-filename": "from-json.trx"
+              }
+            }
+            """;
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+        task.TestingPlatformCommandLineOptionDefault =
+        [
+            new CustomTaskItem("report-trx-filename").Add("Value", "from-msbuild.trx"),
+            new CustomTaskItem("filter-uid").Add("Value", "first"),
+            new CustomTaskItem("filter-uid").Add("Value", "second"),
+        ];
+
+        Assert.IsTrue(task.Execute());
+
+        string? output = fileSystem.Files[outputPath];
+        Assert.IsNotNull(output);
+        using var document = JsonDocument.Parse(output);
+        JsonElement root = document.RootElement;
+        Assert.IsTrue(root.GetProperty("platformOptions").GetProperty("exitProcessOnUnhandledException").GetBoolean());
+        JsonElement defaults = root.GetProperty("commandLineOptionDefaults");
+        Assert.AreEqual("from-json.trx", defaults.GetProperty("report-trx-filename").GetString());
+        Assert.AreSequenceEqual(
+            ["first", "second"],
+            defaults.GetProperty("filter-uid").EnumerateArray().Select(x => x.GetString()).ToArray());
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_GeneratesConfigurationFromOptionDefaults()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        string outputPath = Path.Combine(projectDirectory, "bin", "Tests.testconfig.json");
+        InMemoryFileSystem fileSystem = new();
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+        task.TestingPlatformCommandLineOptionDefault =
+        [
+            new CustomTaskItem("report-trx-filename").Add("Value", "{asm}.trx"),
+        ];
+
+        Assert.IsTrue(task.Execute());
+
+        string? output = fileSystem.Files[outputPath];
+        Assert.IsNotNull(output);
+        using var document = JsonDocument.Parse(output);
+        Assert.AreEqual(
+            "{asm}.trx",
+            document.RootElement.GetProperty("commandLineOptionDefaults").GetProperty("report-trx-filename").GetString());
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_RejectsOptionNameWithLeadingHyphens()
+    {
+        InMemoryFileSystem fileSystem = new();
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, Path.Combine("root", "project"));
+        task.TestingPlatformCommandLineOptionDefault =
+        [
+            new CustomTaskItem("--report-trx-filename").Add("Value", "{asm}.trx"),
+        ];
+
+        Assert.IsFalse(task.Execute());
+        Assert.Contains("without leading hyphens", Assert.ContainsSingle(_errors).Message ?? string.Empty);
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_ReportsDuplicateJsonKeys()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        string sourcePath = Path.Combine(projectDirectory, "testconfig.json");
+        InMemoryFileSystem fileSystem = new();
+        fileSystem.Files[sourcePath] =
+            """
+            {
+              "commandLineOptionDefaults": {},
+              "commandLineOptionDefaults": {}
+            }
+            """;
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+        task.TestingPlatformCommandLineOptionDefault =
+        [
+            new CustomTaskItem("report-trx-filename").Add("Value", "{asm}.trx"),
+        ];
+
+        Assert.IsFalse(task.Execute());
+        Assert.Contains("duplicate keys", Assert.ContainsSingle(_errors).Message ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private ConfigurationFileTask CreateConfigurationFileTask(InMemoryFileSystem fileSystem, string projectDirectory)
+        => new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformConfigurationFileSource = new CustomTaskItem(Path.Combine(projectDirectory, "testconfig.json")),
+            MSBuildProjectDirectory = new CustomTaskItem(projectDirectory),
+            AssemblyName = new CustomTaskItem("Tests"),
+            OutputPath = new CustomTaskItem("bin"),
+        };
+
     private sealed class InMemoryFileSystem : IFileSystem
     {
         public Dictionary<string, string?> Files { get; } = [];
 
-        public void CopyFile(string source, string destination) => throw new NotImplementedException();
+        public void CopyFile(string source, string destination) => Files[destination] = Files[source];
 
-        public void CreateDirectory(string directory) => throw new NotImplementedException();
+        public void CreateDirectory(string directory)
+        {
+        }
 
         public Stream CreateNew(string path) => throw new NotImplementedException();
 
         public bool Exist(string path) => Files.ContainsKey(path);
 
-        public void WriteAllText(string path, string? contents) => Files.Add(path, contents);
+        public string ReadAllText(string path) => Files[path]!;
+
+        public void WriteAllText(string path, string? contents) => Files[path] = contents;
     }
 
     private sealed class CustomTaskItem : ITaskItem

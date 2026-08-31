@@ -38,9 +38,17 @@ internal sealed partial class JsonConfigurationSource
         /// </para>
         /// </remarks>
         internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptions()
-        {
-            const string sectionName = PlatformConfigurationConstants.CommandLineOptionsSectionName;
+            => EnumerateCommandLineOptionEntries(PlatformConfigurationConstants.CommandLineOptionsSectionName, allowBooleanMarkers: true);
 
+        /// <summary>
+        /// Enumerates passive option argument defaults from the <c>commandLineOptionDefaults</c> section.
+        /// Scalar booleans are treated as argument values because defaults cannot represent option presence.
+        /// </summary>
+        internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptionDefaults()
+            => EnumerateCommandLineOptionEntries(PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName, allowBooleanMarkers: false);
+
+        private IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptionEntries(string sectionName, bool allowBooleanMarkers)
+        {
             Dictionary<string, string?> singleValueData = _singleValueData ?? [];
             Dictionary<string, string?> propertyToAllChildren = _propertyToAllChildren ?? [];
 
@@ -181,7 +189,7 @@ internal sealed partial class JsonConfigurationSource
 
                 if (builder.Scalar is not null)
                 {
-                    if (bool.TryParse(builder.Scalar, out bool boolValue))
+                    if (allowBooleanMarkers && bool.TryParse(builder.Scalar, out bool boolValue))
                     {
                         result.Add(new JsonCommandLineOptionEntry(optionName, [], isDisabled: !boolValue));
                     }
