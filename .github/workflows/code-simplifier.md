@@ -31,8 +31,8 @@ imports:
 - shared/formatting.md
 - shared/reporting.md
 safe-outputs:
-  # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
-  # result JSON that gh-aw cannot parse (#10711). Same fix as #10684.
+  # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
+  # false positives and malformed result markers (#10821).
   threat-detection:
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
@@ -46,7 +46,7 @@ safe-outputs:
       quotes and backslashes inside reason strings.
     engine:
       id: copilot
-      model: gpt-5-mini
+      model: detection
   create-pull-request:
     expires: 1d
     labels:
