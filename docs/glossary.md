@@ -327,7 +327,7 @@ Set an individual `Enable*` property to `false` to remove an extension supplied 
 | `EnableMicrosoftTestingExtensionsPackagedApp` | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Build error |
 | `EnableAspireTesting` | Off | Off | Off | Build error | Supported |
 | `EnablePlaywright` | Off | Off | Off | Build error | Supported |
-| `EnableWindowsAppTesting` | Off | Off | Off | Build error | Supported |
+| `EnableWindowsUIAutomation` | Off | Off | Off | Build error | Supported |
 
 Individual extension toggles remain unset and disabled when a profile does not enable them. This differs from explicitly setting a toggle to `false`: VSTest rejects any non-empty MTP extension toggle. NativeAOT warnings and errors are reported during the build. Properties marked "Not available" or "Not added" do not add their package in NativeAOT mode.
 
@@ -339,7 +339,7 @@ Individual extension toggles remain unset and disabled when a profile does not e
 | `EnableMicrosoftTestingPlatform` | Advanced version-alignment escape hatch. When `true` for an `IsTestApplication=true` ClassicEngine or NativeAOT project, adds an explicit `Microsoft.Testing.Platform` package reference using `MicrosoftTestingPlatformVersion`. It is ignored for test libraries and VSTest. It is normally unnecessary and does not select the runner or change `IsTestingPlatformApplication`. |
 | `EnableMSTestSourceGeneration` | Adds `MSTest.SourceGeneration` to non-NativeAOT projects. For reusable test libraries, it also adds `MSTest.TestAdapter`, which provides the runtime hooks referenced by generated code. .NET Standard is not supported because the adapter does not ship compatible runtime hooks. NativeAOT projects always include source generation. |
 | `MSTestVersion` | Overrides the versions of the MSTest framework, adapter, and source generator supplied by the SDK. |
-| `MSTestWindowsAppTestingVersion` | Overrides the `MSTest.Windows.AppTesting` package version added when `EnableWindowsAppTesting=true`. The package version defaults to the MSTest.Sdk version. |
+| `MSTestWindowsUIAutomationVersion` | Overrides the `MSTest.Windows.UIAutomation` package version added when `EnableWindowsUIAutomation=true`. The package version defaults to the MSTest.Sdk version. |
 | `MicrosoftTestingExtensionsPackagedAppVersion` | Overrides the packaged-app launcher version supplied to packaged WinUI MTP projects. |
 
 `EnableMSTestRunner` is set by MSTest.Sdk and should not normally be set by projects. Component-specific properties such as `MicrosoftTestingPlatformVersion`, `MicrosoftTestingExtensionsCommonVersion`, and the individual `MicrosoftTestingExtensions*Version` properties are advanced version-alignment controls.

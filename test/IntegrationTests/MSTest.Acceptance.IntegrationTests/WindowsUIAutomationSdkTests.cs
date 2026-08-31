@@ -9,7 +9,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
 [DoNotParallelize]
-public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTestingSdkTests.TestAssetFixture>
+public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAutomationSdkTests.TestAssetFixture>
 {
     private static readonly string[] DesktopTargetFrameworks =
         TargetFrameworks.Net.Select(tfm => $"{tfm}-windows").ToArray();
@@ -21,8 +21,8 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
     [TestMethod]
     [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests(string tfm)
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task EnableWindowsUIAutomation_WhenUsingMSTestRunner_RunsDesktopTests(string tfm)
     {
         string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
@@ -31,7 +31,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             environmentVariables: new()
             {
                 ["DOTNET_ROLL_FORWARD"] = "Major",
-                ["WINDOWS_APP_TESTING_PID_FILE"] = pidFile,
+                ["MSTEST_UI_AUTOMATION_PID_FILE"] = pidFile,
             },
             cancellationToken: TestContext.CancellationToken);
 
@@ -42,8 +42,8 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
     [TestMethod]
     [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests(string tfm)
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task EnableWindowsUIAutomation_WhenUsingVSTest_RunsDesktopTests(string tfm)
     {
         string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
@@ -59,7 +59,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             environmentVariables: new()
             {
                 ["DOTNET_ROLL_FORWARD"] = "Major",
-                ["WINDOWS_APP_TESTING_PID_FILE"] = pidFile,
+                ["MSTEST_UI_AUTOMATION_PID_FILE"] = pidFile,
             },
             failIfReturnValueIsNotZero: false,
             warnAsError: false,
@@ -68,14 +68,14 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
         dotnetTestResult.AssertExitCodeIs(0);
         dotnetTestResult.AssertOutputContains("Test run for ");
-        dotnetTestResult.AssertOutputContains("VSTestWindowsAppTesting.dll");
+        dotnetTestResult.AssertOutputContains("VSTestWindowsUIAutomation.dll");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
         await AssertProcessExitedAsync(pidFile);
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenTargetFrameworkIsNotWindows_FailsWithClearError()
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task EnableWindowsUIAutomation_WhenTargetFrameworkIsNotWindows_FailsWithClearError()
     {
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {AssetFixture.InvalidTargetFrameworkProjectPath}",
@@ -86,12 +86,12 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
         buildResult.AssertExitCodeIs(1);
         buildResult.AssertOutputContains(
-            "MSTest.Windows.AppTesting requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: 'net8.0'.");
+            "MSTest.Windows.UIAutomation requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: 'net8.0'.");
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenTargetFrameworkUsesUppercase_IsAccepted()
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task EnableWindowsUIAutomation_WhenTargetFrameworkUsesUppercase_IsAccepted()
     {
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {AssetFixture.UppercaseTargetFrameworkProjectPath}",
@@ -104,7 +104,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     }
 
     [TestMethod]
-    public async Task EnableWindowsAppTesting_WhenCrossTargetingFromNonWindows_BuildsSuccessfully()
+    public async Task EnableWindowsUIAutomation_WhenCrossTargetingFromNonWindows_BuildsSuccessfully()
     {
         DotnetMuxerResult propertyResult = await DotnetCli.RunAsync(
             $"msbuild {AssetFixture.CrossTargetingProjectPath} -getProperty:EnableWindowsTargeting -p:OS=Unix",
@@ -124,7 +124,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     }
 
     [TestMethod]
-    public async Task EnableWindowsAppTesting_WhenWindowsTargetingIsExplicitlyDisabled_PreservesValue()
+    public async Task EnableWindowsUIAutomation_WhenWindowsTargetingIsExplicitlyDisabled_PreservesValue()
     {
         DotnetMuxerResult propertyResult = await DotnetCli.RunAsync(
             $"msbuild {AssetFixture.CrossTargetingOptOutProjectPath} -getProperty:EnableWindowsTargeting -p:OS=Unix",
@@ -138,8 +138,8 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
     [TestMethod]
     [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task ApplicationSetup_WhenApplicationExitsBeforeCreatingWindow_ReportsClearFailure(string tfm)
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task WindowSetup_WhenApplicationExitsBeforeDiscovery_ReportsClearFailure(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -148,13 +148,13 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("exited with code 0 before a main window was created.");
+        testHostResult.AssertOutputContains("exited with code 0 before a window was discovered.");
     }
 
     [TestMethod]
     [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task ApplicationTearDown_WhenApplicationNeverCreatesWindow_TerminatesProcess(string tfm)
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task ApplicationTearDown_WhenApplicationNeverExposesWindow_TerminatesProcess(string tfm)
     {
         string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
@@ -163,14 +163,49 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             environmentVariables: new()
             {
                 ["DOTNET_ROLL_FORWARD"] = "Major",
-                ["WINDOWS_APP_TESTING_PID_FILE"] = pidFile,
+                ["MSTEST_UI_AUTOMATION_PID_FILE"] = pidFile,
             },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("did not create a main window within 00:00:03.");
+        testHostResult.AssertOutputContains("did not expose a window within 00:00:03.");
 
         await AssertProcessExitedAsync(pidFile);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task WindowTest_WhenWindowDiscoveryIsCustomized_UsesOverride(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=CustomWindowDiscoveryTests",
+            environmentVariables: new() { ["DOTNET_ROLL_FORWARD"] = "Major" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows UI Automation is Windows-only.")]
+    public async Task ApplicationTest_WhenShutdownIsCustomized_UsesOverride(string tfm)
+    {
+        string shutdownMarker = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.shutdown");
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=CustomShutdownTests",
+            environmentVariables: new()
+            {
+                ["DOTNET_ROLL_FORWARD"] = "Major",
+                ["MSTEST_UI_AUTOMATION_SHUTDOWN_MARKER"] = shutdownMarker,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(shutdownMarker), "Expected the custom shutdown hook to create its marker file.");
     }
 
     private async Task AssertProcessExitedAsync(string pidFile)
@@ -189,10 +224,10 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        public const string ProjectName = "WindowsAppTestingSdk";
+        public const string ProjectName = "WindowsUIAutomationSdk";
 
         private const string SourceCode = """
-#file WindowsAppTestingSdk.csproj
+#file WindowsUIAutomationSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
@@ -200,7 +235,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 
   <ItemGroup>
@@ -212,7 +247,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 </Project>
 
@@ -222,7 +257,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     <TargetFramework>NET8.0-WINDOWS</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 </Project>
 
@@ -232,7 +267,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     <TargetFramework>net8.0-windows</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 </Project>
 
@@ -242,12 +277,12 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     <TargetFramework>net8.0-windows</TargetFramework>
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
     <EnableWindowsTargeting>false</EnableWindowsTargeting>
   </PropertyGroup>
 </Project>
 
-#file VSTest/VSTestWindowsAppTesting.csproj
+#file VSTest/VSTestWindowsUIAutomation.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
@@ -255,7 +290,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseVSTest>true</UseVSTest>
-    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
   </PropertyGroup>
 
   <ItemGroup>
@@ -264,6 +299,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
 </Project>
 
 #file CharacterMapTests.cs
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -271,14 +307,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [STATestClass]
 public class CharacterMapTests : WindowTest
 {
-    public override string ApplicationPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe");
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe"));
 
     [TestMethod]
     public void CharacterMap_MainWindow_IsVisible()
     {
-        string pidFile = Environment.GetEnvironmentVariable("WINDOWS_APP_TESTING_PID_FILE")
-            ?? throw new InvalidOperationException("WINDOWS_APP_TESTING_PID_FILE must be set.");
+        string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
         File.WriteAllText(pidFile, AppProcess.Id.ToString(CultureInfo.InvariantCulture));
 
         Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType,
@@ -294,12 +330,10 @@ public class CharacterMapTests : WindowTest
 }
 
 [STATestClass]
-public class EarlyExitTests : ApplicationTest
+public class EarlyExitTests : WindowTest
 {
-    public override string ApplicationPath =>
-        Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
-
-    public override string? ApplicationArguments => "/c exit 0";
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe", "/c exit 0");
 
     [TestMethod]
     public void TestMethod()
@@ -308,15 +342,55 @@ public class EarlyExitTests : ApplicationTest
 }
 
 [STATestClass]
-public class StartupTimeoutTests : ApplicationTest
+public class StartupTimeoutTests : WindowTest
 {
-    public override string ApplicationPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe");
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_PID_FILE; Start-Sleep -Seconds 30\"");
 
-    public override string? ApplicationArguments =>
-        "-NoProfile -NonInteractive -Command \"$PID | Set-Content -LiteralPath $env:WINDOWS_APP_TESTING_PID_FILE; Start-Sleep -Seconds 30\"";
+    protected override TimeSpan WindowDiscoveryTimeout => TimeSpan.FromSeconds(3);
 
-    public override TimeSpan ApplicationStartTimeout => TimeSpan.FromSeconds(3);
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+}
+
+[STATestClass]
+public class CustomWindowDiscoveryTests : WindowTest
+{
+    private int _findWindowInvocationCount;
+
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe"));
+
+    protected override AutomationElement? FindWindow(Process applicationProcess)
+    {
+        _findWindowInvocationCount++;
+        return base.FindWindow(applicationProcess);
+    }
+
+    [TestMethod]
+    public void FindWindowOverrideWasUsed()
+        => Assert.IsGreaterThan(0, _findWindowInvocationCount);
+}
+
+[STATestClass]
+public class CustomShutdownTests : ApplicationTest
+{
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile -NonInteractive -Command \"Start-Sleep -Seconds 30\"");
+
+    protected override void StopApplication(Process applicationProcess)
+    {
+        string marker = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_SHUTDOWN_MARKER")
+            ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_SHUTDOWN_MARKER must be set.");
+        File.WriteAllText(marker, string.Empty);
+        base.StopApplication(applicationProcess);
+    }
 
     [TestMethod]
     public void TestMethod()

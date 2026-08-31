@@ -31,7 +31,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="Sdk\Sdk.targets" Pack="true" PackagePath="Sdk\Sdk.targets" />
     <None Include="Sdk\Features\Aspire.targets" Pack="true" PackagePath="Sdk\Features\Aspire.targets" />
     <None Include="Sdk\Features\Playwright.targets" Pack="true" PackagePath="Sdk\Features\Playwright.targets" />
-    <None Include="Sdk\Features\WindowsAppTesting.targets" Pack="true" PackagePath="Sdk\Features\WindowsAppTesting.targets" />
+    <None Include="Sdk\Features\WindowsUIAutomation.targets" Pack="true" PackagePath="Sdk\Features\WindowsUIAutomation.targets" />
     <None Include="Sdk\Runner\Runner.targets" Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
     <None Include="Sdk\Runner\Common.targets" Pack="true" PackagePath="Sdk\Runner\Common.targets" />
     <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
@@ -58,7 +58,7 @@ $(CommonProductDescription)]]></PackageDescription>
       <_MicrosoftTestingExtensionsJUnitReportVersion>$(MicrosoftTestingExtensionsJUnitReportVersionPrefix)</_MicrosoftTestingExtensionsJUnitReportVersion>
       <_MicrosoftTestingExtensionsJUnitReportVersion Condition="'$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsJUnitReportVersion)-$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)</_MicrosoftTestingExtensionsJUnitReportVersion>
 
-      <_TemplateProperties>MSTestVersion=$(Version);MSTestWindowsAppTestingVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestVersion=$(Version);MSTestWindowsUIAutomationVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

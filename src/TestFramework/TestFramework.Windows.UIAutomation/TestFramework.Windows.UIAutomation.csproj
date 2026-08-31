@@ -11,16 +11,16 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>MSTest.Windows.AppTesting</PackageId>
-    <PackageTags>$(CommonPackageTags) Windows AppTesting UIAutomation WinForms WPF E2E EndToEnd</PackageTags>
-    <PackageDescription><![CDATA[MSTest base classes for end-to-end testing of Windows desktop applications through Windows UI Automation.
+    <PackageId>MSTest.Windows.UIAutomation</PackageId>
+    <PackageTags>$(CommonPackageTags) Windows Desktop UIAutomation WinForms WPF E2E EndToEnd</PackageTags>
+    <PackageDescription><![CDATA[MSTest lifecycle integration for Windows desktop UI Automation tests.
 
 $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <PropertyGroup>
-    <RootNamespace>Microsoft.MSTest.Windows.AppTesting</RootNamespace>
-    <AssemblyName>MSTest.Windows.AppTesting</AssemblyName>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation</RootNamespace>
+    <AssemblyName>MSTest.Windows.UIAutomation</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Windows.Automation;
 
-namespace ProjectUsingWindowsAppTesting;
+namespace ProjectUsingWindowsUIAutomation;
 
 /// <summary>
 /// Sample end-to-end tests for the Windows Character Map application.
@@ -14,11 +15,10 @@ namespace ProjectUsingWindowsAppTesting;
 public class CharacterMapTests : WindowTest
 {
     /// <summary>
-    /// Path to the application under test.
-    /// Override this to point to your own application executable.
+    /// Creates the launch configuration for the application under test.
     /// </summary>
-    public override string ApplicationPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe");
+    protected override ProcessStartInfo CreateProcessStartInfo()
+        => new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe"));
 
     [TestMethod]
     public void CharacterMap_MainWindow_IsVisible()

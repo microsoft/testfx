@@ -16,7 +16,7 @@
       "src\\Package\\MSTest.Sdk\\MSTest.Sdk.csproj",
       "src\\Package\\MSTest\\MSTest.csproj",
       "src\\TestFramework\\TestFramework.Extensions\\TestFramework.Extensions.csproj",
-      "src\\TestFramework\\TestFramework.Windows.AppTesting\\TestFramework.Windows.AppTesting.csproj",
+      "src\\TestFramework\\TestFramework.Windows.UIAutomation\\TestFramework.Windows.UIAutomation.csproj",
       "src\\TestFramework\\TestFramework.SourceGeneration\\TestFramework.SourceGeneration.csproj",
       "src\\TestFramework\\TestFramework\\TestFramework.csproj",
       "test\\IntegrationTests\\MSTest.Acceptance.IntegrationTests\\MSTest.Acceptance.IntegrationTests.csproj",
