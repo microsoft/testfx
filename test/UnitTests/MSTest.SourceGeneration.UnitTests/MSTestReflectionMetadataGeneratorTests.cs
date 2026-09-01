@@ -2635,7 +2635,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_PreservesEnumTestMethodParametersForNativeAot()
+    public void Generator_PreservesNullableEnumTestMethodParametersForNativeAot()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2652,7 +2652,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public class MyTests
                 {
                     [TestMethod]
-                    public void Test1(CustomValue value) { }
+                    public void Test1(CustomValue? value) { }
                 }
             }
             """;
