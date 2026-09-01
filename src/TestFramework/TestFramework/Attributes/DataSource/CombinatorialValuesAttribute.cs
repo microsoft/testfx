@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 /// <summary>
 /// Specifies the values for a parameter on a combinatorial test method.

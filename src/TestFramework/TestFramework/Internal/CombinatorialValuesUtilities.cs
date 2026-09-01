@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 internal static class CombinatorialValuesUtilities
 {
-    internal static IEnumerable<object?> GetValuesFor(ParameterInfo parameter, out ICombinatorialValuesProvider? valuesSource)
+    internal static IEnumerable<object?> GetValuesFor(ParameterInfo parameter)
     {
         if (parameter is null)
         {
@@ -15,7 +17,7 @@ internal static class CombinatorialValuesUtilities
         ICombinatorialValuesProvider[] valueSources = parameter.GetCustomAttributes()
             .OfType<ICombinatorialValuesProvider>()
             .ToArray();
-        valuesSource = valueSources.Length switch
+        ICombinatorialValuesProvider? valuesSource = valueSources.Length switch
         {
             0 => null,
             1 => valueSources[0],
@@ -32,25 +34,6 @@ internal static class CombinatorialValuesUtilities
         return valuesSource is null
             ? GetValuesFor(parameter.ParameterType)
             : valuesSource.GetValues(parameter);
-    }
-
-    internal static object? GetValueForTestCase(ParameterInfo parameter, ICombinatorialValuesProvider? valuesSource, object?[] candidateValues, int candidateIndex)
-    {
-        if (valuesSource is not (CombinatorialMemberDataAttribute or CombinatorialClassDataAttribute))
-        {
-            return candidateValues[candidateIndex];
-        }
-
-        object?[] freshValues = valuesSource.GetValues(parameter);
-        return freshValues.Length != candidateValues.Length
-            ? throw new InvalidOperationException(
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.CombinatorialProviderValueCountChanged,
-                    parameter.Name,
-                    candidateValues.Length,
-                    freshValues.Length))
-            : freshValues[candidateIndex];
     }
 
     private static IEnumerable<object?> GetValuesFor(Type dataType)

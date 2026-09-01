@@ -466,30 +466,6 @@ Actual: {2}</value>
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
     <comment>{0} is the dynamic data source member name. {1} is the declaring type name.</comment>
   </data>
-  <data name="CombinatorialAtLeastOneRowRequired" xml:space="preserve">
-    <value>At least one row is required.</value>
-    <comment>Error message shown when no base rows are supplied to a combinatorial data builder.</comment>
-  </data>
-  <data name="CombinatorialAtLeastOneValueRequired" xml:space="preserve">
-    <value>At least one value is required.</value>
-    <comment>Error message shown when no values are supplied for a generated combinatorial column.</comment>
-  </data>
-  <data name="CombinatorialBaseRowsCannotBeNull" xml:space="preserve">
-    <value>Base rows cannot be null.</value>
-    <comment>Error message shown when a combinatorial data builder receives a null base row. Do not localize the C# keyword {Locked="null"}.</comment>
-  </data>
-  <data name="CombinatorialExplicitTestCaseValueCountMismatch" xml:space="preserve">
-    <value>Expected explicit test cases to have {0} values, but found {1}.</value>
-    <comment>{0} is the expected value count. {1} is the actual value count.</comment>
-  </data>
-  <data name="CombinatorialBaseRowValueCountMismatch" xml:space="preserve">
-    <value>Expected a base row with {0} values, but found {1}.</value>
-    <comment>{0} is the expected value count. {1} is the actual value count.</comment>
-  </data>
-  <data name="CombinatorialRowsMustPrecedeValues" xml:space="preserve">
-    <value>{0} must be called before {1}.</value>
-    <comment>{0} is the method that adds base rows. {1} is the method that adds generated column values.</comment>
-  </data>
   <data name="CombinatorialClassDataSourceTypeInvalid" xml:space="preserve">
     <value>The values source {0} must be assignable to {1}.</value>
     <comment>{0} is the class data source type. {1} is the required enumerable type.</comment>
@@ -518,10 +494,6 @@ Actual: {2}</value>
     <value>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</value>
     <comment>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</comment>
   </data>
-  <data name="CombinatorialMemberEnumerableArrayUnsupported" xml:space="preserve">
-    <value>Member {0} on {1} returned an IEnumerable&lt;{2}&gt;, which is not supported.</value>
-    <comment>{0} is the member name. {1} is the declaring type name. {2} is the array element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;"}.</comment>
-  </data>
   <data name="CombinatorialMemberNestedEnumerableUnsupported" xml:space="preserve">
     <value>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</value>
     <comment>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</comment>
@@ -534,10 +506,6 @@ Actual: {2}</value>
     <value>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</value>
     <comment>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</comment>
   </data>
-  <data name="CombinatorialProviderValueCountChanged" xml:space="preserve">
-    <value>The value provider for parameter '{0}' returned {1} values when determining combinations, but {2} values when creating a test case.</value>
-    <comment>{0} is the parameter name. {1} is the initial value count. {2} is the refreshed value count.</comment>
-  </data>
   <data name="CombinatorialUnableToInferValues" xml:space="preserve">
     <value>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</value>
     <comment>{0} is the parameter type. {1} is the provider interface name.</comment>
@@ -545,6 +513,10 @@ Actual: {2}</value>
   <data name="CombinatorialExcludeArgumentCountMismatch" xml:space="preserve">
     <value>The number of arguments in {0} must match the number of test method parameters.</value>
     <comment>{0} is the exclusion attribute type name.</comment>
+  </data>
+  <data name="CombinatorialExcludedValueNotFound" xml:space="preserve">
+    <value>The excluded value '{0}' for parameter position {1} does not match any candidate value.</value>
+    <comment>{0} is the excluded value. {1} is the zero-based test method parameter position.</comment>
   </data>
   <data name="CombinatorialArrayLengthMismatch" xml:space="preserve">
     <value>Expected to have the same array length as {0}.</value>

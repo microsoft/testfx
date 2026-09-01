@@ -3,6 +3,8 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
@@ -11,6 +13,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 {
     private static readonly ParameterInfo IntParameter = GetParameter(nameof(IntParameterStub));
     private static readonly ParameterInfo NullableIntParameter = GetParameter(nameof(NullableIntParameterStub));
+    private static readonly ParameterInfo ObjectArrayParameter = GetParameter(nameof(ObjectArrayParameterStub));
     private static readonly ParameterInfo StringParameter = GetParameter(nameof(StringParameterStub));
 
     public void ReadsValuesFromPropertyFieldAndMethod()
@@ -105,8 +108,14 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         }.GetValues(IntParameter).Should().Equal([3, 4]);
     }
 
-    public void FlattensObjectArrayRows()
-        => new CombinatorialMemberDataAttribute(nameof(Rows)).GetValues(IntParameter).Should().Equal([1, 2, 3]);
+    public void TreatsEachObjectArrayRowAsOneCandidate()
+    {
+        object?[] values = new CombinatorialMemberDataAttribute(nameof(Rows)).GetValues(ObjectArrayParameter);
+
+        values.Should().HaveCount(2);
+        ((object[])values[0]!).Should().Equal([1]);
+        ((object[])values[1]!).Should().Equal([2, 3]);
+    }
 
     public void RejectsMissingNonGenericNestedAndIncompatibleMembers()
     {
@@ -189,6 +198,10 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     }
 
     private static void NullableIntParameterStub(int? value)
+    {
+    }
+
+    private static void ObjectArrayParameterStub(object[] value)
     {
     }
 

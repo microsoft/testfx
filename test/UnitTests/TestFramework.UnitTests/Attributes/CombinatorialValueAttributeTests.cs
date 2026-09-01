@@ -3,6 +3,8 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;

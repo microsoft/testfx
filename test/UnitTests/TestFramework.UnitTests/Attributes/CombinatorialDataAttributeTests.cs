@@ -3,6 +3,8 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
@@ -93,6 +95,14 @@ public class CombinatorialDataAttributeTests : TestContainer
             .WithMessage($"*{nameof(ExcludeTestCaseAttribute)}*number of test method parameters*");
     }
 
+    public void GetDataRejectsExclusionValuesOutsideCandidateSet()
+    {
+        Action action = () => GetData(nameof(IneffectiveExclusion));
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*2*parameter position 0*");
+    }
+
     public void GetDataRejectsUnsupportedTypes()
     {
         Action action = () => GetData(nameof(UnsupportedParameter));
@@ -109,36 +119,24 @@ public class CombinatorialDataAttributeTests : TestContainer
             .WithMessage($"*'value'*multiple combinatorial value providers*{nameof(CombinatorialValuesAttribute)}*{nameof(CombinatorialRangeAttribute)}*{nameof(ICombinatorialValuesProvider)}*");
     }
 
-    public void MemberDataValuesAreUniquePerTestCase()
+    public void MemberDataProviderIsEnumeratedOnce()
     {
-        object?[][] rows = GetData(nameof(MutableMemberData));
-        MutableValue[] values = rows.Select(row => (MutableValue)row[0]!).ToArray();
+        MemberEnumerationCount = 0;
 
-        values.Should().HaveCount(4);
-        values.Select(value => value.Value).Should().BeEquivalentTo([1, 1, 2, 2]);
-        for (int i = 0; i < values.Length; i++)
-        {
-            for (int j = i + 1; j < values.Length; j++)
-            {
-                values[i].Should().NotBeSameAs(values[j]);
-            }
-        }
+        GetData(nameof(CountingMemberData)).Should().HaveCount(4);
+
+        MemberEnumerationCount.Should().Be(1);
     }
 
-    public void ClassDataValuesAreUniquePerTestCase()
+    public void ClassDataProviderIsCreatedAndEnumeratedOnce()
     {
-        object?[][] rows = GetData(nameof(MutableClassData));
-        MutableValue[] values = rows.Select(row => (MutableValue)row[0]!).ToArray();
+        CountingClassDataSource.ConstructionCount = 0;
+        CountingClassDataSource.EnumerationCount = 0;
 
-        values.Should().HaveCount(4);
-        values.Select(value => value.Value).Should().BeEquivalentTo([1, 1, 2, 2]);
-        for (int i = 0; i < values.Length; i++)
-        {
-            for (int j = i + 1; j < values.Length; j++)
-            {
-                values[i].Should().NotBeSameAs(values[j]);
-            }
-        }
+        GetData(nameof(CountingClassData)).Should().HaveCount(4);
+
+        CountingClassDataSource.ConstructionCount.Should().Be(1);
+        CountingClassDataSource.EnumerationCount.Should().Be(1);
     }
 
     public void ValueProviderAttributeIsResolvedOnce()
@@ -209,6 +207,11 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
+    [ExcludeTestCase(2)]
+    private static void IneffectiveExclusion(bool value)
+    {
+    }
+
     private static void UnsupportedParameter(Guid value)
     {
     }
@@ -220,14 +223,14 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
-    private static void MutableMemberData(
-        [CombinatorialMemberData(nameof(GetMutableValues))] MutableValue value,
+    private static void CountingMemberData(
+        [CombinatorialMemberData(nameof(GetCountingMemberValues))] int value,
         bool flag)
     {
     }
 
-    private static void MutableClassData(
-        [CombinatorialClassData(typeof(MutableClassDataSource))] MutableValue value,
+    private static void CountingClassData(
+        [CombinatorialClassData(typeof(CountingClassDataSource))] int value,
         bool flag)
     {
     }
@@ -236,26 +239,33 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
-    public static IEnumerable<MutableValue> GetMutableValues()
+    public static int MemberEnumerationCount { get; set; }
+
+    public static IEnumerable<int> GetCountingMemberValues()
     {
-        yield return new MutableValue(1);
-        yield return new MutableValue(2);
+        MemberEnumerationCount++;
+        return [1, 2];
     }
 
-    public sealed class MutableValue(int value)
+    public sealed class CountingClassDataSource : IEnumerable<object[]>
     {
-        public int Value { get; } = value;
-    }
+        public CountingClassDataSource() => ConstructionCount++;
 
-    public sealed class MutableClassDataSource : IEnumerable<object[]>
-    {
+        public static int ConstructionCount { get; set; }
+
+        public static int EnumerationCount { get; set; }
+
         public IEnumerator<object[]> GetEnumerator()
-        {
-            yield return [new MutableValue(1)];
-            yield return [new MutableValue(2)];
-        }
+            => GetRows().GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private static IEnumerable<object[]> GetRows()
+        {
+            EnumerationCount++;
+            yield return [1];
+            yield return [2];
+        }
     }
 
     [AttributeUsage(AttributeTargets.Parameter)]

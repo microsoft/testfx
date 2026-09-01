@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 /// <summary>
 /// Suppresses generation of a specific test case from a combinatorial test.
@@ -64,11 +64,7 @@ public class ExcludeTestCaseAttribute : Attribute
         var indexedExclusions = new List<IndexedExclusion>();
         foreach (ExcludeTestCaseAttribute exclusion in exclusions)
         {
-            var indexedExclusion = IndexedExclusion.Create(candidateValues, exclusion);
-            if (indexedExclusion is not null)
-            {
-                indexedExclusions.Add(indexedExclusion);
-            }
+            indexedExclusions.Add(IndexedExclusion.Create(candidateValues, exclusion));
         }
 
         CombinatorialIndexPredicate predicate = testCase =>
@@ -84,7 +80,7 @@ public class ExcludeTestCaseAttribute : Attribute
             return true;
         };
 
-        return indexedExclusions.Count == 0 ? null : predicate;
+        return predicate;
     }
 
     private static bool IsAny(object? argument) => argument is Type type && type == typeof(AnyDataValue);
@@ -96,7 +92,7 @@ public class ExcludeTestCaseAttribute : Attribute
         private IndexedExclusion(bool[]?[] matchingValueIndices)
             => _matchingValueIndices = matchingValueIndices;
 
-        internal static IndexedExclusion? Create(object?[][] candidateValues, ExcludeTestCaseAttribute exclusion)
+        internal static IndexedExclusion Create(object?[][] candidateValues, ExcludeTestCaseAttribute exclusion)
         {
             if (candidateValues.Length != exclusion.Arguments.Length)
             {
@@ -127,7 +123,13 @@ public class ExcludeTestCaseAttribute : Attribute
 
                 if (!anyMatches)
                 {
-                    return null;
+                    throw new ArgumentException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            FrameworkMessages.CombinatorialExcludedValueNotFound,
+                            excludedValue ?? FrameworkMessages.Common_NullInMessages,
+                            parameterIndex),
+                        nameof(exclusion));
                 }
 
                 matchingValueIndices[parameterIndex] = matches;

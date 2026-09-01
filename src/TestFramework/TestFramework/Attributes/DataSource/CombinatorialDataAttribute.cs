@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 /// <summary>
 /// Provides every possible combination of values for the parameters of a test method.
@@ -33,11 +33,10 @@ public class CombinatorialDataAttribute : Attribute, ITestDataSource
         }
 
         object?[][] values = new object?[parameters.Length][];
-        var valueSources = new ICombinatorialValuesProvider?[parameters.Length];
         int[] dimensionSizes = new int[parameters.Length];
         for (int i = 0; i < parameters.Length; i++)
         {
-            values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i], out valueSources[i]).ToArray();
+            values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i]).ToArray();
             dimensionSizes[i] = values[i].Length;
         }
 
@@ -45,8 +44,7 @@ public class CombinatorialDataAttribute : Attribute, ITestDataSource
         CombinatorialIndexPredicate? isTestCaseAllowed = ExcludeTestCaseAttribute.CreateIndexMatcher(values, exclusions);
         int[][] testCases = CombinatorialTestCaseGenerator.GenerateCombinations(dimensionSizes, isTestCaseAllowed);
         return testCases.Select(indices =>
-            indices.Select((valueIndex, parameterIndex) =>
-                CombinatorialValuesUtilities.GetValueForTestCase(parameters[parameterIndex], valueSources[parameterIndex], values[parameterIndex], valueIndex))
+            indices.Select((valueIndex, parameterIndex) => values[parameterIndex][valueIndex])
                 .ToArray());
     }
 

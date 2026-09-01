@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 /// <summary>
 /// Specifies a member that provides values for a parameter on a combinatorial test method.
@@ -71,9 +71,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             ?? throw new ArgumentException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberReturnedNull, MemberName, type.FullName));
 
-        return values is IEnumerable<object[]> rows
-            ? rows.SelectMany(row => row).ToArray()
-            : values.Cast<object?>().ToArray();
+        return values.Cast<object?>().ToArray();
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern", Justification = "The reflected source member is preserved by MemberType, including its return type. NativeAOT acceptance coverage exercises this interface lookup with a concrete collection return type.")]
@@ -262,25 +260,9 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
 
     private void EnsureValidMemberDataType(Type enumerableType, Type declaringType, ParameterInfo parameterInfo)
     {
-        if (typeof(IEnumerable<object[]>).IsAssignableFrom(enumerableType))
-        {
-            return;
-        }
-
         TypeInfo enumeratedType = GetEnumeratedType(enumerableType)
             ?? throw new ArgumentException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberMustReturnGenericEnumerable, MemberName, declaringType.FullName));
-
-        if (enumeratedType.IsArray)
-        {
-            throw new ArgumentException(
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.CombinatorialMemberEnumerableArrayUnsupported,
-                    MemberName,
-                    declaringType.FullName,
-                    enumeratedType.Name));
-        }
 
         if (enumeratedType.IsGenericType && enumeratedType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
         {

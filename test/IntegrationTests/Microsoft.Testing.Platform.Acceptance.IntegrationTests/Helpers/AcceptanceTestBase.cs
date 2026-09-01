@@ -3,6 +3,8 @@
 
 #if USE_EXTERNAL_COMBINATORIAL
 using Combinatorial.MSTest;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 #endif
 
 using System.Text.Json;

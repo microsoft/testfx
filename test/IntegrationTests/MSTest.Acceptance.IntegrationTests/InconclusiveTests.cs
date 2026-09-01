@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace MSTest.Acceptance.IntegrationTests;
 

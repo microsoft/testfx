@@ -8,12 +8,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 /// <param name="indices">The selected zero-based value index for each dimension.</param>
 /// <returns><see langword="true"/> if the test case is allowed; otherwise, <see langword="false"/>.</returns>
-public delegate bool CombinatorialIndexPredicate(int[] indices);
+internal delegate bool CombinatorialIndexPredicate(int[] indices);
 
 /// <summary>
-/// Generates exhaustive combinations and permutations.
+/// Generates exhaustive combinations.
 /// </summary>
-public static class CombinatorialTestCaseGenerator
+internal static class CombinatorialTestCaseGenerator
 {
     /// <summary>
     /// Generates every possible combination of value indices across the specified dimensions.
@@ -21,7 +21,7 @@ public static class CombinatorialTestCaseGenerator
     /// <param name="dimensionSizes">The number of candidate values in each dimension.</param>
     /// <param name="isTestCaseAllowed">An optional predicate that rejects test cases.</param>
     /// <returns>One test case per array, with one selected value index per dimension.</returns>
-    public static int[][] GenerateCombinations(
+    internal static int[][] GenerateCombinations(
         int[] dimensionSizes,
         CombinatorialIndexPredicate? isTestCaseAllowed = null)
     {
@@ -35,48 +35,6 @@ public static class CombinatorialTestCaseGenerator
         int[] current = new int[dimensions.Length];
         FillCombinations(dimensions, current, 0, isTestCaseAllowed, results);
         return results.ToArray();
-    }
-
-    /// <summary>
-    /// Generates every permutation of the supplied values.
-    /// </summary>
-    /// <typeparam name="T">The type of value to permute.</typeparam>
-    /// <param name="values">The values to permute.</param>
-    /// <returns>Every positional permutation of <paramref name="values"/>.</returns>
-    /// <remarks>Input positions are distinct, so equal input values may produce equal output rows.</remarks>
-    public static T[][] GeneratePermutations<T>(T[] values)
-    {
-        if (values.Length == 0)
-        {
-            return [];
-        }
-
-        T[] valueCopy = [.. values];
-        List<T[]> results = [];
-        FillPermutations(valueCopy, new T[valueCopy.Length], new bool[valueCopy.Length], 0, results);
-        return results.ToArray();
-    }
-
-    private static void FillPermutations<T>(T[] values, T[] current, bool[] usedIndices, int outputIndex, List<T[]> results)
-    {
-        if (outputIndex == current.Length)
-        {
-            results.Add([.. current]);
-            return;
-        }
-
-        for (int valueIndex = 0; valueIndex < values.Length; valueIndex++)
-        {
-            if (usedIndices[valueIndex])
-            {
-                continue;
-            }
-
-            usedIndices[valueIndex] = true;
-            current[outputIndex] = values[valueIndex];
-            FillPermutations(values, current, usedIndices, outputIndex + 1, results);
-            usedIndices[valueIndex] = false;
-        }
     }
 
     private static void FillCombinations(

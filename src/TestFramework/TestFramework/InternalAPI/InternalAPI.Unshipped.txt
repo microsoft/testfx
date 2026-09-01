@@ -15,7 +15,10 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.set 
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities
-static Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute.CreateIndexMatcher(object?[]![]! candidateValues, Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute![]! exclusions) -> Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate?
-static Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute.GetExclusions(System.Reflection.MethodInfo! testMethod) -> Microsoft.VisualStudio.TestTools.UnitTesting.ExcludeTestCaseAttribute![]!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities.GetValueForTestCase(System.Reflection.ParameterInfo! parameter, Microsoft.VisualStudio.TestTools.UnitTesting.ICombinatorialValuesProvider? valuesSource, object?[]! candidateValues, int candidateIndex) -> object?
-static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities.GetValuesFor(System.Reflection.ParameterInfo! parameter, out Microsoft.VisualStudio.TestTools.UnitTesting.ICombinatorialValuesProvider? valuesSource) -> System.Collections.Generic.IEnumerable<object?>!
+Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate
+Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialTestCaseGenerator
+static Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ExcludeTestCaseAttribute.CreateIndexMatcher(object?[]![]! candidateValues, Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ExcludeTestCaseAttribute![]! exclusions) -> Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ExcludeTestCaseAttribute.GetExclusions(System.Reflection.MethodInfo! testMethod) -> Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ExcludeTestCaseAttribute![]!
+static Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialTestCaseGenerator.GenerateCombinations(int[]! dimensionSizes, Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate? isTestCaseAllowed = null) -> int[]![]!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities.GetValuesFor(System.Reflection.ParameterInfo! parameter) -> System.Collections.Generic.IEnumerable<object?>!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialIndexPredicate.Invoke(int[]! indices) -> bool

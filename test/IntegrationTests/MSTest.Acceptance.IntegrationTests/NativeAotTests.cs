@@ -42,6 +42,7 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 
 #file TestClass1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 #pragma warning disable MSTESTEXP
 
