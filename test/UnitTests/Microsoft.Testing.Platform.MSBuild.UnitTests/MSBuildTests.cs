@@ -243,6 +243,7 @@ namespace SomeNamespace
     {
         string projectDirectory = Path.Combine("root", "project");
         string sourcePath = Path.Combine(projectDirectory, "testconfig.json");
+        string outputPath = Path.Combine(projectDirectory, "bin", "Tests.testconfig.json");
         InMemoryFileSystem fileSystem = new();
         fileSystem.Files[sourcePath] =
             """
@@ -259,6 +260,7 @@ namespace SomeNamespace
 
         Assert.IsFalse(task.Execute());
         Assert.Contains("duplicate keys", Assert.ContainsSingle(_errors).Message ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.IsFalse(fileSystem.Files.ContainsKey(outputPath));
     }
 
     private ConfigurationFileTask CreateConfigurationFileTask(InMemoryFileSystem fileSystem, string projectDirectory)
