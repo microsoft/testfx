@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
-    private static readonly TimeSpan MarkerWaitTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan RendezvousWaitTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan MaximumFinalizationTime = TimeSpan.FromSeconds(5);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -50,8 +50,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
         string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
-        using var markerTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
-        markerTimeout.CancelAfter(MarkerWaitTimeout);
+        string executionReadyFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.ready.txt");
+        string executionReleaseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.release.txt");
+        using var rendezvousTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        rendezvousTimeout.CancelAfter(RendezvousWaitTimeout);
 
         Task<TestHostResult> executionTask = testHost.ExecuteAsync(
             "--timeout 500ms",
@@ -61,21 +63,25 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["BLOCK_FINALIZATION"] = "1",
                 ["FINALIZATION_STARTED_FILE"] = finalizationStartedFile,
                 ["DISPOSAL_FILE"] = disposalFile,
+                ["EXECUTION_READY_FILE"] = executionReadyFile,
+                ["EXECUTION_RELEASE_FILE"] = executionReleaseFile,
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
-            cancellationToken: markerTimeout.Token);
+            cancellationToken: rendezvousTimeout.Token);
 
-        await WaitForFileAsync(finalizationStartedFile, markerTimeout.Token);
-        markerTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
+        await WaitForFileAsync(executionReadyFile, rendezvousTimeout.Token);
+        rendezvousTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
         var stopwatch = Stopwatch.StartNew();
+        File.WriteAllText(executionReleaseFile, string.Empty);
         TestHostResult testHostResult = await executionTask;
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
         Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
 
-        // Timing starts after the callback begins, excluding process startup and JIT. Five seconds gives the configured
-        // 500ms finalization budget ample CI margin while remaining below the handler's 10-second blocking duration.
+        // Timing starts before releasing execution to trigger the 500ms test-host timeout. Five seconds gives the
+        // combined test-host and finalization budgets ample CI margin while remaining below the 10-second blocker.
         Assert.IsLessThan(MaximumFinalizationTime, stopwatch.Elapsed, testHostResult.ToString());
     }
 
@@ -85,8 +91,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
-        using var markerTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
-        markerTimeout.CancelAfter(MarkerWaitTimeout);
+        string executionReadyFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.ready.txt");
+        string executionReleaseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.release.txt");
+        using var rendezvousTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        rendezvousTimeout.CancelAfter(RendezvousWaitTimeout);
 
         Task<TestHostResult> executionTask = testHost.ExecuteAsync(
             "--timeout 500ms",
@@ -95,21 +103,24 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["BLOCK_UNTIL_TIMEOUT"] = "1",
                 ["BLOCK_DISPOSAL"] = "1",
                 ["DISPOSAL_ATTEMPTS_FILE"] = disposalAttemptsFile,
+                ["EXECUTION_READY_FILE"] = executionReadyFile,
+                ["EXECUTION_RELEASE_FILE"] = executionReleaseFile,
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
-            cancellationToken: markerTimeout.Token);
+            cancellationToken: rendezvousTimeout.Token);
 
-        await WaitForFileAsync(disposalAttemptsFile, markerTimeout.Token);
-        markerTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
+        await WaitForFileAsync(executionReadyFile, rendezvousTimeout.Token);
+        rendezvousTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
         var stopwatch = Stopwatch.StartNew();
+        File.WriteAllText(executionReleaseFile, string.Empty);
         TestHostResult testHostResult = await executionTask;
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
 
-        // Timing starts after the first disposal attempt, excluding process startup and JIT. Five seconds gives the
-        // configured 500ms finalization budget ample CI margin while remaining below the 10-second blocking duration.
+        // Timing starts before releasing execution to trigger the 500ms test-host timeout. Five seconds gives the
+        // combined test-host and finalization budgets ample CI margin while remaining below the 10-second blocker.
         Assert.IsLessThan(MaximumFinalizationTime, stopwatch.Elapsed, testHostResult.ToString());
     }
 
@@ -267,6 +278,19 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         if (Environment.GetEnvironmentVariable("BLOCK_UNTIL_TIMEOUT") == "1")
         {
+            if (Environment.GetEnvironmentVariable("EXECUTION_READY_FILE") is { Length: > 0 } readyFile)
+            {
+                System.IO.File.WriteAllText(readyFile, string.Empty);
+            }
+
+            if (Environment.GetEnvironmentVariable("EXECUTION_RELEASE_FILE") is { Length: > 0 } releaseFile)
+            {
+                while (!System.IO.File.Exists(releaseFile))
+                {
+                    Thread.Sleep(10);
+                }
+            }
+
             Thread.Sleep(2000);
         }
 
