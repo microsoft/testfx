@@ -219,12 +219,12 @@
       </trans-unit>
       <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
         <source>At least one test failed.</source>
-        <target state="new">At least one test failed.</target>
+        <target state="translated">Au moins un test a échoué.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
         <source>One or more code coverage thresholds were not met.</source>
-        <target state="new">One or more code coverage thresholds were not met.</target>
+        <target state="translated">Un ou plusieurs seuils de couverture du code n’ont pas été atteints.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeDependentProcessExitedDescription">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeGenericFailureDescription">
         <source>An unexpected error occurred.</source>
-        <target state="new">An unexpected error occurred.</target>
+        <target state="translated">Une erreur inattendue s'est produite.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
@@ -249,7 +249,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
         <source>The test platform setup or extension configuration is invalid.</source>
-        <target state="new">The test platform setup or extension configuration is invalid.</target>
+        <target state="translated">L’installation de la plateforme de test ou la configuration de l’extension n’est pas valide.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
@@ -259,7 +259,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
         <source>The test adapter reported a test session failure.</source>
-        <target state="new">The test adapter reported a test session failure.</target>
+        <target state="translated">L’adaptateur de test a signalé l’échec d’une session de test.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeTestSessionAbortedDescription">
         <source>The test session was aborted.</source>
-        <target state="new">The test session was aborted.</target>
+        <target state="translated">La session de test a été interrompue.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeUnknownDescription">
