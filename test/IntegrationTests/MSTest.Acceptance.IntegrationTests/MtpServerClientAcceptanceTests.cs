@@ -105,6 +105,53 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
         }
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShutdownAsync_WhileExternalTeardownBlocks_ReturnsImmediatelyAndHidesForcedExitCode(string tfm)
+    {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
+        string source = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm).FullName;
+        MtpServerClientOptions options = CreateOptions();
+        options.EnvironmentVariables["MTP_SERVER_BLOCK_AFTER_RUN"] = "1";
+
+        using var client = MtpServerClient.Launch(source, options);
+        _ = await client.InitializeAsync(cancellationToken);
+
+        var handlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TestNodesUpdated += (_, _) =>
+        {
+            handlerEntered.TrySetResult(true);
+            releaseHandler.Task.GetAwaiter().GetResult();
+        };
+
+        Task discover = client.DiscoverTestsAsync(cancellationToken);
+        await handlerEntered.Task.WaitAsync(cancellationToken);
+
+        try
+        {
+            var stopwatch = Stopwatch.StartNew();
+            Task shutdown = client.ShutdownAsync();
+            stopwatch.Stop();
+
+            Assert.IsLessThan(
+                TimeSpan.FromSeconds(2),
+                stopwatch.Elapsed,
+                $"Calling ShutdownAsync took {stopwatch.Elapsed.TotalMilliseconds:F0} ms; external-process teardown must run asynchronously.");
+
+            _ = await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => discover);
+
+            // Keep the handler blocked until teardown finishes so this exercises the connection's bounded
+            // read-loop wait rather than only proving that Task.Run returns quickly for an immediate dispose.
+            await shutdown;
+            Assert.IsNull(client.ServerExitCode, "Forced process termination must not surface the operating system's kill status as an application exit code.");
+        }
+        finally
+        {
+            _ = releaseHandler.TrySetResult(true);
+        }
+    }
+
     private static async Task WaitForServerExitAsync(MtpServerClient client, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -183,7 +230,13 @@ internal sealed class Program
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         using ITestApplication app = await builder.BuildAsync();
-        return await app.RunAsync();
+        int exitCode = await app.RunAsync();
+        if (Environment.GetEnvironmentVariable("MTP_SERVER_BLOCK_AFTER_RUN") == "1")
+        {
+            await Task.Delay(System.Threading.Timeout.Infinite);
+        }
+
+        return exitCode;
     }
 }
 
