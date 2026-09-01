@@ -434,11 +434,10 @@ stages:
         # XML-documentation-only PRs use it only for compiler and package validation. Debug remains
         # skippable for samples-only and XML-doc-only PRs.
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
-        # A completely cold acceptance cache builds every generated fixture. Cold or pool-congested
-        # Release runs can spend more than 135 minutes in the test step after setup and still need
-        # time to finish the suite and publish diagnostics. Keep completion headroom without changing
-        # the test command's existing failure semantics.
-        timeoutInMinutes: 180
+        # A completely cold acceptance cache builds every generated fixture. Keep enough headroom
+        # for that bootstrap path while retaining a bounded timeout that still detects pathologically
+        # slow or hung agents. Warm PR runs remain substantially faster.
+        timeoutInMinutes: 150
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
