@@ -72,17 +72,17 @@ internal sealed class AzureDevOpsReporter :
     public string Description { get; } = AzureDevOpsResources.Description;
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync()
+    public async Task<bool> IsEnabledAsync()
     {
         bool isEnabledByParameter = _commandLine.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName);
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{nameof(AzureDevOpsReport)} is {(isEnabledByParameter ? "enabled" : "disabled")}.");
+            await _logger.LogTraceAsync($"{nameof(AzureDevOpsReport)} is {(isEnabledByParameter ? "enabled" : "disabled")}.").ConfigureAwait(false);
         }
 
         if (!isEnabledByParameter)
         {
-            return Task.FromResult(false);
+            return false;
         }
 
         bool isEnabledByEnvVariable = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
@@ -95,12 +95,12 @@ internal sealed class AzureDevOpsReporter :
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName} environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}");
-            _logger.LogTrace($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.");
-            _logger.LogTrace($"Failure annotations are {(annotationsEnabled ? "enabled" : "disabled")}, you can toggle them by using --report-azdo-annotations parameter.");
+            await _logger.LogTraceAsync($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName} environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}").ConfigureAwait(false);
+            await _logger.LogTraceAsync($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.").ConfigureAwait(false);
+            await _logger.LogTraceAsync($"Failure annotations are {(annotationsEnabled ? "enabled" : "disabled")}, you can toggle them by using --report-azdo-annotations parameter.").ConfigureAwait(false);
         }
 
-        return Task.FromResult(isEnabledByEnvVariable && annotationsEnabled);
+        return isEnabledByEnvVariable && annotationsEnabled;
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -150,7 +150,7 @@ internal sealed class AzureDevOpsReporter :
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Failure received.");
+            await _logger.LogTraceAsync("Failure received.").ConfigureAwait(false);
         }
 
         bool isQuarantined = _quarantineFile?.Matches(testName) == true;
@@ -166,7 +166,7 @@ internal sealed class AzureDevOpsReporter :
         {
             if (_logger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace("Failure message is null, returning.");
+                await _logger.LogTraceAsync("Failure message is null, returning.").ConfigureAwait(false);
             }
 
             return;
@@ -174,7 +174,7 @@ internal sealed class AzureDevOpsReporter :
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"Showing failure message '{line}'.");
+            await _logger.LogTraceAsync($"Showing failure message '{line}'.").ConfigureAwait(false);
         }
 
         await _outputDisplay.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);

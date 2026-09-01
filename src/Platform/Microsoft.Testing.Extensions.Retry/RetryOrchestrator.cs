@@ -451,7 +451,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                logger.LogWarning($"Failed to clean retry artifact post-processing directory '{postProcessingDirectory}': {ex}");
+                await logger.LogWarningAsync($"Failed to clean retry artifact post-processing directory '{postProcessingDirectory}': {ex}").ConfigureAwait(false);
             }
         }
 

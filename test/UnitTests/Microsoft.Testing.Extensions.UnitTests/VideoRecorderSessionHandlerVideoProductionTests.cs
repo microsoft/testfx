@@ -160,7 +160,7 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
         VerifyNoConcat(context.Recorder);
         Assert.IsEmpty(context.PublishedData);
         context.Logger.Verify(
-            instance => instance.Log(
+            instance => instance.LogAsync(
                 LogLevel.Trace,
                 It.Is<string>(message => message.Contains(DisplayName, StringComparison.Ordinal)),
                 null,

@@ -179,7 +179,7 @@ public static class DotnetCli
                 string filePath = match.Groups["path"].Value;
                 fileContent = !File.Exists(filePath)
                     ? $"FILE DOES NOT EXIST: {filePath}"
-                    : File.ReadAllText(filePath);
+                    : await File.ReadAllTextAsync(filePath, cancellationToken);
             }
 
             throw new InvalidOperationException($"Invalid runtimeconfig.json:{fileContent}\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}");

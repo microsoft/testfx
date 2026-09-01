@@ -140,11 +140,11 @@ internal sealed class GitHubActionsHistoryService :
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Volatile.Write(ref _statsByTest, EmptyStats);
-            _logger.LogWarning(string.Format(
+            await _logger.LogWarningAsync(string.Format(
                 CultureInfo.InvariantCulture,
                 GitHubActionsResources.HistoryLoadFailedWarning,
                 HistoryPath,
-                ex.Message));
+                ex.Message)).ConfigureAwait(false);
         }
     }
 
@@ -227,11 +227,11 @@ internal sealed class GitHubActionsHistoryService :
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogWarning(string.Format(
+                await _logger.LogWarningAsync(string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.HistoryWriteFailedWarning,
                     configuredGroup.Key,
-                    ex.Message));
+                    ex.Message)).ConfigureAwait(false);
             }
         }
     }
