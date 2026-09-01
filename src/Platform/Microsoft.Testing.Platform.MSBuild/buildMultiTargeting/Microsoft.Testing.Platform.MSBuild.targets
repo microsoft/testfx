@@ -45,10 +45,33 @@
   </Target>
 
   <Target Name="GenerateTestingPlatformConfigurationFile" BeforeTargets="CopyFilesToOutputDirectory"
-          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile;_GenerateTestingPlatformConfigurationFileCore" />
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile;_GenerateTestingPlatformConfigurationFileInputCache;_GenerateTestingPlatformConfigurationFileCore" />
+
+  <Target Name="_GenerateTestingPlatformConfigurationFileInputCache"
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile"
+          Condition=" '$(GenerateTestingPlatformConfigurationFile)' == 'true' And '@(TestingPlatformCommandLineOptionDefault)' != '' ">
+    <PropertyGroup>
+      <_GenerateTestingPlatformConfigurationFileInputCachePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformconfigurationinputcache.cache</_GenerateTestingPlatformConfigurationFileInputCachePath>
+      <_GenerateTestingPlatformConfigurationFileInputCachePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_GenerateTestingPlatformConfigurationFileInputCachePath)))</_GenerateTestingPlatformConfigurationFileInputCachePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_GenerateTestingPlatformConfigurationFileInputsToHash Include="@(TestingPlatformCommandLineOptionDefault->'%(Identity)=%(Value)')" />
+      <GenerateTestingPlatformConfigurationFileInputsCacheFilePath Include="$(_GenerateTestingPlatformConfigurationFileInputCachePath)" />
+    </ItemGroup>
+    <Hash ItemsToHash="@(_GenerateTestingPlatformConfigurationFileInputsToHash)">
+      <Output TaskParameter="HashResult" PropertyName="_GenerateTestingPlatformConfigurationFileInputsHash" />
+    </Hash>
+    <WriteLinesToFile Lines="$(_GenerateTestingPlatformConfigurationFileInputsHash)"
+                      File="$(_GenerateTestingPlatformConfigurationFileInputCachePath)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_GenerateTestingPlatformConfigurationFileInputCachePath)" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_GenerateTestingPlatformConfigurationFileCore"
-          Inputs="@(_TestingPlatformConfigurationFileInput);@(TestingPlatformCommandLineOptionDefault->'__MTP_OPTION_DEFAULT__%(Identity)=%(Value)')"
+          Inputs="@(_TestingPlatformConfigurationFileInput);@(GenerateTestingPlatformConfigurationFileInputsCacheFilePath)"
           Outputs="$(_TestingPlatformConfigurationFile)"
           Condition=" '$(GenerateTestingPlatformConfigurationFile)' == 'true' And (Exists('$(_TestingPlatformConfigurationFileSourcePath)') Or '@(TestingPlatformCommandLineOptionDefault)' != '') " >
     <ConfigurationFileTask

@@ -48,6 +48,7 @@ public static class CommandLineOptionsExtensions
         [NotNullWhen(true)] out string[]? arguments)
     {
         _ = commandLineOptions ?? throw new ArgumentNullException(nameof(commandLineOptions));
+        _ = optionName ?? throw new ArgumentNullException(nameof(optionName));
 
         return commandLineOptions is ICommandLineOptionsWithDefaults commandLineOptionsWithDefaults
             ? commandLineOptionsWithDefaults.TryGetOptionArgumentListOrDefault(optionName, out arguments)

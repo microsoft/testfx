@@ -33,21 +33,31 @@ internal sealed partial class JsonConfigurationSource
         /// </list>
         /// </para>
         /// <para>
-        /// Empty containers (<c>"foo": []</c>) are skipped (treated as absent). Empty objects (<c>"foo": {}</c>)
-        /// are rejected because that shape is otherwise indistinguishable from a malformed nested entry.
+        /// Empty arrays under <c>commandLineOptions</c> are skipped (treated as absent). Passive defaults
+        /// reject empty arrays and null values because they must provide at least one argument. Empty objects
+        /// are rejected for both sections.
         /// </para>
         /// </remarks>
         internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptions()
-            => EnumerateCommandLineOptionEntries(PlatformConfigurationConstants.CommandLineOptionsSectionName, allowBooleanMarkers: true);
+            => EnumerateCommandLineOptionEntries(
+                PlatformConfigurationConstants.CommandLineOptionsSectionName,
+                allowBooleanMarkers: true,
+                requireValue: false);
 
         /// <summary>
         /// Enumerates passive option argument defaults from the <c>commandLineOptionDefaults</c> section.
         /// Scalar booleans are treated as argument values because defaults cannot represent option presence.
         /// </summary>
         internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptionDefaults()
-            => EnumerateCommandLineOptionEntries(PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName, allowBooleanMarkers: false);
+            => EnumerateCommandLineOptionEntries(
+                PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName,
+                allowBooleanMarkers: false,
+                requireValue: true);
 
-        private IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptionEntries(string sectionName, bool allowBooleanMarkers)
+        private IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptionEntries(
+            string sectionName,
+            bool allowBooleanMarkers,
+            bool requireValue)
         {
             Dictionary<string, string?> singleValueData = _singleValueData ?? [];
             Dictionary<string, string?> propertyToAllChildren = _propertyToAllChildren ?? [];
@@ -118,18 +128,26 @@ internal sealed partial class JsonConfigurationSource
 
                 if (subKey is null)
                 {
+                    _ = propertyToAllChildren.TryGetValue(kvp.Key, out string? rawEntry);
+                    if (requireValue && string.Equals(rawEntry?.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ThrowDefaultEntryMustHaveValue(kvp.Key, sectionName);
+                    }
+
                     if (kvp.Value is null)
                     {
-                        // Empty container at the option key. The parser cannot tell the difference between
-                        // {} and [] at write time, so we disambiguate via the raw text recorded for object
-                        // values. Empty arrays are silently dropped (matches runtime behavior — no entries
-                        // means "absent"); empty objects are rejected as the user almost certainly meant a
-                        // typo and the entire commandLineOptions section is supposed to hold leaf values.
-                        if (propertyToAllChildren.TryGetValue(kvp.Key, out string? rawEntry)
-                            && rawEntry is not null
+                        // Empty containers share a null flattened value, so use the retained raw JSON to
+                        // distinguish objects from arrays. Objects are always invalid; empty arrays remain
+                        // absent only for the established commandLineOptions behavior.
+                        if (rawEntry is not null
                             && StartsWithChar(rawEntry, '{'))
                         {
                             ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                        }
+
+                        if (requireValue)
+                        {
+                            ThrowDefaultEntryMustHaveValue(kvp.Key, sectionName);
                         }
 
                         // Empty array — treat as absent.
@@ -239,6 +257,22 @@ internal sealed partial class JsonConfigurationSource
             throw new FormatException(string.Format(
                 CultureInfo.InvariantCulture,
                 PlatformResources.JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage,
+                entryName,
+                sectionName,
+                ConfigurationFile ?? "<unknown>"));
+        }
+
+        [DoesNotReturn]
+        private void ThrowDefaultEntryMustHaveValue(string fullKey, string sectionName)
+        {
+            string prefix = sectionName + PlatformConfigurationConstants.KeyDelimiter;
+            string entryName = fullKey.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                ? fullKey.Substring(prefix.Length)
+                : fullKey;
+
+            throw new FormatException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.JsonCommandLineOptionDefaultMustHaveValueErrorMessage,
                 entryName,
                 sectionName,
                 ConfigurationFile ?? "<unknown>"));

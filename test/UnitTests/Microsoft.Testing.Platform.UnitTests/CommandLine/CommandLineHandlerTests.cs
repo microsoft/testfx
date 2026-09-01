@@ -1182,6 +1182,15 @@ public sealed class CommandLineHandlerTests
         Assert.AreSequenceEqual(["explicit-value"], arguments);
     }
 
+    [TestMethod]
+    public void GetOptionValueOrDefault_NullOptionNameThrows()
+    {
+        ICommandLineOptions commandLineOptions = Mock.Of<ICommandLineOptions>();
+
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => commandLineOptions.TryGetOptionArgumentListOrDefault(null!, out _));
+    }
+
     private sealed class ExtensionCommandLineProviderMockReservedOptions : ICommandLineOptionsProvider
     {
         public const string HelpOption = "help";

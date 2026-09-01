@@ -644,6 +644,11 @@
         <target state="translated">Argumentos de linha de comando inválidos:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
+        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</target>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
         <target state="new">In testconfig.json under 'commandLineOptionDefaults': {0}</target>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright(c) 2016, Alexandre Mutel
@@ -81,7 +81,11 @@ namespace Jsonite
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             var parser = new JsonReader(reader, settings ?? DefaultSettings);
+#if MTP_MSBUILD_TASKS
+            return parser.ParseDocument(null, typeof(object), false);
+#else
             return parser.Parse(null, typeof(object), false);
+#endif
         }
 
         /// <summary>

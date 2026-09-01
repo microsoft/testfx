@@ -19,7 +19,9 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions, ICommandLin
     bool ICommandLineOptionsWithDefaults.TryGetOptionArgumentListOrDefault(string optionName, [NotNullWhen(true)] out string[]? arguments)
         => _commandLineOptions is null
             ? throw new InvalidOperationException(Resources.PlatformResources.CommandLineOptionsNotReady)
-            : _commandLineOptions.TryGetOptionArgumentListOrDefault(optionName, out arguments);
+            : _commandLineOptions is ICommandLineOptionsWithDefaults commandLineOptionsWithDefaults
+                ? commandLineOptionsWithDefaults.TryGetOptionArgumentListOrDefault(optionName, out arguments)
+                : _commandLineOptions.TryGetOptionArgumentList(optionName, out arguments);
 
     public void SetCommandLineOptions(ICommandLineOptions commandLineOptions)
         => _commandLineOptions = commandLineOptions;

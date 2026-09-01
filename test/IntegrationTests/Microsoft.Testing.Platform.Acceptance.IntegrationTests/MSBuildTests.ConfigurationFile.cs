@@ -114,6 +114,17 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
             ["first", "second"],
             defaults.GetProperty("filter-uid").EnumerateArray().Select(x => x.GetString()).ToArray());
 
+        DotnetMuxerResult unchangedBuildResult = await DotnetCli.RunAsync(
+            $"build -v:normal {testAsset.TargetAssetPath} -c Release",
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.IsTrue(Regex.IsMatch(
+            unchangedBuildResult.StandardOutput,
+            """
+            \s*_GenerateTestingPlatformConfigurationFileCore:
+            \s*Skipping target "_GenerateTestingPlatformConfigurationFileCore" because all output files are up\-to\-date with respect to the input files\.
+            """));
+
         await DotnetCli.RunAsync(
             $"build -v:normal {testAsset.TargetAssetPath} -c Release /p:TrxFileName=changed.trx",
             cancellationToken: TestContext.CancellationToken);
@@ -122,6 +133,26 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         Assert.AreEqual(
             "changed.trx",
             updatedDocument.RootElement.GetProperty("commandLineOptionDefaults").GetProperty("report-trx-filename").GetString());
+    }
+
+    [TestMethod]
+    [DataRow("duplicate", """{"value": 1, "value": 2}""")]
+    [DataRow("trailing-content", """{} trailing""")]
+    public async Task ConfigFileGeneration_PackagedTaskRejectsInvalidJson(string scenario, string json)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"{nameof(ConfigFileGeneration_PackagedTaskRejectsInvalidJson)}_{scenario}",
+            InvalidJsonOptionDefaultsSourceCode
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$JsonContent$", json));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build -v:normal {testAsset.TargetAssetPath} -c Release",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIsNot(0);
+        result.AssertOutputContains("Failed to parse Microsoft Testing Platform configuration file");
     }
 
     private const string ConfigurationContent = """
@@ -211,6 +242,32 @@ public class DummyTestFramework : ITestFramework
             <TestingPlatformCommandLineOptionDefault Include="filter-uid" Value="second" />
         </ItemGroup>
     </Project>
+
+    #file Program.cs
+    public static class Program
+    {
+        public static void Main()
+        {
+        }
+    }
+    """;
+
+    private const string InvalidJsonOptionDefaultsSourceCode = """
+    #file MSBuildInvalidOptionDefaults.csproj
+    <Project Sdk="Microsoft.NET.Sdk">
+        <PropertyGroup>
+            <TargetFramework>net8.0</TargetFramework>
+            <OutputType>Exe</OutputType>
+            <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+        </PropertyGroup>
+        <ItemGroup>
+            <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+            <TestingPlatformCommandLineOptionDefault Include="report-trx-filename" Value="{asm}.trx" />
+        </ItemGroup>
+    </Project>
+
+    #file testconfig.json
+    $JsonContent$
 
     #file Program.cs
     public static class Program

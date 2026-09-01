@@ -204,6 +204,21 @@ public sealed class JsonCommandLineOptionsTests
     }
 
     [TestMethod]
+    [DataRow("null")]
+    [DataRow("[]")]
+    public async Task EnumerateCommandLineOptionDefaults_MissingValue_IsRejected(string value)
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            "{\"commandLineOptionDefaults\": {\"timeout\": " + value + "}}");
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            configuration.EnumerateJsonCommandLineOptionDefaults);
+
+        Assert.Contains("timeout", exception.Message);
+        Assert.Contains("non-null scalar value or a non-empty array", exception.Message);
+    }
+
+    [TestMethod]
     public async Task ExplicitJsonDisable_SuppressesConfiguredDefault()
     {
         AggregatedConfiguration configuration = await BuildAggregatedAsync(
