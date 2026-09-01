@@ -34,6 +34,11 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
 
     private Task? _shutdown;
 
+    /// <summary>
+    /// The exit code captured during teardown, boxed so reads and writes are atomic on every target platform.
+    /// </summary>
+    private object? _capturedExitCode;
+
     private MtpServerInProcessHost(
         TcpListener listener,
         TcpClient client,
@@ -69,7 +74,8 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// Gets the exit code the hosted application returned, or <see langword="null"/> while it is still
     /// running (or when it failed or was abandoned rather than returning one).
     /// </summary>
-    public int? ExitCode { get; private set; }
+    public int? ExitCode
+        => Volatile.Read(ref _capturedExitCode) is int exitCode ? exitCode : null;
 
     /// <summary>
     /// Starts the application through <paramref name="serverEntryPoint"/> and waits for it to connect back.
@@ -179,17 +185,15 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
                 MtpServerConnector.SafeStop(listener, logger);
             }
 
-            if (serverTask is not null)
+            if (serverTask is not null
+                && !await ShutdownServerAsync(serverTask, serverCancellation!, TimeSpan.Zero, logger).ConfigureAwait(false))
             {
                 // The launch is being abandoned, so skip the graceful wait entirely: there is no connected
                 // transport whose closure could signal the callback, and the caller (often a canceling one) is
                 // waiting on this unwind. A zero graceful timeout goes straight to cancel-then-grace.
-                if (!await ShutdownServerAsync(serverTask, serverCancellation!, TimeSpan.Zero, logger).ConfigureAwait(false))
-                {
-                    // The callback is still running and still holds the token; disposing its source now would
-                    // turn a clean abandonment into an ObjectDisposedException inside the caller's own code.
-                    throw;
-                }
+                // The callback is still running and still holds the token; disposing its source now would
+                // turn a clean abandonment into an ObjectDisposedException inside the caller's own code.
+                throw;
             }
 
             SafeDispose(serverCancellation, logger, "Disposing the server cancellation source");
@@ -248,6 +252,11 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     {
         try
         {
+            // Start the application timeout before disposing the connection. Connection.Dispose closes the
+            // transport promptly but can then spend up to five seconds waiting for a blocked read-loop handler;
+            // overlapping that wait keeps the complete teardown within shutdown timeout plus cancellation grace.
+            Task<bool> serverShutdown = ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger);
+
             // Close the transport first. A server-mode application exits its message loop when the client's
             // connection reaches EOF, so this is the graceful stop signal even for a callback that ignores the
             // cancellation token (the common case: TestApplication.RunAsync takes none).
@@ -255,7 +264,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             SafeDispose(_client, _logger, "Disposing the accepted client socket");
             MtpServerConnector.SafeStop(_listener, _logger);
 
-            bool stopped = await ShutdownServerAsync(_serverTask, _serverCancellation, _shutdownTimeout, _logger).ConfigureAwait(false);
+            bool stopped = await serverShutdown.ConfigureAwait(false);
 
             if (_serverTask.Status == TaskStatus.RanToCompletion)
             {
@@ -263,7 +272,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
                 // successfully. Awaiting instead would be wrong, because a faulted or abandoned task must not
                 // throw out of a teardown that is documented never to throw.
 #pragma warning disable VSTHRD103 // Result synchronously blocks
-                ExitCode = _serverTask.Result;
+                Volatile.Write(ref _capturedExitCode, _serverTask.Result);
 #pragma warning restore VSTHRD103
             }
 
@@ -311,7 +320,8 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         if (serverTask.IsCanceled)
         {
             return new MtpServerConnectionClosedException(
-                "The in-process Microsoft.Testing.Platform application was canceled before connecting back.");
+                "The in-process Microsoft.Testing.Platform application was canceled before connecting back.",
+                new TaskCanceledException(serverTask));
         }
 
         // Unwrap the AggregateException so the callback's own exception is the inner exception a caller sees.

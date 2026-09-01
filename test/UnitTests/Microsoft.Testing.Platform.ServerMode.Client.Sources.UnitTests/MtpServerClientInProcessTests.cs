@@ -129,6 +129,19 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackIsCanceledBeforeConnecting_PreservesCancellationException()
+    {
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) => Task.FromCanceled<int>(new CancellationToken(canceled: true)),
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        TaskCanceledException cancellationException = Assert.IsInstanceOfType<TaskCanceledException>(exception.InnerException);
+        Assert.IsNotNull(cancellationException.Task);
+    }
+
+    [TestMethod]
     public async Task LaunchInProcessAsync_CallbackExitsWithoutConnecting_FailsFastInsteadOfWaitingOutTheTimeout()
     {
         // The connect race probes "has the server stopped?" between accept polls. A server that stopped can
@@ -409,7 +422,9 @@ public sealed class MtpServerClientInProcessTests
         client.Dispose();
 
         Assert.IsTrue(server.Completion.IsFaulted);
-        _ = server.Completion.Exception;
+        InvalidOperationException faultException = Assert.IsInstanceOfType<InvalidOperationException>(
+            server.Completion.Exception?.GetBaseException());
+        Assert.AreEqual("The application failed while shutting down.", faultException.Message);
         Assert.Contains(
             "The in-process MTP application failed",
             server.Log,
@@ -417,11 +432,14 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
-    public async Task Dispose_CallbackIgnoresShutdown_ReturnsWithinTheDocumentedBound()
+    public async Task Dispose_CallbackAndNotificationHandlerIgnoreShutdown_ReturnsWithinTheDocumentedBound()
     {
         var neverCompletes = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var handlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
         MtpServerClientOptions options = CreateOptions();
-        options.ServerShutdownTimeout = TimeSpan.FromMilliseconds(200);
+        options.ServerShutdownTimeout = TimeSpan.FromSeconds(1);
         var log = new StringBuilder();
         options.Logger = new DelegateMtpClientLogger((_, message) =>
         {
@@ -437,6 +455,7 @@ public sealed class MtpServerClientInProcessTests
                 async (arguments, serverToken) =>
                 {
                     using FakeMtpServer server = ConnectBack(arguments);
+                    connected.TrySetResult(server);
 
                     // Deliberately ignores both the closed transport and the cancellation token.
                     await neverCompletes.Task;
@@ -447,13 +466,24 @@ public sealed class MtpServerClientInProcessTests
 
             _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
 
+            client.TestNodesUpdated += (_, _) =>
+            {
+                handlerEntered.TrySetResult(true);
+                releaseHandler.Task.GetAwaiter().GetResult();
+            };
+
+            FakeMtpServer connectedServer = await WithTimeoutAsync(connected.Task);
+            await connectedServer.SendDiscoveredTestNodeAsync(Guid.NewGuid(), "uid-1", "Test1");
+            await WithTimeoutAsync(handlerEntered.Task);
+
             var stopwatch = Stopwatch.StartNew();
             client.Dispose();
             stopwatch.Stop();
 
-            // ServerShutdownTimeout (200ms) + the fixed 5s cancellation grace, with slack for slow agents.
+            // The connection's fixed 5s read-loop wait must overlap ServerShutdownTimeout (1s) plus the fixed
+            // 5s cancellation grace. Running those waits serially would take at least 11s.
             Assert.IsLessThan(
-                TimeSpan.FromSeconds(15),
+                TimeSpan.FromSeconds(9),
                 stopwatch.Elapsed,
                 $"Dispose took {stopwatch.Elapsed.TotalSeconds:N1}s; it must abandon an unresponsive application within the documented bound rather than block indefinitely.");
 
@@ -467,6 +497,7 @@ public sealed class MtpServerClientInProcessTests
         }
         finally
         {
+            _ = releaseHandler.TrySetResult(true);
             _ = neverCompletes.TrySetResult(true);
         }
     }
@@ -501,7 +532,7 @@ public sealed class MtpServerClientInProcessTests
         options.ClientName = "EmbeddedHost";
 
         using MtpServerClient client = await LaunchAsync(server, options);
-        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
 
         RequestMessage initialize = server.Value.ReceivedRequests.Single(request => request.Method == JsonRpcMethods.Initialize);
         InitializeRequestArgs args = initialize.Params is InitializeRequestArgs typed
@@ -509,6 +540,7 @@ public sealed class MtpServerClientInProcessTests
             : SerializerUtilities.Deserialize<InitializeRequestArgs>((IDictionary<string, object?>)initialize.Params!);
 
         Assert.AreEqual(isStateful, args.Capabilities.IsStateful, "The in-process path must forward the client's stateful capability unchanged.");
+        Assert.AreSame(capabilities, client.Capabilities, "The client must retain the capabilities negotiated with the in-process server.");
         Assert.AreEqual("EmbeddedHost", args.ClientInfo.Name);
         Assert.AreEqual(CurrentProcessId, args.ProcessId);
     }
