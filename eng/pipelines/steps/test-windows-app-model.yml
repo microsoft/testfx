@@ -31,10 +31,42 @@ steps:
   env:
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
 
+- pwsh: |
+    $version = 'v0.6.0'
+    $expectedSha256 = 'F6DC42E3B4E4709C8F617003008E2CFDD9A51735E04E7170D60EDDA258DB78A8'
+    $installDirectory = Join-Path '$(Agent.TempDirectory)' "winappcli-$version-x64"
+    $archivePath = Join-Path '$(Agent.TempDirectory)' "winappcli-$version-x64.zip"
+    $downloadUrl = "https://github.com/microsoft/WinAppCli/releases/download/$version/winappcli-x64.zip"
+
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $archivePath -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
+    $actualSha256 = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash
+    if ($actualSha256 -cne $expectedSha256) {
+      throw "WinApp CLI archive hash mismatch. Expected '$expectedSha256', actual '$actualSha256'."
+    }
+
+    Expand-Archive -LiteralPath $archivePath -DestinationPath $installDirectory -Force
+    $winAppCliPath = Join-Path $installDirectory 'winapp.exe'
+    if (-not (Test-Path -LiteralPath $winAppCliPath -PathType Leaf)) {
+      throw "The pinned WinApp CLI archive did not contain '$winAppCliPath'."
+    }
+
+    & $winAppCliPath --version
+    if ($LASTEXITCODE -ne 0) {
+      throw "The pinned WinApp CLI failed its version probe with exit code $LASTEXITCODE."
+    }
+
+    Write-Host "##vso[task.setvariable variable=TESTFX_WINAPP_CLI_PATH]$winAppCliPath"
+  displayName: 'Install pinned WinApp CLI for interoperability'
+  env:
+    WINAPP_CLI_TELEMETRY_OPTOUT: 1
+
 - script: dotnet test test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true
-  displayName: 'Test real full-trust packaged WinUI application'
+  displayName: 'Test packaged WinUI and WinApp CLI interoperability'
   env:
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
+    TESTFX_RUN_WINAPP_CLI_INTEROP_TESTS: 1
+    TESTFX_WINAPP_CLI_PATH: $(TESTFX_WINAPP_CLI_PATH)
+    WINAPP_CLI_TELEMETRY_OPTOUT: 1
 
 # This check intentionally runs after a test failure. A successful cleanup check cannot change the
 # existing failed job result, while a leaked registration adds an actionable cleanup failure.
