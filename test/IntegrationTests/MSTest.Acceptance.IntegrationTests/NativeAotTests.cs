@@ -103,22 +103,8 @@ public class UnitTest1
 
     [TestMethod]
     [CombinatorialData]
-    public void TestMethod6(
-        [CombinatorialDynamicValues(nameof(MemberValues.Values), MemberType = typeof(MemberValues))]
-        int value)
-    {
-        Assert.IsTrue(value is 1 or 2);
-    }
-
-    [TestMethod]
-    [CombinatorialData]
-    public void TestMethod7(CustomValue? value)
+    public void TestMethod6(CustomValue? value)
         => Assert.IsTrue(value is null or CustomValue.First or CustomValue.Second);
-}
-
-public static class MemberValues
-{
-    public static List<int> Values => [1, 2];
 }
 
 public enum CustomValue
@@ -205,7 +191,7 @@ public sealed class AsyncVoidTests
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
         result.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(

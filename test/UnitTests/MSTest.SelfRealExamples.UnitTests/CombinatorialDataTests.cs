@@ -24,21 +24,7 @@ public sealed class CombinatorialDataTests
 
     [TestMethod]
     [CombinatorialData]
-    public void CombinesDynamicValues(
-        [CombinatorialDynamicValues(nameof(Colors))] string color,
-        [CombinatorialDynamicValues(nameof(Primes))] int prime)
-    {
-        Assert.IsTrue(color is "red" or "blue");
-        Assert.IsTrue(prime is 2 or 3 or 5);
-    }
-
-    [TestMethod]
-    [CombinatorialData]
     public void GeneratesSeededRandomValues(
         [CombinatorialRandomData(Count = 3, Minimum = 10, Maximum = 20, Seed = 42)] int value)
         => Assert.IsTrue(value is >= 10 and <= 20);
-
-    public static IEnumerable<string> Colors => ["red", "blue"];
-
-    public static IEnumerable<int> Primes => [2, 3, 5];
 }

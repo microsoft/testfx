@@ -85,15 +85,6 @@ public class CombinatorialDataAttributeTests : TestContainer
             .WithMessage($"*'value'*multiple combinatorial value providers*{nameof(CombinatorialValuesAttribute)}*{nameof(CombinatorialRangeAttribute)}*{nameof(ICombinatorialValuesProvider)}*");
     }
 
-    public void DynamicValuesProviderIsEnumeratedOnce()
-    {
-        MemberEnumerationCount = 0;
-
-        GetData(nameof(CountingDynamicValues)).Should().HaveCount(4);
-
-        MemberEnumerationCount.Should().Be(1);
-    }
-
     public void ValueProviderAttributeIsResolvedOnce()
     {
         CountingValuesAttribute.ConstructionCount = 0;
@@ -118,7 +109,6 @@ public class CombinatorialDataAttributeTests : TestContainer
         Type[] attributeTypes =
         [
             typeof(CombinatorialDataAttribute),
-            typeof(CombinatorialDynamicValuesAttribute),
             typeof(CombinatorialRandomDataAttribute),
             typeof(CombinatorialRangeAttribute),
             typeof(CombinatorialValuesAttribute),
@@ -170,22 +160,8 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
-    private static void CountingDynamicValues(
-        [CombinatorialDynamicValues(nameof(GetCountingDynamicValues))] int value,
-        bool flag)
-    {
-    }
-
     private static void CountingProviderData([CountingValues] int value, bool flag)
     {
-    }
-
-    public static int MemberEnumerationCount { get; set; }
-
-    public static IEnumerable<int> GetCountingDynamicValues()
-    {
-        MemberEnumerationCount++;
-        return [1, 2];
     }
 
     [AttributeUsage(AttributeTargets.Parameter)]

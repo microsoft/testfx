@@ -466,30 +466,6 @@ Actual: {2}</value>
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
     <comment>{0} is the dynamic data source member name. {1} is the declaring type name.</comment>
   </data>
-  <data name="CombinatorialDynamicValuesMemberNotFound" xml:space="preserve">
-    <value>Could not find public static member (property, field, or method) named '{0}' on {1}.</value>
-    <comment>{0} is the member name. {1} is the declaring type name. Do not localize the C# signature tokens {Locked="public static"}.</comment>
-  </data>
-  <data name="CombinatorialDynamicValuesMemberNotFoundWithParameterTypes" xml:space="preserve">
-    <value>Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</value>
-    <comment>{0} is the member name. {1} is the declaring type name. {2} is the comma-separated list of supplied argument types. Do not localize the C# signature tokens {Locked="public static"}.</comment>
-  </data>
-  <data name="CombinatorialDynamicValuesMemberReturnedNull" xml:space="preserve">
-    <value>Member {0} on {1} returned null.</value>
-    <comment>{0} is the member name. {1} is the declaring type name. Do not localize the C# keyword {Locked="null"}.</comment>
-  </data>
-  <data name="CombinatorialDynamicValuesMethodAmbiguous" xml:space="preserve">
-    <value>Multiple public static methods named '{0}' accept the supplied arguments.</value>
-    <comment>{0} is the member name. Do not localize the C# signature tokens {Locked="public static"}.</comment>
-  </data>
-  <data name="CombinatorialDynamicValuesMustReturnGenericEnumerable" xml:space="preserve">
-    <value>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</value>
-    <comment>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</comment>
-  </data>
-  <data name="CombinatorialDynamicValuesTypeIncompatible" xml:space="preserve">
-    <value>Parameter type {0} is not compatible with returned member type {1}.</value>
-    <comment>{0} is the test method parameter type. {1} is the member data element type.</comment>
-  </data>
   <data name="CombinatorialMultipleValueProviders" xml:space="preserve">
     <value>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</value>
     <comment>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</comment>
