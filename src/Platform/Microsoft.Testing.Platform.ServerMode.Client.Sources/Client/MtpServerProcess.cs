@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using System.Net;
 using System.Net.Sockets;
 
 namespace Microsoft.Testing.Platform.ServerMode.Client;
@@ -19,11 +18,11 @@ namespace Microsoft.Testing.Platform.ServerMode.Client;
 /// formatter (Jsonite on .NET Framework / netstandard, in-box System.Text.Json on .NET), so the wire
 /// is byte-for-byte identical to the server's expectations.
 /// </remarks>
-internal sealed class MtpServerProcess : IDisposable
+internal sealed class MtpServerProcess : IMtpServerHost
 {
-    private const string ServerArgument = "--server";
-    private const string ClientPortArgument = "--client-port";
-    private const string NoBannerArgument = "--no-banner";
+    private const string ServerArgument = MtpServerConnector.ServerArgument;
+    private const string ClientPortArgument = MtpServerConnector.ClientPortArgument;
+    private const string NoBannerArgument = MtpServerConnector.NoBannerArgument;
 
     // Bounded wait after killing the process so the OS releases the executable's file locks before a
     // caller (for example an acceptance test) deletes the application directory.
@@ -36,17 +35,23 @@ internal sealed class MtpServerProcess : IDisposable
     // cap is exceeded the oldest text is dropped from the front and the most recent output is kept.
     private const int MaxStandardErrorLength = 64 * 1024;
 
-    // How often the connect wait re-checks whether the launched process has already exited, so a child
-    // that dies on startup fails fast instead of blocking the full ConnectionTimeout.
-    private static readonly TimeSpan ProcessExitPollInterval = TimeSpan.FromMilliseconds(100);
+    private static readonly object NoExitCode = new();
 
     private readonly TcpListener _listener;
     private readonly Process _process;
     private readonly IMtpClientLogger _logger;
     private readonly StringBuilder _standardError;
     private readonly TcpClient _client;
+    private readonly object _shutdownLock = new();
 
-    private int _disposed;
+    private Task? _shutdown;
+
+    /// <summary>
+    /// The exit code captured during teardown, boxed so the read is atomic. <see langword="null"/> means
+    /// teardown has not captured a result yet; <see cref="NoExitCode"/> means teardown completed without an
+    /// application-returned code.
+    /// </summary>
+    private object? _capturedExitCode;
 
     private MtpServerProcess(TcpListener listener, Process process, TcpClient client, MtpJsonRpcConnection connection, StringBuilder standardError, IMtpClientLogger logger)
     {
@@ -81,6 +86,48 @@ internal sealed class MtpServerProcess : IDisposable
             }
         }
     }
+
+    /// <summary>
+    /// Gets the exit code of the launched application, or <see langword="null"/> while it is still running or
+    /// when forced termination was required.
+    /// </summary>
+    /// <remarks>
+    /// Once teardown has run this returns the value captured then: a <see cref="Process"/> cannot be read
+    /// after it is disposed, so a live read would always report <see langword="null"/> afterwards.
+    /// </remarks>
+    public int? ExitCode
+    {
+        get
+        {
+            object? captured = Volatile.Read(ref _capturedExitCode);
+            return captured switch
+            {
+                null => TryReadExitCode(),
+                int exitCode => exitCode,
+                _ => null,
+            };
+        }
+    }
+
+    private int? TryReadExitCode()
+    {
+        try
+        {
+            return _process.HasExited ? _process.ExitCode : null;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Tears the process down without blocking the caller: killing a child process is bounded but still
+    /// synchronous (it waits for the OS to release the executable's file locks), so it is moved off the
+    /// calling thread. Shares the one teardown with <see cref="Dispose"/>.
+    /// </summary>
+    public Task ShutdownAsync()
+        => StartShutdownAsync();
 
     /// <summary>
     /// Launches the MTP application at <paramref name="source"/> and waits for it to connect back.
@@ -123,13 +170,11 @@ internal sealed class MtpServerProcess : IDisposable
         // The serializers must be registered BEFORE the formatter is created: the .NET
         // System.Text.Json formatter snapshots the registered serializer/deserializer type sets into
         // its per-type engine at construction time.
-        SerializerUtilities.RegisterClientSerializers();
-        IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
+        IMessageFormatter formatter = MtpServerConnector.CreateFormatter();
 
         TcpListener? listener = null;
         Process? process = null;
         TcpClient? acceptedClient = null;
-        Task<TcpClient>? acceptTask = null;
         var standardError = new StringBuilder();
         try
         {
@@ -137,9 +182,7 @@ internal sealed class MtpServerProcess : IDisposable
             // process) lives inside the try so the catch can tear down whatever was already created. In
             // particular, if listener.Start() fails to bind or the process fails to start, the listener is
             // stopped rather than leaked.
-            listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener = MtpServerConnector.StartLoopbackListener(out int port);
 
             LaunchCommand launch = BuildLaunch(source, port);
             string fileName = launch.FileName;
@@ -187,49 +230,28 @@ internal sealed class MtpServerProcess : IDisposable
             // Drain stdout so the child never blocks on a full pipe (banner, diagnostics).
             process.BeginOutputReadLine();
 
-#if NET8_0_OR_GREATER
-            acceptTask = listener.AcceptTcpClientAsync(cancellationToken).AsTask();
-#else
-            acceptTask = listener.AcceptTcpClientAsync();
-#endif
-
             // Wait for the app to dial back, but poll the process alongside the accept: if the child exits
             // early (bad arguments, startup crash) we fail fast with its exit code + captured stderr instead
             // of blocking the full ConnectionTimeout and then reporting a misleading timeout. Polling
             // process.HasExited (rather than racing the accept against Process.Exited) keeps this free of a
             // TaskCompletionSource ordering race.
-            var connectStopwatch = Stopwatch.StartNew();
-            while (!acceptTask.IsCompleted)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (process.HasExited)
-                {
-                    throw new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' exited with code {process.ExitCode} before connecting back. {GetStandardError(standardError)}");
-                }
-
-                if (connectStopwatch.Elapsed >= options.ConnectionTimeout)
-                {
-                    throw new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}");
-                }
-
-                var delayTask = Task.Delay(ProcessExitPollInterval, cancellationToken);
-                _ = await Task.WhenAny(acceptTask, delayTask).ConfigureAwait(false);
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-            acceptedClient = await acceptTask.ConfigureAwait(false);
-            acceptedClient.NoDelay = true;
-            NetworkStream stream = acceptedClient.GetStream();
-
-            var handler = new TcpMessageHandler(acceptedClient, stream, stream, formatter);
-            var connection = new MtpJsonRpcConnection(handler, logger);
+            Process startedProcess = process;
+            acceptedClient = await MtpServerConnector.AcceptAsync(
+                listener,
+                () => startedProcess.HasExited
+                    ? new MtpServerConnectionClosedException(
+                        $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}")
+                    : null,
+                () => new MtpServerConnectionClosedException(
+                    $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
+                options.ConnectionTimeout,
+                serverCompletion: null,
+                cancellationToken).ConfigureAwait(false);
 
             // NOTE: the read loop is intentionally NOT started here. The owner (MtpServerClient) wires its
             // notification/server-request handlers first and then calls Connection.Start(), so no server ->
             // client message can slip past before the handlers are attached.
+            MtpJsonRpcConnection connection = MtpServerConnector.CreateConnection(acceptedClient, formatter, logger);
             return new MtpServerProcess(listener, process, acceptedClient, connection, standardError, logger);
         }
         catch
@@ -240,34 +262,11 @@ internal sealed class MtpServerProcess : IDisposable
                 process.Dispose();
             }
 
-            // If the accept has not produced a socket we own yet, guard against a late dial-back leaking a
-            // connected socket: hand the still-pending accept a continuation that disposes any socket it
-            // eventually yields (or observes its fault so the task is not left unobserved when SafeStop
-            // faults it). When acceptedClient is already set we own it and dispose it directly below.
-            if (acceptedClient is null && acceptTask is not null)
-            {
-                _ = acceptTask.ContinueWith(
-                    static t =>
-                    {
-                        if (t.Status == TaskStatus.RanToCompletion)
-                        {
-                            t.Result.Dispose();
-                        }
-                        else
-                        {
-                            _ = t.Exception;
-                        }
-                    },
-                    CancellationToken.None,
-                    TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-            }
-
             acceptedClient?.Dispose();
 
             if (listener is not null)
             {
-                SafeStop(listener, logger);
+                MtpServerConnector.SafeStop(listener, logger);
             }
 
             throw;
@@ -312,6 +311,12 @@ internal sealed class MtpServerProcess : IDisposable
 
     internal static LaunchCommand BuildLaunch(string source, int port)
     {
+        // Deliberately NOT composed from MtpServerConnector.BuildInProcessServerArguments: this string is the
+        // command line an already-shipped API hands to already-shipped test applications, so it is kept
+        // byte-identical rather than gaining the in-process path's explicit protocol and host. The server
+        // maps its 'localhost' default to IPAddress.Loopback, which is what the listener binds, so the two
+        // forms are equivalent on the wire; only the in-process array states them explicitly because an
+        // embedded host reads it as the documentation of what the client asked for.
         string serverArgs = $"{ServerArgument} {ClientPortArgument} {port} {NoBannerArgument}";
         string workingDirectory = Path.GetDirectoryName(source) ?? Directory.GetCurrentDirectory();
         string extension = Path.GetExtension(source);
@@ -425,20 +430,9 @@ internal sealed class MtpServerProcess : IDisposable
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
 
-    private static void SafeStop(TcpListener listener, IMtpClientLogger logger)
+    private static bool SafeKill(Process process, IMtpClientLogger logger)
     {
-        try
-        {
-            listener.Stop();
-        }
-        catch (SocketException ex)
-        {
-            logger.SafeLog(MtpClientLogLevel.Debug, $"Stopping the TCP listener threw: {ex}");
-        }
-    }
-
-    private static void SafeKill(Process process, IMtpClientLogger logger)
-    {
+        bool killed = false;
         try
         {
             if (!process.HasExited)
@@ -450,6 +444,7 @@ internal sealed class MtpServerProcess : IDisposable
                 // server spawned are left to the OS. This is best-effort teardown on that platform.
                 process.Kill();
 #endif
+                killed = true;
 
                 // Block (bounded) for the OS to finish tearing the process down so a caller can immediately
                 // delete the application directory without racing a file lock on the still-exiting executable.
@@ -460,29 +455,70 @@ internal sealed class MtpServerProcess : IDisposable
         {
             logger.SafeLog(MtpClientLogLevel.Debug, $"Killing the MTP server process threw: {ex}");
         }
+
+        return killed;
     }
 
+    /// <summary>
+    /// Kills the launched process and releases the transport, waiting synchronously for the bounded kill so a
+    /// caller can immediately delete the application directory.
+    /// </summary>
+    /// <remarks>
+    /// Joins the one teardown rather than starting a second, so a <see cref="Dispose"/> that races or follows
+    /// <see cref="ShutdownAsync"/> still returns only once the process has actually gone.
+    /// </remarks>
     public void Dispose()
+#pragma warning disable VSTHRD002 // Synchronously waiting on tasks - this IS the synchronous disposal path; ShutdownAsync is the awaitable one.
+        => StartShutdownAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
+
+    private Task StartShutdownAsync()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+        lock (_shutdownLock)
         {
-            return;
+            return _shutdown ??= Task.Run(ShutdownCore);
         }
+    }
 
-        // Dispose the connection first (cancels the read loop, disposes the handler -> socket/streams).
-        Connection.Dispose();
-
+    private void ShutdownCore()
+    {
         try
         {
-            _client.Dispose();
-        }
-        catch (SocketException ex)
-        {
-            _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
-        }
+            // Dispose the connection first (cancels the read loop, disposes the handler -> socket/streams).
+            Connection.Dispose();
 
-        SafeStop(_listener, _logger);
-        SafeKill(_process, _logger);
-        _process.Dispose();
+            try
+            {
+                _client.Dispose();
+            }
+            catch (SocketException ex)
+            {
+                _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
+            }
+
+            MtpServerConnector.SafeStop(_listener, _logger);
+
+            // Capture before killing, so an application that already exited on its own reports its real exit
+            // code rather than the kill's, and before Dispose(), after which the Process cannot be read.
+            int? exitCode = TryReadExitCode();
+            Volatile.Write(ref _capturedExitCode, exitCode is int captured ? captured : NoExitCode);
+            bool killed = SafeKill(_process, _logger);
+
+            // Preserve the race where the process exits naturally between the first read and SafeKill's
+            // HasExited check, but never publish the operating system's forced-termination status as though
+            // it were an application-returned exit code.
+            if (exitCode is null && !killed && TryReadExitCode() is int racedExitCode)
+            {
+                Volatile.Write(ref _capturedExitCode, racedExitCode);
+            }
+
+            _process.Dispose();
+        }
+        catch (Exception ex)
+        {
+            // The shared teardown task must never fault: every current and future Dispose/ShutdownAsync
+            // caller awaits this one task, so a fault here would throw from every subsequent disposal.
+            _logger.SafeLog(MtpClientLogLevel.Error, $"Tearing down the MTP server process threw: {ex}");
+        }
     }
 }

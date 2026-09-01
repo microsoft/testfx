@@ -80,6 +80,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                     DebuggerProvider = true,
                     IsStateful = true,
                     ConnectionTimeout = TimeSpan.FromSeconds(30),
+                    ServerShutdownTimeout = TimeSpan.FromSeconds(30),
                     Logger = logger,
                 };
                 options.EnvironmentVariables["EXAMPLE"] = "1";
@@ -97,6 +98,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 Console.WriteLine(capabilities.ServerName ?? "unknown");
                 Console.WriteLine(client.Capabilities?.MultiRequestSupport ?? false);
                 Console.WriteLine(client.ProcessId);
+                Console.WriteLine(client.ServerExitCode ?? -1);
 
                 await client.DiscoverTestsAsync(cancellationToken);
                 await client.DiscoverTestsAsync(new[] { "uid" }, cancellationToken);
@@ -111,10 +113,29 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 await client.RunTestsAsync(new[] { "uid" }, cancellationToken);
                 await client.RunTestsWithFilterAsync("/*/*/*/*", cancellationToken);
                 await client.ExitAsync(cancellationToken);
+                await client.ShutdownAsync();
 
                 // Referencing the platform assembly alongside the source package must bind these two public
                 // types to the same assembly. Injected protocol types live in a package-private namespace.
                 _ = new TestNodeUidListFilter(new[] { new TestNodeUid("uid") });
+            }
+
+            // The embedded-host launch path: no Process.Start, the caller only supplies "how to run the app".
+            internal static async Task DriveInProcessAsync(CancellationToken cancellationToken)
+            {
+                using IMtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+                    (string[] serverArgs, CancellationToken serverToken) =>
+                    {
+                        Console.WriteLine(string.Join(" ", serverArgs));
+                        return Task.FromResult(serverToken.IsCancellationRequested ? 1 : 0);
+                    },
+                    new MtpServerClientOptions(),
+                    cancellationToken);
+
+                Console.WriteLine(client.ProcessId);
+                await client.ExitAsync(cancellationToken);
+                await client.ShutdownAsync();
+                Console.WriteLine(client.ServerExitCode ?? -1);
             }
 
             private static void OnTestNodesUpdated(object? sender, MtpTestNodeUpdateEventArgs e)

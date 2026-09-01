@@ -696,6 +696,44 @@ public sealed class MtpServerClientTests
             $"Dispose from a notification handler took {elapsed.TotalMilliseconds:F0} ms; it must not self-wait on the read loop.");
     }
 
+    [TestMethod]
+    public async Task ShutdownAsync_WithBlockedNotificationHandler_ReturnsWithoutBlockingTheCaller()
+    {
+        using FakeMtpServer server = new();
+        MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+        var handlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        client.TestNodesUpdated += (_, _) =>
+        {
+            handlerEntered.TrySetResult(true);
+            releaseHandler.Task.GetAwaiter().GetResult();
+        };
+
+        try
+        {
+            await server.SendDiscoveredTestNodeAsync(Guid.NewGuid(), "Ns.Class.Test", "Test").ConfigureAwait(false);
+            await WithTimeoutAsync(handlerEntered.Task).ConfigureAwait(false);
+
+            var stopwatch = Stopwatch.StartNew();
+            Task shutdown = client.ShutdownAsync();
+            stopwatch.Stop();
+
+            Assert.IsLessThan(
+                TimeSpan.FromSeconds(2),
+                stopwatch.Elapsed,
+                $"Calling ShutdownAsync took {stopwatch.Elapsed.TotalMilliseconds:F0} ms; connection teardown must be scheduled rather than blocking the caller.");
+
+            _ = releaseHandler.TrySetResult(true);
+            await WithTimeoutAsync(shutdown).ConfigureAwait(false);
+        }
+        finally
+        {
+            _ = releaseHandler.TrySetResult(true);
+            client.Dispose();
+        }
+    }
+
     private static async Task<MtpServerClient> ConnectAndInitializeAsync(FakeMtpServer server)
     {
         MtpServerClient client = server.ConnectClient();

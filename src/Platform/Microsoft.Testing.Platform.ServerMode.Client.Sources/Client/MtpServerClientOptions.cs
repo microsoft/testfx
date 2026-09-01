@@ -57,9 +57,28 @@ internal sealed class MtpServerClientOptions
     public TimeSpan ConnectionTimeout { get; set; } = TimeSpan.FromSeconds(90);
 
     /// <summary>
+    /// Gets or sets how long disposal waits for an in-process hosted application (see
+    /// <c>MtpServerClient.LaunchInProcessAsync</c>) to stop after the transport has been closed, before the
+    /// callback's cancellation token is canceled. Defaults to 30 seconds.
+    /// </summary>
+    /// <remarks>
+    /// Disposal waits at most <see cref="MtpServerClientOptions.ServerShutdownTimeout"/> after the transport
+    /// is closed, plus a further fixed 5 seconds after the callback's token is canceled. This option has no
+    /// effect on the external-process launch path, which kills the child process instead, and it does not
+    /// apply to a <em>failed</em> launch: nothing is connected there, so the callback is canceled immediately
+    /// and only the fixed 5-second grace applies.
+    /// </remarks>
+    public TimeSpan ServerShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
     /// Gets the environment variables injected into the launched test-app process (in addition to the
     /// inherited environment). Useful for passing configuration such as diagnostics switches.
     /// </summary>
+    /// <remarks>
+    /// Only applies to the external-process launch path. An application hosted in the caller's own process
+    /// shares the caller's environment, so <c>MtpServerClient.LaunchInProcessAsync</c> ignores this
+    /// collection (and logs a warning when it is non-empty).
+    /// </remarks>
     public IDictionary<string, string?> EnvironmentVariables { get; } = new Dictionary<string, string?>(StringComparer.Ordinal);
 
     /// <summary>
