@@ -8,7 +8,8 @@ It covers:
 - the MSTest section (`mstest:*` — `timeout`, `execution` (including `orderTestsByNameInClass`),
   `parallelism`, `output`, `deployment`, `assemblyResolution`);
 - the Microsoft.Testing.Platform host section (`platformOptions:*`);
-- the `environmentVariables` section.
+- the `environmentVariables` section;
+- passive command-line option argument defaults under `commandLineOptionDefaults`.
 
 The schema is the source for IDE auto-completion and validation when authoring `testconfig.json`.
 

@@ -154,8 +154,11 @@ internal abstract class ReportEngineBase
     {
         _cancellationToken.ThrowIfCancellationRequested();
 
-        bool wasExplicit = _commandLineOptions.TryGetOptionArgumentList(fileNameOptionName, out string[]? providedFileName);
-        string fileName = wasExplicit
+        // TryGetOptionArgumentListOrDefault also returns true for a passive default coming from
+        // testconfig.json, so it cannot be used to determine explicitness. Use it only to pick the
+        // file name, and derive wasExplicit from IsOptionSet to preserve the documented contract.
+        bool wasExplicit = _commandLineOptions.IsOptionSet(fileNameOptionName);
+        string fileName = _commandLineOptions.TryGetOptionArgumentListOrDefault(fileNameOptionName, out string[]? providedFileName)
             ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
             : defaultFileNameFactory();
 

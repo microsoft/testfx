@@ -266,9 +266,17 @@
     <value>In testconfig.json under 'commandLineOptions': {0}</value>
     <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</comment>
   </data>
+  <data name="JsonCommandLineOptionDefaultsValidationErrorPrefix" xml:space="preserve">
+    <value>In testconfig.json under 'commandLineOptionDefaults': {0}</value>
+    <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</comment>
+  </data>
+  <data name="JsonCommandLineOptionDefaultMustHaveValueErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</value>
+    <comment>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</comment>
+  </data>
   <data name="JsonCommandLineOptionIsBootstrapOnlyErrorMessage" xml:space="preserve">
-    <value>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</value>
-    <comment>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</comment>
+    <value>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under '{1}' in testconfig.json.</value>
+    <comment>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {1} is the JSON section name. {Locked="--"}{Locked="testconfig.json"}</comment>
   </data>
   <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
     <value>testconfig.json environment variables provider</value>

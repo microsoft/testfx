@@ -1138,6 +1138,59 @@ public sealed class CommandLineHandlerTests
         Assert.IsNull(optionValue);
     }
 
+    [TestMethod]
+    public void GetOptionValueOrDefault_DefaultDoesNotActivateOption()
+    {
+        Mock<IConfiguration> configuration = new();
+        configuration
+            .Setup(x => x["commandLineOptionDefaults:name:0"])
+            .Returns("default-value");
+        CommandLineHandler commandLineHandler = new(
+            CommandLineParseResult.Empty,
+            _extensionCommandLineOptionsProviders,
+            _systemCommandLineOptionsProviders,
+            _testApplicationModuleInfoMock.Object,
+            _runtimeFeatureMock.Object,
+            configuration.Object);
+
+        Assert.IsFalse(commandLineHandler.IsOptionSet("name"));
+        Assert.IsFalse(commandLineHandler.TryGetOptionArgumentList("name", out _));
+        Assert.IsTrue(commandLineHandler.TryGetOptionArgumentListOrDefault("name", out string[]? arguments));
+        Assert.AreSequenceEqual(["default-value"], arguments);
+    }
+
+    [TestMethod]
+    public void GetOptionValueOrDefault_ExplicitValueWins()
+    {
+        Mock<IConfiguration> configuration = new();
+        configuration
+            .Setup(x => x["commandLineOptions:name:0"])
+            .Returns("explicit-value");
+        configuration
+            .Setup(x => x["commandLineOptionDefaults:name:0"])
+            .Returns("default-value");
+        CommandLineHandler commandLineHandler = new(
+            CommandLineParseResult.Empty,
+            _extensionCommandLineOptionsProviders,
+            _systemCommandLineOptionsProviders,
+            _testApplicationModuleInfoMock.Object,
+            _runtimeFeatureMock.Object,
+            configuration.Object);
+
+        Assert.IsTrue(commandLineHandler.IsOptionSet("name"));
+        Assert.IsTrue(commandLineHandler.TryGetOptionArgumentListOrDefault("name", out string[]? arguments));
+        Assert.AreSequenceEqual(["explicit-value"], arguments);
+    }
+
+    [TestMethod]
+    public void GetOptionValueOrDefault_NullOptionNameThrows()
+    {
+        ICommandLineOptions commandLineOptions = Mock.Of<ICommandLineOptions>();
+
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => commandLineOptions.TryGetOptionArgumentListOrDefault(null!, out _));
+    }
+
     private sealed class ExtensionCommandLineProviderMockReservedOptions : ICommandLineOptionsProvider
     {
         public const string HelpOption = "help";

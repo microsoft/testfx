@@ -272,6 +272,8 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public void CopyFile(string source, string destination) => throw new NotSupportedException();
 
+        public string ReadAllText(string path) => throw new NotSupportedException();
+
         public void WriteAllText(string path, string? contents) => throw new NotSupportedException();
     }
 }

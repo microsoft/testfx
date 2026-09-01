@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright(c) 2016, Alexandre Mutel
@@ -317,7 +317,18 @@ namespace Jsonite
 
         public void OnDeserializeSetObjectMember(object objectContext, object target, object memberContext, object value)
         {
+#if MTP_MSBUILD_TASKS
+            var dictionary = (IDictionary<string, object>)target;
+            string memberName = (string)memberContext;
+            if (dictionary.ContainsKey(memberName))
+            {
+                throw new JsonException(0, 0, 0, $"Duplicate JSON property '{memberName}'.");
+            }
+
+            dictionary.Add(memberName, value);
+#else
             ((IDictionary<string, object>)target)[(string)memberContext] = value;
+#endif
         }
 
         public object OnDeserializeExitObject(object objectContext, object obj)

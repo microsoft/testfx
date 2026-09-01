@@ -224,6 +224,44 @@ internal sealed class AggregatedConfiguration(
     }
 
     /// <summary>
+    /// Resolves a passive command-line option default without changing the option's active state.
+    /// </summary>
+    internal bool TryGetCommandLineOptionDefaultFromProviders(string optionName, out string[] arguments)
+    {
+        string baseKey = PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName
+            + PlatformConfigurationConstants.KeyDelimiter
+            + optionName.Trim(CommandLineParseResult.OptionPrefix);
+
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            List<string>? collected = null;
+            int index = 0;
+            while (provider.TryGet(baseKey + PlatformConfigurationConstants.KeyDelimiter + index.ToString(CultureInfo.InvariantCulture), out string? indexed)
+                && indexed is not null)
+            {
+                collected ??= [];
+                collected.Add(indexed);
+                index++;
+            }
+
+            if (collected is { Count: > 0 })
+            {
+                arguments = [.. collected];
+                return true;
+            }
+
+            if (provider.TryGet(baseKey, out string? scalar) && scalar is not null)
+            {
+                arguments = [scalar];
+                return true;
+            }
+        }
+
+        arguments = [];
+        return false;
+    }
+
+    /// <summary>
     /// Returns the immediate (one-level) string entries declared under <paramref name="sectionName"/>
     /// in the loaded testconfig.json file. Returns an empty list if no JSON configuration source is
     /// active or the section is absent.
@@ -250,6 +288,18 @@ internal sealed class AggregatedConfiguration(
             .FirstOrDefault();
 
         return jsonProvider?.EnumerateCommandLineOptions() ?? [];
+    }
+
+    /// <summary>
+    /// Returns the typed passive command-line option defaults declared in the loaded testconfig.json file.
+    /// </summary>
+    internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateJsonCommandLineOptionDefaults()
+    {
+        JsonConfigurationSource.JsonConfigurationProvider? jsonProvider = _configurationProviders
+            .OfType<JsonConfigurationSource.JsonConfigurationProvider>()
+            .FirstOrDefault();
+
+        return jsonProvider?.EnumerateCommandLineOptionDefaults() ?? [];
     }
 
     /// <summary>
