@@ -7,7 +7,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
-    private static readonly TimeSpan MaximumExecutionTime = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan MarkerWaitTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan MaximumFinalizationTime = TimeSpan.FromSeconds(5);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -49,9 +50,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
         string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
-        var stopwatch = Stopwatch.StartNew();
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
+        Task<TestHostResult> executionTask = testHost.ExecuteAsync(
             "--timeout 500ms",
             new()
             {
@@ -64,13 +64,17 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
             },
             cancellationToken: TestContext.CancellationToken);
 
+        await WaitForFileAsync(finalizationStartedFile, TestContext.CancellationToken)
+            .WaitAsync(MarkerWaitTimeout, TestContext.CancellationToken);
+        var stopwatch = Stopwatch.StartNew();
+        TestHostResult testHostResult = await executionTask;
+
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
-        Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
         Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
 
-        // The configured test-host and finalization timeouts total one second. The limit leaves ample room for process
-        // startup, JIT, and teardown on a loaded CI agent while still proving that the one-minute handler is not awaited.
-        Assert.IsLessThan(MaximumExecutionTime, stopwatch.Elapsed, testHostResult.ToString());
+        // Timing starts after the callback begins, excluding process startup and JIT. Five seconds gives the configured
+        // 500ms finalization budget ample CI margin while remaining below the handler's 10-second blocking duration.
+        Assert.IsLessThan(MaximumFinalizationTime, stopwatch.Elapsed, testHostResult.ToString());
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -79,9 +83,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
-        var stopwatch = Stopwatch.StartNew();
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
+        Task<TestHostResult> executionTask = testHost.ExecuteAsync(
             "--timeout 500ms",
             new()
             {
@@ -93,13 +96,25 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
             },
             cancellationToken: TestContext.CancellationToken);
 
+        await WaitForFileAsync(disposalAttemptsFile, TestContext.CancellationToken)
+            .WaitAsync(MarkerWaitTimeout, TestContext.CancellationToken);
+        var stopwatch = Stopwatch.StartNew();
+        TestHostResult testHostResult = await executionTask;
+
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
-        Assert.IsTrue(File.Exists(disposalAttemptsFile), testHostResult.ToString());
         Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
 
-        // The configured test-host and finalization timeouts total one second. The limit leaves ample room for process
-        // startup, JIT, and teardown on a loaded CI agent while still proving that the one-minute disposal is not awaited.
-        Assert.IsLessThan(MaximumExecutionTime, stopwatch.Elapsed, testHostResult.ToString());
+        // Timing starts after the first disposal attempt, excluding process startup and JIT. Five seconds gives the
+        // configured 500ms finalization budget ample CI margin while remaining below the 10-second blocking duration.
+        Assert.IsLessThan(MaximumFinalizationTime, stopwatch.Elapsed, testHostResult.ToString());
+    }
+
+    private static async Task WaitForFileAsync(string path, CancellationToken cancellationToken)
+    {
+        while (!File.Exists(path))
+        {
+            await Task.Delay(10, cancellationToken);
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -147,8 +162,6 @@ public class Startup
 
 public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDisposable
 {
-    private static readonly TimeSpan BlockingOperationDuration = TimeSpan.FromMinutes(1);
-
     public string Uid => nameof(TestHostProcessLifetimeHandler);
 
     public string Version => string.Empty;
@@ -191,7 +204,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
 
         if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
         {
-            Thread.Sleep(BlockingOperationDuration);
+            Thread.Sleep(10000);
         }
 
         return Task.CompletedTask;
@@ -221,7 +234,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
 
         if (Environment.GetEnvironmentVariable("BLOCK_DISPOSAL") == "1")
         {
-            Thread.Sleep(BlockingOperationDuration);
+            Thread.Sleep(10000);
         }
     }
 }
