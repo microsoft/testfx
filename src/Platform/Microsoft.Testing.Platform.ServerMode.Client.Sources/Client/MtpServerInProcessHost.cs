@@ -122,7 +122,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         if (MtpClientOperatingSystem.IsBrowser())
         {
             throw new PlatformNotSupportedException(
-                "Hosting a Microsoft.Testing.Platform application in process requires a loopback TCP listener, "
+                "Hosting an MTP application in process requires a loopback TCP listener, "
                 + "which is not available on browser/WASM.");
         }
 
@@ -158,7 +158,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
                 listener,
                 () => TryGetServerStoppedFailure(serverTask),
                 () => new MtpServerConnectionClosedException(
-                    $"The in-process Microsoft.Testing.Platform application did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. "
+                    $"The in-process MTP application did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. "
                     + "Make sure the callback forwards the supplied server-mode arguments to the test application."),
                 options.ConnectionTimeout,
                 serverTask,
@@ -351,7 +351,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         if (serverTask.IsCanceled)
         {
             return new MtpServerConnectionClosedException(
-                "The in-process Microsoft.Testing.Platform application was canceled before connecting back.",
+                "The in-process MTP application was canceled before connecting back.",
                 new TaskCanceledException(serverTask));
         }
 
@@ -360,12 +360,12 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         {
             Exception failure = exception.InnerExceptions.Count == 1 ? exception.InnerExceptions[0] : exception;
             return new MtpServerConnectionClosedException(
-                "The in-process Microsoft.Testing.Platform application failed before connecting back.",
+                "The in-process MTP application failed before connecting back.",
                 failure);
         }
 
         return new MtpServerConnectionClosedException(
-            $"The in-process Microsoft.Testing.Platform application exited with code {serverTask.Result} before connecting back. "
+            $"The in-process MTP application exited with code {serverTask.Result} before connecting back. "
             + "Make sure the callback forwards the supplied server-mode arguments to the test application.");
     }
 

@@ -368,6 +368,9 @@ public sealed class MtpServerClientInProcessTests
             TimeSpan.FromSeconds(4),
             elapsed,
             $"Dispose from a notification handler took {elapsed.TotalMilliseconds:F0} ms; it must not self-wait on the read loop.");
+        Assert.IsTrue(server.Completion.IsCompleted, "Dispose from the handler must still complete teardown.");
+        Assert.AreEqual(0, await server.Completion);
+        Assert.AreEqual(0, client.ServerExitCode, "The callback exit code must still be captured after handler-triggered disposal.");
     }
 
     [TestMethod]
@@ -655,7 +658,16 @@ public sealed class MtpServerClientInProcessTests
             1,
             server.ConnectionCount,
             "A stateful session must serve every request over the single connection the launch established.");
-        Assert.HasCount(4, server.Value.ReceivedRequestMethods);
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                JsonRpcMethods.Initialize,
+                JsonRpcMethods.TestingDiscoverTests,
+                JsonRpcMethods.TestingRunTests,
+                JsonRpcMethods.TestingRunTests,
+            },
+            server.Value.ReceivedRequestMethods,
+            "The stateful session must reuse one connection for the expected initialize, discover, and run requests.");
     }
 
     [TestMethod]

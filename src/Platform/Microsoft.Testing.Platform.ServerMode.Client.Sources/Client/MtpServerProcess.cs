@@ -35,6 +35,8 @@ internal sealed class MtpServerProcess : IMtpServerHost
     // cap is exceeded the oldest text is dropped from the front and the most recent output is kept.
     private const int MaxStandardErrorLength = 64 * 1024;
 
+    private static readonly object NoExitCode = new();
+
     private readonly TcpListener _listener;
     private readonly Process _process;
     private readonly IMtpClientLogger _logger;
@@ -45,8 +47,9 @@ internal sealed class MtpServerProcess : IMtpServerHost
     private Task? _shutdown;
 
     /// <summary>
-    /// The exit code captured during teardown, boxed so the read is atomic. A <see cref="Process"/> cannot be
-    /// queried once disposed, so the value has to be taken before that happens.
+    /// The exit code captured during teardown, boxed so the read is atomic. <see langword="null"/> means
+    /// teardown has not captured a result yet; <see cref="NoExitCode"/> means teardown completed without an
+    /// application-returned code.
     /// </summary>
     private object? _capturedExitCode;
 
@@ -93,7 +96,18 @@ internal sealed class MtpServerProcess : IMtpServerHost
     /// after it is disposed, so a live read would always report <see langword="null"/> afterwards.
     /// </remarks>
     public int? ExitCode
-        => Volatile.Read(ref _capturedExitCode) is int captured ? captured : TryReadExitCode();
+    {
+        get
+        {
+            object? captured = Volatile.Read(ref _capturedExitCode);
+            return captured switch
+            {
+                null => TryReadExitCode(),
+                int exitCode => exitCode,
+                _ => null,
+            };
+        }
+    }
 
     private int? TryReadExitCode()
     {
@@ -487,12 +501,16 @@ internal sealed class MtpServerProcess : IMtpServerHost
             // Capture before killing, so an application that already exited on its own reports its real exit
             // code rather than the kill's, and before Dispose(), after which the Process cannot be read.
             int? exitCode = TryReadExitCode();
+            Volatile.Write(ref _capturedExitCode, exitCode is int captured ? captured : NoExitCode);
             bool killed = SafeKill(_process, _logger);
 
             // Preserve the race where the process exits naturally between the first read and SafeKill's
             // HasExited check, but never publish the operating system's forced-termination status as though
             // it were an application-returned exit code.
-            Volatile.Write(ref _capturedExitCode, exitCode ?? (!killed ? TryReadExitCode() : null));
+            if (exitCode is null && !killed && TryReadExitCode() is int racedExitCode)
+            {
+                Volatile.Write(ref _capturedExitCode, racedExitCode);
+            }
 
             _process.Dispose();
         }
