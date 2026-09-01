@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="VSTestNoBuild">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
@@ -12,6 +12,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <IsTestProject>true</IsTestProject>
     <UseWindowsAppVSTestRecipe>true</UseWindowsAppVSTestRecipe>
+    <WindowsAppVSTestNoBuildRequested>$(VSTestNoBuild)</WindowsAppVSTestNoBuildRequested>
     <VSTestNoBuild>true</VSTestNoBuild>
     <Nullable>enable</Nullable>
   </PropertyGroup>

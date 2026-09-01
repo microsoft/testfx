@@ -1,5 +1,22 @@
 <Project>
 
+  <PropertyGroup Condition="'$(UseWindowsAppVSTestRecipe)' == 'true' AND '$(VSTestSessionCorrelationId)' != ''">
+    <_WindowsAppVSTestRestoreMarker>$(BaseIntermediateOutputPath)windows-app-vstest-restore-$(VSTestSessionCorrelationId).marker</_WindowsAppVSTestRestoreMarker>
+    <_WindowsAppVSTestResponseFile>$(BaseIntermediateOutputPath)windows-app-vstest-$(VSTestSessionCorrelationId).rsp</_WindowsAppVSTestResponseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UseWindowsAppVSTestRecipe)' == 'true' AND '$(_WindowsAppVSTestResponseFile)' == ''">
+    <_WindowsAppVSTestResponseFile>$(BaseIntermediateOutputPath)windows-app-vstest-$(MSBuildProcessId).rsp</_WindowsAppVSTestResponseFile>
+  </PropertyGroup>
+
+  <Target Name="_RecordWindowsAppVSTestRestore"
+          AfterTargets="Restore"
+          Condition="'$(_WindowsAppVSTestRestoreMarker)' != ''">
+    <WriteLinesToFile File="$(_WindowsAppVSTestRestoreMarker)"
+                      Lines="restore"
+                      Overwrite="true" />
+  </Target>
+
   <Target Name="_PrepareWindowsAppVSTestRecipe"
           BeforeTargets="_VSTestConsole;_VSTestMSBuild"
           Condition="'$(UseWindowsAppVSTestRecipe)' == 'true'">
@@ -26,7 +43,12 @@
     <Error Condition="'@(_WindowsAppMSBuild)' == ''"
            Text="Building this Windows application test requires Visual Studio with the Universal Windows Platform workload." />
 
-    <Exec Command="&quot;@(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; /restore /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:IsTestProject=false /p:UseUwpTools=$(UseUwp) /nologo" />
+    <PropertyGroup>
+      <_WindowsAppVSTestRestoreArgument Condition="Exists('$(_WindowsAppVSTestRestoreMarker)')">/restore</_WindowsAppVSTestRestoreArgument>
+    </PropertyGroup>
+
+    <Exec Command="&quot;@(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; $(_WindowsAppVSTestRestoreArgument) /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:IsTestProject=false /p:UseUwpTools=$(UseUwp) /nologo"
+          Condition="'$(WindowsAppVSTestNoBuildRequested)' != 'true'" />
 
     <ItemGroup>
       <_WindowsAppVSTestRecipe Include="$(MSBuildProjectDirectory)\bin\$(Platform)\$(Configuration)\**\*.build.appxrecipe" />
@@ -39,20 +61,87 @@
       <!-- Suppress the SDK's DLL-based VSTest task; the AppX recipe is run directly below. -->
       <IsTestProject>false</IsTestProject>
     </PropertyGroup>
+
+    <OnError ExecuteTargets="_CleanWindowsAppVSTestFiles" />
   </Target>
 
   <Target Name="_RunWindowsAppVSTestRecipe"
           AfterTargets="_VSTestConsole;_VSTestMSBuild"
           Condition="'$(UseWindowsAppVSTestRecipe)' == 'true'">
     <PropertyGroup>
-      <_WindowsAppVSTestArguments>&quot;@(_WindowsAppVSTestRecipe)&quot; /Platform:$(PlatformTarget) /Framework:FrameworkUap10</_WindowsAppVSTestArguments>
-      <_WindowsAppVSTestArguments Condition="'$(VSTestTestCaseFilter)' != ''">$(_WindowsAppVSTestArguments) /TestCaseFilter:&quot;$(VSTestTestCaseFilter)&quot;</_WindowsAppVSTestArguments>
-      <_WindowsAppVSTestArguments Condition="'$(VSTestLogger)' != ''">$(_WindowsAppVSTestArguments) /Logger:&quot;$(VSTestLogger)&quot;</_WindowsAppVSTestArguments>
-      <_WindowsAppVSTestArguments Condition="'$(VSTestResultsDirectory)' != ''">$(_WindowsAppVSTestArguments) /ResultsDirectory:&quot;$(VSTestResultsDirectory)&quot;</_WindowsAppVSTestArguments>
-      <_WindowsAppVSTestArguments Condition="'$(VSTestListTests)' == 'true'">$(_WindowsAppVSTestArguments) /ListTests</_WindowsAppVSTestArguments>
+      <_WindowsAppVSTestSettings>$([MSBuild]::ValueOrDefault('$(VSTestSetting)', '$(RunSettingsFilePath)'))</_WindowsAppVSTestSettings>
+      <_WindowsAppVSTestVerbosity>minimal</_WindowsAppVSTestVerbosity>
+      <_WindowsAppVSTestVerbosity Condition="'$(VSTestVerbosity)' == 'q' OR '$(VSTestVerbosity)' == 'quiet'">quiet</_WindowsAppVSTestVerbosity>
+      <_WindowsAppVSTestVerbosity Condition="'$(VSTestVerbosity)' == 'n' OR '$(VSTestVerbosity)' == 'normal' OR '$(VSTestVerbosity)' == 'd' OR '$(VSTestVerbosity)' == 'detailed' OR '$(VSTestVerbosity)' == 'diag' OR '$(VSTestVerbosity)' == 'diagnostic'">normal</_WindowsAppVSTestVerbosity>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameCrash)' == 'true'">CollectDump</_WindowsAppVSTestBlameOptions>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameCrashCollectAlways)' == 'true'">$(_WindowsAppVSTestBlameOptions);CollectAlways=true</_WindowsAppVSTestBlameOptions>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameCrashDumpType)' != ''">$(_WindowsAppVSTestBlameOptions);DumpType=$(VSTestBlameCrashDumpType)</_WindowsAppVSTestBlameOptions>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameHang)' == 'true' AND '$(_WindowsAppVSTestBlameOptions)' != ''">$(_WindowsAppVSTestBlameOptions);CollectHangDump</_WindowsAppVSTestBlameOptions>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameHang)' == 'true' AND '$(_WindowsAppVSTestBlameOptions)' == ''">CollectHangDump</_WindowsAppVSTestBlameOptions>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameHangDumpType)' != ''">$(_WindowsAppVSTestBlameOptions);HangDumpType=$(VSTestBlameHangDumpType)</_WindowsAppVSTestBlameOptions>
+      <_WindowsAppVSTestBlameOptions Condition="'$(VSTestBlameHangTimeout)' != ''">$(_WindowsAppVSTestBlameOptions);TestTimeout=$(VSTestBlameHangTimeout)</_WindowsAppVSTestBlameOptions>
     </PropertyGroup>
 
-    <Exec Command="&quot;@(_WindowsAppVSTestConsole)&quot; $(_WindowsAppVSTestArguments)" />
+    <ItemGroup>
+      <_WindowsAppVSTestLogger Include="$(VSTestLogger)" />
+      <_WindowsAppVSTestConsoleLogger Include="@(_WindowsAppVSTestLogger)"
+                                     Condition="$([System.String]::Copy('%(Identity)').ToLowerInvariant().StartsWith('console'))" />
+      <_WindowsAppVSTestCollector Include="$(VSTestCollect)" />
+      <_WindowsAppVSTestCliSetting Include="$([System.Text.RegularExpressions.Regex]::Replace('$(VSTestCLIRunSettings)', '[\r\n]+', ';').Replace('*', '%2A').Replace('?', '%3F').Replace('&quot;', '\&quot;'))" />
+      <_WindowsAppVSTestAdapterPath Include="$(VSTestTestAdapterPath)" />
+
+      <_WindowsAppVSTestArgument Include="/Settings:&quot;$([MSBuild]::Escape('$(_WindowsAppVSTestSettings)'))&quot;"
+                                Condition="'$(_WindowsAppVSTestSettings)' != ''" />
+      <_WindowsAppVSTestArgument Include="@(_WindowsAppVSTestAdapterPath->'/TestAdapterPath:&quot;%(Identity)&quot;')" />
+      <_WindowsAppVSTestArgument Include="/Framework:FrameworkUap10" />
+      <_WindowsAppVSTestArgument Include="/Platform:$(PlatformTarget)"
+                                Condition="'$(PlatformTarget)' != '' AND !$([System.String]::Copy('$(PlatformTarget)').Contains('AnyCPU'))" />
+      <_WindowsAppVSTestArgument Include="/TestCaseFilter:&quot;$([MSBuild]::Escape('$(VSTestTestCaseFilter)'))&quot;"
+                                Condition="'$(VSTestTestCaseFilter)' != ''" />
+      <_WindowsAppVSTestArgument Include="@(_WindowsAppVSTestLogger->'/Logger:&quot;%(Identity)&quot;')" />
+      <_WindowsAppVSTestArgument Include="/ResultsDirectory:&quot;$([MSBuild]::Escape('$(VSTestResultsDirectory)'))&quot;"
+                                Condition="'$(VSTestResultsDirectory)' != ''" />
+      <_WindowsAppVSTestArgument Include="/ListTests" Condition="'$(VSTestListTests)' == 'true'" />
+      <_WindowsAppVSTestArgument Include="/Diag:&quot;$([MSBuild]::Escape('$(VSTestDiag)'))&quot;" Condition="'$(VSTestDiag)' != ''" />
+      <_WindowsAppVSTestArgument Include="@(_WindowsAppVSTestRecipe->'&quot;%(Identity)&quot;')" />
+      <_WindowsAppVSTestArgument Include="/Logger:Console%3BVerbosity=$(_WindowsAppVSTestVerbosity)"
+                                Condition="'@(_WindowsAppVSTestConsoleLogger)' == '' AND '$(_WindowsAppVSTestSettings)' == ''" />
+      <_WindowsAppVSTestArgument Include="/Logger:Console"
+                                Condition="'@(_WindowsAppVSTestConsoleLogger)' == '' AND '$(_WindowsAppVSTestSettings)' != ''" />
+      <_WindowsAppVSTestArgument Include="/Blame:$([MSBuild]::Escape('$(_WindowsAppVSTestBlameOptions)'))"
+                                Condition="'$(_WindowsAppVSTestBlameOptions)' != ''" />
+      <_WindowsAppVSTestArgument Include="/Blame"
+                                Condition="'$(VSTestBlame)' == 'true' AND '$(_WindowsAppVSTestBlameOptions)' == ''" />
+      <_WindowsAppVSTestArgument Include="@(_WindowsAppVSTestCollector->'/Collect:&quot;%(Identity)&quot;')" />
+      <_WindowsAppVSTestArgument Include="/TestAdapterPath:&quot;$([MSBuild]::Escape('$(TraceDataCollectorDirectoryPath)'))&quot;"
+                                Condition="('$(_WindowsAppVSTestSettings)' != '' OR '@(_WindowsAppVSTestCollector)' != '') AND '$(TraceDataCollectorDirectoryPath)' != ''" />
+      <_WindowsAppVSTestArgument Include="--" Condition="'@(_WindowsAppVSTestCliSetting)' != ''" />
+      <_WindowsAppVSTestArgument Include="@(_WindowsAppVSTestCliSetting->'&quot;%(Identity)&quot;')" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(_WindowsAppVSTestResponseFile)"
+                      Lines="@(_WindowsAppVSTestArgument)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+
+    <Exec Command="&quot;@(_WindowsAppVSTestConsole)&quot; @&quot;$(_WindowsAppVSTestResponseFile)&quot;" />
+    <Delete Files="$(_WindowsAppVSTestResponseFile);$(_WindowsAppVSTestRestoreMarker)" />
+
+    <OnError ExecuteTargets="_CleanWindowsAppVSTestFiles" />
+  </Target>
+
+  <Target Name="_CleanWindowsAppVSTestFiles"
+          AfterTargets="Clean"
+          Condition="'$(UseWindowsAppVSTestRecipe)' == 'true'">
+    <ItemGroup>
+      <_WindowsAppVSTestTemporaryFile Include="$(_WindowsAppVSTestResponseFile)" />
+      <_WindowsAppVSTestTemporaryFile Include="$(_WindowsAppVSTestRestoreMarker)"
+                                     Condition="'$(_WindowsAppVSTestRestoreMarker)' != ''" />
+      <_WindowsAppVSTestTemporaryFile Include="$(BaseIntermediateOutputPath)windows-app-vstest-*.rsp" />
+      <_WindowsAppVSTestTemporaryFile Include="$(BaseIntermediateOutputPath)windows-app-vstest-restore-*.marker" />
+    </ItemGroup>
+
+    <Delete Files="@(_WindowsAppVSTestTemporaryFile)" />
   </Target>
 
 </Project>

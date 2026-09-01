@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="VSTestNoBuild">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -12,6 +12,7 @@
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <IsTestProject>true</IsTestProject>
     <UseWindowsAppVSTestRecipe>true</UseWindowsAppVSTestRecipe>
+    <WindowsAppVSTestNoBuildRequested>$(VSTestNoBuild)</WindowsAppVSTestNoBuildRequested>
     <VSTestNoBuild>true</VSTestNoBuild>
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
