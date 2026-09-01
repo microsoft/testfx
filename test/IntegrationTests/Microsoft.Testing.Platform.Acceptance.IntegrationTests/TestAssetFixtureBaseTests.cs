@@ -103,6 +103,73 @@ public sealed class TestAssetFixtureBaseTests
         Assert.AreEqual(0, savedSeconds);
     }
 
+    [TestMethod]
+    public async Task AcceptanceCacheCircuitBreaker_SuccessfulProbeEnablesWaitingAttempts()
+    {
+        using TempDirectory cacheRoot = new();
+        using CircuitBreakerProxy firstCircuitBreaker = new(cacheRoot.Path);
+        using CircuitBreakerProxy secondCircuitBreaker = new(cacheRoot.Path);
+        using CacheLeaseProxy probe = await firstCircuitBreaker.EnterAsync();
+        Task<CacheLeaseProxy> waitingAttempt = secondCircuitBreaker.EnterAsync();
+
+        Assert.IsTrue(probe.ShouldUseCache);
+        Assert.IsFalse(waitingAttempt.IsCompleted);
+
+        probe.Complete(succeeded: true);
+
+        using CacheLeaseProxy attempt = await waitingAttempt;
+        Assert.IsTrue(attempt.ShouldUseCache);
+        attempt.Complete(succeeded: true);
+    }
+
+    [TestMethod]
+    public async Task AcceptanceCacheCircuitBreaker_FailedProbeDisablesWaitingAndFutureAttempts()
+    {
+        using TempDirectory cacheRoot = new();
+        using CircuitBreakerProxy firstCircuitBreaker = new(cacheRoot.Path);
+        using CircuitBreakerProxy secondCircuitBreaker = new(cacheRoot.Path);
+        using CacheLeaseProxy probe = await firstCircuitBreaker.EnterAsync();
+        Task<CacheLeaseProxy> waitingAttempt = secondCircuitBreaker.EnterAsync();
+
+        probe.Complete(succeeded: false);
+
+        using CacheLeaseProxy attempt = await waitingAttempt;
+        using CacheLeaseProxy laterAttempt = await firstCircuitBreaker.EnterAsync();
+        Assert.IsFalse(attempt.ShouldUseCache);
+        Assert.IsFalse(laterAttempt.ShouldUseCache);
+    }
+
+    [TestMethod]
+    public async Task AcceptanceCacheCircuitBreaker_FailureAfterProbeDisablesFutureAttempts()
+    {
+        using TempDirectory cacheRoot = new();
+        using CircuitBreakerProxy firstCircuitBreaker = new(cacheRoot.Path);
+        using CircuitBreakerProxy secondCircuitBreaker = new(cacheRoot.Path);
+        using CacheLeaseProxy probe = await firstCircuitBreaker.EnterAsync();
+        probe.Complete(succeeded: true);
+        using CacheLeaseProxy attempt = await secondCircuitBreaker.EnterAsync();
+
+        attempt.Complete(succeeded: false);
+
+        using CacheLeaseProxy laterAttempt = await firstCircuitBreaker.EnterAsync();
+        Assert.IsFalse(laterAttempt.ShouldUseCache);
+    }
+
+    [TestMethod]
+    public async Task AcceptanceCacheCircuitBreaker_AbandonedProbeDisablesWaitingAttempts()
+    {
+        using TempDirectory cacheRoot = new();
+        using CircuitBreakerProxy firstCircuitBreaker = new(cacheRoot.Path);
+        using CircuitBreakerProxy secondCircuitBreaker = new(cacheRoot.Path);
+        CacheLeaseProxy probe = await firstCircuitBreaker.EnterAsync();
+        Task<CacheLeaseProxy> waitingAttempt = secondCircuitBreaker.EnterAsync();
+
+        probe.Dispose();
+
+        using CacheLeaseProxy attempt = await waitingAttempt;
+        Assert.IsFalse(attempt.ShouldUseCache);
+    }
+
     private static bool TryReadCacheStatistics(
         IReadOnlyList<string> outputLines,
         out int hitCount,
@@ -138,5 +205,49 @@ public sealed class TestAssetFixtureBaseTests
         MethodInfo method = typeof(TestAssetFixtureBase).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)
             ?? throw new InvalidOperationException($"Could not find {nameof(TestAssetFixtureBase)}.{methodName}.");
         return (T)method.Invoke(null, arguments)!;
+    }
+
+    private sealed class CircuitBreakerProxy : IDisposable
+    {
+        private static readonly Type CircuitBreakerType = typeof(TestAssetFixtureBase).Assembly.GetType(
+            "Microsoft.Testing.TestInfrastructure.AcceptanceCacheCircuitBreaker",
+            throwOnError: true)!;
+
+        private static readonly MethodInfo EnterAsyncMethod = CircuitBreakerType.GetMethod("EnterAsync")!;
+
+        private readonly object _instance;
+
+        public CircuitBreakerProxy(string cacheRoot)
+            => _instance = Activator.CreateInstance(CircuitBreakerType, cacheRoot)!;
+
+        public async Task<CacheLeaseProxy> EnterAsync()
+        {
+            object resultTask = EnterAsyncMethod.Invoke(_instance, [CancellationToken.None])!;
+            await (Task)resultTask;
+            object lease = resultTask.GetType().GetProperty("Result")!.GetValue(resultTask)!;
+            return new CacheLeaseProxy(lease);
+        }
+
+        public void Dispose() => ((IDisposable)_instance).Dispose();
+    }
+
+    private sealed class CacheLeaseProxy : IDisposable
+    {
+        private readonly object _instance;
+        private readonly MethodInfo _completeMethod;
+
+        public CacheLeaseProxy(object instance)
+        {
+            _instance = instance;
+            Type leaseType = instance.GetType();
+            _completeMethod = leaseType.GetMethod("Complete")!;
+            ShouldUseCache = (bool)leaseType.GetProperty("ShouldUseCache")!.GetValue(instance)!;
+        }
+
+        public bool ShouldUseCache { get; }
+
+        public void Complete(bool succeeded) => _completeMethod.Invoke(_instance, [succeeded]);
+
+        public void Dispose() => ((IDisposable)_instance).Dispose();
     }
 }

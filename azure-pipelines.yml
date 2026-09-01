@@ -435,9 +435,9 @@ stages:
         # skippable for samples-only and XML-doc-only PRs.
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
         # A completely cold acceptance cache builds every generated fixture. Keep enough headroom
-        # for that bootstrap path while retaining a bounded timeout that still detects pathologically
-        # slow or hung agents. Warm PR runs remain substantially faster.
-        timeoutInMinutes: 150
+        # for that bootstrap path; warm PR runs remain substantially faster and the test command
+        # retains its existing failure semantics.
+        timeoutInMinutes: 120
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open

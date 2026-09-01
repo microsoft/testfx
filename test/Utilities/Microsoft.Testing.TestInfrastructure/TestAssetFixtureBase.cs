@@ -26,6 +26,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     private const string CacheRootEnvironmentVariable = "TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT";
     private const string CacheLogRootEnvironmentVariable = "TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT";
 
+    private static readonly ConcurrentDictionary<string, AcceptanceCacheCircuitBreaker> AcceptanceCacheCircuitBreakers = new(StringComparer.OrdinalIgnoreCase);
     private static int s_cacheBinlogCounter;
 
     private readonly ConcurrentDictionary<string /* asset ID */, TestAsset> _testAssets = new();
@@ -172,6 +173,23 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
                 cancellationToken: cancellationToken);
         }
 
+        AcceptanceCacheCircuitBreaker cacheCircuitBreaker = AcceptanceCacheCircuitBreakers.GetOrAdd(
+            cacheConfiguration.CacheRoot,
+            static cacheRoot => new AcceptanceCacheCircuitBreaker(cacheRoot));
+        using AcceptanceCacheLease cacheLease = await cacheCircuitBreaker.EnterAsync(cancellationToken);
+        if (!cacheLease.ShouldUseCache)
+        {
+            Console.WriteLine(
+                $"Skipping the cached {cacheVariant} build of acceptance asset '{testAsset.AssetId}' because an earlier "
+                + "acceptance MSBuild cache attempt failed; using dotnet build.");
+            return await DotnetCli.RunAsync(
+                dotnetBuildArguments,
+                failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
+                warnAsError: false,
+                callerMemberName: $"{binlogBaseFileName}_CacheBypass",
+                cancellationToken: cancellationToken);
+        }
+
         string projectPath = ResolveEntryProject(testAsset.TargetAssetPath, testAsset.AssetId);
         int cacheBuildId = Interlocked.Increment(ref s_cacheBinlogCounter);
         string binlogPath = Path.Combine(
@@ -224,6 +242,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
         if (exitCode == 0)
         {
+            cacheLease.Complete(succeeded: true);
             ReportCacheStatistics(
                 testAsset.AssetId,
                 cacheVariant,
@@ -259,6 +278,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         // Cache authentication, transport, or plugin failures must not make acceptance validation less
         // reliable. Re-run through the established dotnet build path; a real source failure is then
         // reported exactly as it was before acceptance caching was enabled.
+        cacheLease.Complete(succeeded: false);
         Console.WriteLine(
             $"The cached {cacheVariant} build of acceptance asset '{testAsset.AssetId}' failed with exit code {exitCode}; "
             + $"falling back to dotnet build.{Environment.NewLine}"
@@ -558,4 +578,163 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     }
 
     private sealed record CacheConfiguration(string Mode, string CacheRoot, string LogRoot, string AssetKey);
+}
+
+internal sealed class AcceptanceCacheCircuitBreaker : IDisposable
+{
+    private const int Unknown = 0;
+    private const int Enabled = 1;
+    private const int Disabled = 2;
+    private const int SharingViolationHResult = unchecked((int)0x80070020);
+    private const int LockViolationHResult = unchecked((int)0x80070021);
+
+    private readonly string _disabledMarkerPath;
+    private readonly string _enabledMarkerPath;
+    private readonly SemaphoreSlim _initialProbeLock = new(1, 1);
+    private readonly string _probeLockPath;
+    private int _state;
+
+    public AcceptanceCacheCircuitBreaker(string cacheRoot)
+    {
+        string stateDirectory = Path.Combine(cacheRoot, "CircuitBreaker");
+        Directory.CreateDirectory(stateDirectory);
+        _disabledMarkerPath = Path.Combine(stateDirectory, "disabled");
+        _enabledMarkerPath = Path.Combine(stateDirectory, "enabled");
+        _probeLockPath = Path.Combine(stateDirectory, "probe.lock");
+    }
+
+    public async Task<AcceptanceCacheLease> EnterAsync(CancellationToken cancellationToken)
+    {
+        int state = GetState();
+        if (state != Unknown)
+        {
+            return new AcceptanceCacheLease(this, shouldUseCache: state == Enabled);
+        }
+
+        await _initialProbeLock.WaitAsync(cancellationToken);
+        FileStream? probeLock = null;
+        bool ownsProbe = false;
+        try
+        {
+            while ((state = GetState()) == Unknown)
+            {
+                try
+                {
+                    probeLock = new FileStream(_probeLockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                    state = GetState();
+                    if (state == Unknown)
+                    {
+                        ownsProbe = true;
+                        return new AcceptanceCacheLease(this, probeLock);
+                    }
+
+                    break;
+                }
+                catch (IOException ex) when (ex.HResult is SharingViolationHResult or LockViolationHResult)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+                }
+            }
+        }
+        finally
+        {
+            if (!ownsProbe)
+            {
+                probeLock?.Dispose();
+                _initialProbeLock.Release();
+            }
+        }
+
+        return new AcceptanceCacheLease(this, shouldUseCache: state == Enabled);
+    }
+
+    internal void Complete(bool succeeded, FileStream? probeLock)
+    {
+        if (!succeeded)
+        {
+            Interlocked.Exchange(ref _state, Disabled);
+            CreateMarker(_disabledMarkerPath);
+        }
+        else if (probeLock is not null)
+        {
+            Volatile.Write(ref _state, Enabled);
+            CreateMarker(_enabledMarkerPath);
+        }
+
+        if (probeLock is not null)
+        {
+            probeLock.Dispose();
+            _initialProbeLock.Release();
+        }
+    }
+
+    private int GetState()
+    {
+        int state = Volatile.Read(ref _state);
+        if (state == Disabled || File.Exists(_disabledMarkerPath))
+        {
+            Volatile.Write(ref _state, Disabled);
+            return Disabled;
+        }
+
+        if (state == Enabled || File.Exists(_enabledMarkerPath))
+        {
+            Volatile.Write(ref _state, Enabled);
+            return Enabled;
+        }
+
+        return Unknown;
+    }
+
+    private static void CreateMarker(string path)
+    {
+        try
+        {
+            File.WriteAllText(path, string.Empty);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Console.WriteLine($"Could not persist acceptance MSBuild cache circuit-breaker state: {ex.Message}");
+        }
+    }
+
+    public void Dispose() => _initialProbeLock.Dispose();
+}
+
+internal sealed class AcceptanceCacheLease : IDisposable
+{
+    private readonly AcceptanceCacheCircuitBreaker _circuitBreaker;
+    private readonly FileStream? _probeLock;
+    private int _completed;
+
+    public AcceptanceCacheLease(AcceptanceCacheCircuitBreaker circuitBreaker, bool shouldUseCache)
+    {
+        _circuitBreaker = circuitBreaker;
+        ShouldUseCache = shouldUseCache;
+    }
+
+    public AcceptanceCacheLease(AcceptanceCacheCircuitBreaker circuitBreaker, FileStream probeLock)
+    {
+        _circuitBreaker = circuitBreaker;
+        _probeLock = probeLock;
+        ShouldUseCache = true;
+    }
+
+    public bool ShouldUseCache { get; }
+
+    public void Complete(bool succeeded)
+    {
+        if (Interlocked.Exchange(ref _completed, 1) == 0)
+        {
+            _circuitBreaker.Complete(succeeded, _probeLock);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (ShouldUseCache)
+        {
+            Complete(succeeded: false);
+        }
+    }
 }
