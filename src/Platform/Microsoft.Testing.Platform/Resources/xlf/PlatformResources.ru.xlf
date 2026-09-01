@@ -304,7 +304,7 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
         <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
-        <target state="new">Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</target>
+        <target state="translated">Параметр "--{0}" использует синтаксис VSTest, который не поддерживается Microsoft.Testing.Platform.</target>
         <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestReplacementSuggestion">

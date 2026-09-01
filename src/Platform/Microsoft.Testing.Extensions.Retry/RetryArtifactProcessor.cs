@@ -171,7 +171,7 @@ internal static class RetryArtifactProcessor
             }
             catch (Exception ex)
             {
-                logger.LogWarning($"Retry artifact post-processor '{processor.Uid}' failed: {ex}");
+                await logger.LogWarningAsync($"Retry artifact post-processor '{processor.Uid}' failed: {ex}").ConfigureAwait(false);
                 await outputDevice.DisplayAsync(
                     producer,
                     new WarningMessageOutputDeviceData(string.Format(

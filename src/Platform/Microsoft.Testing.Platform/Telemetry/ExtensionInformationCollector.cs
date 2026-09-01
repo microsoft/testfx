@@ -60,7 +60,7 @@ internal static class ExtensionInformationCollector
         }
 
         writer.WriteEndArray();
-        writer.Flush();
+        await writer.FlushAsync().ConfigureAwait(false);
 
         return Encoding.UTF8.GetString(stream.ToArray());
 #else

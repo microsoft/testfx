@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -33,7 +33,7 @@ internal sealed partial class TestHostBuilder
 
         if (OperatingSystem.IsBrowser())
         {
-            logger.LogWarning($"Test Host Controller connection is not supported on WebAssembly targets.");
+            await logger.LogWarningAsync($"Test Host Controller connection is not supported on WebAssembly targets.").ConfigureAwait(false);
             return null;
         }
 
