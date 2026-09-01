@@ -211,3 +211,11 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Task 7: Monthly Activity issue #10381 (August 2026) still open and current - rewrote with this run's entry.
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-09-01 Notes
+- Task 7: Closed August 2026 Monthly Activity issue #10381 (month rollover). Created new "[perf-improver] Monthly Activity 2026-09" issue for September.
+- Task 2: dispatched explore-agent scan of MSTestAdapter.PlatformServices remaining files (ReflectionOperations/ReflectionHelper/TestDeployment/DeploymentUtility - already cached via _attributeCache with PERF comments), Platform IPC/ServerMode/DotnetTest (DotnetTestDataConsumer already single-pass optimized per prior PRs; one remaining traits.Select() gated behind IsIDE+Discovered state, low volume, not worth fixing), Assert.ThrowsException.cs/ConditionBaseAttribute.cs (no LINQ/reflection), MSTest.Analyzers (Any() over GetAttributes() is idiomatic once-per-symbol Roslyn analyzer pattern, not a hot loop). No new hot-path findings.
+- Task 4: no open PRs with "[perf-improver]" title prefix (list_pull_requests open, 0 matches).
+- Task 5: not explicitly re-checked this run (deprioritized in favor of Task 2/4/7 given empty backlog trend); no known open performance-labeled issues from recent runs.
+- Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
+- Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 7 done this run (month rollover, new issue created).
