@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -96,6 +97,116 @@ public sealed class CtrfReportGeneratorLifecycleTests
     }
 
     [TestMethod]
+    public async Task ControllerChild_WritesPersistentJournalAndCompletesAfterArtifactPublicationAsync()
+    {
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true);
+        var sessionContext = new TestSessionContextStub();
+
+        await context.Generator.OnTestSessionStartingAsync(sessionContext).ConfigureAwait(false);
+        await context.Generator.ConsumeAsync(
+            null!,
+            CreateMessage("passed", PassedTestNodeStateProperty.CachedInstance),
+            CancellationToken.None).ConfigureAwait(false);
+        await context.Generator.OnTestSessionFinishingAsync(sessionContext).ConfigureAwait(false);
+
+        Assert.HasCount(1, context.JournalContentsAtArtifactPublication);
+        Assert.DoesNotContain(@"""Type"":2", context.JournalContentsAtArtifactPublication[0]);
+        Assert.Contains(@"""Type"":2", context.JournalStream.GetUtf8Content());
+        Assert.IsTrue(context.JournalStream.FlushCount is 2 or 3);
+        Assert.IsTrue(context.JournalStream.IsDisposed);
+        _fileSystemMock.Verify(
+            fileSystem => fileSystem.NewFileStream(
+                context.JournalPath,
+                FileMode.Append,
+                FileAccess.Write,
+                FileShare.ReadWrite),
+            Times.Once);
+
+        context.Generator.Dispose();
+    }
+
+    [TestMethod]
+    public async Task ControllerChild_WhenJournalWriteFails_StillPublishesNormalArtifactAsync()
+    {
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, journalWriteFails: true);
+        var sessionContext = new TestSessionContextStub();
+
+        await context.Generator.OnTestSessionStartingAsync(sessionContext).ConfigureAwait(false);
+        await context.Generator.ConsumeAsync(
+            null!,
+            CreateMessage("passed", PassedTestNodeStateProperty.CachedInstance),
+            CancellationToken.None).ConfigureAwait(false);
+        await context.Generator.OnTestSessionFinishingAsync(sessionContext).ConfigureAwait(false);
+
+        Assert.HasCount(1, context.PublishedArtifacts);
+        Assert.IsTrue(context.JournalStream.IsDisposed);
+        using var document = JsonDocument.Parse(context.ReportStream.GetUtf8Content());
+        Assert.AreEqual(1, document.RootElement.GetProperty("results").GetProperty("summary").GetProperty("passed").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task ControllerChild_ConsumeDoesNotWaitForJournalDiskWriteAsync()
+    {
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, blockJournalWrites: true);
+        var sessionContext = new TestSessionContextStub();
+
+        Task start = context.Generator.OnTestSessionStartingAsync(sessionContext);
+        Assert.IsTrue(start.IsCompleted);
+        await start.ConfigureAwait(false);
+        Task consume = context.Generator.ConsumeAsync(
+            null!,
+            CreateMessage("passed", PassedTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+        Assert.IsTrue(consume.IsCompleted);
+        await consume.ConfigureAwait(false);
+
+        context.JournalStream.ReleaseWrites();
+        await context.Generator.OnTestSessionFinishingAsync(sessionContext).ConfigureAwait(false);
+
+        Assert.Contains(@"""Type"":2", context.JournalStream.GetUtf8Content());
+    }
+
+    [TestMethod]
+    public async Task ControllerChild_BoundedJournalOverflow_DoesNotBlockAndNormalReportStillCompletesAsync()
+    {
+        GeneratorTestContext context = CreateGenerator(optionIsSet: true, isControllerChild: true, blockJournalWrites: true);
+        var sessionContext = new TestSessionContextStub();
+        int queueCapacity = (int)typeof(CtrfReportEngine).Assembly
+            .GetType("Microsoft.Testing.Extensions.ReportGeneratorBase`2", throwOnError: true)!
+            .GetField("JournalQueueCapacity", BindingFlags.Static | BindingFlags.NonPublic)!
+            .GetRawConstantValue()!;
+        int resultCount = queueCapacity + 1;
+
+        await context.Generator.OnTestSessionStartingAsync(sessionContext).ConfigureAwait(false);
+        await context.JournalStream.WaitForWriteStartAsync().ConfigureAwait(false);
+        for (int i = 0; i < resultCount; i++)
+        {
+            Task consume = context.Generator.ConsumeAsync(
+                null!,
+                CreateMessage(i.ToString(CultureInfo.InvariantCulture), PassedTestNodeStateProperty.CachedInstance),
+                CancellationToken.None);
+            Assert.IsTrue(consume.IsCompleted);
+            await consume.ConfigureAwait(false);
+        }
+
+        context.JournalStream.ReleaseWrites();
+        await context.Generator.OnTestSessionFinishingAsync(sessionContext).ConfigureAwait(false);
+
+        Assert.HasCount(1, context.PublishedArtifacts);
+        using var document = JsonDocument.Parse(context.ReportStream.GetUtf8Content());
+        Assert.AreEqual(
+            resultCount,
+            document.RootElement.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32());
+        context.LoggerMock.Verify(
+            logger => logger.Log(
+                LogLevel.Warning,
+                It.Is<string>(message => message.Contains("dropped", StringComparison.OrdinalIgnoreCase)),
+                null,
+                It.IsAny<Func<string, Exception?, string>>()),
+            Times.AtLeastOnce);
+    }
+
+    [TestMethod]
     public async Task OnTestSessionFinishingAsync_WithoutWarning_PublishesArtifactWithoutOutputAsync()
     {
         GeneratorTestContext context = CreateGenerator(optionIsSet: true);
@@ -113,24 +224,39 @@ public sealed class CtrfReportGeneratorLifecycleTests
             Times.Never);
     }
 
-    private GeneratorTestContext CreateGenerator(bool optionIsSet)
+    private GeneratorTestContext CreateGenerator(
+        bool optionIsSet,
+        bool isControllerChild = false,
+        bool journalWriteFails = false,
+        bool blockJournalWrites = false)
     {
         var reportStream = new MemoryFileStream();
+        var journalStream = new MemoryFileStream(journalWriteFails, blockJournalWrites);
+        const string journalPath = "report-recovery.jsonl";
         var messageBusMock = new Mock<IMessageBus>();
         var outputDeviceMock = new Mock<IOutputDevice>();
         var loggerFactoryMock = new Mock<ILoggerFactory>();
+        var loggerMock = new Mock<ILogger>();
         var testApplicationProcessExitCodeMock = new Mock<ITestApplicationProcessExitCode>();
         List<SessionFileArtifact> publishedArtifacts = [];
+        List<string> journalContentsAtArtifactPublication = [];
 
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystemMock
             .Setup(fileSystem => fileSystem.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>()))
             .Returns(reportStream);
+        _ = _fileSystemMock
+            .Setup(fileSystem => fileSystem.NewFileStream(journalPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            .Returns(journalStream);
         _ = _configurationMock.SetupGet(configuration => configuration[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(environment => environment.MachineName).Returns("MachineName");
         _ = _environmentMock
             .Setup(environment => environment.GetEnvironmentVariable(It.IsAny<string>()))
             .Returns("user");
+        _ = _environmentMock
+            .Setup(environment => environment.GetEnvironmentVariable(CtrfReportGenerator.JournalEnvironmentVariableName))
+            .Returns(journalPath);
+        _ = _environmentMock.SetupGet(environment => environment.ProcessId).Returns(42);
         _ = _testApplicationModuleInfoMock
             .Setup(moduleInfo => moduleInfo.GetCurrentTestApplicationFullPath())
             .Returns("TestAppPath");
@@ -139,18 +265,29 @@ public sealed class CtrfReportGeneratorLifecycleTests
         _ = _testFrameworkMock.SetupGet(testFramework => testFramework.DisplayName).Returns("Fake");
         _ = messageBusMock
             .Setup(messageBus => messageBus.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
-            .Callback<IDataProducer, IData>((_, data) => publishedArtifacts.Add((SessionFileArtifact)data))
+            .Callback<IDataProducer, IData>((_, data) =>
+            {
+                journalContentsAtArtifactPublication.Add(journalStream.GetUtf8Content());
+                publishedArtifacts.Add((SessionFileArtifact)data);
+            })
             .Returns(Task.CompletedTask);
         _ = loggerFactoryMock
             .Setup(loggerFactory => loggerFactory.CreateLogger(It.IsAny<string>()))
-            .Returns(Mock.Of<ILogger>());
+            .Returns(loggerMock.Object);
         _ = testApplicationProcessExitCodeMock
             .Setup(exitCode => exitCode.GetProcessExitCode())
             .Returns(0);
 
-        Dictionary<string, string[]> options = optionIsSet
-            ? new() { [CtrfReportGeneratorCommandLine.CtrfReportOptionName] = [] }
-            : [];
+        Dictionary<string, string[]> options = [];
+        if (optionIsSet)
+        {
+            options[CtrfReportGeneratorCommandLine.CtrfReportOptionName] = [];
+        }
+
+        if (isControllerChild)
+        {
+            options[PlatformCommandLineProvider.TestHostControllerPIDOptionKey] = ["1"];
+        }
 
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(_configurationMock.Object);
@@ -165,12 +302,17 @@ public sealed class CtrfReportGeneratorLifecycleTests
         serviceProvider.AddService(_testFrameworkMock.Object);
         serviceProvider.AddService(testApplicationProcessExitCodeMock.Object);
         serviceProvider.AddService(loggerFactoryMock.Object);
+        serviceProvider.AddService(new SystemTask());
 
         return new(
             new CtrfReportGenerator(serviceProvider),
             outputDeviceMock,
             publishedArtifacts,
-            reportStream);
+            reportStream,
+            journalStream,
+            journalContentsAtArtifactPublication,
+            journalPath,
+            loggerMock);
     }
 
     private static TestNodeUpdateMessage CreateMessage(string uid, IProperty state)
@@ -187,7 +329,11 @@ public sealed class CtrfReportGeneratorLifecycleTests
         CtrfReportGenerator generator,
         Mock<IOutputDevice> outputDeviceMock,
         List<SessionFileArtifact> publishedArtifacts,
-        MemoryFileStream reportStream)
+        MemoryFileStream reportStream,
+        MemoryFileStream journalStream,
+        List<string> journalContentsAtArtifactPublication,
+        string journalPath,
+        Mock<ILogger> loggerMock)
     {
         public CtrfReportGenerator Generator { get; } = generator;
 
@@ -196,6 +342,14 @@ public sealed class CtrfReportGeneratorLifecycleTests
         public List<SessionFileArtifact> PublishedArtifacts { get; } = publishedArtifacts;
 
         public MemoryFileStream ReportStream { get; } = reportStream;
+
+        public MemoryFileStream JournalStream { get; } = journalStream;
+
+        public List<string> JournalContentsAtArtifactPublication { get; } = journalContentsAtArtifactPublication;
+
+        public string JournalPath { get; } = journalPath;
+
+        public Mock<ILogger> LoggerMock { get; } = loggerMock;
     }
 
     private sealed class TestSessionContextStub : ITestSessionContext
@@ -207,7 +361,28 @@ public sealed class CtrfReportGeneratorLifecycleTests
 
     private sealed class MemoryFileStream : IFileStream
     {
-        private readonly MemoryStream _stream = new();
+        private readonly TaskCompletionSource<object?> _writeGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<object?> _writeStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly CountingMemoryStream _stream;
+
+        public MemoryFileStream()
+            : this(throwOnWrite: false, blockWrites: false)
+        {
+        }
+
+        public MemoryFileStream(bool throwOnWrite, bool blockWrites)
+        {
+            if (!blockWrites)
+            {
+                _writeGate.SetResult(null);
+            }
+
+            _stream = new(throwOnWrite, _writeGate.Task, _writeStarted);
+        }
+
+        public int FlushCount => _stream.FlushCount;
+
+        public bool IsDisposed { get; private set; }
 
         Stream IFileStream.Stream => _stream;
 
@@ -215,10 +390,58 @@ public sealed class CtrfReportGeneratorLifecycleTests
 
         public string GetUtf8Content() => Encoding.UTF8.GetString(_stream.ToArray());
 
-        void IDisposable.Dispose() => _stream.Dispose();
+        public Task WaitForWriteStartAsync() => _writeStarted.Task;
+
+        public void ReleaseWrites() => _writeGate.TrySetResult(null);
+
+        void IDisposable.Dispose()
+        {
+            IsDisposed = true;
+            _stream.Dispose();
+        }
 
 #if NETCOREAPP
         ValueTask IAsyncDisposable.DisposeAsync() => _stream.DisposeAsync();
 #endif
+
+        private sealed class CountingMemoryStream(
+            bool throwOnWrite,
+            Task writeGate,
+            TaskCompletionSource<object?> writeStarted) : MemoryStream
+        {
+            public int FlushCount { get; private set; }
+
+            public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                writeStarted.TrySetResult(null);
+                await writeGate.ConfigureAwait(false);
+                if (throwOnWrite)
+                {
+                    throw new IOException("Simulated journal write failure.");
+                }
+
+                await base.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            }
+
+#if NETCOREAPP
+            public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                writeStarted.TrySetResult(null);
+                await writeGate.ConfigureAwait(false);
+                if (throwOnWrite)
+                {
+                    throw new IOException("Simulated journal write failure.");
+                }
+
+                await base.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+#endif
+
+            public override void Flush()
+            {
+                FlushCount++;
+                base.Flush();
+            }
+        }
     }
 }

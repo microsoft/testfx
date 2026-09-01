@@ -284,22 +284,22 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
         <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
-        <target state="new">Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</target>
+        <target state="translated">Místo toho použijte '--crashdump' nebo '--hangdump', případně obojí. MTP odděluje diagnostiku chybových ukončení a zablokování, takže za kolektor blame nástroje VSTest neexistuje náhrada jedna ku jedné.</target>
         <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
         <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</target>
+        <target state="translated">MTP používá možnosti specifické pro jednotlivé kolektory. Informace o příslušné možnosti MTP najdete v dokumentaci k rozšíření.</target>
         <note>{Locked="MTP"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
-        <target state="new">For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</target>
+        <target state="translated">Pokud chcete dosáhnout srovnatelné úrovně podrobností výstupu konzoly, použijte '--output {0}'. Výstup konzoly MTP je nakonfigurovaný jinak, takže nejde o přesnou náhradu.</target>
         <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</target>
+        <target state="translated">MTP používá možnosti specifické pro jednotlivé reportéry, například '--report-trx', '--report-html' a '--report-junit'. Informace o příslušné možnosti MTP najdete v dokumentaci k rozšíření reportéru.</target>
         <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
@@ -309,12 +309,12 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestReplacementSuggestion">
         <source>Use {0} instead.</source>
-        <target state="new">Use {0} instead.</target>
+        <target state="translated">Místo toho použijte {0}.</target>
         <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
         <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
-        <target state="new">For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</target>
+        <target state="translated">Pro pokrytí kódu v MTP použijte '--coverage'. Nejde o přímou náhradu kolektoru 'XPlat Code Coverage' z frameworku Coverlet.</target>
         <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">

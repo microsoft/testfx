@@ -173,6 +173,12 @@ internal static class HtmlReportMerger
             merged["exitCode"] = exitCode;
         }
 
+        if (reports.Any(IsIncomplete))
+        {
+            merged["incomplete"] = true;
+            merged["runStatus"] = "aborted";
+        }
+
         return HtmlReportEngine.RenderReport(merged.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
     }
 
@@ -571,6 +577,11 @@ internal static class HtmlReportMerger
 
         return true;
     }
+
+    private static bool IsIncomplete(JsonObject report)
+        => report["incomplete"] is JsonValue value
+            && value.TryGetValue(out bool incomplete)
+            && incomplete;
 
     private static void CountOutcome(string outcome, ref int passed, ref int failed, ref int skipped, ref int timedOut, ref int errored)
     {

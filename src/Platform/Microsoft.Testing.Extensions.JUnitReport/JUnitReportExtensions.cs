@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport;
@@ -24,11 +24,15 @@ public static class JUnitReportExtensions
             throw new InvalidOperationException(ExtensionResources.JUnitReportRequiresArtifactPostProcessing);
         }
 
-        ReportProviderRegistration.AddReportProvider(
+        ReportProviderRegistration.AddReportProvider<JUnitReportGenerator, JUnitReport.CapturedTestResult>(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
+            JUnitReportGeneratorCommandLine.JUnitReportOptionName,
+            JUnitReportGenerator.JournalEnvironmentVariableName,
             () => new JUnitReportGeneratorCommandLine(),
-            serviceProvider => new JUnitReportGenerator(serviceProvider));
+            serviceProvider => new JUnitReportGenerator(serviceProvider),
+            (serviceProvider, metadata) => new JUnitReportGenerator(serviceProvider, metadata),
+            JUnitReportGenerator.DeserializeJournalRecord);
 
         artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new JUnitArtifactPostProcessor());
     }

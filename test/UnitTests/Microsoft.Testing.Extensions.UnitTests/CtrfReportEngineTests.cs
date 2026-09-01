@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -84,6 +84,23 @@ public class CtrfReportEngineTests
 
         JsonElement testArray = results.GetProperty("tests");
         Assert.AreEqual(3, testArray.GetArrayLength());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_WhenRecoveredAfterCrash_MarksEnvironmentIncomplete()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream, isIncomplete: true);
+
+        await engine.GenerateReportAsync([Captured("p1", "Recovered test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement extra = results.GetProperty("environment").GetProperty("extra");
+        Assert.IsTrue(extra.GetProperty("incomplete").GetBoolean());
+        Assert.AreEqual("aborted", extra.GetProperty("runStatus").GetString());
+        JsonElement test = Assert.ContainsSingle(results.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("Recovered test", test.GetProperty("name").GetString());
     }
 
     [TestMethod]
@@ -1147,15 +1164,15 @@ public class CtrfReportEngineTests
         Assert.AreNotEqual(document.RootElement.GetProperty("reportId").GetString(), runId);
     }
 
-    private CtrfReportEngine CreateEngine(MemoryFileStream stream)
+    private CtrfReportEngine CreateEngine(MemoryFileStream stream, bool isIncomplete = false)
     {
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>())).Returns(stream);
 
-        return CreateEngine();
+        return CreateEngine(isIncomplete);
     }
 
-    private CtrfReportEngine CreateEngine()
+    private CtrfReportEngine CreateEngine(bool isIncomplete = false)
     {
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
@@ -1175,7 +1192,8 @@ public class CtrfReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None));
+            CancellationToken.None,
+            IsIncomplete: isIncomplete));
     }
 
     internal sealed class MemoryFileStream : IFileStream

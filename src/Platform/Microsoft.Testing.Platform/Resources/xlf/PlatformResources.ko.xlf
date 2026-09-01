@@ -284,12 +284,12 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
         <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
-        <target state="new">Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</target>
+        <target state="translated">대신 '--crashdump' 및/또는 '--hangdump'를 사용하세요. MTP는 충돌 및 중단 진단을 분리하여 제공하므로, VSTest의 블레임 수집기를 일대일로 대체할 수는 없습니다.</target>
         <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
         <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</target>
+        <target state="translated">MTP는 수집기별 옵션을 사용합니다. 해당 MTP 옵션은 확장의 문서를 참조하세요.</target>
         <note>{Locked="MTP"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
@@ -299,22 +299,22 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</target>
+        <target state="translated">MTP는 '--report-trx', '--report-html', '--report-junit'과 같은 리포터별 옵션을 사용합니다. 해당 MTP 옵션은 리포터 확장의 문서를 참조하세요.</target>
         <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
         <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
-        <target state="new">Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</target>
+        <target state="translated">'--{0}' 옵션은 Microsoft.Testing.Platform에서 지원하지 않는 VSTest 구문을 사용합니다.</target>
         <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestReplacementSuggestion">
         <source>Use {0} instead.</source>
-        <target state="new">Use {0} instead.</target>
+        <target state="translated">{0}을(를) 대신 사용하세요.</target>
         <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
         <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
-        <target state="new">For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</target>
+        <target state="translated">MTP 코드 검사에는 '--coverage'를 사용하세요. 이 옵션은 Coverlet의 'XPlat Code Coverage' 수집기를 그대로 대체하지는 않습니다.</target>
         <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
