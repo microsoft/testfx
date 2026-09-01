@@ -261,6 +261,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
 
     private async Task ShutdownCoreAsync()
     {
+        CancellationToken serverCancellationToken = _serverCancellation.Token;
         try
         {
             // Start the application timeout before disposing the connection. Connection.Dispose closes the
@@ -301,12 +302,25 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             _logger.SafeLog(MtpClientLogLevel.Error, $"Tearing down the in-process MTP application threw: {ex}");
         }
 
-        // ShutdownAsync is the explicit failure-observing path. Rethrow only a callback fault after every owned
-        // resource has been handled; cancellation requested by this teardown is expected, and an abandoned
-        // callback is observed by ShutdownServerAsync's continuation instead.
+        // ShutdownAsync is the explicit failure-observing path. Rethrow a callback fault or independent
+        // cancellation after every owned resource has been handled; cancellation requested by this teardown
+        // is expected, and an abandoned callback is observed by ShutdownServerAsync's continuation instead.
         if (_serverTask.IsFaulted)
         {
             _ = await _serverTask.ConfigureAwait(false);
+        }
+        else if (_serverTask.IsCanceled)
+        {
+            try
+            {
+                _ = await _serverTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+                when (ex.CancellationToken == serverCancellationToken || serverCancellationToken.IsCancellationRequested)
+            {
+                // The callback honored cancellation after teardown requested it, either directly through the
+                // supplied token or through a linked token that carries a different identity.
+            }
         }
     }
 

@@ -170,9 +170,10 @@ internal interface IMtpServerClient : IDisposable
     /// watchdog). Both entry points share one teardown, so a following <see cref="IDisposable.Dispose"/> is
     /// safe and returns as soon as that teardown is done — a <c>using</c> block plus an
     /// <c>await client.ShutdownAsync()</c> before it leaves is the recommended pattern on those platforms.
-    /// For an in-process application, a callback failure that occurs after connection is rethrown once
-    /// teardown has finished. Synchronous <see cref="IDisposable.Dispose"/> reports that failure through the
-    /// configured logger instead so it cannot mask an exception already propagating from the caller.
+    /// For an in-process application, a callback fault or self-cancellation that occurs after connection is
+    /// rethrown once teardown has finished. Cancellation requested by teardown itself is expected and is not
+    /// rethrown. Synchronous <see cref="IDisposable.Dispose"/> reports callback failures through the configured
+    /// logger instead so cleanup cannot mask an exception already propagating from the caller.
     /// </remarks>
     Task ShutdownAsync();
 }

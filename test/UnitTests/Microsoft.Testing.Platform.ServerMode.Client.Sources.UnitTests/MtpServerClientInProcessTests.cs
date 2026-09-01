@@ -458,6 +458,58 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task ShutdownAsync_CallbackCancelsItselfAfterConnecting_PropagatesCancellation()
+    {
+        using var callbackCancellation = new CancellationTokenSource();
+        var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using MtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+            async (arguments, _) =>
+            {
+                using FakeMtpServer server = ConnectBack(arguments);
+                connected.TrySetResult(server);
+                await Task.Delay(Timeout.Infinite, callbackCancellation.Token);
+                return 0;
+            },
+            CreateOptions(),
+            TestContext.CancellationToken);
+
+        _ = await WithTimeoutAsync(connected.Task);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        callbackCancellation.Cancel();
+
+        TaskCanceledException exception = await Assert.ThrowsExactlyAsync<TaskCanceledException>(
+            () => WithTimeoutAsync(client.ShutdownAsync()));
+
+        Assert.AreEqual(callbackCancellation.Token, exception.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task ShutdownAsync_CallbackHonorsTeardownCancellationThroughLinkedToken_DoesNotThrow()
+    {
+        var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
+        MtpServerClientOptions options = CreateOptions();
+        options.ServerShutdownTimeout = TimeSpan.FromMilliseconds(100);
+        using MtpServerClient client = await MtpServerClient.LaunchInProcessAsync(
+            async (arguments, serverToken) =>
+            {
+                using FakeMtpServer server = ConnectBack(arguments);
+                using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(serverToken);
+                connected.TrySetResult(server);
+                await Task.Delay(Timeout.Infinite, linkedCancellation.Token);
+                return 0;
+            },
+            options,
+            TestContext.CancellationToken);
+
+        _ = await WithTimeoutAsync(connected.Task);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        await WithTimeoutAsync(client.ShutdownAsync());
+
+        Assert.IsNull(client.ServerExitCode, "A callback canceled by teardown did not return an application exit code.");
+    }
+
+    [TestMethod]
     [DoNotParallelize] // Measures overlapping timeout paths; thread-pool contention would measure unrelated tests instead.
     public async Task Dispose_BlockedHandlersAndCallback_ReturnsWithinTheDocumentedBound()
     {
