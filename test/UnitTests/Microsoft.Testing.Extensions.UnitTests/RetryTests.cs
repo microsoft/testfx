@@ -1299,7 +1299,8 @@ public class RetryTests
             int bytesRead = 0;
             while (bytesRead < buffer.Length)
             {
-                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken);
+                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken)
+                    .WithCancellationAsync(cancellationToken);
                 if (read == 0)
                 {
                     throw new EndOfStreamException("The retry pipe closed before the response was complete.");
