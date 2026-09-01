@@ -260,7 +260,5 @@ Note those conditions are evaluated per project, and a **class library** does no
 
 - [`Microsoft.Testing.Extensions.PackagedApp` package readme](../src/Platform/Microsoft.Testing.Extensions.PackagedApp/PACKAGE.md)
 - [RFC 017 — Test host launcher](RFCs/017-TestHost-Launcher.md)
-- [`UwpVSTestApp` sample](../samples/public/UwpVSTestApp) (packaged UWP, VSTest)
-- [`WinUIVSTestApp` sample](../samples/public/WinUIVSTestApp) (packaged WinUI, VSTest)
-- [`WinUIMtpPackagedApp` sample](../samples/public/WinUIMtpPackagedApp) (packaged, MTP)
-- [`WinUIMtpUnpackagedApp` sample](../samples/public/WinUIMtpUnpackagedApp) (unpackaged, MTP)
+- [`MSTestRunnerWinUI` sample](../samples/public/mstest-runner/MSTestRunnerWinUI) (packaged, MTP)
+- [`MSTestRunnerWinUIUnpackaged` sample](../samples/public/mstest-runner/MSTestRunnerWinUIUnpackaged) (unpackaged, MTP)
