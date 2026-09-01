@@ -54,6 +54,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         string bodyStartedSignalFilePath = Path.Combine(Path.GetTempPath(), $"mtp-cancellation-body-started-{Guid.NewGuid():N}.txt");
         File.Delete(signalFilePath);
         File.Delete(bodyStartedSignalFilePath);
+        MtpServerClient? client = null;
         try
         {
             // Signaled from the 'in-progress' test-node update, proving the platform recorded the test as
@@ -66,7 +67,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
             List<MtpTestNodeUpdate> allUpdates = [];
             object updatesGate = new();
 
-            using var client = MtpServerClient.Launch(source, CreateOptions(signalFilePath, bodyStartedSignalFilePath));
+            client = MtpServerClient.Launch(source, CreateOptions(signalFilePath, bodyStartedSignalFilePath));
 
             client.TestNodesUpdated += (_, e) =>
             {
@@ -84,7 +85,7 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
                 }
             };
 
-            _ = await client.InitializeAsync(testTimeoutToken);
+            _ = await client.InitializeAsync(testTimeoutToken).WaitAsync(WaitTimeout, testTimeoutToken);
 
             using CancellationTokenSource runCancellation = new();
             Task<MtpRunResult> runTask = client.RunTestsAsync(runCancellation.Token);
@@ -153,10 +154,23 @@ public sealed class MtpServerClientCancellationAcceptanceTests : AcceptanceTestB
         }
         finally
         {
-            File.Delete(signalFilePath);
-            File.Delete(signalFilePath + ".tmp");
-            File.Delete(bodyStartedSignalFilePath);
-            File.Delete(bodyStartedSignalFilePath + ".tmp");
+            try
+            {
+                if (client is not null)
+                {
+                    // Dispose is synchronous and closes the RPC read loop before killing any remaining child
+                    // process. Run it away from the test thread and bound the wait so a disposal regression
+                    // reports a test failure instead of consuming the entire pipeline timeout.
+                    await Task.Run(client.Dispose).WaitAsync(WaitTimeout);
+                }
+            }
+            finally
+            {
+                File.Delete(signalFilePath);
+                File.Delete(signalFilePath + ".tmp");
+                File.Delete(bodyStartedSignalFilePath);
+                File.Delete(bodyStartedSignalFilePath + ".tmp");
+            }
         }
     }
 
