@@ -219,6 +219,57 @@ public sealed class JsonCommandLineOptionsTests
     }
 
     [TestMethod]
+    public async Task EnumerateCommandLineOptionDefaults_ArrayWithNullElement_IsRejected()
+    {
+        // A JSON null array element must be rejected even though both JSON parsers (System.Text.Json and,
+        // on net462/netstandard2.0, Jsonite) flatten it into a non-null placeholder string ("" or "null"
+        // respectively) that looks like a real scalar. The parser separately preserves the element's raw
+        // JSON token so this case can be detected consistently across both parsers.
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            "{\"commandLineOptionDefaults\": {\"filter-uid\": [null]}}");
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            configuration.EnumerateJsonCommandLineOptionDefaults);
+
+        Assert.Contains("filter-uid", exception.Message);
+        Assert.Contains("non-null scalar value or a non-empty array", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task EnumerateCommandLineOptionDefaults_MixedArrayWithNullElement_IsRejected()
+    {
+        // A null element must be rejected even when mixed with otherwise-valid scalar entries in the same
+        // array, and regardless of its position.
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            "{\"commandLineOptionDefaults\": {\"filter-uid\": [\"a\", null, \"b\"]}}");
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            configuration.EnumerateJsonCommandLineOptionDefaults);
+
+        Assert.Contains("filter-uid", exception.Message);
+        Assert.Contains("non-null scalar value or a non-empty array", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task EnumerateCommandLineOptions_ArrayWithNullElement_PreservesEstablishedBehavior()
+    {
+        // Unlike commandLineOptionDefaults, commandLineOptions does not require every array element to be
+        // non-null; this locks in the pre-existing (per-JSON-parser) flattening of a null element so this
+        // fix does not change it. System.Text.Json flattens a null array element to an empty string, while
+        // the Jsonite parser (net462/netstandard2.0) flattens it to the literal "null" string.
+        IReadOnlyList<JsonCommandLineOptionEntry> entries = await EnumerateAsync(
+            "{\"commandLineOptions\": {\"filter-uid\": [\"a\", null, \"b\"]}}");
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(entries);
+        Assert.AreEqual("filter-uid", entry.OptionName);
+#if NETFRAMEWORK
+        Assert.AreSequenceEqual(["a", "null", "b"], entry.Arguments.ToArray());
+#else
+        Assert.AreSequenceEqual(["a", string.Empty, "b"], entry.Arguments.ToArray());
+#endif
+    }
+
+    [TestMethod]
     public async Task ExplicitJsonDisable_SuppressesConfiguredDefault()
     {
         AggregatedConfiguration configuration = await BuildAggregatedAsync(

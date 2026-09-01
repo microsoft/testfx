@@ -34,8 +34,9 @@ internal sealed partial class JsonConfigurationSource
         /// </para>
         /// <para>
         /// Empty arrays under <c>commandLineOptions</c> are skipped (treated as absent). Passive defaults
-        /// reject empty arrays and null values because they must provide at least one argument. Empty objects
-        /// are rejected for both sections.
+        /// reject empty arrays and null values because they must provide at least one argument. This
+        /// includes a JSON <c>null</c> array element (e.g. <c>"foo": ["a", null]</c>), even inside a mixed
+        /// array of otherwise-valid scalars. Empty objects are rejected for both sections.
         /// </para>
         /// </remarks>
         internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptions()
@@ -184,6 +185,23 @@ internal sealed partial class JsonConfigurationSource
                     {
                         // An indexed slot was an empty object/array — reject (arrays must hold scalars).
                         ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                    }
+
+                    if (requireValue)
+                    {
+                        // A JSON null array element (e.g. "foo": ["a", null]) flattens to a non-null
+                        // placeholder in kvp.Value ("" for the System.Text.Json parser, the literal "null"
+                        // string for the Jsonite parser), so kvp.Value alone cannot tell a real empty-string
+                        // scalar apart from a null element. The parser separately preserves the element's raw
+                        // JSON text in _propertyToAllChildren (see JsonConfigurationFileParser.VisitArrayElement),
+                        // which is "null" for both parsers regardless of how they flatten it — use that to
+                        // reject null elements in defaults arrays (including mixed arrays), without touching
+                        // the established commandLineOptions behavior for allowBooleanMarkers callers.
+                        _ = propertyToAllChildren.TryGetValue(kvp.Key, out string? indexedRawEntry);
+                        if (string.Equals(indexedRawEntry?.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ThrowDefaultEntryMustHaveValue(kvp.Key, sectionName);
+                        }
                     }
 
                     builder.Indexed ??= [];

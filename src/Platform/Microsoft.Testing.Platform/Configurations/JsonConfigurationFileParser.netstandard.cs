@@ -75,6 +75,19 @@ internal sealed class JsonConfigurationFileParser
         foreach (object arrayElement in array)
         {
             EnterContext(index.ToString(CultureInfo.InvariantCulture));
+
+            // A JSON null array element flattens to the literal "null" placeholder string in
+            // _singleValueData (see VisitValue), so the flattened value alone cannot tell a real "null"
+            // string scalar apart from an actual null element. Array elements have no name (unlike object
+            // properties), so record the null element's raw JSON text separately, mirroring
+            // SavePropertyToAllChildren, to give callers the token-kind information needed to reject it.
+            // Non-null elements need no such marker: their flattened string already unambiguously
+            // distinguishes them from a null placeholder.
+            if (arrayElement is null)
+            {
+                SavePropertyToAllChildren(arrayElement);
+            }
+
             VisitValue(arrayElement);
             ExitContext();
             index++;

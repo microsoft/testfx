@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -107,6 +107,54 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         Assert.IsTrue(
             File.Exists(customFilePath),
             $"Expected custom CTRF report file '{customFileName}' was not found in '{testResultsPath}'.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Ctrf_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm)
+    {
+        // CtrfReportEngine resolves its output file name through the shared
+        // ReportEngineBase.ResolveOutputPath, unlike TrxReportEngine which has its own
+        // ResolveTrxOutputPath. This exercises that shared code path end to end: a
+        // testconfig.json default is passive (it does not enable the report on its own,
+        // and it is not treated as an explicit value), and an explicit
+        // --report-ctrf-filename still wins over the configured default.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string configFile = Path.Combine(testHost.DirectoryName, $"{TestAssetFixture.AssetName}.testconfig.json");
+        await File.WriteAllTextAsync(
+            configFile,
+            """
+            {
+              "commandLineOptionDefaults": {
+                "report-ctrf-filename": "configured-{asm}.ctrf.json"
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.IsEmpty(Directory.GetFiles(testHost.DirectoryName, "configured-*.ctrf.json", SearchOption.AllDirectories));
+
+        string defaultResultsPath = Path.Combine(testHost.DirectoryName, "default-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --results-directory \"{defaultResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.IsTrue(File.Exists(Path.Combine(defaultResultsPath, $"configured-{TestAssetFixture.AssetName}.ctrf.json")));
+
+        string explicitResultsPath = Path.Combine(testHost.DirectoryName, "explicit-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename explicit.ctrf.json --results-directory \"{explicitResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.IsTrue(File.Exists(Path.Combine(explicitResultsPath, "explicit.ctrf.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(explicitResultsPath, $"configured-{TestAssetFixture.AssetName}.ctrf.json")));
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
