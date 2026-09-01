@@ -123,6 +123,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         AppendStringPair(sb, "endTime", finishTime.ToString("O", CultureInfo.InvariantCulture));
         sb.Append(',');
         AppendNumberPair(sb, "exitCode", _exitCode.ToString(CultureInfo.InvariantCulture));
+        if (_isIncomplete)
+        {
+            sb.Append(',');
+            AppendBooleanPair(sb, "incomplete", true);
+            sb.Append(',');
+            AppendStringPair(sb, "runStatus", "aborted");
+        }
+
         sb.Append(',');
         AppendKey(sb, "tests");
         sb.Append('[');

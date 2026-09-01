@@ -176,7 +176,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 1 --results-directory {resultDirectory} --report-html --report-junit",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
@@ -202,6 +202,50 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         // Nothing recovered, so nothing is flaky.
         testHostResult.AssertOutputDoesNotContain("  flaky:");
         testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+
+        string htmlReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single());
+        const string htmlDataStart = "<script id=\"mtp-data\" type=\"application/json\">";
+        const string htmlDataEnd = "</script>";
+        int htmlDataStartIndex = htmlReport.IndexOf(htmlDataStart, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, htmlDataStartIndex, htmlReport);
+        htmlDataStartIndex += htmlDataStart.Length;
+        int htmlDataEndIndex = htmlReport.IndexOf(htmlDataEnd, htmlDataStartIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(htmlDataStartIndex, htmlDataEndIndex, htmlReport);
+        using var htmlDocument = System.Text.Json.JsonDocument.Parse(
+            htmlReport.Substring(htmlDataStartIndex, htmlDataEndIndex - htmlDataStartIndex));
+        System.Text.Json.JsonElement htmlRoot = htmlDocument.RootElement;
+        Assert.AreEqual(3, htmlRoot.GetProperty("summary").GetProperty("total").GetInt32());
+        Assert.AreEqual(1, htmlRoot.GetProperty("summary").GetProperty("failed").GetInt32());
+        Assert.IsTrue(htmlRoot.GetProperty("incomplete").GetBoolean());
+        Assert.AreEqual("aborted", htmlRoot.GetProperty("runStatus").GetString());
+        string[] htmlTestNames =
+        [
+            .. htmlRoot.GetProperty("tests").EnumerateArray()
+                .Select(test => test.GetProperty("displayName").GetString()!),
+        ];
+        Assert.Contains("TestMethod2", htmlTestNames);
+        Assert.Contains("TestMethod3", htmlTestNames);
+
+        string junitReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single());
+        var junitDocument = System.Xml.Linq.XDocument.Parse(junitReport);
+        System.Xml.Linq.XElement junitRoot = junitDocument.Root!;
+        Assert.AreEqual("3", junitRoot.Attribute("tests")!.Value);
+        Assert.AreEqual("1", junitRoot.Attribute("failures")!.Value);
+        string[] junitTestNames =
+        [
+            .. junitRoot.Descendants("testcase").Select(test => test.Attribute("name")!.Value),
+        ];
+        Assert.Contains("TestMethod2", junitTestNames);
+        Assert.Contains("TestMethod3", junitTestNames);
+        System.Xml.Linq.XElement[] junitProperties = [.. junitRoot.Descendants("property")];
+        Assert.Contains(
+            property => property.Attribute("name")?.Value == "incomplete"
+                && property.Attribute("value")?.Value == "true",
+            junitProperties);
+        Assert.Contains(
+            property => property.Attribute("name")?.Value == "run-status"
+                && property.Attribute("value")?.Value == "aborted",
+            junitProperties);
     }
 
     /// <summary>
@@ -718,13 +762,13 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
-    public async Task RetryFailedTests_HtmlReport_ContainsCompleteRunAndRetryHistory(string tfm)
+    public async Task RetryFailedTests_HtmlAndJUnitReports_AreConsolidatedWithRetryHistory(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-html",
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-html --report-junit",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
@@ -734,14 +778,23 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        string reportPath = Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single();
-        string report = File.ReadAllText(reportPath);
-        Assert.Contains(@"""total"":3", report, report);
-        Assert.Contains(@"""passed"":3", report, report);
-        Assert.Contains(@"""flaky"":1", report, report);
-        Assert.Contains(@"""retryAttempts""", report, report);
-        Assert.Contains("Retry history", report, report);
-        Assert.Contains("badge flaky", report, report);
+        string htmlReportPath = Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single();
+        string htmlReport = File.ReadAllText(htmlReportPath);
+        Assert.Contains(@"""total"":3", htmlReport, htmlReport);
+        Assert.Contains(@"""passed"":3", htmlReport, htmlReport);
+        Assert.Contains(@"""flaky"":1", htmlReport, htmlReport);
+        Assert.Contains(@"""retryAttempts""", htmlReport, htmlReport);
+        Assert.Contains("Retry history", htmlReport, htmlReport);
+        Assert.Contains("badge flaky", htmlReport, htmlReport);
+
+        string junitReportPath = Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single();
+        string junitReport = File.ReadAllText(junitReportPath);
+        Assert.Contains(@"tests=""3"" failures=""0""", junitReport, junitReport);
+        Assert.HasCount(1, Regex.Matches(junitReport, @"<testcase name=""TestMethod1"""), junitReport);
+
+        string retriesDirectory = Path.Combine(resultDirectory, "Retries");
+        Assert.HasCount(2, Directory.GetFiles(retriesDirectory, "*.html", SearchOption.AllDirectories));
+        Assert.HasCount(2, Directory.GetFiles(retriesDirectory, "*.xml", SearchOption.AllDirectories));
     }
 
     private static string ReadRequiredStringProperty(string filePath, string propertyName)
@@ -765,6 +818,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion));
 
         private const string TestCode = """
@@ -784,6 +838,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
@@ -823,6 +878,7 @@ public class Program
         builder.AddTrxReportProvider();
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
         builder.AddCtrfReportProvider();
+        builder.AddJUnitReportProvider();
 #pragma warning restore TPEXP
         builder.AddGitHubActionsProvider();
         builder.AddHtmlReportProvider();
