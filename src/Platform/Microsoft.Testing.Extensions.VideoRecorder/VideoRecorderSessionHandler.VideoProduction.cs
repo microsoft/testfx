@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
@@ -68,7 +68,7 @@ internal sealed partial class VideoRecorderSessionHandler
 
             if (overlapping.Count == 0)
             {
-                _logger.LogTrace($"No segments survived for test '{record.DisplayName}' (pruned by the rolling buffer); skipping its clip.");
+                await _logger.LogTraceAsync($"No segments survived for test '{record.DisplayName}' (pruned by the rolling buffer); skipping its clip.").ConfigureAwait(false);
                 continue;
             }
 

@@ -75,7 +75,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             process.Kill();
         });
 
-        process.WaitForExit();
+        await process.WaitForExitAsync();
 
         if (!succeded)
         {
@@ -88,7 +88,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
         Console.WriteLine($"Compressing to '{sample}'");
         if (_includeScenario)
         {
-            ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
+            await ZipFile.CreateFromDirectoryAsync(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
         }
         else
         {
@@ -100,7 +100,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
                 File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)));
             }
 
-            ZipFile.CreateFromDirectory(dataFileDirectory, sample, _compressionLevel, includeBaseDirectory: true);
+            await ZipFile.CreateFromDirectoryAsync(dataFileDirectory, sample, _compressionLevel, includeBaseDirectory: true);
         }
 
         return new Files([sample]);

@@ -10,7 +10,11 @@ permissions:
   copilot-requests: write
 
 tools:
+  # The scheduled scan must see Dependabot PRs regardless of author association.
+  # Strict mode requires an explicit shell-access decision with min-integrity: none.
+  bash: false
   github:
+    min-integrity: none
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced

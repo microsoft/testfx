@@ -62,7 +62,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 // write. Stay quiet apart from a low-noise trace so local/dev runs don't get a warning.
                 if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogTrace($"'{StepSummaryEnvironmentVariable}' is not set; skipping job summary.");
+                    await _logger.LogTraceAsync($"'{StepSummaryEnvironmentVariable}' is not set; skipping job summary.").ConfigureAwait(false);
                 }
 
                 return;
@@ -164,7 +164,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         if (_logger.IsEnabled(LogLevel.Warning))
         {
-            _logger.LogWarning(overflowWarning);
+            await _logger.LogWarningAsync(overflowWarning).ConfigureAwait(false);
         }
 
         await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(overflowWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
@@ -203,7 +203,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         string warning = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, ex.Message);
         if (_logger.IsEnabled(LogLevel.Warning))
         {
-            _logger.LogWarning(warning);
+            await _logger.LogWarningAsync(warning).ConfigureAwait(false);
         }
 
         await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
