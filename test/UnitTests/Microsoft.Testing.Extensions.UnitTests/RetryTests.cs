@@ -1242,6 +1242,8 @@ public class RetryTests
 
     private sealed class ConnectedTestHostHandle : ITestHostHandle
     {
+        private static readonly TimeSpan RetryPipeRoundTripTimeout = TimeSpan.FromSeconds(30);
+
         private readonly NamedPipeClientStream _pipeClient;
         private readonly Task _exitTask;
         private readonly int _requestSerializerId;
@@ -1272,31 +1274,32 @@ public class RetryTests
         {
             await Task.Yield();
 
+            using var timeout = new CancellationTokenSource(RetryPipeRoundTripTimeout);
+
             // Complete a retry-protocol round trip before reporting exit so the server has accepted the connection.
             byte[] request = new byte[2 * sizeof(int)];
             BitConverter.GetBytes(sizeof(int)).CopyTo(request, 0);
             BitConverter.GetBytes(_requestSerializerId).CopyTo(request, sizeof(int));
-            await _pipeClient.WriteAsync(request, 0, request.Length, CancellationToken.None);
-            await _pipeClient.FlushAsync(CancellationToken.None);
+            await _pipeClient.WriteAsync(request, 0, request.Length, timeout.Token);
+            await _pipeClient.FlushAsync(timeout.Token);
 
             byte[] responseSizeBuffer = new byte[sizeof(int)];
-            await ReadExactlyAsync(responseSizeBuffer);
+            await ReadExactlyAsync(responseSizeBuffer, timeout.Token);
             int responseSize = BitConverter.ToInt32(responseSizeBuffer, 0);
             if (responseSize < sizeof(int))
             {
                 throw new InvalidDataException($"Invalid retry pipe response size: {responseSize}.");
             }
 
-            await ReadExactlyAsync(new byte[responseSize]);
-            _pipeClient.Dispose();
+            await ReadExactlyAsync(new byte[responseSize], timeout.Token);
         }
 
-        private async Task ReadExactlyAsync(byte[] buffer)
+        private async Task ReadExactlyAsync(byte[] buffer, CancellationToken cancellationToken)
         {
             int bytesRead = 0;
             while (bytesRead < buffer.Length)
             {
-                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, CancellationToken.None);
+                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken);
                 if (read == 0)
                 {
                     throw new EndOfStreamException("The retry pipe closed before the response was complete.");
