@@ -49,7 +49,7 @@
 
   <Target Name="_GenerateTestingPlatformConfigurationFileInputCache"
           DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile"
-          Condition=" '$(GenerateTestingPlatformConfigurationFile)' == 'true' And '@(TestingPlatformCommandLineOptionDefault)' != '' ">
+          Condition=" '$(GenerateTestingPlatformConfigurationFile)' == 'true' And (Exists('$(_TestingPlatformConfigurationFileSourcePath)') Or '@(TestingPlatformCommandLineOptionDefault)' != '') ">
     <PropertyGroup>
       <_GenerateTestingPlatformConfigurationFileInputCachePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformconfigurationinputcache.cache</_GenerateTestingPlatformConfigurationFileInputCachePath>
       <_GenerateTestingPlatformConfigurationFileInputCachePath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(_GenerateTestingPlatformConfigurationFileInputCachePath)))</_GenerateTestingPlatformConfigurationFileInputCachePath>

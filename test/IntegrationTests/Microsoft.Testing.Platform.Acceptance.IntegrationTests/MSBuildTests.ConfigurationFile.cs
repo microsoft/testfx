@@ -155,6 +155,36 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         result.AssertOutputContains("Failed to parse Microsoft Testing Platform configuration file");
     }
 
+    [TestMethod]
+    public async Task ConfigFileGeneration_RemovingAllOptionDefaultsRefreshesConfiguration()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(ConfigFileGeneration_RemovingAllOptionDefaultsRefreshesConfiguration),
+            ConditionalOptionDefaultsSourceCode
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        await DotnetCli.RunAsync(
+            $"build -v:normal {testAsset.TargetAssetPath} -c Release",
+            cancellationToken: TestContext.CancellationToken);
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildConditionalOptionDefaults", "net8.0", buildConfiguration: BuildConfiguration.Release);
+        string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildConditionalOptionDefaults.testconfig.json");
+        using (var document = JsonDocument.Parse(File.ReadAllText(generatedConfigurationFile)))
+        {
+            Assert.AreEqual(
+                "{asm}.trx",
+                document.RootElement.GetProperty("commandLineOptionDefaults").GetProperty("report-trx-filename").GetString());
+        }
+
+        await DotnetCli.RunAsync(
+            $"build -v:normal {testAsset.TargetAssetPath} -c Release /p:IncludeOptionDefaults=false",
+            cancellationToken: TestContext.CancellationToken);
+
+        using var updatedDocument = JsonDocument.Parse(File.ReadAllText(generatedConfigurationFile));
+        Assert.IsFalse(updatedDocument.RootElement.TryGetProperty("commandLineOptionDefaults", out _));
+        Assert.IsTrue(updatedDocument.RootElement.GetProperty("platformOptions").GetProperty("exitProcessOnUnhandledException").GetBoolean());
+    }
+
     private const string ConfigurationContent = """
 {
   "platformOptions": {
@@ -268,6 +298,38 @@ public class DummyTestFramework : ITestFramework
 
     #file testconfig.json
     $JsonContent$
+
+    #file Program.cs
+    public static class Program
+    {
+        public static void Main()
+        {
+        }
+    }
+    """;
+
+    private const string ConditionalOptionDefaultsSourceCode = """
+    #file MSBuildConditionalOptionDefaults.csproj
+    <Project Sdk="Microsoft.NET.Sdk">
+        <PropertyGroup>
+            <TargetFramework>net8.0</TargetFramework>
+            <OutputType>Exe</OutputType>
+            <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+        </PropertyGroup>
+        <ItemGroup>
+            <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+            <TestingPlatformCommandLineOptionDefault Include="report-trx-filename"
+                                                     Value="{asm}.trx"
+                                                     Condition="'$(IncludeOptionDefaults)' != 'false'" />
+        </ItemGroup>
+    </Project>
+
+    #file testconfig.json
+    {
+      "platformOptions": {
+        "exitProcessOnUnhandledException": true
+      }
+    }
 
     #file Program.cs
     public static class Program
