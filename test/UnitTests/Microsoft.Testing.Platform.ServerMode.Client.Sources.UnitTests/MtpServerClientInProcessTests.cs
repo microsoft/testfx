@@ -377,26 +377,51 @@ public sealed class MtpServerClientInProcessTests
     public async Task Dispose_WhileShutdownAsyncIsInFlight_WaitsForTheSameTeardown()
     {
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var server = new InProcessServerFixture(onDisconnected: () => release.Task.GetAwaiter().GetResult());
+        var callbackBlocked = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var server = new InProcessServerFixture(onDisconnected: () =>
+        {
+            callbackBlocked.TrySetResult(true);
+            release.Task.GetAwaiter().GetResult();
+        });
 
         MtpServerClient client = await LaunchAsync(server);
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
 
-        // Teardown is now blocked inside the callback, so ShutdownAsync cannot complete yet.
         Task shutdown = client.ShutdownAsync();
-        Assert.IsFalse(shutdown.IsCompleted);
+        try
+        {
+            await WithTimeoutAsync(callbackBlocked.Task);
+            Assert.IsFalse(shutdown.IsCompleted, "ShutdownAsync must remain incomplete while the callback is blocked.");
 
-        // A Dispose that races an in-flight ShutdownAsync must join it, not report success while the
-        // application is still stopping.
-        var dispose = Task.Run(client.Dispose, TestContext.CancellationToken);
-        await Task.Delay(200, TestContext.CancellationToken);
-        Assert.IsFalse(dispose.IsCompleted, "Dispose must not return while the shared teardown is still running.");
+            // A Dispose that races an in-flight ShutdownAsync must join it, not report success while the
+            // application is still stopping.
+            var disposeEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var dispose = Task.Run(
+                () =>
+                {
+                    disposeEntered.TrySetResult(true);
+                    client.Dispose();
+                },
+                TestContext.CancellationToken);
+            await WithTimeoutAsync(disposeEntered.Task);
 
-        _ = release.TrySetResult(true);
+            for (int attempt = 0; attempt < 10 && !dispose.IsCompleted; attempt++)
+            {
+                _ = await Task.WhenAny(dispose, Task.Delay(10, TestContext.CancellationToken));
+            }
 
-        await WithTimeoutAsync(shutdown);
-        await WithTimeoutAsync(dispose);
-        Assert.AreEqual(1, server.CompletionCount, "Both entry points must share one teardown.");
+            Assert.IsFalse(dispose.IsCompleted, "Dispose must not return while the shared teardown is still running.");
+
+            _ = release.TrySetResult(true);
+
+            await WithTimeoutAsync(shutdown);
+            await WithTimeoutAsync(dispose);
+            Assert.AreEqual(1, server.CompletionCount, "Both entry points must share one teardown.");
+        }
+        finally
+        {
+            _ = release.TrySetResult(true);
+        }
     }
 
     [TestMethod]
