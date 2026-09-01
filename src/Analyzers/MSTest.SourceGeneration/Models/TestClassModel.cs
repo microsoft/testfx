@@ -36,7 +36,7 @@ internal enum ConstantValueKind
     Null,
 }
 
-internal sealed record TestParameterModel(string FullyQualifiedType, string Name);
+internal sealed record TestParameterModel(string FullyQualifiedType, string Name, string? EnumFullyQualifiedType);
 
 /// <summary>
 /// The kind of member a <c>[DynamicData]</c> source resolves to at compile time, so the generator can

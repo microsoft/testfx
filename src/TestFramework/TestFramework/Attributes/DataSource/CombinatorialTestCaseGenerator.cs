@@ -4,13 +4,6 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Determines whether a generated test case, represented by one selected value index per dimension, is allowed.
-/// </summary>
-/// <param name="indices">The selected zero-based value index for each dimension.</param>
-/// <returns><see langword="true"/> if the test case is allowed; otherwise, <see langword="false"/>.</returns>
-internal delegate bool CombinatorialIndexPredicate(int[] indices);
-
-/// <summary>
 /// Generates exhaustive combinations.
 /// </summary>
 internal static class CombinatorialTestCaseGenerator
@@ -19,11 +12,8 @@ internal static class CombinatorialTestCaseGenerator
     /// Generates every possible combination of value indices across the specified dimensions.
     /// </summary>
     /// <param name="dimensionSizes">The number of candidate values in each dimension.</param>
-    /// <param name="isTestCaseAllowed">An optional predicate that rejects test cases.</param>
     /// <returns>One test case per array, with one selected value index per dimension.</returns>
-    internal static int[][] GenerateCombinations(
-        int[] dimensionSizes,
-        CombinatorialIndexPredicate? isTestCaseAllowed = null)
+    internal static int[][] GenerateCombinations(int[] dimensionSizes)
     {
         int[] dimensions = ValidateAndCopyDimensions(dimensionSizes);
         if (dimensions.Length == 0 || dimensions.Contains(0))
@@ -33,7 +23,7 @@ internal static class CombinatorialTestCaseGenerator
 
         List<int[]> results = [];
         int[] current = new int[dimensions.Length];
-        FillCombinations(dimensions, current, 0, isTestCaseAllowed, results);
+        FillCombinations(dimensions, current, 0, results);
         return results.ToArray();
     }
 
@@ -41,7 +31,6 @@ internal static class CombinatorialTestCaseGenerator
         int[] dimensions,
         int[] current,
         int dimension,
-        CombinatorialIndexPredicate? isTestCaseAllowed,
         List<int[]> results)
     {
         for (int valueIndex = 0; valueIndex < dimensions[dimension]; valueIndex++)
@@ -49,9 +38,9 @@ internal static class CombinatorialTestCaseGenerator
             current[dimension] = valueIndex;
             if (dimension + 1 < dimensions.Length)
             {
-                FillCombinations(dimensions, current, dimension + 1, isTestCaseAllowed, results);
+                FillCombinations(dimensions, current, dimension + 1, results);
             }
-            else if (isTestCaseAllowed?.Invoke([.. current]) ?? true)
+            else
             {
                 results.Add([.. current]);
             }

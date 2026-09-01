@@ -23,16 +23,15 @@ public sealed class CombinatorialDataTests
     }
 
     [TestMethod]
-    [CombinatorialData]
-    [ExcludeTestCase(typeof(AnyDataValue), false)]
-    public void AppliesWildcardExclusions(bool first, bool second)
+    [DynamicData(nameof(ConstrainedData))]
+    public void AppliesLinqConstraintsThroughDynamicData(bool first, bool second)
         => Assert.IsTrue(second);
 
     [TestMethod]
     [CombinatorialData]
-    public void CombinesMemberAndClassData(
-        [CombinatorialMemberData(nameof(Colors))] string color,
-        [CombinatorialClassData(typeof(PrimeRows))] int prime)
+    public void CombinesDynamicValues(
+        [CombinatorialDynamicValues(nameof(Colors))] string color,
+        [CombinatorialDynamicValues(nameof(Primes))] int prime)
     {
         Assert.IsTrue(color is "red" or "blue");
         Assert.IsTrue(prime is 2 or 3 or 5);
@@ -46,14 +45,9 @@ public sealed class CombinatorialDataTests
 
     public static IEnumerable<string> Colors => ["red", "blue"];
 
-    public sealed class PrimeRows : IEnumerable<object[]>
-    {
-        public IEnumerator<object[]> GetEnumerator()
-        {
-            yield return [2, 3];
-            yield return [5];
-        }
+    public static IEnumerable<int> Primes => [2, 3, 5];
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
+    public static IEnumerable<object?[]> ConstrainedData
+        => CombinatorialDataGenerator.Generate([true, false], [true, false])
+            .Where(row => (bool)row[1]!);
 }

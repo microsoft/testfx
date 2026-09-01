@@ -9,7 +9,7 @@ using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
-public class CombinatorialMemberDataAttributeTests : TestContainer
+public class CombinatorialDynamicValuesAttributeTests : TestContainer
 {
     private static readonly ParameterInfo IntParameter = GetParameter(nameof(IntParameterStub));
     private static readonly ParameterInfo NullableIntParameter = GetParameter(nameof(NullableIntParameterStub));
@@ -18,14 +18,14 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void ReadsValuesFromPropertyFieldAndMethod()
     {
-        new CombinatorialMemberDataAttribute(nameof(IntProperty)).GetValues(IntParameter).Should().Equal([1, 2]);
-        new CombinatorialMemberDataAttribute(nameof(IntField)).GetValues(IntParameter).Should().Equal([3, 4]);
-        new CombinatorialMemberDataAttribute(nameof(GetInts), 5, 2).GetValues(IntParameter).Should().Equal([5, 7]);
+        new CombinatorialDynamicValuesAttribute(nameof(IntProperty)).GetValues(IntParameter).Should().Equal([1, 2]);
+        new CombinatorialDynamicValuesAttribute(nameof(IntField)).GetValues(IntParameter).Should().Equal([3, 4]);
+        new CombinatorialDynamicValuesAttribute(nameof(GetInts), 5, 2).GetValues(IntParameter).Should().Equal([5, 7]);
     }
 
     public void ReadsValuesFromExplicitMemberType()
     {
-        var attribute = new CombinatorialMemberDataAttribute(nameof(ExternalValues.Strings))
+        var attribute = new CombinatorialDynamicValuesAttribute(nameof(ExternalValues.Strings))
         {
             MemberType = typeof(ExternalValues),
         };
@@ -35,7 +35,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void SelectsPublicStaticMethodWhenInstanceOverloadAlsoMatches()
     {
-        var attribute = new CombinatorialMemberDataAttribute(nameof(OverloadedValues.GetValues), "value")
+        var attribute = new CombinatorialDynamicValuesAttribute(nameof(OverloadedValues.GetValues), "value")
         {
             MemberType = typeof(OverloadedValues),
         };
@@ -45,11 +45,11 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void SelectsMostSpecificCompatibleMethod()
     {
-        var stringAttribute = new CombinatorialMemberDataAttribute(nameof(SpecificOverloads.GetValues), "value")
+        var stringAttribute = new CombinatorialDynamicValuesAttribute(nameof(SpecificOverloads.GetValues), "value")
         {
             MemberType = typeof(SpecificOverloads),
         };
-        var intAttribute = new CombinatorialMemberDataAttribute(nameof(SpecificOverloads.GetValues), 1)
+        var intAttribute = new CombinatorialDynamicValuesAttribute(nameof(SpecificOverloads.GetValues), 1)
         {
             MemberType = typeof(SpecificOverloads),
         };
@@ -60,7 +60,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void IgnoresOpenGenericMethodsAndFindsInheritedSource()
     {
-        var attribute = new CombinatorialMemberDataAttribute(nameof(GenericMethodValues.GetValues))
+        var attribute = new CombinatorialDynamicValuesAttribute(nameof(GenericMethodValues.GetValues))
         {
             MemberType = typeof(GenericMethodValues),
         };
@@ -70,7 +70,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void AllowsNullForNullableMethodParameter()
     {
-        var attribute = new CombinatorialMemberDataAttribute(nameof(GetValuesForNullable), [null]);
+        var attribute = new CombinatorialDynamicValuesAttribute(nameof(GetValuesForNullable), [null]);
 
         attribute.GetValues(IntParameter).Should().Equal([1]);
     }
@@ -78,7 +78,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     public void TreatsExplicitNullParamsArrayAsSingleMemberArgument()
     {
         ParameterInfo parameter = GetParameter(nameof(ExplicitNullMemberArgument));
-        CombinatorialMemberDataAttribute attribute = parameter.GetCustomAttribute<CombinatorialMemberDataAttribute>()!;
+        CombinatorialDynamicValuesAttribute attribute = parameter.GetCustomAttribute<CombinatorialDynamicValuesAttribute>()!;
 
         attribute.Arguments.Should().Equal([null]);
         attribute.GetValues(parameter).Should().Equal([1]);
@@ -86,23 +86,23 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void AllowsNonNullForNullableMethodParameter()
     {
-        var attribute = new CombinatorialMemberDataAttribute(nameof(GetValuesForNullable), 2);
+        var attribute = new CombinatorialDynamicValuesAttribute(nameof(GetValuesForNullable), 2);
 
         attribute.GetValues(IntParameter).Should().Equal([2]);
     }
 
     public void AllowsNonNullableMemberValuesForNullableParameter()
-        => new CombinatorialMemberDataAttribute(nameof(IntProperty))
+        => new CombinatorialDynamicValuesAttribute(nameof(IntProperty))
             .GetValues(NullableIntParameter)
             .Should().Equal([1, 2]);
 
     public void FindsEligibleInheritedMembersHiddenByInstanceMembers()
     {
-        new CombinatorialMemberDataAttribute(nameof(HiddenMembers.IntProperty))
+        new CombinatorialDynamicValuesAttribute(nameof(HiddenMembers.IntProperty))
         {
             MemberType = typeof(HiddenMembers),
         }.GetValues(IntParameter).Should().Equal([1, 2]);
-        new CombinatorialMemberDataAttribute(nameof(HiddenMembers.IntField))
+        new CombinatorialDynamicValuesAttribute(nameof(HiddenMembers.IntField))
         {
             MemberType = typeof(HiddenMembers),
         }.GetValues(IntParameter).Should().Equal([3, 4]);
@@ -110,7 +110,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void TreatsEachObjectArrayRowAsOneCandidate()
     {
-        object?[] values = new CombinatorialMemberDataAttribute(nameof(Rows)).GetValues(ObjectArrayParameter);
+        object?[] values = new CombinatorialDynamicValuesAttribute(nameof(Rows)).GetValues(ObjectArrayParameter);
 
         values.Should().HaveCount(2);
         ((object[])values[0]!).Should().Equal([1]);
@@ -119,10 +119,10 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
 
     public void RejectsMissingNonGenericNestedAndIncompatibleMembers()
     {
-        Action missing = () => new CombinatorialMemberDataAttribute("Missing").GetValues(IntParameter);
-        Action nonGeneric = () => new CombinatorialMemberDataAttribute(nameof(NonGenericValues)).GetValues(IntParameter);
-        Action nested = () => new CombinatorialMemberDataAttribute(nameof(NestedValues)).GetValues(IntParameter);
-        Action incompatible = () => new CombinatorialMemberDataAttribute(nameof(StringProperty)).GetValues(IntParameter);
+        Action missing = () => new CombinatorialDynamicValuesAttribute("Missing").GetValues(IntParameter);
+        Action nonGeneric = () => new CombinatorialDynamicValuesAttribute(nameof(NonGenericValues)).GetValues(IntParameter);
+        Action nested = () => new CombinatorialDynamicValuesAttribute(nameof(NestedValues)).GetValues(IntParameter);
+        Action incompatible = () => new CombinatorialDynamicValuesAttribute(nameof(StringProperty)).GetValues(IntParameter);
 
         missing.Should().Throw<ArgumentException>().WithMessage("*Could not find*");
         nonGeneric.Should().Throw<ArgumentException>().WithMessage("*IEnumerable<T>*");
@@ -130,46 +130,12 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
         incompatible.Should().Throw<ArgumentException>().WithMessage("*not compatible*");
     }
 
-    public void ClassDataCreatesSourceWithArgumentsAndFlattensRows()
+    public void DataProviderAttributeOnlyAppliesToParametersAndDisallowsDuplicates()
     {
-        var attribute = new CombinatorialClassDataAttribute(typeof(IntegerRows), 3);
+        AttributeUsageAttribute usage = typeof(CombinatorialDynamicValuesAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
 
-        attribute.GetValues(IntParameter).Should().Equal([0, 1, 2]);
-    }
-
-    public void ClassDataTreatsExplicitNullParamsArrayAsSingleArgument()
-    {
-        ParameterInfo parameter = GetParameter(nameof(ExplicitNullClassArgument));
-        CombinatorialClassDataAttribute attribute = parameter.GetCustomAttribute<CombinatorialClassDataAttribute>()!;
-
-        attribute.GetValues(parameter).Should().Equal([null]);
-    }
-
-    public void ClassDataRejectsInvalidTypesAndConstructorArguments()
-    {
-        Action invalidType = () => _ = new CombinatorialClassDataAttribute(typeof(object));
-        Action invalidArguments = () => new CombinatorialClassDataAttribute(typeof(IntegerRows), "wrong").GetValues(IntParameter);
-
-        invalidType.Should().Throw<InvalidOperationException>().WithMessage("*IEnumerable*");
-        invalidArguments.Should().Throw<InvalidOperationException>().WithMessage("*Failed to create*");
-    }
-
-    public void ClassDataDoesNotReportEnumerationFailuresAsConstructorFailures()
-    {
-        Action action = () => new CombinatorialClassDataAttribute(typeof(ThrowingRows)).GetValues(IntParameter);
-
-        action.Should().Throw<NotSupportedException>().WithMessage("Enumeration failed.");
-    }
-
-    public void DataProviderAttributesOnlyApplyToParametersAndDisallowDuplicates()
-    {
-        AttributeUsageAttribute memberUsage = typeof(CombinatorialMemberDataAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
-        AttributeUsageAttribute classUsage = typeof(CombinatorialClassDataAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
-
-        memberUsage.ValidOn.Should().Be(AttributeTargets.Parameter);
-        memberUsage.AllowMultiple.Should().BeFalse();
-        classUsage.ValidOn.Should().Be(AttributeTargets.Parameter);
-        classUsage.AllowMultiple.Should().BeFalse();
+        usage.ValidOn.Should().Be(AttributeTargets.Parameter);
+        usage.AllowMultiple.Should().BeFalse();
     }
 
     public static IEnumerable<int> IntProperty => [1, 2];
@@ -189,7 +155,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     public static IEnumerable<IEnumerable<int>> NestedValues => [[1], [2]];
 
     private static ParameterInfo GetParameter(string methodName)
-        => typeof(CombinatorialMemberDataAttributeTests)
+        => typeof(CombinatorialDynamicValuesAttributeTests)
             .GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic)!
             .GetParameters()[0];
 
@@ -206,12 +172,7 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     }
 
     private static void ExplicitNullMemberArgument(
-        [CombinatorialMemberData(nameof(GetValuesForNullable), null)] int value)
-    {
-    }
-
-    private static void ExplicitNullClassArgument(
-        [CombinatorialClassData(typeof(NullableArgumentRows), null)] string? value)
+        [CombinatorialDynamicValues(nameof(GetValuesForNullable), null)] int value)
     {
     }
 
@@ -268,36 +229,4 @@ public class CombinatorialMemberDataAttributeTests : TestContainer
     }
 #pragma warning restore CS0108, SA1401
 
-    public sealed class IntegerRows : IEnumerable<object[]>
-    {
-        private readonly int _count;
-
-        public IntegerRows(int count) => _count = count;
-
-        public IEnumerator<object[]> GetEnumerator()
-            => Enumerable.Range(0, _count).Select(value => new object[] { value }).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-
-    public sealed class ThrowingRows : IEnumerable<object[]>
-    {
-        public IEnumerator<object[]> GetEnumerator() => throw new NotSupportedException("Enumeration failed.");
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-
-    public sealed class NullableArgumentRows : IEnumerable<object[]>
-    {
-        private readonly object? _value;
-
-        public NullableArgumentRows(object? value) => _value = value;
-
-        public IEnumerator<object[]> GetEnumerator()
-        {
-            yield return [_value!];
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
 }

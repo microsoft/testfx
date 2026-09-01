@@ -36,6 +36,7 @@ internal static class CombinatorialValuesUtilities
             : valuesSource.GetValues(parameter);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern", Justification = "MSTest.SourceGeneration emits DynamicDependency(PublicFields) for enum test-method parameter types, including nullable enum underlying types.")]
     private static IEnumerable<object?> GetValuesFor(Type dataType)
     {
         if (dataType == typeof(bool))

@@ -466,39 +466,31 @@ Actual: {2}</value>
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
     <comment>{0} is the dynamic data source member name. {1} is the declaring type name.</comment>
   </data>
-  <data name="CombinatorialClassDataSourceTypeInvalid" xml:space="preserve">
-    <value>The values source {0} must be assignable to {1}.</value>
-    <comment>{0} is the class data source type. {1} is the required enumerable type.</comment>
-  </data>
-  <data name="CombinatorialClassDataActivationFailed" xml:space="preserve">
-    <value>Failed to create an instance of {0}. Please make sure the type has a public constructor and the arguments match.</value>
-    <comment>{0} is the class data source type.</comment>
-  </data>
-  <data name="CombinatorialMemberNotFound" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesMemberNotFound" xml:space="preserve">
     <value>Could not find public static member (property, field, or method) named '{0}' on {1}.</value>
     <comment>{0} is the member name. {1} is the declaring type name. Do not localize the C# signature tokens {Locked="public static"}.</comment>
   </data>
-  <data name="CombinatorialMemberNotFoundWithParameterTypes" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesMemberNotFoundWithParameterTypes" xml:space="preserve">
     <value>Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</value>
     <comment>{0} is the member name. {1} is the declaring type name. {2} is the comma-separated list of supplied argument types. Do not localize the C# signature tokens {Locked="public static"}.</comment>
   </data>
-  <data name="CombinatorialMemberReturnedNull" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesMemberReturnedNull" xml:space="preserve">
     <value>Member {0} on {1} returned null.</value>
     <comment>{0} is the member name. {1} is the declaring type name. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
-  <data name="CombinatorialMemberMethodAmbiguous" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesMethodAmbiguous" xml:space="preserve">
     <value>Multiple public static methods named '{0}' accept the supplied arguments.</value>
     <comment>{0} is the member name. Do not localize the C# signature tokens {Locked="public static"}.</comment>
   </data>
-  <data name="CombinatorialMemberMustReturnGenericEnumerable" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesMustReturnGenericEnumerable" xml:space="preserve">
     <value>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</value>
     <comment>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</comment>
   </data>
-  <data name="CombinatorialMemberNestedEnumerableUnsupported" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesNestedEnumerableUnsupported" xml:space="preserve">
     <value>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</value>
     <comment>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</comment>
   </data>
-  <data name="CombinatorialMemberTypeIncompatible" xml:space="preserve">
+  <data name="CombinatorialDynamicValuesTypeIncompatible" xml:space="preserve">
     <value>Parameter type {0} is not compatible with returned member type {1}.</value>
     <comment>{0} is the test method parameter type. {1} is the member data element type.</comment>
   </data>
@@ -510,17 +502,9 @@ Actual: {2}</value>
     <value>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</value>
     <comment>{0} is the parameter type. {1} is the provider interface name.</comment>
   </data>
-  <data name="CombinatorialExcludeArgumentCountMismatch" xml:space="preserve">
-    <value>The number of arguments in {0} must match the number of test method parameters.</value>
-    <comment>{0} is the exclusion attribute type name.</comment>
-  </data>
-  <data name="CombinatorialExcludedValueNotFound" xml:space="preserve">
-    <value>The excluded value '{0}' for parameter position {1} does not match any candidate value.</value>
-    <comment>{0} is the excluded value. {1} is the zero-based test method parameter position.</comment>
-  </data>
-  <data name="CombinatorialArrayLengthMismatch" xml:space="preserve">
-    <value>Expected to have the same array length as {0}.</value>
-    <comment>{0} is the name of the array being compared.</comment>
+  <data name="CombinatorialDimensionCannotBeNull" xml:space="preserve">
+    <value>Dimension at position {0} cannot be null.</value>
+    <comment>{0} is the zero-based dimension position. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="CombinatorialNegativeDimensionSize" xml:space="preserve">
     <value>Dimension sizes cannot be negative.</value>

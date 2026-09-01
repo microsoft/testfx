@@ -353,62 +353,42 @@
         <target state="translated">{0}. {1}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialArrayLengthMismatch">
-        <source>Expected to have the same array length as {0}.</source>
-        <target state="new">Expected to have the same array length as {0}.</target>
-        <note>{0} is the name of the array being compared.</note>
+      <trans-unit id="CombinatorialDimensionCannotBeNull">
+        <source>Dimension at position {0} cannot be null.</source>
+        <target state="new">Dimension at position {0} cannot be null.</target>
+        <note>{0} is the zero-based dimension position. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialClassDataActivationFailed">
-        <source>Failed to create an instance of {0}. Please make sure the type has a public constructor and the arguments match.</source>
-        <target state="new">Failed to create an instance of {0}. Please make sure the type has a public constructor and the arguments match.</target>
-        <note>{0} is the class data source type.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialClassDataSourceTypeInvalid">
-        <source>The values source {0} must be assignable to {1}.</source>
-        <target state="new">The values source {0} must be assignable to {1}.</target>
-        <note>{0} is the class data source type. {1} is the required enumerable type.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialExcludeArgumentCountMismatch">
-        <source>The number of arguments in {0} must match the number of test method parameters.</source>
-        <target state="new">The number of arguments in {0} must match the number of test method parameters.</target>
-        <note>{0} is the exclusion attribute type name.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialExcludedValueNotFound">
-        <source>The excluded value '{0}' for parameter position {1} does not match any candidate value.</source>
-        <target state="new">The excluded value '{0}' for parameter position {1} does not match any candidate value.</target>
-        <note>{0} is the excluded value. {1} is the zero-based test method parameter position.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialMemberMethodAmbiguous">
-        <source>Multiple public static methods named '{0}' accept the supplied arguments.</source>
-        <target state="new">Multiple public static methods named '{0}' accept the supplied arguments.</target>
-        <note>{0} is the member name. Do not localize the C# signature tokens {Locked="public static"}.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialMemberMustReturnGenericEnumerable">
-        <source>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</source>
-        <target state="new">Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</target>
-        <note>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialMemberNestedEnumerableUnsupported">
-        <source>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</source>
-        <target state="new">Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</target>
-        <note>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</note>
-      </trans-unit>
-      <trans-unit id="CombinatorialMemberNotFound">
+      <trans-unit id="CombinatorialDynamicValuesMemberNotFound">
         <source>Could not find public static member (property, field, or method) named '{0}' on {1}.</source>
         <target state="new">Could not find public static member (property, field, or method) named '{0}' on {1}.</target>
         <note>{0} is the member name. {1} is the declaring type name. Do not localize the C# signature tokens {Locked="public static"}.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialMemberNotFoundWithParameterTypes">
+      <trans-unit id="CombinatorialDynamicValuesMemberNotFoundWithParameterTypes">
         <source>Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</source>
         <target state="new">Could not find public static member (property, field, or method) named '{0}' on {1} with parameter types: {2}.</target>
         <note>{0} is the member name. {1} is the declaring type name. {2} is the comma-separated list of supplied argument types. Do not localize the C# signature tokens {Locked="public static"}.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialMemberReturnedNull">
+      <trans-unit id="CombinatorialDynamicValuesMemberReturnedNull">
         <source>Member {0} on {1} returned null.</source>
         <target state="new">Member {0} on {1} returned null.</target>
         <note>{0} is the member name. {1} is the declaring type name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialMemberTypeIncompatible">
+      <trans-unit id="CombinatorialDynamicValuesMethodAmbiguous">
+        <source>Multiple public static methods named '{0}' accept the supplied arguments.</source>
+        <target state="new">Multiple public static methods named '{0}' accept the supplied arguments.</target>
+        <note>{0} is the member name. Do not localize the C# signature tokens {Locked="public static"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDynamicValuesMustReturnGenericEnumerable">
+        <source>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</source>
+        <target state="new">Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</target>
+        <note>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDynamicValuesNestedEnumerableUnsupported">
+        <source>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</source>
+        <target state="new">Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</target>
+        <note>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</note>
+      </trans-unit>
+      <trans-unit id="CombinatorialDynamicValuesTypeIncompatible">
         <source>Parameter type {0} is not compatible with returned member type {1}.</source>
         <target state="new">Parameter type {0} is not compatible with returned member type {1}.</target>
         <note>{0} is the test method parameter type. {1} is the member data element type.</note>

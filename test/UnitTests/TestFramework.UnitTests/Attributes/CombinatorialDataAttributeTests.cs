@@ -69,40 +69,6 @@ public class CombinatorialDataAttributeTests : TestContainer
             ]);
     }
 
-    public void GetDataHonorsExactAndWildcardExclusions()
-    {
-        AssertRows(
-            GetData(nameof(ExactExclusion)),
-            [
-                [true, true],
-                [false, true],
-                [false, false],
-            ]);
-        AssertRows(
-            GetData(nameof(WildcardExclusion)),
-            [
-                [true, true],
-                [false, true],
-            ]);
-        AssertRows(GetData(nameof(NullExclusion)), [["value"]]);
-    }
-
-    public void GetDataValidatesExclusionWidth()
-    {
-        Action action = () => GetData(nameof(InvalidExclusion));
-
-        action.Should().Throw<ArgumentException>()
-            .WithMessage($"*{nameof(ExcludeTestCaseAttribute)}*number of test method parameters*");
-    }
-
-    public void GetDataRejectsExclusionValuesOutsideCandidateSet()
-    {
-        Action action = () => GetData(nameof(IneffectiveExclusion));
-
-        action.Should().Throw<ArgumentException>()
-            .WithMessage("*2*parameter position 0*");
-    }
-
     public void GetDataRejectsUnsupportedTypes()
     {
         Action action = () => GetData(nameof(UnsupportedParameter));
@@ -119,24 +85,13 @@ public class CombinatorialDataAttributeTests : TestContainer
             .WithMessage($"*'value'*multiple combinatorial value providers*{nameof(CombinatorialValuesAttribute)}*{nameof(CombinatorialRangeAttribute)}*{nameof(ICombinatorialValuesProvider)}*");
     }
 
-    public void MemberDataProviderIsEnumeratedOnce()
+    public void DynamicValuesProviderIsEnumeratedOnce()
     {
         MemberEnumerationCount = 0;
 
-        GetData(nameof(CountingMemberData)).Should().HaveCount(4);
+        GetData(nameof(CountingDynamicValues)).Should().HaveCount(4);
 
         MemberEnumerationCount.Should().Be(1);
-    }
-
-    public void ClassDataProviderIsCreatedAndEnumeratedOnce()
-    {
-        CountingClassDataSource.ConstructionCount = 0;
-        CountingClassDataSource.EnumerationCount = 0;
-
-        GetData(nameof(CountingClassData)).Should().HaveCount(4);
-
-        CountingClassDataSource.ConstructionCount.Should().Be(1);
-        CountingClassDataSource.EnumerationCount.Should().Be(1);
     }
 
     public void ValueProviderAttributeIsResolvedOnce()
@@ -187,31 +142,6 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
-    [ExcludeTestCase(true, false)]
-    private static void ExactExclusion(bool first, bool second)
-    {
-    }
-
-    [ExcludeTestCase(typeof(AnyDataValue), false)]
-    private static void WildcardExclusion(bool first, bool second)
-    {
-    }
-
-    [ExcludeTestCase(true)]
-    private static void InvalidExclusion(bool first, bool second)
-    {
-    }
-
-    [ExcludeTestCase(null)]
-    private static void NullExclusion([CombinatorialValues(null, "value")] string? value)
-    {
-    }
-
-    [ExcludeTestCase(2)]
-    private static void IneffectiveExclusion(bool value)
-    {
-    }
-
     private static void UnsupportedParameter(Guid value)
     {
     }
@@ -223,14 +153,8 @@ public class CombinatorialDataAttributeTests : TestContainer
     {
     }
 
-    private static void CountingMemberData(
-        [CombinatorialMemberData(nameof(GetCountingMemberValues))] int value,
-        bool flag)
-    {
-    }
-
-    private static void CountingClassData(
-        [CombinatorialClassData(typeof(CountingClassDataSource))] int value,
+    private static void CountingDynamicValues(
+        [CombinatorialDynamicValues(nameof(GetCountingDynamicValues))] int value,
         bool flag)
     {
     }
@@ -241,31 +165,10 @@ public class CombinatorialDataAttributeTests : TestContainer
 
     public static int MemberEnumerationCount { get; set; }
 
-    public static IEnumerable<int> GetCountingMemberValues()
+    public static IEnumerable<int> GetCountingDynamicValues()
     {
         MemberEnumerationCount++;
         return [1, 2];
-    }
-
-    public sealed class CountingClassDataSource : IEnumerable<object[]>
-    {
-        public CountingClassDataSource() => ConstructionCount++;
-
-        public static int ConstructionCount { get; set; }
-
-        public static int EnumerationCount { get; set; }
-
-        public IEnumerator<object[]> GetEnumerator()
-            => GetRows().GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        private static IEnumerable<object[]> GetRows()
-        {
-            EnumerationCount++;
-            yield return [1];
-            yield return [2];
-        }
     }
 
     [AttributeUsage(AttributeTargets.Parameter)]

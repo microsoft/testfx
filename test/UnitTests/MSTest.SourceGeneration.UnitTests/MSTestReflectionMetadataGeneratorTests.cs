@@ -2635,6 +2635,39 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_PreservesEnumTestMethodParametersForNativeAot()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public enum CustomValue
+                {
+                    First,
+                    Second,
+                }
+
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1(CustomValue value) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registration.Should().Contain(
+            "[DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof(global::Sample.CustomValue))]");
+    }
+
+    [TestMethod]
     public void Generator_EmitsModuleInitializer_RegisteringAssemblyWithAttributes_AndCompilesAgainstHook()
     {
         const string userCode = """

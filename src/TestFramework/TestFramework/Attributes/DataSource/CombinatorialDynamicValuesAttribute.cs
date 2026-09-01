@@ -8,14 +8,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 [CLSCompliant(false)]
-public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesProvider
+public class CombinatorialDynamicValuesAttribute : Attribute, ICombinatorialValuesProvider
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="CombinatorialMemberDataAttribute"/> class.
+    /// Initializes a new instance of the <see cref="CombinatorialDynamicValuesAttribute"/> class.
     /// </summary>
     /// <param name="memberName">The name of the public static member that provides values.</param>
     /// <param name="arguments">Arguments for a method member. They are ignored for fields and properties.</param>
-    public CombinatorialMemberDataAttribute(string memberName, params object?[]? arguments)
+    public CombinatorialDynamicValuesAttribute(string memberName, params object?[]? arguments)
     {
         MemberName = memberName ?? throw new ArgumentNullException(nameof(memberName));
         Arguments = arguments ?? [null];
@@ -59,17 +59,17 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             string message = Arguments.Length > 0
                 ? string.Format(
                     CultureInfo.CurrentCulture,
-                    FrameworkMessages.CombinatorialMemberNotFoundWithParameterTypes,
+                    FrameworkMessages.CombinatorialDynamicValuesMemberNotFoundWithParameterTypes,
                     MemberName,
                     type.FullName,
                     string.Join(", ", Arguments.Select(p => p?.GetType().FullName ?? FrameworkMessages.Common_NullInMessages)))
-                : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberNotFound, MemberName, type.FullName);
+                : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialDynamicValuesMemberNotFound, MemberName, type.FullName);
             throw new ArgumentException(message);
         }
 
         IEnumerable values = accessor() as IEnumerable
             ?? throw new ArgumentException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberReturnedNull, MemberName, type.FullName));
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialDynamicValuesMemberReturnedNull, MemberName, type.FullName));
 
         return values.Cast<object?>().ToArray();
     }
@@ -212,7 +212,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
         return mostSpecificMethods.Length == 1
             ? mostSpecificMethods[0]
             : throw new ArgumentException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberMethodAmbiguous, MemberName));
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialDynamicValuesMethodAmbiguous, MemberName));
     }
 
     private static bool IsMoreSpecific(MethodInfo candidate, MethodInfo other)
@@ -262,14 +262,14 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
     {
         TypeInfo enumeratedType = GetEnumeratedType(enumerableType)
             ?? throw new ArgumentException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialMemberMustReturnGenericEnumerable, MemberName, declaringType.FullName));
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialDynamicValuesMustReturnGenericEnumerable, MemberName, declaringType.FullName));
 
         if (enumeratedType.IsGenericType && enumeratedType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
         {
             throw new ArgumentException(
                 string.Format(
                     CultureInfo.CurrentCulture,
-                    FrameworkMessages.CombinatorialMemberNestedEnumerableUnsupported,
+                    FrameworkMessages.CombinatorialDynamicValuesNestedEnumerableUnsupported,
                     MemberName,
                     declaringType.FullName,
                     enumeratedType.GenericTypeArguments[0].Name));
@@ -280,7 +280,7 @@ public class CombinatorialMemberDataAttribute : Attribute, ICombinatorialValuesP
             throw new ArgumentException(
                 string.Format(
                     CultureInfo.CurrentCulture,
-                    FrameworkMessages.CombinatorialMemberTypeIncompatible,
+                    FrameworkMessages.CombinatorialDynamicValuesTypeIncompatible,
                     parameterInfo.ParameterType.FullName,
                     enumeratedType.FullName));
         }

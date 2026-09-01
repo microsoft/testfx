@@ -3,6 +3,8 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
@@ -25,24 +27,23 @@ public class CombinatorialGenerationTests : TestContainer
             ]);
     }
 
-    public void GenerateCombinationsAppliesPredicate()
+    public void PublicGeneratorReturnsValuesAndSupportsLinqConstraints()
     {
-        int[][] rows = CombinatorialTestCaseGenerator.GenerateCombinations([3, 3], indices => indices[0] < indices[1]);
+        object?[][] rows = CombinatorialDataGenerator.Generate([1, 2, 3], [1, 2, 3])
+            .Where(row => (int)row[0]! < (int)row[1]!)
+            .ToArray();
 
-        AssertRows(rows, [[0, 1], [0, 2], [1, 2]]);
+        AssertRows(rows, [[1, 2], [1, 3], [2, 3]]);
     }
 
-    public void GenerateCombinationsIsolatesPredicateFromTraversalState()
+    public void PublicGeneratorSnapshotsDimensions()
     {
-        int[][] rows = CombinatorialTestCaseGenerator.GenerateCombinations(
-            [2, 2],
-            indices =>
-            {
-                indices[0] = 42;
-                return true;
-            });
+        object?[] first = [1, 2];
+        IEnumerable<object?[]> generatedRows = CombinatorialDataGenerator.Generate(first, ["a"]);
 
-        AssertRows(rows, [[0, 0], [0, 1], [1, 0], [1, 1]]);
+        first[0] = 42;
+
+        AssertRows(generatedRows.ToArray(), [[1, "a"], [2, "a"]]);
     }
 
     public void GenerateCombinationsHandlesEmptyAndInvalidDimensions()
@@ -51,6 +52,15 @@ public class CombinatorialGenerationTests : TestContainer
         CombinatorialTestCaseGenerator.GenerateCombinations([2, 0, 3]).Should().BeEmpty();
         Action action = () => CombinatorialTestCaseGenerator.GenerateCombinations([2, -1]);
         action.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    public void PublicGeneratorRejectsNullDimensions()
+    {
+        Action nullDimensions = () => CombinatorialDataGenerator.Generate(null!);
+        Action nullDimension = () => CombinatorialDataGenerator.Generate([1], null!);
+
+        nullDimensions.Should().Throw<ArgumentNullException>();
+        nullDimension.Should().Throw<ArgumentException>().WithMessage("*position 1*");
     }
 
     private static void AssertRows<T>(T[][] actual, T[][] expected)

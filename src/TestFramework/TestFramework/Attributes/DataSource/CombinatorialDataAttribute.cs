@@ -33,19 +33,12 @@ public class CombinatorialDataAttribute : Attribute, ITestDataSource
         }
 
         object?[][] values = new object?[parameters.Length][];
-        int[] dimensionSizes = new int[parameters.Length];
         for (int i = 0; i < parameters.Length; i++)
         {
             values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i]).ToArray();
-            dimensionSizes[i] = values[i].Length;
         }
 
-        ExcludeTestCaseAttribute[] exclusions = ExcludeTestCaseAttribute.GetExclusions(methodInfo);
-        CombinatorialIndexPredicate? isTestCaseAllowed = ExcludeTestCaseAttribute.CreateIndexMatcher(values, exclusions);
-        int[][] testCases = CombinatorialTestCaseGenerator.GenerateCombinations(dimensionSizes, isTestCaseAllowed);
-        return testCases.Select(indices =>
-            indices.Select((valueIndex, parameterIndex) => values[parameterIndex][valueIndex])
-                .ToArray());
+        return CombinatorialDataGenerator.Generate(values);
     }
 
     /// <inheritdoc />

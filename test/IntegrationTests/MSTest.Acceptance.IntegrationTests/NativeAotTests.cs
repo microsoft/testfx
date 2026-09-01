@@ -104,7 +104,7 @@ public class UnitTest1
     [TestMethod]
     [CombinatorialData]
     public void TestMethod6(
-        [CombinatorialMemberData(nameof(MemberValues.Values), MemberType = typeof(MemberValues))]
+        [CombinatorialDynamicValues(nameof(MemberValues.Values), MemberType = typeof(MemberValues))]
         int value)
     {
         Assert.IsTrue(value is 1 or 2);
@@ -112,12 +112,8 @@ public class UnitTest1
 
     [TestMethod]
     [CombinatorialData]
-    public void TestMethod7(
-        [CombinatorialClassData(typeof(ClassValues), 3)]
-        int value)
-    {
-        Assert.IsTrue(value is 3 or 4);
-    }
+    public void TestMethod7(CustomValue value)
+        => Assert.IsTrue(value is CustomValue.First or CustomValue.Second);
 }
 
 public static class MemberValues
@@ -125,15 +121,10 @@ public static class MemberValues
     public static List<int> Values => [1, 2];
 }
 
-public sealed class ClassValues(int start) : IEnumerable<object[]>
+public enum CustomValue
 {
-    public IEnumerator<object[]> GetEnumerator()
-    {
-        yield return [start];
-        yield return [start + 1];
-    }
-
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    First,
+    Second,
 }
 """;
 

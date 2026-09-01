@@ -308,7 +308,19 @@ internal static class TestClassModelBuilder
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol p = method.Parameters[i];
-            parameters[i] = new TestParameterModel(p.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified), p.Name);
+            INamedTypeSymbol? namedType = p.Type as INamedTypeSymbol;
+            if (namedType?.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                namedType = namedType.TypeArguments[0] as INamedTypeSymbol;
+            }
+
+            string? enumFullyQualifiedType = namedType?.TypeKind == TypeKind.Enum
+                ? namedType.ToDisplayString(SymbolDisplayFormats.FullyQualified)
+                : null;
+            parameters[i] = new TestParameterModel(
+                p.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified),
+                p.Name,
+                enumFullyQualifiedType);
         }
 
         return new EquatableArray<TestParameterModel>(parameters.ToImmutableArray());
