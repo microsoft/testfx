@@ -260,10 +260,17 @@ internal sealed class MtpServerClient : IMtpServerClient
     {
         DetachHandlers();
 
-        // Join the one teardown so Dispose still reports completion only after the transport and any launched
-        // server have stopped, including when it races or follows ShutdownAsync.
+        if (_host is not null)
+        {
+            // The host owns and joins its one teardown. Its synchronous disposal also preserves the IDisposable
+            // contract by reporting a callback failure rather than throwing it.
+            _host.Dispose();
+            return;
+        }
+
+        // An existing-connection client caches and joins the scheduled fallback teardown.
 #pragma warning disable VSTHRD002 // Synchronously waiting on tasks - this IS the synchronous disposal path; ShutdownAsync is the awaitable one.
-        StartShutdownAsync().GetAwaiter().GetResult();
+        StartConnectionShutdownAsync().GetAwaiter().GetResult();
 #pragma warning restore VSTHRD002
     }
 
@@ -271,14 +278,14 @@ internal sealed class MtpServerClient : IMtpServerClient
     public Task ShutdownAsync()
     {
         DetachHandlers();
-        return StartShutdownAsync();
+        return _host?.ShutdownAsync() ?? StartConnectionShutdownAsync();
     }
 
-    private Task StartShutdownAsync()
+    private Task StartConnectionShutdownAsync()
     {
         lock (_shutdownLock)
         {
-            return _shutdown ??= _host?.ShutdownAsync() ?? Task.Run(_connection.Dispose);
+            return _shutdown ??= Task.Run(_connection.Dispose);
         }
     }
 

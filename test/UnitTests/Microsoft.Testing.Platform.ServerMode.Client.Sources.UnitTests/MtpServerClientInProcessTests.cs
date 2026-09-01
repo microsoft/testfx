@@ -444,6 +444,20 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task ShutdownAsync_CallbackFaultsDuringShutdown_PropagatesCallbackException()
+    {
+        var callbackFailure = new InvalidOperationException("The application failed while shutting down.");
+        using var server = new InProcessServerFixture(onDisconnected: () => throw callbackFailure);
+        using MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => WithTimeoutAsync(client.ShutdownAsync()));
+
+        Assert.AreSame(callbackFailure, exception, "ShutdownAsync must preserve the callback's original post-connect failure.");
+    }
+
+    [TestMethod]
     public async Task Dispose_BlockedHandlersAndCallback_ReturnsWithinTheDocumentedBound()
     {
         var neverCompletes = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

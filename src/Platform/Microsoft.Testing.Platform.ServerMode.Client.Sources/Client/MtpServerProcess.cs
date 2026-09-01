@@ -24,9 +24,9 @@ internal sealed class MtpServerProcess : IMtpServerHost
     private const string ClientPortArgument = MtpServerConnector.ClientPortArgument;
     private const string NoBannerArgument = MtpServerConnector.NoBannerArgument;
 
-    // Bounded waits before and after killing the process: first let a server that observed transport closure
-    // exit cleanly, then ensure a forced termination releases executable file locks before the caller proceeds.
-    private const int ProcessExitTimeoutMs = 5000;
+    // Bounded wait after killing the process so the OS releases the executable's file locks before a
+    // caller (for example an acceptance test) deletes the application directory.
+    private const int ProcessKillTimeoutMs = 5000;
 
     private const int UnixPermissionDeniedErrorCode = 13;
 
@@ -85,7 +85,8 @@ internal sealed class MtpServerProcess : IMtpServerHost
     }
 
     /// <summary>
-    /// Gets the exit code of the launched application, or <see langword="null"/> while it is still running.
+    /// Gets the exit code of the launched application, or <see langword="null"/> while it is still running or
+    /// when forced termination was required.
     /// </summary>
     /// <remarks>
     /// Once teardown has run this returns the value captured then: a <see cref="Process"/> cannot be read
@@ -415,8 +416,9 @@ internal sealed class MtpServerProcess : IMtpServerHost
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
 
-    private static void SafeKill(Process process, IMtpClientLogger logger)
+    private static bool SafeKill(Process process, IMtpClientLogger logger)
     {
+        bool killed = false;
         try
         {
             if (!process.HasExited)
@@ -428,35 +430,24 @@ internal sealed class MtpServerProcess : IMtpServerHost
                 // server spawned are left to the OS. This is best-effort teardown on that platform.
                 process.Kill();
 #endif
+                killed = true;
 
                 // Block (bounded) for the OS to finish tearing the process down so a caller can immediately
                 // delete the application directory without racing a file lock on the still-exiting executable.
-                process.WaitForExit(ProcessExitTimeoutMs);
+                process.WaitForExit(ProcessKillTimeoutMs);
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)
         {
             logger.SafeLog(MtpClientLogLevel.Debug, $"Killing the MTP server process threw: {ex}");
         }
-    }
 
-    private static void SafeWaitForExit(Process process, IMtpClientLogger logger)
-    {
-        try
-        {
-            if (!process.HasExited)
-            {
-                process.WaitForExit(ProcessExitTimeoutMs);
-            }
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)
-        {
-            logger.SafeLog(MtpClientLogLevel.Debug, $"Waiting for the MTP server process to exit threw: {ex}");
-        }
+        return killed;
     }
 
     /// <summary>
-    /// Releases the transport, waits briefly for the launched process to exit cleanly, then kills it if needed.
+    /// Kills the launched process and releases the transport, waiting synchronously for the bounded kill so a
+    /// caller can immediately delete the application directory.
     /// </summary>
     /// <remarks>
     /// Joins the one teardown rather than starting a second, so a <see cref="Dispose"/> that races or follows
@@ -493,15 +484,15 @@ internal sealed class MtpServerProcess : IMtpServerHost
 
             MtpServerConnector.SafeStop(_listener, _logger);
 
-            // Transport closure is the server's graceful stop signal. Give it a bounded chance to finish so
-            // callers see the application's real exit code; SafeKill remains the fallback for a hung process.
-            SafeWaitForExit(_process, _logger);
-
             // Capture before killing, so an application that already exited on its own reports its real exit
             // code rather than the kill's, and before Dispose(), after which the Process cannot be read.
             int? exitCode = TryReadExitCode();
-            SafeKill(_process, _logger);
-            Volatile.Write(ref _capturedExitCode, exitCode ?? TryReadExitCode());
+            bool killed = SafeKill(_process, _logger);
+
+            // Preserve the race where the process exits naturally between the first read and SafeKill's
+            // HasExited check, but never publish the operating system's forced-termination status as though
+            // it were an application-returned exit code.
+            Volatile.Write(ref _capturedExitCode, exitCode ?? (!killed ? TryReadExitCode() : null));
 
             _process.Dispose();
         }

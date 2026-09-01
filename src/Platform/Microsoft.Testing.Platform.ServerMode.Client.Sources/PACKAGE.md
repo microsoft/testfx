@@ -100,6 +100,9 @@ Things to know:
 - **Failures before connection.** If the callback throws, is canceled, or returns before dialing back,
   the launch fails with `MtpServerConnectionClosedException` and your exception is preserved as the
   inner exception (instead of surfacing as a misleading connection timeout).
+- **Failures after connection.** `ShutdownAsync` finishes tearing down the connection and then rethrows the
+  callback's original exception. `Dispose` remains non-throwing and reports the same failure through
+  `MtpServerClientOptions.Logger`, so cleanup cannot mask an exception already leaving your code.
 - **Threading.** The callback is invoked on the thread pool, so the launch never blocks the caller and
   the callback never inherits the caller's synchronization context. There is no synchronous
   `LaunchInProcess` overload on purpose.

@@ -72,9 +72,14 @@ internal interface IMtpServerClient : IDisposable
     /// supplied connection.
     /// </summary>
     /// <remarks>
+    /// For an externally launched application the value is available only when the process exits on its own;
+    /// teardown that must forcibly terminate it reports <see langword="null"/> rather than an operating-system
+    /// kill status.
+    /// <para>
     /// For an application hosted in the caller's own process this is the value the launch callback returned
     /// (typically <c>TestApplication.RunAsync</c>'s exit code) and it becomes available once
     /// <see cref="ShutdownAsync"/> or <see cref="IDisposable.Dispose"/> has completed.
+    /// </para>
     /// </remarks>
     int? ServerExitCode { get; }
 
@@ -165,6 +170,9 @@ internal interface IMtpServerClient : IDisposable
     /// watchdog). Both entry points share one teardown, so a following <see cref="IDisposable.Dispose"/> is
     /// safe and returns as soon as that teardown is done — a <c>using</c> block plus an
     /// <c>await client.ShutdownAsync()</c> before it leaves is the recommended pattern on those platforms.
+    /// For an in-process application, a callback failure that occurs after connection is rethrown once
+    /// teardown has finished. Synchronous <see cref="IDisposable.Dispose"/> reports that failure through the
+    /// configured logger instead so it cannot mask an exception already propagating from the caller.
     /// </remarks>
     Task ShutdownAsync();
 }

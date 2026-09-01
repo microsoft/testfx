@@ -215,11 +215,22 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// </para>
     /// </remarks>
     public void Dispose()
+    {
         // Joins the one teardown rather than starting a second, so a Dispose that races or follows
         // ShutdownAsync still returns only once the application has actually stopped.
 #pragma warning disable VSTHRD002 // Synchronously waiting on tasks - this IS the synchronous disposal path; ShutdownAsync is the awaitable one.
-        => StartShutdownAsync().GetAwaiter().GetResult();
+        try
+        {
+            StartShutdownAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            // ShutdownAsync surfaces the callback's own post-connect failure. Dispose reports it instead so it
+            // cannot replace an exception already unwinding through a using statement or finally block.
+            _logger.SafeLog(MtpClientLogLevel.Error, $"The in-process MTP application failed during disposal: {ex}");
+        }
 #pragma warning restore VSTHRD002
+    }
 
     /// <inheritdoc />
     public Task ShutdownAsync()
@@ -286,10 +297,16 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         }
         catch (Exception ex)
         {
-            // The shared teardown task must never fault: every current and future Dispose/ShutdownAsync
-            // caller awaits this one task, so a fault here would turn one unlucky teardown into an exception
-            // thrown from every subsequent disposal — on paths documented never to throw.
+            // Teardown infrastructure failures are reported rather than replacing the callback's own failure.
             _logger.SafeLog(MtpClientLogLevel.Error, $"Tearing down the in-process MTP application threw: {ex}");
+        }
+
+        // ShutdownAsync is the explicit failure-observing path. Rethrow only a callback fault after every owned
+        // resource has been handled; cancellation requested by this teardown is expected, and an abandoned
+        // callback is observed by ShutdownServerAsync's continuation instead.
+        if (_serverTask.IsFaulted)
+        {
+            _ = await _serverTask.ConfigureAwait(false);
         }
     }
 

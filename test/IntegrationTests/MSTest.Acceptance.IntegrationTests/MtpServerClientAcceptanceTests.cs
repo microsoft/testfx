@@ -3,6 +3,8 @@
 
 extern alias serverclient;
 
+using System.Diagnostics;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 using serverclient::Microsoft.Testing.Platform.ServerMode.Client;
@@ -94,12 +96,24 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
                 $"Expected exactly one passed action node named '{ExpectedTestDisplayName}'. Collected: {Describe(snapshot)}");
 
             await client.ExitAsync(cancellationToken);
+            await WaitForServerExitAsync(client, cancellationToken);
 
             // The non-blocking teardown on the external-process path: it shares one teardown with Dispose, so
             // the trailing Dispose from the using block joins the same (already finished) work.
             await client.ShutdownAsync();
             Assert.AreEqual(0, client.ServerExitCode, "The launched process must have exited cleanly once shutdown completed.");
         }
+    }
+
+    private static async Task WaitForServerExitAsync(MtpServerClient client, CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (client.ServerExitCode is null && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
+        {
+            await Task.Delay(100, cancellationToken);
+        }
+
+        Assert.IsNotNull(client.ServerExitCode, "The launched process did not exit after receiving the exit notification.");
     }
 
     private static string Describe(IReadOnlyList<MtpTestNodeUpdate> nodes)
