@@ -7,7 +7,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
-    private static readonly TimeSpan RendezvousWaitTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan MaximumFinalizationTime = TimeSpan.FromSeconds(5);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -50,12 +49,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
         string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
-        string executionReadyFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.ready.txt");
-        string executionReleaseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.release.txt");
-        using var rendezvousTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
-        rendezvousTimeout.CancelAfter(RendezvousWaitTimeout);
 
-        Task<TestHostResult> executionTask = testHost.ExecuteAsync(
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--timeout 500ms",
             new()
             {
@@ -63,26 +58,18 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["BLOCK_FINALIZATION"] = "1",
                 ["FINALIZATION_STARTED_FILE"] = finalizationStartedFile,
                 ["DISPOSAL_FILE"] = disposalFile,
-                ["EXECUTION_READY_FILE"] = executionReadyFile,
-                ["EXECUTION_RELEASE_FILE"] = executionReleaseFile,
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
-            cancellationToken: rendezvousTimeout.Token);
-
-        await WaitForFileAsync(executionReadyFile, rendezvousTimeout.Token);
-        rendezvousTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
-        var stopwatch = Stopwatch.StartNew();
-        File.WriteAllText(executionReleaseFile, string.Empty);
-        TestHostResult testHostResult = await executionTask;
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
         Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
 
-        // Timing starts before releasing execution to trigger the 500ms test-host timeout. Five seconds gives the
-        // combined test-host and finalization budgets ample CI margin while remaining below the 10-second blocker.
-        Assert.IsLessThan(MaximumFinalizationTime, stopwatch.Elapsed, testHostResult.ToString());
+        // The child records a monotonic timestamp at callback entry, excluding process startup and JIT without a
+        // parent-observation race. Five seconds gives the 500ms budget ample margin but remains below the 10s blocker.
+        Assert.IsLessThan(MaximumFinalizationTime, GetElapsedTimeSince(finalizationStartedFile), testHostResult.ToString());
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -91,46 +78,29 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
-        string executionReadyFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.ready.txt");
-        string executionReleaseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.release.txt");
-        using var rendezvousTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
-        rendezvousTimeout.CancelAfter(RendezvousWaitTimeout);
 
-        Task<TestHostResult> executionTask = testHost.ExecuteAsync(
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--timeout 500ms",
             new()
             {
                 ["BLOCK_UNTIL_TIMEOUT"] = "1",
                 ["BLOCK_DISPOSAL"] = "1",
                 ["DISPOSAL_ATTEMPTS_FILE"] = disposalAttemptsFile,
-                ["EXECUTION_READY_FILE"] = executionReadyFile,
-                ["EXECUTION_RELEASE_FILE"] = executionReleaseFile,
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
-            cancellationToken: rendezvousTimeout.Token);
-
-        await WaitForFileAsync(executionReadyFile, rendezvousTimeout.Token);
-        rendezvousTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
-        var stopwatch = Stopwatch.StartNew();
-        File.WriteAllText(executionReleaseFile, string.Empty);
-        TestHostResult testHostResult = await executionTask;
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
 
-        // Timing starts before releasing execution to trigger the 500ms test-host timeout. Five seconds gives the
-        // combined test-host and finalization budgets ample CI margin while remaining below the 10-second blocker.
-        Assert.IsLessThan(MaximumFinalizationTime, stopwatch.Elapsed, testHostResult.ToString());
+        // The child records a monotonic timestamp at disposal entry, excluding process startup and JIT without a
+        // parent-observation race. Five seconds gives the 500ms budget ample margin but remains below the 10s blocker.
+        Assert.IsLessThan(MaximumFinalizationTime, GetElapsedTimeSince(disposalAttemptsFile), testHostResult.ToString());
     }
 
-    private static async Task WaitForFileAsync(string path, CancellationToken cancellationToken)
-    {
-        while (!File.Exists(path))
-        {
-            await Task.Delay(10, cancellationToken);
-        }
-    }
+    private static TimeSpan GetElapsedTimeSince(string timestampFile)
+        => Stopwatch.GetElapsedTime(long.Parse(File.ReadAllText(timestampFile), CultureInfo.InvariantCulture));
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
@@ -152,6 +122,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
 
 #file Program.cs
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;
@@ -214,7 +186,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
 
         if (Environment.GetEnvironmentVariable("FINALIZATION_STARTED_FILE") is { Length: > 0 } finalizationStartedFile)
         {
-            System.IO.File.WriteAllText(finalizationStartedFile, string.Empty);
+            System.IO.File.WriteAllText(finalizationStartedFile, Stopwatch.GetTimestamp().ToString(CultureInfo.InvariantCulture));
         }
 
         if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
@@ -239,7 +211,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
     {
         if (Environment.GetEnvironmentVariable("DISPOSAL_ATTEMPTS_FILE") is { Length: > 0 } disposalAttemptsFile)
         {
-            System.IO.File.AppendAllText(disposalAttemptsFile, "Dispose" + Environment.NewLine);
+            System.IO.File.AppendAllText(disposalAttemptsFile, Stopwatch.GetTimestamp().ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
         }
 
         if (Environment.GetEnvironmentVariable("DISPOSAL_FILE") is { Length: > 0 } disposalFile)
@@ -278,19 +250,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         if (Environment.GetEnvironmentVariable("BLOCK_UNTIL_TIMEOUT") == "1")
         {
-            if (Environment.GetEnvironmentVariable("EXECUTION_READY_FILE") is { Length: > 0 } readyFile)
-            {
-                System.IO.File.WriteAllText(readyFile, string.Empty);
-            }
-
-            if (Environment.GetEnvironmentVariable("EXECUTION_RELEASE_FILE") is { Length: > 0 } releaseFile)
-            {
-                while (!System.IO.File.Exists(releaseFile))
-                {
-                    Thread.Sleep(10);
-                }
-            }
-
             Thread.Sleep(2000);
         }
 
