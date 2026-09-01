@@ -486,10 +486,6 @@ Actual: {2}</value>
     <value>Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</value>
     <comment>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</comment>
   </data>
-  <data name="CombinatorialDynamicValuesNestedEnumerableUnsupported" xml:space="preserve">
-    <value>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</value>
-    <comment>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</comment>
-  </data>
   <data name="CombinatorialDynamicValuesTypeIncompatible" xml:space="preserve">
     <value>Parameter type {0} is not compatible with returned member type {1}.</value>
     <comment>{0} is the test method parameter type. {1} is the member data element type.</comment>

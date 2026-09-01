@@ -14,6 +14,7 @@ public class CombinatorialDynamicValuesAttributeTests : TestContainer
     private static readonly ParameterInfo IntParameter = GetParameter(nameof(IntParameterStub));
     private static readonly ParameterInfo NullableIntParameter = GetParameter(nameof(NullableIntParameterStub));
     private static readonly ParameterInfo ObjectArrayParameter = GetParameter(nameof(ObjectArrayParameterStub));
+    private static readonly ParameterInfo EnumerableIntParameter = GetParameter(nameof(EnumerableIntParameterStub));
     private static readonly ParameterInfo StringParameter = GetParameter(nameof(StringParameterStub));
 
     public void ReadsValuesFromPropertyFieldAndMethod()
@@ -117,16 +118,25 @@ public class CombinatorialDynamicValuesAttributeTests : TestContainer
         ((object[])values[1]!).Should().Equal([2, 3]);
     }
 
-    public void RejectsMissingNonGenericNestedAndIncompatibleMembers()
+    public void AllowsNestedEnumerablesForEnumerableParameter()
+    {
+        object?[] values = new CombinatorialDynamicValuesAttribute(nameof(NestedValues)).GetValues(EnumerableIntParameter);
+
+        values.Should().HaveCount(2);
+        ((IEnumerable<int>)values[0]!).Should().Equal([1]);
+        ((IEnumerable<int>)values[1]!).Should().Equal([2]);
+    }
+
+    public void RejectsMissingNonGenericAndIncompatibleMembers()
     {
         Action missing = () => new CombinatorialDynamicValuesAttribute("Missing").GetValues(IntParameter);
         Action nonGeneric = () => new CombinatorialDynamicValuesAttribute(nameof(NonGenericValues)).GetValues(IntParameter);
-        Action nested = () => new CombinatorialDynamicValuesAttribute(nameof(NestedValues)).GetValues(IntParameter);
+        Action nestedIncompatible = () => new CombinatorialDynamicValuesAttribute(nameof(NestedValues)).GetValues(IntParameter);
         Action incompatible = () => new CombinatorialDynamicValuesAttribute(nameof(StringProperty)).GetValues(IntParameter);
 
         missing.Should().Throw<ArgumentException>().WithMessage("*Could not find*");
         nonGeneric.Should().Throw<ArgumentException>().WithMessage("*IEnumerable<T>*");
-        nested.Should().Throw<ArgumentException>().WithMessage("*not supported*");
+        nestedIncompatible.Should().Throw<ArgumentException>().WithMessage("*not compatible*");
         incompatible.Should().Throw<ArgumentException>().WithMessage("*not compatible*");
     }
 
@@ -168,6 +178,10 @@ public class CombinatorialDynamicValuesAttributeTests : TestContainer
     }
 
     private static void ObjectArrayParameterStub(object[] value)
+    {
+    }
+
+    private static void EnumerableIntParameterStub(IEnumerable<int> value)
     {
     }
 

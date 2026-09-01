@@ -264,17 +264,6 @@ public class CombinatorialDynamicValuesAttribute : Attribute, ICombinatorialValu
             ?? throw new ArgumentException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CombinatorialDynamicValuesMustReturnGenericEnumerable, MemberName, declaringType.FullName));
 
-        if (enumeratedType.IsGenericType && enumeratedType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-        {
-            throw new ArgumentException(
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.CombinatorialDynamicValuesNestedEnumerableUnsupported,
-                    MemberName,
-                    declaringType.FullName,
-                    enumeratedType.GenericTypeArguments[0].Name));
-        }
-
         if (!IsParameterTypeCompatible(parameterInfo.ParameterType, enumeratedType.AsType()))
         {
             throw new ArgumentException(

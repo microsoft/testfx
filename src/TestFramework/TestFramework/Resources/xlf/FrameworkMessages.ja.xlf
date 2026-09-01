@@ -378,11 +378,6 @@
         <target state="new">Member {0} on {1} must return a type that implements IEnumerable&lt;T&gt;.</target>
         <note>{0} is the member name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;T&gt;"}.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialDynamicValuesNestedEnumerableUnsupported">
-        <source>Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</source>
-        <target state="new">Member {0} on {1} returned an IEnumerable&lt;IEnumerable&lt;{2}&gt;&gt;, which is not supported.</target>
-        <note>{0} is the member name. {1} is the declaring type name. {2} is the nested element type name. Do not localize the generic type prefix {Locked="IEnumerable&lt;IEnumerable&lt;"}.</note>
-      </trans-unit>
       <trans-unit id="CombinatorialDynamicValuesTypeIncompatible">
         <source>Parameter type {0} is not compatible with returned member type {1}.</source>
         <target state="new">Parameter type {0} is not compatible with returned member type {1}.</target>
