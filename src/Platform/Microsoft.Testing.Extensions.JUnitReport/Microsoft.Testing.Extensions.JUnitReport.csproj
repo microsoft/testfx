@@ -40,6 +40,10 @@ $(CommonProductDescription)]]></PackageDescription>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
@@ -56,6 +60,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.cs" Link="Helpers\ReportGeneratorBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProviderRegistration.cs" Link="Helpers\ReportProviderRegistration.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportRecovery.cs" Link="Helpers\ReportRecovery.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestResultCaptureHelper.cs" Link="Helpers\TestResultCaptureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />

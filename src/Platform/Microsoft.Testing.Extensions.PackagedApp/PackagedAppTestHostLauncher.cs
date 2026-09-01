@@ -92,7 +92,13 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
     private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     private const string LogicalRunIdEnvironmentVariableName = "TESTINGPLATFORM_LOGICAL_RUN_ID";
+    // These names must match the reporter packages' JournalEnvironmentVariableName constants. They are repeated
+    // here intentionally so PackagedApp does not take dependencies on every report package just to forward launch metadata.
+    private const string CtrfReportJournalEnvironmentVariableName = "TESTINGPLATFORM_CTRFREPORT_JOURNAL";
+    private const string HtmlReportJournalEnvironmentVariableName = "TESTINGPLATFORM_HTMLREPORT_JOURNAL";
+    private const string JUnitReportJournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
     private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
+    private const string RetryRecoveredArtifactManifestEnvironmentVariableName = "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST";
     private const string TrxTestRunIdEnvironmentVariableName = "TESTINGPLATFORM_TRX_TESTRUN_ID";
     private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
 
@@ -388,7 +394,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
         {
             if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, CtrfReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, HtmlReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, JUnitReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, RetryAttemptEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, RetryRecoveredArtifactManifestEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, LogicalRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, TrxTestRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)

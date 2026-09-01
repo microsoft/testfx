@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -7,13 +7,26 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
+#pragma warning disable RS0051 // Recovery status is reporter implementation detail, not package API.
+
 internal sealed class JUnitXmlWriter(
     IFileSystem fileSystem,
     IEnvironment environment,
     ITestFramework testFramework,
     int exitCode,
-    CancellationToken cancellationToken)
+    CancellationToken cancellationToken,
+    bool isIncomplete = false)
 {
+    public JUnitXmlWriter(
+        IFileSystem fileSystem,
+        IEnvironment environment,
+        ITestFramework testFramework,
+        int exitCode,
+        CancellationToken cancellationToken)
+        : this(fileSystem, environment, testFramework, exitCode, cancellationToken, isIncomplete: false)
+    {
+    }
+
     public async Task WriteXmlAsync(string tempPath, SuiteSet suites)
     {
         var settings = new XmlWriterSettings
@@ -51,6 +64,11 @@ internal sealed class JUnitXmlWriter(
         {
             cancellationToken.ThrowIfCancellationRequested();
             await WriteSuiteAsync(writer, suite, suiteId++).ConfigureAwait(false);
+        }
+
+        if (isIncomplete && suiteId == 0)
+        {
+            await WriteMetadataOnlySuiteAsync(writer, suites).ConfigureAwait(false);
         }
 
         await writer.WriteEndElementAsync().ConfigureAwait(false);
@@ -154,6 +172,28 @@ internal sealed class JUnitXmlWriter(
         }
 
         await WritePropertyAsync(writer, "exit-code", exitCode.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(false);
+        if (isIncomplete)
+        {
+            await WritePropertyAsync(writer, "run-status", "aborted").ConfigureAwait(false);
+            await WritePropertyAsync(writer, "incomplete", "true").ConfigureAwait(false);
+        }
+
+        await writer.WriteEndElementAsync().ConfigureAwait(false);
+    }
+
+    private async Task WriteMetadataOnlySuiteAsync(XmlWriter writer, SuiteSet suites)
+    {
+        await writer.WriteStartElementAsync(prefix: null, localName: "testsuite", ns: null).ConfigureAwait(false);
+        WriteAttribute(writer, "name", suites.Name);
+        WriteAttribute(writer, "tests", "0");
+        WriteAttribute(writer, "failures", "0");
+        WriteAttribute(writer, "errors", "0");
+        WriteAttribute(writer, "skipped", "0");
+        WriteAttribute(writer, "time", "0.000");
+        WriteAttribute(writer, "timestamp", FormatTimestamp(suites.Timestamp));
+        WriteAttribute(writer, "hostname", environment.MachineName);
+        WriteAttribute(writer, "id", "0");
+        await WriteSuitePropertiesAsync(writer).ConfigureAwait(false);
         await writer.WriteEndElementAsync().ConfigureAwait(false);
     }
 
@@ -345,3 +385,5 @@ internal sealed class JUnitXmlWriter(
     private static string FormatTimestamp(DateTimeOffset timestamp)
         => timestamp.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture);
 }
+
+#pragma warning restore RS0051

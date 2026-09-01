@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -20,6 +21,12 @@ namespace Microsoft.Testing.Extensions.Policy;
 [UnsupportedOSPlatform("browser")]
 internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer, ITestHostControllerConnectionAuthorizationConsumer
 {
+    private const long MaxRecoveredArtifactManifestBytes = 16L * 1024 * 1024;
+    private const int MaxRecoveredArtifactManifestLineBytes = 64 * 1024;
+    private const int MaxRecoveredArtifactManifestRecords = 10_000;
+    private const int MaxRecoveredArtifactPathChars = 32 * 1024;
+    private const int MaxRecoveredArtifactKindChars = 1024;
+
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileSystem _fileSystem;
@@ -207,6 +214,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             }
 
             currentTryResultFolder = Path.Combine(retryRootFolder, attemptCount.ToString(CultureInfo.InvariantCulture));
+            fileSystem.CreateDirectory(currentTryResultFolder);
 
             // Prepare the pipe server that collects the child process's failed test UIDs.
             using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
@@ -233,10 +241,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 userMaxRetryCount,
                 cancellationToken).ConfigureAwait(false);
 
-            if (attemptResult.ExitedBeforeConnect)
-            {
-                return (int)ExitCode.GenericFailure;
-            }
+            CollectRecoveredArtifacts(
+                fileSystem,
+                attemptResult.RecoveredArtifactManifestPath,
+                retryFailedTestsPipeServer.Artifacts,
+                logger);
 
             attemptArtifacts.AddRange(RetryArtifactProcessor.SnapshotAttemptArtifacts(
                 fileSystem,
@@ -244,6 +253,13 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 attemptCount,
                 currentTryResultFolder,
                 retryRootFolder));
+
+            if (attemptResult.ExitedBeforeConnect)
+            {
+                exitCodes.Add((int)ExitCode.GenericFailure);
+                retryInterrupted = true;
+                break;
+            }
 
             exitCodes.Add(attemptResult.ExitCode);
 
@@ -462,4 +478,180 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
     private static bool IsHotReloadEnabled(IEnvironment environment)
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+
+    private static void CollectRecoveredArtifacts(
+        IFileSystem fileSystem,
+        string manifestPath,
+        List<ArtifactRequest> artifacts,
+        ILogger logger)
+    {
+        try
+        {
+            if (!fileSystem.ExistFile(manifestPath))
+            {
+                return;
+            }
+
+            using IFileStream stream = fileSystem.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var reader = new BoundedManifestLineReader(stream.Stream);
+            int recordCount = 0;
+            while (recordCount++ < MaxRecoveredArtifactManifestRecords)
+            {
+                BoundedManifestLineReadResult readResult = reader.ReadLine(out string line);
+                if (readResult == BoundedManifestLineReadResult.End)
+                {
+                    return;
+                }
+
+                if (readResult == BoundedManifestLineReadResult.LimitExceeded)
+                {
+                    logger.LogWarning($"Stopped reading recovered retry artifact manifest '{manifestPath}' because it exceeded a configured size limit.");
+                    return;
+                }
+
+                int separatorIndex = line.IndexOf('\t');
+                if (separatorIndex <= 0)
+                {
+                    logger.LogWarning($"Ignoring malformed recovered retry artifact manifest entry in '{manifestPath}'.");
+                    continue;
+                }
+
+                try
+                {
+                    string path = Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(0, separatorIndex)));
+                    string encodedKind = line.Substring(separatorIndex + 1);
+                    string? kind = encodedKind == "-"
+                        ? null
+                        : Encoding.UTF8.GetString(Convert.FromBase64String(encodedKind));
+                    if (path.Length > MaxRecoveredArtifactPathChars
+                        || kind?.Length > MaxRecoveredArtifactKindChars)
+                    {
+                        logger.LogWarning($"Ignoring oversized recovered retry artifact manifest entry in '{manifestPath}'.");
+                        continue;
+                    }
+
+                    if (!fileSystem.ExistFile(path))
+                    {
+                        logger.LogWarning($"Ignoring recovered retry artifact '{path}' because it does not exist.");
+                        continue;
+                    }
+
+                    if (kind is not null)
+                    {
+                        artifacts.RemoveAll(artifact => string.Equals(artifact.Kind, kind, StringComparison.Ordinal));
+                    }
+                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, path, StringComparison.Ordinal)))
+                    {
+                        continue;
+                    }
+
+                    artifacts.Add(new ArtifactRequest(path, kind));
+                }
+                catch (Exception ex) when (ex is FormatException or ArgumentException or NotSupportedException or PathTooLongException)
+                {
+                    logger.LogWarning($"Ignoring malformed recovered retry artifact manifest entry in '{manifestPath}': {ex.Message}");
+                }
+            }
+
+            logger.LogWarning($"Stopped reading recovered retry artifact manifest '{manifestPath}' after the maximum of {MaxRecoveredArtifactManifestRecords} records.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            logger.LogWarning($"Failed to read recovered retry artifact manifest '{manifestPath}': {ex}");
+        }
+        finally
+        {
+            try
+            {
+                if (fileSystem.ExistFile(manifestPath))
+                {
+                    fileSystem.DeleteFile(manifestPath);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning($"Failed to delete recovered retry artifact manifest '{manifestPath}': {ex}");
+            }
+        }
+    }
+
+    private enum BoundedManifestLineReadResult
+    {
+        Line,
+        End,
+        LimitExceeded,
+    }
+
+    private sealed class BoundedManifestLineReader(Stream stream)
+    {
+        private const int BufferSize = 8192;
+
+        private readonly byte[] _readBuffer = new byte[BufferSize];
+        private readonly byte[] _lineBuffer = new byte[MaxRecoveredArtifactManifestLineBytes];
+        private int _readOffset;
+        private int _readCount;
+        private long _bytesRead;
+
+        public BoundedManifestLineReadResult ReadLine(out string line)
+        {
+            int lineLength = 0;
+            while (TryReadByte(out byte value))
+            {
+                if (++_bytesRead > MaxRecoveredArtifactManifestBytes)
+                {
+                    line = string.Empty;
+                    return BoundedManifestLineReadResult.LimitExceeded;
+                }
+
+                if (value == (byte)'\n')
+                {
+                    return DecodeLine(lineLength, out line);
+                }
+
+                if (lineLength >= MaxRecoveredArtifactManifestLineBytes)
+                {
+                    line = string.Empty;
+                    return BoundedManifestLineReadResult.LimitExceeded;
+                }
+
+                _lineBuffer[lineLength++] = value;
+            }
+
+            if (lineLength == 0)
+            {
+                line = string.Empty;
+                return BoundedManifestLineReadResult.End;
+            }
+
+            return DecodeLine(lineLength, out line);
+        }
+
+        private BoundedManifestLineReadResult DecodeLine(int lineLength, out string line)
+        {
+            if (lineLength > 0 && _lineBuffer[lineLength - 1] == (byte)'\r')
+            {
+                lineLength--;
+            }
+
+            line = Encoding.UTF8.GetString(_lineBuffer, 0, lineLength);
+            return BoundedManifestLineReadResult.Line;
+        }
+
+        private bool TryReadByte(out byte value)
+        {
+            if (_readOffset >= _readCount)
+            {
+                _readCount = stream.Read(_readBuffer, 0, _readBuffer.Length);
+                _readOffset = 0;
+                if (_readCount == 0)
+                {
+                    value = default;
+                    return false;
+                }
+            }
+
+            value = _readBuffer[_readOffset++];
+            return true;
+        }
+    }
 }

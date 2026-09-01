@@ -361,6 +361,16 @@ button.chevron:focus-visible { outline: 2px solid var(--accent); outline-offset:
   font-size: 13px;
 }
 
+.incomplete-banner {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  color: var(--error);
+  background: var(--error-bg);
+  font-weight: 600;
+}
+
 .pager {
   display: flex;
   gap: 8px;
@@ -519,6 +529,9 @@ footer {
 </header>
 
 <main>
+  <div id="incomplete-banner" class="incomplete-banner" role="alert" hidden>
+    This report is incomplete because the test host terminated unexpectedly. Tests absent from this report did not necessarily pass.
+  </div>
   <section class="summary-cards" id="summary-cards"></section>
   <section class="meta" id="meta"></section>
 
@@ -562,6 +575,7 @@ footer {
   var rawData = document.getElementById("mtp-data").textContent;
   var report = JSON.parse(rawData);
   var tests = report.tests || [];
+  document.getElementById("incomplete-banner").hidden = !report.incomplete;
 
   // Outcome ordering: failed first, then errored, timed out, skipped, passed.
   var OUTCOME_ORDER = { failed: 0, errored: 1, timedOut: 2, skipped: 3, passed: 4 };

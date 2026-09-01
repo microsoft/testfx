@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Text.Json.Nodes;
 
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Platform.CommandLine;
@@ -61,6 +62,38 @@ public class HtmlReportEngineTests
         Assert.Contains("\"passed\":1", html);
         Assert.Contains("\"failed\":1", html);
         Assert.Contains("\"skipped\":1", html);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_WhenRecoveredAfterCrash_MarksReportIncomplete()
+    {
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream, isIncomplete: true);
+
+        await engine.GenerateReportAsync([Captured("p1", "Recovered test", "passed")]);
+
+        string html = memoryStream.GetUtf8Content();
+        Assert.Contains("\"incomplete\":true", html);
+        Assert.Contains("\"runStatus\":\"aborted\"", html);
+        Assert.Contains("\"displayName\":\"Recovered test\"", html);
+        Assert.Contains("Tests absent from this report did not necessarily pass.", html);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_WhenAnyInputIsIncomplete_PropagatesRecoveryMetadata(bool collapseRetryAttempts)
+    {
+        string complete = BuildMergeInput("complete", incomplete: false);
+        string incomplete = BuildMergeInput("incomplete", incomplete: true);
+
+        string merged = HtmlReportMerger.Merge(
+            [incomplete, complete],
+            collapseRetryAttempts ? HtmlMergeMode.CollapseRetryAttempts : HtmlMergeMode.Concatenate);
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(merged))!.AsObject();
+
+        Assert.IsTrue((bool)report["incomplete"]!);
+        Assert.AreEqual("aborted", (string?)report["runStatus"]);
     }
 
     [TestMethod]
@@ -680,15 +713,49 @@ public class HtmlReportEngineTests
             ErrorMessage = errorMessage,
         };
 
-    private HtmlReportEngine CreateEngine(MemoryFileStream stream)
+    private static string BuildMergeInput(string uid, bool incomplete)
+    {
+        var report = new JsonObject
+        {
+            ["schemaVersion"] = "1",
+            ["generator"] = "Microsoft.Testing.Extensions.HtmlReport",
+            ["generatorVersion"] = "1.0.0",
+            ["testApplication"] = "app",
+            ["machineName"] = "machine",
+            ["userName"] = "user",
+            ["framework"] = "framework",
+            ["frameworkUid"] = "framework",
+            ["frameworkVersion"] = "1.0.0",
+            ["startTime"] = "2026-08-31T12:00:00.0000000+00:00",
+            ["endTime"] = "2026-08-31T12:00:01.0000000+00:00",
+            ["exitCode"] = incomplete ? 1 : 0,
+            ["tests"] = new JsonArray(new JsonObject
+            {
+                ["uid"] = uid,
+                ["displayName"] = uid,
+                ["outcome"] = "passed",
+                ["durationMs"] = 1,
+            }),
+            ["summary"] = new JsonObject(),
+        };
+        if (incomplete)
+        {
+            report["incomplete"] = true;
+            report["runStatus"] = "aborted";
+        }
+
+        return HtmlReportEngine.RenderReport(report.ToJsonString());
+    }
+
+    private HtmlReportEngine CreateEngine(MemoryFileStream stream, bool isIncomplete = false)
     {
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>())).Returns(stream);
 
-        return CreateEngine();
+        return CreateEngine(isIncomplete);
     }
 
-    private HtmlReportEngine CreateEngine()
+    private HtmlReportEngine CreateEngine(bool isIncomplete = false)
     {
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
@@ -708,7 +775,8 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None));
+            CancellationToken.None,
+            IsIncomplete: isIncomplete));
     }
 
     internal sealed class MemoryFileStream : IFileStream
