@@ -27,31 +27,33 @@
     <Error Condition="!Exists('$(_VSWherePath)')"
            Text="Running this Windows application test requires Visual Studio Installer's vswhere.exe at '$(_VSWherePath)'." />
 
-    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -find Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
+    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -property installationPath"
           ConsoleToMSBuild="true"
           StandardOutputImportance="Low">
-      <Output TaskParameter="ConsoleOutput" ItemName="_WindowsAppVSTestConsole" />
-    </Exec>
-    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -find MSBuild\Current\Bin\MSBuild.exe"
-          ConsoleToMSBuild="true"
-          StandardOutputImportance="Low">
-      <Output TaskParameter="ConsoleOutput" ItemName="_WindowsAppMSBuild" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="_WindowsAppVSInstallation" />
     </Exec>
 
-    <Error Condition="'@(_WindowsAppVSTestConsole)' == ''"
+    <PropertyGroup>
+      <_WindowsAppVSTestConsole Condition="Exists('$(_WindowsAppVSInstallation)\Common7\IDE\Extensions\TestPlatform\vstest.console.exe')">$(_WindowsAppVSInstallation)\Common7\IDE\Extensions\TestPlatform\vstest.console.exe</_WindowsAppVSTestConsole>
+      <_WindowsAppVSTestConsole Condition="'$(_WindowsAppVSTestConsole)' == '' AND Exists('$(_WindowsAppVSInstallation)\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe')">$(_WindowsAppVSInstallation)\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe</_WindowsAppVSTestConsole>
+      <_WindowsAppMSBuild>$(_WindowsAppVSInstallation)\MSBuild\Current\Bin\MSBuild.exe</_WindowsAppMSBuild>
+    </PropertyGroup>
+
+    <Error Condition="'$(_WindowsAppVSTestConsole)' == ''"
            Text="Running this Windows application test requires Visual Studio with the Universal Windows Platform workload and test tools." />
-    <Error Condition="'@(_WindowsAppMSBuild)' == ''"
+    <Error Condition="!Exists('$(_WindowsAppMSBuild)')"
            Text="Building this Windows application test requires Visual Studio with the Universal Windows Platform workload." />
 
     <PropertyGroup>
       <_WindowsAppVSTestRestoreArgument Condition="Exists('$(_WindowsAppVSTestRestoreMarker)')">/restore</_WindowsAppVSTestRestoreArgument>
     </PropertyGroup>
 
-    <Exec Command="&quot;@(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; $(_WindowsAppVSTestRestoreArgument) /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:IsTestProject=false /p:UseUwpTools=$(UseUwp) /nologo"
+    <Exec Command="&quot;$(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; $(_WindowsAppVSTestRestoreArgument) /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:IsTestProject=false /p:UseUwpTools=$(UseUwp) /nologo"
           Condition="'$(WindowsAppVSTestNoBuildRequested)' != 'true'" />
 
     <ItemGroup>
-      <_WindowsAppVSTestRecipe Include="$(MSBuildProjectDirectory)\bin\$(Platform)\$(Configuration)\**\*.build.appxrecipe" />
+      <_WindowsAppVSTestRecipe Include="$(TargetDir)$(AssemblyName).build.appxrecipe"
+                              Condition="Exists('$(TargetDir)$(AssemblyName).build.appxrecipe')" />
     </ItemGroup>
 
     <Error Condition="'@(_WindowsAppVSTestRecipe)' == ''"
@@ -124,7 +126,7 @@
                       Overwrite="true"
                       WriteOnlyWhenDifferent="true" />
 
-    <Exec Command="&quot;@(_WindowsAppVSTestConsole)&quot; @&quot;$(_WindowsAppVSTestResponseFile)&quot;" />
+    <Exec Command="&quot;$(_WindowsAppVSTestConsole)&quot; @&quot;$(_WindowsAppVSTestResponseFile)&quot;" />
     <Delete Files="$(_WindowsAppVSTestResponseFile);$(_WindowsAppVSTestRestoreMarker)" />
 
     <OnError ExecuteTargets="_CleanWindowsAppVSTestFiles" />
