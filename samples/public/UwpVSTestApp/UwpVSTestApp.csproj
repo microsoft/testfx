@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="VSTestNoBuild">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <Platforms>x86;x64;arm64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <PublishAot>true</PublishAot>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <IsTestProject>true</IsTestProject>
+    <UseWindowsAppVSTestRecipe>true</UseWindowsAppVSTestRecipe>
+    <WindowsAppVSTestNoBuildRequested>$(VSTestNoBuild)</WindowsAppVSTestNoBuildRequested>
+    <VSTestNoBuild>true</VSTestNoBuild>
+    <UseUwp>true</UseUwp>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <EnableMsixTooling>true</EnableMsixTooling>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="TestContainer" />
+    <SDKReference Include="TestPlatform.Universal, Version=$(VisualStudioVersion)" />
+    <RuntimeHostConfigurationOption Include="MSTest.EnableParentProcessQuery"
+                                    Value="false"
+                                    Trim="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- True UWP/AppContainer test applications are hosted by VSTest, not Microsoft.Testing.Platform. -->
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(VSTestVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(VSTestVersion)" ExcludeAssets="build" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+  </ItemGroup>
+
+  <Target Name="UseNuGetTestPlatformRuntime" BeforeTargets="SDKRedistOutputGroup">
+    <ItemGroup>
+      <ResolvedRedistFiles Remove="$(MSBuildProgramFiles32)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\TestPlatform.Universal\$(VisualStudioVersion)\Redist\**\*" />
+    </ItemGroup>
+  </Target>
+
+</Project>
