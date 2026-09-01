@@ -458,6 +458,7 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    [DoNotParallelize] // Measures overlapping timeout paths; thread-pool contention would measure unrelated tests instead.
     public async Task Dispose_BlockedHandlersAndCallback_ReturnsWithinTheDocumentedBound()
     {
         var neverCompletes = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
