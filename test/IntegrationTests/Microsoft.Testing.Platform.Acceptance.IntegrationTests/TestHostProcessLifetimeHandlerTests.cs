@@ -50,6 +50,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
         string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
+        using var markerTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        markerTimeout.CancelAfter(MarkerWaitTimeout);
 
         Task<TestHostResult> executionTask = testHost.ExecuteAsync(
             "--timeout 500ms",
@@ -62,10 +64,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: markerTimeout.Token);
 
-        await WaitForFileAsync(finalizationStartedFile, TestContext.CancellationToken)
-            .WaitAsync(MarkerWaitTimeout, TestContext.CancellationToken);
+        await WaitForFileAsync(finalizationStartedFile, markerTimeout.Token);
+        markerTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
         var stopwatch = Stopwatch.StartNew();
         TestHostResult testHostResult = await executionTask;
 
@@ -83,6 +85,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
+        using var markerTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        markerTimeout.CancelAfter(MarkerWaitTimeout);
 
         Task<TestHostResult> executionTask = testHost.ExecuteAsync(
             "--timeout 500ms",
@@ -94,10 +98,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: markerTimeout.Token);
 
-        await WaitForFileAsync(disposalAttemptsFile, TestContext.CancellationToken)
-            .WaitAsync(MarkerWaitTimeout, TestContext.CancellationToken);
+        await WaitForFileAsync(disposalAttemptsFile, markerTimeout.Token);
+        markerTimeout.CancelAfter(Timeout.InfiniteTimeSpan);
         var stopwatch = Stopwatch.StartNew();
         TestHostResult testHostResult = await executionTask;
 
