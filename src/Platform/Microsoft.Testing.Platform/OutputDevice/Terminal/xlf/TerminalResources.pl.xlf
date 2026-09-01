@@ -219,12 +219,12 @@
       </trans-unit>
       <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
         <source>At least one test failed.</source>
-        <target state="new">At least one test failed.</target>
+        <target state="translated">Co najmniej jeden test zakończył się niepowodzeniem.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
         <source>One or more code coverage thresholds were not met.</source>
-        <target state="new">One or more code coverage thresholds were not met.</target>
+        <target state="translated">Co najmniej jeden próg pokrycia kodu nie został osiągnięty.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeDependentProcessExitedDescription">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeGenericFailureDescription">
         <source>An unexpected error occurred.</source>
-        <target state="new">An unexpected error occurred.</target>
+        <target state="translated">Wystąpił nieoczekiwany błąd.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
@@ -259,7 +259,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
         <source>The test adapter reported a test session failure.</source>
-        <target state="new">The test adapter reported a test session failure.</target>
+        <target state="translated">Adapter testowy zgłosił błąd sesji testowej.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
@@ -269,7 +269,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
         <source>Test execution stopped after reaching the maximum failed tests limit.</source>
-        <target state="new">Test execution stopped after reaching the maximum failed tests limit.</target>
+        <target state="translated">Wykonywanie testu zostało zatrzymane po osiągnięciu maksymalnego limitu testów zakończonych niepowodzeniem.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeTestSessionAbortedDescription">
         <source>The test session was aborted.</source>
-        <target state="new">The test session was aborted.</target>
+        <target state="translated">Sesja testowa została przerwana.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeUnknownDescription">
@@ -580,7 +580,7 @@ Domyślną wartością jest 'failed', gdy opcja '--output' ma wartość 'Minimal
       </trans-unit>
       <trans-unit id="TestDiscoveryExitCode">
         <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
-        <target state="new">Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</target>
+        <target state="translated">Odnajdywanie testów zostało ukończone z kodem zakończenia bez powodzenia: {0}. {1} Zobacz: https://aka.ms/testingplatform/exitcodes</target>
         <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
@@ -590,7 +590,7 @@ Domyślną wartością jest 'failed', gdy opcja '--output' ma wartość 'Minimal
       </trans-unit>
       <trans-unit id="TestRunExitCode">
         <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
-        <target state="new">Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</target>
+        <target state="translated">Przebieg testu został ukończony z kodem zakończenia bez powodzenia: {0}. {1} Zobacz: https://aka.ms/testingplatform/exitcodes</target>
         <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
