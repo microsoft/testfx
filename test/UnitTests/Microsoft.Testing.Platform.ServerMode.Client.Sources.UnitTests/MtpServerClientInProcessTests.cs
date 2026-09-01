@@ -129,6 +129,49 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackBlocksBeforeReturningTask_ReturnsWithoutBlockingCaller()
+    {
+        using var releaseCallback = new ManualResetEventSlim(initialState: false);
+        var callbackEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var server = new InProcessServerFixture();
+
+        // StartNew intentionally does not unwrap the launch task: this test must observe whether invoking the
+        // async factory itself returns while the callback is blocked in its synchronous prefix.
+        Task<Task<MtpServerClient>> invocation = Task.Factory.StartNew(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (arguments, serverToken) =>
+                {
+                    callbackEntered.TrySetResult(true);
+                    releaseCallback.Wait(serverToken);
+                    return server.RunAsync(arguments, serverToken);
+                },
+                CreateOptions(),
+                TestContext.CancellationToken),
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
+
+        await WithTimeoutAsync(callbackEntered.Task);
+        try
+        {
+            Task completed = await Task.WhenAny(invocation, Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken));
+            Assert.AreSame(invocation, completed, "Calling LaunchInProcessAsync must return its task without waiting for the callback's synchronous prefix.");
+
+            Task<MtpServerClient> launch = await invocation;
+            Assert.IsFalse(launch.IsCompleted, "The launch must still be waiting for the gated callback to connect.");
+            releaseCallback.Set();
+
+            using MtpServerClient client = await WithTimeoutAsync(launch);
+            _ = await WithTimeoutAsync(server.Connected);
+            _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+        }
+        finally
+        {
+            releaseCallback.Set();
+        }
+    }
+
+    [TestMethod]
     public async Task LaunchInProcessAsync_CallbackIsCanceledBeforeConnecting_PreservesCancellationException()
     {
         MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
