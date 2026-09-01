@@ -353,11 +353,6 @@
         <target state="translated">{0}。{1}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialDimensionCannotBeNull">
-        <source>Dimension at position {0} cannot be null.</source>
-        <target state="new">Dimension at position {0} cannot be null.</target>
-        <note>{0} is the zero-based dimension position. Do not localize the C# keyword {Locked="null"}.</note>
-      </trans-unit>
       <trans-unit id="CombinatorialDynamicValuesMemberNotFound">
         <source>Could not find public static member (property, field, or method) named '{0}' on {1}.</source>
         <target state="new">Could not find public static member (property, field, or method) named '{0}' on {1}.</target>

@@ -23,11 +23,6 @@ public sealed class CombinatorialDataTests
     }
 
     [TestMethod]
-    [DynamicData(nameof(ConstrainedData))]
-    public void AppliesLinqConstraintsThroughDynamicData(bool first, bool second)
-        => Assert.IsTrue(second);
-
-    [TestMethod]
     [CombinatorialData]
     public void CombinesDynamicValues(
         [CombinatorialDynamicValues(nameof(Colors))] string color,
@@ -46,8 +41,4 @@ public sealed class CombinatorialDataTests
     public static IEnumerable<string> Colors => ["red", "blue"];
 
     public static IEnumerable<int> Primes => [2, 3, 5];
-
-    public static IEnumerable<object?[]> ConstrainedData
-        => CombinatorialDataGenerator.Generate([true, false], [true, false])
-            .Where(row => (bool)row[1]!);
 }

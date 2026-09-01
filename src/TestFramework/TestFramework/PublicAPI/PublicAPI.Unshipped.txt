@@ -28,7 +28,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttr
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.CombinatorialDataAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataGenerator
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDynamicValuesAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDynamicValuesAttribute.Arguments.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDynamicValuesAttribute.CombinatorialDynamicValuesAttribute(string! memberName, params object?[]? arguments) -> void
@@ -61,4 +60,3 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAt
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.Values.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataGenerator.Generate(params object?[]![]! dimensions) -> System.Collections.Generic.IEnumerable<object?[]!>!

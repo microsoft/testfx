@@ -502,10 +502,6 @@ Actual: {2}</value>
     <value>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</value>
     <comment>{0} is the parameter type. {1} is the provider interface name.</comment>
   </data>
-  <data name="CombinatorialDimensionCannotBeNull" xml:space="preserve">
-    <value>Dimension at position {0} cannot be null.</value>
-    <comment>{0} is the zero-based dimension position. Do not localize the C# keyword {Locked="null"}.</comment>
-  </data>
   <data name="CombinatorialNegativeDimensionSize" xml:space="preserve">
     <value>Dimension sizes cannot be negative.</value>
     <comment>Error message shown when a combinatorial dimension size is negative.</comment>
