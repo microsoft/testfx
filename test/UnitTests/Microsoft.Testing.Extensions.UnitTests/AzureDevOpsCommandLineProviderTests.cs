@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -203,6 +203,303 @@ public sealed class AzureDevOpsCommandLineProviderTests
         AzureDevOpsCommandLineProvider provider = new();
         CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter);
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["^MyCompany\\.Testing\\."]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSlowTestHistoryIsUsedWithoutAzureDevOpsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory] = ["14"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsSlowTestHistoryRequiresAzureDevOps, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSlowTestHistoryMinSampleIsUsedWithoutSlowTestHistoryAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample] = ["5"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSlowTestHistoryMultiplierIsUsedWithoutSlowTestHistoryAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier] = ["1.5"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenSlowTestHistorySubOptionsAreUsedWithSlowTestHistoryAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory] = ["14"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample] = ["5"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier] = ["1.5"],
+        })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenArtifactUploadOptionsAreUsedWithUploadDisabledAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName] = ["MyArtifact"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts] = [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeOff],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenArtifactUploadOptionsAreUsedWithoutUploadArtifactsSetAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude] = ["**/*.log"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenArtifactUploadOptionsAreUsedWithUploadEnabledAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName] = ["MyArtifact"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts] = [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeAll],
+        })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenPublishRunNameIsUsedWithoutPublishTestResultsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName] = ["MyRun"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.PublishAzdoRunNameRequiresPublishAzdoTestResults, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenPublishRunNameIsUsedWithPublishTestResultsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName] = ["MyRun"],
+            [AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName] = [],
+        })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenNoOptionsAreSetAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("91")]
+    [DataRow("not-a-number")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForOutOfRangeFlakyHistoryDaysAsync(string days)
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [days]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForInRangeFlakyHistoryDaysAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["30"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("91")]
+    [DataRow("not-a-number")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForOutOfRangeSlowTestHistoryDaysAsync(string days)
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [days]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("not-a-number")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForInvalidSlowTestHistoryMinSampleAsync(string minSample)
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [minSample]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForValidSlowTestHistoryMinSampleAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["10"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("10001")]
+    [DataRow("not-a-number")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForOutOfRangeSlowTestHistoryMultiplierAsync(string multiplier)
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [multiplier]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForValidSlowTestHistoryMultiplierAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["2.5"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForUnknownArtifactUploadModeAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["unknown-mode"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.Contains("unknown-mode", validationResult.ErrorMessage ?? string.Empty);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForKnownArtifactUploadModeAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeTagsOnly]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForUnknownSeverityAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["critical"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.Contains("critical", validationResult.ErrorMessage ?? string.Empty);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForKnownSeverityAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["error"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForRelativeGlobPatternAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["**/*.log"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForAbsoluteGlobPatternAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["/absolute/path/*.log"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForEmptyGlobPatternAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [" "]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForMultipleGlobPatternsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["**/*.log", "artifacts/**"]).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
     }
