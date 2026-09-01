@@ -24,9 +24,9 @@ internal sealed class MtpServerProcess : IMtpServerHost
     private const string ClientPortArgument = MtpServerConnector.ClientPortArgument;
     private const string NoBannerArgument = MtpServerConnector.NoBannerArgument;
 
-    // Bounded wait after killing the process so the OS releases the executable's file locks before a
-    // caller (for example an acceptance test) deletes the application directory.
-    private const int ProcessKillTimeoutMs = 5000;
+    // Bounded waits before and after killing the process: first let a server that observed transport closure
+    // exit cleanly, then ensure a forced termination releases executable file locks before the caller proceeds.
+    private const int ProcessExitTimeoutMs = 5000;
 
     private const int UnixPermissionDeniedErrorCode = 13;
 
@@ -431,7 +431,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
 
                 // Block (bounded) for the OS to finish tearing the process down so a caller can immediately
                 // delete the application directory without racing a file lock on the still-exiting executable.
-                process.WaitForExit(ProcessKillTimeoutMs);
+                process.WaitForExit(ProcessExitTimeoutMs);
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)
@@ -440,9 +440,23 @@ internal sealed class MtpServerProcess : IMtpServerHost
         }
     }
 
+    private static void SafeWaitForExit(Process process, IMtpClientLogger logger)
+    {
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.WaitForExit(ProcessExitTimeoutMs);
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)
+        {
+            logger.SafeLog(MtpClientLogLevel.Debug, $"Waiting for the MTP server process to exit threw: {ex}");
+        }
+    }
+
     /// <summary>
-    /// Kills the launched process and releases the transport, waiting synchronously for the bounded kill so a
-    /// caller can immediately delete the application directory.
+    /// Releases the transport, waits briefly for the launched process to exit cleanly, then kills it if needed.
     /// </summary>
     /// <remarks>
     /// Joins the one teardown rather than starting a second, so a <see cref="Dispose"/> that races or follows
@@ -478,6 +492,10 @@ internal sealed class MtpServerProcess : IMtpServerHost
             }
 
             MtpServerConnector.SafeStop(_listener, _logger);
+
+            // Transport closure is the server's graceful stop signal. Give it a bounded chance to finish so
+            // callers see the application's real exit code; SafeKill remains the fallback for a hung process.
+            SafeWaitForExit(_process, _logger);
 
             // Capture before killing, so an application that already exited on its own reports its real exit
             // code rather than the kill's, and before Dispose(), after which the Process cannot be read.

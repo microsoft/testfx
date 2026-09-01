@@ -26,8 +26,10 @@ internal sealed class MtpServerClient : IMtpServerClient
     private readonly MtpJsonRpcConnection _connection;
     private readonly MtpServerClientOptions _options;
     private readonly IMtpServerHost? _host;
+    private readonly object _shutdownLock = new();
 
     private Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? _serverRequestHandler;
+    private Task? _shutdown;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MtpServerClient"/> class over an existing connection.
@@ -258,34 +260,26 @@ internal sealed class MtpServerClient : IMtpServerClient
     {
         DetachHandlers();
 
-        // No early-return guard here: both teardown paths are themselves idempotent AND join a teardown
-        // already in flight, so a Dispose that follows or races ShutdownAsync still returns only once the
-        // server has actually stopped, instead of reporting success while teardown is still running.
-        if (_host is not null)
-        {
-            // The host owns the connection: its teardown closes the transport in the order the launched
-            // server expects and then tears the server itself down.
-            _host.Dispose();
-        }
-        else
-        {
-            _connection.Dispose();
-        }
+        // Join the one teardown so Dispose still reports completion only after the transport and any launched
+        // server have stopped, including when it races or follows ShutdownAsync.
+#pragma warning disable VSTHRD002 // Synchronously waiting on tasks - this IS the synchronous disposal path; ShutdownAsync is the awaitable one.
+        StartShutdownAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
     }
 
     /// <inheritdoc />
     public Task ShutdownAsync()
     {
         DetachHandlers();
+        return StartShutdownAsync();
+    }
 
-        if (_host is not null)
+    private Task StartShutdownAsync()
+    {
+        lock (_shutdownLock)
         {
-            return _host.ShutdownAsync();
+            return _shutdown ??= _host?.ShutdownAsync() ?? Task.Run(_connection.Dispose);
         }
-
-        // No launched server to await: the client only wraps a caller-supplied transport.
-        _connection.Dispose();
-        return Task.CompletedTask;
     }
 
     private void DetachHandlers()

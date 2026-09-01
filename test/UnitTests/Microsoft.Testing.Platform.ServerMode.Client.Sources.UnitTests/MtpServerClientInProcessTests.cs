@@ -330,6 +330,18 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task ShutdownAsync_PreservesNonzeroCallbackExitCode()
+    {
+        using var server = new InProcessServerFixture(exitCode: 42);
+        using MtpServerClient client = await LaunchAsync(server);
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
+
+        await WithTimeoutAsync(client.ShutdownAsync());
+
+        Assert.AreEqual(42, client.ServerExitCode, "Shutdown must preserve the exact exit code returned by the connected callback.");
+    }
+
+    [TestMethod]
     public async Task Dispose_FromANotificationHandler_DoesNotSelfWaitOnTheReadLoop()
     {
         // Teardown runs on the thread pool, so the read-loop AsyncLocal marker the connection uses to detect
@@ -432,11 +444,13 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
-    public async Task Dispose_CallbackAndNotificationHandlerIgnoreShutdown_ReturnsWithinTheDocumentedBound()
+    public async Task Dispose_BlockedHandlersAndCallback_ReturnsWithinTheDocumentedBound()
     {
         var neverCompletes = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var handlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancellationHandlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseCancellationHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
         MtpServerClientOptions options = CreateOptions();
         options.ServerShutdownTimeout = TimeSpan.FromSeconds(1);
@@ -456,6 +470,11 @@ public sealed class MtpServerClientInProcessTests
                 {
                     using FakeMtpServer server = ConnectBack(arguments);
                     connected.TrySetResult(server);
+                    using CancellationTokenRegistration registration = serverToken.Register(() =>
+                    {
+                        cancellationHandlerEntered.TrySetResult(true);
+                        releaseCancellationHandler.Task.GetAwaiter().GetResult();
+                    });
 
                     // Deliberately ignores both the closed transport and the cancellation token.
                     await neverCompletes.Task;
@@ -487,6 +506,10 @@ public sealed class MtpServerClientInProcessTests
                 stopwatch.Elapsed,
                 $"Dispose took {stopwatch.Elapsed.TotalSeconds:N1}s; it must abandon an unresponsive application within the documented bound rather than block indefinitely.");
 
+            Assert.IsTrue(
+                await WithTimeoutAsync(cancellationHandlerEntered.Task),
+                "Shutdown must request cancellation without waiting inline for a blocking callback registration.");
+
             string text;
             lock (log)
             {
@@ -498,6 +521,7 @@ public sealed class MtpServerClientInProcessTests
         finally
         {
             _ = releaseHandler.TrySetResult(true);
+            _ = releaseCancellationHandler.TrySetResult(true);
             _ = neverCompletes.TrySetResult(true);
         }
     }
@@ -669,6 +693,7 @@ public sealed class MtpServerClientInProcessTests
     private sealed class InProcessServerFixture : IDisposable
     {
         private readonly Action? _onDisconnected;
+        private readonly int _exitCode;
         private readonly TaskCompletionSource<int> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly TaskCompletionSource<FakeMtpServer> _connected = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly StringBuilder _log = new();
@@ -678,8 +703,11 @@ public sealed class MtpServerClientInProcessTests
         private int _completionCount;
         private int _transportClosedCount;
 
-        public InProcessServerFixture(Action? onDisconnected = null)
-            => _onDisconnected = onDisconnected;
+        public InProcessServerFixture(Action? onDisconnected = null, int exitCode = 0)
+        {
+            _onDisconnected = onDisconnected;
+            _exitCode = exitCode;
+        }
 
         /// <summary>Gets the argument array the client generated for the callback (empty before it ran).</summary>
         public string[] Arguments { get; private set; } = [];
@@ -746,8 +774,8 @@ public sealed class MtpServerClientInProcessTests
                 _ = Interlocked.Increment(ref _transportClosedCount);
                 _onDisconnected?.Invoke();
                 _ = Interlocked.Increment(ref _completionCount);
-                _ = _completion.TrySetResult(0);
-                return 0;
+                _ = _completion.TrySetResult(_exitCode);
+                return _exitCode;
             }
             catch (Exception exception)
             {

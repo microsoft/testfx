@@ -98,7 +98,7 @@ public sealed class MtpServerClientAcceptanceTests : AcceptanceTestBase<MtpServe
             // The non-blocking teardown on the external-process path: it shares one teardown with Dispose, so
             // the trailing Dispose from the using block joins the same (already finished) work.
             await client.ShutdownAsync();
-            Assert.IsNotNull(client.ServerExitCode, "The launched process must have reported an exit code once shutdown completed.");
+            Assert.AreEqual(0, client.ServerExitCode, "The launched process must have exited cleanly once shutdown completed.");
         }
     }
 
