@@ -289,7 +289,7 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
         <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</target>
+        <target state="translated">MTP używa opcji specyficznych dla kolektora. Zapoznaj się z dokumentacją rozszerzenia, aby zapoznać się z jego opcją MTP.</target>
         <note>{Locked="MTP"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
@@ -304,12 +304,12 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
         <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
-        <target state="new">Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</target>
+        <target state="translated">Opcja „--{0}” używa składni VSTest, która nie jest obsługiwana przez Microsoft.Testing.Platform.</target>
         <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestReplacementSuggestion">
         <source>Use {0} instead.</source>
-        <target state="new">Use {0} instead.</target>
+        <target state="translated">Zamiast niego użyj ciągu {0}.</target>
         <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">

@@ -294,7 +294,7 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
-        <target state="new">For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</target>
+        <target state="translated">콘솔의 세부 정보 표시를 비교하려면 '--output {0}'를 사용합니다. 콘솔 출력MTP 다르게 구성되었으므로 정확한 대체가 아닙니다.</target>
         <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
