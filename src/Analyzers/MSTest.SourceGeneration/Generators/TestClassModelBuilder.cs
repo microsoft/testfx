@@ -308,7 +308,7 @@ internal static class TestClassModelBuilder
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol p = method.Parameters[i];
-            INamedTypeSymbol? namedType = p.Type as INamedTypeSymbol;
+            var namedType = p.Type as INamedTypeSymbol;
             if (namedType?.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
             {
                 namedType = namedType.TypeArguments[0] as INamedTypeSymbol;
