@@ -1236,25 +1236,75 @@ public class RetryTests
             int pipeNameIndex = context.Arguments.ToList().IndexOf($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}") + 1;
             var pipeClient = new NamedPipeClientStream(".", context.Arguments[pipeNameIndex], PipeDirection.InOut, PipeOptions.Asynchronous);
             await pipeClient.ConnectAsync(5_000, cancellationToken);
-            return new ConnectedTestHostHandle(pipeClient);
+            return new ConnectedTestHostHandle(pipeClient, new GetListOfFailedTestsRequestSerializer().Id);
         }
     }
 
-    private sealed class ConnectedTestHostHandle(NamedPipeClientStream pipeClient) : ITestHostHandle
+    private sealed class ConnectedTestHostHandle : ITestHostHandle
     {
+        private readonly NamedPipeClientStream _pipeClient;
+        private readonly Task _exitTask;
+        private readonly int _requestSerializerId;
+
+        public ConnectedTestHostHandle(NamedPipeClientStream pipeClient, int requestSerializerId)
+        {
+            _pipeClient = pipeClient;
+            _requestSerializerId = requestSerializerId;
+            _exitTask = CompleteRunAsync();
+        }
+
         public string Identifier => nameof(ConnectedTestHostHandle);
 
         public int ExitCode => 0;
 
-        public bool HasExited => true;
+        public bool HasExited => _exitTask.IsCompleted;
 
-        public Task WaitForExitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task WaitForExitAsync(CancellationToken cancellationToken)
+            => _exitTask.WithCancellationAsync(cancellationToken);
 
         public void Terminate()
         {
         }
 
-        public void Dispose() => pipeClient.Dispose();
+        public void Dispose() => _pipeClient.Dispose();
+
+        private async Task CompleteRunAsync()
+        {
+            await Task.Yield();
+
+            // Complete a retry-protocol round trip before reporting exit so the server has accepted the connection.
+            byte[] request = new byte[2 * sizeof(int)];
+            BitConverter.GetBytes(sizeof(int)).CopyTo(request, 0);
+            BitConverter.GetBytes(_requestSerializerId).CopyTo(request, sizeof(int));
+            await _pipeClient.WriteAsync(request, 0, request.Length, CancellationToken.None);
+            await _pipeClient.FlushAsync(CancellationToken.None);
+
+            byte[] responseSizeBuffer = new byte[sizeof(int)];
+            await ReadExactlyAsync(responseSizeBuffer);
+            int responseSize = BitConverter.ToInt32(responseSizeBuffer, 0);
+            if (responseSize < sizeof(int))
+            {
+                throw new InvalidDataException($"Invalid retry pipe response size: {responseSize}.");
+            }
+
+            await ReadExactlyAsync(new byte[responseSize]);
+            _pipeClient.Dispose();
+        }
+
+        private async Task ReadExactlyAsync(byte[] buffer)
+        {
+            int bytesRead = 0;
+            while (bytesRead < buffer.Length)
+            {
+                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, CancellationToken.None);
+                if (read == 0)
+                {
+                    throw new EndOfStreamException("The retry pipe closed before the response was complete.");
+                }
+
+                bytesRead += read;
+            }
+        }
     }
 
     private sealed class AlreadyExitedTestHostLauncher(int exitCode) : ITestHostLauncher
