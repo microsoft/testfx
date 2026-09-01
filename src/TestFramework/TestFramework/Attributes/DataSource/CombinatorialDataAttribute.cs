@@ -8,8 +8,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 /// <summary>
 /// Provides every possible combination of values for the parameters of a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-public class CombinatorialDataAttribute : Attribute, ITestDataSource
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+public sealed class CombinatorialDataAttribute : Attribute, ITestDataSource
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CombinatorialDataAttribute"/> class.
@@ -33,20 +33,47 @@ public class CombinatorialDataAttribute : Attribute, ITestDataSource
         }
 
         object?[][] values = new object?[parameters.Length][];
-        int[] dimensionSizes = new int[parameters.Length];
         for (int i = 0; i < parameters.Length; i++)
         {
             values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i]).ToArray();
-            dimensionSizes[i] = values[i].Length;
         }
 
-        int[][] testCases = CombinatorialTestCaseGenerator.GenerateCombinations(dimensionSizes);
-        return testCases.Select(indices =>
-            indices.Select((valueIndex, parameterIndex) => values[parameterIndex][valueIndex])
-                .ToArray());
+        return GenerateRows(values);
     }
 
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
+
+    private static IEnumerable<object?[]> GenerateRows(object?[][] values)
+    {
+        if (values.Any(static dimension => dimension.Length == 0))
+        {
+            yield break;
+        }
+
+        int[] indices = new int[values.Length];
+        while (true)
+        {
+            object?[] row = new object?[values.Length];
+            for (int i = 0; i < row.Length; i++)
+            {
+                row[i] = values[i][indices[i]];
+            }
+
+            yield return row;
+
+            int dimension = indices.Length - 1;
+            while (dimension >= 0 && ++indices[dimension] == values[dimension].Length)
+            {
+                indices[dimension] = 0;
+                dimension--;
+            }
+
+            if (dimension < 0)
+            {
+                yield break;
+            }
+        }
+    }
 }

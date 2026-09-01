@@ -16,16 +16,16 @@ public class CombinatorialValueAttributeTests : TestContainer
 
     public void SignedRangeSupportsCountsAndStepsInBothDirections()
     {
-        new CombinatorialRangeAttribute(3, 3).Values.Should().Equal([3, 4, 5]);
-        new CombinatorialRangeAttribute(0, 7, 2).Values.Should().Equal([0, 2, 4, 6]);
-        new CombinatorialRangeAttribute(7, 0, -2).Values.Should().Equal([7, 5, 3, 1]);
+        new CombinatorialRangeAttribute(3, 3).GetValues(null!).Should().Equal([3, 4, 5]);
+        new CombinatorialRangeAttribute(0, 7, 2).GetValues(null!).Should().Equal([0, 2, 4, 6]);
+        new CombinatorialRangeAttribute(7, 0, -2).GetValues(null!).Should().Equal([7, 5, 3, 1]);
     }
 
     public void UnsignedRangeSupportsStepsInBothDirections()
     {
-        new CombinatorialRangeAttribute(0u, 4u).Values.Should().Equal([0u, 1u, 2u, 3u]);
-        new CombinatorialRangeAttribute(0u, 7u, 2u).Values.Should().Equal([0u, 2u, 4u, 6u]);
-        new CombinatorialRangeAttribute(7u, 0u, 2u).Values.Should().Equal([7u, 5u, 3u, 1u]);
+        new CombinatorialRangeAttribute(0u, 4u).GetValues(null!).Should().Equal([0u, 1u, 2u, 3u]);
+        new CombinatorialRangeAttribute(0u, 7u, 2u).GetValues(null!).Should().Equal([0u, 2u, 4u, 6u]);
+        new CombinatorialRangeAttribute(7u, 0u, 2u).GetValues(null!).Should().Equal([7u, 5u, 3u, 1u]);
     }
 
     public void RangeRejectsInvalidCountsAndSteps()
@@ -48,11 +48,11 @@ public class CombinatorialValueAttributeTests : TestContainer
     public void RangeHandlesBoundaryArithmeticWithoutWrapping()
     {
         new CombinatorialRangeAttribute(int.MinValue, int.MaxValue, int.MaxValue)
-            .Values.Should().Equal([int.MinValue, -1, int.MaxValue - 1]);
+            .GetValues(null!).Should().Equal([int.MinValue, -1, int.MaxValue - 1]);
         new CombinatorialRangeAttribute(0u, uint.MaxValue, uint.MaxValue)
-            .Values.Should().Equal([0u, uint.MaxValue]);
+            .GetValues(null!).Should().Equal([0u, uint.MaxValue]);
         new CombinatorialRangeAttribute(uint.MaxValue - 1, uint.MaxValue, 2u)
-            .Values.Should().Equal([uint.MaxValue - 1]);
+            .GetValues(null!).Should().Equal([uint.MaxValue - 1]);
     }
 
     public void RandomDataIsUniqueBoundedSeededAndCached()
@@ -65,7 +65,7 @@ public class CombinatorialValueAttributeTests : TestContainer
             Seed = 42,
         };
 
-        object[] values = attribute.Values;
+        object[] values = attribute.GetValues(null!);
 
         values.Should().HaveCount(5).And.OnlyHaveUniqueItems();
         values.Cast<int>().Should().OnlyContain(value => value >= 10 && value <= 20);
@@ -76,21 +76,21 @@ public class CombinatorialValueAttributeTests : TestContainer
             Minimum = 10,
             Maximum = 20,
             Seed = 42,
-        }.Values.Should().Equal(values);
+        }.GetValues(null!).Should().Equal(values);
         new CombinatorialRandomDataAttribute
         {
             Count = 5,
             Minimum = 10,
             Maximum = 20,
             Seed = 43,
-        }.Values.Should().NotEqual(values);
+        }.GetValues(null!).Should().NotEqual(values);
     }
 
     public void RandomDataRejectsInvalidConfiguration()
     {
-        Action nonPositiveCount = () => _ = new CombinatorialRandomDataAttribute { Count = 0 }.Values;
-        Action reversedRange = () => _ = new CombinatorialRandomDataAttribute { Minimum = 2, Maximum = 1 }.Values;
-        Action excessiveCount = () => _ = new CombinatorialRandomDataAttribute { Count = 3, Minimum = 1, Maximum = 2 }.Values;
+        Action nonPositiveCount = () => _ = new CombinatorialRandomDataAttribute { Count = 0 }.GetValues(null!);
+        Action reversedRange = () => _ = new CombinatorialRandomDataAttribute { Minimum = 2, Maximum = 1 }.GetValues(null!);
+        Action excessiveCount = () => _ = new CombinatorialRandomDataAttribute { Count = 3, Minimum = 1, Maximum = 2 }.GetValues(null!);
 
         nonPositiveCount.Should().Throw<InvalidOperationException>();
         reversedRange.Should().Throw<InvalidOperationException>();
@@ -105,21 +105,21 @@ public class CombinatorialValueAttributeTests : TestContainer
             Minimum = 0,
             Maximum = 1000,
             Seed = 42,
-        }.Values;
+        }.GetValues(null!);
         object[] fullRangeValues = new CombinatorialRandomDataAttribute
         {
             Count = 10,
             Minimum = int.MinValue,
             Maximum = int.MaxValue,
             Seed = 42,
-        }.Values;
+        }.GetValues(null!);
         object[] maximumValue = new CombinatorialRandomDataAttribute
         {
             Count = 1,
             Minimum = int.MaxValue,
             Maximum = int.MaxValue,
             Seed = 42,
-        }.Values;
+        }.GetValues(null!);
 
         denseValues.Should().HaveCount(1001).And.OnlyHaveUniqueItems();
         fullRangeValues.Should().HaveCount(10).And.OnlyHaveUniqueItems();

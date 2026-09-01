@@ -15,6 +15,4 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.set 
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities
-Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialTestCaseGenerator
-static Microsoft.VisualStudio.TestTools.UnitTesting.CombinatorialTestCaseGenerator.GenerateCombinations(int[]! dimensionSizes) -> int[]![]!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities.GetValuesFor(System.Reflection.ParameterInfo! parameter) -> System.Collections.Generic.IEnumerable<object?>!

@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 [CLSCompliant(false)]
-public class CombinatorialValuesAttribute : Attribute, ICombinatorialValuesProvider
+public sealed class CombinatorialValuesAttribute : Attribute, ICombinatorialValuesProvider
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CombinatorialValuesAttribute"/> class.

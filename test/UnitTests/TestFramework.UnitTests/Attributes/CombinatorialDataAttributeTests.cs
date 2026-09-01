@@ -113,6 +113,23 @@ public class CombinatorialDataAttributeTests : TestContainer
         displayName.Should().Be("ExplicitParameters (\"a\",2)");
     }
 
+    public void CombinatorialAttributesAreSealedAndDataAttributeIsNotInherited()
+    {
+        Type[] attributeTypes =
+        [
+            typeof(CombinatorialDataAttribute),
+            typeof(CombinatorialDynamicValuesAttribute),
+            typeof(CombinatorialRandomDataAttribute),
+            typeof(CombinatorialRangeAttribute),
+            typeof(CombinatorialValuesAttribute),
+        ];
+        AttributeUsageAttribute usage = typeof(CombinatorialDataAttribute).GetCustomAttribute<AttributeUsageAttribute>()!;
+
+        attributeTypes.Should().OnlyContain(static type => type.IsSealed);
+        usage.AllowMultiple.Should().BeFalse();
+        usage.Inherited.Should().BeFalse();
+    }
+
     private static object?[][] GetData(string methodName)
         => new CombinatorialDataAttribute().GetData(GetMethod(methodName)).ToArray();
 

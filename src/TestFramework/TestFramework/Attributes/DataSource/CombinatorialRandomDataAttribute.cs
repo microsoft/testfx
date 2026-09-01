@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 /// Specifies randomly generated integer values for a parameter on a combinatorial test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
-public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesProvider
+public sealed class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesProvider
 {
     /// <summary>
     /// Specifies that <see cref="Random"/> should choose its own seed.
@@ -42,15 +42,15 @@ public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesP
     /// </summary>
     public int Seed { get; set; } = NoSeed;
 
-    /// <summary>
-    /// Gets the generated values.
-    /// </summary>
-    public object[] Values => _values.Value;
-
     /// <inheritdoc />
-    public object[] GetValues(ParameterInfo parameter) => Values;
+    public object[] GetValues(ParameterInfo parameter)
+    {
+        ValidateConfiguration();
 
-    private object[] GenerateValues()
+        return _values.Value;
+    }
+
+    private void ValidateConfiguration()
     {
         if (Count < 1)
         {
@@ -73,7 +73,11 @@ public class CombinatorialRandomDataAttribute : Attribute, ICombinatorialValuesP
                     nameof(Minimum),
                     nameof(Maximum)));
         }
+    }
 
+    private object[] GenerateValues()
+    {
+        long maxPossibleValues = (long)Maximum - Minimum + 1;
         Random random = Seed != NoSeed ? new Random(Seed) : new Random();
         var selectedOffsets = new HashSet<long>();
         object[] values = new object[Count];

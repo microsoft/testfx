@@ -7,8 +7,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 /// Specifies a range of values for a parameter on a combinatorial test method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
-public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvider
+public sealed class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvider
 {
+    private readonly object[] _values;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CombinatorialRangeAttribute"/> class.
     /// </summary>
@@ -26,10 +28,10 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
             throw new ArgumentOutOfRangeException(nameof(count), FrameworkMessages.CombinatorialRangeExceedsInt32);
         }
 
-        Values = new object[count];
+        _values = new object[count];
         for (int i = 0; i < count; i++)
         {
-            Values[i] = from + i;
+            _values[i] = from + i;
         }
     }
 
@@ -67,10 +69,10 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
         }
 
         int count = (int)valueCount;
-        Values = new object[count];
+        _values = new object[count];
         for (int i = 0; i < count; i++)
         {
-            Values[i] = checked((int)(from + ((long)i * step)));
+            _values[i] = checked((int)(from + ((long)i * step)));
         }
     }
 
@@ -98,10 +100,10 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
         }
 
         int valueCount = (int)count;
-        Values = new object[valueCount];
+        _values = new object[valueCount];
         for (int i = 0; i < valueCount; i++)
         {
-            Values[i] = from + (uint)i;
+            _values[i] = from + (uint)i;
         }
     }
 
@@ -127,19 +129,14 @@ public class CombinatorialRangeAttribute : Attribute, ICombinatorialValuesProvid
             throw new ArgumentOutOfRangeException(nameof(to), FrameworkMessages.CombinatorialRangeTooManyValues);
         }
 
-        Values = new object[(int)count];
-        for (int i = 0; i < Values.Length; i++)
+        _values = new object[(int)count];
+        for (int i = 0; i < _values.Length; i++)
         {
             ulong offset = (ulong)i * step;
-            Values[i] = (uint)(ascending ? from + offset : from - offset);
+            _values[i] = (uint)(ascending ? from + offset : from - offset);
         }
     }
 
-    /// <summary>
-    /// Gets the values that should be passed to this parameter.
-    /// </summary>
-    public object[] Values { get; }
-
     /// <inheritdoc />
-    public object[] GetValues(ParameterInfo parameter) => Values;
+    public object[] GetValues(ParameterInfo parameter) => _values;
 }

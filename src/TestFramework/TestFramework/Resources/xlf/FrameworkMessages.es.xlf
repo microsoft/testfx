@@ -388,11 +388,6 @@
         <target state="new">Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</target>
         <note>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</note>
       </trans-unit>
-      <trans-unit id="CombinatorialNegativeDimensionSize">
-        <source>Dimension sizes cannot be negative.</source>
-        <target state="new">Dimension sizes cannot be negative.</target>
-        <note>Error message shown when a combinatorial dimension size is negative.</note>
-      </trans-unit>
       <trans-unit id="CombinatorialRandomCountExceedsRange">
         <source>{0} requests more unique random values than the range between {1} and {2} contains.</source>
         <target state="new">{0} requests more unique random values than the range between {1} and {2} contains.</target>

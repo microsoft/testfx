@@ -46,14 +46,12 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDa
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Minimum.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Seed.get -> int
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Seed.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Values.get -> object![]!
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(int from, int count) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(int from, int to, int step) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(uint from, uint count) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(uint from, uint to, uint step) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object![]!
-Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.Values.get -> object![]!
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.CombinatorialValuesAttribute(params object?[]? values) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!

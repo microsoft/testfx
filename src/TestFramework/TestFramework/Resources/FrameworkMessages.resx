@@ -498,10 +498,6 @@ Actual: {2}</value>
     <value>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</value>
     <comment>{0} is the parameter type. {1} is the provider interface name.</comment>
   </data>
-  <data name="CombinatorialNegativeDimensionSize" xml:space="preserve">
-    <value>Dimension sizes cannot be negative.</value>
-    <comment>Error message shown when a combinatorial dimension size is negative.</comment>
-  </data>
   <data name="CombinatorialRangeExceedsInt32" xml:space="preserve">
     <value>The range exceeds the maximum integer value.</value>
     <comment>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</comment>
