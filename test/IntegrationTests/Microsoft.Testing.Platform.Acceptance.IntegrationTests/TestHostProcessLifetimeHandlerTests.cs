@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
+    private static readonly TimeSpan MaximumExecutionTime = TimeSpan.FromSeconds(30);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -66,7 +67,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
         Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
-        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+
+        // The configured test-host and finalization timeouts total one second. The limit leaves ample room for process
+        // startup, JIT, and teardown on a loaded CI agent while still proving that the one-minute handler is not awaited.
+        Assert.IsLessThan(MaximumExecutionTime, stopwatch.Elapsed, testHostResult.ToString());
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -92,7 +96,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(File.Exists(disposalAttemptsFile), testHostResult.ToString());
         Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
-        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+
+        // The configured test-host and finalization timeouts total one second. The limit leaves ample room for process
+        // startup, JIT, and teardown on a loaded CI agent while still proving that the one-minute disposal is not awaited.
+        Assert.IsLessThan(MaximumExecutionTime, stopwatch.Elapsed, testHostResult.ToString());
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -140,6 +147,8 @@ public class Startup
 
 public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDisposable
 {
+    private static readonly TimeSpan BlockingOperationDuration = TimeSpan.FromMinutes(1);
+
     public string Uid => nameof(TestHostProcessLifetimeHandler);
 
     public string Version => string.Empty;
@@ -182,7 +191,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
 
         if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
         {
-            Thread.Sleep(10000);
+            Thread.Sleep(BlockingOperationDuration);
         }
 
         return Task.CompletedTask;
@@ -212,7 +221,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
 
         if (Environment.GetEnvironmentVariable("BLOCK_DISPOSAL") == "1")
         {
-            Thread.Sleep(10000);
+            Thread.Sleep(BlockingOperationDuration);
         }
     }
 }
