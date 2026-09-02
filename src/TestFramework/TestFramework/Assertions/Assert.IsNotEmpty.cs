@@ -32,7 +32,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            shouldAppend = !collection.Any();
+            shouldAppend = !IsNotEmptyCore(collection);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
@@ -104,6 +104,17 @@ public sealed partial class Assert
         }
     }
 
+    /// <summary>
+    /// Tests whether the given <paramref name="collection"/> has at least one item, avoiding an
+    /// enumerator allocation for the common case where the collection is an <see cref="ICollection{T}"/>
+    /// (e.g. <see cref="List{T}"/>, arrays) by checking <see cref="ICollection{T}.Count"/> instead of
+    /// enumerating via <see cref="Enumerable.Any{TSource}(IEnumerable{TSource})"/>.
+    /// </summary>
+    private static bool IsNotEmptyCore<T>(IEnumerable<T> collection)
+        => collection is ICollection<T> genericCollection
+            ? genericCollection.Count != 0
+            : collection.Any();
+
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
@@ -139,7 +150,7 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
 
-        if (collection.Any())
+        if (IsNotEmptyCore(collection))
         {
             return;
         }
@@ -160,7 +171,12 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
 
-        if (collection.Cast<object>().Any())
+        // Avoid an enumerator allocation for the common case where the collection is a non-generic
+        // ICollection (e.g. ArrayList) by checking Count instead of enumerating via Cast<object>().Any().
+        bool isNotEmpty = collection is ICollection nonGenericCollection
+            ? nonGenericCollection.Count != 0
+            : collection.Cast<object>().Any();
+        if (isNotEmpty)
         {
             return;
         }
