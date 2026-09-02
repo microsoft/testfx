@@ -1,5 +1,1 @@
 #nullable enable
-Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty
-Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty.TrxWorkItemsProperty(string![]! workItemIds) -> void
-Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty.WorkItemIds.get -> string![]!
-override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty.ToString() -> string!
