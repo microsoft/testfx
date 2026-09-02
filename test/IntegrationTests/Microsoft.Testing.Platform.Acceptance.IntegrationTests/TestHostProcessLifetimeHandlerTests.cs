@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
+    private static readonly TimeSpan MaximumFinalizationTime = TimeSpan.FromSeconds(5);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -48,7 +49,6 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
         string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
-        var stopwatch = Stopwatch.StartNew();
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--timeout 500ms",
@@ -66,7 +66,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
         Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
-        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+
+        // The child records a monotonic timestamp at callback entry, excluding process startup and JIT without a
+        // parent-observation race. Five seconds gives the 500ms budget ample margin but remains below the 10s blocker.
+        Assert.IsLessThan(MaximumFinalizationTime, GetElapsedTimeSince(finalizationStartedFile), testHostResult.ToString());
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -75,7 +78,6 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
-        var stopwatch = Stopwatch.StartNew();
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--timeout 500ms",
@@ -90,10 +92,15 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
-        Assert.IsTrue(File.Exists(disposalAttemptsFile), testHostResult.ToString());
         Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
-        Assert.IsLessThan(8, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+
+        // The child records a monotonic timestamp at disposal entry, excluding process startup and JIT without a
+        // parent-observation race. Five seconds gives the 500ms budget ample margin but remains below the 10s blocker.
+        Assert.IsLessThan(MaximumFinalizationTime, GetElapsedTimeSince(disposalAttemptsFile), testHostResult.ToString());
     }
+
+    private static TimeSpan GetElapsedTimeSince(string timestampFile)
+        => Stopwatch.GetElapsedTime(long.Parse(File.ReadAllText(timestampFile), CultureInfo.InvariantCulture));
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
@@ -115,6 +122,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
 
 #file Program.cs
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;
@@ -177,7 +186,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
 
         if (Environment.GetEnvironmentVariable("FINALIZATION_STARTED_FILE") is { Length: > 0 } finalizationStartedFile)
         {
-            System.IO.File.WriteAllText(finalizationStartedFile, string.Empty);
+            System.IO.File.WriteAllText(finalizationStartedFile, Stopwatch.GetTimestamp().ToString(CultureInfo.InvariantCulture));
         }
 
         if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
@@ -202,7 +211,7 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, I
     {
         if (Environment.GetEnvironmentVariable("DISPOSAL_ATTEMPTS_FILE") is { Length: > 0 } disposalAttemptsFile)
         {
-            System.IO.File.AppendAllText(disposalAttemptsFile, "Dispose" + Environment.NewLine);
+            System.IO.File.AppendAllText(disposalAttemptsFile, Stopwatch.GetTimestamp().ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
         }
 
         if (Environment.GetEnvironmentVariable("DISPOSAL_FILE") is { Length: > 0 } disposalFile)

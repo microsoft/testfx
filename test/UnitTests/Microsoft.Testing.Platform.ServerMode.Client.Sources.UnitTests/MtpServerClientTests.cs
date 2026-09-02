@@ -28,7 +28,10 @@ public sealed class MtpServerClientTests
     public async Task InitializeAsync_DecodesServerCapabilities()
     {
         using FakeMtpServer server = new();
-        using MtpServerClient client = server.ConnectClient();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            IsStateful = true,
+        });
 
         MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
 
@@ -45,6 +48,7 @@ public sealed class MtpServerClientTests
 
         InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
         Assert.AreSequenceEqual(JsonRpcProtocolVersions.Supported, initializeArgs.ProtocolVersions);
+        Assert.IsTrue(initializeArgs.Capabilities.IsStateful);
     }
 
     [TestMethod]

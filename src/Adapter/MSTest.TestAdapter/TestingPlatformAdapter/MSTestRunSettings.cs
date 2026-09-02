@@ -83,7 +83,9 @@ internal sealed class MSTestRunSettings : IRunSettings
 
     private static XDocument Patch(string? runSettingsXml, IConfiguration configuration, IClientInfo client, ICommandLineOptions commandLineOptions)
     {
-        XDocument runSettingsDocument = PatchSettingsWithDefaults(runSettingsXml, isDesignMode: client.Id == WellKnownClients.VisualStudio, configuration);
+        // Keep recognizing older Visual Studio clients that predate the statefulness capability.
+        bool isDesignMode = client.Capabilities.IsStateful || client.Id == WellKnownClients.VisualStudio;
+        XDocument runSettingsDocument = PatchSettingsWithDefaults(runSettingsXml, isDesignMode, configuration);
         PatchTestRunParameters(runSettingsDocument, commandLineOptions);
         return runSettingsDocument;
     }

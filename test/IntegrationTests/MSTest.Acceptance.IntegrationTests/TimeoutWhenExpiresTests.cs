@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -168,11 +168,8 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runSettingsFilePath, runSettings);
 
-        var stopwatch = Stopwatch.StartNew();
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { [$"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}"] = "1" });
-        stopwatch.Stop();
 
-        Assert.IsLessThan(25, stopwatch.Elapsed.TotalSeconds);
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after 1000ms");
     }
 

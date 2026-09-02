@@ -109,6 +109,7 @@ When making change to resource files, you MUST:
   - The adapter unit-test projects (`MSTestAdapter.UnitTests`, `MSTestAdapter.PlatformServices.UnitTests`) ban MSTest's `Assert` family and require `AwesomeAssertions` (FluentAssertions-style API).
 - Acceptance integration tests run with assembly-level method parallelization. Classes that share a single generated mutable test asset across multiple methods must be marked `[DoNotParallelize]` to avoid races on `bin/obj` outputs.
 - When asserting on test-host output that contains a rendered test **duration** (e.g. `failed MyTest (040ms)`), NEVER hard-code `\(\d+ms\)`. The duration format grows leading parts (`(1s 040ms)`, `(2m 03s 040ms)`, …) on slower machines (often macOS, sometimes Windows), so a `\d+ms`-only pattern is a classic source of timing flakiness. Use the shared `AcceptanceAssert.DurationPattern` constant (or, where a duration only ever applies to skipped tests, the deterministic `(0ms)`) instead.
+- Prefer deterministic output, marker, or rendezvous assertions over wall-clock timing. When an acceptance test must assert an upper bound on `Stopwatch.Elapsed` around a real process launch, use a named limit with a generous allowance for process startup, JIT, and teardown on loaded CI agents, and add a comment explaining its relationship to the configured timeout or expected operation.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
 
 ## CLI options guidelines
