@@ -587,6 +587,8 @@ internal sealed class AcceptanceCacheCircuitBreaker : IDisposable
     private const int Disabled = 2;
     private const int SharingViolationHResult = unchecked((int)0x80070020);
     private const int LockViolationHResult = unchecked((int)0x80070021);
+    private const int LinuxWouldBlockHResult = 11;
+    private const int MacOsWouldBlockHResult = 35;
 
     private readonly string _disabledMarkerPath;
     private readonly string _enabledMarkerPath;
@@ -630,7 +632,11 @@ internal sealed class AcceptanceCacheCircuitBreaker : IDisposable
 
                     break;
                 }
-                catch (IOException ex) when (ex.HResult is SharingViolationHResult or LockViolationHResult)
+                catch (IOException ex) when (ex.HResult is
+                    SharingViolationHResult
+                    or LockViolationHResult
+                    or LinuxWouldBlockHResult
+                    or MacOsWouldBlockHResult)
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
                 }
