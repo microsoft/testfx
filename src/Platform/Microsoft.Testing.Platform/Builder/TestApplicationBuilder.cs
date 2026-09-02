@@ -43,8 +43,19 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
         string[] args)
+        : this(loggingState, createBuilderStart, testApplicationOptions, unhandledExceptionsHandler, args, args)
     {
-        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler(), args));
+    }
+
+    internal TestApplicationBuilder(
+        ApplicationLoggingState loggingState,
+        DateTimeOffset createBuilderStart,
+        TestApplicationOptions testApplicationOptions,
+        IUnhandledExceptionsHandler unhandledExceptionsHandler,
+        string[] args,
+        string[] expandedArgs)
+    {
+        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler(), args, expandedArgs));
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
         _testApplicationOptions = testApplicationOptions;

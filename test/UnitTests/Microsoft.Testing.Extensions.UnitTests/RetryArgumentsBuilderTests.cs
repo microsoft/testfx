@@ -106,6 +106,24 @@ public sealed class RetryArgumentsBuilderTests
     }
 
     [TestMethod]
+    public void ComputeIndicesToCleanup_WithInlineOptionValues_ReturnsOnlyOptionIndices()
+    {
+        string[] executableArguments =
+        [
+            "test.dll",
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsOptionName}=3",
+            $"-{RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName}:5",
+            $"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}=results",
+            "--keep",
+            "value",
+        ];
+
+        List<int> actual = RetryArgumentsBuilder.ComputeIndicesToCleanup(executableArguments);
+
+        Assert.AreSequenceEqual([1, 2, 3], actual, SequenceOrder.InAnyOrder);
+    }
+
+    [TestMethod]
     public async Task BuildAttemptArgumentsAsync_WithFailedIds_ReplacesFiltersAndMinimumExpectedTests()
     {
         string[] executableArguments =
@@ -153,6 +171,64 @@ public sealed class RetryArgumentsBuilderTests
         fileSystem.Verify(
             fs => fs.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>()),
             Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_WithOriginalResponseFile_WritesCleanedArgumentsToResponseFile()
+    {
+        string retryRoot = Path.Combine("results", "Retries", "run");
+        string responseFilePath = Path.Combine(retryRoot, "retry-arguments-1.rsp");
+        string[] executableArguments =
+        [
+            "exec",
+            "test.dll",
+            "--keep",
+            "value with spaces",
+            $"--{TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter}",
+            "/old-filter",
+            $"--{PlatformCommandLineProvider.MinimumExpectedTestsOptionKey}",
+            "10",
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsOptionName}=1",
+            $"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}",
+            "old-results",
+        ];
+        List<int> indicesToCleanup = RetryArgumentsBuilder.ComputeIndicesToCleanup(executableArguments);
+        using var memoryStream = new MemoryStream();
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        fileStream.SetupGet(stream => stream.Stream).Returns(memoryStream);
+        fileStream.Setup(stream => stream.Dispose());
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem
+            .Setup(fs => fs.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            .Returns(fileStream.Object);
+
+        List<string> actual = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            executableArguments,
+            ["exec", "test.dll", "@original.rsp"],
+            indicesToCleanup,
+            Path.Combine(retryRoot, "1"),
+            retryRoot,
+            "pipe-name",
+            lastListOfFailedId: ["failed-uid"],
+            attemptCount: 1).ConfigureAwait(false);
+
+        AssertArguments(
+            [
+                "exec",
+                "test.dll",
+                $"@{responseFilePath}",
+                $"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}",
+                Path.Combine(retryRoot, "1"),
+                $"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}",
+                "pipe-name",
+                $"--{PlatformCommandLineProvider.FilterUidOptionKey}",
+                "failed-uid",
+            ],
+            actual);
+        Assert.AreEqual(
+            $"\"--keep\"{Environment.NewLine}\"value with spaces\"{Environment.NewLine}",
+            Encoding.UTF8.GetString(memoryStream.ToArray()));
     }
 
     [TestMethod]

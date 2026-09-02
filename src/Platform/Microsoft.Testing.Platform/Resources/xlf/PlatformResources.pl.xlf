@@ -242,6 +242,11 @@
         <target state="translated">Niepowodzenie odczytu pliku odpowiedzi „{0}”. {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
+      <trans-unit id="CommandLineParserRecursiveResponseFile">
+        <source>A recursive response file reference was detected.</source>
+        <target state="new">A recursive response file reference was detected.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
         <target state="translated">Nie znaleziono pliku odpowiedzi „{0}”</target>

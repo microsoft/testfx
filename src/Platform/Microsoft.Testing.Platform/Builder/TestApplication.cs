@@ -97,7 +97,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess, args);
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess, args, [.. parseResult.ExpandedArguments]);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
         LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, systemConsole, parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
@@ -114,7 +114,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        TestApplicationBuilder builder = new(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
+        TestApplicationBuilder builder = new(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args, [.. parseResult.ExpandedArguments]);
 
         // Register dynamically declared extensions as the last thing before handing the builder back. Note this
         // still puts them *ahead* of statically registered ones: the caller only invokes
