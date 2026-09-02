@@ -128,7 +128,7 @@
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Polly" Version="8.6.6" />
+    <PackageVersion Include="Polly" Version="8.7.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
     <!--
