@@ -56,13 +56,14 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLA
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService
+Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.DisabledGitHubActionsHistoryService() -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.HistoryPath.get -> string?
 Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.HistoryWindowInDays.get -> int
-Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.Instance.get -> Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService!
 Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.IsEnabled.get -> bool
 Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.TryGetStats(string! testId, string! fullyQualifiedName, string! displayName, out Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats stats) -> bool
 Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.WriteAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.CiRunSummaryModule!>! modules, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.AppendHistoryContext(string! testId, string! fullyQualifiedName, string! displayName, string? explanation, System.Exception? exception) -> string?
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.DataTypesConsumed.get -> System.Type![]!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.Description.get -> string!
@@ -130,6 +131,7 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistorySample.Time
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.Architecture.get -> string!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.AssemblyName.get -> string!
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.GitHubActionsHistoryScope() -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.GitHubActionsHistoryScope(string! assemblyName, string! targetFramework, string! architecture, string! runnerOs) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.RunnerOs.get -> string!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryScope.TargetFramework.get -> string!
@@ -160,6 +162,7 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.Durat
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.FailCount.get -> int
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.FailureRate.get -> double
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.FlakyCount.get -> int
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.GitHubActionsHistoryStats() -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.GitHubActionsHistoryStats(int passCount, int failCount, int flakyCount = 0, long p95DurationTicks = 0, long p99DurationTicks = 0, int durationSampleCount = 0) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.P95Duration.get -> System.TimeSpan
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats.P99Duration.get -> System.TimeSpan
@@ -322,6 +325,7 @@ override Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestR
 override Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.Uid.get -> string!
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService.Instance.get -> Microsoft.Testing.Extensions.GitHubActionsReport.DisabledGitHubActionsHistoryService!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.FormatHistoryContext(string! failure, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsHistoryStats stats, int historyWindowInDays) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetErrorAnnotation(string! testName, string? explanation, System.Exception? exception, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, bool skipAssertionFrames, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation? declaredLocation = null) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetExitCodeAnnotation(int exitCode) -> string!
