@@ -420,12 +420,7 @@ public sealed class MtpServerClientInProcessTests
     public async Task Dispose_WhileShutdownAsyncIsInFlight_WaitsForTheSameTeardown()
     {
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var callbackBlocked = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var server = new InProcessServerFixture(onDisconnected: () =>
-        {
-            callbackBlocked.TrySetResult(true);
-            release.Task.GetAwaiter().GetResult();
-        });
+        using var server = new InProcessServerFixture(onDisconnected: () => release.Task.GetAwaiter().GetResult());
 
         MtpServerClient client = await LaunchAsync(server);
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
@@ -433,27 +428,30 @@ public sealed class MtpServerClientInProcessTests
         Task shutdown = client.ShutdownAsync();
         try
         {
-            await WithTimeoutAsync(callbackBlocked.Task);
             Assert.IsFalse(shutdown.IsCompleted, "ShutdownAsync must remain incomplete while the callback is blocked.");
 
             // A Dispose that races an in-flight ShutdownAsync must join it, not report success while the
-            // application is still stopping.
-            var disposeEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var dispose = Task.Run(
+            // application is still stopping. Keep the probe off the thread pool: under net462 contention an
+            // awaited probe can resume only after the bounded teardown abandons the callback.
+            using var disposeEntered = new ManualResetEventSlim();
+            using var disposeReturned = new ManualResetEventSlim();
+            Task dispose = Task.Factory.StartNew(
                 () =>
                 {
-                    disposeEntered.TrySetResult(true);
+                    disposeEntered.Set();
                     client.Dispose();
+                    disposeReturned.Set();
                 },
-                TestContext.CancellationToken);
-            await WithTimeoutAsync(disposeEntered.Task);
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
 
-            for (int attempt = 0; attempt < 10 && !dispose.IsCompleted; attempt++)
-            {
-                _ = await Task.WhenAny(dispose, Task.Delay(10, TestContext.CancellationToken));
-            }
-
-            Assert.IsFalse(dispose.IsCompleted, "Dispose must not return while the shared teardown is still running.");
+            Assert.IsTrue(
+                disposeEntered.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken),
+                "The dedicated Dispose thread must start.");
+            Assert.IsFalse(
+                disposeReturned.Wait(TimeSpan.FromMilliseconds(100), TestContext.CancellationToken),
+                "Dispose must not return while the shared teardown is still running.");
 
             _ = release.TrySetResult(true);
 
