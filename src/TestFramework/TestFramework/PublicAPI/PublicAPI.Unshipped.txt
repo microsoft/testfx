@@ -23,3 +23,31 @@ const Microsoft.VisualStudio.TestTools.UnitTesting.WellKnownResources.Environmen
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDataProvider(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, System.Func<object?[]!, object?>! dataProvider) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDisplayNameProvider(System.Type! declaringType, string! methodName, System.Func<System.Reflection.MethodInfo!, object?[]?, string?>! displayNameProvider) -> void
+const Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.NoSeed = 0 -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.CombinatorialDataAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.CombinatorialRandomDataAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Count.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Count.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object![]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Maximum.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Maximum.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Minimum.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Minimum.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Seed.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Seed.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(int from, int count) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(int from, int to, int step) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(uint from, uint count) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(uint from, uint to, uint step) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object![]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.CombinatorialValuesAttribute(params object?[]? values) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.Values.get -> object?[]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!

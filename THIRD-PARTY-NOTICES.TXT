@@ -8,6 +8,17 @@ bring it to our attention. Post an issue or email us:
 
 The attached notices are provided for information only.
 
+Acknowledgment for Xunit.Combinatorial
+--------------------------------------------------------
+
+https://github.com/AArnott/Xunit.Combinatorial
+
+The combinatorial test-data functionality contributed to MSTest is similar to
+functionality in Xunit.Combinatorial. Andrew Arnott, the copyright holder of
+Xunit.Combinatorial, contributed this implementation to MSTest under the MIT
+License that governs this repository. The source included in this repository
+is not distributed under Xunit.Combinatorial's Microsoft Public License.
+
 License notice for jsonite
 --------------------------------------------------------
 

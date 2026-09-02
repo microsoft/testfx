@@ -88,6 +88,21 @@ internal static class RuntimeRegistrationEmitter
                 }
             }
         }
+
+        var emittedEnums = new HashSet<string>(StringComparer.Ordinal);
+        foreach (TestClassModel cls in testClasses)
+        {
+            foreach (TestMethodModel method in cls.Methods)
+            {
+                foreach (TestParameterModel parameter in method.Parameters)
+                {
+                    if (parameter.EnumFullyQualifiedType is string enumType && emittedEnums.Add(enumType))
+                    {
+                        sb.AppendLine($"[DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof({enumType}))]");
+                    }
+                }
+            }
+        }
     }
 
     private static void EmitInitializeBody(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)

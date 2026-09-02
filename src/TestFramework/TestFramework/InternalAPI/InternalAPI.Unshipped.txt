@@ -14,3 +14,5 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.get 
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities.GetValuesFor(System.Reflection.ParameterInfo! parameter) -> System.Collections.Generic.IEnumerable<object?>!
