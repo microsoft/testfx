@@ -31,6 +31,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Emit OpenTelemetry spans for MSTest tests and fixture methods as part of the expanded testing semantic conventions by @Evangelink in [#10358](https://github.com/microsoft/testfx/pull/10358)
 * Add MSTEST0082 to detect lifecycle and test members inherited from a base class compiled against a different major MSTest framework version, where the assembly rename between v3 and v4 would otherwise make those members silently undiscoverable, by @nohwnd and @Evangelink in [#10508](https://github.com/microsoft/testfx/pull/10508) and [#10637](https://github.com/microsoft/testfx/pull/10637)
 * Add MSTEST0083 and a code fix to replace executable-file guards before matching `Process.Start` calls with `[ExecutableCondition]`, by @Evangelink in [#10634](https://github.com/microsoft/testfx/pull/10634)
+* Add exhaustive combinatorial test data through `CombinatorialData`, with explicit, inferred, range and random parameter-value providers, by @AArnott in [#10896](https://github.com/microsoft/testfx/pull/10896)
 
 ### Changed
 
@@ -1285,7 +1286,7 @@ See full log [of v3.6.0...v3.6.1](https://github.com/microsoft/testfx/compare/v3
 * Microsoft.Testing.Extensions.Retry: [1.4.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.4.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.1)
 
-## <a name="3.6.1" />[3.6.0] - 2024-09-11
+## <a name="3.6.0" />[3.6.0] - 2024-09-11
 
 See full log [of v3.5.2...v3.6.0](https://github.com/microsoft/testfx/compare/v3.5.2...v3.6.0)
 

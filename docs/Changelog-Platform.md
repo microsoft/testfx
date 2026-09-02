@@ -60,6 +60,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Label Azure DevOps retry sub-results as `Attempt# <n> - <test>` and upload each retry attempt's artifacts to the sub-result that produced them, by @Evangelink in [#10704](https://github.com/microsoft/testfx/pull/10704) and [#10723](https://github.com/microsoft/testfx/pull/10723)
 * Harden server-mode JSON-RPC lifecycle and error handling, add independent protocol-version negotiation, align the System.Text.Json and Jsonite serializers, and publish a versioned JSON Schema, by @Evangelink in [#10779](https://github.com/microsoft/testfx/pull/10779)
 * Use controller-backed TRX recovery by default whenever the platform supports a test-host controller, while retaining the in-process compatibility path on browser, WASI, iOS and tvOS, by @Evangelink in [#10808](https://github.com/microsoft/testfx/pull/10808)
+* Include concise descriptions for known non-success Microsoft.Testing.Platform exit codes in run and discovery summaries, by @Evangelink in [#10882](https://github.com/microsoft/testfx/pull/10882)
 
 ### Fixed
 
@@ -91,6 +92,8 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Publish each Azure DevOps retry sub-result exactly once and retain stable attachment targets across retry processes, by @Evangelink in [#10795](https://github.com/microsoft/testfx/pull/10795)
 * Publish superseded in-process MSTest retry attempts to Azure DevOps as ordered rerun sub-results with their durations and attachments, by @Evangelink in [#10845](https://github.com/microsoft/testfx/pull/10845)
 * Authorize TRX, HangDump and Retry extension pipes for sandboxed test-host identities supplied by a custom launcher, by @Evangelink in [#10842](https://github.com/microsoft/testfx/pull/10842)
+* Recover partial HTML, JUnit and CTRF reports after an abnormal test-host termination on platforms with a test-host controller, by @Evangelink in [#10894](https://github.com/microsoft/testfx/pull/10894)
+* Use wall-clock elapsed time instead of the sum of individual test durations for HTML report summaries, so parallel test runs report an accurate duration, by @Evangelink in [#10944](https://github.com/microsoft/testfx/pull/10944)
 
 ## <a name="2.3.3" />[2.3.3] - 2026-07-28
 
