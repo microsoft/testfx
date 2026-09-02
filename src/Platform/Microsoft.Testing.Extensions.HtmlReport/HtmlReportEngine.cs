@@ -83,7 +83,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         int skipped = 0;
         int timedout = 0;
         int errored = 0;
-        TimeSpan totalDuration = TimeSpan.Zero;
+        TimeSpan elapsedTime = finishTime - _testStartTime;
 
         // First pass: count how many entries each UID is going to produce so we can
         // annotate rows that share a UID with "attemptIndex"/"attemptOf". This lets the
@@ -147,8 +147,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             first = false;
 
             CountOutcome(r.Outcome, ref passed, ref failed, ref skipped, ref timedout, ref errored);
-            totalDuration += r.Duration;
-
             int attemptOf = countByUid[r.Uid];
             int attemptIndex = emittedByUid.TryGetValue(r.Uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
             emittedByUid[r.Uid] = attemptIndex;
@@ -276,7 +274,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         sb.Append(',');
         AppendNumberPair(sb, "errored", errored.ToString(CultureInfo.InvariantCulture));
         sb.Append(',');
-        AppendNumberPair(sb, "totalDurationMs", totalDuration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+        AppendNumberPair(sb, "totalDurationMs", elapsedTime.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
         sb.Append('}');
 
         sb.Append('}');

@@ -65,6 +65,26 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
+    public async Task GenerateReportAsync_UsesWallClockDurationForSummary()
+    {
+        DateTimeOffset startTime = new(2026, 8, 31, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset endTime = startTime.AddSeconds(5);
+        _ = _clockMock.SetupGet(clock => clock.UtcNow).Returns(endTime);
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream, testStartTime: startTime);
+        CapturedTestResult[] tests =
+        [
+            Captured("a", "A", "passed", TimeSpan.FromSeconds(4)),
+            Captured("b", "B", "passed", TimeSpan.FromSeconds(4)),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(memoryStream.GetUtf8Content()))!.AsObject();
+        Assert.AreEqual(5_000d, (double)report["summary"]!["totalDurationMs"]!);
+    }
+
+    [TestMethod]
     public async Task GenerateReportAsync_WhenRecoveredAfterCrash_MarksReportIncomplete()
     {
         using var memoryStream = new MemoryFileStream();
@@ -94,6 +114,33 @@ public class HtmlReportEngineTests
 
         Assert.IsTrue((bool)report["incomplete"]!);
         Assert.AreEqual("aborted", (string?)report["runStatus"]);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_UsesOverallWallClockDurationForSummary(bool collapseRetryAttempts)
+    {
+        DateTimeOffset startTime = new(2026, 8, 31, 12, 0, 0, TimeSpan.Zero);
+        string first = BuildMergeInput(
+            "shared",
+            incomplete: false,
+            startTime,
+            startTime.AddSeconds(5),
+            TimeSpan.FromSeconds(30));
+        string second = BuildMergeInput(
+            "shared",
+            incomplete: false,
+            startTime.AddSeconds(2),
+            startTime.AddSeconds(9),
+            TimeSpan.FromSeconds(40));
+
+        string merged = HtmlReportMerger.Merge(
+            [first, second],
+            collapseRetryAttempts ? HtmlMergeMode.CollapseRetryAttempts : HtmlMergeMode.Concatenate);
+        JsonObject report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(merged))!.AsObject();
+
+        Assert.AreEqual(9_000d, (double)report["summary"]!["totalDurationMs"]!);
     }
 
     [TestMethod]
@@ -713,8 +760,15 @@ public class HtmlReportEngineTests
             ErrorMessage = errorMessage,
         };
 
-    private static string BuildMergeInput(string uid, bool incomplete)
+    private static string BuildMergeInput(
+        string uid,
+        bool incomplete,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        TimeSpan? testDuration = null)
     {
+        startTime ??= new DateTimeOffset(2026, 8, 31, 12, 0, 0, TimeSpan.Zero);
+        endTime ??= startTime.Value.AddSeconds(1);
         var report = new JsonObject
         {
             ["schemaVersion"] = "1",
@@ -726,15 +780,15 @@ public class HtmlReportEngineTests
             ["framework"] = "framework",
             ["frameworkUid"] = "framework",
             ["frameworkVersion"] = "1.0.0",
-            ["startTime"] = "2026-08-31T12:00:00.0000000+00:00",
-            ["endTime"] = "2026-08-31T12:00:01.0000000+00:00",
+            ["startTime"] = startTime.Value.ToString("O", CultureInfo.InvariantCulture),
+            ["endTime"] = endTime.Value.ToString("O", CultureInfo.InvariantCulture),
             ["exitCode"] = incomplete ? 1 : 0,
             ["tests"] = new JsonArray(new JsonObject
             {
                 ["uid"] = uid,
                 ["displayName"] = uid,
                 ["outcome"] = "passed",
-                ["durationMs"] = 1,
+                ["durationMs"] = (testDuration ?? TimeSpan.FromMilliseconds(1)).TotalMilliseconds,
             }),
             ["summary"] = new JsonObject(),
         };
@@ -747,15 +801,18 @@ public class HtmlReportEngineTests
         return HtmlReportEngine.RenderReport(report.ToJsonString());
     }
 
-    private HtmlReportEngine CreateEngine(MemoryFileStream stream, bool isIncomplete = false)
+    private HtmlReportEngine CreateEngine(
+        MemoryFileStream stream,
+        bool isIncomplete = false,
+        DateTimeOffset? testStartTime = null)
     {
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>())).Returns(stream);
 
-        return CreateEngine(isIncomplete);
+        return CreateEngine(isIncomplete, testStartTime);
     }
 
-    private HtmlReportEngine CreateEngine(bool isIncomplete = false)
+    private HtmlReportEngine CreateEngine(bool isIncomplete = false, DateTimeOffset? testStartTime = null)
     {
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
@@ -773,7 +830,7 @@ public class HtmlReportEngineTests
             _configurationMock.Object,
             _clockMock.Object,
             _testFrameworkMock.Object,
-            DateTimeOffset.UtcNow,
+            testStartTime ?? DateTimeOffset.UtcNow,
             0,
             CancellationToken.None,
             IsIncomplete: isIncomplete));
