@@ -284,37 +284,37 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
         <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
-        <target state="new">Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</target>
+        <target state="translated">Use '--crashdump' y/o '--hangdump' en su lugar. MTP separa los diagnósticos de bloqueos y cuelgues, por lo que no existe un reemplazo uno a uno para el recopilador de VSTest de errores.</target>
         <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
         <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</target>
+        <target state="translated">MTP usa opciones específicas del recopilador. Consulte la documentación de la extensión para conocer su opción de MTP.</target>
         <note>{Locked="MTP"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
-        <target state="new">For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</target>
+        <target state="translated">Para un nivel de detalle de consola comparable, use '--output {0}'. La salida de consola de MTP se configura de forma diferente, por lo que no se trata de un reemplazo exacto.</target>
         <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</target>
+        <target state="translated">MTP usa opciones específicas del informador, como '--report-trx', '--report-html' y '--report-junit'. Consulte la documentación de la extensión del informador para conocer su opción de MTP.</target>
         <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
         <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
-        <target state="new">Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</target>
+        <target state="translated">La opción '--{0}' usa la sintaxis de VSTest, que no es compatible con Microsoft.Testing.Platform.</target>
         <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestReplacementSuggestion">
         <source>Use {0} instead.</source>
-        <target state="new">Use {0} instead.</target>
+        <target state="translated">En su lugar, use {0}.</target>
         <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
         <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
-        <target state="new">For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</target>
+        <target state="translated">Para la cobertura de código en MTP, use '--coverage'. Este no es un reemplazo transparente del recopilador 'XPlat Code Coverage' de Coverlet.</target>
         <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
