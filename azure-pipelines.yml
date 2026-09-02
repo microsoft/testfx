@@ -252,13 +252,16 @@ stages:
       displayName: Preserve cache diagnostics and clean failed seed outputs
       condition: and(always(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
+    # Keep the cache support packages out of the multithreaded fallback. Their unannotated
+    # ResolveFileAccesses task currently fails in MSBuild's sidecar task host under -mt.
     - script: eng\common\CIBuild.cmd
         -configuration $(_BuildConfig)
+        -msbuildMultiThreaded 1
         -prepareMachine
         /p:Publish=false
         /p:Test=false
         /p:FastAcceptanceTest=true
-        /p:MSBuildCachePackageEnabled=true
+        /p:MSBuildCachePackageEnabled=false
         /p:MSBuildCacheEnabled=false
       name: Build
       displayName: Build
@@ -737,13 +740,16 @@ stages:
 
         # Fallback build. Skipped when the MSBuildCache steps above already produced, signed and packed the
         # outputs; also skipped when they failed with build errors, because this step would only reproduce them.
+        # Keep the cache support packages out of this multithreaded build because their unannotated
+        # ResolveFileAccesses task currently fails in MSBuild's sidecar task host under -mt.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
+            -msbuildMultiThreaded 1
             -prepareMachine
             /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
-            /p:MSBuildCachePackageEnabled=true
+            /p:MSBuildCachePackageEnabled=false
             /p:MSBuildCacheEnabled=false
           name: Build
           displayName: Build
@@ -885,6 +891,7 @@ stages:
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
+            -msbuildMultiThreaded true
             -prepareMachine
             /p:Test=false
             /p:Publish=false
@@ -922,6 +929,7 @@ stages:
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
+            -msbuildMultiThreaded true
             -prepareMachine
             /p:Test=false
             /p:Publish=false
