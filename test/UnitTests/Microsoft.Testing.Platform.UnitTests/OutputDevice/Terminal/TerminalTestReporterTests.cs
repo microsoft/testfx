@@ -897,11 +897,11 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    public void TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
+    public async Task TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
     {
         var terminal = new RecordingTerminal();
         var renderer = new ThrowingProgressRenderer();
-        using var logAttempted = new ManualResetEventSlim();
+        var logAttempted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ILogger> logger = new();
         logger
             .Setup(x => x.Log(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
@@ -909,14 +909,15 @@ public sealed class TerminalTestReporterTests
                 (_, message, _, _) =>
                 {
                     Assert.Contains(nameof(InvalidOperationException), message);
-                    logAttempted.Set();
+                    logAttempted.TrySetResult(true);
                 })
             .Throws(new IOException("Logging failed."));
         using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer, logger.Object);
 
         progressAwareTerminal.StartShowingProgress(workerCount: 1);
 
-        Assert.IsTrue(logAttempted.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken), "Expected the render failure to be logged.");
+        Task completedTask = await Task.WhenAny(logAttempted.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+        Assert.AreSame(logAttempted.Task, completedTask, "Expected the render failure to be logged.");
         progressAwareTerminal.StopShowingProgress();
         Assert.Contains("EraseProgress", terminal.Events);
     }
