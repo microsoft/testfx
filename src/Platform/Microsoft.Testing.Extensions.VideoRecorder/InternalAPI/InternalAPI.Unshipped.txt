@@ -1,16 +1,1 @@
 #nullable enable
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.ConcatAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.VideoRecorder.VideoSegment>! segments, string! outputFileName, string? ffmetadataPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<string?>!
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.DescribeLastFfmpegError() -> string!
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.FfmpegPath.get -> string?
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.IsAvailable.get -> bool
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.ReadSegments() -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.VideoRecorder.VideoSegment>!
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.RecordingStartUtc.get -> System.DateTimeOffset?
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.SegmentDirectory.get -> string?
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.SegmentExtension.get -> string!
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.Start() -> void
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.StopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.VideoRecorderSessionHandler(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILogger<Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler!>! logger, Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder? recorder) -> void
-static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
-static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
-static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
