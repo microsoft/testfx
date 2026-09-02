@@ -187,6 +187,7 @@ stages:
           "/p:MSBuildCachePackageEnabled=true",
           "/p:MSBuildCacheEnabled=true",
           "/p:MSBuildCacheRemoteCacheIsReadOnly=false",
+          "/p:RestoreUseStaticGraphEvaluation=true",
           "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
         )
 
@@ -504,6 +505,7 @@ stages:
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=true",
               "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
+              "/p:RestoreUseStaticGraphEvaluation=true",
               "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
             )
 
