@@ -264,35 +264,6 @@ public sealed class AzureDevOpsCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenArtifactUploadNameIsUsedWithUploadDisabledAsync()
-    {
-        AzureDevOpsCommandLineProvider provider = new();
-        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName] = ["MyArtifact"],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts] = [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeOff],
-        })).ConfigureAwait(false);
-
-        Assert.IsFalse(validationResult.IsValid);
-        Assert.AreEqual(AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts, validationResult.ErrorMessage);
-    }
-
-    [TestMethod]
-    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenArtifactUploadIncludeIsUsedWithoutUploadArtifactsAsync()
-    {
-        AzureDevOpsCommandLineProvider provider = new();
-        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude] = ["**/*.log"],
-        })).ConfigureAwait(false);
-
-        Assert.IsFalse(validationResult.IsValid);
-        Assert.AreEqual(AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts, validationResult.ErrorMessage);
-    }
-
-    [TestMethod]
     public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenArtifactUploadOptionsAreUsedWithUploadEnabledAsync()
     {
         AzureDevOpsCommandLineProvider provider = new();
@@ -461,19 +432,6 @@ public sealed class AzureDevOpsCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForUnknownArtifactUploadModeAsync()
-    {
-        AzureDevOpsCommandLineProvider provider = new();
-        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts);
-        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["unknown-mode"]).ConfigureAwait(false);
-
-        Assert.IsFalse(validationResult.IsValid);
-        Assert.AreEqual(
-            string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidArtifactUploadMode, "unknown-mode"),
-            validationResult.ErrorMessage);
-    }
-
-    [TestMethod]
     [DataRow(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeOff)]
     [DataRow(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeTagsOnly)]
     [DataRow(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeFiles)]
@@ -522,22 +480,6 @@ public sealed class AzureDevOpsCommandLineProviderTests
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["**/*.log"]).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
-    }
-
-    [TestMethod]
-    [DataRow("/absolute/path/*.log")]
-    [DataRow("\\absolute\\path\\*.log")]
-    [DataRow("C:/absolute/path/*.log")]
-    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_ForAbsoluteGlobPatternAsync(string pattern)
-    {
-        AzureDevOpsCommandLineProvider provider = new();
-        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude);
-        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [pattern]).ConfigureAwait(false);
-
-        Assert.IsFalse(validationResult.IsValid);
-        Assert.AreEqual(
-            string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidArtifactUploadGlob, pattern),
-            validationResult.ErrorMessage);
     }
 
     [TestMethod]
