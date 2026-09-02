@@ -420,13 +420,13 @@ public sealed class MtpServerClientInProcessTests
     public async Task Dispose_WhileShutdownAsyncIsInFlight_WaitsForTheSameTeardown()
     {
         using var release = new ManualResetEventSlim();
-        using var callbackBlocked = new ManualResetEventSlim();
+        var callbackBlocked = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var disposeEntered = new ManualResetEventSlim();
         using var disposeReturned = new ManualResetEventSlim();
         using var server = new InProcessServerFixture(
             onDisconnected: () =>
             {
-                callbackBlocked.Set();
+                callbackBlocked.TrySetResult(true);
                 release.Wait(TestContext.CancellationToken);
             },
             waitForDisconnectSynchronously: true);
@@ -438,9 +438,9 @@ public sealed class MtpServerClientInProcessTests
         Task? dispose = null;
         try
         {
-            Assert.IsTrue(
-                callbackBlocked.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken),
-                "The callback must be blocked before testing the concurrent Dispose.");
+            // ShutdownAsync schedules teardown on the thread pool. Awaiting this rendezvous leaves the test's
+            // worker available to run it, which is important for net462 runners with a constrained worker pool.
+            await WithTimeoutAsync(callbackBlocked.Task);
             Assert.IsFalse(shutdown.IsCompleted, "ShutdownAsync must remain incomplete while the callback is blocked.");
 
             // A Dispose that races an in-flight ShutdownAsync must join it, not report success while the
