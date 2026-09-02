@@ -419,52 +419,62 @@ public sealed class MtpServerClientInProcessTests
     [TestMethod]
     public async Task Dispose_WhileShutdownAsyncIsInFlight_WaitsForTheSameTeardown()
     {
-        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var callbackBlocked = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var server = new InProcessServerFixture(onDisconnected: () =>
-        {
-            callbackBlocked.TrySetResult(true);
-            release.Task.GetAwaiter().GetResult();
-        });
+        using var release = new ManualResetEventSlim();
+        using var callbackBlocked = new ManualResetEventSlim();
+        using var disposeEntered = new ManualResetEventSlim();
+        using var disposeReturned = new ManualResetEventSlim();
+        using var server = new InProcessServerFixture(
+            onDisconnected: () =>
+            {
+                callbackBlocked.Set();
+                release.Wait(TestContext.CancellationToken);
+            },
+            waitForDisconnectSynchronously: true);
 
         MtpServerClient client = await LaunchAsync(server);
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
 
         Task shutdown = client.ShutdownAsync();
+        Task? dispose = null;
         try
         {
-            await WithTimeoutAsync(callbackBlocked.Task);
+            Assert.IsTrue(
+                callbackBlocked.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken),
+                "The callback must be blocked before testing the concurrent Dispose.");
             Assert.IsFalse(shutdown.IsCompleted, "ShutdownAsync must remain incomplete while the callback is blocked.");
 
             // A Dispose that races an in-flight ShutdownAsync must join it, not report success while the
-            // application is still stopping.
-            var disposeEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var dispose = Task.Run(
+            // application is still stopping. Keep the probe off the thread pool: under net462 contention an
+            // awaited probe can resume only after the bounded teardown abandons the callback.
+            dispose = Task.Factory.StartNew(
                 () =>
                 {
-                    disposeEntered.TrySetResult(true);
+                    disposeEntered.Set();
                     client.Dispose();
+                    disposeReturned.Set();
                 },
-                TestContext.CancellationToken);
-            await WithTimeoutAsync(disposeEntered.Task);
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
 
-            for (int attempt = 0; attempt < 10 && !dispose.IsCompleted; attempt++)
-            {
-                _ = await Task.WhenAny(dispose, Task.Delay(10, TestContext.CancellationToken));
-            }
-
-            Assert.IsFalse(dispose.IsCompleted, "Dispose must not return while the shared teardown is still running.");
-
-            _ = release.TrySetResult(true);
-
-            await WithTimeoutAsync(shutdown);
-            await WithTimeoutAsync(dispose);
-            Assert.AreEqual(1, server.CompletionCount, "Both entry points must share one teardown.");
+            Assert.IsTrue(
+                disposeEntered.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken),
+                "The dedicated Dispose thread must start.");
+            Assert.IsFalse(
+                disposeReturned.Wait(TimeSpan.FromMilliseconds(100), TestContext.CancellationToken),
+                "Dispose must not return while the shared teardown is still running.");
         }
         finally
         {
-            _ = release.TrySetResult(true);
+            release.Set();
+            await WithTimeoutAsync(shutdown);
+            if (dispose is not null)
+            {
+                await WithTimeoutAsync(dispose);
+            }
         }
+
+        Assert.AreEqual(1, server.CompletionCount, "Both entry points must share one teardown.");
     }
 
     [TestMethod]
@@ -841,6 +851,7 @@ public sealed class MtpServerClientInProcessTests
     {
         private readonly Action? _onDisconnected;
         private readonly int _exitCode;
+        private readonly bool _waitForDisconnectSynchronously;
         private readonly TaskCompletionSource<int> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly TaskCompletionSource<FakeMtpServer> _connected = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly StringBuilder _log = new();
@@ -850,10 +861,14 @@ public sealed class MtpServerClientInProcessTests
         private int _completionCount;
         private int _transportClosedCount;
 
-        public InProcessServerFixture(Action? onDisconnected = null, int exitCode = 0)
+        public InProcessServerFixture(
+            Action? onDisconnected = null,
+            int exitCode = 0,
+            bool waitForDisconnectSynchronously = false)
         {
             _onDisconnected = onDisconnected;
             _exitCode = exitCode;
+            _waitForDisconnectSynchronously = waitForDisconnectSynchronously;
         }
 
         /// <summary>Gets the argument array the client generated for the callback (empty before it ran).</summary>
@@ -917,7 +932,17 @@ public sealed class MtpServerClientInProcessTests
             {
                 // A real server-mode application runs until its session ends, which is what closing the
                 // client's end of the transport produces.
-                await server.Disconnected.ConfigureAwait(false);
+                if (_waitForDisconnectSynchronously)
+                {
+                    // This test-only path keeps the post-disconnect callback on the host's dedicated invocation
+                    // instead of depending on a thread-pool continuation while testing thread-pool contention.
+                    server.Disconnected.GetAwaiter().GetResult();
+                }
+                else
+                {
+                    await server.Disconnected.ConfigureAwait(false);
+                }
+
                 _ = Interlocked.Increment(ref _transportClosedCount);
                 _onDisconnected?.Invoke();
                 _ = Interlocked.Increment(ref _completionCount);

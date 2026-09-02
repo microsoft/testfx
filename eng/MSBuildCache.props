@@ -1,7 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <MSBuildCachePackageName Condition="'$(TF_BUILD)' != ''">Microsoft.MSBuildCache.AzurePipelines</MSBuildCachePackageName>
-    <MSBuildCachePackageName Condition="'$(MSBuildCachePackageName)' == ''">Microsoft.MSBuildCache.Local</MSBuildCachePackageName>
-    <MSBuildCachePackageVersion>0.1.328-preview</MSBuildCachePackageVersion>
-  </PropertyGroup>
-</Project>
