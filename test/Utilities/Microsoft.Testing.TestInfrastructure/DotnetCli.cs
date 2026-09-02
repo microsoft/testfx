@@ -7,11 +7,6 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
-    internal readonly struct CommandSlot : IDisposable
-    {
-        public void Dispose() => s_maxOutstandingCommands_semaphore.Release();
-    }
-
     private static readonly string[] CodeCoverageEnvironmentVariables =
     [
         "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
@@ -61,63 +56,57 @@ public static class DotnetCli
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
-        using CommandSlot commandSlot = await AcquireCommandSlotAsync(cancellationToken);
-        environmentVariables = CreateEnvironmentVariables(environmentVariables, disableTelemetry, disableCodeCoverage);
-
-        string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
-        extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
-        if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
-        {
-            args = args.Insert(platformArgsIndex, extraArgs + " ");
-        }
-        else
-        {
-            args += extraArgs;
-        }
-
-        return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
-    }
-
-    internal static async Task<CommandSlot> AcquireCommandSlotAsync(CancellationToken cancellationToken)
-    {
         await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
-        return default;
-    }
-
-    internal static Dictionary<string, string?> CreateEnvironmentVariables(
-        Dictionary<string, string?>? environmentVariables = null,
-        bool disableTelemetry = true,
-        bool disableCodeCoverage = true)
-    {
-        environmentVariables ??= [];
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        try
         {
-            // Skip all unwanted environment variables.
-            string? key = entry.Key.ToString();
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            environmentVariables ??= [];
+            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
-                continue;
+                // Skip all unwanted environment variables.
+                string? key = entry.Key.ToString();
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (disableCodeCoverage)
+                {
+                    // Disable the code coverage during the build.
+                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
+                // We use TryAdd to let tests "overwrite" existing environment variables.
+                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
             }
 
-            if (disableCodeCoverage
-                && CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            if (disableTelemetry)
             {
-                continue;
+                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
             }
 
-            // We use TryAdd to let tests "overwrite" existing environment variables.
-            // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
-            // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
-            // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-            environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
-        }
+            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
+            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            {
+                args = args.Insert(platformArgsIndex, extraArgs + " ");
+            }
+            else
+            {
+                args += extraArgs;
+            }
 
-        if (disableTelemetry)
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+        }
+        finally
         {
-            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+            s_maxOutstandingCommands_semaphore.Release();
         }
-
-        return environmentVariables;
     }
 
     private static bool IsDotNetTestWithExeOrDll(string args)

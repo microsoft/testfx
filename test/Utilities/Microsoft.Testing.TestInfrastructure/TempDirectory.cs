@@ -7,7 +7,6 @@ public class TempDirectory : IDisposable
 {
     private readonly bool _cleanup;
     private readonly string _baseDirectory;
-    private readonly FileStream? _directoryLock;
     private bool _isDisposed;
 
     /// <summary>
@@ -19,21 +18,6 @@ public class TempDirectory : IDisposable
         (_baseDirectory, Path) = CreateUniqueDirectory(subDirectory);
     }
 
-    private TempDirectory(string stableDirectoryName, string? subDirectory)
-    {
-        _cleanup = Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") != "0";
-        _directoryLock = AcquireStableDirectoryLock(stableDirectoryName);
-        try
-        {
-            (_baseDirectory, Path) = CreateDirectory(stableDirectoryName, subDirectory, recreateExisting: true);
-        }
-        catch
-        {
-            _directoryLock.Dispose();
-            throw;
-        }
-    }
-
     public string Path { get; }
 
 #pragma warning disable CS0618 // Type or member is obsolete - This is the only place where GetRepoRoot and GetTestSuiteDirectory should be called.
@@ -41,9 +25,6 @@ public class TempDirectory : IDisposable
 
     public static string TestSuiteDirectory { get; } = GetTestSuiteDirectory();
 #pragma warning restore CS0618 // Type or member is obsolete
-
-    internal static TempDirectory CreateStable(string stableDirectoryName)
-        => new(stableDirectoryName, subDirectory: null);
 
     public void Dispose()
     {
@@ -56,23 +37,20 @@ public class TempDirectory : IDisposable
 
         if (!_cleanup)
         {
-            _directoryLock?.Dispose();
+            return;
+        }
+
+        if (!Directory.Exists(_baseDirectory))
+        {
             return;
         }
 
         try
         {
-            if (Directory.Exists(_baseDirectory))
-            {
-                Directory.Delete(_baseDirectory, recursive: true);
-            }
+            Directory.Delete(_baseDirectory, recursive: true);
         }
         catch
         {
-        }
-        finally
-        {
-            _directoryLock?.Dispose();
         }
     }
 
@@ -188,33 +166,14 @@ public class TempDirectory : IDisposable
     /// Path of the created directory.
     /// </returns>
     internal static (string BaseDirectory, string FinalDirectory) CreateUniqueDirectory(string? subDirectory)
-        => CreateDirectory(RandomId.Next(), subDirectory);
-
-    private static (string BaseDirectory, string FinalDirectory) CreateDirectory(
-        string directoryName,
-        string? subDirectory,
-        bool recreateExisting = false)
     {
-        string safeDirectoryName = ValidateDirectoryName(directoryName);
-        if (System.IO.Path.IsPathRooted(safeDirectoryName))
-        {
-            throw new ArgumentException("Directory name must be relative.", nameof(directoryName));
-        }
-
-        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, safeDirectoryName);
-        if (recreateExisting && Directory.Exists(directoryPath))
-        {
-            Directory.Delete(directoryPath, recursive: true);
-        }
-
+        string directoryPath = System.IO.Path.Combine(TestSuiteDirectory, RandomId.Next());
         Directory.CreateDirectory(directoryPath);
 
         string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
         File.WriteAllText(directoryBuildProps, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-    <Import Project="{RepoRoot}/eng/MSBuildCache.props"
-            Condition="'$(MSBuildCachePackageEnabled)' == 'true'" />
     <PropertyGroup>
       <RepoRoot>{RepoRoot}/</RepoRoot>
       <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
@@ -223,16 +182,6 @@ public class TempDirectory : IDisposable
       <!-- Prevent build warnings/errors on unsupported TFMs -->
       <CheckEolTargetFramework>false</CheckEolTargetFramework>
     </PropertyGroup>
-    <ItemGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'">
-      <PackageReference Include="$(MSBuildCachePackageName)"
-                        Version="$(MSBuildCachePackageVersion)"
-                        IncludeAssets="Runtime;Build;BuildMultitargeting;Native;contentFiles;Analyzers"
-                        PrivateAssets="All" />
-      <PackageReference Include="Microsoft.MSBuildCache.SharedCompilation"
-                        Version="$(MSBuildCachePackageVersion)"
-                        IncludeAssets="Runtime;Build;BuildMultitargeting;Native;contentFiles;Analyzers"
-                        PrivateAssets="All" />
-    </ItemGroup>
 </Project>
 """);
 
@@ -300,47 +249,6 @@ public class TempDirectory : IDisposable
 
         return (directoryPath, finalDirectory);
     }
-
-    private static FileStream AcquireStableDirectoryLock(string stableDirectoryName)
-    {
-        string safeDirectoryName = ValidateDirectoryName(stableDirectoryName);
-        string lockDirectory = System.IO.Path.Combine(TestSuiteDirectory, ".locks");
-        Directory.CreateDirectory(lockDirectory);
-        string lockFileName = safeDirectoryName + ".lock";
-        if (System.IO.Path.IsPathRooted(lockFileName))
-        {
-            throw new ArgumentException("Lock file name must be relative.", nameof(stableDirectoryName));
-        }
-
-        string lockPath = System.IO.Path.Join(lockDirectory, lockFileName);
-        DateTime timeout = DateTime.UtcNow.AddMinutes(5);
-
-        while (true)
-        {
-            try
-            {
-                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (IOException) when (DateTime.UtcNow < timeout)
-            {
-                Thread.Sleep(100);
-            }
-            catch (IOException ex)
-            {
-                throw new TimeoutException(
-                    $"Timed out waiting for exclusive access to stable test directory '{stableDirectoryName}'.",
-                    ex);
-            }
-        }
-    }
-
-    private static string ValidateDirectoryName(string directoryName)
-        => string.IsNullOrWhiteSpace(directoryName)
-            || System.IO.Path.IsPathRooted(directoryName)
-            || directoryName is "." or ".."
-            || directoryName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0
-                ? throw new ArgumentException("Directory name must be a single relative directory segment.", nameof(directoryName))
-                : System.IO.Path.GetFileName(directoryName);
 
     public override string ToString() => Path;
 }
