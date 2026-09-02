@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.Json;
-
+#if USE_EXTERNAL_COMBINATORIAL
 using Combinatorial.MSTest;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+#endif
+
+using System.Text.Json;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 

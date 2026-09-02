@@ -100,15 +100,15 @@
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
     <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.8" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.11" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
-    <PackageVersion Include="NUnit" Version="4.6.0" />
-    <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageVersion Include="NUnit" Version="4.6.1" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="6.3.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
@@ -116,8 +116,8 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
-    <!-- Third-party (community) package that brings xUnit.Combinatorial-style [CombinatorialData] support to
-         MSTest. Used by the acceptance tests to replace bespoke build-matrix DynamicData helpers. -->
+    <!-- Used by Microsoft.Testing.Platform acceptance tests, which consume the released MSTest packages
+         rather than MSTest from source. -->
     <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
@@ -128,7 +128,7 @@
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Polly" Version="8.6.6" />
+    <PackageVersion Include="Polly" Version="8.7.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
     <!--
@@ -147,7 +147,7 @@
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="9.0.4" />
-    <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.0" />
   </ItemGroup>
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK

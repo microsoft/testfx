@@ -466,6 +466,38 @@ Actual: {2}</value>
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
     <comment>{0} is the dynamic data source member name. {1} is the declaring type name.</comment>
   </data>
+  <data name="CombinatorialMultipleValueProviders" xml:space="preserve">
+    <value>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</value>
+    <comment>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</comment>
+  </data>
+  <data name="CombinatorialUnableToInferValues" xml:space="preserve">
+    <value>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</value>
+    <comment>{0} is the parameter type. {1} is the provider interface name.</comment>
+  </data>
+  <data name="CombinatorialRangeExceedsInt32" xml:space="preserve">
+    <value>The range exceeds the maximum integer value.</value>
+    <comment>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</comment>
+  </data>
+  <data name="CombinatorialRangeExceedsUInt32" xml:space="preserve">
+    <value>The range exceeds the maximum unsigned integer value.</value>
+    <comment>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</comment>
+  </data>
+  <data name="CombinatorialRangeTooManyValues" xml:space="preserve">
+    <value>The range contains too many values.</value>
+    <comment>Error message shown when a combinatorial range cannot be represented in an array.</comment>
+  </data>
+  <data name="CombinatorialRandomCountMustBePositive" xml:space="preserve">
+    <value>{0} must be positive.</value>
+    <comment>{0} is the random data count property name.</comment>
+  </data>
+  <data name="CombinatorialRandomMinimumExceedsMaximum" xml:space="preserve">
+    <value>{0} must not be greater than {1}.</value>
+    <comment>{0} is the minimum property name. {1} is the maximum property name.</comment>
+  </data>
+  <data name="CombinatorialRandomCountExceedsRange" xml:space="preserve">
+    <value>{0} requests more unique random values than the range between {1} and {2} contains.</value>
+    <comment>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</comment>
+  </data>
   <data name="ContainsSingleMatchFailMsg" xml:space="preserve">
     <value>Expected exactly one item to match the predicate but found {1} item(s). {0}</value>
     <comment>{0} is the user-provided assertion message. {1} is the number of items matching the predicate.</comment>

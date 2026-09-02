@@ -22,6 +22,7 @@ public interface IClientCapabilities
     /// its last-known state until it is explicitly updated (for example, an IDE test explorer). A stateless client
     /// consumes updates as a stream and does not retain node state after the run (for example, <c>dotnet test</c>).
     /// The default is <see langword="false"/> (stateless); a client opts into stateful behavior.
+    /// This capability is independent of connection lifetime and multi-request support.
     /// </remarks>
     bool IsStateful { get; }
 }

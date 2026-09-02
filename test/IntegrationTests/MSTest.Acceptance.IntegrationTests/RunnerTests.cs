@@ -1,11 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Combinatorial.MSTest;
-
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 using SystemTask = System.Threading.Tasks.Task;
 

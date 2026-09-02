@@ -42,6 +42,7 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 
 #file TestClass1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 #pragma warning disable MSTESTEXP
 
@@ -99,6 +100,17 @@ public class UnitTest1
         {
            new object[] { 1, 2 }
         };
+
+    [TestMethod]
+    [CombinatorialData]
+    public void TestMethod6(CustomValue? value)
+        => Assert.IsTrue(value is null or CustomValue.First or CustomValue.Second);
+}
+
+public enum CustomValue
+{
+    First,
+    Second,
 }
 """;
 
@@ -179,7 +191,7 @@ public sealed class AsyncVoidTests
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
         result.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(
