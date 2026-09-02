@@ -142,7 +142,7 @@ $($issues.fix.text -join "`n")
 Testing Platform Version: $PlatformVersion
 -------------------------------
 
-See the release notes [here](https://github.com/microsoft/testfx/blob/main/docs/Changelog-TestingPlatform.md#$PlatformVersion).
+See the release notes [here](https://github.com/microsoft/testfx/blob/main/docs/Changelog-Platform.md#$PlatformVersion).
 
 -------------------------------
 
