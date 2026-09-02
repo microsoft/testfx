@@ -127,10 +127,11 @@ internal static class HtmlReportMerger
                     .ThenBy(test => test.OriginalTestIndex),
             ];
 
-        (JsonArray mergedTests, int passed, int failed, int skipped, int timedOut, int errored, double totalDurationMs, int? flaky) =
+        (JsonArray mergedTests, int passed, int failed, int skipped, int timedOut, int errored, int? flaky) =
             mode == HtmlMergeMode.CollapseRetryAttempts
                 ? CollapseRetryAttempts(orderedTests)
                 : ConcatenateTests(orderedTests);
+        double totalDurationMs = (latestEndTime!.Value - earliestStartTime!.Value).TotalMilliseconds;
 
         bool hasCommonFramework = TryGetCommonFramework(reports, out string framework, out string frameworkUid, out string frameworkVersion);
         var summary = new JsonObject
@@ -187,7 +188,7 @@ internal static class HtmlReportMerger
     /// than one row shares the same test identity (e.g. the same test UID appearing in more than one shard), so
     /// nothing is silently collapsed away.
     /// </summary>
-    private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, double TotalDurationMs, int? Flaky) ConcatenateTests(
+    private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) ConcatenateTests(
         MergedTest[] orderedTests)
     {
         var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -203,15 +204,13 @@ internal static class HtmlReportMerger
         int skipped = 0;
         int timedOut = 0;
         int errored = 0;
-        double totalDurationMs = 0;
-
         for (int i = 0; i < orderedTests.Length; i++)
         {
             MergedTest mergedTest = orderedTests[i];
             JsonObject test = mergedTest.Test;
             string identity = CreateTestIdentity(mergedTest);
             string outcome = ReadRequiredString(test, "outcome");
-            double durationMs = ReadRequiredDouble(test, "durationMs");
+            _ = ReadRequiredDouble(test, "durationMs");
 
             test["rowKey"] = i;
             _ = test.Remove("attemptIndex");
@@ -232,11 +231,10 @@ internal static class HtmlReportMerger
             }
 
             CountOutcome(outcome, ref passed, ref failed, ref skipped, ref timedOut, ref errored);
-            totalDurationMs += durationMs;
             mergedTests.Add((JsonNode)test);
         }
 
-        return (mergedTests, passed, failed, skipped, timedOut, errored, totalDurationMs, null);
+        return (mergedTests, passed, failed, skipped, timedOut, errored, null);
     }
 
     /// <summary>
@@ -246,9 +244,9 @@ internal static class HtmlReportMerger
     /// duration, and whichever error/output detail fields they carried. A test whose final outcome is "passed"
     /// after at least one non-passed prior attempt is additionally flagged "flaky" so it stays visibly
     /// distinguishable from a test that has always passed. Logical result counts use only the final occurrence,
-    /// while total duration includes every physical attempt so retry cost remains visible.
+    /// while the merged report duration spans from the earliest input start time to the latest input end time.
     /// </summary>
-    private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, double TotalDurationMs, int? Flaky) CollapseRetryAttempts(
+    private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) CollapseRetryAttempts(
         MergedTest[] orderedTests)
     {
         HashSet<(int ReportIndex, string BaseIdentity)> ambiguousIdentities =
@@ -290,14 +288,12 @@ internal static class HtmlReportMerger
         int timedOut = 0;
         int errored = 0;
         int flaky = 0;
-        double totalDurationMs = 0;
-
         for (int i = 0; i < slots.Count; i++)
         {
             (MergedTest final, List<JsonObject> priors) = slots[i];
             JsonObject test = final.Test;
             string outcome = ReadRequiredString(test, "outcome");
-            double durationMs = ReadRequiredDouble(test, "durationMs");
+            _ = ReadRequiredDouble(test, "durationMs");
 
             test["rowKey"] = i;
             _ = test.Remove("attemptIndex");
@@ -334,16 +330,10 @@ internal static class HtmlReportMerger
             }
 
             CountOutcome(outcome, ref passed, ref failed, ref skipped, ref timedOut, ref errored);
-            totalDurationMs += durationMs;
-            foreach (JsonObject prior in priors)
-            {
-                totalDurationMs += ReadRequiredDouble(prior, "durationMs");
-            }
-
             mergedTests.Add((JsonNode)test);
         }
 
-        return (mergedTests, passed, failed, skipped, timedOut, errored, totalDurationMs, flaky);
+        return (mergedTests, passed, failed, skipped, timedOut, errored, flaky);
     }
 
     /// <summary>
