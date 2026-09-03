@@ -1,1 +1,3 @@
 #nullable enable
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(System.Net.Http.HttpClient! httpClient, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void

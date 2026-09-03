@@ -739,6 +739,31 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_PublishTestResults_SuccessfulHtmlResponseReturnsNullAndReportsDiagnostic()
+    {
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("<!DOCTYPE html><html></html>", Encoding.UTF8, "text/html"),
+        };
+        QueueHttpMessageHandler handler = new((_, _) => Task.FromResult(response));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        CollectingLogger logger = new();
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock(), logger);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null);
+
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await client.PublishTestResultsWithSubResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
+
+        Assert.IsNull(publishedResults);
+        Assert.Contains("status code 200", string.Join(Environment.NewLine, logger.Logs));
+        Assert.Contains("content type 'text/html; charset=utf-8'", string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_PublishFailureLogsWarningAndDoesNotThrow()
     {
         using TestDirectory directory = CreateTestDirectory();
