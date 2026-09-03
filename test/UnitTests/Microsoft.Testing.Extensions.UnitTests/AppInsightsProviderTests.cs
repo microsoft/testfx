@@ -36,6 +36,34 @@ public sealed class AppInsightsProviderTests
         telemetryClient.Verify(x => x.Flush(), Times.Never);
     }
 
+#if !NETCOREAPP
+    [TestMethod]
+    public void Constructor_StartsTelemetryConsumerOnDedicatedThread()
+    {
+        Mock<ITask> task = new();
+        task.Setup(x => x.RunLongRunning(It.IsAny<Func<Task>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _ = new AppInsightsProvider(
+            new Mock<IEnvironment>().Object,
+            new Mock<ITestApplicationCancellationTokenSource>().Object,
+            task.Object,
+            new Mock<ILoggerFactory>().Object,
+            new Mock<IClock>().Object,
+            new Mock<IConfiguration>().Object,
+            new Mock<ITelemetryInformation>().Object,
+            new Mock<ITelemetryClientFactory>().Object,
+            "sessionId");
+
+        task.Verify(
+            x => x.RunLongRunning(It.IsAny<Func<Task>>(), "AppInsights telemetry ingest", It.IsAny<CancellationToken>()),
+            Times.Once);
+        task.Verify(
+            x => x.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+#endif
+
     [TestMethod]
     public async Task FirstPayload_InitializesTelemetryClientOnce()
     {
