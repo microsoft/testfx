@@ -239,13 +239,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     lastListOfFailedId,
                     attemptCount).ConfigureAwait(false);
 
-                if (originalExecutableArguments.Any(argument => argument.StartsWith("@", StringComparison.Ordinal))
-                    && !finalArguments.Contains($"@{generatedResponseFilePaths[0]}"))
-                {
-                    await logger.LogWarningAsync(
-                        "Retry arguments could not be regenerated in a response file because an argument contains a literal double quote. "
-                        + "The retry command line may exceed the operating system limit.").ConfigureAwait(false);
-                }
+                await LogResponseFileFallbackWarningAsync(
+                    logger,
+                    originalExecutableArguments,
+                    finalArguments,
+                    generatedResponseFilePaths[0]).ConfigureAwait(false);
 
                 attemptResult = await RetryTestHostRunner.RunAttemptAsync(
                     _serviceProvider,
@@ -514,6 +512,21 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
     private static bool IsHotReloadEnabled(IEnvironment environment)
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+
+    internal static async Task LogResponseFileFallbackWarningAsync(
+        ILogger logger,
+        string[] originalExecutableArguments,
+        List<string> finalArguments,
+        string generatedResponseFilePath)
+    {
+        if (originalExecutableArguments.Any(argument => argument.StartsWith("@", StringComparison.Ordinal))
+            && !finalArguments.Contains($"@{generatedResponseFilePath}"))
+        {
+            await logger.LogWarningAsync(
+                "Retry arguments could not be regenerated in a response file because an argument contains a literal double quote. "
+                + "The retry command line may exceed the operating system limit.").ConfigureAwait(false);
+        }
+    }
 
     private static void CollectRecoveredArtifacts(
         IFileSystem fileSystem,
