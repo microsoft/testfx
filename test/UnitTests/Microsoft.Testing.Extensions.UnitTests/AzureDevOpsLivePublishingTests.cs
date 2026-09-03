@@ -672,10 +672,12 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
-    public async Task AzureDevOpsTestResultsClient_AuthenticationRedirect_ReportsInvalidAccessTokenGuidance()
+    [DataRow(HttpStatusCode.Redirect, "302")]
+    [DataRow(HttpStatusCode.Unauthorized, "401")]
+    public async Task AzureDevOpsTestResultsClient_AuthenticationFailure_ReportsInvalidAccessTokenGuidance(HttpStatusCode statusCode, string expectedStatus)
     {
         QueueHttpMessageHandler handler = new(
-            (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Redirect)));
+            (_, _) => Task.FromResult(new HttpResponseMessage(statusCode)));
         using HttpClient httpClient = new(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
@@ -686,7 +688,30 @@ public sealed class AzureDevOpsLivePublishingTests
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => client.CreateTestRunAsync(configuration, CancellationToken.None));
 
-        Assert.Contains("status code 302", exception.Message);
+        Assert.Contains($"(status: {expectedStatus})", exception.Message);
+        Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
+        Assert.Contains("Make secrets available to builds of forks", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_BrowserOpaqueRedirect_ReportsInvalidAccessTokenGuidance()
+    {
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(new HttpResponseMessage(0)
+            {
+                ReasonPhrase = "opaqueredirect",
+            }));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.Contains("(status: opaqueredirect)", exception.Message);
         Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
         Assert.Contains("Make secrets available to builds of forks", exception.Message);
     }
