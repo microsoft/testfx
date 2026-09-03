@@ -9,7 +9,7 @@ steps:
     $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
     $nugetConfig = "$(Agent.TempDirectory)\MSBuildCacheTelemetry.NuGet.config"
     $version = "0.1.999-phase-telemetry"
-    $commit = "a29f3f11307f769319f66834585a14bc986eef57"
+    $commit = "f932734021e47c835f86525f9f5944777030e59c"
     $dotnetRoot = Get-ChildItem "$(Agent.TempDirectory)" -Directory |
       Where-Object { Test-Path (Join-Path $_.FullName "sdk\10.0.400") } |
       Select-Object -First 1 -ExpandProperty FullName
