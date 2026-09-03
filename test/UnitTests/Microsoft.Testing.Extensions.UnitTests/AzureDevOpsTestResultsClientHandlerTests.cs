@@ -23,12 +23,13 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class AzureDevOpsTestResultsClientHandlerTests
 {
     [TestMethod]
-    public void CreateHttpClientHandler_WhenPlatformSupportsDecompression_OptsIntoGZipAndDeflate()
+    public void CreateHttpClientHandler_WhenPlatformSupportsDecompression_DisablesRedirectsAndOptsIntoGZipAndDeflate()
     {
         Assert.IsFalse(OperatingSystem.IsBrowser(), "The unit test host is expected to run outside the browser sandbox.");
 
         using HttpClientHandler handler = AzureDevOpsTestResultsClient.CreateHttpClientHandler();
 
+        Assert.IsFalse(handler.AllowAutoRedirect);
         Assert.IsTrue(handler.SupportsAutomaticDecompression, "This platform is expected to support automatic decompression.");
         Assert.AreEqual(DecompressionMethods.Deflate | DecompressionMethods.GZip, handler.AutomaticDecompression);
     }
