@@ -7,6 +7,7 @@ steps:
 - pwsh: |
     $source = "$(Agent.TempDirectory)\MSBuildCacheTelemetry"
     $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
+    $nugetConfig = "$(Agent.TempDirectory)\MSBuildCacheTelemetry.NuGet.config"
     $version = "0.1.999-phase-telemetry"
     $commit = "a29f3f11307f769319f66834585a14bc986eef57"
     $dotnetRoot = Get-ChildItem "$(Agent.TempDirectory)" -Directory |
@@ -27,11 +28,20 @@ steps:
     $env:DOTNET_ROOT = $dotnetRoot
     Set-Location $source
     & $dotnet --info
+    @'
+    <?xml version="1.0" encoding="utf-8"?>
+    <configuration>
+      <packageSources>
+        <clear />
+        <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+        <add key="msbuildcache" value="https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json" />
+      </packageSources>
+    </configuration>
+    '@ | Set-Content $nugetConfig
 
     $azurePipelinesProject = "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj"
     & $dotnet restore $azurePipelinesProject `
-      --source https://api.nuget.org/v3/index.json `
-      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json
+      --configfile $nugetConfig
     if ($LASTEXITCODE -ne 0) {
       throw "Failed to restore Microsoft.MSBuildCache.AzurePipelines."
     }
@@ -46,8 +56,7 @@ steps:
 
     $sharedCompilationProject = "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj"
     & $dotnet restore $sharedCompilationProject `
-      --source https://api.nuget.org/v3/index.json `
-      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json
+      --configfile $nugetConfig
     if ($LASTEXITCODE -ne 0) {
       throw "Failed to restore Microsoft.MSBuildCache.SharedCompilation."
     }
