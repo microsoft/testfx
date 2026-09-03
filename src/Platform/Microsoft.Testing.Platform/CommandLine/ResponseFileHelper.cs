@@ -94,10 +94,18 @@ internal static class ResponseFileHelper
                     string argument = arguments[argumentIndex];
                     if (argument.StartsWith("@", StringComparison.Ordinal))
                     {
-                        string redactedNestedArgument = CommandLineArgumentsRedactor.RedactArgument([.. arguments], argumentIndex);
-                        string nestedDiagnosticPath = redactedNestedArgument.StartsWith("@", StringComparison.Ordinal)
-                            ? redactedNestedArgument[1..]
-                            : redactedNestedArgument;
+                        string nestedDiagnosticPath;
+                        if (filePath != diagnosticPath)
+                        {
+                            nestedDiagnosticPath = diagnosticPath;
+                        }
+                        else
+                        {
+                            string redactedNestedArgument = CommandLineArgumentsRedactor.RedactArgument([.. arguments], argumentIndex);
+                            nestedDiagnosticPath = redactedNestedArgument.StartsWith("@", StringComparison.Ordinal)
+                                ? redactedNestedArgument[1..]
+                                : redactedNestedArgument;
+                        }
 
                         // Nested response files intentionally use the process working directory, just like
                         // top-level response files, rather than the containing response file's directory.

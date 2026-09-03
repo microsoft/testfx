@@ -262,6 +262,37 @@ public sealed class ResponseFileHelperTests
     }
 
     [TestMethod]
+    public void TryReadResponseFile_MissingNestedFileBelowRedactedFile_InheritsRedaction()
+    {
+        string outerPath = Path.GetTempFileName();
+        string middlePath = Path.GetTempFileName();
+        string sensitiveNestedPath = $"{Guid.NewGuid():N}-sensitive-missing.rsp";
+        try
+        {
+            File.WriteAllText(middlePath, $"@{sensitiveNestedPath}");
+            File.WriteAllText(
+                outerPath,
+                $"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}{Environment.NewLine}@{middlePath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains("***REDACTED***", errors[0]);
+            Assert.DoesNotContain(sensitiveNestedPath, errors[0]);
+            Assert.DoesNotContain(middlePath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+        }
+        finally
+        {
+            File.Delete(middlePath);
+            File.Delete(outerPath);
+        }
+    }
+
+    [TestMethod]
     public void TryReadResponseFile_MalformedNestedFile_ReportsRedactedNestedPathWithoutDetails()
     {
         string outerPath = Path.GetTempFileName();
