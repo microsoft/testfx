@@ -77,6 +77,10 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Check names are event-controlled. Keep the value single-line and
+          # bounded before it can reach GitHub command files or agent context.
+          CHECK_NAME=$(printf '%s' "${CHECK_NAME}" | tr -d '\r\n' | cut -c1-200)
+
           EVIDENCE_DIR="${RUNNER_TEMP}/pipeline-test-triage"
           ADO_API="https://dev.azure.com/dnceng-public/public/_apis"
           ADO_BUILD_UI="https://dev.azure.com/dnceng-public/public/_build/results"
