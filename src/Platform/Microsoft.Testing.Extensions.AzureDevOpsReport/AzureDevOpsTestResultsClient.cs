@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
@@ -37,17 +38,29 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
     private readonly HttpClient _httpClient;
     private readonly ITask _task;
     private readonly IClock _clock;
+    private readonly ILogger? _logger;
 
     public AzureDevOpsTestResultsClient(ITask task, IClock clock)
-        : this(SharedHttpClient, task, clock)
+        : this(SharedHttpClient, task, clock, logger: null)
+    {
+    }
+
+    public AzureDevOpsTestResultsClient(ITask task, IClock clock, ILoggerFactory loggerFactory)
+        : this(SharedHttpClient, task, clock, loggerFactory.CreateLogger<AzureDevOpsTestResultsClient>())
     {
     }
 
     internal AzureDevOpsTestResultsClient(HttpClient httpClient, ITask task, IClock clock)
+        : this(httpClient, task, clock, logger: null)
+    {
+    }
+
+    internal AzureDevOpsTestResultsClient(HttpClient httpClient, ITask task, IClock clock, ILogger? logger)
     {
         _httpClient = httpClient;
         _task = task;
         _clock = clock;
+        _logger = logger;
     }
 
     public async Task<int> CreateTestRunAsync(AzureDevOpsPublishConfiguration configuration, CancellationToken cancellationToken)
@@ -102,10 +115,11 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
             configuration.AccessToken,
             results);
 
-        // Transport/HTTP failures throw from SendCoreAsync — caller retries.
+        // Do not throw for an unexpected 2xx content type: Azure DevOps may have accepted this
+        // non-idempotent POST, and retrying it could create duplicate result rows.
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
-        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
+        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout, throwOnUnexpectedContentType: false).ConfigureAwait(false);
 
         // From this point on the AzDO server has accepted the results. Failing to parse the response
         // must not cause the caller to retry the publish (that would duplicate result rows).

@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
+using Microsoft.Testing.Platform.Logging;
 
 #if !NETCOREAPP
 using Polyfills;
@@ -85,7 +86,7 @@ internal sealed partial class AzureDevOpsTestResultsClient
         using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, requestTimeout).ConfigureAwait(false);
     }
 
-    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken, TimeSpan attemptTimeout)
+    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken, TimeSpan attemptTimeout, bool throwOnUnexpectedContentType = true)
     {
         Exception? lastException = null;
 
@@ -106,12 +107,21 @@ internal sealed partial class AzureDevOpsTestResultsClient
                         {
                             int statusCode = (int)response.StatusCode;
                             string contentType = response.Content.Headers.ContentType?.ToString() ?? "text/html";
-                            response.Dispose();
-                            throw new InvalidOperationException(string.Format(
+                            string diagnostic = string.Format(
                                 CultureInfo.InvariantCulture,
                                 AzureDevOpsResources.AzureDevOpsLivePublishingUnexpectedContentType,
                                 statusCode,
-                                contentType));
+                                contentType);
+                            if (throwOnUnexpectedContentType)
+                            {
+                                response.Dispose();
+                                throw new InvalidOperationException(diagnostic);
+                            }
+
+                            if (_logger is not null)
+                            {
+                                await _logger.LogWarningAsync(diagnostic).ConfigureAwait(false);
+                            }
                         }
 
                         return response;
