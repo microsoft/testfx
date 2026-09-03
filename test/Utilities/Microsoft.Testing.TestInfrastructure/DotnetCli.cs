@@ -7,6 +7,48 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
+    private static readonly string[] DotNetTestOptionsWithValues =
+    [
+        "--arch",
+        "--artifacts-path",
+        "--blame-crash-dump-type",
+        "--blame-hang-dump-type",
+        "--blame-hang-timeout",
+        "--collect",
+        "--config-file",
+        "--configuration",
+        "--device",
+        "--diag",
+        "--diagnostic-output-directory",
+        "--environment",
+        "--filter",
+        "--framework",
+        "--logger",
+        "--list-tests",
+        "--max-parallel-test-modules",
+        "--maximum-failed-tests",
+        "--minimum-expected-tests",
+        "--os",
+        "--output",
+        "--results-directory",
+        "--results-directory-layout",
+        "--root-directory",
+        "--runtime",
+        "--settings",
+        "--solution",
+        "--test-adapter-path",
+        "--timeout",
+        "-a",
+        "-c",
+        "-e",
+        "-f",
+        "-l",
+        "-r",
+        "-s",
+        "-v",
+        "-verbosity",
+    ];
+
     private static readonly string[] CodeCoverageEnvironmentVariables =
     [
         "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
@@ -93,6 +135,12 @@ public static class DotnetCli
                 environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
             }
 
+            if (!useMultithreadedMSBuild)
+            {
+                RemoveEnvironmentVariable(environmentVariables, "MSBUILDENABLEMULTITHREADED");
+                RemoveEnvironmentVariable(environmentVariables, "MSBUILDFORCEMULTITHREADED");
+            }
+
             bool shouldUseMultithreadedMSBuild = UseMultithreadedMSBuild
                 && useMultithreadedMSBuild
                 && IsMSBuildBackedBuildOrTest(args);
@@ -131,9 +179,85 @@ public static class DotnetCli
             && (args.Length == command.Length || char.IsWhiteSpace(args[command.Length]));
 
     private static bool IsDotNetTestWithExeOrDll(string args)
-        => IsCommand(args, "test")
-            && (args.Contains(".dll", StringComparison.OrdinalIgnoreCase)
-                || args.Contains(".exe", StringComparison.OrdinalIgnoreCase));
+    {
+        string[] tokens = TokenizeArguments(args);
+        if (tokens.Length == 0 || !string.Equals(tokens[0], "test", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        for (int i = 1; i < tokens.Length; i++)
+        {
+            string token = tokens[i];
+            if (token == "--")
+            {
+                break;
+            }
+
+            string optionName = token.Split(['=', ':'], 2)[0];
+            if (string.Equals(optionName, "--project", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (token.StartsWith('-'))
+            {
+                if (token.Length == optionName.Length && DotNetTestOptionsWithValues.Contains(optionName, StringComparer.OrdinalIgnoreCase))
+                {
+                    i++;
+                }
+
+                continue;
+            }
+
+            string extension = Path.GetExtension(token);
+            return string.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(extension, ".exe", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
+    }
+
+    private static string[] TokenizeArguments(string args)
+    {
+        List<string> tokens = [];
+        StringBuilder currentToken = new();
+        bool inQuotes = false;
+        foreach (char character in args)
+        {
+            if (character == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (char.IsWhiteSpace(character) && !inQuotes)
+            {
+                if (currentToken.Length > 0)
+                {
+                    tokens.Add(currentToken.ToString());
+                    currentToken.Clear();
+                }
+            }
+            else
+            {
+                currentToken.Append(character);
+            }
+        }
+
+        if (currentToken.Length > 0)
+        {
+            tokens.Add(currentToken.ToString());
+        }
+
+        return [.. tokens];
+    }
+
+    private static void RemoveEnvironmentVariable(Dictionary<string, string?> environmentVariables, string variableName)
+    {
+        foreach (string key in environmentVariables.Keys.Where(key => string.Equals(key, variableName, StringComparison.OrdinalIgnoreCase)).ToArray())
+        {
+            environmentVariables.Remove(key);
+        }
+    }
 
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
