@@ -1,2 +1,5 @@
 #nullable enable
 static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.BuildAttemptArgumentsAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string![]! executableArguments, string![]! originalExecutableArguments, System.Collections.Generic.List<int>! indexToCleanup, string! currentTryResultFolder, string! retryRootFolder, string! pipeName, string![]? lastListOfFailedId, int attemptCount) -> System.Threading.Tasks.Task<System.Collections.Generic.List<string!>!>!
+static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetArgumentsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
+static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetFilterUidsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
+static Microsoft.Testing.Extensions.Policy.RetryOrchestrator.LogResponseFileFallbackWarningAsync(Microsoft.Testing.Platform.Logging.ILogger! logger, string![]! originalExecutableArguments, System.Collections.Generic.List<string!>! finalArguments, string! generatedResponseFilePath) -> System.Threading.Tasks.Task!

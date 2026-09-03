@@ -164,11 +164,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                     { "METHOD1", "1" },
                     { "FAIL", "0" },
                     { "RESULTDIR", resultDirectory },
+                    { "CHECK_RETRY_RESPONSE_FILE_CLEANUP", "1" },
                 },
                 cancellationToken: TestContext.CancellationToken);
 
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
+            Assert.IsEmpty(
+                Directory.GetFiles(resultDirectory, "retry-*.rsp", SearchOption.AllDirectories),
+                "Generated retry response files must be deleted after each attempt.");
         }
         finally
         {
@@ -1000,6 +1004,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         var filter = (context.Request as TestExecutionRequest)?.Filter;
         var uidFilter = filter as TestNodeUidListFilter;
         var treeNodeFilter = filter as TreeNodeFilter;
+
+        if (Environment.GetEnvironmentVariable("CHECK_RETRY_RESPONSE_FILE_CLEANUP") == "1"
+            && Environment.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER") == "2"
+            && Directory.GetFiles(Path.Combine(resultDir, "Retries"), "retry-arguments-1.rsp", SearchOption.AllDirectories).Length != 0)
+        {
+            throw new InvalidOperationException("The response file from retry attempt 1 still exists during attempt 2.");
+        }
 
         var testMethod1Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod1", 0, Array.Empty<string>(), string.Empty);
         var testMethod2Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod2", 0, Array.Empty<string>(), string.Empty);

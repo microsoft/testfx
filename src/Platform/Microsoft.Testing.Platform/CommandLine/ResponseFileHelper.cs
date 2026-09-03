@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Resources;
 
 // Most of the core logic is from:
@@ -20,19 +21,22 @@ internal static class ResponseFileHelper
         ICollection<string> errors,
         [NotNullWhen(true)] out string[]? newArguments)
     {
+        var readContext = new ResponseFileReadContext(rspFilePath, diagnosticPath);
         try
         {
             newArguments = [.. ExpandResponseFile(
                 rspFilePath,
+                diagnosticPath,
                 [with(
                     RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                         ? StringComparer.OrdinalIgnoreCase
-                        : StringComparer.Ordinal)])];
+                        : StringComparer.Ordinal)],
+                readContext)];
             return true;
         }
         catch (FileNotFoundException)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, diagnosticPath));
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, readContext.DiagnosticPath));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -40,8 +44,8 @@ internal static class ResponseFileHelper
                 string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.CommandLineParserFailedToReadResponseFile,
-                    diagnosticPath,
-                    GetExceptionDetail(e, rspFilePath, diagnosticPath)));
+                    readContext.DiagnosticPath,
+                    GetExceptionDetail(e, readContext.ActualPath, readContext.DiagnosticPath)));
         }
         catch (FormatException e)
         {
@@ -52,8 +56,8 @@ internal static class ResponseFileHelper
                 string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.CommandLineParserFailedToReadResponseFile,
-                    diagnosticPath,
-                    GetExceptionDetail(e, rspFilePath, diagnosticPath)));
+                    readContext.DiagnosticPath,
+                    GetExceptionDetail(e, readContext.ActualPath, readContext.DiagnosticPath)));
         }
 
         newArguments = null;
@@ -63,8 +67,13 @@ internal static class ResponseFileHelper
         static string GetExceptionDetail(Exception exception, string actualPath, string diagnosticPath)
             => actualPath == diagnosticPath ? exception.ToString() : exception.GetType().Name;
 
-        static IEnumerable<string> ExpandResponseFile(string filePath, HashSet<string> activeResponseFiles)
+        static IEnumerable<string> ExpandResponseFile(
+            string filePath,
+            string diagnosticPath,
+            HashSet<string> activeResponseFiles,
+            ResponseFileReadContext readContext)
         {
+            readContext.SetCurrentFile(filePath, diagnosticPath);
             string fullPath = Path.GetFullPath(filePath);
             if (!activeResponseFiles.Add(fullPath))
             {
@@ -74,24 +83,46 @@ internal static class ResponseFileHelper
             try
             {
                 string[] lines = File.ReadAllLines(filePath);
-
+                List<string> arguments = [];
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    string line = lines[i];
+                    arguments.AddRange(SplitLine(lines[i], i + 1));
+                }
 
-                    foreach (string argument in SplitLine(line, i + 1))
+                for (int argumentIndex = 0; argumentIndex < arguments.Count; argumentIndex++)
+                {
+                    string argument = arguments[argumentIndex];
+                    if (argument.StartsWith("@", StringComparison.Ordinal))
                     {
-                        if (argument.StartsWith("@", StringComparison.Ordinal))
+                        string nestedDiagnosticPath;
+                        if (filePath != diagnosticPath)
                         {
-                            foreach (string nestedArgument in ExpandResponseFile(argument.Substring(1), activeResponseFiles))
-                            {
-                                yield return nestedArgument;
-                            }
+                            nestedDiagnosticPath = diagnosticPath;
                         }
                         else
                         {
-                            yield return argument;
+                            string redactedNestedArgument = CommandLineArgumentsRedactor.RedactArgument([.. arguments], argumentIndex);
+                            nestedDiagnosticPath = redactedNestedArgument.StartsWith("@", StringComparison.Ordinal)
+                                ? redactedNestedArgument[1..]
+                                : redactedNestedArgument;
                         }
+
+                        // Nested response files intentionally use the process working directory, just like
+                        // top-level response files, rather than the containing response file's directory.
+                        foreach (string nestedArgument in ExpandResponseFile(
+                            argument[1..],
+                            nestedDiagnosticPath,
+                            activeResponseFiles,
+                            readContext))
+                        {
+                            yield return nestedArgument;
+                        }
+
+                        readContext.SetCurrentFile(filePath, diagnosticPath);
+                    }
+                    else
+                    {
+                        yield return argument;
                     }
                 }
             }
@@ -114,6 +145,19 @@ internal static class ResponseFileHelper
             {
                 yield return word;
             }
+        }
+    }
+
+    private sealed class ResponseFileReadContext(string actualPath, string diagnosticPath)
+    {
+        public string ActualPath { get; private set; } = actualPath;
+
+        public string DiagnosticPath { get; private set; } = diagnosticPath;
+
+        public void SetCurrentFile(string currentActualPath, string currentDiagnosticPath)
+        {
+            ActualPath = currentActualPath;
+            DiagnosticPath = currentDiagnosticPath;
         }
     }
 
