@@ -15,6 +15,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The information is scoped to the current process and (on .NET Framework) the current
 /// AppDomain. Cross-process or cross-AppDomain test runs each have their own snapshot.
 /// </para>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public static class TestRun

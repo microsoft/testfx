@@ -20,6 +20,9 @@ public interface ICommandLineManager
     /// Adds a command line options provider.
     /// </summary>
     /// <param name="commandLineProviderFactory">The factory method for creating the command line options provider, given a service provider.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     void AddProvider(Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory);
 }

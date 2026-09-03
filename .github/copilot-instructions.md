@@ -99,6 +99,9 @@ When making change to resource files, you MUST:
 - Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init` accessors.
   - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now would be a breaking change. However, we MUST NOT introduce **new** APIs using `init` accessors.
   - IMPORTANT: Make sure to apply this rule strictly both during PR review and when working on code changes.
+- Every API marked with `[Experimental]` MUST include this sentence in its XML documentation `<remarks>`: `This API is experimental. It may change, break, or be removed at any time without notice.` Documentation tooling does not reliably surface the attribute itself.
+  - Add the sentence in a `<para>` when `<remarks>` already contains other text; otherwise, add a new `<remarks>` block.
+  - Apply this rule to experimental members as well as types.
 
 ## Testing Guidelines
 

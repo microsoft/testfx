@@ -15,6 +15,9 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// <c>InternalsVisibleTo</c> grant (its instances are provided by the platform's service provider,
 /// so it cannot be source-embedded). Its shape is an implementation detail; do not depend on it
 /// from your own code.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [Experimental("TPINTERNAL")]
