@@ -25,6 +25,7 @@ steps:
     # TestFX's prerequisite step points DOTNET_ROOT at its not-yet-bootstrapped repo-local SDK.
     # MSBuildCache uses the .NET 10 SDK already installed in the build image.
     $env:DOTNET_ROOT = $dotnetRoot
+    Set-Location $source
     & $dotnet --info
 
     & $dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
