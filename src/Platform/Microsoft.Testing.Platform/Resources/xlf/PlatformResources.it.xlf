@@ -656,7 +656,7 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
-        <target state="new">In testconfig.json under 'commandLineOptionDefaults': {0}</target>
+        <target state="translated">In testconfig.json in 'commandLineOptionDefaults': {0}</target>
         <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
