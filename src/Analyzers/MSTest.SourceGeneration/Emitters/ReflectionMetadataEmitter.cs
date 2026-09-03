@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
@@ -32,20 +32,19 @@ internal static class ReflectionMetadataEmitter
         Append(sb, "{");
         Append(sb, $"    internal static class {GeneratedTypeName}");
         Append(sb, "    {");
+        EmitTestClassMemberTypes(sb);
+        Append(sb, string.Empty);
         Append(sb, "        [ModuleInitializer]");
         var emittedBaseTypeDependencies = new HashSet<string>(StringComparer.Ordinal);
         foreach (TestClassMetadata cls in metadata.Classes)
         {
-            // Preserve the test class members at runtime even when the assembly is published with
-            // Native AOT / IL trimming. MSTest's adapter still needs to call GetConstructors,
-            // GetProperties and other reflection APIs on the class (the source generator only
-            // populates TypeMethods; constructors, properties, etc. fall back to runtime reflection).
-            // Without this hint the trimmer removes those members and discovery fails with
-            // "Cannot find a valid constructor for test class".
-            Append(sb, $"        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({cls.FullyQualifiedName}))]");
+            // Preserve the member kinds that MSTest reflects over at runtime, while deliberately
+            // excluding nested types. Rooting nested types recursively preserves unrelated fakes and
+            // helpers and can surface IL2026 / IL3050 from their base-class members.
+            Append(sb, $"        [DynamicDependency(TestClassMemberTypes, typeof({cls.FullyQualifiedName}))]");
         }
 
-        // Emit a [DynamicDependency] for every accessible non-generic base type of every
+        // Emit a [DynamicDependency] for every closed, referenceable base type of every
         // discovered [TestClass]. This roots members declared on the abstract base — most
         // importantly [ClassInitialize] / [ClassCleanup] / [AssemblyInitialize] / [AssemblyCleanup]
         // and any [TestContext] property — so the trimmer / Native AOT does not remove them.
@@ -56,7 +55,7 @@ internal static class ReflectionMetadataEmitter
             {
                 if (emittedBaseTypeDependencies.Add(baseTypeName))
                 {
-                    Append(sb, $"        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({baseTypeName}))]");
+                    Append(sb, $"        [DynamicDependency(TestClassMemberTypes, typeof({baseTypeName}))]");
                 }
             }
         }
@@ -109,6 +108,19 @@ internal static class ReflectionMetadataEmitter
         Append(sb, "}");
 
         return sb.ToString();
+    }
+
+    private static void EmitTestClassMemberTypes(StringBuilder sb)
+    {
+        Append(sb, "        private const DynamicallyAccessedMemberTypes TestClassMemberTypes =");
+        Append(sb, "            DynamicallyAccessedMemberTypes.PublicConstructors |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.NonPublicConstructors |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.PublicMethods |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.NonPublicMethods |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.PublicFields |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.NonPublicFields |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.PublicProperties |");
+        Append(sb, "            DynamicallyAccessedMemberTypes.NonPublicProperties;");
     }
 
     private static string EmitTypesExpression(TestAssemblyMetadata metadata)

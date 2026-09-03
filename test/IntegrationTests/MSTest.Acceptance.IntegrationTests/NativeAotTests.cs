@@ -50,14 +50,29 @@ using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace MyTests;
 
+public abstract class GenericBase<T>
+{
+    protected static IEnumerable<object[]> GenericData { get; }
+        = new[]
+        {
+            new object[] { 2, 3 }
+        };
+}
+
 public sealed class RunAllFilter : ITestFilter
 {
     public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
 }
 
 [TestClass]
-public class UnitTest1
+public class UnitTest1 : GenericBase<int>
 {
+    // These ordinary nested helper shapes used to be recursively rooted by
+    // DynamicDependency(All), surfacing IL2026 and IL3050 from their base types.
+    private sealed class NestedStream : MemoryStream { }
+    private sealed class NestedException : Exception { }
+    private enum ScenarioState { Ready }
+
     [TestMethod]
     public void TestMethod1()
     {
@@ -100,6 +115,16 @@ public class UnitTest1
         {
            new object[] { 1, 2 }
         };
+
+    // The protected source cannot be called by generated code, so this exercises the reflection
+    // fallback and requires the closed generic base's non-public properties to remain rooted.
+    [TestMethod]
+    [DynamicData(nameof(GenericData))]
+    public void TestMethodFromGenericBase(int a, int b)
+    {
+        Assert.AreEqual(2, a);
+        Assert.AreEqual(3, b);
+    }
 
     [TestMethod]
     [CombinatorialData]
@@ -191,7 +216,7 @@ public sealed class AsyncVoidTests
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 0);
         result.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(

@@ -67,11 +67,11 @@ internal static class TestClassModelBuilder
             bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
             hasPartialTypeInHierarchy |= IsPartial(current);
 
-            // Capture each accessible, non-generic base type so the runtime registration can root
+            // Capture each closed, referenceable base type so the runtime registration can root
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
             // under trimming / Native AOT. Members are folded into the leaf model, but the trimmer
             // only keeps members of the concrete type unless the base is rooted explicitly too.
-            if (!isLeaf && !current.IsGenericType && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(current))
+            if (!isLeaf && SymbolReferenceabilityHelper.IsClosedReferenceableType(current, consumingAssembly))
             {
                 baseTypes.Add(current.ToDisplayString(SymbolDisplayFormats.FullyQualified));
             }

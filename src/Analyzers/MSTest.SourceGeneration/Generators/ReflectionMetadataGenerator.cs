@@ -112,16 +112,15 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Capture every base type that the generated module initializer can reference, so we
+            // Capture every closed base type that the generated module initializer can reference, so we
             // can root its members (ClassInitialize / ClassCleanup / AssemblyInitialize /
             // AssemblyCleanup / TestContext setter) via [DynamicDependency] under trimming or
             // Native AOT. Without this, those members live on the abstract base only and the
-            // trimmer removes them because [DynamicDependency(All, typeof(Concrete))] does not
-            // preserve base-type members. We intentionally do NOT add the base to types[] or
+            // test-class member roots on the concrete type do not preserve base-type members.
+            // We intentionally do NOT add the base to types[] or
             // testMethods{}; runtime discovery still flows through the concrete [TestClass].
             if (!SymbolEqualityComparer.Default.Equals(currentType, typeSymbol)
-                && !currentType.IsGenericType
-                && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(currentType))
+                && SymbolReferenceabilityHelper.IsClosedReferenceableType(currentType, typeSymbol.ContainingAssembly))
             {
                 baseTypes.Add(currentType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
             }
