@@ -3,6 +3,7 @@
 import argparse
 import datetime
 import json
+import math
 import os
 import re
 import shutil
@@ -518,6 +519,50 @@ def records_from_archive(archive: str, artifact: str) -> list[dict[str, object]]
     return deduplicate_records(records)
 
 
+def find_slow_regressions(
+    current_results: list[dict[str, object]],
+    historical_results: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    regressions = []
+    for current in current_results:
+        current_duration = current.get("duration")
+        current_source = current.get("sourceFile")
+        if (
+            not isinstance(current_duration, (int, float))
+            or current_duration < 60000
+            or not isinstance(current_source, str)
+        ):
+            continue
+
+        aliases = record_aliases(current)
+        identity = report_identity(current_source)
+        durations = sorted(
+            duration
+            for result in historical_results
+            if record_aliases(result) & aliases
+            and isinstance(result.get("sourceFile"), str)
+            and report_identity(result["sourceFile"]) == identity
+            and isinstance((duration := result.get("duration")), (int, float))
+            and duration > 0
+        )
+        if len(durations) < 10:
+            continue
+
+        percentile_index = math.ceil(len(durations) * 0.95) - 1
+        p95 = durations[percentile_index]
+        if current_duration >= 3 * p95:
+            regressions.append(
+                {
+                    "name": current.get("name"),
+                    "sourceFile": current_source,
+                    "currentDurationMs": current_duration,
+                    "historicalP95Ms": p95,
+                    "sampleCount": len(durations),
+                }
+            )
+    return regressions
+
+
 def collect_history(
     api_base: str,
     definition_id: str,
@@ -556,6 +601,7 @@ def collect_history(
         "incomplete": False,
         "downloadedBytes": 0,
         "selectedUncompressedBytes": 0,
+        "slowRegressions": [],
     }
     if not candidate_names:
         with open(output_path, "w", encoding="utf-8") as output_file:
@@ -671,6 +717,17 @@ def collect_history(
                             break
 
             history["builds"].append(build_record)
+
+    historical_results = [
+        result
+        for build in history["builds"]
+        for result in build["results"]
+        if isinstance(result, dict)
+    ]
+    history["slowRegressions"] = find_slow_regressions(
+        [result for result in current_results if isinstance(result, dict)],
+        historical_results,
+    )
 
     with open(output_path, "w", encoding="utf-8") as output_file:
         json.dump(history, output_file, separators=(",", ":"))

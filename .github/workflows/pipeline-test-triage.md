@@ -241,7 +241,9 @@ jobs:
 
             SOURCE_FILE=${CTRF_FILE#"${ARTIFACT_DIR}/"}
             jq -c --arg sourceFile "${SOURCE_FILE}" '
-              (.results.tests // [])[] |
+              (.results?.tests? // []) |
+              if type == "array" then .[] else empty end |
+              select(type == "object") |
               {
                 sourceFile: $sourceFile,
                 reportFormat: "CTRF",
@@ -347,7 +349,6 @@ jobs:
             ] | length
           ' "${RESULTS_JSON}")
           SLOW_COUNT=$(jq '[.[] | select((.duration // 0) >= 60000)] | length' "${RESULTS_JSON}")
-          EXTREME_SLOW_COUNT=$(jq '[.[] | select((.duration // 0) >= 180000)] | length' "${RESULTS_JSON}")
           DIAGNOSTIC_COUNT=$(jq 'length' "${EVIDENCE_DIR}/diagnostics.json")
           TIMELINE_SIGNAL_COUNT=$(jq '
             [
@@ -368,11 +369,6 @@ jobs:
             echo "Skipping slow-only pull request evidence; duration trends are analyzed on branch builds."
             emit_none
           fi
-          if [[ "${BUILD_RESULT}" == "succeeded" ]] &&
-            (( FAILURE_OR_RETRY_COUNT == 0 && DIAGNOSTIC_COUNT == 0 && TIMELINE_SIGNAL_COUNT == 0 && EXTREME_SLOW_COUNT == 0 )); then
-            echo "Skipping routine slow-only evidence below the 180-second branch-build activation threshold."
-            emit_none
-          fi
 
           HISTORY_JSON="${EVIDENCE_DIR}/history.json"
           if ! python3 "${TRIAGE_TOOL}" history \
@@ -385,6 +381,13 @@ jobs:
             echo "::warning::Historical test evidence collection failed."
             printf '{"builds":[],"incomplete":true}\n' > "${HISTORY_JSON}"
           fi
+          SLOW_REGRESSION_COUNT=$(jq '.slowRegressions // [] | length' "${HISTORY_JSON}")
+
+          if [[ "${BUILD_RESULT}" == "succeeded" ]] &&
+            (( FAILURE_OR_RETRY_COUNT == 0 && DIAGNOSTIC_COUNT == 0 && TIMELINE_SIGNAL_COUNT == 0 && SLOW_REGRESSION_COUNT == 0 )); then
+            echo "Skipping slow-only evidence that does not exceed 3x historical p95 with at least 10 samples."
+            emit_none
+          fi
 
           jq -n \
             --arg buildId "${BUILD_ID}" \
@@ -395,7 +398,7 @@ jobs:
             --argjson candidateCount "${CANDIDATE_COUNT}" \
             --argjson failureOrRetryCount "${FAILURE_OR_RETRY_COUNT}" \
             --argjson slowCount "${SLOW_COUNT}" \
-            --argjson extremeSlowCount "${EXTREME_SLOW_COUNT}" \
+            --argjson slowRegressionCount "${SLOW_REGRESSION_COUNT}" \
             --argjson diagnosticCount "${DIAGNOSTIC_COUNT}" \
             --argjson downloadFailures "${DOWNLOAD_FAILURES}" \
             --argjson timelineSignalCount "${TIMELINE_SIGNAL_COUNT}" \
@@ -408,7 +411,7 @@ jobs:
               candidateCount: $candidateCount,
               failureOrRetryCount: $failureOrRetryCount,
               slowCount: $slowCount,
-              extremeSlowCount: $extremeSlowCount,
+              slowRegressionCount: $slowRegressionCount,
               diagnosticCount: $diagnosticCount,
               artifactDownloadFailures: $downloadFailures,
               timelineSignalCount: $timelineSignalCount,
