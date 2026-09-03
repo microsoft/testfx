@@ -672,6 +672,48 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_AuthenticationRedirect_ReportsInvalidAccessTokenGuidance()
+    {
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Redirect)));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.Contains("status code 302", exception.Message);
+        Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
+        Assert.Contains("Make secrets available to builds of forks", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_SuccessfulHtmlResponse_ReportsStatusAndContentType()
+    {
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("<!DOCTYPE html><html></html>", Encoding.UTF8, "text/html"),
+            }));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.Contains("status code 200", exception.Message);
+        Assert.Contains("content type 'text/html; charset=utf-8'", exception.Message);
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_PublishFailureLogsWarningAndDoesNotThrow()
     {
         using TestDirectory directory = CreateTestDirectory();

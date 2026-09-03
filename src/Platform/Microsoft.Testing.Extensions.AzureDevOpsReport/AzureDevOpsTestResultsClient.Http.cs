@@ -34,7 +34,11 @@ internal sealed partial class AzureDevOpsTestResultsClient
     /// </remarks>
     internal static HttpClientHandler CreateHttpClientHandler()
     {
-        HttpClientHandler handler = new();
+        HttpClientHandler handler = new()
+        {
+            AllowAutoRedirect = false,
+        };
+
         if (ShouldOptInToAutomaticDecompression(handler))
         {
             handler.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
@@ -97,6 +101,17 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     HttpResponseMessage response = await _httpClient.SendAsync(currentRequest, HttpCompletionOption.ResponseHeadersRead, attemptTimeoutSource.Token).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
+                        if (string.Equals(response.Content.Headers.ContentType?.MediaType, "text/html", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string contentType = response.Content.Headers.ContentType?.ToString() ?? "text/html";
+                            response.Dispose();
+                            throw new InvalidOperationException(string.Format(
+                                CultureInfo.InvariantCulture,
+                                AzureDevOpsResources.AzureDevOpsLivePublishingUnexpectedContentType,
+                                (int)response.StatusCode,
+                                contentType));
+                        }
+
                         return response;
                     }
 
@@ -105,6 +120,14 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     {
                         if (!ShouldRetry(response.StatusCode, attempt))
                         {
+                            if (response.StatusCode == HttpStatusCode.Redirect)
+                            {
+                                throw new InvalidOperationException(string.Format(
+                                    CultureInfo.InvariantCulture,
+                                    AzureDevOpsResources.AzureDevOpsLivePublishingAuthenticationRedirect,
+                                    (int)response.StatusCode));
+                            }
+
                             string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
                             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
                         }
