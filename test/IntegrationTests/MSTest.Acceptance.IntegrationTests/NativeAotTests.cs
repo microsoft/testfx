@@ -58,6 +58,12 @@ public sealed class RunAllFilter : ITestFilter
 [TestClass]
 public class UnitTest1
 {
+    // These ordinary nested helper shapes used to be recursively rooted by
+    // DynamicDependency(All), surfacing IL2026 and IL3050 from their base types.
+    private sealed class NestedStream : MemoryStream { }
+    private sealed class NestedException : Exception { }
+    private enum ScenarioState { Ready }
+
     [TestMethod]
     public void TestMethod1()
     {
