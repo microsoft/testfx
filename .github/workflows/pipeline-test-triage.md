@@ -153,10 +153,32 @@ jobs:
             # preliminary one or suppress durable issue escalation.
             ANALYSIS_MODE="full"
           fi
+          BUILD_PR_SHA=$(jq -r '.triggerInfo["pr.sourceSha"] // empty' "${BUILD_JSON}")
+          BUILD_MERGE_SHA=$(jq -r '.sourceVersion // empty' "${BUILD_JSON}")
           HISTORY_BRANCH="${SOURCE_BRANCH}"
           HISTORY_BRANCH_INCOMPLETE=false
           if [[ -n "${PR_NUMBER}" ]]; then
-            if BASE_REF=$(gh api "repos/${GH_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.base.ref'); then
+            if ! PR_JSON=$(gh api "repos/${GH_REPOSITORY}/pulls/${PR_NUMBER}" 2>/dev/null); then
+              echo "::warning::Could not resolve PR #${PR_NUMBER}; skipping to avoid posting stale test feedback."
+              emit_none
+            fi
+            CURRENT_HEAD=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
+            CURRENT_MERGE=$(printf '%s' "${PR_JSON}" | jq -r '.merge_commit_sha // empty')
+            BASE_REF=$(printf '%s' "${PR_JSON}" | jq -r '.base.ref // empty')
+            if [[ -z "${BUILD_PR_SHA}" || -z "${BUILD_MERGE_SHA}" ||
+                  -z "${CURRENT_HEAD}" || -z "${CURRENT_MERGE}" ]]; then
+              echo "::warning::Could not resolve the build and current PR revisions; skipping to avoid posting stale test feedback."
+              emit_none
+            fi
+            if [[ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]]; then
+              echo "::warning::Build ${BUILD_ID} analyzed revision '${BUILD_PR_SHA}' but PR #${PR_NUMBER} head is now '${CURRENT_HEAD}'; skipping stale build."
+              emit_none
+            fi
+            if [[ "${BUILD_MERGE_SHA}" != "${CURRENT_MERGE}" ]]; then
+              echo "::warning::Build ${BUILD_ID} merge revision '${BUILD_MERGE_SHA}' but PR #${PR_NUMBER} current merge is '${CURRENT_MERGE}'; skipping stale merge."
+              emit_none
+            fi
+            if [[ -n "${BASE_REF}" ]]; then
               HISTORY_BRANCH="refs/heads/${BASE_REF}"
             else
               echo "::warning::Could not resolve PR #${PR_NUMBER}'s base branch; falling back to main history."
@@ -441,6 +463,23 @@ jobs:
             (( FAILURE_OR_RETRY_COUNT == 0 && DIAGNOSTIC_COUNT == 0 && TIMELINE_SIGNAL_COUNT == 0 && SLOW_REGRESSION_COUNT == 0 )); then
             echo "Skipping slow-only evidence that does not exceed 3x historical p95 with at least 10 samples."
             emit_none
+          fi
+
+          if [[ -n "${PR_NUMBER}" ]]; then
+            if ! LATEST_PR=$(gh api "repos/${GH_REPOSITORY}/pulls/${PR_NUMBER}" 2>/dev/null); then
+              echo "::warning::Could not re-resolve PR #${PR_NUMBER} after evidence collection; skipping stale feedback."
+              emit_none
+            fi
+            LATEST_HEAD=$(printf '%s' "${LATEST_PR}" | jq -r '.head.sha // empty')
+            LATEST_MERGE=$(printf '%s' "${LATEST_PR}" | jq -r '.merge_commit_sha // empty')
+            if [[ -z "${LATEST_HEAD}" || "${LATEST_HEAD}" != "${BUILD_PR_SHA}" ]]; then
+              echo "::warning::PR #${PR_NUMBER} head changed during evidence collection ('${BUILD_PR_SHA}' -> '${LATEST_HEAD}'); skipping stale feedback."
+              emit_none
+            fi
+            if [[ -z "${LATEST_MERGE}" || "${LATEST_MERGE}" != "${BUILD_MERGE_SHA}" ]]; then
+              echo "::warning::PR #${PR_NUMBER} merge revision changed during evidence collection ('${BUILD_MERGE_SHA}' -> '${LATEST_MERGE}'); skipping stale feedback."
+              emit_none
+            fi
           fi
 
           jq -n \

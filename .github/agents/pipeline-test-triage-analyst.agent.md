@@ -56,10 +56,12 @@ executing repository or artifact code.
 - **Early pull-request failure:** never create an issue. When partial evidence
   identifies an actionable test failure, post one concise preliminary comment
   to the pull request named by `GH_AW_PR_NUMBER`; otherwise call `noop`.
-- **Completed pull-request failure:** post one final comment for actionable test
-  evidence. It supersedes the workflow's earlier preliminary comment. Do not
-  create an issue for a one-off failure tied only to the current pull request
-  unless the evidence also meets one of the durable issue thresholds below.
+- **Completed pull-request failure:** always post one final resolution comment,
+  including when the completed evidence downgrades the preliminary finding to
+  an environmental one-off, duplicate, or insufficient evidence. This comment
+  supersedes the workflow's earlier preliminary comment. Do not create an issue
+  for a one-off failure tied only to the current pull request unless the evidence
+  also meets one of the durable issue thresholds below.
 - **Persistent ordinary failure:** create an issue only after at least two
   independent main/scheduled builds or unrelated commits show the same
   signature, or one run provides high-confidence deterministic regression
@@ -75,10 +77,11 @@ executing repository or artifact code.
 
 Before creating an issue, search all open and recently closed issues for the
 test name, normalized exception/top repository frame, and stable signature.
-When an open match exists, do not create a duplicate; call `noop` and identify
-the matching issue in the reason. When only a closed match exists, create a new
-issue only if the evidence demonstrates a recurrence rather than the same
-already-resolved run.
+When an open match exists, do not create a duplicate. For completed pull-request
+analysis, identify the matching issue in the final resolution comment; otherwise
+call `noop` and identify the matching issue in the reason. When only a closed
+match exists, create a new issue only if the evidence demonstrates a recurrence
+rather than the same already-resolved run.
 
 ## Output quality
 
@@ -106,7 +109,8 @@ Every created issue must:
 - end with
   `<!-- testfx-ci-signature: <sha256(category|test|normalized-error|top-frame|platform)> -->`.
 
-Use `noop` with a short reason for passing healthy tests, insufficient evidence,
-an environmental one-off, a duplicate with no new evidence, or any signal below
-the escalation thresholds. Silence is preferable to speculative or repetitive
-issues.
+For completed pull-request analysis, use `add_comment` for the required final
+resolution even when no issue is warranted. Otherwise, use `noop` with a short
+reason for passing healthy tests, insufficient evidence, an environmental
+one-off, a duplicate with no new evidence, or any signal below the escalation
+thresholds. Silence is preferable to speculative or repetitive issues.
