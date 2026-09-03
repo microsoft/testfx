@@ -118,10 +118,7 @@ internal sealed partial class AzureDevOpsTestResultsClient
                                 throw new InvalidOperationException(diagnostic);
                             }
 
-                            if (_logger is not null)
-                            {
-                                await _logger.LogWarningAsync(diagnostic).ConfigureAwait(false);
-                            }
+                            await TryLogWarningAsync(diagnostic).ConfigureAwait(false);
                         }
 
                         return response;
@@ -180,6 +177,24 @@ internal sealed partial class AzureDevOpsTestResultsClient
     private static bool IsAuthenticationFailure(HttpResponseMessage response)
         => response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Redirect
             || (response.StatusCode == 0 && string.Equals(response.ReasonPhrase, "opaqueredirect", StringComparison.Ordinal));
+
+    private async Task TryLogWarningAsync(string message)
+    {
+        if (_logger is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _logger.LogWarningAsync(message).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // There is nowhere left to report this, and a logger failure must not cause an accepted
+            // non-idempotent publish request to be retried.
+        }
+    }
 
     private static bool ShouldRetry(Exception exception, CancellationToken userCancellationToken, CancellationToken requestCancellationToken, int attempt)
         => attempt < MaxAttempts
