@@ -31,7 +31,7 @@ The selected mode determines the rest:
   modeled members.
 - **`Rooting` (compatibility mode)** emits member-scoped `DynamicDependency` roots for
   constructors, methods, fields, and properties on each test class and accessible
-  non-generic base type, plus the type/method registry. Nested types are deliberately not
+  closed base type, plus the type/method registry. Nested types are deliberately not
   rooted. Its rich attribute and delegate dictionaries are empty.
 
 Both modes still resolve the `MethodInfo` keys used by the adapter at module
