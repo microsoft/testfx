@@ -49,7 +49,6 @@ internal static class RuntimeRegistrationEmitter
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
         {
-            sb.AppendLine("/// <summary>Source-generated MSTest reflection metadata hook for this test assembly.</summary>");
             using (sb.Block($"internal static class {GeneratedTypeName}"))
             {
                 sb.AppendLine("[ModuleInitializer]");
