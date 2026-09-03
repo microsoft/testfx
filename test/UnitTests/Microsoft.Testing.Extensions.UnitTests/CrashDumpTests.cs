@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics;
@@ -37,14 +37,16 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    public async Task IsInvValid_If_CrashDumpType_Has_IncorrectValue()
+    [DataRow("invalid")]
+    [DataRow("None")]
+    public async Task IsInvalid_If_CrashDumpType_Has_IncorrectValue(string crashDumpType)
     {
         var provider = new CrashDumpCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [crashDumpType]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, "invalid", "'Mini', 'Heap', 'Triage', 'Full'"), validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, crashDumpType, "'Mini', 'Heap', 'Triage', 'Full'"), validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -101,23 +103,27 @@ public sealed class CrashDumpTests
     [DataRow("disable")]
     [DataRow("1")]
     [DataRow("0")]
+    [DataRow("TrUe")]
     public async Task IsValid_If_CrashSequence_Has_CorrectValue(string value)
     {
         var provider = new CrashDumpCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        Assert.IsTrue(validateOptionsResult.IsValid, validateOptionsResult.ErrorMessage);
+        Assert.IsNull(validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
-    public async Task IsInvalid_If_CrashSequence_Has_IncorrectValue()
+    [DataRow("maybe")]
+    [DataRow("auto")]
+    [DataRow("")]
+    public async Task IsInvalid_If_CrashSequence_Has_IncorrectValue(string value)
     {
         var provider = new CrashDumpCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(CrashDumpResources.CrashSequenceOptionInvalidArgument, validateOptionsResult.ErrorMessage);
     }
@@ -183,7 +189,7 @@ public sealed class CrashDumpTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.Contains("'--crash-report' is not supported on Windows", validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -199,7 +205,7 @@ public sealed class CrashDumpTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.Contains("'--crash-report' is not supported on Windows", validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -728,6 +734,38 @@ public sealed class CrashDumpTests
                 // Best effort cleanup.
             }
         }
+    }
+
+    [TestMethod]
+    public async Task IsValid_If_CrashDumpFileName_Has_ArbitraryExtension()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions()
+            .Single(x => x.Name == CrashDumpCommandLineOptions.CrashDumpFileNameOptionName);
+
+        ValidationResult result = await provider
+            .ValidateOptionArgumentsAsync(option, ["dump.custom"])
+            .ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        Assert.IsNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task CrashDump_MainOptionOnly_IsValid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
+        };
+
+        ValidationResult result = await provider
+            .ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options))
+            .ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        Assert.IsNull(result.ErrorMessage);
     }
 
     private sealed class RecordingMessageBus : IMessageBus

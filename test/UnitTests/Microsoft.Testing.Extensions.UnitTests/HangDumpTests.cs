@@ -73,23 +73,29 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    public async Task IsValid_If_Timeout_Value_Has_CorrectValue()
+    [DataRow("32")]
+    [DataRow("30s")]
+    [DataRow("2m")]
+    public async Task IsValid_If_Timeout_Value_Has_CorrectValue(string timeout)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTimeoutOptionName);
 
-        ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
-        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+        ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid, validateOptionsResult.ErrorMessage);
+        Assert.IsNull(validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
-    public async Task IsInvalid_If_Timeout_Value_Has_IncorrectValue()
+    [DataRow("invalid")]
+    [DataRow("")]
+    [DataRow("-1")]
+    public async Task IsInvalid_If_Timeout_Value_Has_IncorrectValue(string timeout)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTimeoutOptionName);
 
-        ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(ExtensionResources.HangDumpTimeoutOptionInvalidArgument, validateOptionsResult.ErrorMessage);
     }
@@ -189,7 +195,7 @@ public sealed class HangDumpTests
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options));
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual("You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line", validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(ExtensionResources.MissingHangDumpMainOption, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -629,6 +635,42 @@ public sealed class HangDumpTests
 #else
         => Assert.AreEqual("Mini", HangDumpCommandLineProvider.MapToSupportedDumpType("Triage"));
 #endif
+
+    [TestMethod]
+    public async Task IsValid_If_HangDumpFileName_Has_ArbitraryExtension()
+    {
+        HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
+        CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().Single(x => x.Name == HangDumpCommandLineProvider.HangDumpFileNameOptionName);
+
+        ValidationResult result = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["dump.custom"]).ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
+        Assert.IsNull(result.ErrorMessage);
+    }
+
+#if !NETCOREAPP
+    [TestMethod]
+    public async Task IsInvalid_If_HangDumpType_Is_Triage_OnNetFramework()
+    {
+        HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
+        CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().Single(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
+
+        ValidationResult result = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["Triage"]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                ExtensionResources.HangDumpTypeOptionInvalidType,
+                "Triage",
+                GetExpectedFormattedOptions()),
+            result.ErrorMessage);
+    }
+#endif
+
+    [TestMethod]
+    public void MapToSupportedDumpType_UnknownValue_FallsBackToFull()
+        => Assert.AreEqual("Full", HangDumpCommandLineProvider.MapToSupportedDumpType("Unknown"));
 
 #if NETCOREAPP
     private static string GetExpectedFormattedOptions() => "'Mini', 'Heap', 'Full', 'Triage', 'None'";
