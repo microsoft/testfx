@@ -73,6 +73,7 @@ jobs:
           DISPATCH_BUILD_ID: ${{ github.event.inputs['ado-build-id'] }}
           GH_TOKEN: ${{ github.token }}
           GH_REPOSITORY: ${{ github.repository }}
+          SAFE_OUTPUT_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -186,9 +187,21 @@ jobs:
               echo "::warning::Build ${BUILD_ID} merge revision '${BUILD_MERGE_SHA}' but PR #${PR_NUMBER} current merge is '${CURRENT_MERGE}'; skipping stale merge."
               emit_none
             fi
+            SAFE_OUTPUT_AUTHOR="github-actions[bot]"
+            if [[ -n "${SAFE_OUTPUT_TOKEN}" ]]; then
+              if ! SAFE_OUTPUT_AUTHOR=$(GH_TOKEN="${SAFE_OUTPUT_TOKEN}" gh api user --jq '.login' 2>/dev/null); then
+                echo "::warning::Could not resolve the safe-output writer identity; skipping prior-feedback detection."
+                emit_none
+              fi
+              SAFE_OUTPUT_AUTHOR=$(printf '%s' "${SAFE_OUTPUT_AUTHOR}" | tr -d '\r\n' | cut -c1-100)
+              if ! [[ "${SAFE_OUTPUT_AUTHOR}" =~ ^[A-Za-z0-9-]+(\[bot\])?$ ]]; then
+                echo "::warning::The safe-output writer identity is invalid; skipping prior-feedback detection."
+                emit_none
+              fi
+            fi
             if ! LATEST_BUILD_TRIAGE_COMMENT=$(gh api --paginate \
               "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-              --jq '.[] | select(.user.login == "github-actions[bot]") |
+              --jq '.[] | select(.user.login == "'"${SAFE_OUTPUT_AUTHOR}"'") |
                 (.body // "") as $body |
                 if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
                     ($body | contains("<!-- testfx-pipeline-triage-state: preliminary; build: '"${BUILD_ID}"' -->"))) then
@@ -212,7 +225,7 @@ jobs:
               # current-build state above always wins when analyses overlap.
               if ! LATEST_TRIAGE_COMMENT=$(gh api --paginate \
                 "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-                --jq '.[] | select(.user.login == "github-actions[bot]") |
+                --jq '.[] | select(.user.login == "'"${SAFE_OUTPUT_AUTHOR}"'") |
                   (.body // "") as $body |
                   if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
                       ($body | contains("<!-- testfx-pipeline-triage-state: preliminary;"))) then
