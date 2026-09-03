@@ -1926,19 +1926,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             "the typed-constant corpus should compile. Diagnostics: {0}",
             string.Join(Environment.NewLine, errors.Select(diagnostic => diagnostic.ToString())));
 
-        using var assemblyStream = new MemoryStream();
-        outputCompilation.Emit(assemblyStream).Success.Should().BeTrue();
-        var assembly = System.Reflection.Assembly.Load(assemblyStream.ToArray());
-        Type registryType = assembly.GetType("MSTest.SourceGenerated.MSTestReflectionMetadata")!;
-        var testClasses = (System.Collections.IEnumerable)registryType.GetProperty("TestClasses")!.GetValue(null)!;
-        object testClass = testClasses.Cast<object>().Single();
-        var methods = (System.Collections.IEnumerable)testClass.GetType().GetProperty("Methods")!.GetValue(testClass)!;
-        object method = methods.Cast<object>().Single();
-        var attributes = (Attribute[])method.GetType().GetProperty("Attributes")!.GetValue(method)!;
-        object[][] rows = attributes
-            .Where(attribute => attribute.GetType().Name == "DataRowAttribute")
-            .Select(attribute => (object[])attribute.GetType().GetProperty("Data")!.GetValue(attribute)!)
-            .ToArray();
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
 
         rows[0][1].Should().BeOfType<byte>().Which.Should().Be(0x4D);
         rows[0][2].Should().BeOfType<sbyte>().Which.Should().Be(-1);
@@ -1994,13 +1982,17 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     public void Generator_DeterministicLiteralCorpus_CompilesWithoutGeneratedDiagnostics()
     {
         const int seed = 0x5EED;
-        char[] alphabet = ['\0', '\u0001', '\t', '\r', '\n', '"', '\\', '\u2028', '\u2029', '\u2603'];
         var random = new Random(seed);
-        string[] values = Enumerable.Range(0, 64)
+        string[] values =
+        [
+            "\uD800",
+            "\uDFFF",
+            "\uD83D\uDE00",
+            .. Enumerable.Range(0, 64)
             .Select(_ => new string(Enumerable.Range(0, random.Next(0, 24))
-                .Select(_ => alphabet[random.Next(alphabet.Length)])
+                .Select(_ => (char)random.Next(char.MinValue, char.MaxValue + 1))
                 .ToArray()))
-            .ToArray();
+        ];
         string dataRows = string.Join(
             Environment.NewLine,
             values.Select(value => $"        [DataRow({Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(value, quote: true)})]"));
@@ -2019,6 +2011,14 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                     [DataRow(double.NaN)]
                     [DataRow(double.PositiveInfinity)]
                     [DataRow(double.NegativeInfinity)]
+                    [DataRow(float.MinValue)]
+                    [DataRow(float.MaxValue)]
+                    [DataRow(-0.0F)]
+                    [DataRow(float.Epsilon)]
+                    [DataRow(double.MinValue)]
+                    [DataRow(double.MaxValue)]
+                    [DataRow(-0.0D)]
+                    [DataRow(double.Epsilon)]
                     [DataRow(new int[] { int.MinValue, 0, int.MaxValue })]
                     [TestMethod]
                     public void Test(object? value) { }
@@ -2032,10 +2032,40 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         Diagnostic[] generatedDiagnostics = outputCompilation.GetDiagnostics()
             .Where(diagnostic => diagnostic.Severity >= DiagnosticSeverity.Warning
-                && diagnostic.Location.SourceTree?.FilePath.EndsWith(".g.cs", StringComparison.Ordinal) == true)
+                && diagnostic.Location.SourceTree?.FilePath.EndsWith(".g.cs", StringComparison.Ordinal) is true)
             .ToArray();
 
         generatedDiagnostics.Should().BeEmpty($"the deterministic literal corpus with seed {seed} should produce clean generated source");
+
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain("global::System.Single.NaN");
+        registry.Should().Contain("global::System.Single.PositiveInfinity");
+        registry.Should().Contain("global::System.Single.NegativeInfinity");
+        registry.Should().Contain("global::System.Double.NaN");
+        registry.Should().Contain("global::System.Double.PositiveInfinity");
+        registry.Should().Contain("global::System.Double.NegativeInfinity");
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        string[] actualValues = rows.Take(values.Length).Select(row => (string)row[0]).ToArray();
+        actualValues.Should().Equal(values, $"the deterministic literal corpus with seed {seed} should round-trip");
+
+        int rowIndex = values.Length;
+        float.IsNaN((float)rows[rowIndex++][0]).Should().BeTrue();
+        float.IsPositiveInfinity((float)rows[rowIndex++][0]).Should().BeTrue();
+        float.IsNegativeInfinity((float)rows[rowIndex++][0]).Should().BeTrue();
+        double.IsNaN((double)rows[rowIndex++][0]).Should().BeTrue();
+        double.IsPositiveInfinity((double)rows[rowIndex++][0]).Should().BeTrue();
+        double.IsNegativeInfinity((double)rows[rowIndex++][0]).Should().BeTrue();
+        rows[rowIndex++][0].Should().Be(float.MinValue);
+        rows[rowIndex++][0].Should().Be(float.MaxValue);
+        BitConverter.SingleToInt32Bits((float)rows[rowIndex++][0]).Should().Be(BitConverter.SingleToInt32Bits(-0.0F));
+        rows[rowIndex++][0].Should().Be(float.Epsilon);
+        rows[rowIndex++][0].Should().Be(double.MinValue);
+        rows[rowIndex++][0].Should().Be(double.MaxValue);
+        BitConverter.DoubleToInt64Bits((double)rows[rowIndex++][0]).Should().Be(BitConverter.DoubleToInt64Bits(-0.0D));
+        rows[rowIndex][0].Should().Be(double.Epsilon);
     }
 
     [TestMethod]
@@ -3711,6 +3741,23 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorDriver driver = CreateDriver(compilation);
         driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
         return outputCompilation;
+    }
+
+    private static object[][] GetMaterializedDataRows(Compilation outputCompilation)
+    {
+        using var assemblyStream = new MemoryStream();
+        outputCompilation.Emit(assemblyStream).Success.Should().BeTrue();
+        var assembly = System.Reflection.Assembly.Load(assemblyStream.ToArray());
+        Type registryType = assembly.GetType("MSTest.SourceGenerated.MSTestReflectionMetadata")!;
+        var testClasses = (System.Collections.IEnumerable)registryType.GetProperty("TestClasses")!.GetValue(null)!;
+        object testClass = testClasses.Cast<object>().Single();
+        var methods = (System.Collections.IEnumerable)testClass.GetType().GetProperty("Methods")!.GetValue(testClass)!;
+        object method = methods.Cast<object>().Single();
+        var attributes = (Attribute[])method.GetType().GetProperty("Attributes")!.GetValue(method)!;
+        return attributes
+            .Where(attribute => attribute.GetType().Name == "DataRowAttribute")
+            .Select(attribute => (object[])attribute.GetType().GetProperty("Data")!.GetValue(attribute)!)
+            .ToArray();
     }
 
     // Drives the generator in ReflectionFree mode (the mode under test). Without the
