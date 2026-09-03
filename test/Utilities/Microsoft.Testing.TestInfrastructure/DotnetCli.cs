@@ -24,7 +24,6 @@ public static class DotnetCli
         "--filter",
         "--framework",
         "--logger",
-        "--list-tests",
         "--max-parallel-test-modules",
         "--maximum-failed-tests",
         "--minimum-expected-tests",
@@ -203,6 +202,19 @@ public static class DotnetCli
             if (string.Equals(optionName, "--project", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
+            }
+
+            if (string.Equals(optionName, "--list-tests", StringComparison.OrdinalIgnoreCase))
+            {
+                if (token.Length == optionName.Length
+                    && i + 1 < tokens.Length
+                    && (string.Equals(tokens[i + 1], "text", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(tokens[i + 1], "json", StringComparison.OrdinalIgnoreCase)))
+                {
+                    i++;
+                }
+
+                continue;
             }
 
             if (token.StartsWith('-'))
