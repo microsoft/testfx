@@ -55,6 +55,7 @@ public static class DotnetCli
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
+        bool useMultithreadedMSBuild = true,
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
@@ -92,14 +93,16 @@ public static class DotnetCli
                 environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
             }
 
-            bool useMultithreadedMSBuild = UseMultithreadedMSBuild && IsMSBuildBackedBuildOrTest(args);
-            if (useMultithreadedMSBuild && IsCommand(args, "test"))
+            bool shouldUseMultithreadedMSBuild = UseMultithreadedMSBuild
+                && useMultithreadedMSBuild
+                && IsMSBuildBackedBuildOrTest(args);
+            if (shouldUseMultithreadedMSBuild && IsCommand(args, "test"))
             {
                 // The Microsoft.Testing.Platform mode of 'dotnet test' does not accept MSBuild's -mt switch.
-                environmentVariables["MSBUILDFORCEMULTITHREADED"] = "1";
+                environmentVariables["MSBUILDENABLEMULTITHREADED"] = "1";
             }
 
-            string extraArgs = useMultithreadedMSBuild && IsCommand(args, "build") ? " -mt" : string.Empty;
+            string extraArgs = shouldUseMultithreadedMSBuild && IsCommand(args, "build") ? " -mt" : string.Empty;
             extraArgs += warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
