@@ -14,6 +14,14 @@
   </ItemGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy" Returns="@(MSTestV2Files)">
+    <ItemGroup>
+      <_MSTestSatelliteResourceLanguages Include="$(SatelliteResourceLanguages)" />
+    </ItemGroup>
+    <PropertyGroup Condition=" '$(SatelliteResourceLanguages)' != '' ">
+      <_MSTestSatelliteResourceLanguagesWithDelimiters>;@(_MSTestSatelliteResourceLanguages);</_MSTestSatelliteResourceLanguagesWithDelimiters>
+      <_MSTestSatelliteResourceLanguagesWithDelimiters>$([System.String]::Copy('$(_MSTestSatelliteResourceLanguagesWithDelimiters)').ToLowerInvariant())</_MSTestSatelliteResourceLanguagesWithDelimiters>
+    </PropertyGroup>
+
     <!--
       Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient
       to get to a culture name that maps to a resource folder we package.
@@ -35,9 +43,12 @@
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
     <ItemGroup>
-      <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
+      <_MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
-      </MSTestV2Files>
+        <Culture>$([System.String]::Copy('%(CurrentUICultureHierarchy.Identity)').ToLowerInvariant())</Culture>
+      </_MSTestV2Files>
+      <MSTestV2Files Include="@(_MSTestV2Files)"
+                     Condition=" '$(SatelliteResourceLanguages)' == '' OR $([System.String]::Copy('$(_MSTestSatelliteResourceLanguagesWithDelimiters)').Contains(';%(_MSTestV2Files.Culture);')) " />
     </ItemGroup>
   </Target>
 
