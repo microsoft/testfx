@@ -971,7 +971,7 @@ public sealed class ReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_DoesNotEmitDynamicDependencyForGenericBase()
+    public void Generator_EmitsDynamicDependencyForClosedGenericBase()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -998,12 +998,9 @@ public sealed class ReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string generated = result.GeneratedSources[0].SourceText.ToString();
 
-        // For this conservative iteration we skip generic base types from [DynamicDependency]
-        // emission — emitting `typeof(GenericBase<int>)` is technically valid but adds edge
-        // cases (open vs. closed, type-parameter capture) that the rest of the generator does
-        // not exercise. The derived class itself is still emitted, and the inherited test
-        // method is still surfaced through the base-walk in the methods collection.
-        generated.Should().NotContain("typeof(global::Sample.GenericBase");
+        // A non-generic test class can inherit a closed generic base. Root that constructed
+        // base explicitly so inherited non-public members used by reflection survive trimming.
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.GenericBase<int>))]");
         generated.Should().Contain("typeof(global::Sample.Derived)");
         generated.Should().Contain("ResolveMethod(typeof(global::Sample.Derived), \"InheritedTest\", Type.EmptyTypes)");
     }

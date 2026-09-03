@@ -2901,6 +2901,43 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_RootsClosedGenericBaseForDynamicDataReflectionFallback()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class GenericBase<T>
+                {
+                    protected static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+                }
+
+                [TestClass]
+                public class DerivedTests : GenericBase<int>
+                {
+                    [TestMethod]
+                    [DynamicData(nameof(Data))]
+                    public void Test(int value) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        string registry = GetRegistry(result);
+
+        registration.Should().Contain(
+            "[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.GenericBase<int>))]");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
     public void Generator_PreservesNullableEnumTestMethodParametersForNativeAot()
     {
         const string userCode = """

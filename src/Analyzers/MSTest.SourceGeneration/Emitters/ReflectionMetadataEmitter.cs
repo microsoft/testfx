@@ -44,7 +44,7 @@ internal static class ReflectionMetadataEmitter
             Append(sb, $"        [DynamicDependency(TestClassMemberTypes, typeof({cls.FullyQualifiedName}))]");
         }
 
-        // Emit a [DynamicDependency] for every accessible non-generic base type of every
+        // Emit a [DynamicDependency] for every closed, referenceable base type of every
         // discovered [TestClass]. This roots members declared on the abstract base — most
         // importantly [ClassInitialize] / [ClassCleanup] / [AssemblyInitialize] / [AssemblyCleanup]
         // and any [TestContext] property — so the trimmer / Native AOT does not remove them.
