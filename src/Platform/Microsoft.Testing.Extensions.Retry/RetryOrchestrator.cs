@@ -223,8 +223,8 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             RetryTestHostRunner.AttemptResult attemptResult;
             string[] generatedResponseFilePaths =
             [
-                Path.Combine(retryRootFolder, $"retry-arguments-{attemptCount}.rsp"),
-                Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp"),
+                RetryArgumentsBuilder.GetArgumentsResponseFilePath(retryRootFolder, attemptCount),
+                RetryArgumentsBuilder.GetFilterUidsResponseFilePath(retryRootFolder, attemptCount),
             ];
             try
             {
@@ -238,6 +238,14 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     retryFailedTestsPipeServer.PipeName,
                     lastListOfFailedId,
                     attemptCount).ConfigureAwait(false);
+
+                if (originalExecutableArguments.Any(argument => argument.StartsWith("@", StringComparison.Ordinal))
+                    && !finalArguments.Contains($"@{generatedResponseFilePaths[0]}"))
+                {
+                    await logger.LogWarningAsync(
+                        "Retry arguments could not be regenerated in a response file because an argument contains a literal double quote. "
+                        + "The retry command line may exceed the operating system limit.").ConfigureAwait(false);
+                }
 
                 attemptResult = await RetryTestHostRunner.RunAttemptAsync(
                     _serviceProvider,

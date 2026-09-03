@@ -232,6 +232,81 @@ public sealed class RetryArgumentsBuilderTests
     }
 
     [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_WithQuotedDirectPrefix_WritesSuffixToResponseFile()
+    {
+        string retryRoot = Path.Combine("results", "Retries", "run");
+        string responseFilePath = Path.Combine(retryRoot, "retry-arguments-1.rsp");
+        string[] executableArguments = ["exec", "quoted\"prefix", "--keep", "value"];
+        using var memoryStream = new MemoryStream();
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        fileStream.SetupGet(stream => stream.Stream).Returns(memoryStream);
+        fileStream.Setup(stream => stream.Dispose());
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem
+            .Setup(fs => fs.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            .Returns(fileStream.Object);
+
+        List<string> actual = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            executableArguments,
+            ["exec", "quoted\"prefix", "@original.rsp"],
+            [],
+            Path.Combine(retryRoot, "1"),
+            retryRoot,
+            "pipe-name",
+            lastListOfFailedId: null,
+            attemptCount: 1).ConfigureAwait(false);
+
+        Assert.AreSequenceEqual(
+            [
+                "exec",
+                "quoted\"prefix",
+                $"@{responseFilePath}",
+                $"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}",
+                Path.Combine(retryRoot, "1"),
+                $"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}",
+                "pipe-name",
+            ],
+            actual);
+        Assert.AreEqual(
+            $"\"--keep\"{Environment.NewLine}\"value\"{Environment.NewLine}",
+            Encoding.UTF8.GetString(memoryStream.ToArray()));
+    }
+
+    [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_WithMultipleOriginalResponseFiles_WritesEntireExpandedSuffix()
+    {
+        string retryRoot = Path.Combine("results", "Retries", "run");
+        string responseFilePath = Path.Combine(retryRoot, "retry-arguments-1.rsp");
+        string[] executableArguments = ["exec", "--first", "a", "--between", "b", "--second", "c", "--after", "d"];
+        using var memoryStream = new MemoryStream();
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        fileStream.SetupGet(stream => stream.Stream).Returns(memoryStream);
+        fileStream.Setup(stream => stream.Dispose());
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem
+            .Setup(fs => fs.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            .Returns(fileStream.Object);
+
+        List<string> actual = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            executableArguments,
+            ["exec", "@first.rsp", "--between", "b", "@second.rsp", "--after", "d"],
+            [],
+            Path.Combine(retryRoot, "1"),
+            retryRoot,
+            "pipe-name",
+            lastListOfFailedId: null,
+            attemptCount: 1).ConfigureAwait(false);
+
+        Assert.AreEqual("exec", actual[0]);
+        Assert.AreEqual($"@{responseFilePath}", actual[1]);
+        Assert.AreEqual(
+            string.Join(Environment.NewLine, executableArguments.Skip(1).Select(argument => $"\"{argument}\"")) + Environment.NewLine,
+            Encoding.UTF8.GetString(memoryStream.ToArray()));
+    }
+
+    [TestMethod]
     public Task BuildAttemptArgumentsAsync_WithNullFailedIds_KeepsOriginalFiltersAndMinimumExpectedTests()
         => AssertFirstAttemptKeepsOriginalFiltersAsync(lastListOfFailedId: null);
 
