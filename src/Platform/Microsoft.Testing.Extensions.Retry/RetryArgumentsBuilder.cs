@@ -20,6 +20,12 @@ internal static class RetryArgumentsBuilder
     private const int CommandLineLengthLimit = 30_000;
     private const int PerArgumentOverhead = 3;
 
+    internal static string GetArgumentsResponseFilePath(string retryRootFolder, int attemptCount)
+        => Path.Combine(retryRootFolder, $"retry-arguments-{attemptCount}.rsp");
+
+    internal static string GetFilterUidsResponseFilePath(string retryRootFolder, int attemptCount)
+        => Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+
     /// <summary>
     /// Computes the indices of the original executable arguments that must be dropped when restarting the test
     /// host, namely the retry-specific options and the result-directory option (which is re-injected per attempt).
@@ -143,9 +149,10 @@ internal static class RetryArgumentsBuilder
             }
         }
 
-        if (directPrefixArguments is not null && !finalArguments.Any(argument => argument.IndexOf('"') >= 0))
+        if (directPrefixArguments is not null
+            && !finalArguments.Skip(directPrefixArguments.Count).Any(argument => argument.IndexOf('"') >= 0))
         {
-            string responseFilePath = Path.Combine(retryRootFolder, $"retry-arguments-{attemptCount}.rsp");
+            string responseFilePath = GetArgumentsResponseFilePath(retryRootFolder, attemptCount);
             using (IFileStream stream = fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream.Stream))
             {
@@ -203,7 +210,7 @@ internal static class RetryArgumentsBuilder
                 // Use a response file to avoid exceeding command-line length limits.
                 // Write to retryRootFolder (not the per-attempt folder) so it won't be included
                 // in the final results move.
-                string responseFilePath = Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+                string responseFilePath = GetFilterUidsResponseFilePath(retryRootFolder, attemptCount);
                 using (IFileStream stream = fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
                 using (var writer = new StreamWriter(stream.Stream))
                 {

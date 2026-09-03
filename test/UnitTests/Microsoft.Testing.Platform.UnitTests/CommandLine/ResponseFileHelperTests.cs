@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -205,6 +207,57 @@ public sealed class ResponseFileHelperTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MissingNestedFile_ReportsRedactedNestedPath()
+    {
+        string outerPath = Path.GetTempFileName();
+        const string SensitiveNestedPath = "sensitive-nested-path.rsp";
+        try
+        {
+            File.WriteAllText(
+                outerPath,
+                $"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}{Environment.NewLine}@{SensitiveNestedPath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains("***REDACTED***", errors[0]);
+            Assert.DoesNotContain(SensitiveNestedPath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+        }
+        finally
+        {
+            File.Delete(outerPath);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MissingNestedFile_ReportsNestedPath()
+    {
+        string outerPath = Path.GetTempFileName();
+        string nestedPath = $"{Guid.NewGuid():N}-missing.rsp";
+        try
+        {
+            File.WriteAllText(outerPath, $"@{nestedPath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains(nestedPath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+        }
+        finally
+        {
+            File.Delete(outerPath);
         }
     }
 

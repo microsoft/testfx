@@ -169,6 +169,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
+            Assert.IsEmpty(
+                Directory.GetFiles(resultDirectory, "retry-*.rsp", SearchOption.AllDirectories),
+                "Generated retry response files must be deleted after each attempt.");
         }
         finally
         {
