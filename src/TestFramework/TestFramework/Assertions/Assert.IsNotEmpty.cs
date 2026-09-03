@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -32,7 +32,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            shouldAppend = !collection.Any();
+            shouldAppend = !IsNotEmptyCore(collection);
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
@@ -139,7 +139,7 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
 
-        if (collection.Any())
+        if (IsNotEmptyCore(collection))
         {
             return;
         }
@@ -160,7 +160,7 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
 
-        if (collection.Cast<object>().Any())
+        if (IsNotEmptyCore(collection))
         {
             return;
         }
@@ -334,6 +334,16 @@ public sealed partial class Assert
 
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+    private static bool IsNotEmptyCore<T>(IEnumerable<T> collection)
+        => collection is ICollection<T> genericCollection
+            ? genericCollection.Count != 0
+            : collection.Any();
+
+    private static bool IsNotEmptyCore(IEnumerable collection)
+        => collection is ICollection nonGenericCollection
+            ? nonGenericCollection.Count != 0
+            : collection.Cast<object>().Any();
 
     [DoesNotReturn]
     private static void ReportAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
