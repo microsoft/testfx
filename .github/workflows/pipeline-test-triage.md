@@ -205,14 +205,21 @@ jobs:
                 ( "${BUILD_RESULT}" != "succeeded" || "${HAS_PRIOR_TRIAGE_COMMENT}" == "true" ) ]]; then
             FINAL_PR_RESOLUTION=true
           fi
+          EVIDENCE_FETCH_FAILURES=0
           TIMELINE_JSON="${EVIDENCE_DIR}/timeline.json"
           ARTIFACTS_JSON="${EVIDENCE_DIR}/artifacts.json"
-          fetch_json "timeline for build ${BUILD_ID}" \
+          if ! fetch_json "timeline for build ${BUILD_ID}" \
             "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" \
-            "${TIMELINE_JSON}" || printf '{"records":[]}\n' > "${TIMELINE_JSON}"
-          fetch_json "artifacts for build ${BUILD_ID}" \
+            "${TIMELINE_JSON}"; then
+            printf '{"records":[]}\n' > "${TIMELINE_JSON}"
+            EVIDENCE_FETCH_FAILURES=$((EVIDENCE_FETCH_FAILURES + 1))
+          fi
+          if ! fetch_json "artifacts for build ${BUILD_ID}" \
             "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1" \
-            "${ARTIFACTS_JSON}" || printf '{"value":[]}\n' > "${ARTIFACTS_JSON}"
+            "${ARTIFACTS_JSON}"; then
+            printf '{"value":[]}\n' > "${ARTIFACTS_JSON}"
+            EVIDENCE_FETCH_FAILURES=$((EVIDENCE_FETCH_FAILURES + 1))
+          fi
 
           ARTIFACT_DIR="${EVIDENCE_DIR}/test-artifacts"
           mkdir -p "${ARTIFACT_DIR}"
@@ -516,7 +523,8 @@ jobs:
           fi
 
           EVIDENCE_INCOMPLETE=false
-          if [[ "${NORMALIZATION_FAILED}" == "true" ]] || (( DOWNLOAD_FAILURES > 0 )); then
+          if [[ "${NORMALIZATION_FAILED}" == "true" ]] ||
+            (( EVIDENCE_FETCH_FAILURES > 0 || DOWNLOAD_FAILURES > 0 )); then
             EVIDENCE_INCOMPLETE=true
           fi
 
@@ -531,6 +539,7 @@ jobs:
             --arg buildPrSha "${BUILD_PR_SHA}" \
             --arg buildMergeSha "${BUILD_MERGE_SHA}" \
             --argjson evidenceIncomplete "${EVIDENCE_INCOMPLETE}" \
+            --argjson evidenceFetchFailures "${EVIDENCE_FETCH_FAILURES}" \
             --argjson candidateCount "${CANDIDATE_COUNT}" \
             --argjson failureOrRetryCount "${FAILURE_OR_RETRY_COUNT}" \
             --argjson slowCount "${SLOW_COUNT}" \
@@ -549,6 +558,7 @@ jobs:
               buildPrSha: (if $buildPrSha == "" then null else $buildPrSha end),
               buildMergeSha: (if $buildMergeSha == "" then null else $buildMergeSha end),
               evidenceIncomplete: $evidenceIncomplete,
+              evidenceFetchFailures: $evidenceFetchFailures,
               candidateCount: $candidateCount,
               failureOrRetryCount: $failureOrRetryCount,
               slowCount: $slowCount,

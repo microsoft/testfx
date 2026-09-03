@@ -99,7 +99,9 @@ Every pull-request comment must:
 - summarize the failure signatures, affected tests, confidence, and next
   concrete diagnostic or fix step;
 - state that other build legs may still change the conclusion when
-  `metadata.json.analysisMode` is `early`.
+  `metadata.json.analysisMode` is `early`;
+- report an inconclusive final resolution rather than claiming the tests are
+  clean when `metadata.json.evidenceIncomplete` is `true`.
 
 Every created issue must:
 
