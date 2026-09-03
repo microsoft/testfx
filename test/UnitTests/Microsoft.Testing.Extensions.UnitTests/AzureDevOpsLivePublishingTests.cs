@@ -770,7 +770,13 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             Content = new StringContent("<!DOCTYPE html><html></html>", Encoding.UTF8, "text/html"),
         };
-        QueueHttpMessageHandler handler = new((_, _) => Task.FromResult(response));
+        int sendCount = 0;
+        QueueHttpMessageHandler handler = new(
+            (_, _) =>
+            {
+                sendCount++;
+                return Task.FromResult(response);
+            });
         using HttpClient httpClient = new(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
@@ -784,6 +790,7 @@ public sealed class AzureDevOpsLivePublishingTests
             await client.PublishTestResultsWithSubResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
 
         Assert.IsNull(publishedResults);
+        Assert.AreEqual(1, sendCount);
     }
 
     [TestMethod]
