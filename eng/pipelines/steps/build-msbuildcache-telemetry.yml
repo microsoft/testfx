@@ -4,13 +4,19 @@ steps:
     $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
     $version = "0.1.999-phase-telemetry"
     $commit = "a29f3f11307f769319f66834585a14bc986eef57"
+    $dotnetRoot = Join-Path $env:ProgramFiles "dotnet"
+    $dotnet = Join-Path $dotnetRoot "dotnet.exe"
 
     git clone --depth 1 --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
     if ((git -C $source rev-parse HEAD) -ne $commit) {
       throw "Expected MSBuildCache commit $commit."
     }
 
-    dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
+    # TestFX's prerequisite step points DOTNET_ROOT at its not-yet-bootstrapped repo-local SDK.
+    # MSBuildCache uses the .NET 10 SDK already installed in the build image.
+    $env:DOTNET_ROOT = $dotnetRoot
+
+    & $dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
       --configuration Release `
       --output $packages `
       "-p:PackageVersion=$version"
@@ -18,7 +24,7 @@ steps:
       throw "Failed to pack Microsoft.MSBuildCache.AzurePipelines."
     }
 
-    dotnet pack "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj" `
+    & $dotnet pack "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj" `
       --configuration Release `
       --output $packages `
       "-p:PackageVersion=$version"
