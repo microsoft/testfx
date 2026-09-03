@@ -30,7 +30,6 @@ internal static class ReflectionMetadataEmitter
         Append(sb, string.Empty);
         Append(sb, "namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generated");
         Append(sb, "{");
-        Append(sb, "    /// <summary>Source-generated MSTest reflection metadata hook for this test assembly.</summary>");
         Append(sb, $"    internal static class {GeneratedTypeName}");
         Append(sb, "    {");
         Append(sb, "        [ModuleInitializer]");
