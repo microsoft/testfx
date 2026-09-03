@@ -32,9 +32,18 @@ $forwardedProperties = @($properties | Where-Object { $_ -notmatch '^(?:-|/)bl(?
 $requestedBinaryLog = $properties | Where-Object { $_ -match '^(?:-|/)bl:' } | Select-Object -Last 1
 $requestedBinaryLog = if ($requestedBinaryLog) { $requestedBinaryLog.Substring($requestedBinaryLog.IndexOf(':') + 1).Trim('"') } else { $null }
 
-function Invoke-NativeTest([string]$selectionOption, [string]$selection, [string]$binaryLogName) {
+function Invoke-NativeTest([string]$selectionOption, [string]$selection, [string]$binaryLogName, [bool]$useUniqueBinaryLog = $false) {
     $binaryLog = if ($requestedBinaryLog) {
-        $requestedBinaryLog
+        if ($useUniqueBinaryLog) {
+            $directory = [System.IO.Path]::GetDirectoryName($requestedBinaryLog)
+            $fileName = [System.IO.Path]::GetFileNameWithoutExtension($requestedBinaryLog)
+            $extension = [System.IO.Path]::GetExtension($requestedBinaryLog)
+            $selectionName = [System.IO.Path]::GetFileNameWithoutExtension($binaryLogName)
+            $uniqueFileName = "$fileName.$selectionName$extension"
+            if ($directory) { Join-Path $directory $uniqueFileName } else { $uniqueFileName }
+        } else {
+            $requestedBinaryLog
+        }
     } else {
         Join-Path $testResultsDirectory $binaryLogName
     }
@@ -52,15 +61,23 @@ function Invoke-NativeTest([string]$selectionOption, [string]$selection, [string
 
 if ($projects) {
     $selectedProjects = $projects.Split(';', [System.StringSplitOptions]::RemoveEmptyEntries)
-    foreach ($project in $selectedProjects) {
+    $useUniqueBinaryLog = $selectedProjects.Count -gt 1
+    for ($index = 0; $index -lt $selectedProjects.Count; $index++) {
+        $project = $selectedProjects[$index]
         $projectPath = if ([System.IO.Path]::IsPathRooted($project)) { $project } else { Join-Path $repoRoot $project }
         $projectName = [System.IO.Path]::GetFileNameWithoutExtension($projectPath)
+        $binaryLogName = if ($useUniqueBinaryLog) { "{0:D2}.$projectName.binlog" -f ($index + 1) } else { "$projectName.binlog" }
+        if ([System.IO.Path]::GetExtension($projectPath) -in ".sln", ".slnf", ".slnx") {
+            Invoke-NativeTest "--solution" $projectPath $binaryLogName $useUniqueBinaryLog
+            continue
+        }
+
         $isIntegrationTest = $projectName.EndsWith(".IntegrationTests", [System.StringComparison]::OrdinalIgnoreCase)
         $isUnitTest = -not $isIntegrationTest -and
             ($projectName.EndsWith(".UnitTests", [System.StringComparison]::OrdinalIgnoreCase) -or
              $projectName.EndsWith(".Tests", [System.StringComparison]::OrdinalIgnoreCase))
         if (($unit -and $isUnitTest) -or ($integration -and $isIntegrationTest)) {
-            Invoke-NativeTest "--project" $projectPath "$projectName.binlog"
+            Invoke-NativeTest "--project" $projectPath $binaryLogName $useUniqueBinaryLog
         }
     }
 

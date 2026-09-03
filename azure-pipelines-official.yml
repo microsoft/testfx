@@ -56,6 +56,14 @@ variables:
     value: Release
   - name: _Products
     value: ${{parameters.products}}
+  - name: _WindowsTestSolution
+    value: Tests.slnf
+  - ${{ if eq(parameters.products, 'mstest') }}:
+    - name: _WindowsTestSolution
+      value: MSTestProductTests.slnf
+  - ${{ if eq(parameters.products, 'testing-platform') }}:
+    - name: _WindowsTestSolution
+      value: MicrosoftTestingPlatformProductTests.slnf
   # _SignType and _Sign are required for signing even if not used directly here
   - name: _SignType
     value: real
@@ -148,7 +156,7 @@ extends:
                 DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
-              - script: $(Build.SourcesDirectory)\.dotnet\dotnet.exe test --solution Tests.slnf --configuration $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:TestingPlatformCaptureOutput=false
+              - script: $(Build.SourcesDirectory)\.dotnet\dotnet.exe test --solution $(_WindowsTestSolution) --configuration $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:TestingPlatformCaptureOutput=false
                 name: Test
                 displayName: Test
                 env:

@@ -1,0 +1,14 @@
+{
+  "solution": {
+    "path": "TestFx.slnx",
+    "projects": [
+      "test\\IntegrationTests\\MSTest.Acceptance.IntegrationTests\\MSTest.Acceptance.IntegrationTests.csproj",
+      "test\\IntegrationTests\\PlatformServices.Desktop.IntegrationTests\\PlatformServices.Desktop.IntegrationTests.csproj",
+      "test\\UnitTests\\MSTest.Analyzers.UnitTests\\MSTest.Analyzers.UnitTests.csproj",
+      "test\\UnitTests\\MSTest.SelfRealExamples.UnitTests\\MSTest.SelfRealExamples.UnitTests.csproj",
+      "test\\UnitTests\\MSTestAdapter.PlatformServices.UnitTests\\MSTestAdapter.PlatformServices.UnitTests.csproj",
+      "test\\UnitTests\\MSTestAdapter.UnitTests\\MSTestAdapter.UnitTests.csproj",
+      "test\\UnitTests\\TestFramework.UnitTests\\TestFramework.UnitTests.csproj"
+    ]
+  }
+}
