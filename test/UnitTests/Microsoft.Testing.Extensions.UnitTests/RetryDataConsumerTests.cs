@@ -113,6 +113,7 @@ public sealed class RetryDataConsumerTests
         await fixture.FinishAsync(TestContext.CancellationToken);
 
         Assert.AreEqual(0, fixture.Server.TotalTestRan);
+        Assert.AreEqual(0, fixture.Server.FailedTestResults);
         Assert.AreEqual(0, fixture.Server.SkippedTests);
         Assert.IsEmpty(fixture.Server.RecoveredTests);
         Assert.IsEmpty(fixture.Server.FailedTests);
