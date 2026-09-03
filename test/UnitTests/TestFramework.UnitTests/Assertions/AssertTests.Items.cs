@@ -744,6 +744,15 @@ public partial class AssertTests
         o.WasToStringCalled.Should().BeFalse();
     }
 
+    public void IsNotEmpty_GenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingGenericEnumerable collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
     public void IsNotEmpty_NonGenericICollection_ShouldUseCountWithoutEnumerating()
     {
         CountTrackingCollection collection = new(1);
@@ -848,6 +857,19 @@ public partial class AssertTests
         {
             EnumerationCount++;
             throw new InvalidOperationException("The ICollection<T> fast path should not enumerate.");
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private sealed class CountTrackingGenericEnumerable(int count) : IEnumerable<int>
+    {
+        public int EnumerationCount { get; private set; }
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            EnumerationCount++;
+            return Enumerable.Range(0, count).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
