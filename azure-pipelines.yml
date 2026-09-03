@@ -302,6 +302,7 @@ stages:
 
 - stage: build
   displayName: Build
+  condition: in(dependencies.msbuild_cache_seed.result, 'Succeeded', 'SucceededWithIssues', 'Skipped')
   jobs:
 
   # Lightweight job that classifies the PR diff into product, samples, infrastructure-only,
