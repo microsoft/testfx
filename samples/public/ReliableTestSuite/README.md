@@ -9,8 +9,8 @@ shared-state bugs. Each file then demonstrates one rung of the reliability ladde
 
 | File | Technique | Why it matters |
 | --- | --- | --- |
-| `OrderExportTests.cs` | **Eliminate** — per-test unique temp directory | No shared resource ⇒ no lock needed ⇒ full parallelism. The cheapest concurrency bug is the one that cannot exist. (MSTest 4.4 adds `TestContext.TestTempDirectory` so the platform manages this for you.) |
-| `EnvironmentPricingTests.cs` | **Coordinate** — `[DoNotParallelize]` today, `[ResourceLock(WellKnownResources.EnvironmentVariables)]` in MSTest 4.4 | Genuinely process-global state must be serialized. `[ResourceLock]` serializes *only* the tests that share the named resource, not the whole suite. |
+| `OrderExportTests.cs` | **Eliminate** — per-test unique temp directory | No shared resource ⇒ no lock needed ⇒ full parallelism. The cheapest concurrency bug is the one that cannot exist. (After the framework package pin moves to MSTest 4.4, `TestContext.TestTempDirectory` can manage this for you.) |
+| `EnvironmentPricingTests.cs` | **Coordinate** — `[DoNotParallelize]` with the pinned MSTest 4.3 packages, `[ResourceLock(WellKnownResources.EnvironmentVariables)]` after upgrading them to 4.4 | Genuinely process-global state must be serialized. `[ResourceLock]` serializes *only* the tests that share the named resource, not the whole suite. |
 | `PlatformSpecificTests.cs` | **Gate** — `[OSCondition]`, `[CICondition]`, `[ExecutableCondition]` | A test that silently early-returns on the wrong OS reports a false pass. Conditions report *not run* for the right reason. |
 | `CancellableWorkTests.cs` | **Bound time** — `[Timeout(CooperativeCancellation = true)]` + `TestContext.CancellationToken` | A test that can hang has no place in a reliable suite; cooperative cancellation stops the work cleanly. No `Thread.Sleep`. |
 | `FlakyDependencyTests.cs` | **Contain** — `[Retry]` | Retry makes a nondeterministic test pass more often; it does **not** make it deterministic. Last resort for residual, external flakiness only. |
@@ -26,12 +26,14 @@ resource locks, and only then contain whatever residual nondeterminism you could
 
 ## `[ResourceLock]` note
 
-`[ResourceLock]` and `WellKnownResources` ship in **MSTest 4.4**. This sample pins the shipped
-`MSTest.Sdk` **4.3.x** (see `../global.json` and `../Directory.Build.props`), so it demonstrates the
-coordination step with the shipped-today `[DoNotParallelize]` and shows the exact `[ResourceLock]`
-upgrade in the comments of `EnvironmentPricingTests.cs`. The migration is a one-for-one swap:
-**remove** `[DoNotParallelize]` and **add** `[ResourceLock(...)]` (keeping both would just
-re-serialize the class).
+`[ResourceLock]` and `WellKnownResources` ship in the **MSTest 4.4 framework packages**. This sample
+uses `MSTest.Sdk` **4.4.0** from `../global.json`, but `../Directory.Build.props` independently pins
+the MSTest framework and adapter packages to **4.3.2** through `MSTestVersion`. The available APIs
+therefore remain those from MSTest 4.3. The sample demonstrates the coordination step with
+`[DoNotParallelize]` and shows the exact `[ResourceLock]` upgrade in the comments of
+`EnvironmentPricingTests.cs`. Once `MSTestVersion` moves to 4.4 or later, the migration is a
+one-for-one swap: **remove** `[DoNotParallelize]` and **add** `[ResourceLock(...)]` (keeping both
+would just re-serialize the class).
 
 `[ResourceLock]` limitations worth stating up front:
 
@@ -54,8 +56,8 @@ re-serialize the class).
   same seed. To reproduce a race deterministically, reduce parallelism (or serialize the suspects)
   first, then use the seed to pin the order. In CI you should **rotate the seed** (or leave it unset)
   so runs keep exploring new orderings instead of freezing on one.
-- On **MSTest 4.4+** a retried test surfaces as *flaky*; on the pinned 4.3.x a retried-then-passed
-  test reports as an ordinary pass.
+- With the framework packages pinned to **MSTest 4.3.x**, a retried-then-passed test reports as an
+  ordinary pass. After `MSTestVersion` moves to **4.4+**, it surfaces as *flaky* instead.
 
 ## Run it
 
