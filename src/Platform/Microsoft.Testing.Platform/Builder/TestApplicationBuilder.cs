@@ -57,6 +57,10 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
 
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ITestHostOrchestratorManager ITestApplicationBuilder.TestHostOrchestrator => _testHostBuilder.TestHostOrchestrator;
 
@@ -65,17 +69,33 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public ILoggingManager Logging => _testHostBuilder.Logging;
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IArtifactPostProcessingManager ArtifactPostProcessing => _testHostBuilder.ArtifactPostProcessing;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IToolsManager Tools => _testHostBuilder.Tools;
 

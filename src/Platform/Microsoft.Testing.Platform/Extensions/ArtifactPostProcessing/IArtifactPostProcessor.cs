@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 /// <summary>
 /// Processes artifacts of one or more well-known kinds after test execution completes.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IArtifactPostProcessor : IExtension
 {
@@ -66,6 +69,9 @@ public interface IArtifactPostProcessor : IExtension
 /// <remarks>
 /// Orchestrators that support this capability advertise that support in the handshake response before a test
 /// session starts. Producers must preserve their standalone behavior when the capability is unavailable.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostProcessor;
@@ -73,6 +79,9 @@ public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostPro
 /// <summary>
 /// Describes the test run that produced artifacts supplied to an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class ArtifactPostProcessingContext
 {
@@ -150,6 +159,9 @@ public sealed class ArtifactPostProcessingContext
 /// <summary>
 /// Describes authoritative run-level values supplied by the outer test orchestrator.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class ArtifactPostProcessingRunSummary
 {
@@ -243,6 +255,9 @@ public sealed class ArtifactPostProcessingRunSummary
 /// <summary>
 /// Specifies how the supplied artifacts relate to one another.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum ArtifactPostProcessingMode
 {
@@ -261,6 +276,9 @@ public enum ArtifactPostProcessingMode
 /// <summary>
 /// Specifies why a test run was truncated before every scheduled test module completed.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum ArtifactPostProcessingTruncationReason
 {
@@ -283,6 +301,9 @@ public enum ArtifactPostProcessingTruncationReason
 /// <summary>
 /// Describes an artifact supplied to an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class InputArtifact
 {
@@ -339,6 +360,9 @@ public sealed class InputArtifact
 /// <summary>
 /// Describes an artifact produced by an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class ProcessedArtifact
 {
