@@ -68,11 +68,15 @@ public sealed class RetryDataConsumerTests
 
         await fixture.Consumer.ConsumeAsync(
             null!,
+            CreateUpdate("uid", PassedTestNodeStateProperty.CachedInstance),
+            TestContext.CancellationToken);
+        await fixture.Consumer.ConsumeAsync(
+            null!,
             CreateUpdate("uid", SkippedTestNodeStateProperty.CachedInstance),
             TestContext.CancellationToken);
         await fixture.FinishAsync(TestContext.CancellationToken);
 
-        Assert.AreEqual(0, fixture.Server.TotalTestRan);
+        Assert.AreEqual(1, fixture.Server.TotalTestRan);
         Assert.AreEqual(1, fixture.Server.SkippedTests);
         Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
@@ -136,7 +140,7 @@ public sealed class RetryDataConsumerTests
     }
 
     [TestMethod]
-    public async Task OnTestSessionStartingAsync_NullRetrySet_DoesNotEnableRecoveryTracking()
+    public async Task OnTestSessionStartingAsync_CalledBeforeRetrySetFetched_DoesNotEnableRecoveryTracking()
     {
         using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync(
             ["uid"],
