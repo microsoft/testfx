@@ -172,13 +172,13 @@ public static class DotnetCli
 
     private static bool IsMSBuildBackedBuildOrTest(string args)
         => IsCommand(args, "build")
-            || (IsCommand(args, "test") && !IsDotNetTestWithExeOrDll(args));
+            || (IsCommand(args, "test") && !IsDirectDotNetTestInvocation(args));
 
     private static bool IsCommand(string args, string command)
         => args.StartsWith(command, StringComparison.OrdinalIgnoreCase)
             && (args.Length == command.Length || char.IsWhiteSpace(args[command.Length]));
 
-    private static bool IsDotNetTestWithExeOrDll(string args)
+    private static bool IsDirectDotNetTestInvocation(string args)
     {
         string[] tokens = TokenizeArguments(args);
         if (tokens.Length == 0 || !string.Equals(tokens[0], "test", StringComparison.OrdinalIgnoreCase))
@@ -195,6 +195,11 @@ public static class DotnetCli
             }
 
             string optionName = token.Split(['=', ':'], 2)[0];
+            if (string.Equals(optionName, "--test-modules", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
             if (string.Equals(optionName, "--project", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
@@ -283,7 +288,7 @@ public static class DotnetCli
         }
 
         string? binlogFullPath = null;
-        if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
+        if (!args.Contains("-bl:") && !IsDirectDotNetTestInvocation(args))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
             binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
