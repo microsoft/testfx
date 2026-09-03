@@ -44,8 +44,8 @@ internal static class TestClassModelBuilder
         // Iteration order is derived-first so that an override or `new`-shadowed member
         // on the derived type wins over the base declaration with the same signature.
         // Constructors are NEVER inherited and are taken only from the leaf type.
-        var methodsByKey = new Dictionary<string, TestMethodModel>(StringComparer.Ordinal);
-        var propertiesByName = new Dictionary<string, TestPropertyModel>(StringComparer.Ordinal);
+        var seenMethodKeys = new HashSet<string>(StringComparer.Ordinal);
+        var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
@@ -83,7 +83,13 @@ internal static class TestClassModelBuilder
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
                         ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
                         bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
-                        if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method))
+                        string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
+                        if (!seenMethodKeys.Add(key))
+                        {
+                            break;
+                        }
+
+                        if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method, consumingAssembly))
                         {
                             hasUnsupportedTestMethod |= isTestMethod;
                             break;
@@ -98,25 +104,17 @@ internal static class TestClassModelBuilder
                             break;
                         }
 
-                        string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
-                        if (!methodsByKey.ContainsKey(key))
-                        {
-                            TestMethodModel model = BuildMethod(method, consumingAssembly, inheritedAttributes, isTestMethod);
-                            methodsByKey[key] = model;
-                            methods.Add(model);
-                        }
+                        methods.Add(BuildMethod(method, consumingAssembly, inheritedAttributes, isTestMethod));
 
                         break;
                     case IPropertySymbol property:
                         hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
                             || HasTestMethodAttribute(property.SetMethod);
                         if (!property.IsIndexer
-                            && TestMemberValidationHelper.IsAccessibleFromConsumer(property)
-                            && !propertiesByName.ContainsKey(property.Name))
+                            && seenPropertyNames.Add(property.Name)
+                            && TestMemberValidationHelper.IsAccessibleFromConsumer(property, consumingAssembly))
                         {
-                            TestPropertyModel model = BuildProperty(property, consumingAssembly);
-                            propertiesByName[property.Name] = model;
-                            properties.Add(model);
+                            properties.Add(BuildProperty(property, consumingAssembly));
                         }
 
                         break;
@@ -282,15 +280,11 @@ internal static class TestClassModelBuilder
             FullyQualifiedType: property.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified),
             IsStatic: property.IsStatic,
 
-            // The generated registry lives in the consuming assembly, so a getter is reachable
-            // when it is public, internal, or protected-internal. private / protected getters
-            // cannot be read from the generated (non-derived) call site.
-            HasGettableValue: property.GetMethod is
-            {
-                DeclaredAccessibility: Accessibility.Public
-                or Accessibility.Internal
-                or Accessibility.ProtectedOrInternal,
-            },
+            HasGettableValue: property.GetMethod is { } getter
+                && SymbolReferenceabilityHelper.IsMemberAccessibleFrom(
+                    getter.DeclaredAccessibility,
+                    getter.ContainingType,
+                    consumingAssembly),
             // An init-only setter has public DeclaredAccessibility but cannot be assigned outside an
             // object initializer, so emitting `instance.Prop = value` would not compile (CS8852);
             // treat it as non-settable so the adapter falls back to reflection (PropertyInfo.SetValue).

@@ -19,13 +19,13 @@ internal static class TestMemberValidationHelper
     // Restricted to accessibilities the emitted helper class (a separate static type
     // declared in MSTest.SourceGenerated, not a derived type) can legally call.
     // 'protected' and 'private protected' members require the caller to be a derived
-    // type, so they are excluded; 'protected internal' is included because the internal
-    // half is satisfied (the generated helper lives in the same assembly).
-    internal static bool IsAccessibleFromConsumer(ISymbol symbol)
-        => symbol.DeclaredAccessibility is
-            Accessibility.Public
-            or Accessibility.Internal
-            or Accessibility.ProtectedOrInternal;
+    // type, so they are excluded. Internal access is available only for members declared
+    // in the consuming assembly.
+    internal static bool IsAccessibleFromConsumer(ISymbol symbol, IAssemblySymbol consumingAssembly)
+        => SymbolReferenceabilityHelper.IsMemberAccessibleFrom(
+            symbol.DeclaredAccessibility,
+            symbol.ContainingAssembly,
+            consumingAssembly);
 
     internal static bool IsTestMethodAttributePresent(ImmutableArray<AttributeData> attributes)
     {
