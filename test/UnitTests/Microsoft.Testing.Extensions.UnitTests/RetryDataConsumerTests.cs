@@ -3,8 +3,6 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 #pragma warning restore IDE0073 // The file header does not match the required text
 
-using System.Reflection;
-
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -140,19 +138,18 @@ public sealed class RetryDataConsumerTests
     [TestMethod]
     public async Task OnTestSessionStartingAsync_NullRetrySet_DoesNotEnableRecoveryTracking()
     {
-        ServiceProvider serviceProvider = CreateServiceProvider();
-        serviceProvider.AddService(new TestCommandLineOptions(new()
-        {
-            [RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName] = ["unused"],
-        }));
-        var lifecycleCallbacks = new RetryLifecycleCallbacks(serviceProvider);
-        serviceProvider.AddService(lifecycleCallbacks);
-        var consumer = new RetryDataConsumer(serviceProvider);
-        await consumer.InitializeAsync();
+        using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync(
+            ["uid"],
+            TestContext.CancellationToken,
+            startSessionBeforeConnecting: true);
 
-        await consumer.OnTestSessionStartingAsync(CreateSessionContext(TestContext.CancellationToken));
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("uid", PassedTestNodeStateProperty.CachedInstance),
+            TestContext.CancellationToken);
+        await fixture.FinishAsync(TestContext.CancellationToken);
 
-        Assert.IsNull(GetTestsBeingRetried(consumer));
+        Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
     [TestMethod]
@@ -160,7 +157,13 @@ public sealed class RetryDataConsumerTests
     {
         using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync([], TestContext.CancellationToken);
 
-        Assert.IsNull(GetTestsBeingRetried(fixture.Consumer));
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("uid", PassedTestNodeStateProperty.CachedInstance),
+            TestContext.CancellationToken);
+        await fixture.FinishAsync(TestContext.CancellationToken);
+
+        Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
     private static TestNodeUpdateMessage CreateUpdate(string uid, params IProperty[] properties)
@@ -184,11 +187,6 @@ public sealed class RetryDataConsumerTests
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Unexpected test state."),
         };
-
-    private static HashSet<string>? GetTestsBeingRetried(RetryDataConsumer consumer)
-        => (HashSet<string>?)typeof(RetryDataConsumer)
-            .GetField("_testsBeingRetried", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .GetValue(consumer);
 
     private static ITestSessionContext CreateSessionContext(CancellationToken cancellationToken)
         => Mock.Of<ITestSessionContext>(context => context.CancellationToken == cancellationToken);
@@ -224,7 +222,10 @@ public sealed class RetryDataConsumerTests
 
         public RetryFailedTestsPipeServer Server { get; }
 
-        public static async Task<ConnectedConsumer> CreateAsync(string[] retrySet, CancellationToken cancellationToken)
+        public static async Task<ConnectedConsumer> CreateAsync(
+            string[] retrySet,
+            CancellationToken cancellationToken,
+            bool startSessionBeforeConnecting = false)
         {
             ServiceProvider serviceProvider = CreateServiceProvider();
             var server = new RetryFailedTestsPipeServer(serviceProvider, retrySet, Mock.Of<ILogger>());
@@ -237,10 +238,18 @@ public sealed class RetryDataConsumerTests
             var consumer = new RetryDataConsumer(serviceProvider);
             await consumer.InitializeAsync();
 
+            if (startSessionBeforeConnecting)
+            {
+                await consumer.OnTestSessionStartingAsync(CreateSessionContext(cancellationToken));
+            }
+
             Task connection = server.WaitForConnectionAsync(cancellationToken);
             await lifecycleCallbacks.BeforeRunAsync(cancellationToken);
             await connection;
-            await consumer.OnTestSessionStartingAsync(CreateSessionContext(cancellationToken));
+            if (!startSessionBeforeConnecting)
+            {
+                await consumer.OnTestSessionStartingAsync(CreateSessionContext(cancellationToken));
+            }
 
             return new ConnectedConsumer(consumer, lifecycleCallbacks, server);
         }
