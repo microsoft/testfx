@@ -288,7 +288,10 @@ stages:
             parameters:
               # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
               enableAffectedTests: false
-              affectedTestsMode: run
+              ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+                affectedTestsMode: collect
+              ${{ else }}:
+                affectedTestsMode: run
 
           # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
           # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the
