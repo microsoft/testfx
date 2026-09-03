@@ -2635,6 +2635,63 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_DynamicDependenciesDoNotRootNestedTypes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    private sealed class NestedException : System.Exception { }
+
+                    [TestMethod]
+                    public void InheritedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    private sealed class NestedStream : System.IO.MemoryStream { }
+                    private enum ScenarioState { Ready }
+
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registration.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.DerivedTests))]");
+        registration.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.BaseTests))]");
+        foreach (string memberType in new[]
+        {
+            "PublicConstructors",
+            "NonPublicConstructors",
+            "PublicMethods",
+            "NonPublicMethods",
+            "PublicFields",
+            "NonPublicFields",
+            "PublicProperties",
+            "NonPublicProperties",
+        })
+        {
+            registration.Should().Contain($"DynamicallyAccessedMemberTypes.{memberType}");
+        }
+
+        registration.Should().NotContain("DynamicallyAccessedMemberTypes.All");
+        registration.Should().NotContain("DynamicallyAccessedMemberTypes.PublicNestedTypes");
+        registration.Should().NotContain("DynamicallyAccessedMemberTypes.NonPublicNestedTypes");
+    }
+
+    [TestMethod]
     public void Generator_PreservesNullableEnumTestMethodParametersForNativeAot()
     {
         const string userCode = """
@@ -2702,7 +2759,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .SourceText.ToString();
 
         registration.Should().Contain("[ModuleInitializer]");
-        registration.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
+        registration.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.MyTests))]");
 
         // The initializer consumes the MSTestReflectionMetadata registry (no more dead code) and
         // publishes the delegate-based invokers via the richer Register overload so the adapter

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// <c>Activator.CreateInstance</c> / <c>PropertyInfo.SetValue</c>). The reflection objects that
 /// the adapter still keys on (<see cref="System.Reflection.MethodInfo"/>,
 /// <see cref="System.Reflection.PropertyInfo"/>) are resolved once at module-load time under the
-/// <c>[DynamicDependency(All)]</c> roots emitted below.
+/// member-scoped <c>[DynamicDependency]</c> roots emitted below.
 /// </para>
 /// </summary>
 internal static class RuntimeRegistrationEmitter
@@ -52,6 +52,8 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine("/// <summary>Source-generated MSTest reflection metadata hook for this test assembly.</summary>");
             using (sb.Block($"internal static class {GeneratedTypeName}"))
             {
+                EmitTestClassMemberTypes(sb);
+                sb.AppendLine();
                 sb.AppendLine("[ModuleInitializer]");
                 EmitDynamicDependencies(sb, testClasses);
 
@@ -70,12 +72,27 @@ internal static class RuntimeRegistrationEmitter
         return sb.ToString();
     }
 
+    private static void EmitTestClassMemberTypes(IndentedStringBuilder sb)
+    {
+        sb.AppendLine("private const DynamicallyAccessedMemberTypes TestClassMemberTypes =");
+        sb.IndentationLevel++;
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicConstructors |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicConstructors |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicMethods |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicMethods |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicFields |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicFields |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicProperties |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicProperties;");
+        sb.IndentationLevel--;
+    }
+
     private static void EmitDynamicDependencies(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)
     {
         var emittedBases = new HashSet<string>(StringComparer.Ordinal);
         foreach (TestClassModel cls in testClasses)
         {
-            sb.AppendLine($"[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({cls.FullyQualifiedTypeName}))]");
+            sb.AppendLine($"[DynamicDependency(TestClassMemberTypes, typeof({cls.FullyQualifiedTypeName}))]");
         }
 
         foreach (TestClassModel cls in testClasses)
@@ -84,7 +101,7 @@ internal static class RuntimeRegistrationEmitter
             {
                 if (emittedBases.Add(baseType))
                 {
-                    sb.AppendLine($"[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({baseType}))]");
+                    sb.AppendLine($"[DynamicDependency(TestClassMemberTypes, typeof({baseType}))]");
                 }
             }
         }
