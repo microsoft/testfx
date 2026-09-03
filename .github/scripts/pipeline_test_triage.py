@@ -177,12 +177,17 @@ def record_aliases(record: dict[str, object]) -> set[str]:
 
 
 def report_identity(source_file: str) -> str:
-    relative = source_file.replace("\\", "/").split("/", 1)[-1]
+    normalized = source_file.replace("\\", "/")
+    artifact, separator, relative = normalized.partition("/")
+    if not separator:
+        relative = artifact
+    artifact = re.sub(r"_Attempt[0-9]+$", "", artifact, flags=re.IGNORECASE)
     lower = relative.lower()
     for suffix in (".ctrf.json", ".trx", ".xml"):
         if lower.endswith(suffix):
-            return relative[: -len(suffix)].casefold()
-    return relative.casefold()
+            relative = relative[: -len(suffix)]
+            break
+    return f"{artifact.casefold()}/{relative.casefold()}"
 
 
 def deduplicate_records(records: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -474,17 +479,23 @@ def records_from_archive(archive: str, artifact: str) -> list[dict[str, object]]
             for test in ctrf_results.get("tests", []):
                 if not isinstance(test, dict):
                     continue
+                duration = test.get("duration")
+                if not isinstance(duration, (int, float)) or not math.isfinite(duration):
+                    duration = None
+                retry_attempts = test.get("retryAttempts")
+                if not isinstance(retry_attempts, list):
+                    retry_attempts = []
                 records.append(
                     {
                         "sourceFile": source_file,
                         "reportFormat": "CTRF",
                         "name": test.get("name"),
                         "status": test.get("status"),
-                        "duration": test.get("duration"),
+                        "duration": duration,
                         "message": test.get("message"),
                         "trace": test.get("trace"),
-                        "flaky": test.get("flaky"),
-                        "retryAttempts": test.get("retryAttempts"),
+                        "flaky": test.get("flaky") is True,
+                        "retryAttempts": retry_attempts,
                         "extra": test.get("extra"),
                     }
                 )

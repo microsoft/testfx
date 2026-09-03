@@ -249,11 +249,11 @@ jobs:
                 reportFormat: "CTRF",
                 name,
                 status,
-                duration,
+                duration: (if (.duration | type) == "number" then .duration else null end),
                 message,
                 trace,
                 flaky,
-                retryAttempts,
+                retryAttempts: (if (.retryAttempts | type) == "array" then .retryAttempts else [] end),
                 extra
               }
             ' "${CTRF_FILE}" >> "${CTRF_NDJSON}"
