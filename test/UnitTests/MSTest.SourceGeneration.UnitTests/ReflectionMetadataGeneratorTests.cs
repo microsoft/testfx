@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -80,8 +80,18 @@ public sealed class ReflectionMetadataGeneratorTests
             {
                 internal static class MSTestSourceGeneratedReflectionMetadata
                 {
+                    private const DynamicallyAccessedMemberTypes TestClassMemberTypes =
+                        DynamicallyAccessedMemberTypes.PublicConstructors |
+                        DynamicallyAccessedMemberTypes.NonPublicConstructors |
+                        DynamicallyAccessedMemberTypes.PublicMethods |
+                        DynamicallyAccessedMemberTypes.NonPublicMethods |
+                        DynamicallyAccessedMemberTypes.PublicFields |
+                        DynamicallyAccessedMemberTypes.NonPublicFields |
+                        DynamicallyAccessedMemberTypes.PublicProperties |
+                        DynamicallyAccessedMemberTypes.NonPublicProperties;
+
                     [ModuleInitializer]
-                    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]
+                    [DynamicDependency(TestClassMemberTypes, typeof(global::Sample.MyTests))]
                     internal static void Initialize()
                     {
                         var assembly = typeof(MSTestSourceGeneratedReflectionMetadata).Assembly;
@@ -140,6 +150,54 @@ public sealed class ReflectionMetadataGeneratorTests
             """;
 
         generated.Should().Be(NormalizeNewlines(expected));
+    }
+
+    [TestMethod]
+    public void Generator_DynamicDependenciesDoNotRootNestedTypes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    private sealed class NestedException : System.Exception { }
+
+                    [TestMethod]
+                    public void InheritedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    private sealed class NestedStream : System.IO.MemoryStream { }
+                    private enum ScenarioState { Ready }
+
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources.Single().SourceText.ToString();
+
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.DerivedTests))]");
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.BaseTests))]");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.PublicConstructors");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.NonPublicConstructors");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.PublicMethods");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.NonPublicMethods");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.PublicFields");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.NonPublicFields");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.PublicProperties");
+        generated.Should().Contain("DynamicallyAccessedMemberTypes.NonPublicProperties");
+        generated.Should().NotContain("DynamicallyAccessedMemberTypes.All");
+        generated.Should().NotContain("DynamicallyAccessedMemberTypes.PublicNestedTypes");
+        generated.Should().NotContain("DynamicallyAccessedMemberTypes.NonPublicNestedTypes");
     }
 
     [TestMethod]
@@ -300,9 +358,9 @@ public sealed class ReflectionMetadataGeneratorTests
         // generated module initializer so that members declared on it ([ClassInitialize],
         // [ClassCleanup], [AssemblyInitialize], [AssemblyCleanup], TestContext setter) are
         // preserved by the IL trimmer / Native AOT. Without this hint those members live only
-        // on the abstract base and are trimmed because [DynamicDependency(All, typeof(Concrete))]
+        // on the abstract base and are trimmed because preserving the concrete type's members
         // does not preserve base-type members.
-        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.AbstractTests))]");
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.AbstractTests))]");
     }
 
     [TestMethod]
@@ -617,8 +675,8 @@ public sealed class ReflectionMetadataGeneratorTests
         // two [DynamicDependency] attributes on Initialize. We assert each block as a
         // contiguous snippet so the per-class layout is locked in.
         const string expectedDynamicDependencies = """
-                [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.AlphaTests))]
-                [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.BetaTests))]
+                [DynamicDependency(TestClassMemberTypes, typeof(global::Sample.AlphaTests))]
+                [DynamicDependency(TestClassMemberTypes, typeof(global::Sample.BetaTests))]
         """;
         generated.Should().Contain(NormalizeNewlines(expectedDynamicDependencies));
 
@@ -789,9 +847,9 @@ public sealed class ReflectionMetadataGeneratorTests
         // trimmer keeps members like [AssemblyInitialize] (declared on GrandparentTests) and
         // [ClassInitialize] (declared on ParentTests). The concrete [TestClass] still owns the
         // discovery entry, but the trimmer roots are emitted per type.
-        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.Derived))]");
-        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.ParentTests))]");
-        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.GrandparentTests))]");
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.Derived))]");
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.ParentTests))]");
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.GrandparentTests))]");
 
         // Bases must NOT appear in the types[] array or the testMethods{} dictionary — they are
         // not runnable test classes; discovery still goes through the concrete [TestClass].
@@ -841,7 +899,7 @@ public sealed class ReflectionMetadataGeneratorTests
         // be emitted N times for N derived classes, bloating the generated source.
         int sharedBaseCount = CountOccurrences(
             generated,
-            "[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.SharedBase))]");
+            "[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.SharedBase))]");
         sharedBaseCount.Should().Be(1);
     }
 
@@ -913,7 +971,7 @@ public sealed class ReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_DoesNotEmitDynamicDependencyForGenericBase()
+    public void Generator_EmitsDynamicDependencyForClosedGenericBase()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -940,12 +998,9 @@ public sealed class ReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string generated = result.GeneratedSources[0].SourceText.ToString();
 
-        // For this conservative iteration we skip generic base types from [DynamicDependency]
-        // emission — emitting `typeof(GenericBase<int>)` is technically valid but adds edge
-        // cases (open vs. closed, type-parameter capture) that the rest of the generator does
-        // not exercise. The derived class itself is still emitted, and the inherited test
-        // method is still surfaced through the base-walk in the methods collection.
-        generated.Should().NotContain("typeof(global::Sample.GenericBase");
+        // A non-generic test class can inherit a closed generic base. Root that constructed
+        // base explicitly so inherited non-public members used by reflection survive trimming.
+        generated.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.GenericBase<int>))]");
         generated.Should().Contain("typeof(global::Sample.Derived)");
         generated.Should().Contain("ResolveMethod(typeof(global::Sample.Derived), \"InheritedTest\", Type.EmptyTypes)");
     }
