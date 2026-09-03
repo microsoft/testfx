@@ -1,4 +1,4 @@
-# Windows Release full-test and coverage steps plus Debug unit tests, shared by PR validation and main-branch cache seeding.
+# Windows Release full-test and coverage steps plus Debug unit tests, shared by PR and main-branch validation.
 #
 # Assumes the consuming job declares:
 #   - the matrix variable `_BuildConfig` (Debug or Release)
