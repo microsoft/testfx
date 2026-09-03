@@ -28,21 +28,33 @@ steps:
     Set-Location $source
     & $dotnet --info
 
-    & $dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
+    $azurePipelinesProject = "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj"
+    & $dotnet restore $azurePipelinesProject `
+      --source https://api.nuget.org/v3/index.json `
+      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to restore Microsoft.MSBuildCache.AzurePipelines."
+    }
+    & $dotnet pack $azurePipelinesProject `
+      --no-restore `
       --configuration Release `
       --output $packages `
-      --source https://api.nuget.org/v3/index.json `
-      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json `
       "-p:PackageVersion=$version"
     if ($LASTEXITCODE -ne 0) {
       throw "Failed to pack Microsoft.MSBuildCache.AzurePipelines."
     }
 
-    & $dotnet pack "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj" `
+    $sharedCompilationProject = "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj"
+    & $dotnet restore $sharedCompilationProject `
+      --source https://api.nuget.org/v3/index.json `
+      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to restore Microsoft.MSBuildCache.SharedCompilation."
+    }
+    & $dotnet pack $sharedCompilationProject `
+      --no-restore `
       --configuration Release `
       --output $packages `
-      --source https://api.nuget.org/v3/index.json `
-      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json `
       "-p:PackageVersion=$version"
     if ($LASTEXITCODE -ne 0) {
       throw "Failed to pack Microsoft.MSBuildCache.SharedCompilation."
