@@ -504,11 +504,10 @@ jobs:
           # than guessing its artifact name from its display name. Artifact
           # naming is configurable per job group and does not necessarily match
           # the timeline display name. Name matching reported healthy legs as
-          # missing on real builds — every macOS failure, and every
-          # `msbuild_cache_seed` job. Arcade's
+          # missing on real builds — including every macOS failure. Arcade's
           # `Publish logs` task record answers the question directly, so no
           # spelling has to be inferred. A failed job carrying no such task
-          # (the `Detect changed paths` classifier, the cache-seed stage) does
+          # (the `Detect changed paths` classifier) does
           # not publish logs at all and is not treated as a missing leg.
           #
           # `canceled` and `abandoned` legs count alongside `failed`: they also
