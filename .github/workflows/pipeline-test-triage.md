@@ -186,15 +186,15 @@ jobs:
               echo "::warning::Build ${BUILD_ID} merge revision '${BUILD_MERGE_SHA}' but PR #${PR_NUMBER} current merge is '${CURRENT_MERGE}'; skipping stale merge."
               emit_none
             fi
-            if ! LATEST_TRIAGE_COMMENT=$(gh api --paginate \
+            if ! LATEST_BUILD_TRIAGE_COMMENT=$(gh api --paginate \
               "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
               --jq '.[] | select(.user.login == "github-actions[bot]") |
                 (.body // "") as $body |
                 if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
-                    ($body | contains("<!-- testfx-pipeline-triage-state: preliminary;"))) then
+                    ($body | contains("<!-- testfx-pipeline-triage-state: preliminary; build: '"${BUILD_ID}"' -->"))) then
                   [.id, "preliminary"]
                 elif (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
-                      ($body | contains("<!-- testfx-pipeline-triage-state: final;"))) then
+                      ($body | contains("<!-- testfx-pipeline-triage-state: final; build: '"${BUILD_ID}"' -->"))) then
                   [.id, "final"]
                 else
                   empty
@@ -203,8 +203,33 @@ jobs:
               tail -n 1); then
               echo "::warning::Could not determine whether PR #${PR_NUMBER} has prior triage feedback; a final resolution comment will be emitted to avoid leaving stale feedback."
               HAS_PENDING_PRELIMINARY_COMMENT=true
-            elif [[ "${LATEST_TRIAGE_COMMENT}" == *$'\tpreliminary' ]]; then
+            elif [[ "${LATEST_BUILD_TRIAGE_COMMENT}" == *$'\tpreliminary' ]]; then
               HAS_PENDING_PRELIMINARY_COMMENT=true
+            elif [[ -z "${LATEST_BUILD_TRIAGE_COMMENT}" ]]; then
+              # A clean newer build has no preliminary marker of its own, but it
+              # must still clear an unresolved preliminary comment from an older
+              # revision. Only use the global latest state as this fallback;
+              # current-build state above always wins when analyses overlap.
+              if ! LATEST_TRIAGE_COMMENT=$(gh api --paginate \
+                "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+                --jq '.[] | select(.user.login == "github-actions[bot]") |
+                  (.body // "") as $body |
+                  if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
+                      ($body | contains("<!-- testfx-pipeline-triage-state: preliminary;"))) then
+                    [.id, "preliminary"]
+                  elif (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
+                        ($body | contains("<!-- testfx-pipeline-triage-state: final;"))) then
+                    [.id, "final"]
+                  else
+                    empty
+                  end | @tsv' |
+                sort -n |
+                tail -n 1); then
+                echo "::warning::Could not determine whether PR #${PR_NUMBER} has unresolved triage feedback; a final resolution comment will be emitted."
+                HAS_PENDING_PRELIMINARY_COMMENT=true
+              elif [[ "${LATEST_TRIAGE_COMMENT}" == *$'\tpreliminary' ]]; then
+                HAS_PENDING_PRELIMINARY_COMMENT=true
+              fi
             fi
             if [[ -n "${BASE_REF}" ]]; then
               HISTORY_BRANCH="refs/heads/${BASE_REF}"
