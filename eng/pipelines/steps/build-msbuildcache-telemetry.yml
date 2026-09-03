@@ -9,8 +9,13 @@ steps:
     $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
     $version = "0.1.999-phase-telemetry"
     $commit = "a29f3f11307f769319f66834585a14bc986eef57"
-    $dotnet = (Get-Command dotnet -ErrorAction Stop).Source
-    $dotnetRoot = Split-Path $dotnet
+    $dotnetRoot = Get-ChildItem "$(Agent.TempDirectory)" -Directory |
+      Where-Object { Test-Path (Join-Path $_.FullName "sdk\10.0.400") } |
+      Select-Object -First 1 -ExpandProperty FullName
+    if (!$dotnetRoot) {
+      throw "Could not locate the .NET 10.0.400 SDK installed by UseDotNet."
+    }
+    $dotnet = Join-Path $dotnetRoot "dotnet.exe"
 
     git clone --depth 1 --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
     if ((git -C $source rev-parse HEAD) -ne $commit) {
@@ -20,6 +25,7 @@ steps:
     # TestFX's prerequisite step points DOTNET_ROOT at its not-yet-bootstrapped repo-local SDK.
     # MSBuildCache uses the .NET 10 SDK already installed in the build image.
     $env:DOTNET_ROOT = $dotnetRoot
+    & $dotnet --info
 
     & $dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
       --configuration Release `
