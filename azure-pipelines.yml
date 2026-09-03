@@ -19,8 +19,8 @@ trigger:
       - azure-pipelines-official.yml
       - azure-pipelines-codeql.yml
 
-# The main-branch CI trigger below keeps the project cache aligned with every product merge and runs the Windows
-# Release tests to publish coverage. The nightly run still exercises the full authoritative pipeline.
+# The main-branch CI trigger runs the Windows Release tests to publish coverage. The nightly run still exercises the
+# full authoritative pipeline.
 schedules:
   - cron: 0 3 * * *
     displayName: Nightly full validation
@@ -66,11 +66,6 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
-  # Required to grant $(System.AccessToken) access to Azure Pipeline Caching.
-  - name: EnablePipelineCache
-    value: true
-  - name: VSO_DEDUP_REDIRECT_TIMEOUT_IN_SEC
-    value: 5
   # Microsoft.Testing.Platform report/dump arguments for the Windows Debug unit-test command that uses
   # --test-modules. That mode bypasses test/Directory.Build.targets, so the command must restore these options
   # explicitly. The full Release runs evaluate the test projects and receive the same options from that targets file.
@@ -307,8 +302,6 @@ stages:
 
 - stage: build
   displayName: Build
-  dependsOn: []
-  condition: and(succeeded(), not(and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
   jobs:
 
   # Lightweight job that classifies the PR diff into product, samples, infrastructure-only,
@@ -451,9 +444,6 @@ stages:
             Debug:
               _BuildConfig: Debug
         steps:
-        - checkout: self
-          clean: true
-
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
         - template: /eng/pipelines/steps/build-msbuildcache-telemetry.yml
@@ -745,26 +735,14 @@ stages:
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
-        # Fallback build. Skipped when the MSBuildCache steps above already produced, signed and packed the
-        # outputs; also skipped when they failed with build errors, because this step would only reproduce them.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
-            /p:MSBuildCachePackageEnabled=true
-            /p:MSBuildCacheEnabled=false
           name: Build
           displayName: Build
-          condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
-        # The Arcade job wrapper gathers artifacts/packages after the configured steps. Debug is unit-test-only and a
-        # cache hit intentionally skips sign/pack, so preserve the wrapper's source-directory contract with an empty
-        # folder rather than producing packages that no downstream job consumes.
-        - pwsh: New-Item "$(Build.SourcesDirectory)\artifacts\packages" -ItemType Directory -Force | Out-Null
-          displayName: Prepare cached Debug artifact directory
-          condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 

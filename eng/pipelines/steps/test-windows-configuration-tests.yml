@@ -116,26 +116,6 @@ steps:
   - pwsh: throw "affectedTestsMode must be 'collect' or 'run' when enableAffectedTests is true."
     displayName: Reject invalid affected-test configuration
 
-# A cache hit materializes compiled outputs but does not run Arcade's restore phase, which installs the .NET runtimes
-# declared in global.json. Release gets those runtimes from its sign/pack preparation; initialize them explicitly for
-# the cached Debug leg before launching its unit-test apphosts. This template is only included when tests are enabled.
-- pwsh: |
-    & ./eng/common/build.ps1 `
-      -ci `
-      -disablePipelineSetResult `
-      -configuration $(_BuildConfig) `
-      -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\PrepareTestRuntime.binlog" `
-      -restore `
-      -prepareMachine `
-      /p:ContinuousIntegrationBuild=true `
-      /p:FastAcceptanceTest=true `
-      /p:NoBuild=true `
-      /p:MSBuildCachePackageEnabled=true `
-      /p:MSBuildCacheEnabled=false
-    exit $LASTEXITCODE
-  displayName: Prepare cached Debug test runtime
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
 # The Debug leg exists to exercise DEBUG-conditional product code and tests. The Release integration suite
 # already creates child test assets in both configurations, so repeating that suite in Debug is redundant.
 # --test-modules bypasses MSBuild evaluation, so explicitly provide the reporting and diagnostics arguments.
