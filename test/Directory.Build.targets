@@ -16,9 +16,6 @@
     <TestingPlatformCommandLineArguments Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
-    <!-- Keep test output focused on actionable per-test results. Skipped tests remain included in summaries
-         and report files; only their terminal result blocks are suppressed. -->
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --show-test-results failed</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
     <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
          output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
@@ -50,6 +47,12 @@
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
 
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Persist this preference into each test host so direct solution and test-module runs also honor it.
+         Explicit command-line values can still override the default. Skipped tests remain in summaries and reports. -->
+    <TestingPlatformCommandLineOptionDefault Include="show-test-results" Value="failed" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(UsingDotNetTest)'=='true'">
     <!-- By default, Arcade already adds report-trx, report-trx-filename, and results-directory -->
