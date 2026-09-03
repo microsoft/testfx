@@ -3,15 +3,14 @@ steps:
   displayName: Install .NET 10 SDK for MSBuildCache
   inputs:
     version: 10.x
-    installationPath: $(Agent.TempDirectory)\dotnet10
 
 - pwsh: |
     $source = "$(Agent.TempDirectory)\MSBuildCacheTelemetry"
     $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
     $version = "0.1.999-phase-telemetry"
     $commit = "a29f3f11307f769319f66834585a14bc986eef57"
-    $dotnetRoot = "$(Agent.TempDirectory)\dotnet10"
-    $dotnet = Join-Path $dotnetRoot "dotnet.exe"
+    $dotnet = (Get-Command dotnet -ErrorAction Stop).Source
+    $dotnetRoot = Split-Path $dotnet
 
     git clone --depth 1 --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
     if ((git -C $source rev-parse HEAD) -ne $commit) {
