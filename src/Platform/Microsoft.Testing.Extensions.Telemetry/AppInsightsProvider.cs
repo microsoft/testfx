@@ -120,12 +120,16 @@ internal sealed partial class AppInsightsProvider :
 #endif
 
         // On single-threaded wasm runtimes (browser-wasm / wasi-wasm) there is no thread pool, so the
-        // background ingest loop (started via Task.Run) would never run and Dispose's blocking
+        // background ingest loop would never run and Dispose's blocking
         // _telemetryTask.Wait(...) would throw PlatformNotSupportedException. Telemetry requires a
         // background sender, so skip the loop entirely there and keep Dispose non-blocking by leaving
         // the task completed. LogEventAsync short-circuits in this mode, so no events are queued.
         _telemetryTask = RuntimeFeatureHelper.IsMultiThreaded
+#if NETCOREAPP
             ? task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken)
+#else
+            ? task.RunLongRunning(IngestLoopAsync, "AppInsights telemetry ingest", _testApplicationCancellationTokenSource.CancellationToken)
+#endif
             : Task.CompletedTask;
         _logger = loggerFactory.CreateLogger<AppInsightsProvider>();
     }
@@ -139,14 +143,24 @@ internal sealed partial class AppInsightsProvider :
         }
 
         DateTimeOffset? lastLoggedError = null;
+#if NETCOREAPP
         _testApplicationCancellationTokenSource.CancellationToken.Register(_flushTimeoutOrStop.Cancel);
+#else
+        _testApplicationCancellationTokenSource.CancellationToken.Register(() =>
+        {
+            _flushTimeoutOrStop.Cancel();
+            _payloads.Complete();
+        });
+#endif
 
         try
         {
 #if NETCOREAPP
             while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
 #else
-            while (await _payloads.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
+#pragma warning disable VSTHRD103 // The consumer runs on a dedicated thread; synchronous waiting prevents thread-pool starvation.
+            while (_payloads.WaitToRead())
+#pragma warning restore VSTHRD103
 #endif
             {
                 if (_client is null)
