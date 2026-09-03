@@ -161,7 +161,7 @@ jobs:
           BUILD_MERGE_SHA=$(jq -r '.sourceVersion // empty' "${BUILD_JSON}")
           HISTORY_BRANCH="${SOURCE_BRANCH}"
           HISTORY_BRANCH_INCOMPLETE=false
-          HAS_PRIOR_TRIAGE_COMMENT=false
+          HAS_PENDING_PRELIMINARY_COMMENT=false
           if [[ -n "${PR_NUMBER}" ]]; then
             if ! PR_JSON=$(gh api "repos/${GH_REPOSITORY}/pulls/${PR_NUMBER}" 2>/dev/null); then
               echo "::warning::Could not resolve PR #${PR_NUMBER}; skipping to avoid posting stale test feedback."
@@ -183,13 +183,24 @@ jobs:
               echo "::warning::Build ${BUILD_ID} merge revision '${BUILD_MERGE_SHA}' but PR #${PR_NUMBER} current merge is '${CURRENT_MERGE}'; skipping stale merge."
               emit_none
             fi
-            if ! PRIOR_TRIAGE_COMMENT_COUNTS=$(gh api --paginate \
+            if ! LATEST_TRIAGE_COMMENT=$(gh api --paginate \
               "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-              --jq '[.[] | select((.body // "") | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->"))] | length'); then
+              --jq '.[] | (.body // "") as $body |
+                if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
+                    ($body | contains("<!-- testfx-pipeline-triage-state: preliminary;"))) then
+                  [.id, "preliminary"]
+                elif (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
+                      ($body | contains("<!-- testfx-pipeline-triage-state: final;"))) then
+                  [.id, "final"]
+                else
+                  empty
+                end | @tsv' |
+              sort -n |
+              tail -n 1); then
               echo "::warning::Could not determine whether PR #${PR_NUMBER} has prior triage feedback; a final resolution comment will be emitted to avoid leaving stale feedback."
-              HAS_PRIOR_TRIAGE_COMMENT=true
-            elif printf '%s\n' "${PRIOR_TRIAGE_COMMENT_COUNTS}" | grep -Eq '^[1-9][0-9]*$'; then
-              HAS_PRIOR_TRIAGE_COMMENT=true
+              HAS_PENDING_PRELIMINARY_COMMENT=true
+            elif [[ "${LATEST_TRIAGE_COMMENT}" == *$'\tpreliminary' ]]; then
+              HAS_PENDING_PRELIMINARY_COMMENT=true
             fi
             if [[ -n "${BASE_REF}" ]]; then
               HISTORY_BRANCH="refs/heads/${BASE_REF}"
@@ -202,7 +213,7 @@ jobs:
           FINAL_PR_RESOLUTION=false
           if [[ "${ANALYSIS_MODE}" == "full" &&
                 -n "${PR_NUMBER}" &&
-                ( "${BUILD_RESULT}" != "succeeded" || "${HAS_PRIOR_TRIAGE_COMMENT}" == "true" ) ]]; then
+                ( "${BUILD_RESULT}" != "succeeded" || "${HAS_PENDING_PRELIMINARY_COMMENT}" == "true" ) ]]; then
             FINAL_PR_RESOLUTION=true
           fi
           EVIDENCE_FETCH_FAILURES=0
@@ -732,6 +743,11 @@ explicitly preliminary comment to `GH_AW_PR_NUMBER` with `add_comment`, naming
 request, post one final resolution comment that supersedes the preliminary
 comment, including a clearing or inconclusive resolution when no issue is
 warranted, and create an issue only when the playbook's durable threshold is met.
+End preliminary comments with
+`<!-- testfx-pipeline-triage-state: preliminary; build: GH_AW_ADO_BUILD_ID -->`
+and final comments with
+`<!-- testfx-pipeline-triage-state: final; build: GH_AW_ADO_BUILD_ID -->`,
+substituting the actual build ID. Emit exactly one state marker per comment.
 Immediately before any `add_comment` or `create_issue` call for a pull-request build,
 re-read that PR with the GitHub tool and compare its current head and merge SHAs
 with `GH_AW_EXPECTED_PR_HEAD_SHA` and `GH_AW_EXPECTED_PR_MERGE_SHA`. Call `noop`

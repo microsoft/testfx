@@ -101,7 +101,12 @@ Every pull-request comment must:
 - state that other build legs may still change the conclusion when
   `metadata.json.analysisMode` is `early`;
 - report an inconclusive final resolution rather than claiming the tests are
-  clean when `metadata.json.evidenceIncomplete` is `true`.
+  clean when `metadata.json.evidenceIncomplete` is `true`;
+- end with exactly one durable state marker, substituting the actual build ID:
+  `<!-- testfx-pipeline-triage-state: preliminary; build: <build-id> -->` for
+  early analysis or
+  `<!-- testfx-pipeline-triage-state: final; build: <build-id> -->` for completed
+  analysis.
 
 Every created issue must:
 
