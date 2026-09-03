@@ -146,6 +146,8 @@ stages:
 
     - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+    - template: /eng/pipelines/steps/build-msbuildcache-telemetry.yml
+
     # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
     # soon as main changes to avoid forcing the entire 204-node graph to miss.
     - pwsh: |
@@ -185,8 +187,11 @@ stages:
           "/p:RepoRoot=$(Build.SourcesDirectory)\",
           "/p:Test=false",
           "/p:MSBuildCachePackageEnabled=true",
+          "/p:MSBuildCachePackageVersion=0.1.999-phase-telemetry",
+          "/p:RestoreAdditionalProjectSources=$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages",
           "/p:MSBuildCacheEnabled=true",
           "/p:MSBuildCacheRemoteCacheIsReadOnly=false",
+          "/p:MSBuildCacheLogCacheOperationTimings=true",
           "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
         )
 
@@ -451,6 +456,8 @@ stages:
 
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+        - template: /eng/pipelines/steps/build-msbuildcache-telemetry.yml
+
         # MSBuildCache requires a direct static graph build; Arcade's outer Build.proj discovers its projects too late
         # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
         #
@@ -502,8 +509,11 @@ stages:
               "/p:RepoRoot=$(Build.SourcesDirectory)\",
               "/p:Test=false",
               "/p:MSBuildCachePackageEnabled=true",
+              "/p:MSBuildCachePackageVersion=0.1.999-phase-telemetry",
+              "/p:RestoreAdditionalProjectSources=$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages",
               "/p:MSBuildCacheEnabled=true",
               "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
+              "/p:MSBuildCacheLogCacheOperationTimings=true",
               "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
             )
 

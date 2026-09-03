@@ -1,0 +1,30 @@
+steps:
+- pwsh: |
+    $source = "$(Agent.TempDirectory)\MSBuildCacheTelemetry"
+    $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
+    $version = "0.1.999-phase-telemetry"
+    $commit = "a29f3f11307f769319f66834585a14bc986eef57"
+
+    git clone --depth 1 --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
+    if ((git -C $source rev-parse HEAD) -ne $commit) {
+      throw "Expected MSBuildCache commit $commit."
+    }
+
+    dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
+      --configuration Release `
+      --output $packages `
+      "-p:PackageVersion=$version"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to pack Microsoft.MSBuildCache.AzurePipelines."
+    }
+
+    dotnet pack "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj" `
+      --configuration Release `
+      --output $packages `
+      "-p:PackageVersion=$version"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to pack Microsoft.MSBuildCache.SharedCompilation."
+    }
+
+    Get-ChildItem $packages -Filter *.nupkg | Select-Object Name, Length
+  displayName: Build instrumented MSBuildCache packages
