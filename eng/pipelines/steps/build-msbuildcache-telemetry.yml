@@ -18,7 +18,7 @@ steps:
     }
     $dotnet = Join-Path $dotnetRoot "dotnet.exe"
 
-    git clone --depth 1 --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
+    git clone --filter=blob:none --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
     if ((git -C $source rev-parse HEAD) -ne $commit) {
       throw "Expected MSBuildCache commit $commit."
     }
