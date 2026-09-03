@@ -19,8 +19,8 @@ trigger:
       - azure-pipelines-official.yml
       - azure-pipelines-codeql.yml
 
-# The main-branch CI trigger below keeps the project cache aligned with every product merge and runs the Windows
-# Release tests to publish coverage. The nightly run still exercises the full authoritative pipeline.
+# The main-branch CI trigger runs the Windows Release tests to publish coverage. The nightly run still exercises the
+# full authoritative pipeline.
 schedules:
   - cron: 0 3 * * *
     displayName: Nightly full validation
@@ -117,188 +117,8 @@ variables:
 
 stages:
 
-- stage: msbuild_cache_seed
-  displayName: Seed MSBuildCache and publish coverage
-  condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - job: Windows
-    displayName: Windows
-    timeoutInMinutes: 90
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
-    variables:
-      - template: /eng/pipelines/variables/test-env-vars.yml
-    strategy:
-      matrix:
-        Release:
-          _BuildConfig: Release
-        Debug:
-          _BuildConfig: Debug
-    steps:
-    - checkout: self
-      clean: true
-
-    - template: /eng/pipelines/steps/install-windows-prereqs.yml
-
-    # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
-    # soon as main changes to avoid forcing the entire 204-node graph to miss.
-    - pwsh: |
-        trap {
-          Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
-          Write-Host "##vso[task.logissue type=warning]Seeding MSBuildCache failed unexpectedly ($($_.Exception.Message)); continuing with the regular Arcade build."
-          exit 0
-        }
-
-        Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
-
-        $pwsh = Join-Path $PSHOME "pwsh.exe"
-        $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"
-        New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
-
-        # Do not pass -ci here: on failure it reports the pipeline result itself and prevents this step from
-        # handing off cleanly to the fallback build.
-        $arguments = @(
-          "-NoLogo",
-          "-NoProfile",
-          "-File", "./eng/common/msbuild.ps1",
-          "-prepareMachine",
-          "-warnAsError:`$false",
-          "./TestFx.slnx",
-          "/restore",
-          "/graph",
-          "/m",
-          "/reportfileaccesses",
-          "/nr:false",
-          "/t:Build",
-          "/v:minimal",
-          "/bl:$binlogDirectory\MSBuildCache.binlog",
-          "/p:Configuration=$(_BuildConfig)",
-          "/p:ContinuousIntegrationBuild=true",
-          "/p:FastAcceptanceTest=true",
-          "/p:Publish=false",
-          "/p:RepoRoot=$(Build.SourcesDirectory)\",
-          "/p:Test=false",
-          "/p:MSBuildCachePackageEnabled=true",
-          "/p:MSBuildCacheEnabled=true",
-          "/p:MSBuildCacheRemoteCacheIsReadOnly=false",
-          "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
-        )
-
-        $previousPSNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
-        try {
-          $PSNativeCommandUseErrorActionPreference = $false
-          & $pwsh @arguments
-          $exitCode = $LASTEXITCODE
-        }
-        finally {
-          $PSNativeCommandUseErrorActionPreference = $previousPSNativeCommandUseErrorActionPreference
-        }
-
-        if ($exitCode -eq 0) {
-          Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]true"
-          exit 0
-        }
-
-        Write-Host "##vso[task.logissue type=warning]Seeding MSBuildCache failed with exit code $exitCode; continuing with the regular Arcade build."
-        exit 0
-      displayName: Seed $(_BuildConfig) project cache
-      env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        # MSBuildCache reads NUGET_PACKAGES to build its path normalizer, and every restored package file is a
-        # fingerprinted input. The seeding and the consuming builds must therefore agree on this folder or every
-        # node misses. Both cache build paths avoid Arcade's -ci switch so they can inspect the real exit code,
-        # so pin the package folder explicitly instead of relying on -ci to redirect restore.
-        NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
-        DOTNET_CLI_TELEMETRY_OPTOUT: 1
-
-    # A failed cache build can leave partial outputs behind. Preserve its diagnostics, then clean those outputs
-    # before using the same regular Arcade build that PR validation uses as its correctness fallback.
-    - pwsh: |
-        $cacheLogSource = "$(Agent.TempDirectory)\MSBuildCache"
-        $cacheLogDestination = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\MSBuildCache"
-
-        try {
-          if (Test-Path $cacheLogSource) {
-            New-Item $cacheLogDestination -ItemType Directory -Force | Out-Null
-            Get-ChildItem $cacheLogSource -Force |
-              Where-Object Name -NE "CacheClient.log" |
-              Copy-Item -Destination $cacheLogDestination -Recurse -Force
-          }
-        }
-        catch {
-          Write-Host "##vso[task.logissue type=warning]Failed to preserve MSBuildCache diagnostics. $($_.Exception.Message)"
-        }
-
-        $artifactsDirectory = "$(Build.SourcesDirectory)\artifacts"
-        if (Test-Path $artifactsDirectory) {
-          Get-ChildItem $artifactsDirectory -Force |
-            Where-Object Name -NotIn @("log", "msbuild-cache", "toolset") |
-            Remove-Item -Recurse -Force
-        }
-
-        @(
-          $cacheLogSource,
-          "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Sdk.props",
-          "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Runner\Runner.targets"
-        ) |
-          Where-Object { Test-Path $_ } |
-          Remove-Item -Recurse -Force
-      displayName: Preserve cache diagnostics and clean failed seed outputs
-      condition: and(always(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
-    - script: eng\common\CIBuild.cmd
-        -configuration $(_BuildConfig)
-        -prepareMachine
-        /p:Publish=false
-        /p:Test=false
-        /p:FastAcceptanceTest=true
-        /p:MSBuildCachePackageEnabled=true
-        /p:MSBuildCacheEnabled=false
-      name: Build
-      displayName: Build
-      condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
-    - ${{ if eq(parameters.SkipTests, False) }}:
-      # The Release cache seed already produced the compiled solution outputs. Run the remaining Arcade phases that
-      # sign and pack those outputs so acceptance tests consume the same packages as PR validation.
-      - pwsh: |
-          & ./eng/common/build.ps1 `
-            -ci `
-            -disablePipelineSetResult `
-            -configuration $(_BuildConfig) `
-            -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog" `
-            -restore `
-            -sign `
-            -pack `
-            -prepareMachine `
-            /p:ContinuousIntegrationBuild=true `
-            /p:FastAcceptanceTest=true `
-            /p:NoBuild=true `
-            /p:MSBuildCachePackageEnabled=true `
-            /p:MSBuildCacheEnabled=false
-          exit $LASTEXITCODE
-        displayName: Prepare and pack cached Release build outputs
-        condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
-      - template: /eng/pipelines/steps/test-windows-configuration-tests.yml
-        parameters:
-          # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
-          enableAffectedTests: false
-          affectedTestsMode: collect
-
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish cache seed build binlogs'
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        ArtifactName: Build_Binlogs_MSBuildCacheSeed_$(_BuildConfig)_Attempt$(System.JobAttempt)
-      condition: always()
-      continueOnError: true
-
 - stage: build
   displayName: Build
-  dependsOn: []
-  condition: and(succeeded(), not(and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
   jobs:
 
   # Lightweight job that classifies the PR diff into product, samples, infrastructure-only,
@@ -453,8 +273,6 @@ stages:
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
-        # Fallback build. Skipped when the MSBuildCache steps above already produced, signed and packed the
-        # outputs; also skipped when they failed with build errors, because this step would only reproduce them.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -463,14 +281,6 @@ stages:
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
-          condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
-        # The Arcade job wrapper gathers artifacts/packages after the configured steps. Debug is unit-test-only and a
-        # cache hit intentionally skips sign/pack, so preserve the wrapper's source-directory contract with an empty
-        # folder rather than producing packages that no downstream job consumes.
-        - pwsh: New-Item "$(Build.SourcesDirectory)\artifacts\packages" -ItemType Directory -Force | Out-Null
-          displayName: Prepare cached Debug artifact directory
-          condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
