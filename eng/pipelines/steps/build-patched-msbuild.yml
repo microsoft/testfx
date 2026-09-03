@@ -1,0 +1,59 @@
+parameters:
+- name: condition
+  type: string
+  default: succeeded()
+
+steps:
+# Build from an immutable commit in dotnet/msbuild without mapping System.AccessToken into the source build.
+- pwsh: |
+    $ErrorActionPreference = "Stop"
+    Write-Host "##vso[task.setvariable variable=PatchedMSBuildAvailable]false"
+
+    $sourceDirectory = "$(Agent.TempDirectory)\patched-msbuild-source"
+    $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"
+    $msbuildPath = Join-Path $sourceDirectory "artifacts\bin\bootstrap\net472\MSBuild\Current\Bin\amd64\MSBuild.exe"
+
+    try {
+      Remove-Item $sourceDirectory -Recurse -Force -ErrorAction SilentlyContinue
+      New-Item $sourceDirectory -ItemType Directory -Force | Out-Null
+      New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
+
+      & git -C $sourceDirectory init --quiet
+      if ($LASTEXITCODE -ne 0) { throw "git init failed with exit code $LASTEXITCODE." }
+
+      & git -C $sourceDirectory remote add origin https://github.com/dotnet/msbuild.git
+      if ($LASTEXITCODE -ne 0) { throw "git remote add failed with exit code $LASTEXITCODE." }
+
+      & git -C $sourceDirectory -c core.longpaths=true fetch --depth=1 origin $(_PatchedMSBuildCommit)
+      if ($LASTEXITCODE -ne 0) { throw "git fetch failed with exit code $LASTEXITCODE." }
+
+      & git -C $sourceDirectory -c core.longpaths=true checkout --detach FETCH_HEAD
+      if ($LASTEXITCODE -ne 0) { throw "git checkout failed with exit code $LASTEXITCODE." }
+
+      $actualCommit = (& git -C $sourceDirectory rev-parse HEAD).Trim()
+      if ($LASTEXITCODE -ne 0 -or $actualCommit -ne "$(_PatchedMSBuildCommit)") {
+        throw "Expected MSBuild commit '$(_PatchedMSBuildCommit)' but checked out '$actualCommit'."
+      }
+
+      & "$sourceDirectory\build.cmd" `
+        -configuration Release `
+        -verbosity quiet `
+        -binaryLogName "$binlogDirectory\PatchedMSBuild.binlog" `
+        /p:LocalizedBuild=false
+      if ($LASTEXITCODE -ne 0) { throw "The patched MSBuild build failed with exit code $LASTEXITCODE." }
+      if (-not (Test-Path $msbuildPath -PathType Leaf)) { throw "The patched MSBuild executable was not produced at '$msbuildPath'." }
+
+      & $msbuildPath -version -nologo
+      if ($LASTEXITCODE -ne 0) { throw "The patched MSBuild executable failed its version check with exit code $LASTEXITCODE." }
+    }
+    catch {
+      Write-Host "##vso[task.logissue type=warning]Patched MSBuild is unavailable: $($_.Exception.Message) The authoritative Arcade build will run."
+      exit 0
+    }
+
+    Write-Host "##vso[task.setvariable variable=PatchedMSBuildPath]$msbuildPath"
+    Write-Host "##vso[task.setvariable variable=PatchedMSBuildAvailable]true"
+  displayName: Build patched MSBuild for cache experiment
+  condition: ${{ parameters.condition }}
+  env:
+    DOTNET_CLI_TELEMETRY_OPTOUT: 1
