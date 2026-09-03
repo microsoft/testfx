@@ -29,6 +29,7 @@ public sealed class AzureDevOpsTestResultsClientHandlerTests
 
         using HttpClientHandler handler = AzureDevOpsTestResultsClient.CreateHttpClientHandler();
 
+        Assert.IsFalse(OperatingSystem.IsWasi(), "The unit test host is expected to support redirect configuration.");
         Assert.IsFalse(handler.AllowAutoRedirect);
         Assert.IsTrue(handler.SupportsAutomaticDecompression, "This platform is expected to support automatic decompression.");
         Assert.AreEqual(DecompressionMethods.Deflate | DecompressionMethods.GZip, handler.AutomaticDecompression);

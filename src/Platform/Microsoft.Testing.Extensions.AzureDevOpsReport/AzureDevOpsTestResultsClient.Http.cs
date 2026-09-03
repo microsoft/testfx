@@ -34,10 +34,11 @@ internal sealed partial class AzureDevOpsTestResultsClient
     /// </remarks>
     internal static HttpClientHandler CreateHttpClientHandler()
     {
-        HttpClientHandler handler = new()
+        HttpClientHandler handler = new();
+        if (!OperatingSystem.IsWasi())
         {
-            AllowAutoRedirect = false,
-        };
+            handler.AllowAutoRedirect = false;
+        }
 
         if (ShouldOptInToAutomaticDecompression(handler))
         {
@@ -103,12 +104,13 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     {
                         if (string.Equals(response.Content.Headers.ContentType?.MediaType, "text/html", StringComparison.OrdinalIgnoreCase))
                         {
+                            int statusCode = (int)response.StatusCode;
                             string contentType = response.Content.Headers.ContentType?.ToString() ?? "text/html";
                             response.Dispose();
                             throw new InvalidOperationException(string.Format(
                                 CultureInfo.InvariantCulture,
                                 AzureDevOpsResources.AzureDevOpsLivePublishingUnexpectedContentType,
-                                (int)response.StatusCode,
+                                statusCode,
                                 contentType));
                         }
 
@@ -120,12 +122,15 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     {
                         if (!ShouldRetry(response.StatusCode, attempt))
                         {
-                            if (response.StatusCode == HttpStatusCode.Redirect)
+                            if (IsAuthenticationFailure(response))
                             {
+                                string status = response.StatusCode == 0
+                                    ? response.ReasonPhrase ?? "opaqueredirect"
+                                    : ((int)response.StatusCode).ToString(CultureInfo.InvariantCulture);
                                 throw new InvalidOperationException(string.Format(
                                     CultureInfo.InvariantCulture,
-                                    AzureDevOpsResources.AzureDevOpsLivePublishingAuthenticationRedirect,
-                                    (int)response.StatusCode));
+                                    AzureDevOpsResources.AzureDevOpsLivePublishingAuthenticationFailure,
+                                    status));
                             }
 
                             string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
@@ -161,6 +166,10 @@ internal sealed partial class AzureDevOpsTestResultsClient
 
     private static bool ShouldRetry(HttpStatusCode statusCode, int attempt)
         => attempt < MaxAttempts && ((int)statusCode is >= 500 or 429);
+
+    private static bool IsAuthenticationFailure(HttpResponseMessage response)
+        => response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Redirect
+            || (response.StatusCode == 0 && string.Equals(response.ReasonPhrase, "opaqueredirect", StringComparison.Ordinal));
 
     private static bool ShouldRetry(Exception exception, CancellationToken userCancellationToken, CancellationToken requestCancellationToken, int attempt)
         => attempt < MaxAttempts
