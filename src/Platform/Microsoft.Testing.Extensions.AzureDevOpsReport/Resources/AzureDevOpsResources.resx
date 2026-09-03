@@ -154,8 +154,8 @@
     <comment>{0} is the number of attachments that could not be uploaded.</comment>
   </data>
   <data name="AzureDevOpsLivePublishingAuthenticationFailure" xml:space="preserve">
-    <value>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, enable 'Make secrets available to builds of forks' in the pipeline settings.</value>
-    <comment>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="'Make secrets available to builds of forks'"}</comment>
+    <value>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</value>
+    <comment>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to complete the test run.</value>

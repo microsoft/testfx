@@ -690,7 +690,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.Contains($"(status: {expectedStatus})", exception.Message);
         Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
-        Assert.Contains("Make secrets available to builds of forks", exception.Message);
+        Assert.Contains("do not expose secrets to untrusted fork code", exception.Message);
+        Assert.Contains("separate trusted pipeline context", exception.Message);
     }
 
     [TestMethod]
@@ -713,7 +714,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.Contains("(status: opaqueredirect)", exception.Message);
         Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
-        Assert.Contains("Make secrets available to builds of forks", exception.Message);
+        Assert.Contains("do not expose secrets to untrusted fork code", exception.Message);
+        Assert.Contains("separate trusted pipeline context", exception.Message);
     }
 
     [TestMethod]
