@@ -235,8 +235,9 @@ def deduplicate_records(records: list[dict[str, object]]) -> list[dict[str, obje
     return deduplicated
 
 
-def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> None:
+def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> int:
     results: list[dict[str, object]] = []
+    skipped_report_count = 0
 
     def add_result(record: dict[str, object], _artifact: str) -> None:
         name = record.get("name")
@@ -263,10 +264,12 @@ def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> No
 
     for path in report_paths:
         if os.path.getsize(path) > MAX_XML_REPORT_BYTES:
+            skipped_report_count += 1
             continue
         try:
             document = ET.parse(path).getroot()
         except (ET.ParseError, OSError):
+            skipped_report_count += 1
             continue
 
         source_file = os.path.relpath(path, artifact_dir).replace("\\", "/")
@@ -279,6 +282,8 @@ def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> No
 
     with open(output_path, "w", encoding="utf-8") as output_file:
         json.dump(deduplicate_records(results), output_file, separators=(",", ":"))
+
+    return skipped_report_count
 
 
 def normalize_trx(
@@ -806,7 +811,7 @@ def main() -> None:
     elif args.command == "extract":
         extract_archive(args.archive, args.destination)
     elif args.command == "normalize":
-        normalize_reports(args.ctrf_ndjson, args.artifact_dir, args.output)
+        print(normalize_reports(args.ctrf_ndjson, args.artifact_dir, args.output))
     elif args.command == "download":
         try:
             downloaded = download_artifact(args.url, args.destination, args.maximum_bytes)

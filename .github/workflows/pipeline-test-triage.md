@@ -41,7 +41,6 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'check_run' &&
        ((github.event.check_run.name == 'microsoft.testfx' &&
-         github.event.check_run.conclusion != 'cancelled' &&
          github.event.check_run.conclusion != 'skipped') ||
         (startsWith(github.event.check_run.name, 'microsoft.testfx (Build ') &&
          github.event.check_run.conclusion == 'failure')))
@@ -341,10 +340,12 @@ jobs:
           )
 
           CTRF_NDJSON="${EVIDENCE_DIR}/results.ndjson"
+          SKIPPED_REPORTS=0
           : > "${CTRF_NDJSON}"
           while IFS= read -r CTRF_FILE; do
             if ! jq -e . "${CTRF_FILE}" > /dev/null 2>&1; then
               echo "::warning::Ignoring malformed CTRF report '${CTRF_FILE}'."
+              SKIPPED_REPORTS=$((SKIPPED_REPORTS + 1))
               continue
             fi
 
@@ -369,13 +370,19 @@ jobs:
           done < "${CTRF_FILE_LIST}"
 
           RESULTS_JSON="${EVIDENCE_DIR}/results.json"
-          if ! python3 "${TRIAGE_TOOL}" normalize "${CTRF_NDJSON}" "${ARTIFACT_DIR}" "${RESULTS_JSON}"; then
+          if ! NORMALIZATION_SKIPPED_REPORTS=$(python3 "${TRIAGE_TOOL}" normalize \
+            "${CTRF_NDJSON}" "${ARTIFACT_DIR}" "${RESULTS_JSON}"); then
             echo "::warning::Could not normalize the extracted test reports."
             if [[ "${FINAL_PR_RESOLUTION}" != "true" ]]; then
               emit_none
             fi
             NORMALIZATION_FAILED=true
             printf '[]\n' > "${RESULTS_JSON}"
+          elif ! [[ "${NORMALIZATION_SKIPPED_REPORTS}" =~ ^[0-9]+$ ]]; then
+            echo "::warning::The test report normalizer returned an invalid skipped-report count."
+            NORMALIZATION_FAILED=true
+          else
+            SKIPPED_REPORTS=$((SKIPPED_REPORTS + NORMALIZATION_SKIPPED_REPORTS))
           fi
           rm -f "${CTRF_NDJSON}"
 
@@ -539,7 +546,7 @@ jobs:
 
           EVIDENCE_INCOMPLETE=false
           if [[ "${NORMALIZATION_FAILED}" == "true" ]] ||
-            (( EVIDENCE_FETCH_FAILURES > 0 || DOWNLOAD_FAILURES > 0 )); then
+            (( EVIDENCE_FETCH_FAILURES > 0 || DOWNLOAD_FAILURES > 0 || SKIPPED_REPORTS > 0 )); then
             EVIDENCE_INCOMPLETE=true
           fi
 
@@ -555,6 +562,7 @@ jobs:
             --arg buildMergeSha "${BUILD_MERGE_SHA}" \
             --argjson evidenceIncomplete "${EVIDENCE_INCOMPLETE}" \
             --argjson evidenceFetchFailures "${EVIDENCE_FETCH_FAILURES}" \
+            --argjson skippedReportCount "${SKIPPED_REPORTS}" \
             --argjson candidateCount "${CANDIDATE_COUNT}" \
             --argjson failureOrRetryCount "${FAILURE_OR_RETRY_COUNT}" \
             --argjson slowCount "${SLOW_COUNT}" \
@@ -574,6 +582,7 @@ jobs:
               buildMergeSha: (if $buildMergeSha == "" then null else $buildMergeSha end),
               evidenceIncomplete: $evidenceIncomplete,
               evidenceFetchFailures: $evidenceFetchFailures,
+              skippedReportCount: $skippedReportCount,
               candidateCount: $candidateCount,
               failureOrRetryCount: $failureOrRetryCount,
               slowCount: $slowCount,
