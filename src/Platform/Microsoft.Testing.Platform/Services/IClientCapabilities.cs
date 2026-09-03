@@ -10,6 +10,9 @@ namespace Microsoft.Testing.Platform.Services;
 /// Capabilities are opt-in: unless a client explicitly declares a capability, the platform assumes the
 /// most conservative (default) behavior. This lets a test framework tailor its behavior to how the client
 /// intends to consume the results without having to guess based on the environment or transport.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IClientCapabilities
