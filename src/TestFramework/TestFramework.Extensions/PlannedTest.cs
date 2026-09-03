@@ -12,6 +12,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// They are intended for read-only inspection (for example to decide whether expensive setup is
 /// needed in <c>[AssemblyInitialize]</c>); they do not carry execution-time state such as outcome,
 /// exceptions, or data-driven rows.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public sealed class PlannedTest

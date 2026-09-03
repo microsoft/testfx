@@ -8,6 +8,9 @@ namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 /// <summary>
 /// Represents a manager for test host orchestrators.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostOrchestratorManager
 {

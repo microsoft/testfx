@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Configurations;
 /// <summary>
 /// Represents a configuration provider.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IConfigurationProvider
 {

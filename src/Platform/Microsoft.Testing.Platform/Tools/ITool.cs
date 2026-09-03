@@ -9,6 +9,9 @@ namespace Microsoft.Testing.Platform.Tools;
 /// Represents a non-test command that can be invoked by passing its <see cref="Name"/>
 /// as the first positional command-line argument.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITool : IExtension
 {

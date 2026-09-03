@@ -120,6 +120,9 @@ public static class ServiceProviderExtensions
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The IClientInfo object.</returns>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public static IClientInfo GetClientInfo(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClientInfo>();
@@ -211,6 +214,9 @@ public static class ServiceProviderExtensions
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The platform <see cref="IClock"/>.</returns>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Experimental("TPINTERNAL")]
     public static IClock GetSystemClock(this IServiceProvider serviceProvider)
