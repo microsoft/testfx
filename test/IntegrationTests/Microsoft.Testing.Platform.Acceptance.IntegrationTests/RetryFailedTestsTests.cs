@@ -41,6 +41,17 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    internal static IEnumerable<(bool RetryArgumentsInResponseFile, bool UseInlineDelimiters, string Tfm)> GetResponseFileMatrix()
+    {
+        foreach (string tfm in TargetFrameworks.Net)
+        {
+            yield return (true, false, tfm);
+            yield return (true, true, tfm);
+            yield return (false, false, tfm);
+            yield return (false, true, tfm);
+        }
+    }
+
     [TestMethod]
     [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_OnlyRetryTimes_Succeeds(string tfm, bool failOnly)
@@ -110,6 +121,58 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             // Only the first attempt's summary survives; the three retry attempts each re-ran a single test and
             // would otherwise have printed three more "total: 1" blocks.
             AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
+        }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetResponseFileMatrix))]
+    public async Task RetryFailedTests_WithArgumentsInResponseFile_Succeeds(bool retryArgumentsInResponseFile, bool useInlineDelimiters, string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, $"response file results {Guid.NewGuid():N}");
+        string responseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.rsp");
+
+        try
+        {
+            File.WriteAllText(
+                responseFile,
+                (retryArgumentsInResponseFile, useInlineDelimiters) switch
+                {
+                    (true, true) => $"""
+                                    --retry-failed-tests=1
+                                    --retry-failed-tests-max-tests:50
+                                    --results-directory="{resultDirectory}"
+                                    """,
+                    (true, false) => $"""
+                                     --retry-failed-tests 1
+                                     --retry-failed-tests-max-tests 50
+                                     --results-directory "{resultDirectory}"
+                                     """,
+                    (false, true) => $"--results-directory=\"{resultDirectory}\"",
+                    (false, false) => $"--results-directory \"{resultDirectory}\"",
+                });
+
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                retryArgumentsInResponseFile
+                    ? $"@{responseFile}"
+                    : useInlineDelimiters
+                        ? $"@{responseFile} --retry-failed-tests=1 --retry-failed-tests-max-tests:50"
+                        : $"@{responseFile} --retry-failed-tests 1 --retry-failed-tests-max-tests 50",
+                new()
+                {
+                    { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                    { "METHOD1", "1" },
+                    { "FAIL", "0" },
+                    { "RESULTDIR", resultDirectory },
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
+        }
+        finally
+        {
+            File.Delete(responseFile);
         }
     }
 

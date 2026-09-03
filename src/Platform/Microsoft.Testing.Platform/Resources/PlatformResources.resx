@@ -927,6 +927,9 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
     <value>Unclosed quote in response file at line {0}</value>
     <comment>{0} is the line number in the response file.</comment>
   </data>
+  <data name="CommandLineParserRecursiveResponseFile" xml:space="preserve">
+    <value>A recursive response file reference was detected.</value>
+  </data>
   <data name="CommandLineParserUnclosedQuoteInCommandLine" xml:space="preserve">
     <value>Unclosed quote in command line</value>
   </data>

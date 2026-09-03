@@ -22,7 +22,12 @@ internal static class ResponseFileHelper
     {
         try
         {
-            newArguments = [.. ExpandResponseFile(rspFilePath)];
+            newArguments = [.. ExpandResponseFile(
+                rspFilePath,
+                [with(
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                        ? StringComparer.OrdinalIgnoreCase
+                        : StringComparer.Ordinal)])];
             return true;
         }
         catch (FileNotFoundException)
@@ -58,18 +63,41 @@ internal static class ResponseFileHelper
         static string GetExceptionDetail(Exception exception, string actualPath, string diagnosticPath)
             => actualPath == diagnosticPath ? exception.ToString() : exception.GetType().Name;
 
-        static IEnumerable<string> ExpandResponseFile(string filePath)
+        static IEnumerable<string> ExpandResponseFile(string filePath, HashSet<string> activeResponseFiles)
         {
-            string[] lines = File.ReadAllLines(filePath);
-
-            for (int i = 0; i < lines.Length; i++)
+            string fullPath = Path.GetFullPath(filePath);
+            if (!activeResponseFiles.Add(fullPath))
             {
-                string line = lines[i];
+                throw new FormatException(PlatformResources.CommandLineParserRecursiveResponseFile);
+            }
 
-                foreach (string p in SplitLine(line, i + 1))
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+
+                for (int i = 0; i < lines.Length; i++)
                 {
-                    yield return p;
+                    string line = lines[i];
+
+                    foreach (string argument in SplitLine(line, i + 1))
+                    {
+                        if (argument.StartsWith("@", StringComparison.Ordinal))
+                        {
+                            foreach (string nestedArgument in ExpandResponseFile(argument.Substring(1), activeResponseFiles))
+                            {
+                                yield return nestedArgument;
+                            }
+                        }
+                        else
+                        {
+                            yield return argument;
+                        }
+                    }
                 }
+            }
+            finally
+            {
+                activeResponseFiles.Remove(fullPath);
             }
         }
 
