@@ -63,8 +63,15 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
             public class DataRowAttribute : System.Attribute
             {
-                public DataRowAttribute(object? data1) { }
-                public DataRowAttribute(object? data1, params object?[] moreData) { }
+                public DataRowAttribute(object? data1) { Data = new object?[] { data1 }; }
+                public DataRowAttribute(object? data1, params object?[] moreData)
+                {
+                    Data = new object?[moreData.Length + 1];
+                    Data[0] = data1;
+                    System.Array.Copy(moreData, 0, Data, 1, moreData.Length);
+                }
+
+                public object?[] Data { get; }
             }
 
             public enum DynamicDataSourceType { Property = 0, Method = 1, AutoDetect = 2, Field = 3 }
@@ -1870,6 +1877,168 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_PreservesDataRowConstantTypes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                internal enum ByteEnum : byte { Max = byte.MaxValue }
+                internal enum SByteEnum : sbyte { Min = sbyte.MinValue }
+                internal enum ShortEnum : short { Min = short.MinValue }
+                internal enum UShortEnum : ushort { Max = ushort.MaxValue }
+                internal enum IntEnum : int { Min = int.MinValue }
+                internal enum UIntEnum : uint { Max = uint.MaxValue }
+                internal enum LongEnum : long { Min = long.MinValue }
+                internal enum ULongEnum : ulong { Max = ulong.MaxValue }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(false, (byte)0x4D, (sbyte)-1, (short)-2, (ushort)3, uint.MaxValue, ulong.MaxValue, '\n')]
+                    [DataRow(ByteEnum.Max, SByteEnum.Min, ShortEnum.Min, UShortEnum.Max, IntEnum.Min, UIntEnum.Max, LongEnum.Min, ULongEnum.Max)]
+                    public void Test(params object?[] values) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain(
+            "DataRowAttribute(false, new object[] { (byte)77, (sbyte)(-1), (short)(-2), (ushort)3, 4294967295U, 18446744073709551615UL, '\\n' })");
+        registry.Should().Contain("(global::Sample.ByteEnum)(255)");
+        registry.Should().Contain("(global::Sample.SByteEnum)(-128)");
+        registry.Should().Contain("(global::Sample.ShortEnum)(-32768)");
+        registry.Should().Contain("(global::Sample.UShortEnum)(65535)");
+        registry.Should().Contain("(global::Sample.IntEnum)(-2147483648)");
+        registry.Should().Contain("(global::Sample.UIntEnum)(4294967295U)");
+        registry.Should().Contain("(global::Sample.LongEnum)(-9223372036854775808L)");
+        registry.Should().Contain("(global::Sample.ULongEnum)(18446744073709551615UL)");
+        Diagnostic[] errors = outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ToArray();
+        errors.Should().BeEmpty(
+            "the typed-constant corpus should compile. Diagnostics: {0}",
+            string.Join(Environment.NewLine, errors.Select(diagnostic => diagnostic.ToString())));
+
+        using var assemblyStream = new MemoryStream();
+        outputCompilation.Emit(assemblyStream).Success.Should().BeTrue();
+        var assembly = System.Reflection.Assembly.Load(assemblyStream.ToArray());
+        Type registryType = assembly.GetType("MSTest.SourceGenerated.MSTestReflectionMetadata")!;
+        var testClasses = (System.Collections.IEnumerable)registryType.GetProperty("TestClasses")!.GetValue(null)!;
+        object testClass = testClasses.Cast<object>().Single();
+        var methods = (System.Collections.IEnumerable)testClass.GetType().GetProperty("Methods")!.GetValue(testClass)!;
+        object method = methods.Cast<object>().Single();
+        var attributes = (Attribute[])method.GetType().GetProperty("Attributes")!.GetValue(method)!;
+        object[][] rows = attributes
+            .Where(attribute => attribute.GetType().Name == "DataRowAttribute")
+            .Select(attribute => (object[])attribute.GetType().GetProperty("Data")!.GetValue(attribute)!)
+            .ToArray();
+
+        rows[0][1].Should().BeOfType<byte>().Which.Should().Be(0x4D);
+        rows[0][2].Should().BeOfType<sbyte>().Which.Should().Be(-1);
+        rows[0][3].Should().BeOfType<short>().Which.Should().Be(-2);
+        rows[0][4].Should().BeOfType<ushort>().Which.Should().Be(3);
+        rows[0][5].Should().BeOfType<uint>().Which.Should().Be(uint.MaxValue);
+        rows[0][6].Should().BeOfType<ulong>().Which.Should().Be(ulong.MaxValue);
+        rows[0][7].Should().BeOfType<char>().Which.Should().Be('\n');
+        rows[1].Select(value => value.GetType().FullName).Should().Equal(
+            "Sample.ByteEnum",
+            "Sample.SByteEnum",
+            "Sample.ShortEnum",
+            "Sample.UShortEnum",
+            "Sample.IntEnum",
+            "Sample.UIntEnum",
+            "Sample.LongEnum",
+            "Sample.ULongEnum");
+    }
+
+    [TestMethod]
+    public void Generator_EscapesDataRowStringAndCharacterLiterals()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow("\tMZXW6\r\n", "\"\\\0\u2028\u2029", '\'', '\\', '\0', '\u2028')]
+                    public void Test(params object?[] values) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("\"\\tMZXW6\\r\\n\"");
+        registry.Should().Contain("\"\\\"\\\\\\0\\u2028\\u2029\"");
+        registry.Should().Contain("'\\''");
+        registry.Should().Contain("'\\\\'");
+        registry.Should().Contain("'\\0'");
+        registry.Should().Contain("'\\u2028'");
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_DeterministicLiteralCorpus_CompilesWithoutGeneratedDiagnostics()
+    {
+        const int seed = 0x5EED;
+        char[] alphabet = ['\0', '\u0001', '\t', '\r', '\n', '"', '\\', '\u2028', '\u2029', '\u2603'];
+        var random = new Random(seed);
+        string[] values = Enumerable.Range(0, 64)
+            .Select(_ => new string(Enumerable.Range(0, random.Next(0, 24))
+                .Select(_ => alphabet[random.Next(alphabet.Length)])
+                .ToArray()))
+            .ToArray();
+        string dataRows = string.Join(
+            Environment.NewLine,
+            values.Select(value => $"        [DataRow({Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(value, quote: true)})]"));
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+            {{dataRows}}
+                    [DataRow(float.NaN)]
+                    [DataRow(float.PositiveInfinity)]
+                    [DataRow(float.NegativeInfinity)]
+                    [DataRow(double.NaN)]
+                    [DataRow(double.PositiveInfinity)]
+                    [DataRow(double.NegativeInfinity)]
+                    [DataRow(new int[] { int.MinValue, 0, int.MaxValue })]
+                    [TestMethod]
+                    public void Test(object? value) { }
+                }
+            }
+            """;
+        var parseOptions = new CSharpParseOptions(documentationMode: DocumentationMode.Diagnose);
+        CSharpCompilation compilation = CreateCompilation(parseOptions, MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CreateDriver(compilation);
+        driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+
+        Diagnostic[] generatedDiagnostics = outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity >= DiagnosticSeverity.Warning
+                && diagnostic.Location.SourceTree?.FilePath.EndsWith(".g.cs", StringComparison.Ordinal) == true)
+            .ToArray();
+
+        generatedDiagnostics.Should().BeEmpty($"the deterministic literal corpus with seed {seed} should produce clean generated source");
+    }
+
+    [TestMethod]
     public void Generator_HandlesNullValueInDataRow()
     {
         const string userCode = """
@@ -3556,11 +3725,14 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps));
 
     private static CSharpCompilation CreateCompilation(params string[] sources)
+        => CreateCompilation(CSharpParseOptions.Default, sources);
+
+    private static CSharpCompilation CreateCompilation(CSharpParseOptions parseOptions, params string[] sources)
     {
         // Always include the adapter hook stub so the emitted [ModuleInitializer] registration
         // (which calls ReflectionMetadataHook.Register) compiles in the Roslyn test compilation
         // without referencing MSTestAdapter.PlatformServices.
-        IEnumerable<SyntaxTree> trees = sources.Append(RuntimeHookStub).Select(s => CSharpSyntaxTree.ParseText(s));
+        IEnumerable<SyntaxTree> trees = sources.Append(RuntimeHookStub).Select(source => CSharpSyntaxTree.ParseText(source, parseOptions));
         MetadataReference[] references = new[]
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),

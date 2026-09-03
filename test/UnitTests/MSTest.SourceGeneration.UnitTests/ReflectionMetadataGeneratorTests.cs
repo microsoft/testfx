@@ -78,7 +78,6 @@ public sealed class ReflectionMetadataGeneratorTests
 
             namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generated
             {
-                /// <summary>Source-generated MSTest reflection metadata hook for this test assembly.</summary>
                 internal static class MSTestSourceGeneratedReflectionMetadata
                 {
                     [ModuleInitializer]
