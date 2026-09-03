@@ -188,7 +188,8 @@ jobs:
             fi
             if ! LATEST_TRIAGE_COMMENT=$(gh api --paginate \
               "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-              --jq '.[] | (.body // "") as $body |
+              --jq '.[] | select(.user.login == "github-actions[bot]") |
+                (.body // "") as $body |
                 if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
                     ($body | contains("<!-- testfx-pipeline-triage-state: preliminary;"))) then
                   [.id, "preliminary"]
