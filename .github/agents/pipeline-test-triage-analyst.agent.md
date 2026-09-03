@@ -50,6 +50,12 @@ executing repository or artifact code.
 7. Inspect the associated pull request and relevant source/tests only to connect
    evidence to likely ownership and recent changes. Do not guess a root cause
    from a test name alone.
+8. Immediately before any output for a pull-request build, including a comment
+   or issue creation, re-read the pull request with the GitHub tool. Its current
+   head and merge SHAs must exactly match `GH_AW_EXPECTED_PR_HEAD_SHA` and
+   `GH_AW_EXPECTED_PR_MERGE_SHA`. If either expected or current value is missing
+   or differs, call `noop` without writing; a newer workflow run will cover the
+   current revision.
 
 ## Escalation policy
 
