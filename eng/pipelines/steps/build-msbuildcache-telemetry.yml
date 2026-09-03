@@ -41,8 +41,10 @@ steps:
           <package pattern="*" />
         </packageSource>
         <packageSource key="msbuildcache">
+          <package pattern="Microsoft.Artifacts.*" />
           <package pattern="Microsoft.BuildXL.*" />
           <package pattern="Microsoft.VisualStudio.Services.*" />
+          <package pattern="Microsoft.Windows.Debuggers.*" />
           <package pattern="RocksDb*" />
         </packageSource>
       </packageSourceMapping>
