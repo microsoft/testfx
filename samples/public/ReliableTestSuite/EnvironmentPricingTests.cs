@@ -12,17 +12,18 @@ namespace ReliableTestSuite;
 /// share state with every other test in the process. Left unguarded under method-level
 /// parallelization, one test's write would race another's read - the classic flaky failure.
 ///
-/// TODAY (shipped MSTest): the blunt-but-correct tool is [DoNotParallelize]. It guarantees the
-/// class runs with nothing else, but it is all-or-nothing: the class is serialized against the
-/// ENTIRE suite and deferred to the end of the run, even against tests that never touch the
-/// environment.
+/// WITH THIS SAMPLE'S PINNED MSTest 4.3 PACKAGES: the blunt-but-correct tool is
+/// [DoNotParallelize]. It guarantees the class runs with nothing else, but it is all-or-nothing:
+/// the class is serialized against the ENTIRE suite and deferred to the end of the run, even
+/// against tests that never touch the environment.
 ///
-/// COMING IN MSTest 4.4 - the precise tool is [ResourceLock]. It names the exact resource that
-/// is shared, so the scheduler serializes only tests that declare the SAME key and lets
-/// everything else run concurrently. The full migration is a one-for-one swap - you REMOVE
-/// [DoNotParallelize] and ADD [ResourceLock] (keeping both would just re-serialize the class):
+/// AVAILABLE AFTER UPGRADING THE FRAMEWORK PACKAGES TO MSTest 4.4: the precise tool is
+/// [ResourceLock]. It names the exact resource that is shared, so the scheduler serializes only
+/// tests that declare the SAME key and lets everything else run concurrently. The full migration
+/// is a one-for-one swap - you REMOVE [DoNotParallelize] and ADD [ResourceLock] (keeping both
+/// would just re-serialize the class):
 ///
-///     // [compiles once MSTest 4.4 ships]
+///     // [compiles once MSTestVersion in ../Directory.Build.props is 4.4 or later]
 ///     [TestClass]
 ///     [ResourceLock(WellKnownResources.EnvironmentVariables)]   // exclusive by default
 ///     public sealed class EnvironmentPricingTests { ... }
