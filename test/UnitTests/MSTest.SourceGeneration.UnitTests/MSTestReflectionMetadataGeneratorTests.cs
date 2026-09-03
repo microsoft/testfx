@@ -1976,6 +1976,14 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("'\\0'");
         registry.Should().Contain("'\\u2028'");
         outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        rows[0][0].Should().Be("\tMZXW6\r\n");
+        rows[0][1].Should().Be("\"\\\0\u2028\u2029");
+        rows[0][2].Should().Be('\'');
+        rows[0][3].Should().Be('\\');
+        rows[0][4].Should().Be('\0');
+        rows[0][5].Should().Be('\u2028');
     }
 
     [TestMethod]
@@ -2065,7 +2073,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         rows[rowIndex++][0].Should().Be(double.MinValue);
         rows[rowIndex++][0].Should().Be(double.MaxValue);
         BitConverter.DoubleToInt64Bits((double)rows[rowIndex++][0]).Should().Be(BitConverter.DoubleToInt64Bits(-0.0D));
-        rows[rowIndex][0].Should().Be(double.Epsilon);
+        rows[rowIndex++][0].Should().Be(double.Epsilon);
+        rows[rowIndex++][0].Should().BeOfType<int[]>().Which.Should().Equal(int.MinValue, 0, int.MaxValue);
+        rowIndex.Should().Be(rows.Length);
     }
 
     [TestMethod]
