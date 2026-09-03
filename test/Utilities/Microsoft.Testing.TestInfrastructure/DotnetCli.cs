@@ -44,6 +44,8 @@ public static class DotnetCli
         }
     }
 
+    public static bool UseMultithreadedMSBuild { get; set; }
+
     public static async Task<DotnetMuxerResult> RunAsync(
         string args,
         string? workingDirectory = null,
@@ -90,7 +92,15 @@ public static class DotnetCli
                 environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
             }
 
-            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
+            bool useMultithreadedMSBuild = UseMultithreadedMSBuild && IsMSBuildBackedBuildOrTest(args);
+            if (useMultithreadedMSBuild && IsCommand(args, "test"))
+            {
+                // The Microsoft.Testing.Platform mode of 'dotnet test' does not accept MSBuild's -mt switch.
+                environmentVariables["MSBUILDFORCEMULTITHREADED"] = "1";
+            }
+
+            string extraArgs = useMultithreadedMSBuild && IsCommand(args, "build") ? " -mt" : string.Empty;
+            extraArgs += warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
@@ -109,8 +119,18 @@ public static class DotnetCli
         }
     }
 
+    private static bool IsMSBuildBackedBuildOrTest(string args)
+        => IsCommand(args, "build")
+            || (IsCommand(args, "test") && !IsDotNetTestWithExeOrDll(args));
+
+    private static bool IsCommand(string args, string command)
+        => args.StartsWith(command, StringComparison.OrdinalIgnoreCase)
+            && (args.Length == command.Length || char.IsWhiteSpace(args[command.Length]));
+
     private static bool IsDotNetTestWithExeOrDll(string args)
-        => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
+        => IsCommand(args, "test")
+            && (args.Contains(".dll", StringComparison.OrdinalIgnoreCase)
+                || args.Contains(".exe", StringComparison.OrdinalIgnoreCase));
 
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
