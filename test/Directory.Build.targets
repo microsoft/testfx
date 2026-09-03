@@ -69,6 +69,10 @@
     <_CodeCoverageSourceRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)src'))</_CodeCoverageSourceRoot>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(EnableCodeCoverage)' == 'True' ">
+    <FileWrites Include="$(CodeCoverageSettingsFile)" />
+  </ItemGroup>
+
   <Target Name="_GenerateCodeCoverageSettings"
           AfterTargets="Build"
           Condition=" '$(EnableCodeCoverage)' == 'True' ">
