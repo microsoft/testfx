@@ -273,3 +273,18 @@ Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole 
 - Task 5: not checked this run (time budget spent on recovery diagnosis + new PR).
 - Task 7: issue #10920 (September) updated — corrected Suggested Actions (dropped stale azdo PR reference since none was created, added new PR), Run History entry prepended for this run, backlog note updated. **NOTE: `update_issue` is capped at 1 call/run and was already used to update #10920 — closing issue #10389 (August, confirmed all 3 referenced PRs merged) still needs to happen; do this at the start of the next run.**
 - Remaining candidates for future runs: other report-provider command-line providers not yet swept (GitHubActionsReport, HtmlReport, JUnitReport, CtrfReport). Consider Task 5/6 given core coverage backlog thinning.
+
+## Run 2026-10-02 (run 33815261480) — reconciliation + VideoRecorderCommandLineProvider
+
+- Reconciled stale state: confirmed human PR #11013 "Add dump command-line provider validation tests" already covers HangDump/CrashDump (125 tests) — superseding the prior run's PR intent. Confirmed branch `test-assist/hangdump-crashdump-cli-validation` doesn't exist remotely (no orphan to recover).
+- Confirmed issue #10389 (August) still needs closing (all 3 referenced PRs merged) — **still not closed** (update_issue capped at 1/run, prioritized #10920 update this run again). Close #10389 first thing next run.
+- Confirmed `GitHubActionsCommandLineProvider` and `AzureDevOpsReport` already well-covered (85+ tests) — remove from "candidates" list, not a gap.
+- Confirmed no separate HtmlReport/JUnitReport/CtrfReport command-line provider classes exist (report generators for these don't expose their own CLI provider).
+- Identified `VideoRecorderCommandLineProvider` (src/Platform/Microsoft.Testing.Extensions.VideoRecorder) as zero-coverage: allowed-value checks (mode/source/granularity/chapters), positive-integer check (max-duration), cross-option "requires --capture-video" checks. Only incidental references existed in `VideoRecorderSessionHandlerTests`.
+- Added `VideoRecorderCommandLineProviderTests.cs` (33 tests) to `test/UnitTests/Microsoft.Testing.Extensions.UnitTests/`. No `extern alias` needed (plain `using Microsoft.Testing.Extensions.VideoRecorder;`).
+- Build succeeded (after fixing one IDE0028 collection-init-simplification error: `new Dictionary<string,string[]>()` → `[]`). Targeted suite 33/33 passed; full suite 1678 total, 1641 succeeded, 0 failed, 37 skipped (pre-existing). Format check clean (BOM present).
+- **Command gotcha discovered**: this test host does NOT expose `--treenode-filter` (VSTest-based bridge) — use `--filter "FullyQualifiedName~<Class>"` instead. `--treenode-filter` silently falls back to printing `--help`.
+- Created draft PR "Add unit tests for VideoRecorderCommandLineProvider validation" on branch `test-assist/video-recorder-cli-validation`.
+- Task 4: no open `[test-improver]`-prefixed PRs found needing maintenance.
+- Task 7: issue #10920 updated (corrected Suggested Actions, added new PR reference, prepended run history, refreshed backlog/commands). Issue #10389 (August) still needs closing next run — same constraint as before (1 update_issue call/run).
+- Remaining candidates for future runs: sweep other Platform extensions (Retry, Logging, OpenTelemetry, Telemetry, AzureFoundry) for untested command-line providers/core validation logic. Consider Task 5 (issue comments) or Task 6 (infra) next run given core CLI-provider coverage backlog thinning.
