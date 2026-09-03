@@ -20,15 +20,14 @@ executing repository or artifact code.
 2. Correlate failures by fully qualified test name plus
    OS/TFM/architecture/build leg. Normalize changing paths, PIDs, timestamps,
    durations, and addresses out of signatures.
-3. For a candidate that may warrant durable action, use the public Azure DevOps
-   Build APIs under `https://dev.azure.com/dnceng-public/public/_apis` to inspect
-   at most 12 relevant completed builds from the previous 30 days. Azure DevOps
-   Test APIs require credentials even for this public project, so use the public
-   `TestResults_*` build artifacts instead and read CTRF first, then TRX and
-   JUnit when CTRF is absent or lacks the relevant test. Keep all additional
-   downloads under 1 GiB. Prefer native CTRF retry metadata and matching
-   unaffected matrix legs over broad log downloads. Do not infer retry or flaky
-   state from TRX/JUnit unless separate attempt records prove fail-then-pass.
+3. Read `history.json`, which the trusted collector builds from public
+   `TestResults_*` and `Windows_App_Model_Diagnostics_*` artifacts for up to 12
+   completed builds in the previous 30 days. Read CTRF first, then TRX and JUnit
+   when CTRF is absent or lacks the relevant test. If `incomplete` is true,
+   report the gap and do not claim the absence of prior occurrences. Prefer
+   native CTRF retry metadata and matching unaffected matrix legs over broad
+   build-level inference. Do not infer retry or flaky state from TRX/JUnit
+   unless separate attempt records prove fail-then-pass.
 4. A retry is not evidence of flakiness by itself. Call a test flaky only when a
    failed attempt later passed for the same code and environment. Distinguish a
    likely environmental flake (runner loss, network/service timeout, disk
@@ -37,20 +36,13 @@ executing repository or artifact code.
 5. For slowness, require at least 10 historical samples and both a 60-second
    static floor and a current duration at least 3 times historical p95. A single
    slow run, machine-wide slowdown, or loaded agent is not actionable.
-6. For crash or hang evidence, inspect textual crash reports, test-sequence
-   files, logs, and artifact manifests first. Download only a directly relevant
-   artifact into `/tmp/gh-aw/agent/pipeline-test-dumps`, never more than 512 MB
-   total. If a compatible Linux managed dump is available, run
-   `dotnet tool install --global dotnet-dump`, then use `dotnet-dump` for bounded
-   non-interactive commands such as `pe`, `clrthreads`, `clrstack -all`,
-   `parallelstacks`, `syncblk`, `dumpasync`, and `threadpool`, ending with
-   `exit`. Delete the raw dump immediately after analysis. Windows and macOS
-   dumps cannot be analyzed on this Linux runner; use their textual crash
-   reports, sequence files, and diagnostic logs instead. Never publish heap
+6. For crash or hang evidence, inspect the securely extracted textual crash
+   reports, test-sequence files, logs, and artifact manifest. Raw binary dumps
+   stay in Azure DevOps and are never exposed to this agent. Never publish heap
    contents, environment variables, tokens, private paths, or other potentially
-   sensitive dump data. State plainly when the binary dump could not be analyzed
-   because the runner OS, architecture, runtime, DAC, symbols, or artifact was
-   unavailable; never imply inspection that did not happen.
+   sensitive dump data. State plainly that binary dump inspection requires a
+   matching-OS human diagnostic session when textual evidence is insufficient;
+   never imply inspection that did not happen.
 7. Inspect the associated pull request and relevant source/tests only to connect
    evidence to likely ownership and recent changes. Do not guess a root cause
    from a test name alone.

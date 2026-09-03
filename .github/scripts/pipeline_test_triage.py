@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
 
 import argparse
+import datetime
 import json
 import os
 import re
 import shutil
 import stat
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlencode, urlparse
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 MAX_XML_REPORT_BYTES = 32 * 1024 * 1024
+MAX_HISTORY_DOWNLOAD_BYTES = 512 * 1024 * 1024
+MAX_HISTORY_ARTIFACT_BYTES = 256 * 1024 * 1024
+MAX_HISTORY_EXTRACTED_BYTES = 1024 * 1024 * 1024
+MAX_JSON_BYTES = 10 * 1024 * 1024
+ALLOWED_AZURE_HOSTS = ("dev.azure.com", "artifacts.visualstudio.com")
 
 
 def is_selected_artifact(path: str) -> bool:
@@ -46,22 +55,25 @@ def normalized_entry_name(entry: zipfile.ZipInfo, seen_names: set[str]) -> str:
     return normalized
 
 
-def inspect_archive(archive: str) -> None:
+def archive_stats(archive: str) -> tuple[int, int]:
     safe_count = 0
     selected_size = 0
-    try:
-        with zipfile.ZipFile(archive) as zip_file:
-            seen_names: set[str] = set()
-            for entry in zip_file.infolist():
-                try:
-                    normalized = normalized_entry_name(entry, seen_names)
-                except ValueError:
-                    print(f"{safe_count}\t1\t{selected_size}")
-                    return
+    with zipfile.ZipFile(archive) as zip_file:
+        seen_names: set[str] = set()
+        for entry in zip_file.infolist():
+            normalized = normalized_entry_name(entry, seen_names)
+            safe_count += 1
+            if is_selected_artifact(normalized):
+                selected_size += entry.file_size
+    return safe_count, selected_size
 
-                safe_count += 1
-                if is_selected_artifact(normalized):
-                    selected_size += entry.file_size
+
+def inspect_archive(archive: str) -> None:
+    try:
+        safe_count, selected_size = archive_stats(archive)
+    except ValueError:
+        print("0\t1\t0")
+        return
     except (OSError, zipfile.BadZipFile):
         raise SystemExit(1)
 
@@ -135,9 +147,23 @@ def first_child(element: ET.Element | None, name: str) -> ET.Element | None:
     return next((child for child in element if local_name(child.tag) == name), None)
 
 
+def record_aliases(record: dict[str, object]) -> set[str]:
+    aliases = set()
+    name = record.get("name")
+    if isinstance(name, str) and name:
+        aliases.add(name.casefold())
+    extra = record.get("extra")
+    if isinstance(extra, dict):
+        display_name = extra.get("displayName")
+        if isinstance(display_name, str) and display_name:
+            aliases.add(display_name.casefold())
+    return aliases
+
+
 def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> None:
     results: list[dict[str, object]] = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, str, str]] = set()
+    ctrf_names_by_artifact: dict[str, set[str]] = {}
 
     def report_identity(source_file: str) -> str:
         relative = source_file.replace("\\", "/").split("/", 1)[-1]
@@ -152,7 +178,13 @@ def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> No
         source_file = record.get("sourceFile")
         if not isinstance(name, str) or not name or not isinstance(source_file, str):
             return
-        key = (artifact.casefold(), report_identity(source_file), name.casefold())
+        artifact_key = artifact.casefold()
+        aliases = record_aliases(record)
+        if record.get("reportFormat") == "CTRF":
+            ctrf_names_by_artifact.setdefault(artifact_key, set()).update(aliases)
+        elif aliases & ctrf_names_by_artifact.get(artifact_key, set()):
+            return
+        key = (artifact_key, report_identity(source_file), name.casefold())
         if key in seen:
             return
         seen.add(key)
@@ -295,6 +327,311 @@ def normalize_junit(
         )
 
 
+def is_allowed_azure_url(url: str) -> bool:
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    return (
+        parsed.scheme == "https"
+        and any(host == allowed or host.endswith(f".{allowed}") for allowed in ALLOWED_AZURE_HOSTS)
+        and parsed.username is None
+        and parsed.password is None
+    )
+
+
+class SafeAzureRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, request, file_pointer, code, message, headers, new_url):
+        if not is_allowed_azure_url(new_url):
+            raise ValueError(f"Refusing redirect to untrusted URL: {new_url}")
+        return super().redirect_request(request, file_pointer, code, message, headers, new_url)
+
+
+AZURE_OPENER = build_opener(SafeAzureRedirectHandler())
+
+
+def open_azure_url(url: str):
+    if not is_allowed_azure_url(url):
+        raise ValueError(f"Refusing untrusted Azure DevOps URL: {url}")
+    return AZURE_OPENER.open(Request(url, headers={"User-Agent": "testfx-pipeline-test-triage"}), timeout=60)
+
+
+def fetch_json(url: str) -> dict[str, object]:
+    with open_azure_url(url) as response:
+        content_length = response.headers.get("Content-Length")
+        if content_length and int(content_length) > MAX_JSON_BYTES:
+            raise ValueError("JSON response exceeds size limit")
+        payload = response.read(MAX_JSON_BYTES + 1)
+    if len(payload) > MAX_JSON_BYTES:
+        raise ValueError("JSON response exceeds size limit")
+    document = json.loads(payload)
+    if not isinstance(document, dict):
+        raise ValueError("Expected a JSON object")
+    return document
+
+
+def download_artifact(url: str, destination: str, maximum_bytes: int) -> int:
+    downloaded = 0
+    with open_azure_url(url) as response, open(destination, "xb") as output:
+        content_length = response.headers.get("Content-Length")
+        if content_length and int(content_length) > maximum_bytes:
+            raise ValueError("Artifact exceeds size limit")
+        while True:
+            chunk = response.read(min(1024 * 1024, maximum_bytes - downloaded + 1))
+            if not chunk:
+                break
+            downloaded += len(chunk)
+            if downloaded > maximum_bytes:
+                raise ValueError("Artifact exceeds size limit")
+            output.write(chunk)
+    return downloaded
+
+
+def records_from_archive(archive: str, artifact: str) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+
+    def add_result(record: dict[str, object], _artifact: str) -> None:
+        records.append(record)
+
+    with zipfile.ZipFile(archive) as zip_file:
+        report_entries = [
+            entry
+            for entry in zip_file.infolist()
+            if not entry.is_dir() and is_selected_artifact(entry.filename)
+        ]
+        individual_ctrf = [
+            entry
+            for entry in report_entries
+            if entry.filename.lower().endswith(".ctrf.json")
+            and "/merged/" not in entry.filename.replace("\\", "/").lower()
+        ]
+        ctrf_entries = individual_ctrf or [
+            entry for entry in report_entries if entry.filename.lower().endswith(".ctrf.json")
+        ]
+
+        for entry in ctrf_entries:
+            if entry.file_size > MAX_XML_REPORT_BYTES:
+                continue
+            try:
+                document = json.loads(zip_file.read(entry))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            if not isinstance(document, dict):
+                continue
+            normalized_name = entry.filename.replace("\\", "/")
+            source_file = f"{artifact}/{normalized_name}"
+            ctrf_results = document.get("results")
+            if not isinstance(ctrf_results, dict):
+                continue
+            for test in ctrf_results.get("tests", []):
+                if not isinstance(test, dict):
+                    continue
+                records.append(
+                    {
+                        "sourceFile": source_file,
+                        "reportFormat": "CTRF",
+                        "name": test.get("name"),
+                        "status": test.get("status"),
+                        "duration": test.get("duration"),
+                        "message": test.get("message"),
+                        "trace": test.get("trace"),
+                        "flaky": test.get("flaky"),
+                        "retryAttempts": test.get("retryAttempts"),
+                        "extra": test.get("extra"),
+                    }
+                )
+
+        xml_entries = sorted(
+            (
+                entry
+                for entry in report_entries
+                if entry.filename.lower().endswith((".trx", ".xml"))
+                and entry.file_size <= MAX_XML_REPORT_BYTES
+            ),
+            key=lambda entry: (not entry.filename.lower().endswith(".trx"), entry.filename),
+        )
+        for entry in xml_entries:
+            try:
+                document = ET.fromstring(zip_file.read(entry))
+            except (ET.ParseError, UnicodeDecodeError):
+                continue
+            normalized_name = entry.filename.replace("\\", "/")
+            source_file = f"{artifact}/{normalized_name}"
+            if local_name(document.tag) == "TestRun":
+                normalize_trx(document, source_file, artifact, add_result)
+            elif local_name(document.tag) in ("testsuite", "testsuites"):
+                normalize_junit(document, source_file, artifact, add_result)
+
+    if not ctrf_entries:
+        return records
+
+    ctrf_aliases = set()
+    for record in records:
+        if record.get("reportFormat") == "CTRF":
+            ctrf_aliases.update(record_aliases(record))
+    return [
+        record
+        for record in records
+        if record.get("reportFormat") == "CTRF" or not (record_aliases(record) & ctrf_aliases)
+    ]
+
+
+def collect_history(
+    api_base: str,
+    definition_id: str,
+    source_branch: str,
+    current_build_id: str,
+    current_results_path: str,
+    output_path: str,
+) -> None:
+    with open(current_results_path, encoding="utf-8") as current_file:
+        current_results = json.load(current_file)
+
+    candidate_names: set[str] = set()
+    for result in current_results:
+        if not isinstance(result, dict):
+            continue
+        status = result.get("status")
+        duration = result.get("duration")
+        is_candidate = (
+            status in ("failed", "other")
+            or result.get("flaky") is True
+            or bool(result.get("retryAttempts"))
+            or isinstance(duration, (int, float)) and duration >= 60000
+        )
+        if not is_candidate:
+            continue
+        extra = result.get("extra")
+        display_name = extra.get("displayName") if isinstance(extra, dict) else None
+        for name in (result.get("name"), display_name):
+            if isinstance(name, str) and name:
+                candidate_names.add(name.casefold())
+
+    history = {
+        "branch": "refs/heads/main" if source_branch.startswith("refs/pull/") else source_branch,
+        "candidateNames": sorted(candidate_names),
+        "builds": [],
+        "incomplete": False,
+        "downloadedBytes": 0,
+        "selectedUncompressedBytes": 0,
+    }
+    if not candidate_names:
+        with open(output_path, "w", encoding="utf-8") as output_file:
+            json.dump(history, output_file, separators=(",", ":"))
+        return
+
+    minimum_time = (datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=30)).isoformat()
+    query = urlencode(
+        {
+            "definitions": definition_id,
+            "branchName": history["branch"],
+            "statusFilter": "completed",
+            "queryOrder": "finishTimeDescending",
+            "minTime": minimum_time,
+            "$top": "100",
+            "api-version": "7.1",
+        }
+    )
+
+    try:
+        builds_payload = fetch_json(f"{api_base.rstrip('/')}/build/builds?{query}")
+    except (OSError, ValueError, json.JSONDecodeError):
+        history["incomplete"] = True
+        builds_payload = {"value": []}
+
+    with tempfile.TemporaryDirectory(prefix="testfx-triage-history-") as temporary_directory:
+        for build in builds_payload.get("value", []):
+            if len(history["builds"]) >= 12:
+                break
+            build_id = str(build.get("id", ""))
+            if not build_id.isdigit() or build_id == current_build_id:
+                continue
+
+            build_record = {
+                "id": build_id,
+                "buildNumber": build.get("buildNumber"),
+                "result": build.get("result"),
+                "sourceVersion": build.get("sourceVersion"),
+                "finishTime": build.get("finishTime"),
+                "results": [],
+            }
+            try:
+                artifacts_payload = fetch_json(
+                    f"{api_base.rstrip('/')}/build/builds/{build_id}/artifacts?api-version=7.1"
+                )
+            except (OSError, ValueError, json.JSONDecodeError):
+                history["incomplete"] = True
+                history["builds"].append(build_record)
+                continue
+
+            artifacts = [
+                artifact
+                for artifact in artifacts_payload.get("value", [])
+                if re.match(
+                    r"^(TestResults_|Windows_App_Model_Diagnostics_)",
+                    str(artifact.get("name", "")),
+                    re.IGNORECASE,
+                )
+            ][:8]
+            if not artifacts:
+                continue
+
+            for index, artifact in enumerate(artifacts):
+                remaining_download = MAX_HISTORY_DOWNLOAD_BYTES - int(history["downloadedBytes"])
+                if remaining_download <= 0:
+                    history["incomplete"] = True
+                    break
+                maximum_download = min(MAX_HISTORY_ARTIFACT_BYTES, remaining_download)
+                archive = os.path.join(temporary_directory, f"{build_id}-{index}.zip")
+                try:
+                    downloaded = download_artifact(
+                        str(artifact.get("resource", {}).get("downloadUrl", "")),
+                        archive,
+                        maximum_download,
+                    )
+                    _, selected_size = archive_stats(archive)
+                    if (
+                        int(history["selectedUncompressedBytes"]) + selected_size
+                        > MAX_HISTORY_EXTRACTED_BYTES
+                    ):
+                        history["incomplete"] = True
+                        os.remove(archive)
+                        break
+                    history["downloadedBytes"] = int(history["downloadedBytes"]) + downloaded
+                    history["selectedUncompressedBytes"] = (
+                        int(history["selectedUncompressedBytes"]) + selected_size
+                    )
+                    records = records_from_archive(archive, str(artifact.get("name", "")))
+                except (
+                    OSError,
+                    RuntimeError,
+                    ValueError,
+                    zipfile.BadZipFile,
+                ):
+                    history["incomplete"] = True
+                    continue
+                finally:
+                    if os.path.exists(archive):
+                        os.remove(archive)
+
+                for record in records:
+                    aliases = [record.get("name")]
+                    extra = record.get("extra")
+                    if isinstance(extra, dict):
+                        aliases.append(extra.get("displayName"))
+                    if any(
+                        isinstance(alias, str) and alias.casefold() in candidate_names
+                        for alias in aliases
+                    ):
+                        build_record["results"].append(record)
+                        if len(build_record["results"]) >= 500:
+                            history["incomplete"] = True
+                            break
+
+            history["builds"].append(build_record)
+
+    with open(output_path, "w", encoding="utf-8") as output_file:
+        json.dump(history, output_file, separators=(",", ":"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -311,13 +648,30 @@ def main() -> None:
     normalize_parser.add_argument("artifact_dir")
     normalize_parser.add_argument("output")
 
+    history_parser = subparsers.add_parser("history")
+    history_parser.add_argument("api_base")
+    history_parser.add_argument("definition_id")
+    history_parser.add_argument("source_branch")
+    history_parser.add_argument("current_build_id")
+    history_parser.add_argument("current_results")
+    history_parser.add_argument("output")
+
     args = parser.parse_args()
     if args.command == "inspect":
         inspect_archive(args.archive)
     elif args.command == "extract":
         extract_archive(args.archive, args.destination)
-    else:
+    elif args.command == "normalize":
         normalize_reports(args.ctrf_ndjson, args.artifact_dir, args.output)
+    else:
+        collect_history(
+            args.api_base,
+            args.definition_id,
+            args.source_branch,
+            args.current_build_id,
+            args.current_results,
+            args.output,
+        )
 
 
 if __name__ == "__main__":

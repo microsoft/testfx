@@ -37,7 +37,7 @@ jobs:
   collect-test-evidence:
     name: Collect test evidence (Azure Pipelines)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'check_run' &&
@@ -225,7 +225,7 @@ jobs:
             jq -r '
               limit(8;
                 (.value // [])[] |
-                select(.name | test("^TestResults_"; "i"))
+                select(.name | test("^(TestResults_|Windows_App_Model_Diagnostics_)"; "i"))
               ) |
               [.name, .resource.downloadUrl] | @tsv
             ' "${ARTIFACTS_JSON}"
@@ -374,6 +374,18 @@ jobs:
             emit_none
           fi
 
+          HISTORY_JSON="${EVIDENCE_DIR}/history.json"
+          if ! python3 "${TRIAGE_TOOL}" history \
+            "${ADO_API}" \
+            "${ADO_BUILD_DEFINITION_ID}" \
+            "${SOURCE_BRANCH}" \
+            "${BUILD_ID}" \
+            "${RESULTS_JSON}" \
+            "${HISTORY_JSON}"; then
+            echo "::warning::Historical test evidence collection failed."
+            printf '{"builds":[],"incomplete":true}\n' > "${HISTORY_JSON}"
+          fi
+
           jq -n \
             --arg buildId "${BUILD_ID}" \
             --arg buildResult "${BUILD_RESULT}" \
@@ -440,9 +452,6 @@ steps:
 network:
   allowed:
     - defaults
-    - dotnet
-    - dev.azure.com
-    - "*.artifacts.visualstudio.com"
 
 tools:
   github:
@@ -450,9 +459,6 @@ tools:
     toolsets: [issues, pull_requests, repos]
   bash:
     - "cat"
-    - "curl:*"
-    - "dotnet tool install:*"
-    - "dotnet-dump:*"
     - "find"
     - "grep"
     - "head"
@@ -462,7 +468,6 @@ tools:
     - "sha256sum"
     - "sort"
     - "tail"
-    - "unzip"
     - "wc"
 
 post-steps:
@@ -516,6 +521,9 @@ Analyze the completed `microsoft.testfx` Azure Pipelines build identified by
   record identifies its report format and source file and exposes a common
   status, message, trace, and millisecond duration shape. CTRF records can also
   carry retry attempts, flakiness, and extension metadata.
+- `history.json` contains bounded, securely collected matching results from up
+  to 12 completed builds in the previous 30 days. Its `incomplete` flag means
+  the analyst must not claim the absence of prior occurrences.
 - `timeline.compact.json` contains failed/warned/retried pipeline records.
 - `artifacts.compact.json` contains links to relevant test and diagnostic
   artifacts.
