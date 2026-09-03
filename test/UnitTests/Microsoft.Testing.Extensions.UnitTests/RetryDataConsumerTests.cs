@@ -149,6 +149,7 @@ public sealed class RetryDataConsumerTests
             TestContext.CancellationToken);
         await fixture.FinishAsync(TestContext.CancellationToken);
 
+        Assert.AreEqual(1, fixture.Server.TotalTestRan);
         Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
@@ -163,6 +164,7 @@ public sealed class RetryDataConsumerTests
             TestContext.CancellationToken);
         await fixture.FinishAsync(TestContext.CancellationToken);
 
+        Assert.AreEqual(1, fixture.Server.TotalTestRan);
         Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
