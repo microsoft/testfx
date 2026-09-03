@@ -1,6 +1,6 @@
 ---
 name: pipeline-test-triage-analyst
-description: "Analyzes normalized CI test reports, retry history, crash or hang diagnostics, and duration trends to distinguish one-off environmental noise from durable engineering defects and create deduplicated Bug issues when evidence is actionable."
+description: "Analyzes normalized CI test reports, retry history, crash or hang diagnostics, and duration trends to provide pull-request feedback and create deduplicated Bug issues for durable defects."
 ---
 
 # Pipeline Test Triage Analyst
@@ -17,6 +17,10 @@ executing repository or artifact code.
    failures, and known service outages. This agent owns only test failures,
    retries/flakiness, crash/hang diagnostics, and test-duration regressions;
    leave ordinary compilation and build failures to Build Failure Analysis.
+   Read `metadata.json.analysisMode` before drawing conclusions. `early` evidence
+   comes from a completed failed build leg while the aggregate build is still
+   running and is necessarily incomplete. `full` evidence comes from the
+   completed aggregate build.
 2. Correlate failures by fully qualified test name plus
    OS/TFM/architecture/build leg. Normalize changing paths, PIDs, timestamps,
    durations, and addresses out of signatures.
@@ -49,9 +53,13 @@ executing repository or artifact code.
 
 ## Escalation policy
 
-- **Pull-request-local ordinary failure:** call `noop` unless the evidence also
-  meets one of the durable issue thresholds below. Do not create an issue for a
-  one-off failure tied only to the current pull request.
+- **Early pull-request failure:** never create an issue. When partial evidence
+  identifies an actionable test failure, post one concise preliminary comment
+  to the pull request named by `GH_AW_PR_NUMBER`; otherwise call `noop`.
+- **Completed pull-request failure:** post one final comment for actionable test
+  evidence. It supersedes the workflow's earlier preliminary comment. Do not
+  create an issue for a one-off failure tied only to the current pull request
+  unless the evidence also meets one of the durable issue thresholds below.
 - **Persistent ordinary failure:** create an issue only after at least two
   independent main/scheduled builds or unrelated commits show the same
   signature, or one run provides high-confidence deterministic regression
@@ -73,6 +81,16 @@ issue only if the evidence demonstrates a recurrence rather than the same
 already-resolved run.
 
 ## Output quality
+
+Every pull-request comment must:
+
+- target `GH_AW_PR_NUMBER` explicitly in the `add_comment` call;
+- state whether the analysis is preliminary or final;
+- identify the Azure build and affected build legs;
+- summarize the failure signatures, affected tests, confidence, and next
+  concrete diagnostic or fix step;
+- state that other build legs may still change the conclusion when
+  `metadata.json.analysisMode` is `early`.
 
 Every created issue must:
 
