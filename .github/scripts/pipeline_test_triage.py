@@ -403,6 +403,12 @@ class SafeAzureRedirectHandler(HTTPRedirectHandler):
 AZURE_OPENER = build_opener(SafeAzureRedirectHandler())
 
 
+class ArtifactDownloadError(Exception):
+    def __init__(self, message: str, downloaded_bytes: int):
+        super().__init__(message)
+        self.downloaded_bytes = downloaded_bytes
+
+
 def open_azure_url(url: str):
     if not is_allowed_azure_url(url):
         raise ValueError(f"Refusing untrusted Azure DevOps URL: {url}")
@@ -425,18 +431,23 @@ def fetch_json(url: str) -> dict[str, object]:
 
 def download_artifact(url: str, destination: str, maximum_bytes: int) -> int:
     downloaded = 0
-    with open_azure_url(url) as response, open(destination, "xb") as output:
-        content_length = response.headers.get("Content-Length")
-        if content_length and int(content_length) > maximum_bytes:
-            raise ValueError("Artifact exceeds size limit")
-        while True:
-            chunk = response.read(min(1024 * 1024, maximum_bytes - downloaded + 1))
-            if not chunk:
-                break
-            downloaded += len(chunk)
-            if downloaded > maximum_bytes:
-                raise ValueError("Artifact exceeds size limit")
-            output.write(chunk)
+    try:
+        with open_azure_url(url) as response, open(destination, "xb") as output:
+            content_length = response.headers.get("Content-Length")
+            if content_length and int(content_length) > maximum_bytes:
+                raise ArtifactDownloadError("Artifact exceeds size limit", downloaded)
+            while True:
+                chunk = response.read(min(1024 * 1024, maximum_bytes - downloaded + 1))
+                if not chunk:
+                    break
+                downloaded += len(chunk)
+                if downloaded > maximum_bytes:
+                    raise ArtifactDownloadError("Artifact exceeds size limit", downloaded)
+                output.write(chunk)
+    except ArtifactDownloadError:
+        raise
+    except (OSError, ValueError) as error:
+        raise ArtifactDownloadError(str(error), downloaded) from error
     return downloaded
 
 
@@ -476,7 +487,10 @@ def records_from_archive(archive: str, artifact: str) -> list[dict[str, object]]
             ctrf_results = document.get("results")
             if not isinstance(ctrf_results, dict):
                 continue
-            for test in ctrf_results.get("tests", []):
+            tests = ctrf_results.get("tests")
+            if not isinstance(tests, list):
+                continue
+            for test in tests:
                 if not isinstance(test, dict):
                     continue
                 duration = test.get("duration")
@@ -663,15 +677,21 @@ def collect_history(
                 history["builds"].append(build_record)
                 continue
 
-            artifacts = [
-                artifact
-                for artifact in artifacts_payload.get("value", [])
-                if re.match(
-                    r"^(TestResults_|Windows_App_Model_Diagnostics_)",
-                    str(artifact.get("name", "")),
-                    re.IGNORECASE,
-                )
-            ][:8]
+            all_artifacts = sorted(
+                [
+                    artifact
+                    for artifact in artifacts_payload.get("value", [])
+                    if re.match(
+                        r"^(TestResults_|Windows_App_Model_Diagnostics_)",
+                        str(artifact.get("name", "")),
+                        re.IGNORECASE,
+                    )
+                ],
+                key=lambda artifact: str(artifact.get("name", "")),
+            )
+            if len(all_artifacts) > 8:
+                history["incomplete"] = True
+            artifacts = all_artifacts[:8]
             if not artifacts:
                 continue
 
@@ -688,6 +708,7 @@ def collect_history(
                         archive,
                         maximum_download,
                     )
+                    history["downloadedBytes"] = int(history["downloadedBytes"]) + downloaded
                     _, selected_size = archive_stats(archive)
                     if (
                         int(history["selectedUncompressedBytes"]) + selected_size
@@ -696,11 +717,17 @@ def collect_history(
                         history["incomplete"] = True
                         os.remove(archive)
                         break
-                    history["downloadedBytes"] = int(history["downloadedBytes"]) + downloaded
                     history["selectedUncompressedBytes"] = (
                         int(history["selectedUncompressedBytes"]) + selected_size
                     )
                     records = records_from_archive(archive, str(artifact.get("name", "")))
+                except ArtifactDownloadError as error:
+                    history["downloadedBytes"] = min(
+                        MAX_HISTORY_DOWNLOAD_BYTES,
+                        int(history["downloadedBytes"]) + error.downloaded_bytes,
+                    )
+                    history["incomplete"] = True
+                    continue
                 except (
                     OSError,
                     RuntimeError,
@@ -760,6 +787,11 @@ def main() -> None:
     normalize_parser.add_argument("artifact_dir")
     normalize_parser.add_argument("output")
 
+    download_parser = subparsers.add_parser("download")
+    download_parser.add_argument("url")
+    download_parser.add_argument("destination")
+    download_parser.add_argument("maximum_bytes", type=int)
+
     history_parser = subparsers.add_parser("history")
     history_parser.add_argument("api_base")
     history_parser.add_argument("definition_id")
@@ -775,6 +807,13 @@ def main() -> None:
         extract_archive(args.archive, args.destination)
     elif args.command == "normalize":
         normalize_reports(args.ctrf_ndjson, args.artifact_dir, args.output)
+    elif args.command == "download":
+        try:
+            downloaded = download_artifact(args.url, args.destination, args.maximum_bytes)
+        except ArtifactDownloadError as error:
+            print(error.downloaded_bytes)
+            raise SystemExit(1)
+        print(downloaded)
     else:
         collect_history(
             args.api_base,

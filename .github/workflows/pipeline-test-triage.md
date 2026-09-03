@@ -46,6 +46,7 @@ jobs:
        github.event.check_run.conclusion != 'skipped')
     permissions:
       contents: read
+      pull-requests: read
     outputs:
       evidence-found: ${{ steps.collect.outputs.evidence-found }}
       build-id: ${{ steps.collect.outputs.build-id }}
@@ -64,6 +65,8 @@ jobs:
         env:
           CHECK_DETAILS_URL: ${{ github.event.check_run.details_url }}
           DISPATCH_BUILD_ID: ${{ github.event.inputs['ado-build-id'] }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
 
@@ -121,6 +124,17 @@ jobs:
           fi
 
           PR_NUMBER=$(printf '%s' "${SOURCE_BRANCH}" | sed -n 's#^refs/pull/\([0-9]\{1,\}\)/merge$#\1#p')
+          HISTORY_BRANCH="${SOURCE_BRANCH}"
+          HISTORY_BRANCH_INCOMPLETE=false
+          if [[ -n "${PR_NUMBER}" ]]; then
+            if BASE_REF=$(gh api "repos/${GH_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.base.ref'); then
+              HISTORY_BRANCH="refs/heads/${BASE_REF}"
+            else
+              echo "::warning::Could not resolve PR #${PR_NUMBER}'s base branch; falling back to main history."
+              HISTORY_BRANCH="refs/heads/main"
+              HISTORY_BRANCH_INCOMPLETE=true
+            fi
+          fi
           TIMELINE_JSON="${EVIDENCE_DIR}/timeline.json"
           ARTIFACTS_JSON="${EVIDENCE_DIR}/artifacts.json"
           fetch_json "timeline for build ${BUILD_ID}" \
@@ -160,16 +174,18 @@ jobs:
               MAX_ARTIFACT_BYTES="${REMAINING_DOWNLOAD_BYTES}"
             fi
 
-            if ! timeout 240 curl --silent --show-error --location --fail \
-              --retry 3 --connect-timeout 10 --max-time 180 \
-              --max-filesize "${MAX_ARTIFACT_BYTES}" --output "${ARCHIVE}" "${DOWNLOAD_URL}"; then
+            if ! DOWNLOAD_RESULT=$(python3 "${TRIAGE_TOOL}" download \
+              "${DOWNLOAD_URL}" "${ARCHIVE}" "${MAX_ARTIFACT_BYTES}"); then
+              PARTIAL_BYTES="${DOWNLOAD_RESULT:-0}"
+              [[ "${PARTIAL_BYTES}" =~ ^[0-9]+$ ]] || PARTIAL_BYTES=0
+              DOWNLOADED_BYTES=$((DOWNLOADED_BYTES + PARTIAL_BYTES))
               echo "::warning::Could not download test artifact '${ARTIFACT_NAME}' within the remaining download budget."
               rm -f "${ARCHIVE}"
               DOWNLOAD_FAILURES=$((DOWNLOAD_FAILURES + 1))
               continue
             fi
 
-            ARCHIVE_BYTES=$(wc -c < "${ARCHIVE}")
+            ARCHIVE_BYTES="${DOWNLOAD_RESULT}"
             DOWNLOADED_BYTES=$((DOWNLOADED_BYTES + ARCHIVE_BYTES))
             if (( DOWNLOADED_BYTES > DOWNLOAD_LIMIT )); then
               echo "::warning::Artifact '${ARTIFACT_NAME}' exceeded the cumulative 1 GiB download budget."
@@ -223,10 +239,11 @@ jobs:
             fi
           done < <(
             jq -r '
-              limit(8;
-                (.value // [])[] |
-                select(.name | test("^(TestResults_|Windows_App_Model_Diagnostics_)"; "i"))
-              ) |
+              (
+                (.value // []) |
+                map(select(.name | test("^(TestResults_|Windows_App_Model_Diagnostics_)"; "i"))) |
+                sort_by(.name)
+              )[] |
               [.name, .resource.downloadUrl] | @tsv
             ' "${ARTIFACTS_JSON}"
           )
@@ -374,12 +391,16 @@ jobs:
           if ! python3 "${TRIAGE_TOOL}" history \
             "${ADO_API}" \
             "${ADO_BUILD_DEFINITION_ID}" \
-            "${SOURCE_BRANCH}" \
+            "${HISTORY_BRANCH}" \
             "${BUILD_ID}" \
             "${RESULTS_JSON}" \
             "${HISTORY_JSON}"; then
             echo "::warning::Historical test evidence collection failed."
             printf '{"builds":[],"incomplete":true}\n' > "${HISTORY_JSON}"
+          fi
+          if [[ "${HISTORY_BRANCH_INCOMPLETE}" == "true" ]]; then
+            jq '.incomplete = true' "${HISTORY_JSON}" > "${HISTORY_JSON}.tmp"
+            mv "${HISTORY_JSON}.tmp" "${HISTORY_JSON}"
           fi
           SLOW_REGRESSION_COUNT=$(jq '.slowRegressions // [] | length' "${HISTORY_JSON}")
 
