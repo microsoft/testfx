@@ -145,26 +145,39 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [DataRow("Unset", "", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
-    [DataRow("Empty", "<SatelliteResourceLanguages />", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
-    [DataRow("SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
-    [DataRow("CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr")]
-    [DataRow("MultipleLanguages", "<SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>", "fr;ja")]
-    [DataRow("NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
-    [DataRow("NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
-    public async Task SatelliteResourceLanguages_FiltersAdapterResources(string scenario, string properties, string expectedCultures)
+    [DataRow("MTP", "Unset", "", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("MTP", "Empty", "<SatelliteResourceLanguages />", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("MTP", "SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
+    [DataRow("MTP", "CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr")]
+    [DataRow("MTP", "MultipleLanguages", "<SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>", "fr;ja")]
+    [DataRow("MTP", "SpecificCultureDoesNotMatchParent", "<SatelliteResourceLanguages>fr-FR</SatelliteResourceLanguages>", "")]
+    [DataRow("MTP", "ParentCultureDoesNotMatchSpecific", "<SatelliteResourceLanguages>pt</SatelliteResourceLanguages>", "")]
+    [DataRow("MTP", "NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("MTP", "NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
+    [DataRow("VSTest", "Unset", "", "fr")]
+    [DataRow("VSTest", "Empty", "<SatelliteResourceLanguages />", "fr")]
+    [DataRow("VSTest", "SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
+    [DataRow("VSTest", "CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr")]
+    [DataRow("VSTest", "MultipleLanguages", "<SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>", "fr")]
+    [DataRow("VSTest", "DifferentLanguage", "<SatelliteResourceLanguages>ja</SatelliteResourceLanguages>", "")]
+    [DataRow("VSTest", "SpecificCultureDoesNotMatchParent", "<SatelliteResourceLanguages>fr-FR</SatelliteResourceLanguages>", "")]
+    [DataRow("VSTest", "NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "fr")]
+    [DataRow("VSTest", "NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
+    public async Task SatelliteResourceLanguages_FiltersAdapterResources(string runner, string scenario, string properties, string expectedCultures)
     {
-        string assetName = $"{AssetName}Satellites{scenario}";
+        string assetName = $"{AssetName}{runner}Satellites{scenario}";
+        string runnerProperties = runner == "VSTest" ? "<UseVSTest>true</UseVSTest>" : string.Empty;
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             assetName,
             SingleTestSourceCode
                 .PatchCodeWithReplace("MSTestSdk.csproj", $"{assetName}.csproj")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$ExtraProperties$", properties));
+                .PatchCodeWithReplace("$ExtraProperties$", runnerProperties + properties));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
@@ -173,6 +186,53 @@ namespace MSTestSdkTest
 
         AssertSatelliteCultures(outputDirectory, "MSTest.TestAdapter.resources.dll", expected);
         AssertSatelliteCultures(outputDirectory, "MSTestAdapter.PlatformServices.resources.dll", expected);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only on Windows.")]
+    [DataRow("Unset", "", "fr;fr")]
+    [DataRow("Empty", "<SatelliteResourceLanguages />", "fr;fr")]
+    [DataRow("MatchingLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr;fr")]
+    [DataRow("CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr;fr")]
+    [DataRow("DifferentLanguage", "<SatelliteResourceLanguages>ja</SatelliteResourceLanguages>", "")]
+    [DataRow("SpecificCultureDoesNotMatchParent", "<SatelliteResourceLanguages>fr-FR</SatelliteResourceLanguages>", "")]
+    public async Task SatelliteResourceLanguages_FiltersClassicUwpAdapterResources(string scenario, string properties, string expectedCultures)
+    {
+        const string Source = """
+            #file ClassicUwpSatelliteResources.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                $Properties$
+              </PropertyGroup>
+
+              <ItemGroup>
+                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+              </ItemGroup>
+
+              <Import Project="$(PkgMSTest_TestAdapter)\buildTransitive\uap10.0\MSTest.TestAdapter.targets"
+                      Condition=" '$(PkgMSTest_TestAdapter)' != '' " />
+
+              <Target Name="PrintSatelliteCultures" DependsOnTargets="GetMSTestV2CultureHierarchy">
+                <Message Text="SatelliteCultures=[@(MSTestV2Files->'%(UICulture)')]" Importance="High" />
+              </Target>
+            </Project>
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"{AssetName}ClassicUwpSatellites{scenario}",
+            Source
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$Properties$", properties));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild {testAsset.TargetAssetPath} -restore -t:PrintSatelliteCultures",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains($"SatelliteCultures=[{expectedCultures}]");
     }
 
     [TestMethod]
