@@ -145,6 +145,37 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    [DataRow("Unset", "", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("Empty", "<SatelliteResourceLanguages />", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
+    [DataRow("CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr")]
+    [DataRow("MultipleLanguages", "<SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>", "fr;ja")]
+    [DataRow("NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
+    public async Task SatelliteResourceLanguages_FiltersAdapterResources(string scenario, string properties, string expectedCultures)
+    {
+        string assetName = $"{AssetName}Satellites{scenario}";
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            assetName,
+            SingleTestSourceCode
+                .PatchCodeWithReplace("MSTestSdk.csproj", $"{assetName}.csproj")
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ExtraProperties$", properties));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}",
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        string outputDirectory = Path.Combine(testAsset.TargetAssetPath, "bin", BuildConfiguration.Release.ToString(), TargetFrameworks.NetCurrent);
+        string[] expected = expectedCultures.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        AssertSatelliteCultures(outputDirectory, "MSTest.TestAdapter.resources.dll", expected);
+        AssertSatelliteCultures(outputDirectory, "MSTestAdapter.PlatformServices.resources.dll", expected);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
@@ -962,6 +993,20 @@ namespace MSTestWebTest
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false");
         result.AssertOutputContains("OutputType=Exe");
+    }
+
+    private static void AssertSatelliteCultures(string outputDirectory, string resourceAssemblyName, string[] expectedCultures)
+    {
+        string[] actualCultures = Directory.GetFiles(outputDirectory, resourceAssemblyName, SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(outputDirectory, Path.GetDirectoryName(path)!))
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        string[] expected = expectedCultures.Order(StringComparer.OrdinalIgnoreCase).ToArray();
+
+        CollectionAssert.AreEqual(
+            expected,
+            actualCultures,
+            $"Unexpected cultures for {resourceAssemblyName}. Expected: '{string.Join(";", expected)}'. Actual: '{string.Join(";", actualCultures)}'.");
     }
 
     private async Task<DotnetMuxerResult> EvaluateWindowsApplicationModelAsync(
