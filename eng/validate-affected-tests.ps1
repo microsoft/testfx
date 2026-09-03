@@ -45,19 +45,14 @@ if ($globalJsonText -match '(?i)"[^"]*(token|secret|password|connectionString|sa
 }
 
 $pipeline = Get-Content -LiteralPath $pipelinePath -Raw
-$collectCall = [regex]::Match(
+$affectedTestsCall = [regex]::Match(
     $pipeline,
-    '(?s)enableAffectedTests:\s*(?<enabled>true|false)\s+affectedTestsMode:\s*collect')
-$runCall = [regex]::Match(
-    $pipeline,
-    '(?s)enableAffectedTests:\s*(?<enabled>true|false)\s+affectedTestsMode:\s*run')
-if (-not $collectCall.Success -or -not $runCall.Success) {
-    throw "The pipeline must define explicit main collection and PR selection call sites."
+    '(?s)enableAffectedTests:\s*(?<enabled>true|false)\s+\$\{\{ if eq\(variables\[''Build\.SourceBranch''\], ''refs/heads/main''\) \}\}:\s+affectedTestsMode:\s*collect\s+\$\{\{ else \}\}:\s+affectedTestsMode:\s*run')
+if (-not $affectedTestsCall.Success) {
+    throw "The pipeline must route the Windows test call site to collection on main and selection on PRs."
 }
 
-$affectedTestsEnabled =
-    $collectCall.Groups["enabled"].Value -eq "true" -or
-    $runCall.Groups["enabled"].Value -eq "true"
+$affectedTestsEnabled = $affectedTestsCall.Groups["enabled"].Value -eq "true"
 
 $bootstrappedSdk = [System.Management.Automation.SemanticVersion]$configuration.tools.dotnet
 $selectedSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version

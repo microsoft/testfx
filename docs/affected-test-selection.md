@@ -16,7 +16,8 @@ available yet. Ordinary test commands therefore remain unchanged.
 - `global.json` defines the repository-specific `test.affectedTests` change and instrumentation scopes.
 - The trusted main-branch Windows Release test is the future `--collect-test-map` entry point.
 - The Windows Release PR test is the future `--affected-tests` entry point.
-- Both pipeline call sites pass `enableAffectedTests: false`. The inactive template branches restore the map through
+- The shared Windows test call site passes `enableAffectedTests: false` and selects the mode from the source branch. The
+  inactive template branches restore the map through
   Azure Pipelines `Cache@2` and set `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for the affected-test commands.
 - `eng/validate-affected-tests.ps1` protects the disabled state and verifies that the public SDK gate and command names
   do not drift.
@@ -59,9 +60,9 @@ cannot be validated.
 3. Add `test.affectedTests.storage` using the package's published local-filesystem schema and point it at the Pipeline
    Cache directory.
 4. Update `affectedTestsCacheVersion` whenever the persisted map format or its compatibility dimensions change.
-5. Enable `collect` in the main-branch cache-seed call site and publish non-secret diagnostics as an Azure DevOps
-   artifact.
-6. After a compatible map exists, enable `run` in the PR call site. Keep the full test command available as an explicit
-   rollback by setting `enableAffectedTests` back to `false`.
+5. Set `enableAffectedTests` to `true` in the shared Windows test call site so main builds collect maps and PR builds use
+   them. Publish non-secret collection diagnostics as an Azure DevOps artifact.
+6. After a compatible map exists, validate PR selection. Keep the full test command available as an explicit rollback by
+   setting `enableAffectedTests` back to `false`.
 7. Validate a documentation-only change, a product change with a narrow affected set, a force-all change, a missing or
    incompatible map, a fork PR without secrets, and a collection failure before making selection required.
