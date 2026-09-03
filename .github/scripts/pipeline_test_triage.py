@@ -7,7 +7,6 @@ import os
 import re
 import shutil
 import stat
-import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
@@ -16,6 +15,8 @@ from urllib.parse import urlencode, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 MAX_XML_REPORT_BYTES = 32 * 1024 * 1024
+MAX_ARCHIVE_ENTRIES = 10_000
+MAX_SELECTED_ARCHIVE_ENTRIES = 5_000
 MAX_HISTORY_DOWNLOAD_BYTES = 512 * 1024 * 1024
 MAX_HISTORY_ARTIFACT_BYTES = 256 * 1024 * 1024
 MAX_HISTORY_EXTRACTED_BYTES = 1024 * 1024 * 1024
@@ -57,13 +58,19 @@ def normalized_entry_name(entry: zipfile.ZipInfo, seen_names: set[str]) -> str:
 
 def archive_stats(archive: str) -> tuple[int, int]:
     safe_count = 0
+    selected_count = 0
     selected_size = 0
     with zipfile.ZipFile(archive) as zip_file:
         seen_names: set[str] = set()
         for entry in zip_file.infolist():
             normalized = normalized_entry_name(entry, seen_names)
             safe_count += 1
+            if safe_count > MAX_ARCHIVE_ENTRIES:
+                raise ValueError("Archive exceeds entry-count limit")
             if is_selected_artifact(normalized):
+                selected_count += 1
+                if selected_count > MAX_SELECTED_ARCHIVE_ENTRIES:
+                    raise ValueError("Archive exceeds selected-entry limit")
                 selected_size += entry.file_size
     return safe_count, selected_size
 
@@ -85,10 +92,18 @@ def extract_archive(archive: str, destination: str) -> None:
     try:
         with zipfile.ZipFile(archive) as zip_file:
             seen_names: set[str] = set()
+            entry_count = 0
+            selected_count = 0
             for entry in zip_file.infolist():
                 normalized = normalized_entry_name(entry, seen_names)
+                entry_count += 1
+                if entry_count > MAX_ARCHIVE_ENTRIES:
+                    raise ValueError("Archive exceeds entry-count limit")
                 if entry.is_dir() or not is_selected_artifact(normalized):
                     continue
+                selected_count += 1
+                if selected_count > MAX_SELECTED_ARCHIVE_ENTRIES:
+                    raise ValueError("Archive exceeds selected-entry limit")
 
                 parts = [part for part in normalized.split("/") if part not in ("", ".")]
                 target = os.path.abspath(os.path.join(destination_root, *parts))
@@ -160,34 +175,68 @@ def record_aliases(record: dict[str, object]) -> set[str]:
     return aliases
 
 
+def report_identity(source_file: str) -> str:
+    relative = source_file.replace("\\", "/").split("/", 1)[-1]
+    lower = relative.lower()
+    for suffix in (".ctrf.json", ".trx", ".xml"):
+        if lower.endswith(suffix):
+            return relative[: -len(suffix)].casefold()
+    return relative.casefold()
+
+
+def deduplicate_records(records: list[dict[str, object]]) -> list[dict[str, object]]:
+    deduplicated = []
+    seen: set[tuple[str, str, str, str]] = set()
+    names_by_artifact_and_format: dict[tuple[str, str], set[str]] = {}
+
+    for record in records:
+        name = record.get("name")
+        source_file = record.get("sourceFile")
+        report_format = record.get("reportFormat")
+        if (
+            not isinstance(name, str)
+            or not name
+            or not isinstance(source_file, str)
+            or not isinstance(report_format, str)
+        ):
+            continue
+
+        artifact = source_file.replace("\\", "/").split("/", 1)[0].casefold()
+        aliases = record_aliases(record)
+        if report_format == "TRX":
+            higher_priority_aliases = names_by_artifact_and_format.get((artifact, "CTRF"), set())
+        elif report_format == "JUnit":
+            higher_priority_aliases = (
+                names_by_artifact_and_format.get((artifact, "CTRF"), set())
+                | names_by_artifact_and_format.get((artifact, "TRX"), set())
+            )
+        else:
+            higher_priority_aliases = set()
+        if aliases & higher_priority_aliases:
+            continue
+
+        extra = record.get("extra")
+        execution_id = extra.get("executionId") if isinstance(extra, dict) else None
+        discriminator = str(execution_id) if execution_id else ""
+        key = (artifact, report_identity(source_file), name.casefold(), discriminator)
+        if key in seen:
+            continue
+
+        seen.add(key)
+        names_by_artifact_and_format.setdefault((artifact, report_format), set()).update(aliases)
+        deduplicated.append(record)
+
+    return deduplicated
+
+
 def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> None:
     results: list[dict[str, object]] = []
-    seen: set[tuple[str, str, str]] = set()
-    ctrf_names_by_artifact: dict[str, set[str]] = {}
 
-    def report_identity(source_file: str) -> str:
-        relative = source_file.replace("\\", "/").split("/", 1)[-1]
-        lower = relative.lower()
-        for suffix in (".ctrf.json", ".trx", ".xml"):
-            if lower.endswith(suffix):
-                return relative[: -len(suffix)].casefold()
-        return relative.casefold()
-
-    def add_result(record: dict[str, object], artifact: str) -> None:
+    def add_result(record: dict[str, object], _artifact: str) -> None:
         name = record.get("name")
         source_file = record.get("sourceFile")
         if not isinstance(name, str) or not name or not isinstance(source_file, str):
             return
-        artifact_key = artifact.casefold()
-        aliases = record_aliases(record)
-        if record.get("reportFormat") == "CTRF":
-            ctrf_names_by_artifact.setdefault(artifact_key, set()).update(aliases)
-        elif aliases & ctrf_names_by_artifact.get(artifact_key, set()):
-            return
-        key = (artifact_key, report_identity(source_file), name.casefold())
-        if key in seen:
-            return
-        seen.add(key)
         results.append(record)
 
     with open(ctrf_path, encoding="utf-8") as ctrf_file:
@@ -199,7 +248,7 @@ def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> No
 
     report_paths = []
     for root, directories, files in os.walk(artifact_dir):
-        directories.sort()
+        directories[:] = sorted(directory for directory in directories if directory.casefold() != "merged")
         for file_name in sorted(files):
             lower_name = file_name.lower()
             if lower_name.endswith(".trx") or lower_name.endswith(".xml"):
@@ -223,7 +272,7 @@ def normalize_reports(ctrf_path: str, artifact_dir: str, output_path: str) -> No
             normalize_junit(document, source_file, artifact, add_result)
 
     with open(output_path, "w", encoding="utf-8") as output_file:
-        json.dump(results, output_file, separators=(",", ":"))
+        json.dump(deduplicate_records(results), output_file, separators=(",", ":"))
 
 
 def normalize_trx(
@@ -439,13 +488,19 @@ def records_from_archive(archive: str, artifact: str) -> list[dict[str, object]]
                     }
                 )
 
+        all_xml_entries = [
+            entry
+            for entry in report_entries
+            if entry.filename.lower().endswith((".trx", ".xml"))
+            and entry.file_size <= MAX_XML_REPORT_BYTES
+        ]
+        individual_xml_entries = [
+            entry
+            for entry in all_xml_entries
+            if "/merged/" not in entry.filename.replace("\\", "/").lower()
+        ]
         xml_entries = sorted(
-            (
-                entry
-                for entry in report_entries
-                if entry.filename.lower().endswith((".trx", ".xml"))
-                and entry.file_size <= MAX_XML_REPORT_BYTES
-            ),
+            individual_xml_entries or all_xml_entries,
             key=lambda entry: (not entry.filename.lower().endswith(".trx"), entry.filename),
         )
         for entry in xml_entries:
@@ -460,18 +515,7 @@ def records_from_archive(archive: str, artifact: str) -> list[dict[str, object]]
             elif local_name(document.tag) in ("testsuite", "testsuites"):
                 normalize_junit(document, source_file, artifact, add_result)
 
-    if not ctrf_entries:
-        return records
-
-    ctrf_aliases = set()
-    for record in records:
-        if record.get("reportFormat") == "CTRF":
-            ctrf_aliases.update(record_aliases(record))
-    return [
-        record
-        for record in records
-        if record.get("reportFormat") == "CTRF" or not (record_aliases(record) & ctrf_aliases)
-    ]
+    return deduplicate_records(records)
 
 
 def collect_history(
