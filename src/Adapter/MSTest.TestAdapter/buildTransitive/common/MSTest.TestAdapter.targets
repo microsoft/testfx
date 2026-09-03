@@ -54,6 +54,14 @@
   </PropertyGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy" Returns="@(MSTestV2Files)">
+    <ItemGroup>
+      <_MSTestSatelliteResourceLanguages Include="$(SatelliteResourceLanguages)" />
+    </ItemGroup>
+    <PropertyGroup Condition=" '$(SatelliteResourceLanguages)' != '' ">
+      <_MSTestSatelliteResourceLanguagesWithDelimiters>;@(_MSTestSatelliteResourceLanguages);</_MSTestSatelliteResourceLanguagesWithDelimiters>
+      <_MSTestSatelliteResourceLanguagesWithDelimiters>$([System.String]::Copy('$(_MSTestSatelliteResourceLanguagesWithDelimiters)').ToLowerInvariant())</_MSTestSatelliteResourceLanguagesWithDelimiters>
+    </PropertyGroup>
+
     <!--
       MTP scenario (EnableMSTestRunner): the UI language is chosen at runtime (for example via
       TESTINGPLATFORM_UI_LANGUAGE / DOTNET_CLI_UI_LANGUAGE), so the build-machine culture is irrelevant.
@@ -68,14 +76,6 @@
         <UICulture>%(RecursiveDir)</UICulture>
         <Culture>$([System.String]::Copy('%(RecursiveDir)').TrimEnd('\').TrimEnd('/').ToLowerInvariant())</Culture>
       </_MSTestV2Files>
-    </ItemGroup>
-    <PropertyGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(SatelliteResourceLanguages)' != '' ">
-      <_MSTestSatelliteResourceLanguagesWithDelimiters>;@(_MSTestSatelliteResourceLanguages);</_MSTestSatelliteResourceLanguagesWithDelimiters>
-      <_MSTestSatelliteResourceLanguagesWithDelimiters>$([System.String]::Copy('$(_MSTestSatelliteResourceLanguagesWithDelimiters)').ToLowerInvariant())</_MSTestSatelliteResourceLanguagesWithDelimiters>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
-      <MSTestV2Files Include="@(_MSTestV2Files)"
-                     Condition=" '$(SatelliteResourceLanguages)' == '' OR $([System.String]::Copy('$(_MSTestSatelliteResourceLanguagesWithDelimiters)').Contains(';%(_MSTestV2Files.Culture);')) " />
     </ItemGroup>
 
     <!--
@@ -101,9 +101,15 @@
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
     <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
-      <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
+      <_MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)\</UICulture>
-      </MSTestV2Files>
+        <Culture>$([System.String]::Copy('%(CurrentUICultureHierarchy.Identity)').ToLowerInvariant())</Culture>
+      </_MSTestV2Files>
+    </ItemGroup>
+
+    <ItemGroup>
+      <MSTestV2Files Include="@(_MSTestV2Files)"
+                     Condition=" '$(SatelliteResourceLanguages)' == '' OR $([System.String]::Copy('$(_MSTestSatelliteResourceLanguagesWithDelimiters)').Contains(';%(_MSTestV2Files.Culture);')) " />
     </ItemGroup>
   </Target>
 
