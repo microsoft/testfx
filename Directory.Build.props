@@ -107,7 +107,8 @@
 
   <!-- Test config -->
   <PropertyGroup>
-    <!-- Needs to be setup globally so that arcade doesn't bring xUnit to playground and other test projects -->
+    <!-- Arcade remains the build SDK and defaults test-project evaluation to its xUnit runner.
+         Keep evaluation on MTP, while all repository test execution goes through native dotnet test. -->
     <TestRunnerName>Microsoft.Testing.Platform</TestRunnerName>
   </PropertyGroup>
 

@@ -146,7 +146,11 @@ MSTest uses the following 3 kinds of tests:
 - Performance tests
   - Focused tests that ensure the performance of specific workflows of the application
 
-The easiest way to run the tests is to call
+The repository uses the native .NET `dotnet test` Microsoft.Testing.Platform experience. The build scripts still
+bootstrap the pinned SDK, build, and pack through Arcade, but their test switches delegate test execution to
+`dotnet test`.
+
+The easiest way to build, pack, and run all tests is to call
 
 For Windows:
 
@@ -160,7 +164,21 @@ For Linux and macOS:
 ./build.sh -pack -test -integrationTest
 ```
 
-Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
+The `-test` switch runs `UnitTests.slnf` (or `NonWindowsUnitTests.slnf`) and `-integrationTest` runs
+`IntegrationTests.slnf` (or `NonWindowsIntegrationTests.slnf`). Acceptance integration tests require the NuGet
+packages in `artifacts/packages/<Configuration>/Shipping`, hence the `-pack` flag.
+
+After building, the equivalent direct commands are:
+
+```powershell
+.\.dotnet\dotnet.exe test --solution UnitTests.slnf --configuration Debug --no-build
+.\.dotnet\dotnet.exe test --solution IntegrationTests.slnf --configuration Debug --no-build
+```
+
+```shell
+./.dotnet/dotnet test --solution NonWindowsUnitTests.slnf --configuration Debug --no-build
+./.dotnet/dotnet test --solution NonWindowsIntegrationTests.slnf --configuration Debug --no-build
+```
 
 ### Mutation testing
 

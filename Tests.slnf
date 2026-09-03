@@ -1,0 +1,23 @@
+{
+  "solution": {
+    "path": "TestFx.slnx",
+    "projects": [
+      "test\\IntegrationTests\\MSTest.Acceptance.IntegrationTests\\MSTest.Acceptance.IntegrationTests.csproj",
+      "test\\IntegrationTests\\Microsoft.Testing.Platform.Acceptance.IntegrationTests\\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj",
+      "test\\IntegrationTests\\PlatformServices.Desktop.IntegrationTests\\PlatformServices.Desktop.IntegrationTests.csproj",
+      "test\\UnitTests\\MSTest.Analyzers.UnitTests\\MSTest.Analyzers.UnitTests.csproj",
+      "test\\UnitTests\\MSTest.SelfRealExamples.UnitTests\\MSTest.SelfRealExamples.UnitTests.csproj",
+      "test\\UnitTests\\MSTest.SourceGeneration.UnitTests\\MSTest.SourceGeneration.UnitTests.csproj",
+      "test\\UnitTests\\MSTestAdapter.PlatformServices.UnitTests\\MSTestAdapter.PlatformServices.UnitTests.csproj",
+      "test\\UnitTests\\MSTestAdapter.UnitTests\\MSTestAdapter.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Extensions.UnitTests\\Microsoft.Testing.Extensions.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests\\Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests\\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.TerminalReporterContract.UnitTests\\Microsoft.Testing.Platform.TerminalReporterContract.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.UnitTests\\Microsoft.Testing.Platform.UnitTests.csproj",
+      "test\\UnitTests\\TestFramework.UnitTests\\TestFramework.UnitTests.csproj"
+    ]
+  }
+}

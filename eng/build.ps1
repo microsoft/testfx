@@ -82,4 +82,59 @@ if ($installWindowsSdk) {
 $null = $PSBoundParameters.Remove("vs")
 $null = $PSBoundParameters.Remove("installWindowsSdk")
 
+$runUnitTests = $test.IsPresent
+$runIntegrationTests = $integrationTest.IsPresent
+
+if (($runUnitTests -or $runIntegrationTests) -and -not $clean -and -not $help) {
+    $childBuildArguments = [System.Collections.Generic.List[string]]::new()
+    foreach ($parameter in $PSBoundParameters.GetEnumerator()) {
+        if ($parameter.Key -in "test", "integrationTest") {
+            continue
+        }
+
+        if ($parameter.Key -eq "properties") {
+            foreach ($property in $parameter.Value) {
+                $childBuildArguments.Add($property)
+            }
+
+            continue
+        }
+
+        if ($parameter.Value -is [System.Management.Automation.SwitchParameter]) {
+            if ($parameter.Value.IsPresent) {
+                $childBuildArguments.Add("-$($parameter.Key)")
+            }
+
+            continue
+        }
+
+        if ($parameter.Value -is [bool]) {
+            $childBuildArguments.Add("-$($parameter.Key):`$$($parameter.Value.ToString().ToLowerInvariant())")
+            continue
+        }
+
+        if ($null -ne $parameter.Value) {
+            $childBuildArguments.Add("-$($parameter.Key)")
+            $childBuildArguments.Add([string]$parameter.Value)
+        }
+    }
+
+    # Arcade still bootstraps the pinned SDK and performs build/pack/sign work, but it no longer
+    # receives either test switch. Test execution is delegated to the native dotnet test command.
+    $powerShellPath = (Get-Process -Id $PID).Path
+    & $powerShellPath -ExecutionPolicy ByPass -NoProfile -File $PSCommandPath @childBuildArguments
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+
+    & $PSScriptRoot\run-tests.ps1 `
+        -configuration $configuration `
+        -unit:$runUnitTests `
+        -integration:$runIntegrationTests `
+        -ci:$ci.IsPresent `
+        -projects $projects `
+        -properties $properties
+    exit $LASTEXITCODE
+}
+
 & $PSScriptRoot\common\Build.ps1 @PSBoundParameters

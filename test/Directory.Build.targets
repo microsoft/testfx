@@ -44,20 +44,11 @@
          token, so gate it on $(TF_BUILD). -->
     <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-flaky-history 30</TestingPlatformCommandLineArguments>
     <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
-         $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
+         $(ResultsDirectory) alongside the TRX files so they are picked up by the AzDO
          PublishTestResults task and any external JUnit consumer. -->
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
 
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(UsingDotNetTest)'=='true'">
-    <!-- By default, Arcade already adds report-trx, report-trx-filename, and results-directory -->
-    <!-- However, when we run with dotnet test, we need to add these options, but still don't duplicate them on Arcade -->
-    <!-- So we detect when running with dotnet test and only add them there. That's unfortunate because any invocation of dotnet test will need to be done with -p:UsingDotNetTest=true -->
-    <!-- An alternative is that we always add those options here, and introduce a property in Arcade so that Arcade doesn't add the options again -->
-
-    <!-- This usage is bad. See https://github.com/dotnet/arcade/issues/16003 -->
     <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
     <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).trx --results-directory $(ArtifactsTestResultsDir)</TestingPlatformCommandLineArguments>

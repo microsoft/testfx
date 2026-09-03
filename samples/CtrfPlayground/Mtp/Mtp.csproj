@@ -7,14 +7,13 @@
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile;TPEXP</NoWarn>
 
     <!--
-      IsTestingPlatformApplication is intentionally NOT set when running under
-      'dotnet test' (CI's Debug Test step on TestFx.slnx passes -p:UsingDotNetTest=true).
+      IsTestingPlatformApplication is intentionally NOT set during repository-wide test runs.
       This playground intentionally contains failing, throwing and skipped tests so the
       user can compare the produced CTRF report against xunit.v3's built-in CTRF output
       (see ../README.md). We don't want those intentional failures to break CI's test step.
       During a normal build the property stays true so the project still wires MTP correctly.
     -->
-    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
+    <IsTestingPlatformApplication Condition=" '$(SkipNonTestPlaygrounds)' != 'true' ">true</IsTestingPlatformApplication>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>

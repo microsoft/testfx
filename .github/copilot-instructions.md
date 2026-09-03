@@ -17,7 +17,10 @@ The codebase ships several distinct (but related) products. Knowing which produc
 - `test/Utilities/Microsoft.Testing.TestInfrastructure` — shared helpers for acceptance/integration tests (test asset fixtures, runners, etc.).
 - `eng/` — Arcade-based build infrastructure. Do not hand-edit `eng/common/`: it is mirrored from `dotnet/arcade` and overwritten by automation.
 
-Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Testing.Platform.slnf`, and `NonWindowsTests.slnf` are filtered views.
+Solution files: `TestFx.slnx` is the full solution; `Tests.slnf`, `UnitTests.slnf`, and `IntegrationTests.slnf` are
+Windows test-only views; `NonWindowsTests.slnf`, `NonWindowsUnitTests.slnf`, and
+`NonWindowsIntegrationTests.slnf` preserve the supported non-Windows test matrix; `MSTest.slnf` and
+`Microsoft.Testing.Platform.slnf` are product-filtered views.
 
 ## Build, test, and debug commands
 
@@ -31,6 +34,9 @@ Always use the repo-local toolchain via the build scripts — they restore the p
 | Unit tests | `.\build.cmd -test` | `./build.sh -test` |
 | Integration + acceptance tests | `.\build.cmd -pack -test -integrationTest` | `./build.sh -pack -test -integrationTest` |
 | Open the solution in VS with the right env | `.\open-vs.cmd` | n/a |
+
+The build scripts use Arcade for SDK bootstrapping and build/pack orchestration, but test execution is always
+delegated to native `dotnet test` with the Microsoft.Testing.Platform runner selected in `global.json`.
 
 Acceptance integration tests (anything under `test/IntegrationTests/*.Acceptance.IntegrationTests`) consume the packed NuGets from `artifacts/packages/<Configuration>/Shipping`, so you **must** run `-pack` (and rerun it after every source change you want to test) before invoking them. Plain unit tests do not need `-pack`.
 

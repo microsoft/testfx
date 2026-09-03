@@ -23,10 +23,10 @@ steps:
 - script: dotnet build test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-incremental -bl:artifacts\log\$(_BuildConfig)\PackagedWinUI.binlog
   displayName: 'Build packaged WinUI acceptance tests'
 
-- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "FullyQualifiedName~WindowsApplicationModelPackageTests" -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\WindowsApplicationModelPackageContracts
+- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "FullyQualifiedName~WindowsApplicationModelPackageTests" -p:ArtifactsTestResultsDir=$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\WindowsApplicationModelPackageContracts
   displayName: 'Test packed Windows application-model contracts'
 
-- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true
+- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel"
   displayName: 'Test real Modern and classic UWP applications'
   env:
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
@@ -60,7 +60,7 @@ steps:
   env:
     WINAPP_CLI_TELEMETRY_OPTOUT: 1
 
-- script: dotnet test test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true
+- script: dotnet test test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel"
   displayName: 'Test packaged WinUI and WinApp CLI interoperability'
   env:
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1

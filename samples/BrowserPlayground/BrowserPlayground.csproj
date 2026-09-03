@@ -24,13 +24,12 @@
     <Nullable>enable</Nullable>
     <!--
       Marks this as a Microsoft.Testing.Platform application. It is intentionally NOT set
-      when running under 'dotnet test' (CI's Debug Test step on TestFx.slnx passes
-      -p:UsingDotNetTest=true): the browser-wasm output can only be launched through a JS
+      during repository-wide test runs: the browser-wasm output can only be launched through a JS
       host (a browser or node importing dotnet.js), which is not wired into 'dotnet test'.
       The entry point is this sample's own Program.cs (top-level statements), not an
       MTP-generated one.
     -->
-    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
+    <IsTestingPlatformApplication Condition=" '$(SkipNonTestPlaygrounds)' != 'true' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

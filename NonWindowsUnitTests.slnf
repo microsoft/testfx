@@ -1,0 +1,13 @@
+{
+  "solution": {
+    "path": "TestFx.slnx",
+    "projects": [
+      "test\\UnitTests\\MSTest.Analyzers.UnitTests\\MSTest.Analyzers.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Extensions.UnitTests\\Microsoft.Testing.Extensions.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests\\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.UnitTests\\Microsoft.Testing.Platform.UnitTests.csproj"
+    ]
+  }
+}

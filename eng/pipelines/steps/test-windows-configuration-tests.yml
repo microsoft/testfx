@@ -27,7 +27,7 @@ steps:
 - ${{ if eq(parameters.enableAffectedTests, false) }}:
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:SkipNonTestPlaygrounds=true -p:TestingPlatformCaptureOutput=false
     name: Test
     displayName: Test
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
@@ -52,7 +52,7 @@ steps:
 
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --collect-test-map
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:SkipNonTestPlaygrounds=true -p:TestingPlatformCaptureOutput=false --collect-test-map
     name: Test
     displayName: Test and collect affected-test map
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
@@ -72,7 +72,7 @@ steps:
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
 
   - pwsh: |
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --affected-tests
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:SkipNonTestPlaygrounds=true -p:TestingPlatformCaptureOutput=false --affected-tests
       $exitCode = $LASTEXITCODE
       if ($exitCode -eq 0) {
         Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
@@ -104,7 +104,7 @@ steps:
           Remove-Item -Force
       }
 
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:SkipNonTestPlaygrounds=true -p:TestingPlatformCaptureOutput=false
       exit $LASTEXITCODE
     name: Test
     displayName: Test (affected-test fallback)

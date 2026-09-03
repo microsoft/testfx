@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --retry-failed-tests 3</TestingPlatformCommandLineArguments>
     <!-- Retry attempts emit Azure DevOps annotations before the retry orchestrator knows the final outcome.
          Keep those annotations visible as warnings; the final process exit code and published TRX still fail
          the step and Tests tab when all retry attempts are exhausted. -->

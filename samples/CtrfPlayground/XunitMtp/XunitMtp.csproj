@@ -8,13 +8,13 @@
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
 
     <!--
-      Mirror Mtp.csproj: opt this project out of the CI 'dotnet test' run, which passes
-      -p:UsingDotNetTest=true. The playground intentionally contains failing/throwing/skipped
+      Mirror Mtp.csproj: opt this project out of repository-wide test runs. The playground
+      intentionally contains failing/throwing/skipped
       tests so users can diff the CTRF output against the in-repo extension; those failures
       must not break CI. A normal build still enables MTP so 'dotnet run' works as documented.
     -->
-    <UseMicrosoftTestingPlatformRunner Condition=" '$(UsingDotNetTest)' != 'true' ">true</UseMicrosoftTestingPlatformRunner>
-    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' == 'true' ">false</IsTestingPlatformApplication>
+    <UseMicrosoftTestingPlatformRunner Condition=" '$(SkipNonTestPlaygrounds)' != 'true' ">true</UseMicrosoftTestingPlatformRunner>
+    <IsTestingPlatformApplication Condition=" '$(SkipNonTestPlaygrounds)' == 'true' ">false</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>
