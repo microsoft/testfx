@@ -1257,6 +1257,67 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_ExcludesInaccessibleMembersFromBaseTypeInAnotherAssembly()
+    {
+        const string baseCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class GrandparentTests
+            {
+                [TestMethod]
+                public void HiddenTest() { }
+
+                [TestContext]
+                public int HiddenContext { get; set; }
+            }
+
+            public class BaseTests : GrandparentTests
+            {
+                [TestMethod]
+                protected internal void InheritedTest() { }
+
+                protected internal new void HiddenTest() { }
+
+                [TestContext]
+                protected internal int InaccessibleContext { get; set; }
+
+                protected internal new int HiddenContext { get; set; }
+
+                public int ContextWithInaccessibleGetter { protected internal get; set; }
+            }
+            """;
+
+        CSharpCompilation baseCompilation = CreateCompilation(MinimalMSTestStub, baseCode)
+            .WithAssemblyName("BaseAssembly");
+        using var stream = new MemoryStream();
+        baseCompilation.Emit(stream).Success.Should().BeTrue();
+        MetadataReference baseReference = MetadataReference.CreateFromImage(stream.ToArray());
+
+        const string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class DerivedTests : BaseTests { }
+            """;
+
+        CSharpCompilation consumerCompilation = CreateCompilation(consumerCode).AddReferences(baseReference);
+        GeneratorDriver driver = CreateDriver(consumerCompilation);
+        driver.RunGeneratorsAndUpdateCompilation(consumerCompilation, out Compilation outputCompilation, out _);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().NotContain("Name = \"InheritedTest\"");
+        registry.Should().NotContain("Name = \"InaccessibleContext\"");
+        registry.Should().NotContain("Name = \"HiddenTest\"");
+        registry.Should().NotContain("Name = \"HiddenContext\"");
+        registry.Should().Contain("Property 'ContextWithInaccessibleGetter' has no accessible getter.");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
     public void Generator_IncludesMethodsFromMultiLevelInheritance()
     {
         const string userCode = """
