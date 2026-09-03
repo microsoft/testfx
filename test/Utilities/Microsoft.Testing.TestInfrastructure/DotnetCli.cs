@@ -37,6 +37,7 @@ public static class DotnetCli
         "--solution",
         "--test-adapter-path",
         "--timeout",
+        "--verbosity",
         "-a",
         "-c",
         "-e",
