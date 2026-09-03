@@ -763,6 +763,17 @@ public partial class AssertTests
         collection.EnumerationCount.Should().Be(0);
     }
 
+    public void IsNotEmpty_NonGenericICollection_WhenEmpty_ShouldFailWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(0);
+
+        Action action = () => Assert.IsNotEmpty(collection);
+
+        action.Should().Throw<Exception>();
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
     public void IsNotEmpty_NonGenericIEnumerable_ShouldEnumerate()
     {
         CountTrackingEnumerable collection = new(1);
