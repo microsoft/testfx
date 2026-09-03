@@ -31,6 +31,8 @@ steps:
     & $dotnet pack "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj" `
       --configuration Release `
       --output $packages `
+      --source https://api.nuget.org/v3/index.json `
+      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json `
       "-p:PackageVersion=$version"
     if ($LASTEXITCODE -ne 0) {
       throw "Failed to pack Microsoft.MSBuildCache.AzurePipelines."
@@ -39,6 +41,8 @@ steps:
     & $dotnet pack "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj" `
       --configuration Release `
       --output $packages `
+      --source https://api.nuget.org/v3/index.json `
+      --source https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json `
       "-p:PackageVersion=$version"
     if ($LASTEXITCODE -ne 0) {
       throw "Failed to pack Microsoft.MSBuildCache.SharedCompilation."
