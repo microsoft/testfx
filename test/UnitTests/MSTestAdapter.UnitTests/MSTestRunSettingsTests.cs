@@ -26,10 +26,16 @@ public sealed class MSTestRunSettingsTests : TestContainer
     public void StatelessNonVisualStudioClientDoesNotSetDesignMode()
         => GetDesignMode("custom-client", isStateful: false).Should().BeFalse();
 
-    public void StatelessVisualStudioClientSetsDesignModeForBackwardCompatibility()
-        => GetDesignMode(WellKnownClients.VisualStudio, isStateful: false).Should().BeTrue();
+    public void UndeclaredNonVisualStudioClientDoesNotSetDesignMode()
+        => GetDesignMode("custom-client", isStateful: null).Should().BeFalse();
 
-    private static bool GetDesignMode(string clientId, bool isStateful)
+    public void UndeclaredVisualStudioClientSetsDesignModeForBackwardCompatibility()
+        => GetDesignMode(WellKnownClients.VisualStudio, isStateful: null).Should().BeTrue();
+
+    public void StatelessVisualStudioClientDoesNotSetDesignMode()
+        => GetDesignMode(WellKnownClients.VisualStudio, isStateful: false).Should().BeFalse();
+
+    private static bool GetDesignMode(string clientId, bool? isStateful)
     {
         const string RunSettingsFilePath = "settings.runsettings";
         string[]? runSettingsFilePaths = [RunSettingsFilePath];

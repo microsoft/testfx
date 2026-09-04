@@ -102,6 +102,7 @@ When making change to resource files, you MUST:
 - Every API marked with `[Experimental]` MUST include this sentence in its XML documentation `<remarks>`: `This API is experimental. It may change, break, or be removed at any time without notice.` Documentation tooling does not reliably surface the attribute itself.
   - Add the sentence in a `<para>` when `<remarks>` already contains other text; otherwise, add a new `<remarks>` block.
   - Apply this rule to experimental members as well as types.
+- When designing a capability API or protocol field, consider clients that predate the capability. Model "unsupported or not declared" separately from an explicit value (for example, with a nullable value or presence-aware representation) unless absence is intentionally equivalent to the default, and document the compatibility behavior.
 
 ## Testing Guidelines
 

@@ -18,7 +18,8 @@ internal static class RunSettingsPatcher
     public static XDocument Patch(string? runSettingsXml, IConfiguration configuration, IClientInfo client, ICommandLineOptions commandLineOptions)
     {
         // Keep recognizing older Visual Studio clients that predate the statefulness capability.
-        bool isDesignMode = client.Capabilities.IsStateful || client.Id == WellKnownClients.VisualStudio;
+        bool isDesignMode = client.Capabilities.IsStateful
+            ?? client.Id == WellKnownClients.VisualStudio;
         XDocument runSettingsDocument = PatchSettingsWithDefaults(runSettingsXml, isDesignMode, configuration);
         PatchTestRunParameters(runSettingsDocument, commandLineOptions);
 

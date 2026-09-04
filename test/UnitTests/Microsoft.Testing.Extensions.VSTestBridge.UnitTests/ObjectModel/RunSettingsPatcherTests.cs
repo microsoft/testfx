@@ -47,7 +47,35 @@ public class RunSettingsPatcherTests
     }
 
     [TestMethod]
-    public void Patch_StatelessVisualStudioClient_SetsDesignModeForBackwardCompatibility()
+    public void Patch_UndeclaredNonVisualStudioClient_DoesNotSetDesignMode()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(IsStateful: null)),
+            _commandLineOptions.Object);
+
+        Assert.IsFalse(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_UndeclaredVisualStudioClient_SetsDesignModeForBackwardCompatibility()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(IsStateful: null)),
+            _commandLineOptions.Object);
+
+        Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_StatelessVisualStudioClient_DoesNotSetDesignMode()
     {
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
 
@@ -57,7 +85,7 @@ public class RunSettingsPatcherTests
             new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(IsStateful: false)),
             _commandLineOptions.Object);
 
-        Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+        Assert.IsFalse(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
     }
 
     [TestMethod]

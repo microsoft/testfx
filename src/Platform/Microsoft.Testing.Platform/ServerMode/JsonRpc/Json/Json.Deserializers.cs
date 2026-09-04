@@ -189,9 +189,16 @@ internal sealed partial class Json
         {
             jsonElement.TryGetProperty(JsonRpcStrings.Testing, out JsonElement testing);
 
-            bool isStateful = testing.ValueKind == JsonValueKind.Object
-                && testing.TryGetProperty(JsonRpcStrings.IsStateful, out JsonElement statefulElement)
-                && statefulElement.ValueKind == JsonValueKind.True;
+            bool? isStateful = testing.ValueKind != JsonValueKind.Object
+                || !testing.TryGetProperty(JsonRpcStrings.IsStateful, out JsonElement statefulElement)
+                ? null
+                : statefulElement.ValueKind switch
+                {
+                    JsonValueKind.Null => null,
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    _ => throw new MessageFormatException($"'{JsonRpcStrings.IsStateful}' field has wrong type (expected {nameof(Boolean)})"),
+                };
 
             return new ClientCapabilities(
                     DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider),

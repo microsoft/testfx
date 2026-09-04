@@ -2,6 +2,18 @@
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.CommandLineParseResult(string? toolName, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>! options, System.Collections.Generic.IReadOnlyList<string!>! errors, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Collections.Generic.IReadOnlyList<string!>! expandedArguments) -> void
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ExpandedArguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestApplicationBuilder(Microsoft.Testing.Platform.Logging.ApplicationLoggingState! loggingState, System.DateTimeOffset createBuilderStart, Microsoft.Testing.Platform.Builder.TestApplicationOptions! testApplicationOptions, Microsoft.Testing.Platform.Helpers.IUnhandledExceptionsHandler! unhandledExceptionsHandler, string![]! args, string![]! expandedArgs) -> void
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool? IsStateful) -> void
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool? IsStateful) -> void
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool?
+Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool? IsStateful) -> void
+Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bool? IsStateful) -> void
+Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool?
 Microsoft.Testing.Platform.Services.CurrentTestApplicationModuleInfo.CurrentTestApplicationModuleInfo(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IProcessHandler! process, string![]? commandLineArguments, string![]? expandedCommandLineArguments) -> void
 Microsoft.Testing.Platform.Services.ExecutableInfo.ExecutableInfo(string! filePath, System.Collections.Generic.IEnumerable<string!>! arguments, System.Collections.Generic.IEnumerable<string!>! expandedArguments, string! workspace) -> void
 Microsoft.Testing.Platform.Services.ExecutableInfo.ExpandedArguments.get -> System.Collections.Generic.IEnumerable<string!>!
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool
+*REMOVED*Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool IsStateful) -> void
+*REMOVED*Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bool IsStateful) -> void
+*REMOVED*Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
