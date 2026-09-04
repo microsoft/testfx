@@ -18,11 +18,10 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests.OutputDevice;
 
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(WellKnownResources.Console)]
 [UnsupportedOSPlatform("browser")]
 public sealed class TerminalOutputDeviceTests
 {
-    private static readonly SemaphoreSlim ConsoleErrorSemaphore = new(1, 1);
     private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>(
         producer => producer.Uid == "producer");
 
@@ -99,7 +98,6 @@ public sealed class TerminalOutputDeviceTests
         Func<TerminalOutputDevice, Task> action,
         bool isHotReloadEnabled = false)
     {
-        await ConsoleErrorSemaphore.WaitAsync();
         TextWriter originalError = Console.Error;
         using var errorWriter = new StringWriter(CultureInfo.InvariantCulture);
         Console.SetError(errorWriter);
@@ -116,7 +114,6 @@ public sealed class TerminalOutputDeviceTests
         finally
         {
             Console.SetError(originalError);
-            ConsoleErrorSemaphore.Release();
         }
     }
 
@@ -175,7 +172,6 @@ public sealed class TerminalOutputDeviceTests
 
     private static async Task<string> InitializeAndCaptureStandardErrorAsync(Dictionary<string, string[]> options, bool isCIEnvironment = false)
     {
-        await ConsoleErrorSemaphore.WaitAsync();
         TextWriter originalError = Console.Error;
         using var errorWriter = new StringWriter(CultureInfo.InvariantCulture);
         Console.SetError(errorWriter);
@@ -192,7 +188,6 @@ public sealed class TerminalOutputDeviceTests
         {
             Console.SetError(originalError);
             ResetNoProgressDeprecationWarning();
-            ConsoleErrorSemaphore.Release();
         }
     }
 
