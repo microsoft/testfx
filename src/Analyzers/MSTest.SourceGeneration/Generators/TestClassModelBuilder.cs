@@ -48,6 +48,7 @@ internal static class TestClassModelBuilder
         var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
         var methodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
         var nonMethodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
+        var inaccessibleMethodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
@@ -69,6 +70,7 @@ internal static class TestClassModelBuilder
             bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
             hasPartialTypeInHierarchy |= IsPartial(current);
             ImmutableArray<ISymbol> currentMembers = current.GetMembers();
+            var inaccessibleMethodNamesInCurrentType = new HashSet<string>(StringComparer.Ordinal);
 
             // Capture each closed, referenceable base type so the runtime registration can root
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
@@ -86,7 +88,8 @@ internal static class TestClassModelBuilder
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
                         ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
                         bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
-                        if (nonMethodNamesInDerivedTypes.Contains(method.Name))
+                        if (nonMethodNamesInDerivedTypes.Contains(method.Name)
+                            || inaccessibleMethodNamesInDerivedTypes.Contains(method.Name))
                         {
                             hasUnsupportedTestMethod |= isTestMethod;
                             break;
@@ -100,6 +103,7 @@ internal static class TestClassModelBuilder
 
                         if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method, consumingAssembly))
                         {
+                            inaccessibleMethodNamesInCurrentType.Add(method.Name);
                             hasUnsupportedTestMethod |= isTestMethod;
                             break;
                         }
@@ -164,6 +168,7 @@ internal static class TestClassModelBuilder
                 }
             }
 
+            inaccessibleMethodNamesInDerivedTypes.UnionWith(inaccessibleMethodNamesInCurrentType);
             foreach (ISymbol member in currentMembers)
             {
                 HashSet<string> names = member is IMethodSymbol { MethodKind: MethodKind.Ordinary }

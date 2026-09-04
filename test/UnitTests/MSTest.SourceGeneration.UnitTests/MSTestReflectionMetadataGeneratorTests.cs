@@ -1273,6 +1273,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 [TestMethod]
                 public void StaticHidesInstance() { }
 
+                [TestMethod]
+                public void InaccessibleOverloadHidesMethodGroup(int value) { }
+
                 [TestContext]
                 public int HiddenContext { get; set; }
 
@@ -1292,6 +1295,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 protected internal int PropertyHidesMethod { get; set; }
 
                 protected internal static new void StaticHidesInstance() { }
+
+                protected internal void InaccessibleOverloadHidesMethodGroup(string value) { }
 
                 [TestContext]
                 protected internal int InaccessibleContext { get; set; }
@@ -1340,6 +1345,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().NotContain("Name = \"HiddenContext\"");
         registry.Should().NotContain("Name = \"PropertyHidesMethod\"");
         registry.Should().NotContain("Name = \"StaticHidesInstance\"");
+        registry.Should().NotContain("Name = \"InaccessibleOverloadHidesMethodGroup\"");
         registry.Should().NotContain("Name = \"MethodHidesProperty\"");
         registry.Should().Contain("Property 'ContextWithInaccessibleGetter' has no accessible getter.");
         registry.Should().Contain("Property 'ContextWithInternalGetter' has no accessible getter.");
@@ -1393,6 +1399,31 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_DynamicAndObjectParameters_HaveSameSignatureKey()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden(object value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new void Hidden(dynamic value) { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        int hiddenEntries = registry.Split(["Name = \"Hidden\""], StringSplitOptions.None).Length - 1;
+        hiddenEntries.Should().Be(1);
     }
 
     [TestMethod]

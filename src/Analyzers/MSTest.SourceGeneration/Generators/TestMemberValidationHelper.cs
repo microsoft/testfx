@@ -118,10 +118,48 @@ internal static class TestMemberValidationHelper
                     break;
             }
 
-            sb.Append(p.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified));
+            AppendTypeKey(sb, p.Type);
         }
 
         sb.Append(')');
         return sb.ToString();
+    }
+
+    private static void AppendTypeKey(StringBuilder builder, ITypeSymbol type)
+    {
+        switch (type)
+        {
+            case ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method } methodTypeParameter:
+                builder.Append("!!").Append(methodTypeParameter.Ordinal);
+                break;
+            case IDynamicTypeSymbol:
+                builder.Append("object");
+                break;
+            case IArrayTypeSymbol array:
+                AppendTypeKey(builder, array.ElementType);
+                builder.Append('[').Append(array.Rank).Append(']');
+                break;
+            case IPointerTypeSymbol pointer:
+                AppendTypeKey(builder, pointer.PointedAtType);
+                builder.Append('*');
+                break;
+            case INamedTypeSymbol { IsGenericType: true } named:
+                builder.Append(named.OriginalDefinition.ToDisplayString(SymbolDisplayFormats.FullyQualified)).Append('<');
+                for (int i = 0; i < named.TypeArguments.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        builder.Append(',');
+                    }
+
+                    AppendTypeKey(builder, named.TypeArguments[i]);
+                }
+
+                builder.Append('>');
+                break;
+            default:
+                builder.Append(type.ToDisplayString(SymbolDisplayFormats.FullyQualified));
+                break;
+        }
     }
 }
