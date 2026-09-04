@@ -138,6 +138,43 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
 
     /// <summary>
+    /// Tests whether the specified array does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="notExpected">The unexpected item.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(T notExpected, T[] collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(notExpected, (IEnumerable<T>)collection, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified array does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="notExpected">The unexpected item.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(T notExpected, T[] collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(notExpected, (IEnumerable<T>)collection, comparer, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
     /// Tests whether the specified span does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the span items.</typeparam>

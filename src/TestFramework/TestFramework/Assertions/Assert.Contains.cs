@@ -137,6 +137,43 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
 
     /// <summary>
+    /// Tests whether the specified array contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(T expected, T[] collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(expected, (IEnumerable<T>)collection, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified array contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(T expected, T[] collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(expected, (IEnumerable<T>)collection, comparer, message, expectedExpression, collectionExpression);
+
+    /// <summary>
     /// Tests whether the specified span contains the given element.
     /// </summary>
     /// <typeparam name="T">The type of the span items.</typeparam>

@@ -26,6 +26,7 @@ public sealed class SdkTests : AcceptanceTestBase<NopAssetFixture>
     -->
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <TargetFrameworks>$TargetFramework$</TargetFrameworks>
+    <LangVersion>12</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
     <NoWarn>$(NoWarn);NU1507</NoWarn>
     $ExtraProperties$
@@ -44,6 +45,11 @@ namespace MSTestSdkTest
         [TestMethod]
         public void TestMethod1()
         {
+            int[] values = new[] { 1, 2, 3 };
+            Assert.Contains(1, values);
+            Assert.Contains(1, values, System.Collections.Generic.EqualityComparer<int>.Default);
+            Assert.DoesNotContain(4, values);
+            Assert.DoesNotContain(4, values, System.Collections.Generic.EqualityComparer<int>.Default);
         }
     }
 }
