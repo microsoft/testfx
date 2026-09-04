@@ -134,10 +134,13 @@ internal static class TestMemberValidationHelper
                 && AreSignatureTypesEquivalent(leftArray.ElementType, rightArray.ElementType);
         }
 
-        if (left is INamedTypeSymbol leftNamed && right is INamedTypeSymbol rightNamed && !leftNamed.TypeArguments.IsEmpty)
+        if (left is INamedTypeSymbol leftNamed && right is INamedTypeSymbol rightNamed)
         {
             if (leftNamed.TypeArguments.Length != rightNamed.TypeArguments.Length
-                || !SymbolEqualityComparer.Default.Equals(leftNamed.OriginalDefinition, rightNamed.OriginalDefinition))
+                || !SymbolEqualityComparer.Default.Equals(leftNamed.OriginalDefinition, rightNamed.OriginalDefinition)
+                || (leftNamed.ContainingType is null) != (rightNamed.ContainingType is null)
+                || (leftNamed.ContainingType is not null
+                    && !AreSignatureTypesEquivalent(leftNamed.ContainingType, rightNamed.ContainingType!)))
             {
                 return false;
             }

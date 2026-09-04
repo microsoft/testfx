@@ -1703,6 +1703,41 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_NestedGenericContainingTypeSubstitutions_HaveDistinctRuntimeSignatures()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Outer<T>
+            {
+                public class Middle<U>
+                {
+                    public class Inner { }
+                }
+            }
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden(Outer<int>.Middle<string>.Inner value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Hidden(Outer<long>.Middle<string>.Inner value) { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().Contain("typeof(global::Outer<long>.Middle<string>.Inner)");
+        registry.Should().NotContain("typeof(global::Outer<int>.Middle<string>.Inner)");
+    }
+
+    [TestMethod]
     public void Generator_DerivedMethodGroup_HidesBaseOverloads()
     {
         const string userCode = """
