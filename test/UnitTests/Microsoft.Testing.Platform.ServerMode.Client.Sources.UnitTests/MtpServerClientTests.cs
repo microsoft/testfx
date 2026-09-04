@@ -52,6 +52,18 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task InitializeAsync_DefaultOptions_LeaveStatefulnessUndeclared()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.IsNull(initializeArgs.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
     public void SerializeClientCapabilities_UndeclaredStatefulness_OmitsProperty()
     {
         IDictionary<string, object?> serialized = SerializerUtilities.Serialize(

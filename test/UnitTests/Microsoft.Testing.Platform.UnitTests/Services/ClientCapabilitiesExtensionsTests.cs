@@ -10,6 +10,14 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class ClientCapabilitiesExtensionsTests
 {
     [TestMethod]
+    public void IsStateful_UndeclaredCapability_DefaultsToFalse()
+    {
+        IClientCapabilities capabilities = new ClientCapabilitiesService(DeclaredIsStateful: null);
+
+        Assert.IsFalse(capabilities.IsStateful);
+    }
+
+    [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
     public void GetIsStateful_ForwardsCustomImplementation(bool isStateful)
