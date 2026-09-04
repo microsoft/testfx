@@ -355,7 +355,7 @@
       </trans-unit>
       <trans-unit id="CombinatorialMultipleValueProviders">
         <source>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</source>
-        <target state="new">Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</target>
+        <target state="translated">'{1}'의 매개 변수 '{0}'에 조합 값 공급자가 여러 개 있습니다. {2}. {3} 구현하는 특성을 하나만 적용합니다.</target>
         <note>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountExceedsRange">
@@ -390,7 +390,7 @@
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
         <source>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</source>
-        <target state="new">Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</target>
+        <target state="translated">{0} 유형의 매개 변수에 대한 값을 자동으로 생성할 수 없습니다. 값을 지정하기 위해 {1} 구현하는 특성을 적용합니다.</target>
         <note>{0} is the parameter type. {1} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">
