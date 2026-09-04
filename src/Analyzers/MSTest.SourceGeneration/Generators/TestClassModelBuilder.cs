@@ -49,6 +49,7 @@ internal static class TestClassModelBuilder
         var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
         var methodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
         var nonMethodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
+        var methodsInDerivedTypes = new List<IMethodSymbol>();
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
@@ -87,10 +88,15 @@ internal static class TestClassModelBuilder
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
                         ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
                         bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
-                        if (nonMethodNamesInDerivedTypes.Contains(method.Name)
-                            || methodNamesInDerivedTypes.Contains(method.Name))
+                        bool hiddenByNonMethod = nonMethodNamesInDerivedTypes.Contains(method.Name);
+                        bool hiddenByMethodGroup = methodNamesInDerivedTypes.Contains(method.Name);
+                        if (hiddenByNonMethod || hiddenByMethodGroup)
                         {
-                            hasUnsupportedTestMethod |= isTestMethod;
+                            hasUnsupportedTestMethod |= isTestMethod
+                                && (hiddenByNonMethod
+                                    || !methodsInDerivedTypes.Any(derivedMethod =>
+                                        ReplacesInheritedRuntimeTest(derivedMethod)
+                                        && TestMemberValidationHelper.HaveSameRuntimeSignature(derivedMethod, method)));
                             break;
                         }
 
@@ -167,10 +173,15 @@ internal static class TestClassModelBuilder
                     continue;
                 }
 
-                HashSet<string> names = member is IMethodSymbol { MethodKind: MethodKind.Ordinary }
-                    ? methodNamesInDerivedTypes
-                    : nonMethodNamesInDerivedTypes;
-                names.Add(member.Name);
+                if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method)
+                {
+                    methodNamesInDerivedTypes.Add(method.Name);
+                    methodsInDerivedTypes.Add(method);
+                }
+                else
+                {
+                    nonMethodNamesInDerivedTypes.Add(member.Name);
+                }
             }
         }
 
@@ -225,6 +236,11 @@ internal static class TestClassModelBuilder
     private static bool HasTestMethodAttribute(IMethodSymbol? method)
         => method is not null
         && TestMemberValidationHelper.IsTestMethodAttributePresent(AttributeMaterializationHelper.CollectInheritedAttributes(method));
+
+    private static bool ReplacesInheritedRuntimeTest(IMethodSymbol method)
+        => method.OverriddenMethod is not null
+        || (method is { DeclaredAccessibility: Accessibility.Public, IsStatic: false }
+            && HasTestMethodAttribute(method));
 
     private static TestMethodModel BuildMethod(
         IMethodSymbol method,

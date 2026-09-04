@@ -1476,6 +1476,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         runEntries.Should().Be(1, "the derived override must replace the base entry (not duplicate it)");
         registry.Should().Contain("((global::Sample.DerivedTests)instance!).Run();");
         registry.Should().NotContain("((global::Sample.BaseTests)instance!).Run();");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
 
         // TestMethodAttribute is not inherited, so the override should not pick up the base attribute.
         registry.Should().NotContain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute");
@@ -1543,6 +1544,83 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         int hiddenEntries = registry.Split(["Name = \"Hidden\""], System.StringSplitOptions.None).Length - 1;
         hiddenEntries.Should().Be(1, "members with the same name and signature must be de-duplicated; derived wins");
         registry.Should().Contain("((global::Sample.DerivedTests)instance!).Hidden();");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+    }
+
+    [TestMethod]
+    public void Generator_PrivateSameSignatureMethod_DoesNotReplaceInheritedTest()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                private new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("((global::DerivedTests)instance!).Hidden();");
+    }
+
+    [TestMethod]
+    public void Generator_PublicNonTestSameSignatureMethod_DoesNotReplaceInheritedTest()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().Contain("((global::DerivedTests)instance!).Hidden();");
+    }
+
+    [TestMethod]
+    public void Generator_InstanceTestMethod_ReplacesStaticAncestor()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public static void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).Hidden();");
     }
 
     [TestMethod]
