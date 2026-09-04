@@ -192,7 +192,7 @@ internal static class RuntimeRegistrationEmitter
                 // reflection for that one method) rather than throwing out of the [ModuleInitializer],
                 // which would fault registration for the whole assembly.
                 sb.AppendLine("availableMethods ??= type.GetMethods(memberFlags);");
-                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(availableMethods, method.Name, method.ParameterTypes);");
+                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes);");
                 using (sb.Block("if (methodInfo is not null)"))
                 {
                     sb.AppendLine("methodInvokers[methodInfo] = method.Invoke;");
@@ -280,12 +280,12 @@ internal static class RuntimeRegistrationEmitter
 
     private static void EmitResolveMethodHelper(IndentedStringBuilder sb)
     {
-        sb.AppendLine("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, string name, Type[] parameterTypes)");
+        sb.AppendLine("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, Type declaringType, string name, Type[] parameterTypes)");
         using (sb.Block(null))
         {
             using (sb.Block("foreach (MethodInfo candidate in availableMethods)"))
             {
-                using (sb.Block("if (candidate.Name != name)"))
+                using (sb.Block("if (candidate.DeclaringType != declaringType || candidate.Name != name)"))
                 {
                     sb.AppendLine("continue;");
                 }
