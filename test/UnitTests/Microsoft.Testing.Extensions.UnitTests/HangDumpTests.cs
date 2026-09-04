@@ -4,14 +4,13 @@
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Helpers;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
+using Microsoft.Testing.Extensions.HangDump.Serializers;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.IPC;
-using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -557,20 +556,13 @@ public sealed class HangDumpTests
     {
         using var deadlineTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         using var activityTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
-        var namedPipeClient = new NamedPipeClient($"hang_{Guid.NewGuid():N}");
-        var namedPipeServer = new NamedPipeServer(
-            $"hang_{Guid.NewGuid():N}",
-            _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
-            Mock.Of<IEnvironment>(),
-            Mock.Of<ILogger>(),
-            Mock.Of<ITask>(),
-            CancellationToken.None);
         HangDumpProcessLifetimeHandler handler = CreateHandler();
+        await InitializePipeResourcesAsync(handler);
+        object namedPipeClient = GetHandlerField<object>(handler, "_namedPipeClient");
+        object namedPipeServer = GetHandlerField<object>(handler, "_singleConnectionNamedPipeServer");
         SetHandlerField(handler, "_deadlineTimer", deadlineTimer);
         SetHandlerField(handler, "_activityTimer", activityTimer);
         SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
-        SetHandlerField(handler, "_namedPipeClient", namedPipeClient);
-        SetHandlerField(handler, "_singleConnectionNamedPipeServer", namedPipeServer);
 
         handler.Dispose();
 
@@ -579,10 +571,8 @@ public sealed class HangDumpTests
         AssertTimerDisposed(activityTimer);
         Assert.ThrowsExactly<ObjectDisposedException>(
             () => _ = GetHandlerField<ManualResetEventSlim>(handler, "_waitConsumerPipeName").WaitHandle);
-        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
-            () => namedPipeClient.ConnectAsync(TestContext.CancellationToken));
-        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
-            () => namedPipeServer.WaitConnectionAsync(TestContext.CancellationToken));
+        await AssertPipeDisposedAsync(namedPipeClient, "ConnectAsync", TestContext.CancellationToken);
+        await AssertPipeDisposedAsync(namedPipeServer, "WaitConnectionAsync", TestContext.CancellationToken);
     }
 
     [TestMethod]
@@ -638,6 +628,23 @@ public sealed class HangDumpTests
     }
 
 #if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_CompletedDump_DisposesResources()
+    {
+        HangDumpProcessLifetimeHandler handler = CreateHandler();
+        await InitializePipeResourcesAsync(handler);
+        object namedPipeClient = GetHandlerField<object>(handler, "_namedPipeClient");
+        object namedPipeServer = GetHandlerField<object>(handler, "_singleConnectionNamedPipeServer");
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+
+        await handler.DisposeAsync();
+
+        Assert.ThrowsExactly<ObjectDisposedException>(
+            () => _ = GetHandlerField<ManualResetEventSlim>(handler, "_waitConsumerPipeName").WaitHandle);
+        await AssertPipeDisposedAsync(namedPipeClient, "ConnectAsync", TestContext.CancellationToken);
+        await AssertPipeDisposedAsync(namedPipeServer, "WaitConnectionAsync", TestContext.CancellationToken);
+    }
+
     [TestMethod]
     public async Task DisposeAsync_FaultedDump_ReportsAndRethrowsOriginalException()
     {
@@ -799,6 +806,23 @@ public sealed class HangDumpTests
                 (_, data, _) => errors.Add((ErrorMessageOutputDeviceData)data))
             .Returns(Task.CompletedTask);
         return outputDevice;
+    }
+
+    private static async Task InitializePipeResourcesAsync(HangDumpProcessLifetimeHandler handler)
+    {
+        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None);
+        MethodInfo callback = typeof(HangDumpProcessLifetimeHandler)
+            .GetMethod("CallbackAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        await (Task)callback.Invoke(
+            handler,
+            [new ConsumerPipeNameRequest($"hang_{Guid.NewGuid():N}")])!;
+    }
+
+    private static async Task AssertPipeDisposedAsync(object pipe, string operationName, CancellationToken cancellationToken)
+    {
+        MethodInfo operation = pipe.GetType().GetMethod(operationName)!;
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
+            () => (Task)operation.Invoke(pipe, [cancellationToken])!);
     }
 
     private static void SetHandlerField<T>(HangDumpProcessLifetimeHandler handler, string fieldName, T value)
