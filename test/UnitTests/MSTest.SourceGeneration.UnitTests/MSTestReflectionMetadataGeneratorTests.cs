@@ -1267,8 +1267,17 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 [TestMethod]
                 public void HiddenTest() { }
 
+                [TestMethod]
+                public void PropertyHidesMethod() { }
+
+                [TestMethod]
+                public void StaticHidesInstance() { }
+
                 [TestContext]
                 public int HiddenContext { get; set; }
+
+                [TestContext]
+                public int MethodHidesProperty { get; set; }
             }
 
             public class BaseTests : GrandparentTests
@@ -1276,14 +1285,28 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 [TestMethod]
                 protected internal void InheritedTest() { }
 
+                [TestMethod]
+                internal void InternalTest() { }
+
                 protected internal new void HiddenTest() { }
+
+                protected internal int PropertyHidesMethod { get; set; }
+
+                protected internal static new void StaticHidesInstance() { }
 
                 [TestContext]
                 protected internal int InaccessibleContext { get; set; }
 
+                [TestContext]
+                internal int InternalContext { get; set; }
+
                 protected internal new int HiddenContext { get; set; }
 
+                protected internal void MethodHidesProperty() { }
+
                 public int ContextWithInaccessibleGetter { protected internal get; set; }
+
+                public int ContextWithInternalGetter { internal get; set; }
             }
             """;
 
@@ -1300,7 +1323,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             public class DerivedTests : BaseTests { }
             """;
 
-        CSharpCompilation consumerCompilation = CreateCompilation(consumerCode).AddReferences(baseReference);
+        CSharpCompilation consumerCompilation = CreateCompilation(consumerCode);
+        consumerCompilation = consumerCompilation
+            .WithOptions(consumerCompilation.Options.WithMetadataImportOptions(MetadataImportOptions.All))
+            .AddReferences(baseReference);
         GeneratorDriver driver = CreateDriver(consumerCompilation);
         driver.RunGeneratorsAndUpdateCompilation(consumerCompilation, out Compilation outputCompilation, out _);
         string registry = outputCompilation.SyntaxTrees
@@ -1308,10 +1334,16 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .ToString();
 
         registry.Should().NotContain("Name = \"InheritedTest\"");
+        registry.Should().NotContain("Name = \"InternalTest\"");
         registry.Should().NotContain("Name = \"InaccessibleContext\"");
+        registry.Should().NotContain("Name = \"InternalContext\"");
         registry.Should().NotContain("Name = \"HiddenTest\"");
         registry.Should().NotContain("Name = \"HiddenContext\"");
+        registry.Should().NotContain("Name = \"PropertyHidesMethod\"");
+        registry.Should().NotContain("Name = \"StaticHidesInstance\"");
+        registry.Should().NotContain("Name = \"MethodHidesProperty\"");
         registry.Should().Contain("Property 'ContextWithInaccessibleGetter' has no accessible getter.");
+        registry.Should().Contain("Property 'ContextWithInternalGetter' has no accessible getter.");
         outputCompilation.GetDiagnostics()
             .Where(d => d.Severity == DiagnosticSeverity.Error)
             .Should().BeEmpty();
