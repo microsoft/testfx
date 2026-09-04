@@ -1285,6 +1285,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             public class BaseTests : GrandparentTests
             {
                 [TestMethod]
+                public void PublicInheritedTest() { }
+
+                [TestMethod]
                 protected internal void InheritedTest() { }
 
                 [TestMethod]
@@ -1297,6 +1300,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 protected internal static new void StaticHidesInstance() { }
 
                 protected internal void InaccessibleOverloadHidesMethodGroup(string value) { }
+
+                [TestContext]
+                public int PublicContext { get; set; }
 
                 [TestContext]
                 protected internal int InaccessibleContext { get; set; }
@@ -1339,8 +1345,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         registry.Should().NotContain("Name = \"InheritedTest\"");
         registry.Should().NotContain("Name = \"InternalTest\"");
+        registry.Should().Contain("Name = \"PublicInheritedTest\"");
         registry.Should().NotContain("Name = \"InaccessibleContext\"");
         registry.Should().NotContain("Name = \"InternalContext\"");
+        registry.Should().Contain("Name = \"PublicContext\"");
         registry.Should().NotContain("Name = \"HiddenTest\"");
         registry.Should().NotContain("Name = \"HiddenContext\"");
         registry.Should().NotContain("Name = \"PropertyHidesMethod\"");
