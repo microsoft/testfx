@@ -91,7 +91,7 @@ internal static class TestMemberValidationHelper
             || left.Arity != right.Arity
             || left.Parameters.Length != right.Parameters.Length
             || (left.IsStatic && !right.IsStatic)
-            || !SymbolEqualityComparer.Default.Equals(left.ReturnType, right.ReturnType))
+            || !AreSignatureTypesEquivalent(left.ReturnType, right.ReturnType))
         {
             return false;
         }
@@ -112,6 +112,16 @@ internal static class TestMemberValidationHelper
 
     private static bool AreSignatureTypesEquivalent(ITypeSymbol left, ITypeSymbol right)
     {
+        if (left is IDynamicTypeSymbol)
+        {
+            return right is IDynamicTypeSymbol || right.SpecialType == SpecialType.System_Object;
+        }
+
+        if (right is IDynamicTypeSymbol)
+        {
+            return left.SpecialType == SpecialType.System_Object;
+        }
+
         if (left is ITypeParameterSymbol leftTypeParameter && right is ITypeParameterSymbol rightTypeParameter)
         {
             return leftTypeParameter.TypeParameterKind == rightTypeParameter.TypeParameterKind

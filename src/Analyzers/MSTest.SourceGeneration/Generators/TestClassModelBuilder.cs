@@ -284,6 +284,7 @@ internal static class TestClassModelBuilder
 
         return new TestMethodModel(
             Name: method.Name,
+            DeclaringTypeFullyQualifiedName: method.ContainingType.ToDisplayString(SymbolDisplayFormats.FullyQualified),
             IsStatic: method.IsStatic,
             IsAsync: method.IsAsync,
             ReturnsTask: returnsTask,
