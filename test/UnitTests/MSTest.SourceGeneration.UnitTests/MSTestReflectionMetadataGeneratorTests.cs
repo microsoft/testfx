@@ -1561,7 +1561,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_OverloadsWithDifferentSignatures_AreAllPreserved()
+    public void Generator_DerivedMethodGroup_HidesBaseOverloads()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1583,13 +1583,18 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             }
             """;
 
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
 
-        // Both overloads survive — they have different signatures.
         int opEntries = registry.Split(["Name = \"Op\""], System.StringSplitOptions.None).Length - 1;
-        opEntries.Should().Be(2);
-        registry.Should().Contain("typeof(int)");
+        opEntries.Should().Be(1);
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
         registry.Should().Contain("typeof(string)");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
     }
 
     [TestMethod]
