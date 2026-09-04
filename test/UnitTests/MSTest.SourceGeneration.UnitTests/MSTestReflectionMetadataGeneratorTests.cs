@@ -1692,6 +1692,37 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_DerivedPropertyAccessor_DoesNotHideBaseAccessorNamedMethod()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void get_Value() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int Value => 1;
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).get_Value();");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
     public void Generator_IncludesPropertiesFromBaseType()
     {
         const string userCode = """

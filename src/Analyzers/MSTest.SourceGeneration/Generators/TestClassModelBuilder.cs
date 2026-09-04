@@ -168,19 +168,19 @@ internal static class TestClassModelBuilder
 
             foreach (ISymbol member in currentMembers)
             {
-                if (member is IPropertySymbol { IsIndexer: true })
+                switch (member)
                 {
-                    continue;
-                }
+                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                        methodNamesInDerivedTypes.Add(method.Name);
+                        methodsInDerivedTypes.Add(method);
+                        break;
 
-                if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method)
-                {
-                    methodNamesInDerivedTypes.Add(method.Name);
-                    methodsInDerivedTypes.Add(method);
-                }
-                else
-                {
-                    nonMethodNamesInDerivedTypes.Add(member.Name);
+                    case IPropertySymbol { IsIndexer: false }:
+                    case IFieldSymbol:
+                    case IEventSymbol:
+                    case INamedTypeSymbol:
+                        nonMethodNamesInDerivedTypes.Add(member.Name);
+                        break;
                 }
             }
         }
