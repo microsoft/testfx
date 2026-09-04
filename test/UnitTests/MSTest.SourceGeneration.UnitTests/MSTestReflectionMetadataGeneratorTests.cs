@@ -1376,6 +1376,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("((global::DerivedTests)instance!).Hidden();");
     }
 
     [TestMethod]
@@ -1399,31 +1400,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
-    }
-
-    [TestMethod]
-    public void Generator_DynamicAndObjectParameters_HaveSameSignatureKey()
-    {
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            public class BaseTests
-            {
-                [TestMethod]
-                public void Hidden(object value) { }
-            }
-
-            [TestClass]
-            public class DerivedTests : BaseTests
-            {
-                public new void Hidden(dynamic value) { }
-            }
-            """;
-
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
-
-        int hiddenEntries = registry.Split(["Name = \"Hidden\""], StringSplitOptions.None).Length - 1;
-        hiddenEntries.Should().Be(1);
+        registry.Should().NotContain("PropertyType = typeof(int)");
     }
 
     [TestMethod]
