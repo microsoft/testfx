@@ -43,7 +43,8 @@ internal static class TestClassModelBuilder
         //
         // Iteration order is derived-first. Members declared at a nearer inheritance level
         // hide same-name ancestor members according to C# lookup rules, while overloads
-        // declared together on the same type are preserved.
+        // declared together on the same type are preserved. Indexers are excluded because
+        // their metadata name is not used in C# member access.
         // Constructors are NEVER inherited and are taken only from the leaf type.
         var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
         var methodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
@@ -161,6 +162,11 @@ internal static class TestClassModelBuilder
 
             foreach (ISymbol member in currentMembers)
             {
+                if (member is IPropertySymbol { IsIndexer: true })
+                {
+                    continue;
+                }
+
                 HashSet<string> names = member is IMethodSymbol { MethodKind: MethodKind.Ordinary }
                     ? methodNamesInDerivedTypes
                     : nonMethodNamesInDerivedTypes;
