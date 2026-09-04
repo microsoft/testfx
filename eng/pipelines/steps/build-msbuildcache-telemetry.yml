@@ -1,0 +1,85 @@
+steps:
+- task: UseDotNet@2
+  displayName: Install .NET 10 SDK for MSBuildCache
+  inputs:
+    version: 10.x
+
+- pwsh: |
+    $source = "$(Agent.TempDirectory)\MSBuildCacheTelemetry"
+    $packages = "$(Agent.TempDirectory)\MSBuildCacheTelemetryPackages"
+    $nugetConfig = "$(Agent.TempDirectory)\MSBuildCacheTelemetry.NuGet.config"
+    $version = "0.1.999-phase-telemetry"
+    $commit = "877701a8d0b2352cd7e70f59d9c146511041ed2e"
+    $dotnetRoot = Get-ChildItem "$(Agent.TempDirectory)" -Directory |
+      Where-Object { Test-Path (Join-Path $_.FullName "sdk\10.0.400") } |
+      Select-Object -First 1 -ExpandProperty FullName
+    if (!$dotnetRoot) {
+      throw "Could not locate the .NET 10.0.400 SDK installed by UseDotNet."
+    }
+    $dotnet = Join-Path $dotnetRoot "dotnet.exe"
+
+    git clone --branch dev/janprovaznik/cache-phase-telemetry https://github.com/JanProvaznik/MSBuildCache $source
+    if ((git -C $source rev-parse HEAD) -ne $commit) {
+      throw "Expected MSBuildCache commit $commit."
+    }
+
+    # TestFX's prerequisite step points DOTNET_ROOT at its not-yet-bootstrapped repo-local SDK.
+    # MSBuildCache uses the .NET 10 SDK already installed in the build image.
+    $env:DOTNET_ROOT = $dotnetRoot
+    Set-Location $source
+    & $dotnet --info
+    @'
+    <?xml version="1.0" encoding="utf-8"?>
+    <configuration>
+      <packageSources>
+        <clear />
+        <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+        <add key="msbuildcache" value="https://pkgs.dev.azure.com/msbuildcache/public/_packaging/msbuildcache/nuget/v3/index.json" />
+      </packageSources>
+      <packageSourceMapping>
+        <packageSource key="nuget.org">
+          <package pattern="*" />
+        </packageSource>
+        <packageSource key="msbuildcache">
+          <package pattern="Microsoft.Artifacts.*" />
+          <package pattern="Microsoft.BuildXL.*" />
+          <package pattern="Microsoft.VisualStudio.Services.*" />
+          <package pattern="Microsoft.Windows.Debuggers.*" />
+          <package pattern="RocksDb*" />
+        </packageSource>
+      </packageSourceMapping>
+    </configuration>
+    '@ | Set-Content $nugetConfig
+
+    $azurePipelinesProject = "$source\src\AzurePipelines\Microsoft.MSBuildCache.AzurePipelines.csproj"
+    & $dotnet restore $azurePipelinesProject `
+      --configfile $nugetConfig
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to restore Microsoft.MSBuildCache.AzurePipelines."
+    }
+    & $dotnet build $azurePipelinesProject `
+      --no-restore `
+      --configuration Release `
+      "-p:PackageOutputPath=$packages" `
+      "-p:PackageVersion=$version"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to build Microsoft.MSBuildCache.AzurePipelines."
+    }
+
+    $sharedCompilationProject = "$source\src\SharedCompilation\Microsoft.MSBuildCache.SharedCompilation.csproj"
+    & $dotnet restore $sharedCompilationProject `
+      --configfile $nugetConfig
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to restore Microsoft.MSBuildCache.SharedCompilation."
+    }
+    & $dotnet build $sharedCompilationProject `
+      --no-restore `
+      --configuration Release `
+      "-p:PackageOutputPath=$packages" `
+      "-p:PackageVersion=$version"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to build Microsoft.MSBuildCache.SharedCompilation."
+    }
+
+    Get-ChildItem $packages -Filter *.nupkg | Select-Object Name, Length
+  displayName: Build instrumented MSBuildCache packages
