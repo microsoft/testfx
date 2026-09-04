@@ -622,7 +622,7 @@ public sealed class HangDumpTests
 
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(handler.Dispose);
 
-        Assert.Contains("_activityIndicatorTask didn't exit in 00:00:00 seconds", exception.Message);
+        Assert.Contains("_activityIndicatorTask didn't exit in 00:00:00", exception.Message);
         dumpCompletion.SetResult(true);
         handler.Dispose();
     }

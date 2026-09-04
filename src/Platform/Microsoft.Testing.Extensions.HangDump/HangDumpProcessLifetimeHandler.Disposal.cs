@@ -30,7 +30,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
 
             if (!waitResult)
             {
-                throw new InvalidOperationException($"_activityIndicatorTask didn't exit in {_disposeTimeout} seconds");
+                throw new InvalidOperationException($"_activityIndicatorTask didn't exit in {_disposeTimeout}");
             }
         }
 
