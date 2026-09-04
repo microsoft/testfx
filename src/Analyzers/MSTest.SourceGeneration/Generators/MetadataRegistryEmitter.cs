@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
@@ -58,6 +58,7 @@ internal static class MetadataRegistryEmitter
             using (sb.Block("internal sealed class TestMethodReflectionInfo"))
             {
                 sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
                 sb.AppendLine("public bool IsTestMethod { get; set; }");
                 sb.AppendLine("public bool IsStatic { get; set; }");
                 sb.AppendLine("public bool IsAsync { get; set; }");
@@ -243,6 +244,7 @@ internal static class MetadataRegistryEmitter
                 using (sb.Block(null))
                 {
                     sb.AppendLine($"Name = \"{Escape(method.Name)}\",");
+                    sb.AppendLine($"DeclaringType = typeof({method.DeclaringTypeFullyQualifiedName}),");
                     sb.AppendLine($"IsTestMethod = {Bool(method.IsTestMethod)},");
                     sb.AppendLine($"IsStatic = {Bool(method.IsStatic)},");
                     sb.AppendLine($"IsAsync = {Bool(method.IsAsync)},");
