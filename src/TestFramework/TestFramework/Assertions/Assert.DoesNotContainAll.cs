@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -178,6 +178,27 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
 
     #region DoesNotContainAll span/memory
+
+    /// <summary>
+    /// Tests whether the specified array does not contain every element of <paramref name="notExpected"/> using the specified equality comparer.
+    /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.
+    /// </remarks>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="notExpected">The array of items that must not all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The array that must not contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if every element in <paramref name="notExpected"/> occurs enough times in <paramref name="collection"/>.
+    /// </exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    public static void DoesNotContainAll<T>([NotNull] T[]? notExpected, [NotNull] T[]? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll((IEnumerable<T>?)notExpected, (IEnumerable<T>?)collection, comparer, message, notExpectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
 
     /// <summary>
     /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).

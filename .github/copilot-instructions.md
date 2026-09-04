@@ -96,6 +96,11 @@ When making change to resource files, you MUST:
 
 ## Public API guidelines
 
+- Treat adding an overload as a potential source-breaking change, even when it is binary-compatible. Existing calls can become ambiguous when an argument converts to multiple parameter types, especially across `Span<T>`, `ReadOnlySpan<T>`, arrays, generic interfaces such as `IEnumerable<T>`, and overloads with optional parameters.
+  - Before adding or changing overloads, enumerate representative existing call shapes and compare all applicable implicit conversions and generic type-inference paths.
+  - For `Assert` overload changes, update the manually maintained implicit consumer call shapes in [`AssertSourceCompatibilityTests.cs`](../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/AssertSourceCompatibilityTests.cs). The test compiles them against the packed `MSTest.TestFramework` using C# 12 and automatically requires every public `Assert` method family to have at least one representative scenario.
+  - Add equivalent package-consuming compilation coverage for overload changes in other public API types, using the oldest relevant default C# language version and target framework. Repository projects use `LangVersion=preview`, so an ordinary in-repo unit test does not detect overload-resolution regressions that only affect older compilers.
+  - During review, do not treat successful compilation under the repository's language version as sufficient evidence of source compatibility.
 - Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init` accessors.
   - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now would be a breaking change. However, we MUST NOT introduce **new** APIs using `init` accessors.
   - IMPORTANT: Make sure to apply this rule strictly both during PR review and when working on code changes.

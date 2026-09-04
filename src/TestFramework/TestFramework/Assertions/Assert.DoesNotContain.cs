@@ -175,6 +175,24 @@ public sealed partial class Assert
         => DoesNotContain(notExpected, (IEnumerable<T>)collection, comparer, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
+    /// Tests whether the specified array contains no element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContain(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+
+    /// <summary>
     /// Tests whether the specified span does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the span items.</typeparam>

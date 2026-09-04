@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,6 +11,25 @@ public sealed partial class Assert
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
     #region ContainsSingle span/memory
+
+    /// <summary>
+    /// Tests whether the specified array contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static T ContainsSingle<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified span contains exactly one element.
