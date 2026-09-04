@@ -1703,6 +1703,35 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void RuntimeSignature_DifferentReturnTypes_AreNotEquivalent()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new int Hidden() => 1;
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(userCode);
+        var baseMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("BaseTests")!.GetMembers("Hidden").Single();
+        var derivedMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("DerivedTests")!.GetMembers("Hidden").Single();
+
+        TestMemberValidationHelper.HaveSameRuntimeSignature(derivedMethod, baseMethod).Should().BeFalse();
+        GetRegistry(RunGenerator(MinimalMSTestStub, userCode))
+            .Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
     public void Generator_NestedGenericContainingTypeSubstitutions_HaveDistinctRuntimeSignatures()
     {
         const string userCode = """
