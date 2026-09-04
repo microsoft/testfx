@@ -390,7 +390,7 @@
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
         <source>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</source>
-        <target state="new">Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</target>
+        <target state="translated">型 {0} のパラメーターの値を自動的に生成できません。値を指定するために {1} を実装する属性を適用します。</target>
         <note>{0} is the parameter type. {1} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">
