@@ -19,6 +19,20 @@ public sealed partial class Assert
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The array.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">The syntactic expression of predicate as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static T ContainsSingle<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="predicateExpression">
     /// The syntactic expression of predicate as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
@@ -28,7 +42,8 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static T ContainsSingle<T, TCollection>(Func<T, bool> predicate, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TCollection : IEnumerable<T>
         => ContainsSingle(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
 
     /// <summary>

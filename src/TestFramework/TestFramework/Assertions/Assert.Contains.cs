@@ -143,33 +143,21 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The array.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
-    /// Users shouldn't pass a value for this parameter.
-    /// </param>
-    /// <param name="collectionExpression">
-    /// The syntactic expression of collection as given by the compiler via caller argument expression.
-    /// Users shouldn't pass a value for this parameter.
-    /// </param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
     public static void Contains<T>(T expected, T[] collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => Contains(expected, (IEnumerable<T>)collection, message, expectedExpression, collectionExpression);
 
     /// <summary>
-    /// Tests whether the specified array contains the given element.
+    /// Tests whether the specified array contains the given element using the specified equality comparer.
     /// </summary>
     /// <typeparam name="T">The type of the array items.</typeparam>
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The array.</param>
     /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
-    /// Users shouldn't pass a value for this parameter.
-    /// </param>
-    /// <param name="collectionExpression">
-    /// The syntactic expression of collection as given by the compiler via caller argument expression.
-    /// Users shouldn't pass a value for this parameter.
-    /// </param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
     public static void Contains<T>(T expected, T[] collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => Contains(expected, (IEnumerable<T>)collection, comparer, message, expectedExpression, collectionExpression);
 
@@ -180,6 +168,60 @@ public sealed partial class Assert
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The array.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">The syntactic expression of predicate as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    public static void Contains<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => Contains(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T, TCollection>(T expected, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TCollection : IEnumerable<T>
+        => Contains(expected, (IEnumerable<T>)collection, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T, TCollection>(T expected, TCollection collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TCollection : IEnumerable<T>
+        => Contains(expected, (IEnumerable<T>)collection, comparer, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified collection contains an element that matches the given predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
     /// <param name="predicateExpression">
     /// The syntactic expression of predicate as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
@@ -188,7 +230,8 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(Func<T, bool> predicate, T[] collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T, TCollection>(Func<T, bool> predicate, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TCollection : IEnumerable<T>
         => Contains(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
 
     /// <summary>

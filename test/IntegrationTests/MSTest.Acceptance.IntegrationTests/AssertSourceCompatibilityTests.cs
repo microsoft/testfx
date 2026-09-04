@@ -37,6 +37,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         using System;
         using System.Collections;
         using System.Collections.Generic;
+        using System.Collections.Immutable;
         using System.Globalization;
         using System.Text.RegularExpressions;
         using System.Threading.Tasks;
@@ -44,8 +45,9 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
 
         namespace AssertSourceCompatibility;
 
-        // This code is compiled but never executed. Keep the calls implicit: casts or explicit type
-        // arguments would hide the overload-resolution regressions this asset is intended to catch.
+        // This code is compiled but never executed. Except for ExplicitGenericArrayCalls, keep the calls
+        // implicit: casts or explicit type arguments would hide the overload-resolution regressions this
+        // asset is intended to catch.
         internal static class AssertCallShapes
         {
             internal static void ArrayAndEnumerableCalls(
@@ -94,6 +96,31 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.IsNotEmpty(values);
             }
 
+            // General constrained collection forwarders have additional generic parameters, so explicit
+            // one-type-argument calls require the exact-array overloads to remain source compatible.
+            internal static void ExplicitGenericArrayCalls(
+                int[] values,
+                int[] other,
+                IEqualityComparer<int> comparer)
+            {
+                Func<int, bool> predicate = value => value > 0;
+
+                Assert.AreAllDistinct<int>(values, comparer);
+                Assert.AreSequenceEqual<int>(values, other, comparer);
+                Assert.AreSequenceEqual<int>(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual<int>(values, other, comparer);
+                Assert.AreNotSequenceEqual<int>(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains<int>(1, values);
+                Assert.Contains<int>(1, values, comparer);
+                Assert.Contains<int>(predicate, values);
+                Assert.DoesNotContain<int>(1, values);
+                Assert.DoesNotContain<int>(1, values, comparer);
+                Assert.DoesNotContain<int>(predicate, values);
+                Assert.ContainsAll<int>(values, other, comparer);
+                Assert.DoesNotContainAll<int>(values, other, comparer);
+                _ = Assert.ContainsSingle<int>(predicate, values);
+            }
+
             internal static void GenericEnumerableCalls(
                 IEnumerable<int> values,
                 IEnumerable<int> other,
@@ -129,6 +156,119 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.HasCount(1, values);
                 Assert.IsEmpty(values);
                 Assert.IsNotEmpty(values);
+            }
+
+            internal static void StringCharacterCollectionCalls(
+                string values,
+                string other,
+                IEqualityComparer<char> comparer)
+            {
+                Func<char, bool> predicate = value => value == 'a';
+
+                Assert.AreAllDistinct(values, comparer);
+                Assert.AreSequenceEqual(values, other, comparer);
+                Assert.AreSequenceEqual(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual(values, other, comparer);
+                Assert.AreNotSequenceEqual(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains('a', values);
+                Assert.Contains('a', values, comparer);
+                Assert.Contains(predicate, values);
+                Assert.DoesNotContain('z', values);
+                Assert.DoesNotContain('z', values, comparer);
+                Assert.DoesNotContain(predicate, values);
+                Assert.ContainsAll(values, other, comparer);
+                Assert.DoesNotContainAll(values, other, comparer);
+                _ = Assert.ContainsSingle(predicate, values);
+            }
+
+            internal static void ArraySegmentCalls(
+                ArraySegment<int> values,
+                ArraySegment<int> other,
+                IEqualityComparer<int> comparer)
+            {
+                Func<int, bool> predicate = value => value > 0;
+
+                Assert.AreAllDistinct(values, comparer);
+                Assert.AreSequenceEqual(values, other, comparer);
+                Assert.AreSequenceEqual(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual(values, other, comparer);
+                Assert.AreNotSequenceEqual(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains(1, values);
+                Assert.Contains(1, values, comparer);
+                Assert.Contains(predicate, values);
+                Assert.DoesNotContain(0, values);
+                Assert.DoesNotContain(0, values, comparer);
+                Assert.DoesNotContain(predicate, values);
+                Assert.ContainsAll(values, other, comparer);
+                Assert.DoesNotContainAll(values, other, comparer);
+                _ = Assert.ContainsSingle(predicate, values);
+            }
+
+            internal static void ImmutableArrayCalls(
+                ImmutableArray<int> values,
+                ImmutableArray<int> other,
+                IEqualityComparer<int> comparer)
+            {
+                Func<int, bool> predicate = value => value > 0;
+
+                Assert.AreAllDistinct(values, comparer);
+                Assert.AreSequenceEqual(values, other, comparer);
+                Assert.AreSequenceEqual(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual(values, other, comparer);
+                Assert.AreNotSequenceEqual(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains(1, values);
+                Assert.Contains(1, values, comparer);
+                Assert.Contains(predicate, values);
+                Assert.DoesNotContain(0, values);
+                Assert.DoesNotContain(0, values, comparer);
+                Assert.DoesNotContain(predicate, values);
+                Assert.ContainsAll(values, other, comparer);
+                Assert.DoesNotContainAll(values, other, comparer);
+                _ = Assert.ContainsSingle(predicate, values);
+            }
+
+            internal static void CollectionExpressionCalls(IEqualityComparer<int> comparer)
+            {
+                Func<int, bool> predicate = value => value > 0;
+
+                Assert.AreAllDistinct([1, 2, 3], comparer);
+                Assert.AreSequenceEqual([1, 2], [1, 2], comparer);
+                Assert.AreSequenceEqual([1, 2], [2, 1], comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual([1, 2], [1, 3], comparer);
+                Assert.AreNotSequenceEqual([1, 2], [2, 1], comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains(1, [1, 2, 3]);
+                Assert.Contains(1, [1, 2, 3], comparer);
+                Assert.Contains(predicate, [1, 2, 3]);
+                Assert.DoesNotContain(0, [1, 2, 3]);
+                Assert.DoesNotContain(0, [1, 2, 3], comparer);
+                Assert.DoesNotContain(predicate, [1, 2, 3]);
+                Assert.ContainsAll([1, 2], [1, 2, 3], comparer);
+                Assert.DoesNotContainAll([0, 1], [1, 2, 3], comparer);
+                _ = Assert.ContainsSingle(predicate, [1]);
+            }
+
+            internal static void CustomDualConvertibleCollectionCalls(
+                DualConvertibleEnumerable<int> values,
+                DualConvertibleEnumerable<int> other,
+                ArraySegment<int> segment,
+                IEqualityComparer<int> comparer)
+            {
+                Func<int, bool> predicate = value => value > 0;
+
+                Assert.AreAllDistinct(values, comparer);
+                Assert.AreSequenceEqual(values, other, comparer);
+                Assert.AreSequenceEqual(values, segment, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual(segment, values, comparer);
+                Assert.AreNotSequenceEqual(values, segment, comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains(1, values);
+                Assert.Contains(1, values, comparer);
+                Assert.Contains(predicate, values);
+                Assert.DoesNotContain(0, values);
+                Assert.DoesNotContain(0, values, comparer);
+                Assert.DoesNotContain(predicate, values);
+                Assert.ContainsAll(values, segment, comparer);
+                Assert.DoesNotContainAll(segment, values, comparer);
+                _ = Assert.ContainsSingle(predicate, values);
             }
 
             internal static void NonGenericEnumerableCalls(
@@ -325,6 +465,26 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             private static void Throw() => throw new InvalidOperationException();
 
             private static object ReturnValue() => new object();
+        }
+
+        internal sealed class DualConvertibleEnumerable<T> : IEnumerable<T>
+        {
+            private readonly T[] _items;
+
+            internal DualConvertibleEnumerable(params T[] items)
+                => _items = items;
+
+            public static implicit operator Span<T>(DualConvertibleEnumerable<T> collection)
+                => collection._items;
+
+            public static implicit operator ReadOnlySpan<T>(DualConvertibleEnumerable<T> collection)
+                => collection._items;
+
+            public IEnumerator<T> GetEnumerator()
+                => ((IEnumerable<T>)_items).GetEnumerator();
+
+            IEnumerator IEnumerable.GetEnumerator()
+                => GetEnumerator();
         }
         """;
 

@@ -234,12 +234,27 @@ public sealed partial class Assert
     /// <param name="collection">The array whose elements must all be distinct.</param>
     /// <param name="comparer">The equality comparer to use when comparing elements.</param>
     /// <param name="message">The message to include in the exception when two equal elements are found.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if any two elements in <paramref name="collection"/> are equal.</exception>
+    public static void AreAllDistinct<T>([NotNull] T[]? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllDistinct((IEnumerable<T>?)collection, comparer, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified collection are distinct using the specified equality comparer
+    /// and throws an exception if any two elements are equal.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection elements.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="collection">The collection whose elements must all be distinct.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when two equal elements are found.</param>
     /// <param name="collectionExpression">
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">Thrown if any two elements in <paramref name="collection"/> are equal.</exception>
-    public static void AreAllDistinct<T>([NotNull] T[]? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllDistinct<T, TCollection>([NotNull] TCollection? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TCollection : IEnumerable<T>
         => AreAllDistinct((IEnumerable<T>?)collection, comparer, message, collectionExpression);
 
     /// <summary>
