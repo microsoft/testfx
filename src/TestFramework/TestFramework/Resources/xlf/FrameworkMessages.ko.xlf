@@ -360,32 +360,32 @@
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountExceedsRange">
         <source>{0} requests more unique random values than the range between {1} and {2} contains.</source>
-        <target state="new">{0} requests more unique random values than the range between {1} and {2} contains.</target>
+        <target state="translated">{0}에서는 {1}과(와) {2} 사이의 범위에 포함된 것보다 많은 고유한 임의 값을 요청합니다.</target>
         <note>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountMustBePositive">
         <source>{0} must be positive.</source>
-        <target state="new">{0} must be positive.</target>
+        <target state="translated">{0}은(는) 양수여야 합니다.</target>
         <note>{0} is the random data count property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomMinimumExceedsMaximum">
         <source>{0} must not be greater than {1}.</source>
-        <target state="new">{0} must not be greater than {1}.</target>
+        <target state="translated">{0}은(는) {1}보다 크지 않아야 합니다.</target>
         <note>{0} is the minimum property name. {1} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsInt32">
         <source>The range exceeds the maximum integer value.</source>
-        <target state="new">The range exceeds the maximum integer value.</target>
+        <target state="translated">범위가 최대 정수 값을 초과합니다.</target>
         <note>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsUInt32">
         <source>The range exceeds the maximum unsigned integer value.</source>
-        <target state="new">The range exceeds the maximum unsigned integer value.</target>
+        <target state="translated">범위가 최대 부호 없는 정수 값을 초과합니다.</target>
         <note>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeTooManyValues">
         <source>The range contains too many values.</source>
-        <target state="new">The range contains too many values.</target>
+        <target state="translated">범위에 포함된 값이 너무 많습니다.</target>
         <note>Error message shown when a combinatorial range cannot be represented in an array.</note>
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
