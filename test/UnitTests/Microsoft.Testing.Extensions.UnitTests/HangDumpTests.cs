@@ -686,14 +686,22 @@ public sealed class HangDumpTests
     [TestMethod]
     public async Task Dispose_RepeatedAndMixedSyncAsyncCalls_AreIdempotent()
     {
+        using var deadlineTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        using var activityTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        Task completedDump = Task.CompletedTask;
         HangDumpProcessLifetimeHandler handler = CreateHandler();
-        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+        await InitializePipeResourcesAsync(handler);
+        SetHandlerField(handler, "_deadlineTimer", deadlineTimer);
+        SetHandlerField(handler, "_activityTimer", activityTimer);
+        SetHandlerField(handler, "_activityIndicatorTask", completedDump);
 
         handler.Dispose();
         await handler.DisposeAsync();
         handler.Dispose();
 
         Assert.AreEqual(1, GetHandlerField<int>(handler, "_dumpTaken"));
+        Assert.AreSame(completedDump, GetHandlerField<Task>(handler, "_activityIndicatorTask"));
+        Assert.IsTrue(completedDump.IsCompletedSuccessfully);
     }
 #endif
 
