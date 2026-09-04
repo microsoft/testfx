@@ -85,7 +85,9 @@ internal static class TestMemberValidationHelper
                 && parameters[0].Type.ToDisplayString(SymbolDisplayFormats.FullyQualified) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
     }
 
-    internal static bool HaveSameRuntimeSignature(IMethodSymbol left, IMethodSymbol right)
+    // Mirrors TypeEnumerator's MethodInfo.ToString()-based discovery identity. In particular,
+    // generic parameter names remain significant because reflection formats them into that string.
+    internal static bool HaveSameRuntimeDiscoverySignature(IMethodSymbol left, IMethodSymbol right)
     {
         if (!string.Equals(left.Name, right.Name, StringComparison.Ordinal)
             || left.Arity != right.Arity

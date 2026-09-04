@@ -105,7 +105,7 @@ internal static class TestClassModelBuilder
                                 && (hiddenByNonMethod
                                     || !methodsInDerivedTypes.Any(derivedMethod =>
                                         ReplacesInheritedRuntimeTest(derivedMethod)
-                                        && TestMemberValidationHelper.HaveSameRuntimeSignature(derivedMethod, method)));
+                                        && TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(derivedMethod, method)));
                             break;
                         }
 
