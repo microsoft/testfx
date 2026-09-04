@@ -5,6 +5,7 @@ Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestApplicationBuilder
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool? IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool? IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.init -> void
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool? DeclaredIsStateful) -> void
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bool? DeclaredIsStateful) -> void
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.DeclaredIsStateful.get -> bool?
@@ -61,6 +62,7 @@ static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetCanceledConsumerC
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.init -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bool IsStateful) -> void
 <<<<<<< HEAD
