@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -20,6 +20,12 @@ internal static class RetryArgumentsBuilder
     private const int CommandLineLengthLimit = 30_000;
     private const int PerArgumentOverhead = 3;
 
+    internal static string GetArgumentsResponseFilePath(string retryRootFolder, int attemptCount)
+        => Path.Combine(retryRootFolder, $"retry-arguments-{attemptCount}.rsp");
+
+    internal static string GetFilterUidsResponseFilePath(string retryRootFolder, int attemptCount)
+        => Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+
     /// <summary>
     /// Computes the indices of the original executable arguments that must be dropped when restarting the test
     /// host, namely the retry-specific options and the result-directory option (which is re-injected per attempt).
@@ -28,47 +34,47 @@ internal static class RetryArgumentsBuilder
     {
         List<int> indexToCleanup = [];
 
-        int argIndex = RetryOrchestratorHelper.GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, executableArguments);
-        if (argIndex < 0)
+        if (!AddOptionIndicesToCleanup(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
-        indexToCleanup.Add(argIndex);
-        indexToCleanup.Add(argIndex + 1);
-
-        argIndex = RetryOrchestratorHelper.GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
-        }
-
-        argIndex = RetryOrchestratorHelper.GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
-        }
-
-        argIndex = RetryOrchestratorHelper.GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            if (argIndex + 1 < executableArguments.Length)
-            {
-                indexToCleanup.Add(argIndex + 1);
-            }
-        }
-
-        argIndex = RetryOrchestratorHelper.GetOptionArgumentIndex(PlatformCommandLineProvider.ResultDirectoryOptionKey, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
-        }
+        AddOptionIndicesToCleanup(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName);
+        AddOptionIndicesToCleanup(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName);
+        AddOptionIndicesToCleanup(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
+        AddOptionIndicesToCleanup(PlatformCommandLineProvider.ResultDirectoryOptionKey);
 
         return indexToCleanup;
+
+        bool AddOptionIndicesToCleanup(string optionName)
+        {
+            string shortForm = $"-{optionName}";
+            string longForm = $"-{shortForm}";
+            bool found = false;
+
+            for (int i = 0; i < executableArguments.Length; i++)
+            {
+                string argument = executableArguments[i];
+                bool isSeparate = argument == shortForm || argument == longForm;
+                bool isInline = argument.StartsWith(shortForm + "=", StringComparison.Ordinal)
+                    || argument.StartsWith(shortForm + ":", StringComparison.Ordinal)
+                    || argument.StartsWith(longForm + "=", StringComparison.Ordinal)
+                    || argument.StartsWith(longForm + ":", StringComparison.Ordinal);
+                if (!isSeparate && !isInline)
+                {
+                    continue;
+                }
+
+                found = true;
+                indexToCleanup.Add(i);
+                if (isSeparate && i + 1 < executableArguments.Length)
+                {
+                    indexToCleanup.Add(i + 1);
+                }
+            }
+
+            return found;
+        }
     }
 
     /// <summary>
@@ -78,6 +84,27 @@ internal static class RetryArgumentsBuilder
     public static async Task<List<string>> BuildAttemptArgumentsAsync(
         IFileSystem fileSystem,
         string[] executableArguments,
+        List<int> indexToCleanup,
+        string currentTryResultFolder,
+        string retryRootFolder,
+        string pipeName,
+        string[]? lastListOfFailedId,
+        int attemptCount)
+        => await BuildAttemptArgumentsAsync(
+            fileSystem,
+            executableArguments,
+            executableArguments,
+            indexToCleanup,
+            currentTryResultFolder,
+            retryRootFolder,
+            pipeName,
+            lastListOfFailedId,
+            attemptCount).ConfigureAwait(false);
+
+    public static async Task<List<string>> BuildAttemptArgumentsAsync(
+        IFileSystem fileSystem,
+        string[] executableArguments,
+        string[] originalExecutableArguments,
         List<int> indexToCleanup,
         string currentTryResultFolder,
         string retryRootFolder,
@@ -98,6 +125,47 @@ internal static class RetryArgumentsBuilder
             finalArguments.Add(executableArguments[i]);
         }
 
+        int responseFileIndex = Array.FindIndex(originalExecutableArguments, argument => argument.StartsWith("@", StringComparison.Ordinal));
+        List<string>? directPrefixArguments = null;
+        if (responseFileIndex >= 0)
+        {
+            directPrefixArguments = [];
+            for (int i = 0; i < responseFileIndex; i++)
+            {
+                if (!indexToCleanup.Contains(i))
+                {
+                    directPrefixArguments.Add(executableArguments[i]);
+                }
+            }
+        }
+
+        // When retrying, replace any existing test filter with --filter-uid for the failed tests.
+        if (lastListOfFailedId is { Length: > 0 })
+        {
+            RemoveRetryOnlyOptions(finalArguments);
+            if (directPrefixArguments is not null)
+            {
+                RemoveRetryOnlyOptions(directPrefixArguments);
+            }
+        }
+
+        if (directPrefixArguments is not null
+            && !finalArguments.Skip(directPrefixArguments.Count).Any(argument => argument.IndexOf('"') >= 0))
+        {
+            string responseFilePath = GetArgumentsResponseFilePath(retryRootFolder, attemptCount);
+            using (IFileStream stream = fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            using (var writer = new StreamWriter(stream.Stream))
+            {
+                foreach (string argument in finalArguments.Skip(directPrefixArguments.Count))
+                {
+                    await writer.WriteLineAsync($"\"{argument}\"").ConfigureAwait(false);
+                }
+            }
+
+            finalArguments.RemoveRange(directPrefixArguments.Count, finalArguments.Count - directPrefixArguments.Count);
+            finalArguments.Add($"@{responseFilePath}");
+        }
+
         // Fix result folder
         finalArguments.Add($"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}");
         finalArguments.Add(currentTryResultFolder);
@@ -106,17 +174,8 @@ internal static class RetryArgumentsBuilder
         finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
         finalArguments.Add(pipeName);
 
-        // When retrying, replace any existing test filter with --filter-uid for the failed tests
         if (lastListOfFailedId is { Length: > 0 })
         {
-            RetryOrchestratorHelper.RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
-            RetryOrchestratorHelper.RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
-
-            // Strip --minimum-expected-tests on retry attempts: a retry only re-runs the previously
-            // failed tests, so propagating the original threshold (computed against the full test
-            // set) would always trip the policy and fail the run. See issue #5639.
-            RetryOrchestratorHelper.RemoveOption(finalArguments, PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
-
             // The RSP parser (ResponseFileHelper.SplitCommandLine) strips all '"' characters
             // from tokens, so UIDs containing literal '"' (e.g. parameterized tests with
             // string arguments that include double quotes) cannot safely round-trip through
@@ -151,7 +210,7 @@ internal static class RetryArgumentsBuilder
                 // Use a response file to avoid exceeding command-line length limits.
                 // Write to retryRootFolder (not the per-attempt folder) so it won't be included
                 // in the final results move.
-                string responseFilePath = Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+                string responseFilePath = GetFilterUidsResponseFilePath(retryRootFolder, attemptCount);
                 using (IFileStream stream = fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
                 using (var writer = new StreamWriter(stream.Stream))
                 {
@@ -172,5 +231,14 @@ internal static class RetryArgumentsBuilder
         }
 
         return finalArguments;
+
+        static void RemoveRetryOnlyOptions(List<string> arguments)
+        {
+            RetryOrchestratorHelper.RemoveOption(arguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+            RetryOrchestratorHelper.RemoveOption(arguments, PlatformCommandLineProvider.FilterUidOptionKey);
+
+            // A retry only re-runs the previously failed tests, so the original full-suite threshold must not apply.
+            RetryOrchestratorHelper.RemoveOption(arguments, PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
+        }
     }
 }

@@ -125,7 +125,8 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         int userMaxRetryCount = int.Parse(cmdRetries[0], CultureInfo.InvariantCulture);
 
         // Find out the retry args indices so we can clean up the command line when we restart.
-        string[] executableArguments = [.. executableInfo.Arguments];
+        string[] originalExecutableArguments = [.. executableInfo.Arguments];
+        string[] executableArguments = [.. executableInfo.ExpandedArguments];
         List<int> indexToCleanup = RetryArgumentsBuilder.ComputeIndicesToCleanup(executableArguments);
 
         // Override the result directory with the attempt one
@@ -219,27 +220,60 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             // Prepare the pipe server that collects the child process's failed test UIDs.
             using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
 
-            List<string> finalArguments = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
-                _fileSystem,
-                executableArguments,
-                indexToCleanup,
-                currentTryResultFolder,
-                retryRootFolder,
-                retryFailedTestsPipeServer.PipeName,
-                lastListOfFailedId,
-                attemptCount).ConfigureAwait(false);
+            RetryTestHostRunner.AttemptResult attemptResult;
+            string[] generatedResponseFilePaths =
+            [
+                RetryArgumentsBuilder.GetArgumentsResponseFilePath(retryRootFolder, attemptCount),
+                RetryArgumentsBuilder.GetFilterUidsResponseFilePath(retryRootFolder, attemptCount),
+            ];
+            try
+            {
+                List<string> finalArguments = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+                    _fileSystem,
+                    executableArguments,
+                    originalExecutableArguments,
+                    indexToCleanup,
+                    currentTryResultFolder,
+                    retryRootFolder,
+                    retryFailedTestsPipeServer.PipeName,
+                    lastListOfFailedId,
+                    attemptCount).ConfigureAwait(false);
 
-            RetryTestHostRunner.AttemptResult attemptResult = await RetryTestHostRunner.RunAttemptAsync(
-                _serviceProvider,
-                this,
-                outputDevice,
-                logger,
-                retryFailedTestsPipeServer,
-                executableInfo,
-                finalArguments,
-                attemptCount,
-                userMaxRetryCount,
-                cancellationToken).ConfigureAwait(false);
+                await LogResponseFileFallbackWarningAsync(
+                    logger,
+                    originalExecutableArguments,
+                    finalArguments,
+                    generatedResponseFilePaths[0]).ConfigureAwait(false);
+
+                attemptResult = await RetryTestHostRunner.RunAttemptAsync(
+                    _serviceProvider,
+                    this,
+                    outputDevice,
+                    logger,
+                    retryFailedTestsPipeServer,
+                    executableInfo,
+                    finalArguments,
+                    attemptCount,
+                    userMaxRetryCount,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                foreach (string responseFilePath in generatedResponseFilePaths)
+                {
+                    try
+                    {
+                        if (fileSystem.ExistFile(responseFilePath))
+                        {
+                            fileSystem.DeleteFile(responseFilePath);
+                        }
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        await logger.LogWarningAsync($"Failed to delete generated retry response file '{responseFilePath}': {ex}").ConfigureAwait(false);
+                    }
+                }
+            }
 
             CollectRecoveredArtifacts(
                 fileSystem,
@@ -478,6 +512,21 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
     private static bool IsHotReloadEnabled(IEnvironment environment)
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+
+    internal static async Task LogResponseFileFallbackWarningAsync(
+        ILogger logger,
+        string[] originalExecutableArguments,
+        List<string> finalArguments,
+        string generatedResponseFilePath)
+    {
+        if (originalExecutableArguments.Any(argument => argument.StartsWith("@", StringComparison.Ordinal))
+            && !finalArguments.Contains($"@{generatedResponseFilePath}"))
+        {
+            await logger.LogWarningAsync(
+                "Retry arguments could not be regenerated in a response file because an argument contains a literal double quote. "
+                + "The retry command line may exceed the operating system limit.").ConfigureAwait(false);
+        }
+    }
 
     private static void CollectRecoveredArtifacts(
         IFileSystem fileSystem,

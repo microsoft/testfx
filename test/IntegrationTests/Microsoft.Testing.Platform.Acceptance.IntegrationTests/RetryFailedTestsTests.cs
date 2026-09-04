@@ -41,6 +41,17 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    internal static IEnumerable<(bool RetryArgumentsInResponseFile, bool UseInlineDelimiters, string Tfm)> GetResponseFileMatrix()
+    {
+        foreach (string tfm in TargetFrameworks.Net)
+        {
+            yield return (true, false, tfm);
+            yield return (true, true, tfm);
+            yield return (false, false, tfm);
+            yield return (false, true, tfm);
+        }
+    }
+
     [TestMethod]
     [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_OnlyRetryTimes_Succeeds(string tfm, bool failOnly)
@@ -110,6 +121,62 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             // Only the first attempt's summary survives; the three retry attempts each re-ran a single test and
             // would otherwise have printed three more "total: 1" blocks.
             AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
+        }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetResponseFileMatrix))]
+    public async Task RetryFailedTests_WithArgumentsInResponseFile_Succeeds(bool retryArgumentsInResponseFile, bool useInlineDelimiters, string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, $"response file results {Guid.NewGuid():N}");
+        string responseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.rsp");
+
+        try
+        {
+            File.WriteAllText(
+                responseFile,
+                (retryArgumentsInResponseFile, useInlineDelimiters) switch
+                {
+                    (true, true) => $"""
+                                    --retry-failed-tests=1
+                                    --retry-failed-tests-max-tests:50
+                                    --results-directory="{resultDirectory}"
+                                    """,
+                    (true, false) => $"""
+                                     --retry-failed-tests 1
+                                     --retry-failed-tests-max-tests 50
+                                     --results-directory "{resultDirectory}"
+                                     """,
+                    (false, true) => $"--results-directory=\"{resultDirectory}\"",
+                    (false, false) => $"--results-directory \"{resultDirectory}\"",
+                });
+
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                retryArgumentsInResponseFile
+                    ? $"@{responseFile}"
+                    : useInlineDelimiters
+                        ? $"@{responseFile} --retry-failed-tests=1 --retry-failed-tests-max-tests:50"
+                        : $"@{responseFile} --retry-failed-tests 1 --retry-failed-tests-max-tests 50",
+                new()
+                {
+                    { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                    { "METHOD1", "1" },
+                    { "FAIL", "0" },
+                    { "RESULTDIR", resultDirectory },
+                    { "CHECK_RETRY_RESPONSE_FILE_CLEANUP", "1" },
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
+            Assert.IsEmpty(
+                Directory.GetFiles(resultDirectory, "retry-*.rsp", SearchOption.AllDirectories),
+                "Generated retry response files must be deleted after each attempt.");
+        }
+        finally
+        {
+            File.Delete(responseFile);
         }
     }
 
@@ -937,6 +1004,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         var filter = (context.Request as TestExecutionRequest)?.Filter;
         var uidFilter = filter as TestNodeUidListFilter;
         var treeNodeFilter = filter as TreeNodeFilter;
+
+        if (Environment.GetEnvironmentVariable("CHECK_RETRY_RESPONSE_FILE_CLEANUP") == "1"
+            && Environment.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER") == "2"
+            && Directory.GetFiles(Path.Combine(resultDir, "Retries"), "retry-arguments-1.rsp", SearchOption.AllDirectories).Length != 0)
+        {
+            throw new InvalidOperationException("The response file from retry attempt 1 still exists during attempt 2.");
+        }
 
         var testMethod1Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod1", 0, Array.Empty<string>(), string.Empty);
         var testMethod2Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod2", 0, Array.Empty<string>(), string.Empty);

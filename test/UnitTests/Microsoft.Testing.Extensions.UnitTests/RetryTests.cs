@@ -30,6 +30,42 @@ public class RetryTests
 {
     private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
 
+    [DataRow(true)]
+    [DataRow(false)]
+    [TestMethod]
+    public async Task LogResponseFileFallbackWarningAsync_OnlyQuotedSuffixLogsWarning(bool quoteIsInDirectPrefix)
+    {
+        const string GeneratedResponseFilePath = "retry-arguments-1.rsp";
+        string[] originalArguments = quoteIsInDirectPrefix
+            ? ["quoted\"prefix", "@original.rsp"]
+            : ["@original.rsp", "quoted\"suffix"];
+        List<string> finalArguments = quoteIsInDirectPrefix
+            ? ["quoted\"prefix", $"@{GeneratedResponseFilePath}"]
+            : ["quoted\"suffix"];
+        var logger = new Mock<ILogger>();
+        logger
+            .Setup(value => value.LogAsync(
+                LogLevel.Warning,
+                It.IsAny<string>(),
+                null,
+                It.IsAny<Func<string, Exception?, string>>()))
+            .Returns(Task.CompletedTask);
+
+        await RetryOrchestrator.LogResponseFileFallbackWarningAsync(
+            logger.Object,
+            originalArguments,
+            finalArguments,
+            GeneratedResponseFilePath);
+
+        logger.Verify(
+            value => value.LogAsync(
+                LogLevel.Warning,
+                It.Is<string>(message => message.Contains("literal double quote", StringComparison.Ordinal)),
+                null,
+                It.IsAny<Func<string, Exception?, string>>()),
+            quoteIsInDirectPrefix ? Times.Never : Times.Once);
+    }
+
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainer pipe authorization is Windows-only.")]
     public void RetryPipeServer_UsesControllerAuthorizedSecurityIdentities()
