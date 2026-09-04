@@ -298,4 +298,8 @@
     <value>Remove redundant 'DisplayName'</value>
     <comment>{Locked="DisplayName"}</comment>
   </data>
+  <data name="MakeOSConditionConsistentFix" xml:space="preserve">
+    <value>Make '[OSCondition]' consistent with platform compatibility attributes</value>
+    <comment>{Locked="[OSCondition]"}</comment>
+  </data>
 </root>

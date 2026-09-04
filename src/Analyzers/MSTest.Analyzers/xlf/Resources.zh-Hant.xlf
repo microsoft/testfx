@@ -760,6 +760,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">請勿忽略字串方法的傳回值</target>
         <note />
       </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
+        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</target>
+        <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
+        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
+        <target state="new">Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</target>
+        <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
+        <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
+        <target state="new">Platform compatibility attributes should be consistent with '[OSCondition]'</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
         <target state="translated">'Assert.Fail' 可明確表示刻意失敗，並讓失敗訊息說明測試為何無法繼續。</target>

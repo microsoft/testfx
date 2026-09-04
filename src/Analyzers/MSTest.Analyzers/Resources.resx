@@ -1261,4 +1261,16 @@ The type declaring these methods should also respect the following rules:
     <value>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</value>
     <comment>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</comment>
   </data>
+  <data name="OSPlatformAttributesShouldBeConsistentTitle" xml:space="preserve">
+    <value>Platform compatibility attributes should be consistent with '[OSCondition]'</value>
+    <comment>{Locked="[OSCondition]"}</comment>
+  </data>
+  <data name="OSPlatformAttributesShouldBeConsistentMessageFormat" xml:space="preserve">
+    <value>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</value>
+    <comment>{0} is the test method or test class name. {Locked="[OSCondition]"}</comment>
+  </data>
+  <data name="OSPlatformAttributesShouldBeConsistentDescription" xml:space="preserve">
+    <value>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</value>
+    <comment>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</comment>
+  </data>
 </root>
