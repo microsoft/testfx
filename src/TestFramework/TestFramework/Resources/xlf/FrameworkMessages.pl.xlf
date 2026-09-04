@@ -360,7 +360,7 @@
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountExceedsRange">
         <source>{0} requests more unique random values than the range between {1} and {2} contains.</source>
-        <target state="new">{0} requests more unique random values than the range between {1} and {2} contains.</target>
+        <target state="translated">{0} żąda więcej unikatowych losowych wartości niż zawiera zakres od {1} do {2}.</target>
         <note>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountMustBePositive">
@@ -390,7 +390,7 @@
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
         <source>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</source>
-        <target state="new">Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</target>
+        <target state="translated">Nie można automatycznie wygenerować wartości dla parametru typu {0}. Zastosuj atrybut, który implementuje {1}, aby określić wartości.</target>
         <note>{0} is the parameter type. {1} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">
