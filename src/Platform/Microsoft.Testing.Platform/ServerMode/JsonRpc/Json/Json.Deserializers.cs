@@ -194,7 +194,6 @@ internal sealed partial class Json
                 ? null
                 : statefulElement.ValueKind switch
                 {
-                    JsonValueKind.Null => null,
                     JsonValueKind.True => true,
                     JsonValueKind.False => false,
                     _ => throw new MessageFormatException($"'{JsonRpcStrings.IsStateful}' field has wrong type (expected {nameof(Boolean)})"),

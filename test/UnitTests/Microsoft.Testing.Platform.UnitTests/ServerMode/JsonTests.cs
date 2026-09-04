@@ -284,6 +284,27 @@ public sealed class JsonTests
     }
 
     [TestMethod]
+    public void Deserialize_InitializeRequest_WithNullIsStateful_StjPath_Throws()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": null } }
+            }
+            """;
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory()));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
     public void Deserialize_ClientCapabilities_WithIsStatefulTrue_JsonitePath_SurfacesStatefulClient()
     {
         // Arrange
@@ -363,6 +384,30 @@ public sealed class JsonTests
                 {
                     ["debuggerProvider"] = true,
                     ["isStateful"] = "false",
+                },
+            },
+        };
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<ClientCapabilities>(properties));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithNullIsStateful_JsonitePath_Throws()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = null,
                 },
             },
         };
