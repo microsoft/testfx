@@ -41,8 +41,9 @@ internal static class TestClassModelBuilder
         // [TestMethod], the [TestContext] setter, … — are visible to the consumer
         // without runtime reflection.
         //
-        // Iteration order is derived-first so that an override or `new`-shadowed member
-        // on the derived type wins over the base declaration with the same signature.
+        // Iteration order is derived-first. Members declared at a nearer inheritance level
+        // hide same-name ancestor members according to C# lookup rules, while overloads
+        // declared together on the same type are preserved.
         // Constructors are NEVER inherited and are taken only from the leaf type.
         var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
         var methodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
