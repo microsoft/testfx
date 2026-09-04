@@ -146,12 +146,11 @@ internal static partial class SerializerUtilities
             IDictionary<string, object?> capabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities);
             IDictionary<string, object?> testingCapabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(capabilities, JsonRpcStrings.Testing);
             bool debuggerProvider = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.DebuggerProvider);
-            bool? isStateful = GetOptionalPropertyFromJson(testingCapabilities, JsonRpcStrings.IsStateful) switch
-            {
-                null => null,
-                bool value => value,
-                _ => throw new MessageFormatException($"'{JsonRpcStrings.IsStateful}' field has wrong type (expected {nameof(Boolean)})"),
-            };
+            bool? isStateful = testingCapabilities.TryGetValue(JsonRpcStrings.IsStateful, out object? isStatefulValue)
+                ? isStatefulValue is bool value
+                    ? value
+                    : throw new MessageFormatException($"'{JsonRpcStrings.IsStateful}' field has wrong type (expected {nameof(Boolean)})")
+                : null;
 
             return new ClientCapabilities(debuggerProvider, isStateful);
         });
