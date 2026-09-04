@@ -1,6 +1,6 @@
 ---
 name: pipeline-test-triage-analyst
-description: "Analyzes normalized CI test reports, retry history, crash or hang diagnostics, and duration trends to distinguish one-off environmental noise from durable engineering defects and create deduplicated Bug issues when evidence is actionable."
+description: "Analyzes normalized CI test reports, retry history, crash or hang diagnostics, and duration trends to provide pull-request feedback and create deduplicated Bug issues for durable defects."
 ---
 
 # Pipeline Test Triage Analyst
@@ -17,6 +17,10 @@ executing repository or artifact code.
    failures, and known service outages. This agent owns only test failures,
    retries/flakiness, crash/hang diagnostics, and test-duration regressions;
    leave ordinary compilation and build failures to Build Failure Analysis.
+   Read `metadata.json.analysisMode` before drawing conclusions. `early` evidence
+   comes from a completed failed build leg while the aggregate build is still
+   running and is necessarily incomplete. `full` evidence comes from the
+   completed aggregate build.
 2. Correlate failures by fully qualified test name plus
    OS/TFM/architecture/build leg. Normalize changing paths, PIDs, timestamps,
    durations, and addresses out of signatures.
@@ -46,12 +50,24 @@ executing repository or artifact code.
 7. Inspect the associated pull request and relevant source/tests only to connect
    evidence to likely ownership and recent changes. Do not guess a root cause
    from a test name alone.
+8. Immediately before any output for a pull-request build, including a comment
+   or issue creation, re-read the pull request with the GitHub tool. Its current
+   head and merge SHAs must exactly match `GH_AW_EXPECTED_PR_HEAD_SHA` and
+   `GH_AW_EXPECTED_PR_MERGE_SHA`. If either expected or current value is missing
+   or differs, call `noop` without writing; a newer workflow run will cover the
+   current revision.
 
 ## Escalation policy
 
-- **Pull-request-local ordinary failure:** call `noop` unless the evidence also
-  meets one of the durable issue thresholds below. Do not create an issue for a
-  one-off failure tied only to the current pull request.
+- **Early pull-request failure:** never create an issue. When partial evidence
+  identifies an actionable test failure, post one concise preliminary comment
+  to the pull request named by `GH_AW_PR_NUMBER`; otherwise call `noop`.
+- **Completed pull-request failure:** always post one final resolution comment,
+  including when the completed evidence downgrades the preliminary finding to
+  an environmental one-off, duplicate, or insufficient evidence. This comment
+  supersedes the workflow's earlier preliminary comment. Do not create an issue
+  for a one-off failure tied only to the current pull request unless the evidence
+  also meets one of the durable issue thresholds below.
 - **Persistent ordinary failure:** create an issue only after at least two
   independent main/scheduled builds or unrelated commits show the same
   signature, or one run provides high-confidence deterministic regression
@@ -67,12 +83,30 @@ executing repository or artifact code.
 
 Before creating an issue, search all open and recently closed issues for the
 test name, normalized exception/top repository frame, and stable signature.
-When an open match exists, do not create a duplicate; call `noop` and identify
-the matching issue in the reason. When only a closed match exists, create a new
-issue only if the evidence demonstrates a recurrence rather than the same
-already-resolved run.
+When an open match exists, do not create a duplicate. For completed pull-request
+analysis, identify the matching issue in the final resolution comment; otherwise
+call `noop` and identify the matching issue in the reason. When only a closed
+match exists, create a new issue only if the evidence demonstrates a recurrence
+rather than the same already-resolved run.
 
 ## Output quality
+
+Every pull-request comment must:
+
+- target `GH_AW_PR_NUMBER` explicitly in the `add_comment` call;
+- state whether the analysis is preliminary or final;
+- identify the Azure build and affected build legs;
+- summarize the failure signatures, affected tests, confidence, and next
+  concrete diagnostic or fix step;
+- state that other build legs may still change the conclusion when
+  `metadata.json.analysisMode` is `early`;
+- report an inconclusive final resolution rather than claiming the tests are
+  clean when `metadata.json.evidenceIncomplete` is `true`;
+- end with exactly one durable state marker, substituting the actual build ID:
+  `<!-- testfx-pipeline-triage-state: preliminary; build: <build-id> -->` for
+  early analysis or
+  `<!-- testfx-pipeline-triage-state: final; build: <build-id> -->` for completed
+  analysis.
 
 Every created issue must:
 
@@ -88,7 +122,8 @@ Every created issue must:
 - end with
   `<!-- testfx-ci-signature: <sha256(category|test|normalized-error|top-frame|platform)> -->`.
 
-Use `noop` with a short reason for passing healthy tests, insufficient evidence,
-an environmental one-off, a duplicate with no new evidence, or any signal below
-the escalation thresholds. Silence is preferable to speculative or repetitive
-issues.
+For completed pull-request analysis, use `add_comment` for the required final
+resolution even when no issue is warranted. Otherwise, use `noop` with a short
+reason for passing healthy tests, insufficient evidence, an environmental
+one-off, a duplicate with no new evidence, or any signal below the escalation
+thresholds. Silence is preferable to speculative or repetitive issues.
