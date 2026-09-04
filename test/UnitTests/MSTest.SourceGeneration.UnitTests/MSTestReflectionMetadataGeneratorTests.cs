@@ -1412,6 +1412,36 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_HiddenUnsupportedInheritedMethods_ReportDiagnostics()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void GenericHidden<T>() { }
+
+                [TestMethod]
+                public void ByRefHidden(ref int value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int GenericHidden { get; set; }
+
+                public int ByRefHidden { get; set; }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0004");
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+    }
+
+    [TestMethod]
     public void Generator_IncludesMethodsFromMultiLevelInheritance()
     {
         const string userCode = """

@@ -90,6 +90,15 @@ internal static class TestClassModelBuilder
                         bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
                         bool hiddenByNonMethod = nonMethodNamesInDerivedTypes.Contains(method.Name);
                         bool hiddenByMethodGroup = methodNamesInDerivedTypes.Contains(method.Name);
+                        bool isAccessible = TestMemberValidationHelper.IsAccessibleFromConsumer(method, consumingAssembly);
+                        if ((hiddenByNonMethod || hiddenByMethodGroup)
+                            && isAccessible
+                            && TestMemberValidationHelper.TryReportUnsupportedMethod(method, leafFqn, diagnostics))
+                        {
+                            hasUnsupportedTestMethod |= isTestMethod;
+                            break;
+                        }
+
                         if (hiddenByNonMethod || hiddenByMethodGroup)
                         {
                             hasUnsupportedTestMethod |= isTestMethod
@@ -100,7 +109,7 @@ internal static class TestClassModelBuilder
                             break;
                         }
 
-                        if (!TestMemberValidationHelper.IsAccessibleFromConsumer(method, consumingAssembly))
+                        if (!isAccessible)
                         {
                             hasUnsupportedTestMethod |= isTestMethod;
                             break;
