@@ -1776,6 +1776,28 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void RuntimeSignature_DifferentlyNamedMethodTypeParameters_AreNotEquivalent()
+    {
+        const string userCode = """
+            public class First
+            {
+                public void Method<T>(T value) { }
+            }
+
+            public class Second
+            {
+                public void Method<U>(U value) { }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(userCode);
+        var firstMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("First")!.GetMembers("Method").Single();
+        var secondMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("Second")!.GetMembers("Method").Single();
+
+        TestMemberValidationHelper.HaveSameRuntimeSignature(firstMethod, secondMethod).Should().BeFalse();
+    }
+
+    [TestMethod]
     public void Generator_NestedGenericContainingTypeSubstitutions_HaveDistinctRuntimeSignatures()
     {
         const string userCode = """
