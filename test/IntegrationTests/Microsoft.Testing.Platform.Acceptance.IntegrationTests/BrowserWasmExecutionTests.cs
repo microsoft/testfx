@@ -892,12 +892,14 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
 
         // Only a missing 'wasm-tools' workload is an acceptable skip; any other build failure (compiler
         // error, a broken generated MTP entry point) is a real regression and must fail the test.
+        // The browser-WASM SDK's JsonToItemsTaskFactory cannot run in the out-of-process TaskHost used by -mt.
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -f {TargetFramework} -r {WasmRuntime.BrowserRid} -c Release",
             // Trimming/wasm builds can emit non-actionable warnings; we only assert on the build
             // succeeding and the entry point being generated, not on a warning-clean build.
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         if (buildResult.ExitCode != 0)
