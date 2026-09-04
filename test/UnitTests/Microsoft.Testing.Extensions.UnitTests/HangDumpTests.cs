@@ -8,6 +8,7 @@ using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -550,6 +551,144 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public void Dispose_CompletedDump_StopsTimersClaimsGateAndDisposesWaitSignal()
+    {
+        using var deadlineTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        using var activityTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        HangDumpProcessLifetimeHandler handler = CreateHandler();
+        SetHandlerField(handler, "_deadlineTimer", deadlineTimer);
+        SetHandlerField(handler, "_activityTimer", activityTimer);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+
+        handler.Dispose();
+
+        Assert.AreEqual(1, GetHandlerField<int>(handler, "_dumpTaken"));
+        AssertTimerDisposed(deadlineTimer);
+        AssertTimerDisposed(activityTimer);
+        Assert.ThrowsExactly<ObjectDisposedException>(
+            () => _ = GetHandlerField<ManualResetEventSlim>(handler, "_waitConsumerPipeName").WaitHandle);
+    }
+
+    [TestMethod]
+    public async Task Dispose_DumpInFlight_WaitsForCompletion()
+    {
+        TaskCompletionSource<bool> dumpCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        HangDumpProcessLifetimeHandler handler = CreateHandler(disposeTimeout: TimeSpan.FromSeconds(30));
+        SetHandlerField(handler, "_activityIndicatorTask", dumpCompletion.Task);
+
+        var disposeTask = Task.Run(handler.Dispose, TestContext.CancellationToken);
+        Assert.IsTrue(
+            SpinWait.SpinUntil(() => GetHandlerField<int>(handler, "_dumpTaken") == 1, TimeSpan.FromSeconds(30)),
+            "Dispose did not reach the dump gate.");
+        Assert.IsFalse(disposeTask.IsCompleted, "Dispose returned before the in-flight dump completed.");
+
+        dumpCompletion.SetResult(true);
+        Task completed = await Task.WhenAny(disposeTask, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+
+        Assert.AreSame(disposeTask, completed);
+        await disposeTask;
+    }
+
+    [TestMethod]
+    public void Dispose_FaultedDump_ReportsAndRethrowsAggregateException()
+    {
+        var failure = new InvalidOperationException("dump failed");
+        List<ErrorMessageOutputDeviceData> errors = [];
+        Mock<IOutputDevice> outputDevice = CreateCapturingOutputDevice(errors);
+        HangDumpProcessLifetimeHandler handler = CreateHandler(outputDevice.Object);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.FromException(failure));
+
+        AggregateException exception = Assert.ThrowsExactly<AggregateException>(handler.Dispose);
+
+        Assert.AreSame(failure, exception.InnerException);
+        Assert.HasCount(1, errors);
+        Assert.Contains(failure.Message, errors[0].Message);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+        handler.Dispose();
+    }
+
+    [TestMethod]
+    public void Dispose_InFlightDumpExceedsTimeout_ThrowsWithoutProductionDelay()
+    {
+        TaskCompletionSource<bool> dumpCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        HangDumpProcessLifetimeHandler handler = CreateHandler(disposeTimeout: TimeSpan.Zero);
+        SetHandlerField(handler, "_activityIndicatorTask", dumpCompletion.Task);
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(handler.Dispose);
+
+        Assert.Contains("_activityIndicatorTask didn't exit in 00:00:00 seconds", exception.Message);
+        dumpCompletion.SetResult(true);
+        handler.Dispose();
+    }
+
+#if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_FaultedDump_ReportsAndRethrowsOriginalException()
+    {
+        var failure = new InvalidOperationException("async dump failed");
+        List<ErrorMessageOutputDeviceData> errors = [];
+        Mock<IOutputDevice> outputDevice = CreateCapturingOutputDevice(errors);
+        HangDumpProcessLifetimeHandler handler = CreateHandler(outputDevice.Object);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.FromException(failure));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await handler.DisposeAsync());
+
+        Assert.AreSame(failure, exception);
+        Assert.HasCount(1, errors);
+        Assert.Contains(failure.Message, errors[0].Message);
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+        await handler.DisposeAsync();
+    }
+
+    [TestMethod]
+    public async Task DisposeAsync_InFlightDumpExceedsTimeout_ReportsAndThrowsWithoutProductionDelay()
+    {
+        TaskCompletionSource<bool> dumpCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        List<ErrorMessageOutputDeviceData> errors = [];
+        Mock<IOutputDevice> outputDevice = CreateCapturingOutputDevice(errors);
+        HangDumpProcessLifetimeHandler handler = CreateHandler(outputDevice.Object, TimeSpan.Zero);
+        SetHandlerField(handler, "_activityIndicatorTask", dumpCompletion.Task);
+
+        TimeoutException exception = await Assert.ThrowsExactlyAsync<TimeoutException>(
+            async () => await handler.DisposeAsync());
+
+        Assert.HasCount(1, errors);
+        Assert.Contains(typeof(TimeoutException).FullName!, errors[0].Message);
+        Assert.Contains(exception.Message, errors[0].Message);
+        dumpCompletion.SetResult(true);
+        await handler.DisposeAsync();
+    }
+
+    [TestMethod]
+    public async Task Dispose_RepeatedAndMixedSyncAsyncCalls_AreIdempotent()
+    {
+        HangDumpProcessLifetimeHandler handler = CreateHandler();
+        SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+
+        handler.Dispose();
+        await handler.DisposeAsync();
+        handler.Dispose();
+
+        Assert.AreEqual(1, GetHandlerField<int>(handler, "_dumpTaken"));
+    }
+#endif
+
+    [TestMethod]
+    public void Dispose_TimerCallbackArrivingAfterGateClaim_DoesNotStartDump()
+    {
+        HangDumpProcessLifetimeHandler handler = CreateHandler();
+        handler.Dispose();
+
+        typeof(HangDumpProcessLifetimeHandler)
+            .GetMethod("TriggerDumpOnce", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(handler, [CancellationToken.None, false]);
+
+        Assert.AreEqual(1, GetHandlerField<int>(handler, "_dumpTaken"));
+        Assert.IsNull(GetHandlerField<Task?>(handler, "_activityIndicatorTask"));
+    }
+
+    [TestMethod]
     public async Task HangDumpType_And_HangDumpTypeIfSupported_AreMutuallyExclusive()
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -600,6 +739,68 @@ public sealed class HangDumpTests
             .GetField("_testsCurrentExecutionState", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(indicator)!;
         return (int)state.GetType().GetProperty("Count")!.GetValue(state)!;
+    }
+
+    private static HangDumpProcessLifetimeHandler CreateHandler(
+        IOutputDevice? outputDevice = null,
+        TimeSpan? disposeTimeout = null)
+    {
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        Mock<IClock> clock = new();
+        clock.SetupGet(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
+
+        var handler = new HangDumpProcessLifetimeHandler(
+            new NamedPipeServerEndpoint($"hang_{Guid.NewGuid():N}"),
+            Mock.Of<IMessageBus>(),
+            outputDevice ?? Mock.Of<IOutputDevice>(),
+            new TestCommandLineOptions([]),
+            Mock.Of<ITask>(),
+            Mock.Of<IEnvironment>(),
+            loggerFactory.Object,
+            Mock.Of<IConfiguration>(),
+            Mock.Of<IProcessHandler>(),
+            clock.Object,
+            new ServiceProvider(),
+            disposeTimeout);
+
+        return handler;
+    }
+
+    private static Mock<IOutputDevice> CreateCapturingOutputDevice(List<ErrorMessageOutputDeviceData> errors)
+    {
+        Mock<IOutputDevice> outputDevice = new();
+        outputDevice
+            .Setup(x => x.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>(
+                (_, data, _) => errors.Add((ErrorMessageOutputDeviceData)data))
+            .Returns(Task.CompletedTask);
+        return outputDevice;
+    }
+
+    private static void SetHandlerField<T>(HangDumpProcessLifetimeHandler handler, string fieldName, T value)
+        => typeof(HangDumpProcessLifetimeHandler)
+            .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(handler, value);
+
+    private static T GetHandlerField<T>(HangDumpProcessLifetimeHandler handler, string fieldName)
+        => (T)typeof(HangDumpProcessLifetimeHandler)
+            .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(handler)!;
+
+    private static void AssertTimerDisposed(Timer timer)
+    {
+        try
+        {
+            Assert.IsFalse(timer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan));
+        }
+        catch (ObjectDisposedException)
+        {
+            // .NET Framework throws while current .NET returns false for the same disposed state.
+        }
     }
 
     [TestMethod]

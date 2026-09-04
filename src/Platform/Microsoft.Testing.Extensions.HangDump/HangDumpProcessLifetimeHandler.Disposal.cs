@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
+#if NETCOREAPP
 using Microsoft.Testing.Platform.Helpers;
+#endif
 using Microsoft.Testing.Platform.OutputDevice;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
@@ -18,7 +20,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             bool waitResult;
             try
             {
-                waitResult = activityIndicatorTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                waitResult = activityIndicatorTask.Wait(_disposeTimeout);
             }
             catch (Exception e)
             {
@@ -28,7 +30,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
 
             if (!waitResult)
             {
-                throw new InvalidOperationException($"_activityIndicatorTask didn't exit in {TimeoutHelper.DefaultHangTimeSpanTimeout} seconds");
+                throw new InvalidOperationException($"_activityIndicatorTask didn't exit in {_disposeTimeout} seconds");
             }
         }
 
@@ -46,7 +48,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         {
             try
             {
-                await activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+                await activityIndicatorTask.TimeoutAfterAsync(_disposeTimeout).ConfigureAwait(false);
             }
             catch (Exception e)
             {
