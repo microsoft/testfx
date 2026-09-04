@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -83,83 +83,5 @@ internal static class TestMemberValidationHelper
         return parameters.Length == 0
             || (parameters.Length == 1
                 && parameters[0].Type.ToDisplayString(SymbolDisplayFormats.FullyQualified) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
-    }
-
-    internal static string BuildMethodSignatureKey(IMethodSymbol method)
-    {
-        var sb = new StringBuilder();
-        sb.Append(method.Name);
-        if (method.Arity > 0)
-        {
-            sb.Append('`');
-            sb.Append(method.Arity);
-        }
-
-        sb.Append('(');
-        bool first = true;
-        foreach (IParameterSymbol p in method.Parameters)
-        {
-            if (!first)
-            {
-                sb.Append(',');
-            }
-
-            first = false;
-            switch (p.RefKind)
-            {
-                case RefKind.Ref:
-                    sb.Append("ref ");
-                    break;
-                case RefKind.Out:
-                    sb.Append("out ");
-                    break;
-                case RefKind.In:
-                    sb.Append("in ");
-                    break;
-            }
-
-            AppendTypeKey(sb, p.Type);
-        }
-
-        sb.Append(')');
-        return sb.ToString();
-    }
-
-    private static void AppendTypeKey(StringBuilder builder, ITypeSymbol type)
-    {
-        switch (type)
-        {
-            case ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method } methodTypeParameter:
-                builder.Append("!!").Append(methodTypeParameter.Ordinal);
-                break;
-            case IDynamicTypeSymbol:
-                builder.Append("object");
-                break;
-            case IArrayTypeSymbol array:
-                AppendTypeKey(builder, array.ElementType);
-                builder.Append('[').Append(array.Rank).Append(']');
-                break;
-            case IPointerTypeSymbol pointer:
-                AppendTypeKey(builder, pointer.PointedAtType);
-                builder.Append('*');
-                break;
-            case INamedTypeSymbol { IsGenericType: true } named:
-                builder.Append(named.OriginalDefinition.ToDisplayString(SymbolDisplayFormats.FullyQualified)).Append('<');
-                for (int i = 0; i < named.TypeArguments.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        builder.Append(',');
-                    }
-
-                    AppendTypeKey(builder, named.TypeArguments[i]);
-                }
-
-                builder.Append('>');
-                break;
-            default:
-                builder.Append(type.ToDisplayString(SymbolDisplayFormats.FullyQualified));
-                break;
-        }
     }
 }

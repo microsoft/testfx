@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -44,7 +44,6 @@ internal static class TestClassModelBuilder
         // Iteration order is derived-first so that an override or `new`-shadowed member
         // on the derived type wins over the base declaration with the same signature.
         // Constructors are NEVER inherited and are taken only from the leaf type.
-        var seenMethodKeys = new HashSet<string>(StringComparer.Ordinal);
         var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
         var methodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
         var nonMethodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
@@ -90,12 +89,6 @@ internal static class TestClassModelBuilder
                             || methodNamesInDerivedTypes.Contains(method.Name))
                         {
                             hasUnsupportedTestMethod |= isTestMethod;
-                            break;
-                        }
-
-                        string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
-                        if (!seenMethodKeys.Add(key))
-                        {
                             break;
                         }
 
