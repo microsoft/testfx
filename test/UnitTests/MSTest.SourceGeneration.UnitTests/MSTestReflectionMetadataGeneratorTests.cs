@@ -1743,7 +1743,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         var dynamicMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("DynamicReturn")!.GetMembers("Method").Single();
         var objectMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("ObjectReturn")!.GetMembers("Method").Single();
 
-        TestMemberValidationHelper.HaveSameRuntimeSignature(dynamicMethod, objectMethod).Should().BeTrue();
+        TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(dynamicMethod, objectMethod).Should().BeTrue();
     }
 
     [TestMethod]
@@ -1770,7 +1770,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         var baseMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("BaseTests")!.GetMembers("Hidden").Single();
         var derivedMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("DerivedTests")!.GetMembers("Hidden").Single();
 
-        TestMemberValidationHelper.HaveSameRuntimeSignature(derivedMethod, baseMethod).Should().BeFalse();
+        TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(derivedMethod, baseMethod).Should().BeFalse();
         GetRegistry(RunGenerator(MinimalMSTestStub, userCode))
             .Should().Contain("AreGeneratedDescriptorsComplete = false");
     }
@@ -1794,7 +1794,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         var firstMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("First")!.GetMembers("Method").Single();
         var secondMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("Second")!.GetMembers("Method").Single();
 
-        TestMemberValidationHelper.HaveSameRuntimeSignature(firstMethod, secondMethod).Should().BeFalse();
+        TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(firstMethod, secondMethod).Should().BeFalse();
     }
 
     [TestMethod]
