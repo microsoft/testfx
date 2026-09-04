@@ -84,4 +84,65 @@ internal static class TestMemberValidationHelper
             || (parameters.Length == 1
                 && parameters[0].Type.ToDisplayString(SymbolDisplayFormats.FullyQualified) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
     }
+
+    internal static bool HaveSameRuntimeSignature(IMethodSymbol left, IMethodSymbol right)
+    {
+        if (!string.Equals(left.Name, right.Name, StringComparison.Ordinal)
+            || left.Arity != right.Arity
+            || left.Parameters.Length != right.Parameters.Length
+            || (left.IsStatic && !right.IsStatic)
+            || !SymbolEqualityComparer.Default.Equals(left.ReturnType, right.ReturnType))
+        {
+            return false;
+        }
+
+        for (int index = 0; index < left.Parameters.Length; index++)
+        {
+            IParameterSymbol leftParameter = left.Parameters[index];
+            IParameterSymbol rightParameter = right.Parameters[index];
+            if ((leftParameter.RefKind == RefKind.None) != (rightParameter.RefKind == RefKind.None)
+                || !AreSignatureTypesEquivalent(leftParameter.Type, rightParameter.Type))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool AreSignatureTypesEquivalent(ITypeSymbol left, ITypeSymbol right)
+    {
+        if (left is ITypeParameterSymbol leftTypeParameter && right is ITypeParameterSymbol rightTypeParameter)
+        {
+            return leftTypeParameter.TypeParameterKind == rightTypeParameter.TypeParameterKind
+                && string.Equals(leftTypeParameter.Name, rightTypeParameter.Name, StringComparison.Ordinal);
+        }
+
+        if (left is IArrayTypeSymbol leftArray && right is IArrayTypeSymbol rightArray)
+        {
+            return leftArray.Rank == rightArray.Rank
+                && AreSignatureTypesEquivalent(leftArray.ElementType, rightArray.ElementType);
+        }
+
+        if (left is INamedTypeSymbol leftNamed && right is INamedTypeSymbol rightNamed && !leftNamed.TypeArguments.IsEmpty)
+        {
+            if (leftNamed.TypeArguments.Length != rightNamed.TypeArguments.Length
+                || !SymbolEqualityComparer.Default.Equals(leftNamed.OriginalDefinition, rightNamed.OriginalDefinition))
+            {
+                return false;
+            }
+
+            for (int index = 0; index < leftNamed.TypeArguments.Length; index++)
+            {
+                if (!AreSignatureTypesEquivalent(leftNamed.TypeArguments[index], rightNamed.TypeArguments[index]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return SymbolEqualityComparer.Default.Equals(left, right);
+    }
 }
