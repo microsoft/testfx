@@ -114,11 +114,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
             public static class ReflectionMetadataHook
             {
+                public static System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]>? RegisteredTestMethods { get; private set; }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
-                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> descriptorTestMethods, System.Type[] descriptorCompleteTypes) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> descriptorTestMethods, System.Type[] descriptorCompleteTypes) { RegisteredTestMethods = testMethods; }
             }
         }
         """;
@@ -1654,6 +1655,54 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_DynamicTestMethod_ReplacesObjectAncestor()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden(object value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Hidden(dynamic value) { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).Hidden((dynamic)args![0]!);");
+    }
+
+    [TestMethod]
+    public void RuntimeSignature_DynamicAndObjectReturnTypes_AreEquivalent()
+    {
+        const string userCode = """
+            public class DynamicReturn
+            {
+                public dynamic Method() => new object();
+            }
+
+            public class ObjectReturn
+            {
+                public object Method() => new object();
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(userCode);
+        var dynamicMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("DynamicReturn")!.GetMembers("Method").Single();
+        var objectMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("ObjectReturn")!.GetMembers("Method").Single();
+
+        TestMemberValidationHelper.HaveSameRuntimeSignature(dynamicMethod, objectMethod).Should().BeTrue();
+    }
+
+    [TestMethod]
     public void Generator_DerivedMethodGroup_HidesBaseOverloads()
     {
         const string userCode = """
@@ -1750,6 +1799,17 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         outputCompilation.GetDiagnostics()
             .Where(d => d.Severity == DiagnosticSeverity.Error)
             .Should().BeEmpty();
+
+        using var assemblyStream = new MemoryStream();
+        outputCompilation.Emit(assemblyStream).Success.Should().BeTrue();
+        var assembly = System.Reflection.Assembly.Load(assemblyStream.ToArray());
+        Type hookType = assembly.GetType("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook")!;
+        var registeredTestMethods = (IReadOnlyDictionary<Type, System.Reflection.MethodInfo[]>)hookType
+            .GetProperty("RegisteredTestMethods")!
+            .GetValue(null)!;
+        System.Reflection.MethodInfo registeredMethod = registeredTestMethods.Values.SelectMany(static methods => methods).Single();
+        registeredMethod.DeclaringType!.Name.Should().Be("BaseTests");
+        registeredMethod.ReturnType.Should().Be(typeof(void));
     }
 
     [TestMethod]
@@ -3357,8 +3417,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // matching and unresolved-member fallback over those cached arrays.
         registration.Should().Contain("MethodInfo[]? availableMethods = null;");
         registration.Should().Contain("availableMethods ??= type.GetMethods(memberFlags);");
-        registration.Should().Contain("ResolveMethod(availableMethods, method.Name, method.ParameterTypes)");
-        registration.Should().Contain("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods");
+        registration.Should().Contain("ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes)");
+        registration.Should().Contain("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, Type declaringType");
         registration.Should().Contain("availableProperties ??= type.GetProperties(memberFlags);");
         registration.Should().Contain("private static PropertyInfo? ResolveProperty(PropertyInfo[] availableProperties");
         registration.Should().NotContain("type.GetMethods(flags)");
