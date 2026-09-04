@@ -1,13 +1,29 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-09-03 UTC
+2026-09-04 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-09-03, run 33809152562): **4 (verify no open efficiency PRs), 2 (scan MSBuildCache removal + source-generator changes), 5 (re-check #8824, no engagement), 7 (September monthly summary — month rollover)**
-Last run before this: Task 4/2/5/7 (2026-08-31, run 33442495945)
-Next run should prioritise: a genuinely unscanned area. Consider `src/Package/MSTest.Sdk` .targets drift re-check, or `src/Analyzers/MSTest.Analyzers.CodeFixes` (last deep-scanned 2026-08-19), or continue rotating through Platform extensions for drift since major merges. Repo commit volume high (~40 commits since 2026-08-31), but all reviewed changes were CI-infra-only (MSBuildCache removal), compile-time-only (source-gen emission fix), or narrow/cold-path fixes (telemetry starvation .NET FW-only, Retry response-file cold path) — no new hot-path efficiency regressions found.
+Tasks run this session (2026-09-04, run 33922149342): **4 (verify no open efficiency PRs — confirmed 0), 2 (scan core MTP engine/IPC + Retry/TrxReport/HtmlReport extensions), 3 (implemented HtmlReportMerger identity-caching fix, opened PR), 5 (re-check #8824, no engagement), 7 (September monthly summary — updated)**
+Last run before this: Task 4/2/5/7 (2026-09-03, run 33809152562)
+Next run should prioritise: `src/Package/MSTest.Sdk` .targets drift re-check, or `src/Analyzers/MSTest.Analyzers.CodeFixes` (last deep-scanned 2026-08-19). Also worth re-visiting `HtmlReportMerger.ConcatenateTests` (lines ~191-238), which has the SAME redundant-identity-computation pattern as `CollapseRetryAttempts` (calls `CreateTestIdentity` once via `.Select()` for counting, then again in the main loop) — lower severity since it's only 1 `string.Join` per call (not 2), but same fix shape; deliberately left out of this run's PR to keep the change small and focused, but a good follow-up once the current PR lands. Also revisit `RetryDataConsumer.ConsumeAsync` (one IPC round-trip per failed test, not batched) — explicitly a design trade-off, not a bug, but worth a second look if maintainers want batching.
+
+## 2026-09-04 Run Notes
+
+- Task 4: confirmed via `search_pull_requests` no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain.
+- Task 2: Delegated two sub-agent scans:
+  - `src/Platform/Microsoft.Testing.Platform` (core engine) + `Microsoft.Testing.Platform.IPC`: **no genuine hot-path issues** — `TreeNodeFilter` pre-compiles regex once, IPC serializers are explicitly allocation-free (ArrayPool/stackalloc), `AsynchronousMessageBus` uses Dictionary+for-loops not LINQ. Confirms this core area is already carefully optimized.
+  - `Microsoft.Testing.Extensions.Retry`, `Microsoft.Testing.Extensions.TrxReport`, `Microsoft.Testing.Extensions.HtmlReport`: found **one genuine candidate** — `HtmlReportMerger.CollapseRetryAttempts` called `CreateRetryBaseIdentity(test)` (2×`string.Join` internally) twice per test row: once in a LINQ `GroupBy` ambiguity scan, again in the slot-assignment loop.
+- Task 3: Implemented the fix — precompute `CreateRetryBaseIdentity` once per test into a `string[]`, reuse in both passes. Verified with a temporary micro-benchmark (added, measured, removed — not shipped) using `GC.GetAllocatedBytesForCurrentThread()` around `HtmlReportMerger.Merge(..., HtmlMergeMode.CollapseRetryAttempts)` on a synthetic 20,000-test/40,000-row report:
+  - Before: 166,408,536 bytes allocated. After: 156,021,208 bytes. **Reduction: ~10.4 MB (≈6.2%)**, measured by `git stash`/`pop`-ing the fix and re-running the same benchmark both ways.
+  - Ran full `HtmlReport*`-filtered unit test suite (`Microsoft.Testing.Extensions.UnitTests`, net9.0): 58 passed, 2 skipped (pre-existing), 0 failed. `dotnet build` on `Microsoft.Testing.Extensions.HtmlReport.csproj` (net8.0/net9.0/netstandard2.0): 0 warnings, 0 errors.
+  - Created branch `efficiency/htmlreport-merger-identity-caching`, opened draft PR "Cache retry-identity computation in HtmlReportMerger.CollapseRetryAttempts" via `safeoutputs create_pull_request` (labels: area/performance).
+  - **Learning**: `dotnet run --project ... -- --treenode-filter/--filter` sometimes echoes `--help` instead of running when invoked through certain shell/arg-passing combos in this sandbox — running the built test-host executable directly from `artifacts/bin/<Project>/Debug/<tfm>/<Project>` with `--filter "FullyQualifiedName~X"` (VSTest-style filter) worked reliably.
+  - **Learning**: for allocation-based micro-benchmarks, writing results to a temp file (not `Console.WriteLine`, which MTP/VSTest test-host output doesn't surface by default) is the simplest way to retrieve measured values; delete the benchmark test before finalizing the PR (don't ship throwaway benchmark tests).
+- Task 5: re-checked #8824 (RFC: Agent/LLM-efficient test output) — no new comments since 2026-07-14 reconciliation comment already reviewed. Not re-engaged (anti-spam).
+- Task 7: updated #11023 (September monthly tracker) with this run's Run History entry.
+- Checked git log on `main` since last memory update — only 1 new commit (92b6986, cross-assembly source-gen accessibility fix, #11014) — very low commit volume this window.
 
 ## 2026-09-03 Run Notes
 
@@ -205,11 +221,13 @@ Notes:
 | LOW | Code-Level | `TestExecutionManager` MethodLevel parallel: `Select(t => new[] { t })` — 1 array per test in setup path | One-time setup cost, ~80KB for 10K tests |
 | LOW | Code-Level | `TestContextImplementation.SanitizeName`: `Array.IndexOf` over invalid chars per character | Only called when TestTempDirectory is first accessed |
 | LOW | Infrastructure | CI output-byte-count health metric | Needs maintainer discussion |
+| LOW | Code-Level | `HtmlReportMerger.ConcatenateTests`: `CreateTestIdentity` computed once via `.Select()` (counting only) then again in main loop | Same shape as fixed `CollapseRetryAttempts` bug but only 1 `string.Join`/call (not 2) — good small follow-up once current PR lands |
 
 ## Completed Work
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-09-04 | PR created (draft, `efficiency/htmlreport-merger-identity-caching`) | Cache `CreateRetryBaseIdentity` per test in `HtmlReportMerger.CollapseRetryAttempts` (was computed twice per row: LINQ ambiguity scan + slot-assignment loop); GC-allocation micro-benchmark showed ~10.4MB reduction (≈6.2%) on 20K-test/40K-row synthetic report; build succeeded, 58/60 HtmlReport-filtered unit tests passed (2 pre-existing skips) |
 | 2026-08-19 | PR created (draft, `efficiency/cache-regex-matches`) | Cache compiled `Regex` instances in `Assert.Matches.cs`'s `ToRegex` helper (string-pattern overloads of `MatchesRegex`/`DoesNotMatchRegex`) via `ConcurrentDictionary<string, Regex>`; micro-benchmark showed ~300x per-call reduction (5.12µs uncached vs 0.016µs cached, 200K iterations); build succeeded, 1520/1520 TestFramework.UnitTests passed |
 | 2026-08-18 | PR created (draft, `efficiency/trx-reparse-point-syscall`) | Combine `Directory.Exists()` + `File.GetAttributes()` into one syscall in `TrxReportEngine`'s reparse-point ancestor-walk (`HasReparsePointComponent` + `TrxReportEngine.Merge.Attachments.cs`); build succeeded, TrxArtifactPostProcessorTests 16/16 passed |
 | 2026-08-01 | scan only | Scanned new OTel (#10358), MSTestTestNodeConverter caching (#10366), TestResult assertion texts (#10353) — all well-optimized by maintainers; no new HIGH/MEDIUM opportunities |
