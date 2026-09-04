@@ -13,5 +13,5 @@ public sealed record ClientTestingCapabilities(
     [property: JsonProperty("debuggerProvider")]
     bool DebuggerProvider,
 
-    [property: JsonProperty("isStateful")]
-    bool IsStateful = false);
+    [property: JsonProperty("isStateful", NullValueHandling = NullValueHandling.Ignore)]
+    bool? IsStateful = null);

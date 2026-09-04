@@ -1,1 +1,3 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool?
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool
