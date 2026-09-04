@@ -235,3 +235,11 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
 - Task 7: Monthly Activity issue #10914 (September 2026) still open and current - updated with this run's entry.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-09-04 Notes
+- Task 4: no open PRs with "[perf-improver]" title prefix (list_pull_requests open, 15 open, none from perf-improver bot). Nothing to maintain.
+- Task 5: no open performance-labeled issues found (search_issues label:performance is:open 0 results).
+- Task 2: dispatched explore-agent scan of MSTestAdapter.PlatformServices/Execution (TestMethodInfo/TestClassInfo/TestMethodRunner - already heavily optimized with explicit prior-perf-work comments), Platform Framework host invocation loop (thin, no LINQ), Messages folder (manual foreach/StringBuilder already), TestFramework Assertions (Assert.That/ExpressionEvaluation - failure-cache only built on failure, already optimized; CollectionAssert/AreEquivalent/AreSequenceEqual LINQ inherent to generic/non-generic bridging, same low-priority category as before), and diffed commits since 2026-08-25 (only 1 commit, capability nullability change, unrelated to perf). No new hot-path findings.
+- Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enum (low volume) - all low priority, not fixed.
+- Task 7: Monthly Activity issue #10914 (September 2026) still open and current - updated with this run's entry.
+- Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
