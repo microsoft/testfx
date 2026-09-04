@@ -249,22 +249,33 @@ internal static class HtmlReportMerger
     private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) CollapseRetryAttempts(
         MergedTest[] orderedTests)
     {
+        // Computed once per test and reused below instead of being recomputed for both the ambiguity scan and
+        // the slot-assignment pass; CreateRetryBaseIdentity performs two string.Join calls per invocation, so
+        // caching it here halves the string-allocation work for this method.
+        string[] baseIdentities = new string[orderedTests.Length];
+        for (int i = 0; i < orderedTests.Length; i++)
+        {
+            baseIdentities[i] = CreateRetryBaseIdentity(orderedTests[i]);
+        }
+
         HashSet<(int ReportIndex, string BaseIdentity)> ambiguousIdentities =
         [
             .. orderedTests
-                .GroupBy(test => (
+                .Select((test, i) => (
                     test.OriginalReportIndex,
-                    BaseIdentity: CreateRetryBaseIdentity(test),
+                    BaseIdentity: baseIdentities[i],
                     RetryAttempt: ReadOptionalInt(test.Test, "retryAttemptNumber")))
+                .GroupBy(entry => (entry.OriginalReportIndex, entry.BaseIdentity, entry.RetryAttempt))
                 .Where(static group => group.Count() > 1)
                 .Select(static group => (group.Key.OriginalReportIndex, group.Key.BaseIdentity)),
         ];
         var slots = new List<(MergedTest Final, List<JsonObject> Priors)>();
         var slotByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
 
-        foreach (MergedTest mergedTest in orderedTests)
+        for (int i = 0; i < orderedTests.Length; i++)
         {
-            string baseIdentity = CreateRetryBaseIdentity(mergedTest);
+            MergedTest mergedTest = orderedTests[i];
+            string baseIdentity = baseIdentities[i];
             string identity = ambiguousIdentities.Contains((mergedTest.OriginalReportIndex, baseIdentity))
                 ? $"{baseIdentity}\0ambiguous\0{mergedTest.OriginalReportIndex.ToString(CultureInfo.InvariantCulture)}\0{mergedTest.OriginalTestIndex.ToString(CultureInfo.InvariantCulture)}"
                 : baseIdentity;
