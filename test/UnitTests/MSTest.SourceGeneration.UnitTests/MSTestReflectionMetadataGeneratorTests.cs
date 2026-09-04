@@ -1389,6 +1389,50 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_NonMethodMembersHideBaseMethods()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void FieldHidden() { }
+
+                [TestMethod]
+                public void EventHidden() { }
+
+                [TestMethod]
+                public void TypeHidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int FieldHidden;
+
+                public event Action? EventHidden;
+
+                public class TypeHidden { }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("((global::DerivedTests)instance!).FieldHidden();");
+        registry.Should().NotContain("((global::DerivedTests)instance!).EventHidden();");
+        registry.Should().NotContain("((global::DerivedTests)instance!).TypeHidden();");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
     public void Generator_MethodHidingTestAttributedPropertyAccessor_MarksDescriptorsIncomplete()
     {
         const string userCode = """
