@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed record ClientCapabilitiesService(bool? IsStateful) : IClientCapabilities;
+internal sealed record ClientCapabilitiesService(bool? DeclaredIsStateful) : IClientCapabilities
+{
+    public bool IsStateful => DeclaredIsStateful ?? false;
+}
