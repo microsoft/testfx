@@ -46,6 +46,8 @@ internal static class TestClassModelBuilder
         // Constructors are NEVER inherited and are taken only from the leaf type.
         var seenMethodKeys = new HashSet<string>(StringComparer.Ordinal);
         var seenPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+        var methodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
+        var nonMethodNamesInDerivedTypes = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
@@ -66,6 +68,7 @@ internal static class TestClassModelBuilder
         {
             bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
             hasPartialTypeInHierarchy |= IsPartial(current);
+            ImmutableArray<ISymbol> currentMembers = current.GetMembers();
 
             // Capture each closed, referenceable base type so the runtime registration can root
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
@@ -76,11 +79,16 @@ internal static class TestClassModelBuilder
                 baseTypes.Add(current.ToDisplayString(SymbolDisplayFormats.FullyQualified));
             }
 
-            foreach (ISymbol member in current.GetMembers())
+            foreach (ISymbol member in currentMembers)
             {
                 switch (member)
                 {
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                        if (nonMethodNamesInDerivedTypes.Contains(method.Name))
+                        {
+                            break;
+                        }
+
                         ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
                         bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
                         string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
@@ -108,6 +116,12 @@ internal static class TestClassModelBuilder
 
                         break;
                     case IPropertySymbol property:
+                        if (methodNamesInDerivedTypes.Contains(property.Name)
+                            || nonMethodNamesInDerivedTypes.Contains(property.Name))
+                        {
+                            break;
+                        }
+
                         hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
                             || HasTestMethodAttribute(property.SetMethod);
                         if (!property.IsIndexer
@@ -147,6 +161,14 @@ internal static class TestClassModelBuilder
                         hasUnsupportedTestMethod |= HasTestMethodAttribute(method);
                         break;
                 }
+            }
+
+            foreach (ISymbol member in currentMembers)
+            {
+                HashSet<string> names = member is IMethodSymbol { MethodKind: MethodKind.Ordinary }
+                    ? methodNamesInDerivedTypes
+                    : nonMethodNamesInDerivedTypes;
+                names.Add(member.Name);
             }
         }
 

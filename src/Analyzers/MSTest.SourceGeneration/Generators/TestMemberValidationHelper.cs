@@ -88,7 +88,6 @@ internal static class TestMemberValidationHelper
     internal static string BuildMethodSignatureKey(IMethodSymbol method)
     {
         var sb = new StringBuilder();
-        sb.Append(method.IsStatic ? "S:" : "I:");
         sb.Append(method.Name);
         if (method.Arity > 0)
         {
