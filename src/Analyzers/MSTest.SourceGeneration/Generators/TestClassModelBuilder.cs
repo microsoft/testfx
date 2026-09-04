@@ -84,13 +84,14 @@ internal static class TestClassModelBuilder
                 switch (member)
                 {
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method:
+                        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
+                        bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
                         if (nonMethodNamesInDerivedTypes.Contains(method.Name))
                         {
+                            hasUnsupportedTestMethod |= isTestMethod;
                             break;
                         }
 
-                        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
-                        bool isTestMethod = TestMemberValidationHelper.IsTestMethodAttributePresent(inheritedAttributes);
                         string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
                         if (!seenMethodKeys.Add(key))
                         {
@@ -116,14 +117,14 @@ internal static class TestClassModelBuilder
 
                         break;
                     case IPropertySymbol property:
+                        hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
+                            || HasTestMethodAttribute(property.SetMethod);
                         if (methodNamesInDerivedTypes.Contains(property.Name)
                             || nonMethodNamesInDerivedTypes.Contains(property.Name))
                         {
                             break;
                         }
 
-                        hasUnsupportedTestMethod |= HasTestMethodAttribute(property.GetMethod)
-                            || HasTestMethodAttribute(property.SetMethod);
                         if (!property.IsIndexer
                             && seenPropertyNames.Add(property.Name)
                             && TestMemberValidationHelper.IsAccessibleFromConsumer(property, consumingAssembly))

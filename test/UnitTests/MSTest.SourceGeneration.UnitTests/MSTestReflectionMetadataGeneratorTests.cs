@@ -1276,8 +1276,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 [TestContext]
                 public int HiddenContext { get; set; }
 
-                [TestContext]
-                public int MethodHidesProperty { get; set; }
+                public int MethodHidesProperty { [TestMethod] get; set; }
             }
 
             public class BaseTests : GrandparentTests
@@ -1347,6 +1346,53 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         outputCompilation.GetDiagnostics()
             .Where(d => d.Severity == DiagnosticSeverity.Error)
             .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_PropertyHidingTestMethod_MarksDescriptorsIncomplete()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new int Hidden { get; set; }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_MethodHidingTestAttributedPropertyAccessor_MarksDescriptorsIncomplete()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                public int Hidden { [TestMethod] get; set; }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
     }
 
     [TestMethod]
