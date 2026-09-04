@@ -10,6 +10,8 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -551,14 +553,24 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    public void Dispose_CompletedDump_StopsTimersClaimsGateAndDisposesWaitSignal()
+    public async Task Dispose_CompletedDump_StopsTimersClaimsGateAndDisposesResources()
     {
         using var deadlineTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         using var activityTimer = new Timer(_ => { }, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        var namedPipeClient = new NamedPipeClient($"hang_{Guid.NewGuid():N}");
+        var namedPipeServer = new NamedPipeServer(
+            $"hang_{Guid.NewGuid():N}",
+            _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<ILogger>(),
+            Mock.Of<ITask>(),
+            CancellationToken.None);
         HangDumpProcessLifetimeHandler handler = CreateHandler();
         SetHandlerField(handler, "_deadlineTimer", deadlineTimer);
         SetHandlerField(handler, "_activityTimer", activityTimer);
         SetHandlerField(handler, "_activityIndicatorTask", Task.CompletedTask);
+        SetHandlerField(handler, "_namedPipeClient", namedPipeClient);
+        SetHandlerField(handler, "_singleConnectionNamedPipeServer", namedPipeServer);
 
         handler.Dispose();
 
@@ -567,6 +579,10 @@ public sealed class HangDumpTests
         AssertTimerDisposed(activityTimer);
         Assert.ThrowsExactly<ObjectDisposedException>(
             () => _ = GetHandlerField<ManualResetEventSlim>(handler, "_waitConsumerPipeName").WaitHandle);
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
+            () => namedPipeClient.ConnectAsync(TestContext.CancellationToken));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
+            () => namedPipeServer.WaitConnectionAsync(TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -761,8 +777,12 @@ public sealed class HangDumpTests
             Mock.Of<IConfiguration>(),
             Mock.Of<IProcessHandler>(),
             clock.Object,
-            new ServiceProvider(),
-            disposeTimeout);
+            new ServiceProvider());
+
+        if (disposeTimeout is not null)
+        {
+            SetHandlerField(handler, "_disposeTimeout", disposeTimeout.Value);
+        }
 
         return handler;
     }

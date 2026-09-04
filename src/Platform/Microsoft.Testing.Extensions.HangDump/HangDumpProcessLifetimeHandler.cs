@@ -70,7 +70,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     private static readonly TimeSpan InProgressTestsQueryTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan BestEffortDiagnosticsTimeout = TimeSpan.FromSeconds(1);
 
-    private readonly TimeSpan _disposeTimeout;
+    private TimeSpan _disposeTimeout = TimeoutHelper.DefaultHangTimeSpanTimeout;
     private int _dumpTaken;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;
@@ -97,8 +97,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         IConfiguration configuration,
         IProcessHandler processHandler,
         IClock clock,
-        IServiceProvider serviceProvider,
-        TimeSpan? disposeTimeout = null)
+        IServiceProvider serviceProvider)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
@@ -112,7 +111,6 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         _processHandler = processHandler;
         _clock = clock;
         _serviceProvider = serviceProvider;
-        _disposeTimeout = disposeTimeout ?? TimeoutHelper.DefaultHangTimeSpanTimeout;
     }
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
