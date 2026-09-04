@@ -47,6 +47,11 @@
         <target state="translated">Динамической публикации Azure DevOps не удалось отправить несколько ({0}) вложений; они будут отсутствовать в тестовом запуске Azure DevOps.</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="new">Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps: не удалось выполнить тестовый запуск при публикации в реальном времени.</target>
@@ -161,6 +166,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">Превышено время ожидания: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="new">Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>
