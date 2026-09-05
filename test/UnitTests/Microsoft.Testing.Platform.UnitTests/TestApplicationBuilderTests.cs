@@ -250,6 +250,29 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public async Task TestHostControllerProcessTermination_CancellationDuringStartupUsesTeardownPath()
+    {
+        using CancellationTokenSource cancellationTokenSource = new();
+        cancellationTokenSource.Cancel();
+        Mock<IProcess> process = new();
+        TaskCompletionSource<bool> neverExits = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(neverExits.Task);
+        bool cancellationRequested = false;
+
+        await TestHostControllersTestHost.RunWithCancellationTeardownAsync(
+            () => Task.FromCanceled(cancellationTokenSource.Token),
+            cancellationTokenSource.Token,
+            process.Object,
+            () => cancellationRequested = true,
+            new NopLogger(),
+            TimeSpan.FromMilliseconds(50),
+            TimeSpan.FromMilliseconds(50));
+
+        Assert.IsTrue(cancellationRequested);
+        process.Verify(x => x.Kill(), Times.Once);
+    }
+
+    [TestMethod]
     public void TestHostControllerProcessTermination_CooperativeBudgetUsesConfiguredCanceledConsumerBudget()
     {
         Mock<IEnvironment> environment = new();
