@@ -50,13 +50,11 @@ internal sealed class TestHostControllerCancellationListener : IDisposable
 
     private async Task ListenAsync(CancellationToken cancellationToken)
     {
-        bool connected = false;
         try
         {
             using var connectCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             connectCancellationTokenSource.CancelAfter(ConnectionTimeout);
             await _client.ConnectAsync(connectCancellationTokenSource.Token).ConfigureAwait(false);
-            connected = true;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -84,10 +82,6 @@ internal sealed class TestHostControllerCancellationListener : IDisposable
         catch (Exception ex)
         {
             await _logger.LogDebugAsync($"Test host controller cancellation channel stopped unexpectedly: {ex}").ConfigureAwait(false);
-            if (connected)
-            {
-                RequestCancellation();
-            }
         }
         finally
         {
