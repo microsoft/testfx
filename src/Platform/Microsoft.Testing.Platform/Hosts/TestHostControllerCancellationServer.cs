@@ -106,6 +106,7 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
             }
             catch (OperationCanceledException ex) when (ex.CancellationToken == _acceptCancellationTokenSource.Token)
             {
+                // Disposal canceled the connection wait before a child connected.
             }
         }
 
