@@ -45,7 +45,11 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         var environment = new RecordingEnvironment();
         using var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
         bool forceExitActionInvoked = false;
-        source.SetForceExitAction(() => forceExitActionInvoked = true);
+        source.SetForceExitAction(() =>
+        {
+            Assert.IsNull(environment.ExitCode, "The child force-exit action must run before the controller exits.");
+            forceExitActionInvoked = true;
+        });
 
         console.FireCancelKeyPress();
         console.FireCancelKeyPress();

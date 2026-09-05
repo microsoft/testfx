@@ -19,7 +19,11 @@ Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.TestHostCo
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.WaitForRequestAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCancellationListener(Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener? testHostControllerCancellationListener) -> void
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+static Microsoft.Testing.Platform.Hosts.TestHostControlledHost.RegisterCompletionCancellationTransition(System.Threading.CancellationToken applicationCancellationToken, System.Func<bool>! shouldReportCompletionAfterCancellation, System.Threading.CancellationTokenSource! completionCancellationTokenSource) -> System.Threading.CancellationTokenRegistration
+>>>>>>> Preserve late cooperative completion reporting
 Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.WasCancellationRequestedByConsole.get -> bool
 Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.SetForceExitAction(System.Action? forceExitAction) -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
