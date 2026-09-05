@@ -62,6 +62,21 @@ public sealed class TestHostControllerCancellationTests
     }
 
     [TestMethod]
+    public async Task ServerDisposal_WhenNoClientConnects_DoesNotHang()
+    {
+        Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
+        SystemEnvironment environment = new();
+        var server = new TestHostControllerCancellationServer(
+            authorizedSecurityIdentities: null,
+            environment,
+            loggerFactory.Object,
+            new SystemTask());
+        server.Start();
+
+        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [TestMethod]
     public async Task ServerDisposal_WhenClientKeepsConnectionOpenAfterRequest_DoesNotHang()
     {
         Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
