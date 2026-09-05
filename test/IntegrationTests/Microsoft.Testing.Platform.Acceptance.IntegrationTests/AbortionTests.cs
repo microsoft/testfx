@@ -12,6 +12,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.Console)]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -55,6 +56,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
+    [ResourceLock(WellKnownResources.Console)]
     public async Task AbortControllerWithCTRLPlusC_AllowsChildCleanupToComplete(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
