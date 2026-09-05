@@ -19,11 +19,9 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
-    private static readonly TimeSpan TestHostCooperativeShutdownTimeout =
-        ShutdownTimeouts.DefaultCanceledConsumerCompletion + TimeSpan.FromSeconds(15);
-
     private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
 
+    private readonly TimeSpan _testHostCooperativeShutdownTimeout;
     private readonly TimeSpan _controllerExtensionFinalizationTimeout;
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly PassiveNode? _passiveNode;
@@ -58,6 +56,8 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _testHostsInformation = testHostsInformation;
         _passiveNode = passiveNode;
         _environment = environment;
+        _testHostCooperativeShutdownTimeout =
+            ShutdownTimeouts.GetCanceledConsumerCompletion(environment) + TimeSpan.FromSeconds(15);
         _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetControllerFinalization(environment);
         _clock = clock;
         _loggerFactory = loggerFactory;
