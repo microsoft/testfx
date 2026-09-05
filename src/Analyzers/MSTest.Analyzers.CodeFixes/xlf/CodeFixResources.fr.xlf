@@ -87,6 +87,11 @@
         <target state="translated">Corriger la signature numérique</target>
         <note />
       </trans-unit>
+      <trans-unit id="MakeOSConditionConsistentFix">
+        <source>Make '[OSCondition]' consistent with platform compatibility attributes</source>
+        <target state="new">Make '[OSCondition]' consistent with platform compatibility attributes</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Transmettre l'argument « TestContext.CancellationToken » à l'appel de méthode</target>
