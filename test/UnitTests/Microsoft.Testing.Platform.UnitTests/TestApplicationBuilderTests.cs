@@ -213,10 +213,29 @@ public sealed class TestApplicationBuilderTests
         process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(neverExits.Task);
         var stopwatch = Stopwatch.StartNew();
 
-        bool exited = await WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100));
+        bool exited = await WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
 
         Assert.IsFalse(exited);
         Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+    }
+
+    [TestMethod]
+    public async Task TestHostControllerProcessTermination_FaultedWaitAdvancesToTermination()
+    {
+        Mock<IProcess> process = new();
+        process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new IOException("remote wait failed"));
+        bool cancellationRequested = false;
+
+        await TestHostControllersTestHost.HandleCanceledTestHostAsync(
+            process.Object,
+            () => cancellationRequested = true,
+            new NopLogger(),
+            TimeSpan.FromMilliseconds(50),
+            TimeSpan.FromMilliseconds(50));
+
+        Assert.IsTrue(cancellationRequested);
+        process.Verify(x => x.Kill(), Times.Once);
     }
 
     [TestMethod]
@@ -519,13 +538,13 @@ public sealed class TestApplicationBuilderTests
             ?? throw new InvalidOperationException("TestHostControllersTestHost.TryRunControllerExtensionAsync returned null.");
     }
 
-    private static Task<bool> WaitForExitAfterTerminationAsync(IProcess process, TimeSpan timeout)
+    private static Task<bool> WaitForExitAfterTerminationAsync(IProcess process, TimeSpan timeout, ILogger logger)
     {
         MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
             "WaitForExitAfterTerminationAsync",
             BindingFlags.NonPublic | BindingFlags.Static)
             ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.WaitForExitAfterTerminationAsync.");
-        return (Task<bool>?)method.Invoke(null, [process, timeout])
+        return (Task<bool>?)method.Invoke(null, [process, timeout, logger])
             ?? throw new InvalidOperationException("TestHostControllersTestHost.WaitForExitAfterTerminationAsync returned null.");
     }
 

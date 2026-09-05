@@ -180,6 +180,24 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     public bool WasConnected { get; private set; }
 
+    internal async Task<bool> WaitForDisconnectAsync(TimeSpan timeout)
+    {
+        if (!WasConnected)
+        {
+            return true;
+        }
+
+        ApplicationStateGuard.Ensure(_loopTask is not null);
+        Task completedTask = await Task.WhenAny(_loopTask, Task.Delay(timeout)).ConfigureAwait(false);
+        if (completedTask != _loopTask)
+        {
+            return false;
+        }
+
+        await _loopTask.ConfigureAwait(false);
+        return true;
+    }
+
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
         // NOTE: _cancellationToken field is usually the "test session" cancellation token, while the parameter

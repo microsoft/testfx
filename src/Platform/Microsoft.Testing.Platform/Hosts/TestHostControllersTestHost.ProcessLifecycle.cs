@@ -407,7 +407,8 @@ internal sealed partial class TestHostControllersTestHost
 
     private static async Task<bool> WaitForExitAfterTerminationAsync(
         IProcess testHostProcess,
-        TimeSpan timeout)
+        TimeSpan timeout,
+        ILogger logger)
     {
         try
         {
@@ -417,6 +418,11 @@ internal sealed partial class TestHostControllersTestHost
         }
         catch (TimeoutException)
         {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            await logger.LogDebugAsync($"Ignoring failure while waiting for the test host to exit during cancellation teardown: {ex}").ConfigureAwait(false);
             return false;
         }
     }
@@ -429,7 +435,7 @@ internal sealed partial class TestHostControllersTestHost
         TimeSpan terminationTimeout)
     {
         requestCancellation();
-        if (await WaitForExitAfterTerminationAsync(testHostProcess, cooperativeShutdownTimeout).ConfigureAwait(false))
+        if (await WaitForExitAfterTerminationAsync(testHostProcess, cooperativeShutdownTimeout, logger).ConfigureAwait(false))
         {
             return;
         }
@@ -449,7 +455,7 @@ internal sealed partial class TestHostControllersTestHost
             await logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
         }
 
-        if (await WaitForExitAfterTerminationAsync(testHostProcess, terminationTimeout).ConfigureAwait(false))
+        if (await WaitForExitAfterTerminationAsync(testHostProcess, terminationTimeout, logger).ConfigureAwait(false))
         {
             return;
         }
