@@ -55,6 +55,29 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "The targeted SIGINT test uses the Unix kill API.")]
+    public async Task AbortControllerWithSecondSIGINT_ForceTerminatesChild(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
+        var environmentVariables = new Dictionary<string, string?>
+        {
+            ["ABORT_CONTROLLER_ONLY"] = "1",
+            ["ABORT_CONTROLLER_TWICE"] = "1",
+            ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
+        };
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--report-trx",
+            environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        Assert.IsFalse(File.Exists(cleanupMarker), "Force cancellation must terminate the child before its delayed cleanup completes.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [ResourceLock(WellKnownResources.Console)]
     public async Task AbortControllerWithCTRLPlusC_AllowsChildCleanupToComplete(string tfm)
@@ -135,6 +158,15 @@ internal sealed class Program
                 if (kill(controllerPid, 2) != 0)
                 {
                     throw new Exception($"kill(SIGINT) failed with errno '{Marshal.GetLastWin32Error()}'.");
+                }
+
+                if (Environment.GetEnvironmentVariable("ABORT_CONTROLLER_TWICE") == "1")
+                {
+                    Thread.Sleep(500);
+                    if (kill(controllerPid, 2) != 0)
+                    {
+                        throw new Exception($"Second kill(SIGINT) failed with errno '{Marshal.GetLastWin32Error()}'.");
+                    }
                 }
 
                 return;

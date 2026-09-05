@@ -27,9 +27,11 @@ Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.TestHostCo
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.WaitForRequestAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCancellationListener(Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener? testHostControllerCancellationListener) -> void
 Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.WasCancellationRequestedByConsole.get -> bool
+Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.SetForceExitAction(System.Action? forceExitAction) -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
 const Microsoft.Testing.Platform.IPC.ServerControlKinds.CloseChannel = 2 -> byte
 static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.HandleCanceledTestHostAsync(Microsoft.Testing.Platform.Helpers.IProcess! testHostProcess, System.Action! requestCancellation, Microsoft.Testing.Platform.Logging.ILogger! logger, System.TimeSpan cooperativeShutdownTimeout, System.TimeSpan terminationTimeout) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.RunWithCancellationTeardownAsync(System.Func<System.Threading.Tasks.Task!>! runAsync, System.Threading.CancellationToken applicationCancellationToken, Microsoft.Testing.Platform.Helpers.IProcess! testHostProcess, System.Action! requestCancellation, Microsoft.Testing.Platform.Logging.ILogger! logger, System.TimeSpan cooperativeShutdownTimeout, System.TimeSpan terminationTimeout) -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool

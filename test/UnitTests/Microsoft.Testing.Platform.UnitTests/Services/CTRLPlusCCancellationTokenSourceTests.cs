@@ -39,6 +39,22 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
     }
 
     [TestMethod]
+    public void SecondCtrlC_InvokesForceExitActionBeforeExitingController()
+    {
+        var console = new CancelableConsole();
+        var environment = new RecordingEnvironment();
+        using var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
+        bool forceExitActionInvoked = false;
+        source.SetForceExitAction(() => forceExitActionInvoked = true);
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+
+        Assert.IsTrue(forceExitActionInvoked);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, environment.ExitCode);
+    }
+
+    [TestMethod]
     public void CtrlC_AfterExternalCancel_DoesNotForceExit_ButSecondCtrlCDoes()
     {
         var console = new CancelableConsole();
