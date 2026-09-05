@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -183,6 +183,48 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
 
     #region ContainsAll span/memory
+
+    /// <summary>
+    /// Tests whether the specified array contains every element of <paramref name="expected"/> using the specified equality comparer.
+    /// </summary>
+    /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The array of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The array expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if an expected element does not occur enough times in <paramref name="collection"/>.</exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    public static void ContainsAll<T>([NotNull] T[]? expected, [NotNull] T[]? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll((IEnumerable<T>?)expected, (IEnumerable<T>?)collection, comparer, message, expectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+
+    /// <summary>
+    /// Tests whether the specified collection contains every element of <paramref name="expected"/> using the specified equality comparer.
+    /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.
+    /// </remarks>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <typeparam name="TExpectedCollection">The concrete type of the expected collection.</typeparam>
+    /// <typeparam name="TCollection">The concrete type of the collection.</typeparam>
+    /// <param name="expected">The collection of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The collection expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> contains an element that does not occur enough times in <paramref name="collection"/>.
+    /// </exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    public static void ContainsAll<T, TExpectedCollection, TCollection>([NotNull] TExpectedCollection? expected, [NotNull] TCollection? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        where TExpectedCollection : IEnumerable<T>
+        where TCollection : IEnumerable<T>
+        => ContainsAll((IEnumerable<T>?)expected, (IEnumerable<T>?)collection, comparer, message, expectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
 
     /// <summary>
     /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -138,6 +138,78 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
 
     #region AreSequenceEqual span/memory
+
+    /// <summary>
+    /// Tests whether two arrays contain equal elements in the same order using the specified equality comparer.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="expected">The array expected to be equal to <paramref name="actual"/>.</param>
+    /// <param name="actual">The array produced by the code under test.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements, or <see langword="null"/> to use the default comparer.</param>
+    /// <param name="message">The message to include in the exception when the arrays are not equal.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    public static void AreSequenceEqual<T>(T[]? expected, T[]? actual, IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreSequenceEqual((IEnumerable<T>?)expected, (IEnumerable<T>?)actual, comparer, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two arrays contain equal elements using the specified equality comparer and order semantics.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="expected">The array expected to be equal to <paramref name="actual"/>.</param>
+    /// <param name="actual">The array produced by the code under test.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements, or <see langword="null"/> to use the default comparer.</param>
+    /// <param name="order">Specifies whether elements must appear in the same order or in any order.</param>
+    /// <param name="message">The message to include in the exception when the arrays are not equal.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    public static void AreSequenceEqual<T>(T[]? expected, T[]? actual, IEqualityComparer<T>? comparer, SequenceOrder order, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreSequenceEqual((IEnumerable<T>?)expected, (IEnumerable<T>?)actual, comparer, order, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two collections contain equal elements in the same order using the specified equality comparer
+    /// and throws an exception if they do not.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection elements.</typeparam>
+    /// <typeparam name="TExpectedCollection">The concrete type of the expected collection.</typeparam>
+    /// <typeparam name="TActualCollection">The concrete type of the actual collection.</typeparam>
+    /// <param name="expected">The collection expected to be equal to <paramref name="actual"/>.</param>
+    /// <param name="actual">The collection produced by the code under test.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements, or <see langword="null"/> to use the default comparer.</param>
+    /// <param name="message">The message to include in the exception when the collections are not equal.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    public static void AreSequenceEqual<T, TExpectedCollection, TActualCollection>(TExpectedCollection? expected, TActualCollection? actual, IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        where TExpectedCollection : IEnumerable<T>
+        where TActualCollection : IEnumerable<T>
+    {
+        IEnumerable<T>? expectedEnumerable = expected;
+        IEnumerable<T>? actualEnumerable = actual;
+        AreSequenceEqual(expectedEnumerable, actualEnumerable, comparer, message, expectedExpression, actualExpression);
+    }
+
+    /// <summary>
+    /// Tests whether two collections contain equal elements using the specified equality comparer and order semantics
+    /// and throws an exception if they do not.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection elements.</typeparam>
+    /// <typeparam name="TExpectedCollection">The concrete type of the expected collection.</typeparam>
+    /// <typeparam name="TActualCollection">The concrete type of the actual collection.</typeparam>
+    /// <param name="expected">The collection expected to be equal to <paramref name="actual"/>.</param>
+    /// <param name="actual">The collection produced by the code under test.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements, or <see langword="null"/> to use the default comparer.</param>
+    /// <param name="order">Specifies whether elements must appear in the same order or in any order.</param>
+    /// <param name="message">The message to include in the exception when the collections are not equal.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    public static void AreSequenceEqual<T, TExpectedCollection, TActualCollection>(TExpectedCollection? expected, TActualCollection? actual, IEqualityComparer<T>? comparer, SequenceOrder order, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        where TExpectedCollection : IEnumerable<T>
+        where TActualCollection : IEnumerable<T>
+    {
+        IEnumerable<T>? expectedEnumerable = expected;
+        IEnumerable<T>? actualEnumerable = actual;
+        AreSequenceEqual(expectedEnumerable, actualEnumerable, comparer, order, message, expectedExpression, actualExpression);
+    }
 
     /// <summary>
     /// Tests whether two spans contain equal elements in the same order and throws an exception if they do not.
