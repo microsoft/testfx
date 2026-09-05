@@ -307,13 +307,8 @@ public sealed class TestApplicationBuilderTests
             environment.Object,
             loggerFactory.Object,
             Mock.Of<IClock>());
-        FieldInfo field = typeof(TestHostControllersTestHost).GetField(
-            "_testHostCooperativeShutdownTimeout",
-            BindingFlags.NonPublic | BindingFlags.Instance)
-            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost._testHostCooperativeShutdownTimeout.");
-        var cooperativeShutdownTimeout = (TimeSpan)field.GetValue(host)!;
 
-        Assert.AreEqual(TimeSpan.FromSeconds(75), cooperativeShutdownTimeout);
+        Assert.AreEqual(TimeSpan.FromSeconds(75), host.TestHostCooperativeShutdownTimeout);
     }
 
     [TestMethod]

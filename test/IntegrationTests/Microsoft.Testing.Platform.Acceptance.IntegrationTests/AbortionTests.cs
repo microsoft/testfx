@@ -76,8 +76,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 
         testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
         Assert.IsTrue(File.Exists(cleanupStartedMarker), "The second SIGINT must be sent only after child cleanup starts.");
-        await Task.Delay(TimeSpan.FromSeconds(3), TestContext.CancellationToken);
-        Assert.IsFalse(File.Exists(cleanupMarker), "Force cancellation must terminate the child before its delayed cleanup completes.");
+        await AssertFileIsNotCreatedAsync(cleanupMarker, TimeSpan.FromSeconds(3), TestContext.CancellationToken);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -303,4 +302,14 @@ internal class TrxReportCapability : ITrxReportCapability
     }
 
     public TestContext TestContext { get; set; }
+
+    private static async Task AssertFileIsNotCreatedAsync(string path, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        DateTime deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            Assert.IsFalse(File.Exists(path), $"The file '{path}' was created before the timeout elapsed.");
+            await Task.Delay(TimeSpan.FromMilliseconds(50), cancellationToken);
+        }
+    }
 }
