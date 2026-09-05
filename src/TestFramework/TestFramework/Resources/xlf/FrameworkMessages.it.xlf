@@ -365,27 +365,27 @@
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountMustBePositive">
         <source>{0} must be positive.</source>
-        <target state="new">{0} must be positive.</target>
+        <target state="translated">{0} deve essere positivo.</target>
         <note>{0} is the random data count property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomMinimumExceedsMaximum">
         <source>{0} must not be greater than {1}.</source>
-        <target state="new">{0} must not be greater than {1}.</target>
+        <target state="translated">{0} non deve essere maggiore di {1}.</target>
         <note>{0} is the minimum property name. {1} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsInt32">
         <source>The range exceeds the maximum integer value.</source>
-        <target state="new">The range exceeds the maximum integer value.</target>
+        <target state="translated">L'intervallo supera il valore massimo di un intero.</target>
         <note>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsUInt32">
         <source>The range exceeds the maximum unsigned integer value.</source>
-        <target state="new">The range exceeds the maximum unsigned integer value.</target>
+        <target state="translated">L'intervallo supera il valore Unsigned Integer massimo.</target>
         <note>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeTooManyValues">
         <source>The range contains too many values.</source>
-        <target state="new">The range contains too many values.</target>
+        <target state="translated">L'intervallo contiene troppi valori.</target>
         <note>Error message shown when a combinatorial range cannot be represented in an array.</note>
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
