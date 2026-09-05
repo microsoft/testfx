@@ -11,14 +11,10 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class TestHostControllersTestHost
 {
-    private async Task<NamedPipeServer> CreateTestHostControllerIpcAsync(ExecutableInfo executableInfo, CancellationToken cancellationToken)
+    private NamedPipeServer CreateTestHostControllerIpc(
+        IReadOnlyList<string>? authorizedSecurityIdentities,
+        CancellationToken cancellationToken)
     {
-        IReadOnlyList<string>? authorizedSecurityIdentities = await ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
-            _testHostsInformation.TestHostLauncher,
-            executableInfo.FilePath,
-            _logger,
-            cancellationToken).ConfigureAwait(false);
-
         NamedPipeServer testHostControllerIpc = new(
             $"MONITORTOHOST_{Guid.NewGuid():N}",
             HandleRequestAsync,

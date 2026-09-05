@@ -118,6 +118,10 @@ internal static class ServerControlKinds
     // Values must stay stable (they flow over IPC to dotnet test). Reserve additional values for future
     // signals (drain, pause, ...).
     internal const byte CancelSession = 1;
+
+    // Closes a parked control request without canceling the test session. The test-host controller uses this
+    // when its child has already completed normally and the auxiliary control channel can shut down.
+    internal const byte CloseChannel = 2;
 }
 
 [Embedded]

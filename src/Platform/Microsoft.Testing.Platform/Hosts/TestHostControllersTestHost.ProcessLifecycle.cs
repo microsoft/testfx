@@ -24,6 +24,7 @@ internal sealed partial class TestHostControllersTestHost
         IProcessHandler process,
         IConfiguration configuration,
         NamedPipeServer testHostControllerIpc,
+        TestHostControllerCancellationServer testHostControllerCancellationServer,
         ProxyOutputDevice outputDevice,
         ITelemetryInformation telemetryInformation,
         Stopwatch consoleRunStarted,
@@ -128,35 +129,43 @@ internal sealed partial class TestHostControllersTestHost
             }
             catch (OperationCanceledException) when (applicationCancellationToken.IsCancellationRequested)
             {
-                // The run was canceled while waiting for the test host to exit. Tear the host down
-                // and wait (without cancellation) for it to fully exit, so the exit-code
-                // reconciliation below still observes a real OS exit code.
-                await _logger.LogDebugAsync("Test host execution was canceled; terminating the test host").ConfigureAwait(false);
-                try
-                {
-                    testHostProcess.Kill();
-                }
-                catch (Exception ex)
-                {
-                    // Termination is best-effort. The host may have exited between the cancellation
-                    // and this Kill call (InvalidOperationException), or Kill may delegate to a custom
-                    // ITestHostLauncher's Terminate() which can throw anything (e.g. NotSupportedException,
-                    // Win32Exception). Either way the host is on its way out, so swallow and log rather
-                    // than letting it mask the cancellation teardown flow.
-                    await _logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
-                }
-
+                // Preserve first-Ctrl+C semantics across the controller boundary: ask the child to cancel
+                // cooperatively so its framework and application cleanup can run. A child that does not support
+                // the control channel (version skew), or ignores cancellation, is still terminated after the
+                // bounded grace period.
+                await _logger.LogDebugAsync("Test host execution was canceled; requesting cooperative test host cancellation").ConfigureAwait(false);
+                testHostControllerCancellationServer.RequestCancellation();
                 if (!await WaitForExitAfterTerminationAsync(
                     testHostProcess,
                     TestHostTerminationTimeout).ConfigureAwait(false))
                 {
-                    if (testHostProcess is TestHostHandleToProcessAdapter adapter)
+                    await _logger.LogDebugAsync($"Test host did not exit within {TestHostTerminationTimeout} after cooperative cancellation; terminating it").ConfigureAwait(false);
+                    try
                     {
-                        adapter.DeferDisposalUntilExit();
+                        testHostProcess.Kill();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Termination is best-effort. The host may have exited between the cancellation
+                        // and this Kill call (InvalidOperationException), or Kill may delegate to a custom
+                        // ITestHostLauncher's Terminate() which can throw anything (e.g. NotSupportedException,
+                        // Win32Exception). Either way the host is on its way out, so swallow and log rather
+                        // than letting it mask the cancellation teardown flow.
+                        await _logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
                     }
 
-                    await _logger.LogWarningAsync(
-                        $"Test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
+                    if (!await WaitForExitAfterTerminationAsync(
+                        testHostProcess,
+                        TestHostTerminationTimeout).ConfigureAwait(false))
+                    {
+                        if (testHostProcess is TestHostHandleToProcessAdapter adapter)
+                        {
+                            adapter.DeferDisposalUntilExit();
+                        }
+
+                        await _logger.LogWarningAsync(
+                            $"Test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
+                    }
                 }
             }
         }

@@ -232,6 +232,12 @@ internal sealed partial class TestHostBuilder
             context.TestHostControllerInfo,
             context.Configuration,
             context.SystemEnvironment).ConfigureAwait(false);
+        TestHostControllerCancellationListener? testHostControllerCancellationListener =
+            CreateTestHostControllerCancellationListenerIfAvailable(
+                context.TestApplicationCancellationTokenSource,
+                context.LoggerFactory.CreateLogger(nameof(TestHostControllerCancellationListener)),
+                context.TestHostControllerInfo,
+                context.SystemEnvironment);
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -245,11 +251,14 @@ internal sealed partial class TestHostBuilder
         context.ServiceProvider.AddServices(testExecutionFilterProviders);
 
         return context.IsJsonRpcProtocol
-            ? await BuildServerTestHostAsync(context, testControllerConnection).ConfigureAwait(false)
-            : await BuildConsoleTestHostAsync(context, testControllerConnection).ConfigureAwait(false);
+            ? await BuildServerTestHostAsync(context, testControllerConnection, testHostControllerCancellationListener).ConfigureAwait(false)
+            : await BuildConsoleTestHostAsync(context, testControllerConnection, testHostControllerCancellationListener).ConfigureAwait(false);
     }
 
-    private async Task<IHost> BuildServerTestHostAsync(BuildContext context, NamedPipeClient? testControllerConnection)
+    private async Task<IHost> BuildServerTestHostAsync(
+        BuildContext context,
+        NamedPipeClient? testControllerConnection,
+        TestHostControllerCancellationListener? testHostControllerCancellationListener)
     {
         IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(context.ServiceProvider);
         ServerTestHost serverTestHost = new(
@@ -260,13 +269,17 @@ internal sealed partial class TestHostBuilder
             (TestHostManager)TestHost);
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(
+        IHost actualTestHost = serverTestHost;
+        if (testControllerConnection is not null)
+        {
+            var controlledHost = new TestHostControlledHost(
                 testControllerConnection,
                 serverTestHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
-                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
-            : serverTestHost;
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCancellationListener(testHostControllerCancellationListener);
+            actualTestHost = controlledHost;
+        }
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
         // The TestHostBuilt telemetry event must be sent through the collector previously registered
@@ -293,7 +306,10 @@ internal sealed partial class TestHostBuilder
         return actualTestHost;
     }
 
-    private async Task<IHost> BuildConsoleTestHostAsync(BuildContext context, NamedPipeClient? testControllerConnection)
+    private async Task<IHost> BuildConsoleTestHostAsync(
+        BuildContext context,
+        NamedPipeClient? testControllerConnection,
+        TestHostControllerCancellationListener? testHostControllerCancellationListener)
     {
         ActionResult<ITestExecutionFilterFactory> testExecutionFilterFactoryResult = await ((TestHostManager)TestHost).TryBuildTestExecutionFilterFactoryAsync(context.ServiceProvider).ConfigureAwait(false);
         if (testExecutionFilterFactoryResult.IsSuccess)
@@ -320,13 +336,17 @@ internal sealed partial class TestHostBuilder
             (TestHostManager)TestHost);
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(
+        IHost actualTestHost = consoleHost;
+        if (testControllerConnection is not null)
+        {
+            var controlledHost = new TestHostControlledHost(
                 testControllerConnection,
                 consoleHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
-                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
-            : consoleHost;
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCancellationListener(testHostControllerCancellationListener);
+            actualTestHost = controlledHost;
+        }
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
 #pragma warning disable SA1118 // Parameter should not span multiple lines
