@@ -75,8 +75,11 @@ internal sealed class TestHostControllerCancellationListener : IDisposable
                 }
             }
         }
-        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (cancellationToken.IsCancellationRequested)
         {
+            // The platform logger can already be disposed when this listener is torn down. Keep the expected
+            // shutdown race observable for debugger diagnostics without re-entering the logging pipeline.
+            Debug.WriteLine($"Test host controller cancellation channel stopped during shutdown: {ex}");
         }
         catch (Exception ex)
         {
