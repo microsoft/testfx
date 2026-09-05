@@ -1,0 +1,47 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Enables the MSTest Windows UI Automation feature -->
+    <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
+  </PropertyGroup>
+
+</Project>
+
+
+<!--
+Below is the equivalent project configuration when not using MSTest.Sdk
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableWindowsTargeting Condition=" '$(EnableWindowsTargeting)' == '' and '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(VSTestVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="MSTest.Windows.UIAutomation" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation" />
+  </ItemGroup>
+
+</Project>
+-->
