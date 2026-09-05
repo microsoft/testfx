@@ -4,3 +4,4 @@ static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetArgumentsRes
 static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetFilterUidsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
 static Microsoft.Testing.Extensions.Policy.RetryOrchestrator.LogResponseFileFallbackWarningAsync(Microsoft.Testing.Platform.Logging.ILogger! logger, string![]! originalExecutableArguments, System.Collections.Generic.List<string!>! finalArguments, string! generatedResponseFilePath) -> System.Threading.Tasks.Task!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
