@@ -62,6 +62,36 @@ public sealed class TestHostControllerCancellationTests
     }
 
     [TestMethod]
+    public async Task ServerDisposal_WhenClientKeepsConnectionOpenAfterRequest_DoesNotHang()
+    {
+        Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
+        SystemEnvironment environment = new();
+        var server = new TestHostControllerCancellationServer(
+            authorizedSecurityIdentities: null,
+            environment,
+            loggerFactory.Object,
+            new SystemTask());
+        server.Start();
+        using var client = new System.IO.Pipes.NamedPipeClientStream(
+            ".",
+            server.PipeName,
+            System.IO.Pipes.PipeDirection.InOut,
+            System.IO.Pipes.PipeOptions.Asynchronous);
+        await client.ConnectAsync(TestContext.CancellationToken);
+        byte[] requestFrame = [.. BitConverter.GetBytes(sizeof(int)), .. BitConverter.GetBytes(13)];
+        await client.WriteAsync(requestFrame, 0, requestFrame.Length, TestContext.CancellationToken);
+        await client.FlushAsync(TestContext.CancellationToken);
+        await server.WaitForRequestAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(5));
+
+        byte[] responseBuffer = new byte[64];
+        int bytesRead = await client.ReadAsync(responseBuffer, 0, responseBuffer.Length, TestContext.CancellationToken);
+
+        Assert.AreEqual(0, bytesRead);
+    }
+
+    [TestMethod]
     public async Task NormalServerDisposal_DoesNotCancelChildApplication()
     {
         for (int i = 0; i < 20; i++)

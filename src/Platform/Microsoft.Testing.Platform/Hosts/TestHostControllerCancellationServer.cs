@@ -17,6 +17,8 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
+    private static readonly TimeSpan CloseHandshakeTimeout = TimeSpan.FromSeconds(1);
+
     private readonly CancellationTokenSource _acceptCancellationTokenSource = new();
     private readonly CancellationTokenSource _serverLifetimeCancellationTokenSource = new();
     private readonly TaskCompletionSource<ServerControlMessage> _controlMessage =
@@ -89,7 +91,9 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
 #else
         _acceptCancellationTokenSource.Cancel();
 #endif
-        if (!_requestReceived.Task.IsCompleted)
+        bool disconnected = _requestReceived.Task.IsCompleted
+            && await _server.WaitForDisconnectAsync(CloseHandshakeTimeout).ConfigureAwait(false);
+        if (!disconnected)
         {
 #if NET
             await _serverLifetimeCancellationTokenSource.CancelAsync().ConfigureAwait(false);

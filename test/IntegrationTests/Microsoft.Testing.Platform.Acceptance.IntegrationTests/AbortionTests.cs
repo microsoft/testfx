@@ -60,11 +60,13 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
+        string cleanupStartedMarker = Path.Combine(testHost.DirectoryName, $"cleanup-started-{Guid.NewGuid():N}.txt");
         var environmentVariables = new Dictionary<string, string?>
         {
             ["ABORT_CONTROLLER_ONLY"] = "1",
             ["ABORT_CONTROLLER_TWICE"] = "1",
             ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
+            ["ABORT_CLEANUP_STARTED_MARKER"] = cleanupStartedMarker,
         };
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -73,6 +75,8 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        Assert.IsTrue(File.Exists(cleanupStartedMarker), "The second SIGINT must be sent only after child cleanup starts.");
+        await Task.Delay(TimeSpan.FromSeconds(3), TestContext.CancellationToken);
         Assert.IsFalse(File.Exists(cleanupMarker), "Force cancellation must terminate the child before its delayed cleanup completes.");
     }
 
@@ -162,7 +166,19 @@ internal sealed class Program
 
                 if (Environment.GetEnvironmentVariable("ABORT_CONTROLLER_TWICE") == "1")
                 {
-                    Thread.Sleep(500);
+                    string cleanupStartedMarker = Environment.GetEnvironmentVariable("ABORT_CLEANUP_STARTED_MARKER")
+                        ?? throw new Exception("Missing cleanup-started marker path.");
+                    DateTime timeout = DateTime.UtcNow.AddSeconds(15);
+                    while (!File.Exists(cleanupStartedMarker) && DateTime.UtcNow < timeout)
+                    {
+                        Thread.Sleep(10);
+                    }
+
+                    if (!File.Exists(cleanupStartedMarker))
+                    {
+                        throw new Exception("Child cleanup did not start before the second SIGINT timeout.");
+                    }
+
                     if (kill(controllerPid, 2) != 0)
                     {
                         throw new Exception($"Second kill(SIGINT) failed with errno '{Marshal.GetLastWin32Error()}'.");
@@ -234,7 +250,17 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             string? cleanupMarker = Environment.GetEnvironmentVariable("ABORT_CLEANUP_MARKER");
             if (cleanupMarker is not null)
             {
-                await Task.Delay(500, CancellationToken.None);
+                string? cleanupStartedMarker = Environment.GetEnvironmentVariable("ABORT_CLEANUP_STARTED_MARKER");
+                if (cleanupStartedMarker is not null)
+                {
+                    File.WriteAllText(cleanupStartedMarker, "cleanup started");
+                    await Task.Delay(TimeSpan.FromSeconds(2), CancellationToken.None);
+                }
+                else
+                {
+                    await Task.Delay(500, CancellationToken.None);
+                }
+
                 File.WriteAllText(cleanupMarker, "cleanup completed");
             }
         }
