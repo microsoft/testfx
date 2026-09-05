@@ -61,12 +61,14 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
         string cleanupStartedMarker = Path.Combine(testHost.DirectoryName, $"cleanup-started-{Guid.NewGuid():N}.txt");
+        string childPidMarker = Path.Combine(testHost.DirectoryName, $"child-pid-{Guid.NewGuid():N}.txt");
         var environmentVariables = new Dictionary<string, string?>
         {
             ["ABORT_CONTROLLER_ONLY"] = "1",
             ["ABORT_CONTROLLER_TWICE"] = "1",
             ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
             ["ABORT_CLEANUP_STARTED_MARKER"] = cleanupStartedMarker,
+            ["ABORT_CHILD_PID_MARKER"] = childPidMarker,
         };
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -76,7 +78,9 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 
         testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
         Assert.IsTrue(File.Exists(cleanupStartedMarker), "The second SIGINT must be sent only after child cleanup starts.");
-        await AssertFileIsNotCreatedAsync(cleanupMarker, TimeSpan.FromSeconds(3), TestContext.CancellationToken);
+        int childPid = int.Parse(File.ReadAllText(childPidMarker), CultureInfo.InvariantCulture);
+        await AssertProcessExitedAsync(childPid, TestContext.CancellationToken);
+        Assert.IsFalse(File.Exists(cleanupMarker), "Force cancellation must terminate the child before its delayed cleanup completes.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -125,6 +129,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 #file Program.cs
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
@@ -141,6 +146,13 @@ internal sealed class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        string? childPidMarker = Environment.GetEnvironmentVariable("ABORT_CHILD_PID_MARKER");
+        if (childPidMarker is not null)
+        {
+            using Process currentProcess = Process.GetCurrentProcess();
+            File.WriteAllText(childPidMarker, currentProcess.Id.ToString());
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         builder.AddTrxReportProvider();
@@ -303,13 +315,19 @@ internal class TrxReportCapability : ITrxReportCapability
 
     public TestContext TestContext { get; set; }
 
-    private static async Task AssertFileIsNotCreatedAsync(string path, TimeSpan timeout, CancellationToken cancellationToken)
+    private static async Task AssertProcessExitedAsync(int processId, CancellationToken cancellationToken)
     {
-        DateTime deadline = DateTime.UtcNow + timeout;
-        while (DateTime.UtcNow < deadline)
+        try
         {
-            Assert.IsFalse(File.Exists(path), $"The file '{path}' was created before the timeout elapsed.");
-            await Task.Delay(TimeSpan.FromMilliseconds(50), cancellationToken);
+            using var child = System.Diagnostics.Process.GetProcessById(processId);
+            Task waitForExitTask = child.WaitForExitAsync(cancellationToken);
+            Task completedTask = await Task.WhenAny(waitForExitTask, Task.Delay(TimeSpan.FromSeconds(5), cancellationToken));
+            Assert.AreSame(waitForExitTask, completedTask, $"Child process '{processId}' was still running after forced cancellation.");
+            await waitForExitTask;
+        }
+        catch (ArgumentException)
+        {
+            // The process already exited before it could be opened.
         }
     }
 }
