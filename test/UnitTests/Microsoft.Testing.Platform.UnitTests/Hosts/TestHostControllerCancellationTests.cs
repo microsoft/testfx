@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -14,6 +15,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TestHostControllerCancellationTests
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task RequestCancellation_CancelsChildApplication()
     {
@@ -39,6 +42,23 @@ public sealed class TestHostControllerCancellationTests
             applicationCancellationTokenSource.CancellationToken.WaitHandle.WaitOne(TimeoutHelper.DefaultHangTimeSpanTimeout),
             "The controller cancellation request was not propagated to the child application.");
         Assert.IsTrue(listener.WasCancellationRequestedByController);
+    }
+
+    [TestMethod]
+    public async Task ServerDisposal_WhenClientConnectsWithoutSendingRequest_DoesNotHang()
+    {
+        Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
+        SystemEnvironment environment = new();
+        var server = new TestHostControllerCancellationServer(
+            authorizedSecurityIdentities: null,
+            environment,
+            loggerFactory.Object,
+            new SystemTask());
+        server.Start();
+        using var client = new NamedPipeClient(server.PipeName, environment, exitProcessOnConnectionLoss: false);
+        await client.ConnectAsync(TestContext.CancellationToken);
+
+        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(5));
     }
 
     [TestMethod]

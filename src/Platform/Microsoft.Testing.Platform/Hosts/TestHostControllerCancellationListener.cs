@@ -44,6 +44,10 @@ internal sealed class TestHostControllerCancellationListener : IDisposable
     public bool WasCancellationRequestedByController
         => Volatile.Read(ref _cancellationRequestedByController) != 0;
 
+    public bool ShouldReportCompletionAfterCancellation
+        => WasCancellationRequestedByController
+        || _testApplicationCancellationTokenSource.WasCancellationRequestedByConsole;
+
     private async Task ListenAsync(CancellationToken cancellationToken)
     {
         bool connected = false;

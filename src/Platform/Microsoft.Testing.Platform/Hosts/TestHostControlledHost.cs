@@ -51,7 +51,7 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
     {
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
         using CancellationTokenSource? completionCancellationTokenSource =
-            _testHostControllerCancellationListener?.WasCancellationRequestedByController == true
+            _testHostControllerCancellationListener?.ShouldReportCompletionAfterCancellation == true
             ? new(ShutdownTimeouts.DefaultControllerFinalization)
             : null;
         try

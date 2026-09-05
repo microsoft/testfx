@@ -48,6 +48,9 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     public CancellationToken CancellationToken
         => _cancellationTokenSource.Token;
 
+    public bool WasCancellationRequestedByConsole
+        => Volatile.Read(ref _state) != StateIdle;
+
     private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
     {
         // Suppress the runtime's default Ctrl+C handling so we control the exit code on

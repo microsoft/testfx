@@ -15,6 +15,7 @@ Microsoft.Testing.Platform.Services.ExecutableInfo.ExecutableInfo(string! filePa
 Microsoft.Testing.Platform.Services.ExecutableInfo.ExpandedArguments.get -> System.Collections.Generic.IEnumerable<string!>!
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.Dispose() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.ShouldReportCompletionAfterCancellation.get -> bool
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.TestHostControllerCancellationListener(string! pipeName, Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.WasCancellationRequestedByController.get -> bool
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer
@@ -25,6 +26,10 @@ Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.Start() ->
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.TestHostControllerCancellationServer(System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.ITask! task) -> void
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.WaitForRequestAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCancellationListener(Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener? testHostControllerCancellationListener) -> void
+Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.WasCancellationRequestedByConsole.get -> bool
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
+const Microsoft.Testing.Platform.IPC.ServerControlKinds.CloseChannel = 2 -> byte
+static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.HandleCanceledTestHostAsync(Microsoft.Testing.Platform.Helpers.IProcess! testHostProcess, System.Action! requestCancellation, Microsoft.Testing.Platform.Logging.ILogger! logger, System.TimeSpan cooperativeShutdownTimeout, System.TimeSpan terminationTimeout) -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool

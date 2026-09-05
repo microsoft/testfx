@@ -202,6 +202,14 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             {
                 // We are being canceled, so we don't need to wait anymore
             }
+            catch (Exception ex) when (
+                _cancellationToken.IsCancellationRequested
+                && ex is OperationCanceledException or IOException or ObjectDisposedException)
+            {
+                // .NET Framework does not reliably interrupt a pending pipe read when only the cancellation
+                // token is canceled. Disposal closes the stream to release that read; the resulting transport
+                // exception is expected shutdown rather than a server failure.
+            }
             catch (Exception ex)
             {
                 await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
@@ -408,6 +416,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         if (WasConnected)
         {
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                _namedPipeServerStream.Dispose();
+            }
+
             // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
             // This is unexpected and we throw an exception.
             ApplicationStateGuard.Ensure(_loopTask is not null);
@@ -439,6 +452,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         if (WasConnected)
         {
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                _namedPipeServerStream.Dispose();
+            }
+
             // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
             // This is unexpected and we throw an exception.
             ApplicationStateGuard.Ensure(_loopTask is not null);

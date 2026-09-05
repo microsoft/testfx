@@ -20,6 +20,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         console.FireCancelKeyPress();
 
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.IsTrue(source.WasCancellationRequestedByConsole);
         Assert.IsNull(environment.ExitCode, "Environment.Exit must not be called on the first Ctrl+C press.");
     }
 
@@ -124,6 +125,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         source.Cancel();
 
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
         Assert.IsNull(environment.ExitCode, "Without a console there is no Ctrl+C handler and Exit must never be called.");
     }
 

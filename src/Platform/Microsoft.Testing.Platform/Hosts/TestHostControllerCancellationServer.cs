@@ -18,6 +18,7 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
 #endif
 {
     private readonly CancellationTokenSource _acceptCancellationTokenSource = new();
+    private readonly CancellationTokenSource _serverLifetimeCancellationTokenSource = new();
     private readonly TaskCompletionSource<ServerControlMessage> _controlMessage =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -41,7 +42,7 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
             loggerFactory.CreateLogger<TestHostControllerCancellationServer>(),
             task,
             authorizedSecurityIdentities,
-            CancellationToken.None);
+            _serverLifetimeCancellationTokenSource.Token);
         _server.RegisterAllSerializers();
     }
 
@@ -88,6 +89,14 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
 #else
         _acceptCancellationTokenSource.Cancel();
 #endif
+        if (!_requestReceived.Task.IsCompleted)
+        {
+#if NET
+            await _serverLifetimeCancellationTokenSource.CancelAsync().ConfigureAwait(false);
+#else
+            _serverLifetimeCancellationTokenSource.Cancel();
+#endif
+        }
 
         if (_waitConnectionTask is not null)
         {
@@ -102,5 +111,6 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
 
         await DisposeHelper.DisposeAsync(_server).ConfigureAwait(false);
         _acceptCancellationTokenSource.Dispose();
+        _serverLifetimeCancellationTokenSource.Dispose();
     }
 }
