@@ -61,13 +61,22 @@ internal static partial class SerializerUtilities
             [JsonRpcStrings.Version] = info.Version,
         });
 
-        Serializers[typeof(ClientCapabilities)] = new ObjectSerializer<ClientCapabilities>(capabilities => new Dictionary<string, object?>
+        Serializers[typeof(ClientCapabilities)] = new ObjectSerializer<ClientCapabilities>(capabilities =>
         {
-            [JsonRpcStrings.Testing] = new Dictionary<string, object?>
+            Dictionary<string, object?> testingCapabilities = new()
             {
                 [JsonRpcStrings.DebuggerProvider] = capabilities.DebuggerProvider,
-                [JsonRpcStrings.IsStateful] = capabilities.IsStateful,
-            },
+            };
+
+            if (capabilities.IsStateful is { } isStateful)
+            {
+                testingCapabilities[JsonRpcStrings.IsStateful] = isStateful;
+            }
+
+            return new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = testingCapabilities,
+            };
         });
 
         Serializers[typeof(InitializeRequestArgs)] = new ObjectSerializer<InitializeRequestArgs>(args =>

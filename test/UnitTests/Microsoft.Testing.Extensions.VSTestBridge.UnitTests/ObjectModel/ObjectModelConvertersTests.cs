@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public sealed class ObjectModelConvertersTests
 {
-    private static readonly IClientInfo ClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(IsStateful: false));
+    private static readonly IClientInfo ClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false));
     private static readonly TestProperty OriginalExecutorUriProperty = TestProperty.Register(
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
