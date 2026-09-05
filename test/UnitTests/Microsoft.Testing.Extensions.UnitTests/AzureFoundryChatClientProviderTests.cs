@@ -12,8 +12,12 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 
 // The provider reads process-wide AZURE_OPENAI_* environment variables, so these tests must not run
 // concurrently with each other. Each test snapshots and restores the variables to avoid leaking state.
+// A class-level [ResourceLock(WellKnownResources.EnvironmentVariables)] (instead of [DoNotParallelize])
+// still serializes this class against itself and against every other test in the assembly that mutates
+// environment variables, which is required because the resource is process-wide; but it allows this
+// class to run in parallel with tests that never touch environment variables at all.
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(WellKnownResources.EnvironmentVariables)]
 public sealed class AzureFoundryChatClientProviderTests
 {
     private const string EndpointVariable = "AZURE_OPENAI_ENDPOINT";
