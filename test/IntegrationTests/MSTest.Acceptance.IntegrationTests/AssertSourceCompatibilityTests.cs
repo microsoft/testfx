@@ -119,6 +119,21 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.ContainsAll<int>(values, other, comparer);
                 Assert.DoesNotContainAll<int>(values, other, comparer);
                 _ = Assert.ContainsSingle<int>(predicate, values);
+
+                Assert.AreAllDistinct<int>(default!, comparer);
+                Assert.AreSequenceEqual<int>(default!, default!, comparer);
+                Assert.AreSequenceEqual<int>(default!, default!, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual<int>(default!, default!, comparer);
+                Assert.AreNotSequenceEqual<int>(default!, default!, comparer, SequenceOrder.InAnyOrder);
+                Assert.Contains<int>(1, default!);
+                Assert.Contains<int>(1, default!, comparer);
+                Assert.Contains<int>(predicate, default!);
+                Assert.DoesNotContain<int>(1, default!);
+                Assert.DoesNotContain<int>(1, default!, comparer);
+                Assert.DoesNotContain<int>(predicate, default!);
+                Assert.ContainsAll<int>(default!, default!, comparer);
+                Assert.DoesNotContainAll<int>(default!, default!, comparer);
+                _ = Assert.ContainsSingle<int>(predicate, default!);
             }
 
             internal static void GenericEnumerableCalls(
