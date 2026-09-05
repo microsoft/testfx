@@ -187,14 +187,19 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             return true;
         }
 
-        ApplicationStateGuard.Ensure(_loopTask is not null);
-        Task completedTask = await Task.WhenAny(_loopTask, Task.Delay(timeout)).ConfigureAwait(false);
-        if (completedTask != _loopTask)
+        Task? loopTask = _loopTask;
+        if (loopTask is null)
         {
             return false;
         }
 
-        await _loopTask.ConfigureAwait(false);
+        Task completedTask = await Task.WhenAny(loopTask, Task.Delay(timeout)).ConfigureAwait(false);
+        if (completedTask != loopTask)
+        {
+            return false;
+        }
+
+        await loopTask.ConfigureAwait(false);
         return true;
     }
 
@@ -439,14 +444,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
                 _namedPipeServerStream.Dispose();
             }
 
-            // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
-            // This is unexpected and we throw an exception.
-            ApplicationStateGuard.Ensure(_loopTask is not null);
-
             // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-            if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            Task? loopTask = _loopTask;
+            if (loopTask is not null && !loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.");
+                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={loopTask.Status}.");
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
@@ -475,22 +477,22 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
                 _namedPipeServerStream.Dispose();
             }
 
-            // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
-            // This is unexpected and we throw an exception.
-            ApplicationStateGuard.Ensure(_loopTask is not null);
-
-            try
+            Task? loopTask = _loopTask;
+            if (loopTask is not null)
             {
-                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-            }
-            catch (TimeoutException)
-            {
-                await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.").ConfigureAwait(false);
-                throw new InvalidOperationException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-                    nameof(InternalLoopAsync)));
+                try
+                {
+                    // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
+                    await loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+                }
+                catch (TimeoutException)
+                {
+                    await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={loopTask.Status}.").ConfigureAwait(false);
+                    throw new InvalidOperationException(string.Format(
+                        CultureInfo.InvariantCulture,
+                        PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+                        nameof(InternalLoopAsync)));
+                }
             }
         }
 
