@@ -16,6 +16,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private readonly IEnvironment _environment;
     private readonly ILogger? _logger;
     private readonly IConsole? _subscribedConsole;
+    private Action? _forceExitAction;
     private int _state = StateIdle;
     private int _disposed;
 
@@ -47,6 +48,12 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     public CancellationToken CancellationToken
         => _cancellationTokenSource.Token;
+
+    public bool WasCancellationRequestedByConsole
+        => Volatile.Read(ref _state) != StateIdle;
+
+    public void SetForceExitAction(Action? forceExitAction)
+        => Volatile.Write(ref _forceExitAction, forceExitAction);
 
     private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
     {
@@ -83,6 +90,15 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         // is the confirmation. Any subsequent presses are suppressed by the StateForcing guard.
         if (Interlocked.CompareExchange(ref _state, StateForcing, StateCancelling) == StateCancelling)
         {
+            try
+            {
+                Volatile.Read(ref _forceExitAction)?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning($"Exception while force-terminating the active test host:\n{ex}");
+            }
+
             _environment.Exit((int)ExitCode.TestSessionAborted);
         }
     }

@@ -1,1 +1,3 @@
 #nullable enable
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
