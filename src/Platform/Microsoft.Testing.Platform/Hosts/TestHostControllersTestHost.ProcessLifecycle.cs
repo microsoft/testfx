@@ -138,7 +138,7 @@ internal sealed partial class TestHostControllersTestHost
                     testHostProcess,
                     testHostControllerCancellationServer.RequestCancellation,
                     _logger,
-                    TestHostCooperativeShutdownTimeout,
+                    _testHostCooperativeShutdownTimeout,
                     TestHostTerminationTimeout).ConfigureAwait(false);
             }
         }

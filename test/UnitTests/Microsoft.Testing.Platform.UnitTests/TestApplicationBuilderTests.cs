@@ -250,15 +250,28 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
-    public void TestHostControllerProcessTermination_CooperativeBudgetExceedsCanceledConsumerBudget()
+    public void TestHostControllerProcessTermination_CooperativeBudgetUsesConfiguredCanceledConsumerBudget()
     {
+        Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("60");
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        using var host = new TestHostControllersTestHost(
+            new([], [], [], testHostLauncher: null, requireProcessRestart: false),
+            new(),
+            passiveNode: null,
+            environment.Object,
+            loggerFactory.Object,
+            Mock.Of<IClock>());
         FieldInfo field = typeof(TestHostControllersTestHost).GetField(
-            "TestHostCooperativeShutdownTimeout",
-            BindingFlags.NonPublic | BindingFlags.Static)
-            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TestHostCooperativeShutdownTimeout.");
-        var cooperativeShutdownTimeout = (TimeSpan)field.GetValue(null)!;
+            "_testHostCooperativeShutdownTimeout",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost._testHostCooperativeShutdownTimeout.");
+        var cooperativeShutdownTimeout = (TimeSpan)field.GetValue(host)!;
 
-        Assert.IsGreaterThan(ShutdownTimeouts.DefaultCanceledConsumerCompletion, cooperativeShutdownTimeout);
+        Assert.AreEqual(TimeSpan.FromSeconds(75), cooperativeShutdownTimeout);
     }
 
     [TestMethod]
