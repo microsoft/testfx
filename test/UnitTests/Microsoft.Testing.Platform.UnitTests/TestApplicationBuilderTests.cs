@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -216,6 +217,48 @@ public sealed class TestApplicationBuilderTests
 
         Assert.IsFalse(exited);
         Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+    }
+
+    [TestMethod]
+    public async Task TestHostControllerProcessTermination_UnresponsiveCustomHandleIsTerminatedAndDeferred()
+    {
+        TaskCompletionSource<bool> exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> disposed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITestHostHandle> handle = new();
+        handle.SetupGet(x => x.HasExited).Returns(() => exited.Task.IsCompleted);
+        handle.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(exited.Task);
+        handle.Setup(x => x.Dispose()).Callback(() => disposed.TrySetResult(true));
+        var adapter = new TestHostHandleToProcessAdapter(handle.Object);
+        bool cancellationRequested = false;
+
+        await TestHostControllersTestHost.HandleCanceledTestHostAsync(
+            adapter,
+            () => cancellationRequested = true,
+            new NopLogger(),
+            TimeSpan.FromMilliseconds(50),
+            TimeSpan.FromMilliseconds(50));
+
+        Assert.IsTrue(cancellationRequested);
+        handle.Verify(x => x.Terminate(), Times.Once);
+
+        adapter.Dispose();
+        handle.Verify(x => x.Dispose(), Times.Never);
+
+        exited.SetResult(true);
+        await disposed.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        handle.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void TestHostControllerProcessTermination_CooperativeBudgetExceedsCanceledConsumerBudget()
+    {
+        FieldInfo field = typeof(TestHostControllersTestHost).GetField(
+            "TestHostCooperativeShutdownTimeout",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.TestHostCooperativeShutdownTimeout.");
+        var cooperativeShutdownTimeout = (TimeSpan)field.GetValue(null)!;
+
+        Assert.IsGreaterThan(ShutdownTimeouts.DefaultCanceledConsumerCompletion, cooperativeShutdownTimeout);
     }
 
     [TestMethod]
