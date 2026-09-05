@@ -292,6 +292,38 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public void TestHostControlledHost_LateCooperativeCancellationPreservesCompletionToken()
+    {
+        using CancellationTokenSource applicationCancellationTokenSource = new();
+        using CancellationTokenSource completionCancellationTokenSource = new();
+        bool cooperativeCancellation = false;
+        using CancellationTokenRegistration registration = TestHostControlledHost.RegisterCompletionCancellationTransition(
+            applicationCancellationTokenSource.Token,
+            () => cooperativeCancellation,
+            completionCancellationTokenSource);
+
+        cooperativeCancellation = true;
+        applicationCancellationTokenSource.Cancel();
+
+        Assert.IsFalse(completionCancellationTokenSource.IsCancellationRequested);
+    }
+
+    [TestMethod]
+    public void TestHostControlledHost_LateNonCooperativeCancellationCancelsCompletionToken()
+    {
+        using CancellationTokenSource applicationCancellationTokenSource = new();
+        using CancellationTokenSource completionCancellationTokenSource = new();
+        using CancellationTokenRegistration registration = TestHostControlledHost.RegisterCompletionCancellationTransition(
+            applicationCancellationTokenSource.Token,
+            () => false,
+            completionCancellationTokenSource);
+
+        applicationCancellationTokenSource.Cancel();
+
+        Assert.IsTrue(completionCancellationTokenSource.IsCancellationRequested);
+    }
+
+    [TestMethod]
     public void TestHostControllerProcessTermination_CooperativeBudgetUsesConfiguredCanceledConsumerBudget()
     {
         Mock<IEnvironment> environment = new();

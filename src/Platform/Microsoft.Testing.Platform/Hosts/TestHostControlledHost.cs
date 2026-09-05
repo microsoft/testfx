@@ -50,10 +50,11 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
     public async Task<int> RunAsync()
     {
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
-        using CancellationTokenSource? completionCancellationTokenSource =
-            _testHostControllerCancellationListener?.ShouldReportCompletionAfterCancellation == true
-            ? new(ShutdownTimeouts.DefaultControllerFinalization)
-            : null;
+        using CancellationTokenSource completionCancellationTokenSource = new();
+        using CancellationTokenRegistration completionCancellationRegistration = RegisterCompletionCancellationTransition(
+            _cancellationToken,
+            () => _testHostControllerCancellationListener?.ShouldReportCompletionAfterCancellation == true,
+            completionCancellationTokenSource);
         try
         {
             int unfilteredExitCode = _testApplicationResult?.GetProcessExitCode() == exitCode
@@ -61,11 +62,11 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
                 : exitCode;
             await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
                 new TestHostCompletedRequest(exitCode, unfilteredExitCode),
-                completionCancellationTokenSource?.Token ?? _cancellationToken).ConfigureAwait(false);
+                completionCancellationTokenSource.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException oc) when (
             oc.CancellationToken == _cancellationToken
-            || oc.CancellationToken == completionCancellationTokenSource?.Token)
+            || oc.CancellationToken == completionCancellationTokenSource.Token)
         {
             // We do nothing we're canceling
         }
@@ -77,6 +78,23 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
 
         return exitCode;
     }
+
+    internal static CancellationTokenRegistration RegisterCompletionCancellationTransition(
+        CancellationToken applicationCancellationToken,
+        Func<bool> shouldReportCompletionAfterCancellation,
+        CancellationTokenSource completionCancellationTokenSource)
+        => applicationCancellationToken.Register(
+            () =>
+            {
+                if (shouldReportCompletionAfterCancellation())
+                {
+                    completionCancellationTokenSource.CancelAfter(ShutdownTimeouts.DefaultControllerFinalization);
+                }
+                else
+                {
+                    completionCancellationTokenSource.Cancel();
+                }
+            });
 
     public void Dispose()
     {
