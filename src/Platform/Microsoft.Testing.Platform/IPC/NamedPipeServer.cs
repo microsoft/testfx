@@ -182,13 +182,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
-        // NOTE: _cancellationToken field is usually the "test session" cancellation token.
-        // And cancellationToken parameter may have hang mitigating timeout.
-        // The parameter should only be used for the call of WaitForConnectionAsync and Task.Run call.
-        // NOTE: The cancellation token passed to Task.Run will only have effect before the task is started by runtime.
-        // Once it starts, it won't be considered.
-        // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
-        // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
+        // NOTE: _cancellationToken field is usually the "test session" cancellation token, while the parameter
+        // may include a connection timeout. Once the connection is accepted, always schedule the loop: using the
+        // parameter for Task.Run creates a race where cancellation between acceptance and scheduling leaves a
+        // canceled loop task, and disposal then mistakes that for a loop failure. InternalLoopAsync observes the
+        // server lifetime token for its whole lifetime.
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
         WasConnected = true;
@@ -209,7 +207,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
                 await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
                 _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
             }
-        }, cancellationToken);
+        }, CancellationToken.None);
     }
 
     /// <summary>

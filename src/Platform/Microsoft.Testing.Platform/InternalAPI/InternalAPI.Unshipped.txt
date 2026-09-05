@@ -5,3 +5,15 @@ Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestApplicationBuilder
 Microsoft.Testing.Platform.Services.CurrentTestApplicationModuleInfo.CurrentTestApplicationModuleInfo(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IProcessHandler! process, string![]? commandLineArguments, string![]? expandedCommandLineArguments) -> void
 Microsoft.Testing.Platform.Services.ExecutableInfo.ExecutableInfo(string! filePath, System.Collections.Generic.IEnumerable<string!>! arguments, System.Collections.Generic.IEnumerable<string!>! expandedArguments, string! workspace) -> void
 Microsoft.Testing.Platform.Services.ExecutableInfo.ExpandedArguments.get -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.Dispose() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.TestHostControllerCancellationListener(string! pipeName, Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.WasCancellationRequestedByController.get -> bool
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.Dispose() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.PipeName.get -> string!
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.RequestCancellation() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.Start() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.TestHostControllerCancellationServer(System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.ITask! task) -> void
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.WaitForRequestAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCancellationListener(Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener? testHostControllerCancellationListener) -> void

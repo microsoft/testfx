@@ -27,6 +27,55 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "The targeted SIGINT test uses the Unix kill API.")]
+    public async Task AbortControllerWithSIGINT_AllowsChildCleanupToComplete(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
+        string trxFileName = $"abort-{Guid.NewGuid():N}.trx";
+        var environmentVariables = new Dictionary<string, string?>
+        {
+            ["ABORT_CONTROLLER_ONLY"] = "1",
+            ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
+        };
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {trxFileName}",
+            environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        Assert.IsTrue(File.Exists(cleanupMarker), $"The child cleanup marker was not written to '{cleanupMarker}'.");
+        Assert.AreEqual("cleanup completed", File.ReadAllText(cleanupMarker));
+        Assert.HasCount(1, Directory.GetFiles(testHost.DirectoryName, trxFileName, SearchOption.AllDirectories));
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task AbortControllerWithCTRLPlusC_AllowsChildCleanupToComplete(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
+        string trxFileName = $"abort-{Guid.NewGuid():N}.trx";
+        var environmentVariables = new Dictionary<string, string?>
+        {
+            ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
+        };
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {trxFileName}",
+            environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        Assert.IsTrue(File.Exists(cleanupMarker), $"The child cleanup marker was not written to '{cleanupMarker}'.");
+        Assert.AreEqual("cleanup completed", File.ReadAllText(cleanupMarker));
+        Assert.HasCount(1, Directory.GetFiles(testHost.DirectoryName, trxFileName, SearchOption.AllDirectories));
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
@@ -41,14 +90,18 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
 #file Program.cs
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -62,10 +115,28 @@ internal sealed class Program
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
+        builder.AddTrxReportProvider();
         using ITestApplication app = await builder.BuildAsync();
         _ = Task.Run(() =>
         {
             DummyTestFramework.FireCancel.Wait();
+
+            if (Environment.GetEnvironmentVariable("ABORT_CONTROLLER_ONLY") == "1")
+            {
+                int optionIndex = Array.IndexOf(args, "--internal-testhostcontroller-pid");
+                if (optionIndex < 0 || optionIndex + 1 >= args.Length)
+                {
+                    throw new Exception("The child process did not receive the test host controller PID.");
+                }
+
+                int controllerPid = int.Parse(args[optionIndex + 1]);
+                if (kill(controllerPid, 2) != 0)
+                {
+                    throw new Exception($"kill(SIGINT) failed with errno '{Marshal.GetLastWin32Error()}'.");
+                }
+
+                return;
+            }
 
             if (!GenerateConsoleCtrlEvent(ConsoleCtrlEvent.CTRL_C, 0))
             {
@@ -77,6 +148,8 @@ internal sealed class Program
 
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern bool GenerateConsoleCtrlEvent(ConsoleCtrlEvent sigevent, int dwProcessGroupId);
+    [DllImport("libc", SetLastError = true)]
+    static extern int kill(int pid, int sig);
     public enum ConsoleCtrlEvent
     {
         CTRL_C = 0,
@@ -118,7 +191,20 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
         FireCancel.Set();
 
         var timeoutTask = Task.Delay(15_000, context.CancellationToken);
-        await timeoutTask;
+        try
+        {
+            await timeoutTask;
+        }
+        finally
+        {
+            string? cleanupMarker = Environment.GetEnvironmentVariable("ABORT_CLEANUP_MARKER");
+            if (cleanupMarker is not null)
+            {
+                await Task.Delay(500, CancellationToken.None);
+                File.WriteAllText(cleanupMarker, "cleanup completed");
+            }
+        }
+
         if (!timeoutTask.IsCanceled)
         {
             throw new Exception("Cancellation was not propagated to the adapter within 15 seconds since CTRL+C.");
@@ -134,7 +220,16 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
 
 internal class Capabilities : ITestFrameworkCapabilities
 {
-    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
+    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => new ITestFrameworkCapability[] { new TrxReportCapability() };
+}
+
+internal class TrxReportCapability : ITrxReportCapability
+{
+    bool ITrxReportCapability.IsSupported => true;
+
+    void ITrxReportCapability.Enable()
+    {
+    }
 }
 """;
 
