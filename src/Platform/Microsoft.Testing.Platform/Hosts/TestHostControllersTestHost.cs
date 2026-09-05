@@ -21,7 +21,6 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
 {
     private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
 
-    private readonly TimeSpan _testHostCooperativeShutdownTimeout;
     private readonly TimeSpan _controllerExtensionFinalizationTimeout;
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly PassiveNode? _passiveNode;
@@ -56,7 +55,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _testHostsInformation = testHostsInformation;
         _passiveNode = passiveNode;
         _environment = environment;
-        _testHostCooperativeShutdownTimeout =
+        TestHostCooperativeShutdownTimeout =
             ShutdownTimeouts.GetCanceledConsumerCompletion(environment) + TimeSpan.FromSeconds(15);
         _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetControllerFinalization(environment);
         _clock = clock;
@@ -71,6 +70,8 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
+
+    internal TimeSpan TestHostCooperativeShutdownTimeout { get; }
 
     protected override bool RunTestApplicationLifeCycleCallbacks => false;
 
