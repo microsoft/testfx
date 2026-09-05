@@ -244,7 +244,7 @@
       </trans-unit>
       <trans-unit id="CommandLineParserRecursiveResponseFile">
         <source>A recursive response file reference was detected.</source>
-        <target state="new">A recursive response file reference was detected.</target>
+        <target state="translated">Wykryto rekursywne odwołanie do pliku odpowiedzi.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
