@@ -45,7 +45,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         var environment = new RecordingEnvironment();
         using var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
         bool forceExitActionInvoked = false;
-        source.SetForceExitAction(() =>
+        using IDisposable registration = source.RegisterForceExitAction(() =>
         {
             Assert.IsNull(environment.ExitCode, "The child force-exit action must run before the controller exits.");
             forceExitActionInvoked = true;
@@ -55,6 +55,22 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         console.FireCancelKeyPress();
 
         Assert.IsTrue(forceExitActionInvoked);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, environment.ExitCode);
+    }
+
+    [TestMethod]
+    public void DisposedForceExitRegistration_DoesNotInvokeAction()
+    {
+        var console = new CancelableConsole();
+        var environment = new RecordingEnvironment();
+        using var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
+        bool forceExitActionInvoked = false;
+        source.RegisterForceExitAction(() => forceExitActionInvoked = true).Dispose();
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+
+        Assert.IsFalse(forceExitActionInvoked);
         Assert.AreEqual((int)ExitCode.TestSessionAborted, environment.ExitCode);
     }
 

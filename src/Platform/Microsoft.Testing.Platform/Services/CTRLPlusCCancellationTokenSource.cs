@@ -52,8 +52,11 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     public bool WasCancellationRequestedByConsole
         => Volatile.Read(ref _state) != StateIdle;
 
-    public void SetForceExitAction(Action? forceExitAction)
-        => Volatile.Write(ref _forceExitAction, forceExitAction);
+    public IDisposable RegisterForceExitAction(Action forceExitAction)
+    {
+        Volatile.Write(ref _forceExitAction, forceExitAction);
+        return new ForceExitRegistration(this, forceExitAction);
+    }
 
     private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
     {
@@ -123,4 +126,10 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     public void Cancel()
         => _cancellationTokenSource.Cancel();
+
+    private sealed class ForceExitRegistration(CTRLPlusCCancellationTokenSource owner, Action forceExitAction) : IDisposable
+    {
+        public void Dispose()
+            => Interlocked.CompareExchange(ref owner._forceExitAction, null, forceExitAction);
+    }
 }
