@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
@@ -20,6 +21,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
     private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan TestHostCooperativeShutdownMargin = TimeSpan.FromSeconds(15);
 
     private readonly TimeSpan _controllerExtensionFinalizationTimeout;
     private readonly TestHostControllerConfiguration _testHostsInformation;
@@ -56,7 +58,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _passiveNode = passiveNode;
         _environment = environment;
         TestHostCooperativeShutdownTimeout =
-            ShutdownTimeouts.GetCanceledConsumerCompletion(environment) + TimeSpan.FromSeconds(15);
+            ShutdownTimeouts.GetCanceledConsumerCompletion(environment) + TestHostCooperativeShutdownMargin;
         _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetControllerFinalization(environment);
         _clock = clock;
         _loggerFactory = loggerFactory;
@@ -71,7 +73,17 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
 
     public string Description => string.Empty;
 
-    internal TimeSpan TestHostCooperativeShutdownTimeout { get; }
+    internal TimeSpan TestHostCooperativeShutdownTimeout { get; private set; }
+
+    internal static TimeSpan GetTestHostCooperativeShutdownTimeout(IReadOnlyEnvironmentVariables environmentVariables)
+    {
+        environmentVariables.TryGetVariable(
+            EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS,
+            out OwnedEnvironmentVariable? configuredTimeout);
+
+        return ShutdownTimeouts.GetCanceledConsumerCompletion(configuredTimeout?.Value)
+            + TestHostCooperativeShutdownMargin;
+    }
 
     protected override bool RunTestApplicationLifeCycleCallbacks => false;
 
