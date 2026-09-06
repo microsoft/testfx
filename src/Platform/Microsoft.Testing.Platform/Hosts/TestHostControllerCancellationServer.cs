@@ -108,7 +108,7 @@ internal sealed class TestHostControllerCancellationServer : IDisposable
             {
                 await _waitConnectionTask.ConfigureAwait(false);
             }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == _acceptCancellationTokenSource.Token)
+            catch (OperationCanceledException) when (_acceptCancellationTokenSource.IsCancellationRequested)
             {
                 // Disposal canceled the connection wait before a child connected.
             }
