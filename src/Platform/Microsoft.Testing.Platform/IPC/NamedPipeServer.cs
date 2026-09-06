@@ -36,7 +36,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     private readonly ILogger _logger;
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lifecycleSync = new();
+#else
     private readonly object _lifecycleSync = new();
+#endif
     private Task? _loopTask;
     private bool _disposed;
 
