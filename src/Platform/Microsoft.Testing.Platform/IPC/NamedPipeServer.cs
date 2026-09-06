@@ -187,15 +187,17 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     internal async Task<bool> WaitForDisconnectAsync(TimeSpan timeout)
     {
-        if (!WasConnected)
-        {
-            return true;
-        }
-
+        bool wasConnected;
         Task? loopTask;
         lock (_lifecycleSync)
         {
+            wasConnected = WasConnected;
             loopTask = _loopTask;
+        }
+
+        if (!wasConnected)
+        {
+            return true;
         }
 
         if (loopTask is null)
