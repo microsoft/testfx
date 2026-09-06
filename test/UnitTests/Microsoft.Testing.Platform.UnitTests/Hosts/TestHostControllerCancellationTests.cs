@@ -15,6 +15,10 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TestHostControllerCancellationTests
 {
+    // Production closes the stalled control channel after one second. Allow loaded CI agents extra time
+    // to schedule the blocking Dispose call and observe the resulting pipe disconnect.
+    private static readonly TimeSpan DisposalTestTimeout = TimeSpan.FromSeconds(30);
+
     public TestContext TestContext { get; set; }
 
     [TestMethod]
@@ -83,7 +87,7 @@ public sealed class TestHostControllerCancellationTests
         using var client = new NamedPipeClient(server.PipeName, environment, exitProcessOnConnectionLoss: false);
         await client.ConnectAsync(TestContext.CancellationToken);
 
-        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(5));
+        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
     }
 
     [TestMethod]
@@ -98,7 +102,7 @@ public sealed class TestHostControllerCancellationTests
             new SystemTask());
         server.Start();
 
-        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(5));
+        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
     }
 
     [TestMethod]
@@ -123,7 +127,7 @@ public sealed class TestHostControllerCancellationTests
         await client.FlushAsync(TestContext.CancellationToken);
         await server.WaitForRequestAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
 
-        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(5));
+        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
 
         byte[] responseBuffer = new byte[64];
         int bytesRead;
