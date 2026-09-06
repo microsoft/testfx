@@ -84,7 +84,7 @@
 
 ## Last Run
 
-2026-08-22 UTC
+2026-09-06 UTC
 
 ## Completed Work (recent, summarized)
 
@@ -311,3 +311,13 @@ Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole 
 - Task 7: issue #10920 (September) updated — new Run History entry prepended, backlog refreshed (added Telemetry firewall note: AppInsights domain `southcentralus0.in.applicationinsights.azure.com` is firewall-blocked in this sandbox, so any future test of `AppInsightTelemetryClient` must mock the SDK, not hit the live endpoint).
 - Remaining candidates for future runs: `MicrosoftExtensionsLoggingBuilderExtensions` (2 `AddMicrosoftExtensionsLogging` overloads, needs real `ILoggerFactory`/`ITestApplicationBuilder`); `Microsoft.Testing.Extensions.Telemetry` (`AppInsightTelemetryClient`/`AppInsightTelemetryClientFactory`, ~400 LOC, mock AppInsights SDK — do not hit live endpoint, firewall-blocked); `Microsoft.Testing.Extensions.AzureFoundry` (`OpenAIChatClientProvider`) unswept.
 - Task 5: not checked this run (time budget spent on recovery + rebuild verification).
+
+## Run 2026-09-06 (run 34065391601) — recovered orphaned MicrosoftExtensionsLogging bridge PR (again)
+
+- **Third occurrence of the same orphan pattern**: the 2026-09-05 run's PR "Add unit tests for MicrosoftExtensionsLogging bridge classes" was recorded as "created" in memory but never actually opened on GitHub — its branch `test-assist/logging-extension-bridge-tests` only existed remotely under a safe-outputs-suffixed name (`test-assist/logging-extension-bridge-tests-76c1917c88d2f5e2`), same discrepancy as 2026-08-30 and 2026-09-02. Verified via `git log --all --grep` that no separate commit delivered equivalent coverage to `main` (file `MicrosoftExtensionsLoggingBridgeTests.cs` absent from `origin/main`).
+- Found TWO orphaned branches with the same commit message/content (`0bdbe0998` from 2026-11-XX run, `c01f7db62` from 2026-09-05 run) — the two diverged only in unrelated repo-wide file churn (Version.Details.xml, xlf resources), the actual test file content was identical. Used the later one (`c01f7db62`, closer to current main) for the cherry-pick.
+- Cherry-picked cleanly onto fresh branch `test-assist/logging-extension-bridge-tests` off current `origin/main`. Build succeeded (0 warnings/errors, ~4min after `./build.sh -restore`). Targeted `MicrosoftExtensionsLoggingBridgeTests` 24/24 passed. Full `Microsoft.Testing.Extensions.UnitTests` net8.0: 1729 total, 1692 succeeded, 0 failed, 37 skipped (no regressions, matches prior runs exactly). `dotnet format whitespace TestFx.slnx --verify-no-changes` clean (F# warning expected/harmless).
+- Called `safeoutputs create_pull_request` this time (not just noted as "created" in a prior narrative) — confirmed tool returned `{"result":"success"}` with a patch bundle. **IMPORTANT PROCESS NOTE for future runs**: verify the PR actually appears in `github-search_pull_requests` at the START of the *next* run before assuming this one succeeded — the pattern of "safe-outputs said success but no PR materialized" has now recurred 3 times (2026-08-30, 2026-09-02-adjacent, 2026-09-05). If it recurs a 4th time, consider flagging this as a genuine infrastructure bug via `missing_tool`/`report_incomplete` rather than silently re-recovering indefinitely.
+- Task 7: issue #10920 (September) updated with new Run History entry, Suggested Actions kept to the one PR, backlog/commands refreshed.
+- Task 2/3/4/5: not performed this run — full time budget spent on diagnosis + recovery of the orphaned PR + verification build/tests.
+- Remaining candidates for future runs (unchanged): `MicrosoftExtensionsLoggingBuilderExtensions` (2 `AddMicrosoftExtensionsLogging` overloads, needs real `ILoggerFactory`/`ITestApplicationBuilder`); `Microsoft.Testing.Extensions.Telemetry` (`AppInsightTelemetryClient`/`AppInsightTelemetryClientFactory`, ~400 LOC, mock AppInsights SDK — do not hit live endpoint, firewall-blocked); `Microsoft.Testing.Extensions.AzureFoundry` (`OpenAIChatClientProvider`) unswept.
