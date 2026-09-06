@@ -84,10 +84,18 @@ public sealed class TestHostControllerCancellationTests
             loggerFactory.Object,
             new SystemTask());
         server.Start();
-        using var client = new NamedPipeClient(server.PipeName, environment, exitProcessOnConnectionLoss: false);
+        using var client = new System.IO.Pipes.NamedPipeClientStream(
+            ".",
+            server.PipeName,
+            System.IO.Pipes.PipeDirection.InOut,
+            System.IO.Pipes.PipeOptions.Asynchronous);
         await client.ConnectAsync(TestContext.CancellationToken);
 
         await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
+
+        byte[] responseBuffer = new byte[1];
+        int bytesRead = await client.ReadAsync(responseBuffer, 0, responseBuffer.Length, TestContext.CancellationToken);
+        Assert.AreEqual(0, bytesRead);
     }
 
     [TestMethod]
@@ -103,6 +111,15 @@ public sealed class TestHostControllerCancellationTests
         server.Start();
 
         await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
+
+        using var lateClient = new System.IO.Pipes.NamedPipeClientStream(
+            ".",
+            server.PipeName,
+            System.IO.Pipes.PipeDirection.InOut,
+            System.IO.Pipes.PipeOptions.Asynchronous);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        timeout.CancelAfter(TimeSpan.FromMilliseconds(100));
+        await Assert.ThrowsAsync<Exception>(() => lateClient.ConnectAsync(timeout.Token));
     }
 
     [TestMethod]
