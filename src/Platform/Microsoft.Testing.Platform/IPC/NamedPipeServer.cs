@@ -36,6 +36,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     private readonly ILogger _logger;
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
+    private readonly object _lifecycleSync = new();
     private Task? _loopTask;
     private bool _disposed;
 
@@ -187,7 +188,12 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             return true;
         }
 
-        Task? loopTask = _loopTask;
+        Task? loopTask;
+        lock (_lifecycleSync)
+        {
+            loopTask = _loopTask;
+        }
+
         if (loopTask is null)
         {
             return false;
@@ -212,33 +218,42 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         // server lifetime token for its whole lifetime.
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-        WasConnected = true;
-        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
-        _loopTask = _task.Run(
-            async () =>
+        lock (_lifecycleSync)
         {
-            try
+            if (_disposed)
             {
-                await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
+                return;
             }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
-            {
-                // We are being canceled, so we don't need to wait anymore
-            }
-            catch (Exception ex) when (
-                _cancellationToken.IsCancellationRequested
-                && ex is OperationCanceledException or IOException or ObjectDisposedException)
-            {
-                // .NET Framework does not reliably interrupt a pending pipe read when only the cancellation
-                // token is canceled. Disposal closes the stream to release that read; the resulting transport
-                // exception is expected shutdown rather than a server failure.
-            }
-            catch (Exception ex)
-            {
-                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
-                _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
-            }
-        }, CancellationToken.None);
+
+            _loopTask = _task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
+                    {
+                        // We are being canceled, so we don't need to wait anymore
+                    }
+                    catch (Exception ex) when (
+                        _cancellationToken.IsCancellationRequested
+                        && ex is OperationCanceledException or IOException or ObjectDisposedException)
+                    {
+                        // .NET Framework does not reliably interrupt a pending pipe read when only the cancellation
+                        // token is canceled. Disposal closes the stream to release that read; the resulting transport
+                        // exception is expected shutdown rather than a server failure.
+                    }
+                    catch (Exception ex)
+                    {
+                        await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
+                        _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
+                    }
+                }, CancellationToken.None);
+            WasConnected = true;
+        }
+
+        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
     }
 
     /// <summary>
@@ -432,12 +447,21 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     public void Dispose()
     {
-        if (_disposed)
+        Task? loopTask;
+        bool wasConnected;
+        lock (_lifecycleSync)
         {
-            return;
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            wasConnected = WasConnected;
+            loopTask = _loopTask;
         }
 
-        if (WasConnected)
+        if (wasConnected)
         {
             if (_cancellationToken.IsCancellationRequested)
             {
@@ -445,7 +469,6 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             }
 
             // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-            Task? loopTask = _loopTask;
             if (loopTask is not null && !loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={loopTask.Status}.");
@@ -458,26 +481,32 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         _namedPipeServerStream.Dispose();
         DisposeBuffers();
-
-        _disposed = true;
     }
 
 #if NET
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
+        Task? loopTask;
+        bool wasConnected;
+        lock (_lifecycleSync)
         {
-            return;
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            wasConnected = WasConnected;
+            loopTask = _loopTask;
         }
 
-        if (WasConnected)
+        if (wasConnected)
         {
             if (_cancellationToken.IsCancellationRequested)
             {
                 _namedPipeServerStream.Dispose();
             }
 
-            Task? loopTask = _loopTask;
             if (loopTask is not null)
             {
                 try
@@ -498,8 +527,6 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         _namedPipeServerStream.Dispose();
         DisposeBuffers();
-
-        _disposed = true;
     }
 #endif
 }
