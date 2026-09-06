@@ -45,6 +45,31 @@ public sealed class TestHostControllerCancellationTests
     }
 
     [TestMethod]
+    public void RequestCancellation_BeforeChildConnects_CancelsChildAfterConnection()
+    {
+        Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
+        SystemEnvironment environment = new();
+        using var server = new TestHostControllerCancellationServer(
+            authorizedSecurityIdentities: null,
+            environment,
+            loggerFactory.Object,
+            new SystemTask());
+        server.Start();
+        server.RequestCancellation();
+        using CTRLPlusCCancellationTokenSource applicationCancellationTokenSource = new();
+        using var listener = new TestHostControllerCancellationListener(
+            server.PipeName,
+            applicationCancellationTokenSource,
+            environment,
+            new NopLogger());
+
+        Assert.IsTrue(
+            applicationCancellationTokenSource.CancellationToken.WaitHandle.WaitOne(TimeoutHelper.DefaultHangTimeSpanTimeout),
+            "The cancellation queued before connection was not propagated after the child connected.");
+        Assert.IsTrue(listener.WasCancellationRequestedByController);
+    }
+
+    [TestMethod]
     public async Task ServerDisposal_WhenClientConnectsWithoutSendingRequest_DoesNotHang()
     {
         Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
