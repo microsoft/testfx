@@ -292,20 +292,26 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
-    public void TestHostControlledHost_LateCooperativeCancellationPreservesCompletionToken()
+    public async Task TestHostControlledHost_LateCooperativeCancellationPreservesCompletionToken()
     {
         using CancellationTokenSource applicationCancellationTokenSource = new();
         using CancellationTokenSource completionCancellationTokenSource = new();
+        TaskCompletionSource<bool> cancellationObserved = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration completionRegistration =
+            completionCancellationTokenSource.Token.Register(() => cancellationObserved.TrySetResult(true));
         bool cooperativeCancellation = false;
         using CancellationTokenRegistration registration = TestHostControlledHost.RegisterCompletionCancellationTransition(
             applicationCancellationTokenSource.Token,
             () => cooperativeCancellation,
-            completionCancellationTokenSource);
+            completionCancellationTokenSource,
+            TimeSpan.FromMilliseconds(20));
 
         cooperativeCancellation = true;
         applicationCancellationTokenSource.Cancel();
 
         Assert.IsFalse(completionCancellationTokenSource.IsCancellationRequested);
+        await cancellationObserved.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        Assert.IsTrue(completionCancellationTokenSource.IsCancellationRequested);
     }
 
     [TestMethod]
@@ -316,7 +322,8 @@ public sealed class TestApplicationBuilderTests
         using CancellationTokenRegistration registration = TestHostControlledHost.RegisterCompletionCancellationTransition(
             applicationCancellationTokenSource.Token,
             () => false,
-            completionCancellationTokenSource);
+            completionCancellationTokenSource,
+            TimeoutHelper.DefaultHangTimeSpanTimeout);
 
         applicationCancellationTokenSource.Cancel();
 
