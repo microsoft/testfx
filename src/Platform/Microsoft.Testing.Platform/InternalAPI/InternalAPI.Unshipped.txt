@@ -28,7 +28,7 @@ Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.WaitForReq
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCancellationListener(Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener? testHostControllerCancellationListener) -> void
 static Microsoft.Testing.Platform.Hosts.TestHostControlledHost.RegisterCompletionCancellationTransition(System.Threading.CancellationToken applicationCancellationToken, System.Func<bool>! shouldReportCompletionAfterCancellation, System.Threading.CancellationTokenSource! completionCancellationTokenSource) -> System.Threading.CancellationTokenRegistration
 Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.WasCancellationRequestedByConsole.get -> bool
-Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.SetForceExitAction(System.Action? forceExitAction) -> void
+Microsoft.Testing.Platform.Services.CTRLPlusCCancellationTokenSource.RegisterForceExitAction(System.Action! forceExitAction) -> System.IDisposable!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
 const Microsoft.Testing.Platform.IPC.ServerControlKinds.CloseChannel = 2 -> byte
 static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.HandleCanceledTestHostAsync(Microsoft.Testing.Platform.Helpers.IProcess! testHostProcess, System.Action! requestCancellation, Microsoft.Testing.Platform.Logging.ILogger! logger, System.TimeSpan cooperativeShutdownTimeout, System.TimeSpan terminationTimeout) -> System.Threading.Tasks.Task!
