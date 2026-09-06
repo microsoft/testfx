@@ -170,6 +170,8 @@ internal sealed partial class TestHostControllersTestHost
             }
         }
 
+        TestHostCooperativeShutdownTimeout = GetTestHostCooperativeShutdownTimeout(environmentVariables);
+
         return (processStartInfo, partialCommandLine);
     }
 
