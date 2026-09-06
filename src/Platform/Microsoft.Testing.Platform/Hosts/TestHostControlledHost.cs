@@ -54,7 +54,8 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
         using CancellationTokenRegistration completionCancellationRegistration = RegisterCompletionCancellationTransition(
             _cancellationToken,
             () => _testHostControllerCancellationListener?.ShouldReportCompletionAfterCancellation == true,
-            completionCancellationTokenSource);
+            completionCancellationTokenSource,
+            ShutdownTimeouts.DefaultControllerFinalization);
         try
         {
             int unfilteredExitCode = _testApplicationResult?.GetProcessExitCode() == exitCode
@@ -82,13 +83,14 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
     internal static CancellationTokenRegistration RegisterCompletionCancellationTransition(
         CancellationToken applicationCancellationToken,
         Func<bool> shouldReportCompletionAfterCancellation,
-        CancellationTokenSource completionCancellationTokenSource)
+        CancellationTokenSource completionCancellationTokenSource,
+        TimeSpan cooperativeCompletionTimeout)
         => applicationCancellationToken.Register(
             () =>
             {
                 if (shouldReportCompletionAfterCancellation())
                 {
-                    completionCancellationTokenSource.CancelAfter(ShutdownTimeouts.DefaultControllerFinalization);
+                    completionCancellationTokenSource.CancelAfter(cooperativeCompletionTimeout);
                 }
                 else
                 {
