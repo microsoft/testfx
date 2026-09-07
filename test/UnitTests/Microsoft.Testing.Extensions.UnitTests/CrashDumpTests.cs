@@ -356,6 +356,205 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
+    [DataRow(false, false, false, true, false)]
+    [DataRow(true, false, false, true, true)]
+    [DataRow(false, true, false, true, true)]
+    [DataRow(false, false, true, true, true)]
+    [DataRow(true, true, true, false, false)]
+    public async Task IsEnabledAsync_OptionsAndConfiguration_ReturnsExpectedResult(
+        bool crashDump,
+        bool crashReport,
+        bool crashReportIfSupported,
+        bool configurationEnabled,
+        bool expected)
+    {
+        var options = new Dictionary<string, string[]>();
+        if (crashDump)
+        {
+            options.Add(CrashDumpCommandLineOptions.CrashDumpOptionName, []);
+        }
+
+        if (crashReport)
+        {
+            options.Add(CrashDumpCommandLineOptions.CrashReportOptionName, []);
+        }
+
+        if (crashReportIfSupported)
+        {
+            options.Add(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, []);
+        }
+
+        var handler = new CrashDumpProcessLifetimeHandler(
+            new TestCommandLineOptions(options),
+            new RecordingMessageBus(),
+            new NullOutputDevice(),
+            new CrashDumpConfiguration { Enable = configurationEnabled });
+
+        Assert.AreEqual(expected, await handler.IsEnabledAsync().ConfigureAwait(false));
+    }
+
+    [TestMethod]
+    public async Task BeforeTestHostProcessStartAsync_CrashReportIfSupported_DisplaysUnsupportedMessageOnce()
+    {
+        var outputDevice = new CapturingOutputDevice();
+        var handler = new CrashDumpProcessLifetimeHandler(
+            new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                [CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName] = [],
+            }),
+            new RecordingMessageBus(),
+            outputDevice,
+            new CrashDumpConfiguration());
+
+        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None).ConfigureAwait(false);
+        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None).ConfigureAwait(false);
+
+#if NETCOREAPP
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Assert.AreSequenceEqual([CrashDumpResources.CrashReportIfSupportedIgnoredOnWindowsInfoMessage], outputDevice.Displayed);
+        }
+        else
+        {
+            Assert.IsEmpty(outputDevice.Displayed);
+        }
+#else
+        Assert.AreSequenceEqual([CrashDumpResources.CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage], outputDevice.Displayed);
+#endif
+    }
+
+    [TestMethod]
+    public async Task BeforeTestHostProcessStartAsync_StrictCrashReportIsSet_DoesNotDisplayUnsupportedMessage()
+    {
+        var outputDevice = new CapturingOutputDevice();
+        var handler = new CrashDumpProcessLifetimeHandler(
+            new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                [CrashDumpCommandLineOptions.CrashReportOptionName] = [],
+                [CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName] = [],
+            }),
+            new RecordingMessageBus(),
+            outputDevice,
+            new CrashDumpConfiguration());
+
+        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None).ConfigureAwait(false);
+
+        Assert.IsEmpty(outputDevice.Displayed);
+    }
+
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_CrashHandlingDisabled_DoesNotDeleteSequenceFileOrPublishArtifacts()
+    {
+        string sequenceFile = Path.GetTempFileName();
+        try
+        {
+            var messageBus = new RecordingMessageBus();
+            var handler = new CrashDumpProcessLifetimeHandler(
+                new TestCommandLineOptions([]),
+                messageBus,
+                new NullOutputDevice(),
+                new CrashDumpConfiguration { SequenceFileName = sequenceFile });
+
+            await handler.OnTestHostProcessExitedAsync(
+                new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false),
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.IsTrue(File.Exists(sequenceFile));
+            Assert.IsEmpty(messageBus.Published);
+        }
+        finally
+        {
+            File.Delete(sequenceFile);
+        }
+    }
+
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_GracefulExit_DeletesSequenceFileAndDoesNotPublishArtifacts()
+    {
+        string sequenceFile = Path.GetTempFileName();
+        var messageBus = new RecordingMessageBus();
+        var handler = new CrashDumpProcessLifetimeHandler(
+            new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
+            }),
+            messageBus,
+            new NullOutputDevice(),
+            new CrashDumpConfiguration { SequenceFileName = sequenceFile });
+
+        await handler.OnTestHostProcessExitedAsync(
+            new TestHostProcessInformation(pid: 123, exitCode: 0, hasExitedGracefully: true),
+            CancellationToken.None).ConfigureAwait(false);
+
+        Assert.IsFalse(File.Exists(sequenceFile));
+        Assert.IsEmpty(messageBus.Published);
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task OnTestHostProcessExitedAsync_ProcessKilledByHangDump_DeletesSequenceFileAndDoesNotPublishArtifacts()
+    {
+        string sequenceFile = Path.GetTempFileName();
+        object? processKilledByHangDump = AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump");
+        try
+        {
+            AppDomain.CurrentDomain.SetData("ProcessKilledByHangDump", "true");
+            var messageBus = new RecordingMessageBus();
+            var handler = new CrashDumpProcessLifetimeHandler(
+                new TestCommandLineOptions(new Dictionary<string, string[]>
+                {
+                    [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
+                }),
+                messageBus,
+                new NullOutputDevice(),
+                new CrashDumpConfiguration { SequenceFileName = sequenceFile });
+
+            await handler.OnTestHostProcessExitedAsync(
+                new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false),
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.IsFalse(File.Exists(sequenceFile));
+            Assert.IsEmpty(messageBus.Published);
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.SetData("ProcessKilledByHangDump", processKilledByHangDump);
+            File.Delete(sequenceFile);
+        }
+    }
+
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_PreCancelledToken_ThrowsBeforeHandlingExit()
+    {
+        string sequenceFile = Path.GetTempFileName();
+        try
+        {
+            var messageBus = new RecordingMessageBus();
+            var handler = new CrashDumpProcessLifetimeHandler(
+                new TestCommandLineOptions(new Dictionary<string, string[]>
+                {
+                    [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
+                }),
+                messageBus,
+                new NullOutputDevice(),
+                new CrashDumpConfiguration { SequenceFileName = sequenceFile });
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => handler.OnTestHostProcessExitedAsync(
+                new TestHostProcessInformation(pid: 123, exitCode: 0, hasExitedGracefully: true),
+                cancellationTokenSource.Token));
+
+            Assert.IsTrue(File.Exists(sequenceFile));
+            Assert.IsEmpty(messageBus.Published);
+        }
+        finally
+        {
+            File.Delete(sequenceFile);
+        }
+    }
+
+    [TestMethod]
     [DataRow("trailing%", "^trailing%$")]
     // Glob metacharacters that may appear literally in a user-supplied filename must be escaped so they are
     // matched literally, not treated as wildcards. This guards against picking up unrelated dump files on
@@ -791,7 +990,11 @@ public sealed class CrashDumpTests
 
         public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
         {
-            if (data is ErrorMessageOutputDeviceData errorData)
+            if (data is FormattedTextOutputDeviceData formattedTextData)
+            {
+                Displayed.Add(formattedTextData.Text);
+            }
+            else if (data is ErrorMessageOutputDeviceData errorData)
             {
                 Displayed.Add(errorData.Message);
             }
