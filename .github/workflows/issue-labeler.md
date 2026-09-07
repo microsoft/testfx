@@ -92,9 +92,17 @@ safe-outputs:
       - area/uwp
       - area/vendored-sync
       - area/winui
+      - external/azdo
       - external/code-coverage
+      - external/dotnet-sdk
+      - external/dotnet-test
       - external/fakes
+      - external/nuget
+      - external/nunit
       - external/test-explorer
+      - external/tunit
+      - external/vstest
+      - external/xunit
       - type/breaking-change
       - type/flaky-test
       - type/question
