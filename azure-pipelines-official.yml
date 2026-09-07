@@ -125,7 +125,16 @@ extends:
           jobs:
           - job: Windows
             enablePublishing: true
-            timeoutInMinutes: 90
+            # An ordinary run fits in 90 minutes with room to spare: Build takes 19-21 minutes and Test
+            # about 28. Every 72 hours 1ES CodeQL takes its turn (see the Codeql.Cadence note above) and
+            # traces the compiler, which inflates Build to 50-57 minutes even though it still succeeds with
+            # zero errors. The job then needs about 95 minutes and is killed mid-Test with "Job cancelled
+            # due to worker timeout.", which is what happened to
+            # https://dev.azure.com/dnceng/internal/_build/results?buildId=3068335 and
+            # https://dev.azure.com/dnceng/internal/_build/results?buildId=3065040. 120 leaves headroom for
+            # the traced run and is already used elsewhere in this pipeline (the post-build stage declares
+            # 120 for Publish Using Darc and 150 for publish-build-assets).
+            timeoutInMinutes: 120
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2026preview.scout.amd64
