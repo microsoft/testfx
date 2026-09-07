@@ -1,7 +1,7 @@
 ---
 emoji: label
 name: Issue labeler
-description: Add high-confidence canonical labels to newly opened issues from their title and body.
+description: Add high-confidence canonical labels to newly opened issues from their title and body, and assign the area owner when one is known.
 
 on:
   issues:
@@ -15,7 +15,7 @@ permissions:
 
 strict: true
 model: gpt-5-mini
-max-turns: 4
+max-turns: 5
 network: defaults
 
 tools:
@@ -47,41 +47,19 @@ safe-outputs:
       id: copilot
       model: detection
   add-labels:
+    # Glob patterns keep this in sync with the repository label set automatically:
+    # every `area/*` and `external/*` label is selectable, while `type/*` stays
+    # restricted to the categories an automated triage pass can judge.
+    # `create-if-missing` stays off, so a hallucinated label is rejected.
+    blocked:
+      # Legacy/ambiguous labels that must never be applied automatically.
+      - area/testing-platform
+      - external/other
+      - "~*"
+      - "*[bot]"
     allowed:
-      - area/agentic-workflows
-      - area/analyzers
-      - area/assertion
-      - area/branding
-      - area/deployment-item
-      - area/documentation
-      - area/dump
-      - area/fixtures
-      - area/infrastructure
-      - area/localization
-      - area/mstest
-      - area/mstest-sdk
-      - area/mtp
-      - area/mtp-azdo-report
-      - area/mtp-extensions
-      - area/mtp-github-actions-report
-      - area/mtp-migration
-      - area/mtp-msbuild
-      - area/mtp-observability
-      - area/mtp-reporting
-      - area/mtp-retry
-      - area/mtp-vstest-bridge
-      - area/native-aot
-      - area/parameterized-tests
-      - area/performance
-      - area/server-mode-jsonrpc
-      - area/server-mode-pipe
-      - area/terminal-reporter
-      - area/test-framework
-      - area/timeout
-      - area/trx
-      - area/uwp
-      - area/vendored-sync
-      - area/winui
+      - area/*
+      - external/*
       - type/breaking-change
       - type/flaky-test
       - type/question
@@ -90,7 +68,15 @@ safe-outputs:
       - type/test-gap
     issues: true
     pull-requests: false
-    max: 3
+    max: 4
+    target: triggering
+  assign-to-user:
+    # Area owners for components that are owned outside the core testfx team.
+    # Keep this list in sync with the "Area ownership" table in the prompt.
+    allowed:
+      - drognanar
+      - fhnaseer
+    max: 1
     target: triggering
   noop:
     report-as-issue: false
@@ -119,22 +105,55 @@ found in them.
 ## Task
 
 Read the triggering issue once with `gh issue view`, including its title, body, and
-current labels. Add only high-confidence labels from the configured allowlist.
+current labels. Add only high-confidence labels from the configured allowlist, then
+assign the area owner when the selected labels map to one.
 
 1. Select one most-specific `area/*` label. Add a second area only when the issue
    clearly spans two independently actionable components.
 2. Optionally add one `type/*` label only when the title or body explicitly supports it.
-3. Prefer exact package, API, option, or feature names over broad semantic similarity.
-4. Do not remove or replace labels. Do not add priority, state, needs, resolution,
-   dependency, or external labels.
-5. Keep `needs/triage`; automated labels are suggestions for maintainers to confirm.
-6. Do not add a broad label together with its specific child unless both components
+3. Optionally add one `external/*` label when the reported behavior clearly originates
+   in a component this repository does not own (see the ownership and keyword maps).
+   An `external/*` label is additive: still pick the best `area/*` label when one
+   applies, and never use `external/*` merely because a third-party tool is mentioned
+   in passing.
+4. Prefer exact package, API, option, or feature names over broad semantic similarity.
+5. Do not remove or replace labels. Do not add priority, state, needs, resolution, or
+   dependency labels.
+6. Only use labels that appear in the keyword maps or the ownership table below. The
+   safe output accepts any `area/*` or `external/*` label, so the maps — not the
+   allowlist — are the real boundary. Never invent a label, and never add a label the
+   issue already has.
+7. Keep `needs/triage`; automated labels are suggestions for maintainers to confirm.
+8. Do not add a broad label together with its specific child unless both components
    are independently involved:
    - Prefer a dedicated `area/mtp-*` label over `area/mtp-extensions`.
    - Prefer `area/trx` or `area/dump` over `area/mtp-extensions`.
    - Prefer a focused MSTest label over `area/mstest`.
-7. If no label is strongly supported, or all selected labels already exist, use `noop`.
-8. Otherwise use the `add-labels` safe output exactly once with all selected labels.
+9. If no label is strongly supported, or all selected labels already exist, use `noop`
+   instead of the `add-labels` safe output. An assignment may still be emitted when the
+   already-present labels map to an owner and that owner is not assigned yet.
+10. Otherwise use the `add-labels` safe output exactly once with all selected labels.
+
+## Area ownership
+
+Some components are owned outside the core testfx team. When the labels you selected —
+or the labels already on the issue — match a row below, call the `assign-to-user` safe
+output exactly once with that owner.
+
+| Label | Owner |
+| --- | --- |
+| `external/test-explorer` | `drognanar` |
+| `external/fakes` | `drognanar` |
+| `external/code-coverage` | `fhnaseer` |
+
+Assignment rules:
+
+1. Assign at most one user, and only from the table above. Never infer an owner from
+   the issue text, from `git blame`, or from a mention inside the issue.
+2. Assign only when the owning label is high confidence — the same bar as adding it.
+3. Do not assign when the issue already has that owner assigned, or when two rows with
+   different owners match; leave those for a maintainer.
+4. Assignment does not replace labeling: still emit `add-labels` for any new labels.
 
 ## High-confidence keyword map
 
@@ -150,6 +169,8 @@ label on a weak substring match.
 - `MSTest.Sdk`: `area/mstest-sdk`
 - `TestFramework.Extensions`: `area/test-framework`
 - MSTest attributes, `TestContext`, adapter, discovery, execution: `area/mstest`
+- MSTest source generator, generated test registration, `MSTestSourceGeneration`:
+  `area/mstest-source-generation`
 - `Microsoft.Testing.Platform`, MTP core, test node, test host: `area/mtp`
 - MTP migration or migration from VSTest: `area/mtp-migration`
 - MTP MSBuild integration or generated entry point: `area/mtp-msbuild`
@@ -174,6 +195,25 @@ label on a weak substring match.
 - agentic workflow or `gh-aw`: `area/agentic-workflows`
 - vendored-source drift: `area/vendored-sync`
 - branding, naming, icons: `area/branding`
+
+## External component keyword map
+
+Use an `external/*` label only when the described defect clearly lives in that
+component rather than in this repository. When several match, pick the one that owns
+the failing behavior.
+
+- Visual Studio Test Explorer UI, test window, VS test discovery UI:
+  `external/test-explorer`
+- Microsoft Fakes, shims, stubs, `Fakes` assemblies: `external/fakes`
+- code coverage collection or reports, `Microsoft.CodeCoverage`, `--coverage`,
+  `.coverage`/`.cobertura.xml` produced by the coverage tooling:
+  `external/code-coverage`
+- `dotnet test` CLI integration and its options: `external/dotnet-test`
+- .NET SDK, MSBuild, or runtime defect: `external/dotnet-sdk`
+- VSTest / `vstest.console` platform defect: `external/vstest`
+- NuGet client, restore, or feed behavior: `external/nuget`
+- Azure DevOps service or task behavior: `external/azdo`
+- xUnit, NUnit, or TUnit behavior: `external/xunit`, `external/nunit`, `external/tunit`
 
 Use `type/regression`, `type/breaking-change`, `type/flaky-test`, `type/test-gap`,
 `type/tech-debt`, or `type/question` only when the issue explicitly describes that
