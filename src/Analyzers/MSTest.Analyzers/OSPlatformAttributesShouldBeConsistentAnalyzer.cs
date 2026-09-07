@@ -196,23 +196,37 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         int expectedAllowedOperatingSystems = includeMode
             ? operatingSystems
             : allOperatingSystems & ~operatingSystems;
+        bool expectedAllowsUnknownOperatingSystems = !includeMode;
 
-        if (!TryGetAllowedOperatingSystems(localAttribute, out int localAllowedOperatingSystems)
-            || !TryGetAllowedOperatingSystems(containingClassAttribute, out int containingClassAllowedOperatingSystems))
+        if (!TryGetAllowedOperatingSystems(
+                localAttribute,
+                out int localAllowedOperatingSystems,
+                out bool localAllowsUnknownOperatingSystems)
+            || !TryGetAllowedOperatingSystems(
+                containingClassAttribute,
+                out int containingClassAllowedOperatingSystems,
+                out bool containingClassAllowsUnknownOperatingSystems))
         {
             return false;
         }
 
         int actualAllowedOperatingSystems = localAllowedOperatingSystems & containingClassAllowedOperatingSystems;
-        return actualAllowedOperatingSystems == expectedAllowedOperatingSystems;
+        bool actualAllowsUnknownOperatingSystems =
+            localAllowsUnknownOperatingSystems && containingClassAllowsUnknownOperatingSystems;
+        return actualAllowedOperatingSystems == expectedAllowedOperatingSystems
+            && actualAllowsUnknownOperatingSystems == expectedAllowsUnknownOperatingSystems;
     }
 
-    private static bool TryGetAllowedOperatingSystems(AttributeData? attribute, out int allowedOperatingSystems)
+    private static bool TryGetAllowedOperatingSystems(
+        AttributeData? attribute,
+        out int allowedOperatingSystems,
+        out bool allowsUnknownOperatingSystems)
     {
         const int allOperatingSystems = (1 << 4) - 1;
         if (attribute is null)
         {
             allowedOperatingSystems = allOperatingSystems;
+            allowsUnknownOperatingSystems = true;
             return true;
         }
 
@@ -221,16 +235,19 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         {
             case [{ Value: int operatingSystems }]:
                 allowedOperatingSystems = operatingSystems;
+                allowsUnknownOperatingSystems = false;
                 return true;
 
             case [{ Value: int mode }, { Value: int operatingSystems }]:
                 allowedOperatingSystems = mode == 0
                     ? operatingSystems
                     : allOperatingSystems & ~operatingSystems;
+                allowsUnknownOperatingSystems = mode != 0;
                 return true;
 
             default:
                 allowedOperatingSystems = 0;
+                allowsUnknownOperatingSystems = false;
                 return false;
         }
     }

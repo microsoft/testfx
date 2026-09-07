@@ -194,6 +194,72 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenUnsupportedPlatformUsesComplementaryIncludeCondition_UpdatesToExcludeMode()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [{|#0:UnsupportedOSPlatform("windows")|}]
+            [TestClass]
+            [OSCondition(OperatingSystems.Linux | OperatingSystems.OSX | OperatingSystems.FreeBSD)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [UnsupportedOSPlatform("windows")]
+            [TestClass]
+            [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenSupportedPlatformUsesComplementaryExcludeCondition_UpdatesToIncludeMode()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [{|#0:SupportedOSPlatform("windows")|}]
+            [TestClass]
+            [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux | OperatingSystems.OSX | OperatingSystems.FreeBSD)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [SupportedOSPlatform("windows")]
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenContainingClassOSConditionIsEquivalentToMethodPlatform_NoDiagnostic()
     {
         string code = """
