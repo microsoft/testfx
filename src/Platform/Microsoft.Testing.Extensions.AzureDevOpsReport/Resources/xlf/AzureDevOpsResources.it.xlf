@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
         <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
-        <target state="new">Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</target>
+        <target state="translated">Autenticazione Azure DevOps REST API non riuscita o reindirizzata alla pagina di accesso (stato: {0}), il che indica che SYSTEM_ACCESSTOKEN non è valido o non è disponibile. Per le build di convalida delle richieste pull provenienti da fork, non esporre i segreti al codice non attendibile del fork; pubblicare i risultati da un contesto di pipeline separato e attendibile, oppure disabilitare la pubblicazione live di Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
