@@ -47,10 +47,9 @@ safe-outputs:
       id: copilot
       model: detection
   add-labels:
-    # Glob patterns keep this in sync with the repository label set automatically:
-    # every `area/*` and `external/*` label is selectable, while `type/*` stays
-    # restricted to the categories an automated triage pass can judge.
-    # `create-if-missing` stays off, so a hallucinated label is rejected.
+    # Keep this explicit because the pinned gh-aw compiler uses exact matching for
+    # allowed labels. `create-if-missing` stays off, so hallucinated labels are
+    # rejected.
     blocked:
       # Legacy/ambiguous labels that must never be applied automatically.
       - area/testing-platform
@@ -58,8 +57,44 @@ safe-outputs:
       - "~*"
       - "*[bot]"
     allowed:
-      - area/*
-      - external/*
+      - area/agentic-workflows
+      - area/analyzers
+      - area/assertion
+      - area/branding
+      - area/deployment-item
+      - area/documentation
+      - area/dump
+      - area/fixtures
+      - area/infrastructure
+      - area/localization
+      - area/mstest
+      - area/mstest-sdk
+      - area/mstest-source-generation
+      - area/mtp
+      - area/mtp-azdo-report
+      - area/mtp-extensions
+      - area/mtp-github-actions-report
+      - area/mtp-migration
+      - area/mtp-msbuild
+      - area/mtp-observability
+      - area/mtp-reporting
+      - area/mtp-retry
+      - area/mtp-vstest-bridge
+      - area/native-aot
+      - area/parameterized-tests
+      - area/performance
+      - area/server-mode-jsonrpc
+      - area/server-mode-pipe
+      - area/terminal-reporter
+      - area/test-framework
+      - area/timeout
+      - area/trx
+      - area/uwp
+      - area/vendored-sync
+      - area/winui
+      - external/code-coverage
+      - external/fakes
+      - external/test-explorer
       - type/breaking-change
       - type/flaky-test
       - type/question
@@ -119,10 +154,9 @@ assign the area owner when the selected labels map to one.
 4. Prefer exact package, API, option, or feature names over broad semantic similarity.
 5. Do not remove or replace labels. Do not add priority, state, needs, resolution, or
    dependency labels.
-6. Only use labels that appear in the keyword maps or the ownership table below. The
-   safe output accepts any `area/*` or `external/*` label, so the maps — not the
-   allowlist — are the real boundary. Never invent a label, and never add a label the
-   issue already has.
+6. Only use labels that appear in the keyword maps or the ownership table below and
+   in the explicit safe-output allowlist. Never invent a label, and never add a label
+   the issue already has.
 7. Keep `needs/triage`; automated labels are suggestions for maintainers to confirm.
 8. Do not add a broad label together with its specific child unless both components
    are independently involved:
