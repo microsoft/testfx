@@ -140,7 +140,7 @@ public sealed partial class Assert
     #region AreNotSequenceEqual span/memory
 
     /// <summary>
-    /// Tests whether two arrays differ in the same order.
+    /// Tests whether an array and a sequence differ in the same order.
     /// </summary>
     /// <typeparam name="T">The type of the array elements.</typeparam>
     /// <param name="notExpected">The array not expected to equal <paramref name="actual"/>.</param>
@@ -170,7 +170,7 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether two arrays differ using the specified order semantics.
+    /// Tests whether an array and a sequence differ using the specified order semantics.
     /// </summary>
     /// <typeparam name="T">The type of the array elements.</typeparam>
     /// <param name="notExpected">The array not expected to equal <paramref name="actual"/>.</param>

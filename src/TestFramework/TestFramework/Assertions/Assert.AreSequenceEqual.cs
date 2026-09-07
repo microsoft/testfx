@@ -140,7 +140,7 @@ public sealed partial class Assert
     #region AreSequenceEqual span/memory
 
     /// <summary>
-    /// Tests whether two arrays contain equal elements in the same order.
+    /// Tests whether an array and a sequence contain equal elements in the same order.
     /// </summary>
     /// <typeparam name="T">The type of the array elements.</typeparam>
     /// <param name="expected">The array expected to be equal to <paramref name="actual"/>.</param>
@@ -170,7 +170,7 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether two arrays contain equal elements using the specified order semantics.
+    /// Tests whether an array and a sequence contain equal elements using the specified order semantics.
     /// </summary>
     /// <typeparam name="T">The type of the array elements.</typeparam>
     /// <param name="expected">The array expected to be equal to <paramref name="actual"/>.</param>

@@ -167,6 +167,21 @@ public partial class AssertTests : TestContainer
         threw.Should().BeTrue();
     }
 
+    public void ArrayInterpolatedMessageOverloads_NullCollection_ThrowArgumentNullException()
+    {
+        int[] collection = null!;
+
+        Action containsSingle = () => Assert.ContainsSingle<int>(collection, $"collection: {collection}");
+        Action hasCount = () => Assert.HasCount<int>(0, collection, $"collection: {collection}");
+        Action isEmpty = () => Assert.IsEmpty<int>(collection, $"collection: {collection}");
+        Action isNotEmpty = () => Assert.IsNotEmpty<int>(collection, $"collection: {collection}");
+
+        containsSingle.Should().Throw<ArgumentNullException>();
+        hasCount.Should().Throw<ArgumentNullException>();
+        isEmpty.Should().Throw<ArgumentNullException>();
+        isNotEmpty.Should().Throw<ArgumentNullException>();
+    }
+
     #endregion
 }
 

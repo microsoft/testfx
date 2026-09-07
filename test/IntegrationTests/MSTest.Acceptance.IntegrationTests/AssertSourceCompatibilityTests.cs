@@ -131,6 +131,10 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.HasCount<int>(1, values);
                 Assert.IsEmpty<int>(values);
                 Assert.IsNotEmpty<int>(values);
+                _ = Assert.ContainsSingle<int>(values, $"contains single {values.Length}");
+                Assert.HasCount<int>(1, values, $"has count {values.Length}");
+                Assert.IsEmpty<int>(values, $"is empty {values.Length}");
+                Assert.IsNotEmpty<int>(values, $"is not empty {values.Length}");
 
                 Assert.AreAllDistinct<int>(default!);
                 Assert.AreAllDistinct<int>(default!, comparer);

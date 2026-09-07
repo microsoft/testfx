@@ -79,7 +79,7 @@ public sealed partial class Assert
         /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, TItem[] collection, out bool shouldAppend)
-            : this(literalLength, formattedCount, count, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+            : this(literalLength, formattedCount, count, (IEnumerable<TItem>)collection, out shouldAppend)
         {
         }
 
@@ -91,7 +91,7 @@ public sealed partial class Assert
         /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, TItem[] collection, out bool shouldAppend)
-            : this(literalLength, formattedCount, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+            : this(literalLength, formattedCount, (IEnumerable<TItem>)collection, out shouldAppend)
         {
         }
 

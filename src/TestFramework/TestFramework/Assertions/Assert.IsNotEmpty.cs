@@ -49,7 +49,7 @@ public sealed partial class Assert
         /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, TItem[] collection, out bool shouldAppend)
-            : this(literalLength, formattedCount, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+            : this(literalLength, formattedCount, (IEnumerable<TItem>)collection, out shouldAppend)
         {
         }
 
