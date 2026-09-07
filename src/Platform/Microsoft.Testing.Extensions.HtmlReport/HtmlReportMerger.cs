@@ -252,22 +252,30 @@ internal static class HtmlReportMerger
     private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) CollapseRetryAttempts(
         MergedTest[] orderedTests)
     {
+        string[] baseIdentities = new string[orderedTests.Length];
+        for (int i = 0; i < orderedTests.Length; i++)
+        {
+            baseIdentities[i] = CreateRetryBaseIdentity(orderedTests[i]);
+        }
+
         HashSet<(int ReportIndex, string BaseIdentity)> ambiguousIdentities =
         [
             .. orderedTests
-                .GroupBy(test => (
+                .Select((test, index) => (
                     test.OriginalReportIndex,
-                    BaseIdentity: CreateRetryBaseIdentity(test),
+                    BaseIdentity: baseIdentities[index],
                     RetryAttempt: ReadOptionalInt(test.Test, "retryAttemptNumber")))
+                .GroupBy(static entry => (entry.OriginalReportIndex, entry.BaseIdentity, entry.RetryAttempt))
                 .Where(static group => group.Count() > 1)
                 .Select(static group => (group.Key.OriginalReportIndex, group.Key.BaseIdentity)),
         ];
         var slots = new List<(MergedTest Final, List<JsonObject> Priors)>();
         var slotByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
 
-        foreach (MergedTest mergedTest in orderedTests)
+        for (int testIndex = 0; testIndex < orderedTests.Length; testIndex++)
         {
-            string baseIdentity = CreateRetryBaseIdentity(mergedTest);
+            MergedTest mergedTest = orderedTests[testIndex];
+            string baseIdentity = baseIdentities[testIndex];
             string identity = ambiguousIdentities.Contains((mergedTest.OriginalReportIndex, baseIdentity))
                 ? $"{baseIdentity}\0ambiguous\0{mergedTest.OriginalReportIndex.ToString(CultureInfo.InvariantCulture)}\0{mergedTest.OriginalTestIndex.ToString(CultureInfo.InvariantCulture)}"
                 : baseIdentity;
