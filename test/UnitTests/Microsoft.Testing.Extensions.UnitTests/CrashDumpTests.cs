@@ -472,22 +472,29 @@ public sealed class CrashDumpTests
     public async Task OnTestHostProcessExitedAsync_GracefulExit_DeletesSequenceFileAndDoesNotPublishArtifacts()
     {
         string sequenceFile = Path.GetTempFileName();
-        var messageBus = new RecordingMessageBus();
-        var handler = new CrashDumpProcessLifetimeHandler(
-            new TestCommandLineOptions(new Dictionary<string, string[]>
-            {
-                [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
-            }),
-            messageBus,
-            new NullOutputDevice(),
-            new CrashDumpConfiguration { SequenceFileName = sequenceFile });
+        try
+        {
+            var messageBus = new RecordingMessageBus();
+            var handler = new CrashDumpProcessLifetimeHandler(
+                new TestCommandLineOptions(new Dictionary<string, string[]>
+                {
+                    [CrashDumpCommandLineOptions.CrashDumpOptionName] = [],
+                }),
+                messageBus,
+                new NullOutputDevice(),
+                new CrashDumpConfiguration { SequenceFileName = sequenceFile });
 
-        await handler.OnTestHostProcessExitedAsync(
-            new TestHostProcessInformation(pid: 123, exitCode: 0, hasExitedGracefully: true),
-            CancellationToken.None).ConfigureAwait(false);
+            await handler.OnTestHostProcessExitedAsync(
+                new TestHostProcessInformation(pid: 123, exitCode: 0, hasExitedGracefully: true),
+                CancellationToken.None).ConfigureAwait(false);
 
-        Assert.IsFalse(File.Exists(sequenceFile));
-        Assert.IsEmpty(messageBus.Published);
+            Assert.IsFalse(File.Exists(sequenceFile));
+            Assert.IsEmpty(messageBus.Published);
+        }
+        finally
+        {
+            File.Delete(sequenceFile);
+        }
     }
 
     [TestMethod]
