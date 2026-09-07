@@ -286,37 +286,48 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         return platformName is not null;
     }
 
+    // Bit positions must match the OperatingSystems enum in Microsoft.VisualStudio.TestTools.UnitTesting.
+    private static readonly (string Name, int Bit)[] OperatingSystemBits =
+    [
+        ("Linux", 1 << 0),
+        ("OSX", 1 << 1),
+        ("Windows", 1 << 2),
+        ("FreeBSD", 1 << 3),
+    ];
+
     private static bool TryMapPlatform(string platformName, out int operatingSystem)
     {
-        operatingSystem = platformName.ToUpperInvariant() switch
+        string normalizedPlatformName = platformName.ToUpperInvariant() switch
         {
-            // Bit positions must match the OperatingSystems enum in Microsoft.VisualStudio.TestTools.UnitTesting.
-            "LINUX" => 1 << 0,
-            "OSX" or "MACOS" => 1 << 1,
-            "WINDOWS" => 1 << 2,
-            "FREEBSD" => 1 << 3,
-            _ => 0,
+            "MACOS" => "OSX",
+            string name => name,
         };
 
-        return operatingSystem != 0;
+        foreach ((string name, int bit) in OperatingSystemBits)
+        {
+            if (string.Equals(name, normalizedPlatformName, StringComparison.OrdinalIgnoreCase))
+            {
+                operatingSystem = bit;
+                return true;
+            }
+        }
+
+        operatingSystem = 0;
+        return false;
     }
 
     private static string CreateOperatingSystemsExpression(int operatingSystems)
     {
         var names = new List<string>();
-        AddNameIfSet(names, operatingSystems, 1 << 0, "Linux");
-        AddNameIfSet(names, operatingSystems, 1 << 1, "OSX");
-        AddNameIfSet(names, operatingSystems, 1 << 2, "Windows");
-        AddNameIfSet(names, operatingSystems, 1 << 3, "FreeBSD");
-        return string.Join("|", names);
-    }
-
-    private static void AddNameIfSet(List<string> names, int operatingSystems, int value, string name)
-    {
-        if ((operatingSystems & value) != 0)
+        foreach ((string name, int bit) in OperatingSystemBits)
         {
-            names.Add(name);
+            if ((operatingSystems & bit) != 0)
+            {
+                names.Add(name);
+            }
         }
+
+        return string.Join("|", names);
     }
 
     private static bool IsEquivalentOSCondition(
