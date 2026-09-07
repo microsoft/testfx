@@ -85,13 +85,13 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             return;
         }
 
-        AttributeData? osConditionAttribute = attributes.FirstOrDefault(
+        AttributeData? localOSConditionAttribute = attributes.FirstOrDefault(
             attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
-        if (osConditionAttribute is null && context.Symbol is IMethodSymbol methodSymbol)
-        {
-            osConditionAttribute = methodSymbol.ContainingType.GetAttributes().FirstOrDefault(
-                attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
-        }
+        AttributeData? containingClassOSConditionAttribute = context.Symbol is IMethodSymbol methodSymbol
+            ? methodSymbol.ContainingType.GetAttributes().FirstOrDefault(
+                attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol))
+            : null;
+        bool hasContainingClassCondition = containingClassOSConditionAttribute is not null;
 
         bool canFix = TryGetExpectedCondition(
             platformAttributes,
@@ -100,12 +100,16 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             out int operatingSystems,
             out string? operatingSystemsExpression);
 
-        if (canFix && IsEquivalentOSCondition(osConditionAttribute, includeMode, operatingSystems))
+        if (canFix && IsEquivalentOSCondition(
+            localOSConditionAttribute,
+            containingClassOSConditionAttribute,
+            includeMode,
+            operatingSystems))
         {
             return;
         }
 
-        ImmutableDictionary<string, string?> properties = canFix
+        ImmutableDictionary<string, string?> properties = canFix && !hasContainingClassCondition
             ? ImmutableDictionary<string, string?>.Empty
                 .Add(ConditionModeKey, includeMode ? "Include" : "Exclude")
                 .Add(OperatingSystemsKey, operatingSystemsExpression)
@@ -182,21 +186,52 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         }
     }
 
-    private static bool IsEquivalentOSCondition(AttributeData? attribute, bool includeMode, int operatingSystems)
+    private static bool IsEquivalentOSCondition(
+        AttributeData? localAttribute,
+        AttributeData? containingClassAttribute,
+        bool includeMode,
+        int operatingSystems)
     {
-        if (attribute is null)
+        const int allOperatingSystems = (1 << 4) - 1;
+        int expectedAllowedOperatingSystems = includeMode
+            ? operatingSystems
+            : allOperatingSystems & ~operatingSystems;
+
+        if (!TryGetAllowedOperatingSystems(localAttribute, out int localAllowedOperatingSystems)
+            || !TryGetAllowedOperatingSystems(containingClassAttribute, out int containingClassAllowedOperatingSystems))
         {
             return false;
         }
 
-        ImmutableArray<TypedConstant> arguments = attribute.ConstructorArguments;
-        return arguments switch
+        int actualAllowedOperatingSystems = localAllowedOperatingSystems & containingClassAllowedOperatingSystems;
+        return actualAllowedOperatingSystems == expectedAllowedOperatingSystems;
+    }
+
+    private static bool TryGetAllowedOperatingSystems(AttributeData? attribute, out int allowedOperatingSystems)
+    {
+        const int allOperatingSystems = (1 << 4) - 1;
+        if (attribute is null)
         {
-            [{ Value: int actualOperatingSystems }]
-                => includeMode && actualOperatingSystems == operatingSystems,
-            [{ Value: int actualMode }, { Value: int actualOperatingSystems }]
-                => (actualMode == 0) == includeMode && actualOperatingSystems == operatingSystems,
-            _ => false,
-        };
+            allowedOperatingSystems = allOperatingSystems;
+            return true;
+        }
+
+        ImmutableArray<TypedConstant> arguments = attribute.ConstructorArguments;
+        switch (arguments)
+        {
+            case [{ Value: int operatingSystems }]:
+                allowedOperatingSystems = operatingSystems;
+                return true;
+
+            case [{ Value: int mode }, { Value: int operatingSystems }]:
+                allowedOperatingSystems = mode == 0
+                    ? operatingSystems
+                    : allOperatingSystems & ~operatingSystems;
+                return true;
+
+            default:
+                allowedOperatingSystems = 0;
+                return false;
+        }
     }
 }

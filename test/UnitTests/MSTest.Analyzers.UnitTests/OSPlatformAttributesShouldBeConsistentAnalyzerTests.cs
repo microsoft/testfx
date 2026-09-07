@@ -176,6 +176,80 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenContainingClassOSConditionConflictsWithMethodPlatform_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Linux)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:SupportedOSPlatform("windows")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodAndClassOSConditionsConflict_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Linux)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:SupportedOSPlatform("windows")|}]
+                [OSCondition(OperatingSystems.Windows)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodAndClassOSConditionsComposeToExpectedPlatform_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [SupportedOSPlatform("windows")]
+                [OSCondition(OperatingSystems.Windows)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenOSConditionIsInconsistent_UpdatesCondition()
     {
         string code = """
