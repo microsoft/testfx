@@ -579,11 +579,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
     private static IEnumerable<object[]> GetSourceCompatibilityTargetFrameworks()
     {
         yield return [TargetFrameworks.NetCurrent];
-
-        if (TargetFrameworks.NetCurrent != "net8.0")
-        {
-            yield return ["net8.0"];
-        }
+        yield return ["net8.0"];
     }
 
     private static void VerifyEveryPublicAssertMethodFamilyHasAConsumerCall()
