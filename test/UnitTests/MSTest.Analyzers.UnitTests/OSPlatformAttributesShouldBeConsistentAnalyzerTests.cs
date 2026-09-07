@@ -3,6 +3,8 @@
 
 using Microsoft.CodeAnalysis.Testing;
 
+using Microsoft.Testing.TestInfrastructure;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.OSPlatformAttributesShouldBeConsistentAnalyzer,
     MSTest.Analyzers.OSPlatformAttributesShouldBeConsistentFixer>;
@@ -483,7 +485,8 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
 
         var test = new VerifyCS.Test
         {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net100,
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net100
+                .WithNuGetConfigFilePath(Path.Combine(RootFinder.Find(), "NuGet.config")),
             TestCode = code,
             FixedCode = fixedCode,
         };
