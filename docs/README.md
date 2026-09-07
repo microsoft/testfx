@@ -13,8 +13,6 @@ For API documentation refer [to Microsoft Documentation](https://learn.microsoft
 
 ## Features
 
-You can find the main differences with MSTest v1 in [Deltas w.r.t MSTest V1](delta-with-MSTestV1.md).
-
 You can find detailed examples and explanations of MSTest features at
 
 - [Writing your first test with MSTest](https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-mstest)
@@ -49,4 +47,4 @@ For technical reasoning and implementation details, you can refer to the list of
 
 ## Releases
 
-You can find all features and bugs fixed in all our releases by looking at [releases.md](releases.md).
+You can find all features and bugs fixed in all our releases by looking at [Changelog.md](Changelog.md).

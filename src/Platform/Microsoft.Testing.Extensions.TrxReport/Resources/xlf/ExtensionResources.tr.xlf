@@ -129,7 +129,7 @@ Example: 'MyReport_{tfm}.trx'.</source>
         <target state="translated">Oluşturulan TRX raporunun adı. Göreli veya mutlak yol içerebilir; göreli yollar test sonuçları dizinine göre çözümlenir ve eksik dizinler oluşturulur.
 Şu yer tutucuları destekler: {pname} (test uygulaması adı), {pid} (işlem kimliği), {asm} (girdi derleme adı), {tfm} (hedef çerçeve bilinen adı), {arch} (işlem mimarisi), {time} (zaman damgası).
 Örnek: 'MyReport_{tfm}.trx'.</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</note>
+        <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>

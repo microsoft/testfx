@@ -90,12 +90,18 @@ When making change to resource files, you MUST:
 - NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/TestFramework/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
 - A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
 - `{Locked="…"}` markers in a resource `<comment>` are matched as **substrings, not whole words**. A short locked token therefore also freezes every longer word that contains it, which blocks a legitimately translatable word. For example, `{Locked="const"}` on a message that also contains the English word *constant* locks `const` inside `constant`, so translators cannot localize it. Make each locked token unambiguous:
+  - Every locked token MUST occur verbatim in the corresponding `<value>`. Do not lock an option name or other contextual identifier that the user-facing string does not actually contain.
   - Include the punctuation that surrounds the token in the message — usually the single quotes the message already uses — e.g. write `{Locked="'const'"}` rather than `{Locked="const"}`.
   - Prefer the longest form that identifies the token (`{Locked="Assert.AreEqual"}`, `{Locked="[TestClass]"}`) over a bare fragment.
   - Before adding a marker, re-read the whole message and confirm the locked text does not appear as a substring of another word that should stay translatable.
 
 ## Public API guidelines
 
+- Treat adding an overload as a potential source-breaking change, even when it is binary-compatible. Existing calls can become ambiguous when an argument converts to multiple parameter types, especially across `Span<T>`, `ReadOnlySpan<T>`, arrays, generic interfaces such as `IEnumerable<T>`, and overloads with optional parameters.
+  - Before adding or changing overloads, enumerate representative existing call shapes and compare all applicable implicit conversions and generic type-inference paths.
+  - For `Assert` overload changes, update the manually maintained implicit consumer call shapes in [`AssertSourceCompatibilityTests.cs`](../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/AssertSourceCompatibilityTests.cs). The test compiles them against the packed `MSTest.TestFramework` using C# 12 and automatically requires every public `Assert` method family to have at least one representative scenario.
+  - Add equivalent package-consuming compilation coverage for overload changes in other public API types, using the oldest relevant default C# language version and target framework. Repository projects use `LangVersion=preview`, so an ordinary in-repo unit test does not detect overload-resolution regressions that only affect older compilers.
+  - During review, do not treat successful compilation under the repository's language version as sufficient evidence of source compatibility.
 - Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init` accessors.
   - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now would be a breaking change. However, we MUST NOT introduce **new** APIs using `init` accessors.
   - IMPORTANT: Make sure to apply this rule strictly both during PR review and when working on code changes.

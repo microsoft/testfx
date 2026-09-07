@@ -191,9 +191,12 @@ internal static class HtmlReportMerger
     private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) ConcatenateTests(
         MergedTest[] orderedTests)
     {
+        string[] identities = new string[orderedTests.Length];
         var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (string identity in orderedTests.Select(CreateTestIdentity))
+        for (int i = 0; i < orderedTests.Length; i++)
         {
+            string identity = CreateTestIdentity(orderedTests[i]);
+            identities[i] = identity;
             countByIdentity[identity] = countByIdentity.TryGetValue(identity, out int existing) ? existing + 1 : 1;
         }
 
@@ -208,7 +211,7 @@ internal static class HtmlReportMerger
         {
             MergedTest mergedTest = orderedTests[i];
             JsonObject test = mergedTest.Test;
-            string identity = CreateTestIdentity(mergedTest);
+            string identity = identities[i];
             string outcome = ReadRequiredString(test, "outcome");
             _ = ReadRequiredDouble(test, "durationMs");
 
