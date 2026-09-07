@@ -477,6 +477,15 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 }
             }
 
+            internal static void ExperimentalCalls()
+            {
+        #pragma warning disable MSTESTEXP
+                using IDisposable genericFormatter = Assert.AddValueFormatter<int>(value => value.ToString(CultureInfo.InvariantCulture));
+                using IDisposable formatterFactory = Assert.AddValueFormatter(next => value => next(value));
+                using IDisposable scope = Assert.Scope();
+        #pragma warning restore MSTESTEXP
+            }
+
             private static void Throw() => throw new InvalidOperationException();
 
             private static object ReturnValue() => new object();
@@ -504,7 +513,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
         """;
 
     private static readonly Regex PublicAssertMethodRegex = new(
-        @"^static Microsoft\.VisualStudio\.TestTools\.UnitTesting\.Assert\.(?<name>[A-Za-z0-9]+)(?:<|\()",
+        @"^(?:\[[^\]]+\])*\s*static Microsoft\.VisualStudio\.TestTools\.UnitTesting\.Assert\.(?<name>[A-Za-z0-9]+)(?:<|\()",
         RegexOptions.CultureInvariant);
 
     private static readonly Regex ConsumerAssertCallRegex = new(
