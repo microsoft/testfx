@@ -523,12 +523,13 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
     public TestContext TestContext { get; set; }
 
     [TestMethod]
-    public async Task PublicAssertCallShapes_CompileWithCSharp12()
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task PublicAssertCallShapes_CompileWithCSharp12(string targetFramework)
     {
         VerifyEveryPublicAssertMethodFamilyHasAConsumerCall();
 
         string source = ConsumerSource
-            .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+            .PatchTargetFrameworks(targetFramework)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, source);
 
@@ -557,6 +558,8 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             Path.Combine(publicApiDirectory, "PublicAPI.Unshipped.txt"),
             Path.Combine(publicApiDirectory, "net", "PublicAPI.Shipped.txt"),
             Path.Combine(publicApiDirectory, "net", "PublicAPI.Unshipped.txt"),
+            Path.Combine(publicApiDirectory, "net9.0", "PublicAPI.Shipped.txt"),
+            Path.Combine(publicApiDirectory, "net9.0", "PublicAPI.Unshipped.txt"),
         ];
 
         var publicMethodFamilies = publicApiFiles
