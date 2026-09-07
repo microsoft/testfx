@@ -80,6 +80,8 @@ internal static class WellKnownTypeNames
     public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
     public const string SystemRuntimeInteropServicesArchitecture = "System.Runtime.InteropServices.Architecture";
     public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
+    public const string SystemRuntimeVersioningSupportedOSPlatformAttribute = "System.Runtime.Versioning.SupportedOSPlatformAttribute";
+    public const string SystemRuntimeVersioningUnsupportedOSPlatformAttribute = "System.Runtime.Versioning.UnsupportedOSPlatformAttribute";
     public const string SystemThreadingCancellationToken = "System.Threading.CancellationToken";
     public const string SystemThreadingCancellationTokenSource = "System.Threading.CancellationTokenSource";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
