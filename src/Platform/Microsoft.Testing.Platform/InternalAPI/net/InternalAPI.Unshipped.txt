@@ -1,1 +1,3 @@
 #nullable enable
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.DisposeAsync() -> System.Threading.Tasks.ValueTask

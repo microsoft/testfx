@@ -20,6 +20,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         console.FireCancelKeyPress();
 
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.IsTrue(source.WasCancellationRequestedByConsole);
         Assert.IsNull(environment.ExitCode, "Environment.Exit must not be called on the first Ctrl+C press.");
     }
 
@@ -34,6 +35,42 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         console.FireCancelKeyPress();
 
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, environment.ExitCode);
+    }
+
+    [TestMethod]
+    public void SecondCtrlC_InvokesForceExitActionBeforeExitingController()
+    {
+        var console = new CancelableConsole();
+        var environment = new RecordingEnvironment();
+        using var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
+        bool forceExitActionInvoked = false;
+        using IDisposable registration = source.RegisterForceExitAction(() =>
+        {
+            Assert.IsNull(environment.ExitCode, "The child force-exit action must run before the controller exits.");
+            forceExitActionInvoked = true;
+        });
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+
+        Assert.IsTrue(forceExitActionInvoked);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, environment.ExitCode);
+    }
+
+    [TestMethod]
+    public void DisposedForceExitRegistration_DoesNotInvokeAction()
+    {
+        var console = new CancelableConsole();
+        var environment = new RecordingEnvironment();
+        using var source = new CTRLPlusCCancellationTokenSource(console, logger: null, environment);
+        bool forceExitActionInvoked = false;
+        source.RegisterForceExitAction(() => forceExitActionInvoked = true).Dispose();
+
+        console.FireCancelKeyPress();
+        console.FireCancelKeyPress();
+
+        Assert.IsFalse(forceExitActionInvoked);
         Assert.AreEqual((int)ExitCode.TestSessionAborted, environment.ExitCode);
     }
 
@@ -124,6 +161,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         source.Cancel();
 
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
         Assert.IsNull(environment.ExitCode, "Without a console there is no Ctrl+C handler and Exit must never be called.");
     }
 
