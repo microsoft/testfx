@@ -92,9 +92,11 @@ decision from a person. MSTest has no way to say that today.
 - CI cannot tell those two apart, so the skipped count stops being a useful health signal;
 - the reason string is the only thing that distinguishes them, and nothing enforces it.
 
-Conditions (`ConditionBaseAttribute`) are not the answer either. A condition knows the environment,
-it cannot know what the user asked for. Explicitness is a property of the request, not of the
-machine, so `[Explicit]` does not derive from `ConditionBaseAttribute`.
+Conditions (`ConditionBaseAttribute`) look closer than they are. A condition answers a question about
+the machine, and explicitness answers a question about the request, so the two are asked at different
+times: `IsConditionMet` is read after the type is loaded, and the gate below exists to answer before
+that. Whether `[Explicit]` should nonetheless live in that hierarchy is an open question rather than a
+settled one, and it is put in [Base type](#base-type) with what it would buy and cost.
 
 ### Prior art
 
@@ -223,6 +225,56 @@ author's back:
 | method supplied through a custom `TestMethodAttribute` | that method | yes |
 
 The API additions are recorded in `PublicAPI.Unshipped.txt`.
+
+### Naming
+
+`Explicit` is the name every framework that has this feature already uses, and the prior-art table
+above is the argument for it: someone arriving from NUnit or xUnit searches for `[Explicit]`, and a
+migration guide that has to explain a renamed concept is a worse guide. The reason is `ExplicitReason`
+so it reads next to `IgnoreMessage`, and the same stem carries the filterable property, the setting,
+and the diagnostics, so there is one word to learn.
+
+`OnDemand` is the alternative on the table, as `[OnDemand]`, `IsOnDemand`, `OnDemandReason` and
+`OnDemandTestMode`. It describes the behavior instead of naming the category: the test stays
+discoverable and runs when something positively asks for it, which is what this document spends most
+of its length defining. `Explicit` says nothing about that on its own, and a reader who has not met
+the term elsewhere has to be told what it means either way. `Manual` is rejected under either name,
+because it reads as "cannot be automated" when a one-line CI filter runs the whole set.
+
+The choice is between matching the ecosystem and describing the behavior, it applies to every surface
+in this document at once, and it cannot be changed after the API ships. It is therefore listed as
+something approval decides rather than settled here. `Explicit` is used throughout the rest of this
+document because the document needs one name to be readable, not because the question is closed.
+
+### Base type
+
+`ExplicitAttribute` derives from `Attribute` above. Deriving it from `ConditionBaseAttribute` instead
+is the alternative, and the shape that makes it work is a non-nullable virtual
+`EvaluateCondition(ConditionEvaluationContext context)` on the base whose default implementation
+returns `IsConditionMet`. `ExplicitAttribute.IsConditionMet` returns `false`, and it overrides
+`EvaluateCondition` to answer from `context.IsTestActivated`. New adapters call the method, existing
+conditions keep answering through the property, and no shipped condition changes behavior.
+
+It buys two things. The first is that it closes the pre-3.10.0 boundary that
+[Compatibility](#compatibility) otherwise cannot: `AttributeHelpers.IsIgnored` finds conditions by
+pattern-matching the base type, so an adapter that predates `[Explicit]` still finds the attribute
+through `ConditionBaseAttribute`, reads `IsConditionMet` as `false`, and skips. The test is ignored
+rather than run, which is the wrong reason for the right outcome, and it is the outcome the design
+wants when the adapter is too old to ask the question properly. Without the derivation that adapter
+runs the test during Run All and the framework has no way to stop it. The second is that one hierarchy
+covers every declarative gate that ends in a skipped result, `[Ignore]` included, so `[Explicit]`
+composes with STA, UI, and user-defined test-method attributes and can be extended to class,
+data-source, and data-row scope in one place.
+
+It costs a virtual method and a context type on a base class that has shipped, and it does not replace
+the gate. Conditions are evaluated after `TypeCache.GetTestMethodInfo`, and [The gate](#the-gate)
+exists to answer before any type load, so the early gate stays and the condition path becomes a second
+mechanism answering the same question at a later point for the benefit of older adapters. Two
+mechanisms that must agree is the real cost, and the `IsConditionMet` value that makes the old adapter
+fail closed is also the value a new adapter must be careful never to read.
+
+Approval decides this one. The discovery metadata, the early gate, and everything downstream of them
+are unchanged either way.
 
 ### Running explicit tests
 
@@ -353,7 +405,7 @@ For an explicit test in category `Fast`:
 | `TestCategory!=Integration \| TestCategory=Fast` | yes, through the positive branch |
 | `TestCategory=Other \| TestCategory!=Integration` | no, only the exclusion branch matched |
 | `Explicit=True` | yes |
-| `Explicit!=False` | no |
+| `Explicit!=True` | no, an exclusion, and it selects the ordinary tests |
 
 A positive leaf does not have to identify one test. `TestCategory=Hardware` activating every explicit
 test in that category is the intent, that is what makes the opt-in CI job above a single line.
@@ -377,14 +429,12 @@ tests, which is the opt-in job this design is mostly for.
 
 Nothing else qualifies. Wildcards, empty segments and `(!EXPR)` do not, and neither does any `!=`
 predicate whatever literals it carries, since the operator makes it an exclusion. Nor does any
-predicate that no node can fail. `Explicit` is written on every node with `True` or `False`, so a
-predicate the universal property satisfies on its own selects everything, which is Run All written as
-a property. That is about what the predicate matches, not how it is spelled, because
-`TreeNodeFilter` expands `*` inside a property name and matches the result against every metadata
-key: `[Explicit=*]`, `[Exp*=*]` and `[*=*]` all reduce to "has the property every node has" and none
-of them activates. Pinning the value to one of the two, as `[Explicit=True]` or `[Exp*=True]` does,
-excludes the other half of the tree and discriminates. `[Hardware=*]` discriminates for the same
-reason, its key matches a property most nodes do not carry.
+predicate that no node can fail, because a predicate every node satisfies selects everything, which is
+Run All written as a property. That is about what the predicate matches, not how it is spelled,
+because `TreeNodeFilter` expands `*` inside a property name and matches the result against every
+metadata key, so `[*=*]` reduces to "has any metadata property at all". `Explicit` is written only on
+the nodes that are explicit, the same way a category is, so `[Explicit=*]` names a property most nodes
+do not carry and discriminates for exactly the reason `[Hardware=*]` does.
 
 Segments compose the same way expressions do: `A & B` is discriminating when the
 segment matches and either side is, `A | B` only through a branch that both matched and is itself
@@ -409,10 +459,10 @@ do not.
 | `/*/*/*/*[Hardware=*]` | yes, this is how a category is written, and it is the opt-in suite |
 | `/*/*/MyClass/(!Slow)` | yes, through `MyClass` |
 | `/*/*/*/(MyTest\|(!Slow))` | yes for a node matched by `MyTest`, no for one matched only by `(!Slow)` |
-| `/*/*/*/*[Explicit=True]`, `/**[Explicit=True]` | yes |
-| `/**[Explicit=False]` | yes, it names a value, and it selects the ordinary tests |
-| `/**[Explicit!=False]` | no, an exclusion, and it selects the explicit tests without activating them |
-| `/**[Explicit=*]`, `/**[Exp*=*]`, `/**[*=*]` | no, the property is on every node, so these select everything |
+| `/**[Explicit=True]`, `/*/*/*/*[Explicit=True]` | yes |
+| `/**[Explicit=*]`, `/**[Exp*=True]` | yes, only explicit nodes carry the key |
+| `/**[Explicit!=True]` | no, an exclusion, and it selects the ordinary tests |
+| `/**[*=*]` | no, "has any metadata property" names nothing |
 
 `TreeNodeFilter` lives in this repository and `Microsoft.Testing.Platform` already grants
 `InternalsVisibleTo` to `MSTest.TestAdapter`, so it reports the discriminating result itself through
@@ -668,10 +718,30 @@ extension then replaces the original filter with `--filter-uid` for it. Read as 
 selection, that request activates the parent, and the explicit rows the first attempt skipped run on
 the second.
 A retry attempt therefore inherits the activation of the attempt it is retrying and never derives one
-from its own UID list. The extension already marks the child process as a retry attempt, and the
-activation of the original request has to travel with the failed-UID list rather than be
-reconstructed from it. An original Run All stays unactivated for every attempt, and an originally
-selected explicit test keeps retrying.
+from its own UID list. The retry pipe cannot carry that by itself.
+`RetryArgumentsBuilder.BuildAttemptArgumentsAsync` adds `--internal-retry-pipename` to every attempt it
+launches, including the first, and only the `--filter-uid` replacement is conditional on there being
+failed tests to retry. Attempt 1 of a user-selected UID run and attempt 2 of a retried Run All can
+therefore carry the same two options, and nothing in either of them says which request the user made.
+
+The activation travels as its own hidden option, `--internal-retry-activation`, written by the retry
+extension on every attempt it launches, alongside `--internal-retry-pipename` and following the same
+naming and registration convention. It carries the classification the orchestrator made of the
+original request, `SourceRun`, `SelectedTestCases`, or `PositiveFilter`, with the original filter
+string when the last one applies, which are the three values
+[Future work](#future-work) already names for diagnostics. MSTest reads it in preference to
+classifying the request it can see, so an original Run All stays unactivated on every attempt and an
+originally selected explicit test keeps retrying.
+
+Absence has to be defined rather than assumed, because it is reachable without any corruption. The
+retry extension ships on its own version line, so an older one paired with a newer MSTest supplies the
+pipe and the UID list and no activation, and that pairing is outside the framework and adapter
+alignment check under [Compatibility](#compatibility), which compares only those two. When a process
+is a retry attempt and the option is absent, MSTest activates nothing rather than reading
+`--filter-uid` as selection. That is the fail closed direction the rest of this design takes: it costs
+an originally selected explicit test its retries under an old extension, which is one skipped result
+that names its reason and is recoverable by running the test again, while the alternative starts a
+twenty-minute row that nobody asked for.
 
 A host's "rerun failed tests" is a user action rather than orchestration. It arrives as ordinary
 test-case selection and activates what it selects, which for a folded parent is every row under it.
@@ -693,9 +763,23 @@ both:
 | `ExplicitFromSources` | what the data sources say: `None`, `All`, or `Some` | the execution gate in `UnitTestRunner` |
 | `ExplicitReason` | see below, and none whenever the sources a gated parent stands for disagree | reporting |
 
-The gate skips when `IsExplicit` is true unless `ExplicitFromDeclaration` is false and
-`ExplicitFromSources` is `Some`. Deferring to the per-source checks is the one answer that must be
-earned, so it takes a positive assertion from both fields, and everything else gates.
+The gate skips when `IsExplicit` is true unless all three of these hold: `ExplicitFromDeclaration` is
+false, `ExplicitFromSources` is `Some`, and the element is a folded data-driven parent. Deferring to
+the per-source checks is the one answer that must be earned, so it takes a positive assertion from
+every one of them, and everything else gates.
+
+The shape condition is normative rather than a description of what happens to be true today, because
+the folded parent is the only shape with a per-source check downstream for the deferral to defer to.
+Unfolding clones the parent element, so without the shape condition an unfolded row would inherit
+`ExplicitFromDeclaration=False` and `ExplicitFromSources=Some` from a mixed-source parent, take a
+deferral nothing downstream honors, and run under Run All, which is exactly the twenty-minute row in
+[Motivation](#motivation). `ExplicitFromSources` is therefore also element-scoped rather than
+method-scoped: while unfolding, `AssemblyEnumerator` overwrites it on each cloned row with the value
+for the source that produced that row, `All` when that source declared explicitness and `None` when it
+did not, so an unfolded row never carries `Some` and never reaches the deferral in the first place.
+The two work together on purpose. The element scoping is what makes ordinary and explicit sibling rows
+correct, and the shape condition is what keeps them correct for an element that arrives with fields
+this discovery run did not write, such as one rebuilt from serialized VSTest properties.
 
 They are two independent fields rather than one because a single field cannot be checked against
 anything. A boolean has two values, so one corrupted bit turns any explicit parent into a legitimate
@@ -728,29 +812,29 @@ fields to keep consistent.
   round-tripped by `ToTestCase` and `ToUnitTestElement`.
   These names are stable wire identifiers. `Explicit` is registered as a filterable string with values
   `True` and `False` compared case-insensitively, deliberately not a `bool`, so malformed persisted
-  values reach the fail closed rule instead of being defaulted by VSTest's converter. A missing
-  `Explicit` means false and a missing reason means no reason, so a case persisted by an older version
-  still deserializes. The two gate inputs are not filterable, they exist only so the gate has them,
-  and both are strings compared ordinal case-insensitively for the same reason `Explicit` is. The
-  deferral is honored only on a folded data-driven parent, the one shape with a per-source check
+  values reach the fail closed rule instead of being defaulted by VSTest's converter. It is written
+  only when it is true, so an ordinary case carries no `Explicit` property at all. A missing
+  `Explicit` means false to the gate and a missing reason means no reason, so a case persisted by an
+  older version still deserializes. The two gate inputs are not filterable, they exist only so the gate
+  has them, and both are strings compared ordinal case-insensitively for the same reason `Explicit` is.
+  The deferral is honored only on a folded data-driven parent, the one shape with a per-source check
   downstream, and the case says which shape it is in metadata it already carries, so no type load is
   needed to ask. On any other shape it is inconsistent rather than a deferral and the gate fires, as it
   does for a missing or unrecognized value in either field on any shape. Over-skipping costs a folded
   parent with disagreeing sources one explicit skip instead of its ordinary source's rows, which is
   visible and recoverable by selecting the test. Reasons are prose and stay unfilterable.
-- Native MTP: `MSTestTestNodeConverter` adds `Explicit` to every node, `True` or `False`, on both
+- Native MTP: `MSTestTestNodeConverter` adds `Explicit`, value `True`, to explicit nodes only, on both
   discovered and result nodes. `Explicit` is a `TestMetadataProperty`, which is the property type
   `[Key=Value]` in a tree node filter matches, so `/**[Explicit=True]` works with no platform matcher
-  change. It is written for ordinary nodes as well because `TreeNodeFilter` has no synthetic default:
-  a missing property does not match `=` and therefore does match `!=`, so omitting it would make
-  `/**[Explicit=False]` match nothing and `/**[Explicit!=False]` match everything, which is the
-  opposite of what VSTest answers for both, where the registered property evaluates an ordinary test
-  as `False`. A default cannot be added in the matcher either, since `TreeNodeFilter` is platform code
-  shared by every framework and must not know this key. One short pair per node is the price of the
-  two hosts agreeing on both operators. It is still not a trait: it is produced from `IsExplicit`
-  rather than from `[TestCategory]` or `[TestProperty]`, it is not in `UnitTestElement.Traits`, and it
-  does not show up as a user
-  authored category. The reason is deliberately not a node metadata property: `IsMatchingProperty`
+  change. It is deliberately not written to ordinary nodes. An earlier draft wrote `Explicit=False`
+  to every node so that both operators would have something to match, on the stated grounds that the
+  registered VSTest property evaluates an ordinary test as `False`. It does not:
+  `TestMethodFilter.PropertyValueProvider` returns a value only when
+  `currentTest.Properties.Contains(testProperty)` and otherwise falls through to `null`, so a
+  registered property that was never written to a `TestCase` is missing rather than false. Both hosts
+  already answer a missing property the same way, `=` does not match it and `!=` does, and the
+  universal write was the thing that would have made them disagree.
+  The reason is deliberately not a node metadata property: `IsMatchingProperty`
   matches every `TestMetadataProperty`, so writing it as one would make it filterable on MTP and
   unfilterable on VSTest, which contradicts both the API contract and the equivalence rule. It reaches
   the user through the skip message on the result, the same place the other hosts read it. UIDs do
@@ -758,13 +842,52 @@ fields to keep consistent.
   ordinary nodes and ordinary skipped results. The native path keeps its elements in process, so
   nothing is reconstructed there and the two gate inputs need no node metadata.
 
-`Explicit` and `ExplicitReason` are reserved property names on both hosts, compared ordinal
-case-insensitively, because both hosts match case-insensitively: `ValueExpression` builds its regex
-with `RegexOptions.IgnoreCase`, and `TestMethodFilter`'s supported-property dictionary and its trait
-fallback both use `OrdinalIgnoreCase`. Reserving only the exact spellings would leave
-`[TestProperty("explicit", "True")]` colliding. A `[TestProperty]` whose name matches either reserved
-name in any casing is not written to the metadata surface or to the traits, and discovery reports a
+Writing `Explicit` as a `TestMetadataProperty` puts it on the surfaces that carry test metadata
+downstream, and this RFC states that rather than claiming the property stays inside the filter engine.
+Server mode serializes every `TestMetadataProperty` under `traits`, `--list-tests` JSON emits it in the
+`traits` array, the TRX report writes it under `<Properties>`, and the OpenTelemetry handler emits
+`test.metadata.Explicit`. Restricting the write to explicit nodes is what keeps that a property of the
+feature rather than a change to every MSTest-on-MTP run: a test with no declaration carries no new
+metadata on any of those surfaces, which is what the [Compatibility](#compatibility) statement
+promises. On a test that does declare `[Explicit]` the addition is intended and is listed there as a
+compatibility change. It is still not a user authored category or trait, it is produced from
+`IsExplicit` rather than from `[TestCategory]` or `[TestProperty]` and it is not in
+`UnitTestElement.Traits`, but it shares their transport, so the test plan asserts which surfaces it
+reaches rather than asserting it reaches none.
+
+That leaves one filter answer to state plainly, because dropping the universal write changes it. Both
+hosts match a missing property the same way, so on both of them `Explicit=True` selects the explicit
+tests, `Explicit!=True` selects the ordinary ones, `Explicit=False` selects nothing, and
+`Explicit!=False` selects everything. `Explicit=False` is not the way to ask for ordinary tests on
+either host, and nothing in this design needs it to be: `ExplicitTestMode` is how a run changes the
+default, and `Explicit!=True` is how a filter excludes them. VSTest additionally has `None`, a
+reserved value in its filter grammar meaning "this property is not set", so `Explicit=None` selects
+the ordinary tests there. `TreeNodeFilter` has no equivalent token, so that spelling has no MTP
+counterpart. The divergence belongs to the two filter grammars rather than to this feature, it is the
+same for every unset property VSTest knows, and the vectors under [Testing](#testing) record what each
+host answers so neither drifts.
+
+`Explicit` is a reserved property name on both hosts, compared ordinal case-insensitively, because
+both hosts match case-insensitively: `ValueExpression` builds its regex with `RegexOptions.IgnoreCase`,
+and `TestMethodFilter`'s supported-property dictionary and its trait fallback both use
+`OrdinalIgnoreCase`. Reserving only the exact spelling would leave `[TestProperty("explicit", "True")]`
+colliding.
+
+The reservation covers `[TestCategory]` as well as `[TestProperty]`, because MTP puts both in one key
+space: `MSTestTestNodeConverter` writes each category as `TestMetadataProperty(category, string.Empty)`
+and each trait as `TestMetadataProperty(name, value)`, and `IsMatchingProperty` succeeds on any
+matching value. Covering only `[TestProperty]` would let `[TestCategory("Explicit")]` add a second
+value under the reserved key beside the built-in one and bypass the reservation without ever naming a
+property. A `[TestCategory]` or a `[TestProperty]` whose name matches the reserved name in any casing
+is written to none of the metadata surface, the categories, or the traits, and discovery reports a
 warning naming the test, so the built-in value is the only one either host can match.
+
+`ExplicitReason` is deliberately not reserved. The reason is not written to node metadata and is not
+filterable on either host, so no built-in surface occupies that name for a user property to collide
+with, and reserving it would only take the name away from existing
+`[TestProperty("ExplicitReason", ...)]` and `[TestCategory("ExplicitReason")]` users in exchange for
+nothing. If a later change exposes the reason on a matchable surface, reserving the name belongs in
+that change, where it can be justified by what it protects.
 
 A folded parent carries its class, method, and source declarations. A source declaration is read from
 the attribute instance and needs no enumeration, so a method with any explicit source is reported
@@ -795,12 +918,12 @@ and it does not print one console line per skipped test.
 | Area | Change |
 | --- | --- |
 | Framework | `ExplicitAttribute`, the data capability interface, row properties, public API baseline |
-| Discovery | `TypeEnumerator` reads class and method declarations, `AssemblyEnumerator` scans every data source's declaration before it decides whether to unfold, since `TryUnfoldITestDataSources` returns for both fold modes ahead of reading the attributes and can also return once a source fails to unfold, and merges row declarations while unfolding |
+| Discovery | `TypeEnumerator` reads class and method declarations, `AssemblyEnumerator` scans every data source's declaration before it decides whether to unfold, since `TryUnfoldITestDataSources` returns for both fold modes ahead of reading the attributes and can also return once a source fails to unfold, and while unfolding it merges row declarations and overwrites the cloned row's `ExplicitFromSources` with its own producing source's value |
 | Execution | pre-initialization gate in `UnitTestRunner`, per-source and per-row checks in `TestMethodRunner.DataRow` |
 | VSTest | classify source versus test-case execution in `MSTestExecutor`, register and round-trip properties, evaluate activation in `TestMethodFilter` |
 | Native MTP | build activation from UID, tree, and property filters in `MSTestFilterContext` and `MtpTestElementFilter`, accept tree node and graph filters instead of throwing, add node metadata |
 | Platform | `TestExecutionFilterComposer` and the request factories keep the original request filter next to the provider-constrained one, on an internal surface reached through the existing friend assembly |
-| Retry | the process retry extension carries the original activation alongside the failed-UID list, so a retry attempt inherits it instead of reading its own `--filter-uid` as a selection |
+| Retry | the process retry extension adds `--internal-retry-activation` beside `--internal-retry-pipename` on every attempt it launches, so a retry attempt inherits the original activation instead of reading its own `--filter-uid` as a selection, and its absence activates nothing |
 | Settings | three `ExplicitTestMode` values with existing precedence, `explicitTestMode` added to `docs/testconfig.schema.json`, whose `mstest.execution` object sets `additionalProperties: false`, plus localized resources |
 | Source generation | root `ExplicitAttribute` and capability bearing types, keep reading through the existing reflection abstraction so generated and reflection discovery produce identical metadata |
 
@@ -826,16 +949,20 @@ An upstream API that exposes a walkable tree replaces this later without changin
   parentheses, escaping, bare values, and case-insensitive `Explicit` values. They run against nodes
   the converter actually produced rather than hand-built property bags, because that is what would
   have caught a category being written as `[Hardware=*]` while the table claimed `[Category=Hardware]`.
-  Wildcarded property keys are vectors too, `[Exp*=*]` and `[*=*]` asserting no activation while
-  `[Exp*=True]` asserts it, since the universal `Explicit` property makes the first two select
-  everything.
+  Wildcarded property keys are vectors too. `[Exp*=*]` and `[Exp*=True]` assert activation and `[*=*]`
+  asserts none, because `Explicit` is written only to explicit nodes, so a wildcard that resolves to
+  that key names something most nodes do not carry while one that resolves to every key names nothing.
   The same serialized
   vectors run against VSTest and native MTP so the two cannot drift, and against both expression
   evaluators so the duplicated parser cannot drift either. Every `Explicit` vector runs in all four
   combinations of the two operators and the two values, because that is where the hosts would diverge
-  first: a node without the property does not match `=` and does match `!=`, so an ordinary test has
-  to carry `Explicit=False` for `Explicit=False` and `Explicit!=False` to answer the same on MTP as
-  the registered property answers on VSTest.
+  first, and all four assert the same answer on both: `Explicit=True` selects the explicit tests,
+  `Explicit!=True` the ordinary ones, `Explicit=False` nothing, and `Explicit!=False` everything. That
+  is the missing-property behavior both hosts already have, and the vectors exist to keep anyone from
+  restoring the universal `Explicit=False` write that would break it. `Explicit=None` is a vector too,
+  asserting it selects the ordinary tests on VSTest, where `None` is a reserved value in the filter
+  grammar, and that `/**[Explicit=None]` selects nothing on MTP, which has no such token, so the
+  grammar-level difference is recorded rather than discovered later.
 - Ordering tests proving that assembly `ITestFilter` returning `Run` and provider constraints never
   activate, and that an unclassifiable request activates nothing. One of them registers a
   `[TestFilterProvider]` alongside an unactivated explicit test and asserts the filter is still
@@ -847,18 +974,30 @@ An upstream API that exposes a walkable tree replaces this later without changin
   rather than resolve to a mode.
 - Filter-path agreement tests for `Explicit` as node metadata: `/**[Explicit=True]` selects the same
   tests through `MtpTestElementFilter` before nodes exist as `TreeNodeFilter` matches against the
-  `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
-  category surfaces. One covers the root-segment case specifically, that `/**[Explicit=True]` activates
+  `TestMetadataProperty` the converter writes. One covers the root-segment case specifically, that
+  `/**[Explicit=True]` activates
   while `/**` and `/MyAssembly/**` do not, since that is the whole reason the rule separates the path
   token from the property predicate. One asserts the documented reachability boundary directly: a
   folded method with an explicit source is selected, a folded method whose explicitness is only on rows
   is not, and selecting that method by name runs its explicit rows. Another puts
   `[TestProperty("Explicit", "True")]` on an ordinary test, and `[TestProperty("explicit", ...)]` and
-  `[TestProperty("EXPLICITREASON", ...)]` beside it, asserting both hosts ignore every casing, that
-  none reaches the node metadata, the traits, or the VSTest property, that `--filter "Explicit=True"`
-  no longer matches them on VSTest where it does today, and that discovery warns for each.
+  `[TestCategory("EXPLICIT")]` beside it, asserting both hosts ignore every casing and both attribute
+  kinds, that none reaches the node metadata, the categories, the traits, or the VSTest property, that
+  `--filter "Explicit=True"` no longer matches them on VSTest where it does today, and that discovery
+  warns for each. The category form is a vector in its own right rather than an afterthought, because
+  categories and traits share one `TestMetadataProperty` key space on MTP, so covering only
+  `[TestProperty]` would leave the reservation bypassable.
+- Metadata-surface tests pinning what the node property reaches, replacing the earlier claim that it
+  reaches nothing. For a test declaring `[Explicit]`, `Explicit=True` is asserted present in server
+  mode `traits`, in the `--list-tests` JSON `traits` array, in TRX `<Properties>`, and as the
+  OpenTelemetry `test.metadata.Explicit` tag. For a test with no declaration, all four are asserted to
+  carry nothing new against a baseline captured before the feature, which is the assertion that keeps
+  the compatibility promise honest and would fail immediately if the universal write came back.
 - A reason-is-not-filterable test: an explicit test with a reason, asserting `/**[ExplicitReason=*]`
-  matches nothing on MTP and the reason still reaches the skip message on both hosts.
+  matches nothing on MTP and the reason still reaches the skip message on both hosts. Beside it, a
+  test carrying `[TestProperty("ExplicitReason", "mine")]` asserts the opposite of the `Explicit`
+  vectors, that the name is not reserved: the property still reaches the traits, the node metadata and
+  the VSTest property, `--filter "ExplicitReason=mine"` still matches it, and discovery does not warn.
 - A late-row test: an assembly whose only explicit declaration is on a `TestDataRow<T>` produced
   during execution, asserting the row is still skipped under Run All and still runs when the method is
   selected, so an assembly that looks free of explicit tests at discovery does not lose activation.
@@ -882,6 +1021,14 @@ An upstream API that exposes a walkable tree replaces this later without changin
   selectable under both fold strategies and when an earlier source fails to unfold, pinning that the
   source scan happens ahead of every early return in `TryUnfoldITestDataSources` rather than inside
   the unfolding it skips.
+- An unfolding test under the default strategy, run on both hosts, over one method carrying an
+  ordinary `[DataRow]` and an explicit one. Under Run All the ordinary row runs and the explicit row
+  is skipped, which is the vector that fails if a cloned row keeps the parent's `Some` and takes the
+  deferral no per-source check backs. It asserts the cause and not only the symptom: each unfolded
+  element carries its own producing source's `ExplicitFromSources`, `All` or `None` and never `Some`.
+  Beside it, an element hand-built as a non-folded shape claiming `ExplicitFromDeclaration=False` with
+  `ExplicitFromSources=Some` asserts the gate skips it, pinning the shape condition itself rather than
+  only the discovery code that currently keeps it satisfied.
 - A custom `ITestDataSource` test covering both ways in, the capability for every row and a
   `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
   row is recognized exactly as the `DynamicData` shape is.
@@ -898,7 +1045,12 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Retry tests over a folded parent whose rows are one ordinary failing row and one explicit row.
   Under Run All the ordinary row fails and retries, and the explicit row is skipped on every attempt,
   pinning that the parent UID in the retry set does not activate it. The same asset selected by UID
-  retries both.
+  retries both. Two more cover the signal rather than the outcome: one asserts every attempt the
+  extension launches carries `--internal-retry-activation`, including the first, since the pipe alone
+  cannot tell a retried Run All from a user-selected UID run. The other is the version-skew vector,
+  launching the attempt with the pipe and the failed-UID list but no activation option, and asserting
+  the explicit row is skipped rather than run, which is the fail closed answer an older retry
+  extension paired with a newer MSTest has to get.
 - One acceptance asset, run through both hosts, covering explicit method, class, base and override,
   ignored and conditional explicit tests, ordinary and explicit sibling rows, source-wide and
   row-specific dynamic data, retry, all three `ExplicitTestMode` values, and fixture counters written
@@ -918,19 +1070,34 @@ one asset run twice rather than two suites.
 ## Compatibility
 
 The APIs are additive and binary compatible, and a test with no declarations keeps exactly its
-current discovery, filtering, execution, retry, and result behavior. Existing custom data sources
-compile and behave as before, the capability is opt-in.
+current discovery, filtering, execution, retry, and result behavior, on every surface. That last part
+is why `Explicit` is written only to nodes that declare it. A `TestMetadataProperty` is not confined to
+the filter engine, it is the transport for test metadata downstream, so writing the property to every
+node would have added `Explicit=False` to server mode `traits`, to `--list-tests` JSON, to TRX
+`<Properties>` and to an OpenTelemetry tag for every MSTest-on-MTP run in existence, including runs of
+assemblies that never heard of this feature. Writing it only where it is declared keeps this paragraph
+true. Existing custom data sources compile and behave as before, the capability is opt-in.
 
-Reserving the two property names is the one exception, and it needs a release note that covers both
-hosts. A test carrying `[TestProperty("Explicit", ...)]` or `[TestProperty("ExplicitReason", ...)]`,
-in any casing, compiles and runs as before, but the property stops reaching the filterable surfaces
+Reserving one property name is the one exception, and it needs a release note that covers both hosts.
+A test carrying `[TestProperty("Explicit", ...)]` or `[TestCategory("Explicit")]`, in any casing,
+compiles and runs as before, but the value stops reaching the filterable surfaces
 and discovery warns about it. On MTP a tree node filter written against it stops matching. On VSTest
 it stops matching too, and not because the trait is dropped in isolation: `TestMethodFilter` resolves
 any name it does not recognize from `TestCase.Traits`, so `--filter "Explicit=True"` matches such a
 test today, and registering `Explicit` as a supported property takes that name over regardless. The
-break is therefore on both hosts rather than on MTP alone, the fix is to rename the property, and it
-is called out here because it is a behavior change for a test with no explicit declaration of its own,
-which nothing else in this design touches.
+break is therefore on both hosts rather than on MTP alone, the fix is to rename the property or the
+category, and it is called out here because it is a behavior change for a test with no explicit
+declaration of its own, which nothing else in this design touches.
+
+`ExplicitReason` is not reserved, so `[TestProperty("ExplicitReason", ...)]` keeps working unchanged
+and is not part of this break. An earlier draft reserved it alongside `Explicit`; since the reason is
+not written to node metadata and is not filterable on either host, there was no built-in value for a
+user property to collide with and the reservation only widened the break.
+
+A test that does declare `[Explicit]` gains `Explicit=True` on those same downstream surfaces. That is
+a change to what a run reports, not only to what it selects, so a report or dashboard that enumerates
+traits or TRX properties sees one more entry on declaring tests. It is intended and additive, no
+existing key changes value, and it is listed here so it is not discovered by a diff.
 
 The risk worth calling out in release notes is version skew, and the alignment check already closes
 most of it. `MSTestExecutor`'s module initializer compares the informational versions of
@@ -939,14 +1106,16 @@ the run before anything is discovered. A new adapter with an old framework does 
 declarations, and an old adapter with a new framework does not quietly run `[Explicit]`. Both stop
 with the existing alignment error, and this RFC does not change that check.
 
-One boundary is left that the check cannot close. The check itself shipped in 3.10.0, so an adapter
-older than that, paired with a new framework, does not perform it, does not recognize `[Explicit]`,
-and runs the test during Run All. The gate lives in the adapter, so the framework cannot defend its
-own attribute against an adapter that predates it. That is a release-note boundary rather than
-something the design can fix.
+One boundary is left that the alignment check cannot close. The check itself shipped in 3.10.0, so an
+adapter older than that, paired with a new framework, does not perform it, does not recognize
+`[Explicit]`, and runs the test during Run All. The gate lives in the adapter, so an
+`Attribute`-derived `[Explicit]` cannot defend itself against an adapter that predates it, and that is
+a release-note boundary. Deriving from `ConditionBaseAttribute` closes it, because that base type is
+old enough for the old adapter to find the attribute through it, which is the concrete reason
+[Base type](#base-type) is an open question rather than a stylistic one.
 
-Making the attribute derive from `[Ignore]` would hide this and would also make the test impossible
-to select on any adapter, so it is not done.
+Making the attribute derive from `[Ignore]` would also hide this, and would additionally make the test
+impossible to select on any adapter, so it is not done.
 
 ## Future work
 
@@ -962,11 +1131,25 @@ to select on any adapter, so it is not done.
 - A platform level explicit contract, if other frameworks want the same distinction. This RFC keeps
   the semantics inside MSTest on purpose.
 
+## Open questions
+
+Two questions are deliberately left for approval rather than answered here, because both change every
+surface at once and neither can be revised after the API ships.
+
+| Question | Options | Where |
+| --- | --- | --- |
+| What is the concept called? | `Explicit`, matching NUnit, xUnit and TUnit, or `OnDemand`, describing the behavior. `Manual` is rejected under either. | [Naming](#naming) |
+| What does the attribute derive from? | `Attribute`, or `ConditionBaseAttribute` with a virtual `EvaluateCondition`, which additionally closes the pre-3.10.0 adapter boundary. | [Base type](#base-type) |
+
+Everything else in this document is written as though the answers were `Explicit` and `Attribute`,
+because it needs one spelling to be readable. Neither answer changes the activation model, the gate,
+the metadata, or the tests.
+
 ## Resolved questions
 
 | Question | Decision |
 | --- | --- |
-| Is explicit a condition? | No, it depends on the request, not on the environment. |
+| Is explicit a condition? | Not in semantics: it depends on the request, not on the environment. Whether the attribute nonetheless derives from `ConditionBaseAttribute` is open, see [Base type](#base-type). |
 | Are explicit tests discovered? | Always, and Run All reports them skipped rather than hiding them. |
 | What activates one? | Concrete selection, or a positive branch of a request filter that matches it. |
 | Does an exclusion filter activate? | Never, and neither does `/**` or a root-only tree path. |
@@ -981,6 +1164,7 @@ to select on any adapter, so it is not done.
 | Are skipped explicit tests retried? | No. Selected explicit failures retry normally, and a retry attempt inherits the original activation rather than making one. |
 | Is there an override? | `ExplicitTestMode`, with `Skip` and `Run` on either side of the default. |
 
-Approval is needed for the public API, the positive-filter activation model, the discriminating
-segment rule for tree node and graph filters, the three configuration values, and the documented
-legacy VSTest boundary.
+Approval is needed for the name, the attribute's base type, the public API, the positive-filter
+activation model, the discriminating segment rule for tree node and graph filters, the three
+configuration values, and the documented legacy VSTest boundary. The first two are the ones
+[Open questions](#open-questions) leaves undecided.
