@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
         <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
-        <target state="new">Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</target>
+        <target state="translated">Die Authentifizierung der Azure DevOps REST API ist fehlgeschlagen oder wurde zur Anmeldung umgeleitet (Status: {0}). Dies weist darauf hin, dass SYSTEM_ACCESSTOKEN ungültig oder nicht verfügbar ist. Bei Validierungsbuilds für Fork-Pull-Requests keine Geheimnisse an Code aus einem nicht vertrauenswürdigen Fork weitergeben; Ergebnisse aus einem separaten, vertrauenswürdigen Pipelinekontext veröffentlichen oder die Liveveröffentlichung von Azure DevOps deaktivieren.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -169,7 +169,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
         <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
-        <target state="new">Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</target>
+        <target state="translated">Die Azure DevOps REST API hat eine unerwartet erfolgreiche Antwort mit dem Statuscode {0} und dem Inhaltstyp „{1}“ zurückgegeben.</target>
         <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">

@@ -24,6 +24,7 @@ internal sealed partial class TestHostControllersTestHost
         string processIdString,
         string processCorrelationId,
         NamedPipeServer testHostControllerIpc,
+        TestHostControllerCancellationServer testHostControllerCancellationServer,
         IEnvironment environment,
         ProxyOutputDevice outputDevice,
         CancellationToken cancellationToken)
@@ -62,6 +63,7 @@ internal sealed partial class TestHostControllersTestHost
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPid}", processIdString },
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPid}", "1" },
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPid}", testHostControllerIpc.PipeName.Name },
+                { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME}_{currentPid}", testHostControllerCancellationServer.PipeName },
             },
             UseShellExecute = false,
         };
@@ -167,6 +169,8 @@ internal sealed partial class TestHostControllersTestHost
                 processStartInfo.EnvironmentVariables[envVar.Variable] = envVar.Value;
             }
         }
+
+        TestHostCooperativeShutdownTimeout = GetTestHostCooperativeShutdownTimeout(environmentVariables);
 
         return (processStartInfo, partialCommandLine);
     }

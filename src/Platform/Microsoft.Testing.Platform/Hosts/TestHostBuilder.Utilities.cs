@@ -60,6 +60,25 @@ internal sealed partial class TestHostBuilder
         return client;
     }
 
+    private static TestHostControllerCancellationListener? CreateTestHostControllerCancellationListenerIfAvailable(
+        CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource,
+        ILogger logger,
+        TestHostControllerInfo testHostControllerInfo,
+        SystemEnvironment environment)
+    {
+        if (!testHostControllerInfo.HasTestHostController || OperatingSystem.IsBrowser())
+        {
+            return null;
+        }
+
+        string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME}_{testHostControllerInfo.GetTestHostControllerPID()}";
+        string? pipeName = environment.GetEnvironmentVariable(pipeEnvironmentVariable);
+        environment.SetEnvironmentVariable(pipeEnvironmentVariable, string.Empty);
+        return RoslynString.IsNullOrEmpty(pipeName)
+            ? null
+            : new TestHostControllerCancellationListener(pipeName, testApplicationCancellationTokenSource, environment, logger);
+    }
+
     private void AddApplicationTelemetryMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
     {
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();

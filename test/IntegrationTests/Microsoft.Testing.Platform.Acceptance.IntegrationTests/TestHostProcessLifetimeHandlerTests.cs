@@ -86,7 +86,10 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
                 ["BLOCK_UNTIL_TIMEOUT"] = "1",
                 ["BLOCK_DISPOSAL"] = "1",
                 ["DISPOSAL_ATTEMPTS_FILE"] = disposalAttemptsFile,
-                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
+                // Leave enough room for the canceled-run cleanup to enter Dispose before its bounded wait
+                // expires. The handler then blocks for 10s, so the test still verifies that cleanup abandons it
+                // within the five-second assertion budget and never retries disposal.
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "2",
                 ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
             },
             cancellationToken: TestContext.CancellationToken);

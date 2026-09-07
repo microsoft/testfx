@@ -266,7 +266,8 @@ The test platform loads arbitrary user code — it must not crash regardless of 
 2. Never manually edit `*.xlf` files — build generates them.
 3. Use `nameof` for member references instead of string literals.
 4. Resource string formatting must use proper placeholders.
-5. `{Locked="…"}` comment markers match **substrings, not whole words**. A locked token that is also a substring of another word in the same message freezes that word too, so it can never be translated. Lock the token together with its surrounding punctuation (usually the quotes the message already uses) or use its longest unambiguous form.
+5. Every `{Locked="…"}` token must occur verbatim in the corresponding resource value. Do not lock contextual identifiers, such as an option name, when the user-facing string does not contain them.
+6. `{Locked="…"}` comment markers match **substrings, not whole words**. A locked token that is also a substring of another word in the same message freezes that word too, so it can never be translated. Lock the token together with its surrounding punctuation (usually the quotes the message already uses) or use its longest unambiguous form.
 
 **Substring-collision example (real bug, [PR #10310](https://github.com/microsoft/testfx/pull/10310)):**
 
@@ -284,6 +285,7 @@ The test platform loads arbitrary user code — it must not crash regardless of 
 - [ ] `*.xlf` file manually edited
 - [ ] String literal where `nameof` should be used
 - [ ] Resource string with incorrect/missing placeholders
+- [ ] `{Locked="X"}` where `X` does not occur verbatim in the corresponding resource value
 - [ ] `{Locked="X"}` where `X` also occurs as a substring of a translatable word in the same message (e.g. `const` inside `constant`, `class` inside `classes`, `int` inside `interface`) — require the quoted/longest form
 - [ ] `.resx` comment changed without the matching `*.xlf` `<note>` regeneration via `dotnet msbuild <project>.csproj /t:UpdateXlf`
 

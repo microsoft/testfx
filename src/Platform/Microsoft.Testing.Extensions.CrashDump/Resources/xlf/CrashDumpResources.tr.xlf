@@ -170,7 +170,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
         <target state="translated">Test oturumu sırasında başlatılan ve sonlandırılan testleri listeleyen bir sıra dosyasının kilitlenme bilgi dökümü veya kilitlenme raporuyla birlikte oluşturulup oluşturulmadığını denetleyin.
 Dosya, dökümü incelemeye gerek kalmadan kilitlenme sırasında çalışan testlerin belirlenmesini mümkün kılar.
 Geçerli değerler: 'on' (varsayılan: 'true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).</target>
-        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
+        <note>Do not localize option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
