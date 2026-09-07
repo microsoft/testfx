@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
@@ -20,6 +21,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
     private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan TestHostCooperativeShutdownMargin = TimeSpan.FromSeconds(15);
 
     private readonly TimeSpan _controllerExtensionFinalizationTimeout;
     private readonly TestHostControllerConfiguration _testHostsInformation;
@@ -55,6 +57,8 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         _testHostsInformation = testHostsInformation;
         _passiveNode = passiveNode;
         _environment = environment;
+        TestHostCooperativeShutdownTimeout =
+            ShutdownTimeouts.GetCanceledConsumerCompletion(environment) + TestHostCooperativeShutdownMargin;
         _controllerExtensionFinalizationTimeout = ShutdownTimeouts.GetControllerFinalization(environment);
         _clock = clock;
         _loggerFactory = loggerFactory;
@@ -68,6 +72,18 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
+
+    internal TimeSpan TestHostCooperativeShutdownTimeout { get; private set; }
+
+    internal static TimeSpan GetTestHostCooperativeShutdownTimeout(IReadOnlyEnvironmentVariables environmentVariables)
+    {
+        environmentVariables.TryGetVariable(
+            EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS,
+            out OwnedEnvironmentVariable? configuredTimeout);
+
+        return ShutdownTimeouts.GetCanceledConsumerCompletion(configuredTimeout?.Value)
+            + TestHostCooperativeShutdownMargin;
+    }
 
     protected override bool RunTestApplicationLifeCycleCallbacks => false;
 
@@ -88,6 +104,8 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         var outputDevice = (ProxyOutputDevice)ServiceProvider.GetOutputDevice();
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         NamedPipeServer? testHostControllerIpc = null;
+        TestHostControllerCancellationServer? testHostControllerCancellationServer = null;
+        using CancellationTokenSource testHostControllerIpcLifetime = new();
         try
         {
             int currentPid = environment.ProcessId;
@@ -99,7 +117,18 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
             string processCorrelationId = Guid.NewGuid().ToString("N");
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPid} '{processCorrelationId}'").ConfigureAwait(false);
 
-            testHostControllerIpc = await CreateTestHostControllerIpcAsync(executableInfo, cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<string>? authorizedSecurityIdentities = await ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                _testHostsInformation.TestHostLauncher,
+                executableInfo.FilePath,
+                _logger,
+                cancellationToken).ConfigureAwait(false);
+            testHostControllerIpc = CreateTestHostControllerIpc(authorizedSecurityIdentities, testHostControllerIpcLifetime.Token);
+            testHostControllerCancellationServer = new(
+                authorizedSecurityIdentities,
+                environment,
+                _loggerFactory,
+                ServiceProvider.GetTask());
+            testHostControllerCancellationServer.Start();
 
             (ProcessStartInfo ProcessStartInfo, IReadOnlyList<string> PartialCommandLine)? processConfiguration =
                 await PrepareProcessConfigurationAsync(
@@ -108,6 +137,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
                     processIdString,
                     processCorrelationId,
                     testHostControllerIpc,
+                    testHostControllerCancellationServer,
                     environment,
                     outputDevice,
                     cancellationToken).ConfigureAwait(false);
@@ -124,6 +154,7 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
                     process,
                     configuration,
                     testHostControllerIpc,
+                    testHostControllerCancellationServer,
                     outputDevice,
                     telemetryInformation,
                     consoleRunStarted,
@@ -133,9 +164,24 @@ internal sealed partial class TestHostControllersTestHost : CommonHost, IHost, I
         {
             try
             {
-                if (testHostControllerIpc is not null)
+                try
                 {
-                    await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
+                    if (testHostControllerCancellationServer is not null)
+                    {
+                        await DisposeHelper.DisposeAsync(testHostControllerCancellationServer).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    if (testHostControllerIpc is not null)
+                    {
+#if NET
+                        await testHostControllerIpcLifetime.CancelAsync().ConfigureAwait(false);
+#else
+                        testHostControllerIpcLifetime.Cancel();
+#endif
+                        await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
+                    }
                 }
             }
             finally
