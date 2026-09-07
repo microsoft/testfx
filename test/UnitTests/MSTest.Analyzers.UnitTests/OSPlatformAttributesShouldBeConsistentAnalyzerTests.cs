@@ -373,6 +373,79 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenOuterTypeCompatibilityConflictsWithNestedMethod_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [SupportedOSPlatform("windows")]
+            public class OuterClass
+            {
+                [TestClass]
+                public class MyTestClass
+                {
+                    [TestMethod]
+                    [{|#0:SupportedOSPlatform("linux")|}]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenUnsupportedPlatformHasMessage_AddsExcludeCondition()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:UnsupportedOSPlatform("windows", "Not supported on Windows")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [UnsupportedOSPlatform("windows", "Not supported on Windows")]
+                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net100,
+            TestCode = code,
+            FixedCode = fixedCode,
+        };
+        test.ExpectedDiagnostics.Add(VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenContainingClassOSConditionConflictsWithMethodPlatform_DiagnosticWithoutFix()
     {
         string code = """

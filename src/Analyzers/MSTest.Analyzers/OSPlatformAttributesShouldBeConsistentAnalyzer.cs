@@ -93,13 +93,20 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             : null;
         bool hasContainingClassCondition = containingClassOSConditionAttribute is not null;
 
-        ImmutableArray<AttributeData> containingTypeAttributes = context.Symbol.ContainingType?.GetAttributes()
-            ?? ImmutableArray<AttributeData>.Empty;
+        ImmutableArray<ImmutableArray<AttributeData>>.Builder containingTypeAttributeScopes =
+            ImmutableArray.CreateBuilder<ImmutableArray<AttributeData>>();
+        for (INamedTypeSymbol? containingType = context.Symbol.ContainingType;
+            containingType is not null;
+            containingType = containingType.ContainingType)
+        {
+            containingTypeAttributeScopes.Add(containingType.GetAttributes());
+        }
+
         ImmutableArray<AttributeData> assemblyAttributes = context.Compilation.Assembly.GetAttributes();
 
         bool canFix = TryGetExpectedCondition(
             platformAttributes,
-            containingTypeAttributes,
+            containingTypeAttributeScopes.ToImmutable(),
             assemblyAttributes,
             supportedOSPlatformAttributeSymbol,
             unsupportedOSPlatformAttributeSymbol,
@@ -135,7 +142,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
 
     private static bool TryGetExpectedCondition(
         ImmutableArray<AttributeData> localPlatformAttributes,
-        ImmutableArray<AttributeData> containingTypeAttributes,
+        ImmutableArray<ImmutableArray<AttributeData>> containingTypeAttributeScopes,
         ImmutableArray<AttributeData> assemblyAttributes,
         INamedTypeSymbol supportedOSPlatformAttributeSymbol,
         INamedTypeSymbol unsupportedOSPlatformAttributeSymbol,
@@ -151,12 +158,6 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
                 out int localAllowedOperatingSystems,
                 out bool localAllowsUnknownOperatingSystems)
             || !TryGetAllowedOperatingSystems(
-                containingTypeAttributes,
-                supportedOSPlatformAttributeSymbol,
-                unsupportedOSPlatformAttributeSymbol,
-                out int containingTypeAllowedOperatingSystems,
-                out bool containingTypeAllowsUnknownOperatingSystems)
-            || !TryGetAllowedOperatingSystems(
                 assemblyAttributes,
                 supportedOSPlatformAttributeSymbol,
                 unsupportedOSPlatformAttributeSymbol,
@@ -169,12 +170,28 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             return false;
         }
 
-        int allowedOperatingSystems =
-            localAllowedOperatingSystems & containingTypeAllowedOperatingSystems & assemblyAllowedOperatingSystems;
+        int allowedOperatingSystems = localAllowedOperatingSystems & assemblyAllowedOperatingSystems;
         bool allowsUnknownOperatingSystems =
             localAllowsUnknownOperatingSystems
-            && containingTypeAllowsUnknownOperatingSystems
             && assemblyAllowsUnknownOperatingSystems;
+        foreach (ImmutableArray<AttributeData> containingTypeAttributes in containingTypeAttributeScopes)
+        {
+            if (!TryGetAllowedOperatingSystems(
+                    containingTypeAttributes,
+                    supportedOSPlatformAttributeSymbol,
+                    unsupportedOSPlatformAttributeSymbol,
+                    out int containingTypeAllowedOperatingSystems,
+                    out bool containingTypeAllowsUnknownOperatingSystems))
+            {
+                includeMode = false;
+                operatingSystems = 0;
+                operatingSystemsExpression = null;
+                return false;
+            }
+
+            allowedOperatingSystems &= containingTypeAllowedOperatingSystems;
+            allowsUnknownOperatingSystems &= containingTypeAllowsUnknownOperatingSystems;
+        }
 
         includeMode = !allowsUnknownOperatingSystems;
         operatingSystems = includeMode
@@ -215,8 +232,11 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         int operatingSystems = 0;
         foreach (AttributeData attribute in platformAttributes)
         {
-            if (includeMode != SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
-                || attribute.ConstructorArguments is not [{ Value: string platformName }]
+            bool isSupportedAttribute = SymbolEqualityComparer.Default.Equals(
+                attribute.AttributeClass,
+                supportedOSPlatformAttributeSymbol);
+            if (includeMode != isSupportedAttribute
+                || !TryGetPlatformName(attribute, isSupportedAttribute, out string? platformName)
                 || !TryMapPlatform(platformName, out int operatingSystem))
             {
                 allowedOperatingSystems = 0;
@@ -232,6 +252,21 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             : allOperatingSystems & ~operatingSystems;
         allowsUnknownOperatingSystems = !includeMode;
         return true;
+    }
+
+    private static bool TryGetPlatformName(
+        AttributeData attribute,
+        bool isSupportedAttribute,
+        [NotNullWhen(true)] out string? platformName)
+    {
+        platformName = attribute.ConstructorArguments switch
+        {
+            [{ Value: string value }] => value,
+            [{ Value: string value }, _] when !isSupportedAttribute => value,
+            _ => null,
+        };
+
+        return platformName is not null;
     }
 
     private static bool TryMapPlatform(string platformName, out int operatingSystem)
