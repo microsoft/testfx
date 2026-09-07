@@ -49,6 +49,8 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             }
             """;
 
+        // The outer Windows-only scope and Linux-only method have an empty effective platform set, so the
+        // analyzer reports the inconsistency without registering an OSCondition code fix.
         await VerifyCS.VerifyCodeFixAsync(
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
