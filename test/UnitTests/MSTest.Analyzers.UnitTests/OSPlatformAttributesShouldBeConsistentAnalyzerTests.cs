@@ -117,6 +117,25 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenExcludeOSConditionIsEquivalent_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [UnsupportedOSPlatform("windows")]
+            [UnsupportedOSPlatform("linux")]
+            [TestClass]
+            [OSCondition(ConditionMode.Exclude, OperatingSystems.Linux | OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenOSConditionIsInconsistent_UpdatesCondition()
     {
         string code = """
