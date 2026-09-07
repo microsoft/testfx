@@ -37,7 +37,7 @@ internal sealed partial class TestContextImplementation
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNul(message);
         TestContextMessageBuilder.Append(msg);
         WriteLive(msg, appendLine: false);
     }
@@ -50,7 +50,7 @@ internal sealed partial class TestContextImplementation
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNul(format), args);
         TestContextMessageBuilder.Append(message);
         WriteLive(message, appendLine: false);
     }
@@ -62,7 +62,7 @@ internal sealed partial class TestContextImplementation
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNul(message);
         TestContextMessageBuilder.AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
@@ -75,10 +75,19 @@ internal sealed partial class TestContextImplementation
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNul(format), args);
         TestContextMessageBuilder.AppendLine(message);
         WriteLive(message, appendLine: true);
     }
+
+    // Avoids the unconditional Replace() allocation for the overwhelmingly common case where the message
+    // does not contain a NUL character. On .NET Core, string.Replace already short-circuits internally when
+    // there is no match, but on netstandard2.0/.NET Framework it always allocates a new string regardless.
+    [return: NotNullIfNotNull(nameof(message))]
+    private static string? EscapeNul(string? message)
+        => message is null || message.IndexOf('\0') < 0
+            ? message
+            : message.Replace("\0", "\\0");
 
     /// <summary>
     /// Gets messages from the testContext writeLines.
