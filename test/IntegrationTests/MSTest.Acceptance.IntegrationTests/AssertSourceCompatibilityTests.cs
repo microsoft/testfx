@@ -551,7 +551,7 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
     public TestContext TestContext { get; set; }
 
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [DynamicData(nameof(GetSourceCompatibilityTargetFrameworks))]
     public async Task PublicAssertCallShapes_CompileWithCSharp12(string targetFramework)
     {
         VerifyEveryPublicAssertMethodFamilyHasAConsumerCall();
@@ -574,6 +574,16 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(0);
+    }
+
+    private static IEnumerable<object[]> GetSourceCompatibilityTargetFrameworks()
+    {
+        yield return [TargetFrameworks.NetCurrent];
+
+        if (TargetFrameworks.NetCurrent != "net8.0")
+        {
+            yield return ["net8.0"];
+        }
     }
 
     private static void VerifyEveryPublicAssertMethodFamilyHasAConsumerCall()
