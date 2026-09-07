@@ -6,8 +6,6 @@ using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
-
-internal sealed partial class AzureDevOpsTestResultsPublisher
 {
     private async Task UploadPendingRunAttachmentsAsync(CancellationToken cancellationToken)
     {
@@ -121,6 +119,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
         }
     }
+
     private static bool BatchHasAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
     {
         for (int i = 0; i < batch.Count; i++)
@@ -147,5 +146,4 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         return count;
     }
-
 }

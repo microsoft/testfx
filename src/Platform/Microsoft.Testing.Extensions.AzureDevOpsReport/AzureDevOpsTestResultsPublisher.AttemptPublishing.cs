@@ -6,8 +6,6 @@ using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
-
-internal sealed partial class AzureDevOpsTestResultsPublisher
 {
     /// <summary>
     /// Appends the first attempt after its parent has been created, then targets that stable sub-result with
@@ -123,5 +121,4 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
         }
     }
-
 }

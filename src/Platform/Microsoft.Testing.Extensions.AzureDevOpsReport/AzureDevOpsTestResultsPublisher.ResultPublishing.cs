@@ -6,8 +6,6 @@ using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
-
-internal sealed partial class AzureDevOpsTestResultsPublisher
 {
     /// <summary>
     /// Publishes results Azure DevOps has not seen in this build yet, recording the ids it assigns them so
@@ -232,5 +230,4 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
         : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);
-
 }

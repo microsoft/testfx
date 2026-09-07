@@ -6,8 +6,6 @@ using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
-
-internal sealed partial class AzureDevOpsTestResultsPublisher
 {
     private async Task BackgroundFlushLoopAsync(CancellationToken cancellationToken)
     {
@@ -232,5 +230,4 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // wait for the flush interval (background loop) before retrying instead.
         return _retryResults.Count == 0 && _pendingResults.Count >= _options.BatchSize;
     }
-}
 }
