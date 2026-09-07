@@ -21,6 +21,15 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
     internal const string ConditionModeKey = nameof(ConditionModeKey);
     internal const string OperatingSystemsKey = nameof(OperatingSystemsKey);
 
+    // Bit positions must match the OperatingSystems enum in Microsoft.VisualStudio.TestTools.UnitTesting.
+    private static readonly (string Name, int Bit)[] OperatingSystemBits =
+    [
+        ("Linux", 1 << 0),
+        ("OSX", 1 << 1),
+        ("Windows", 1 << 2),
+        ("FreeBSD", 1 << 3),
+    ];
+
     private static readonly LocalizableResourceString Title = new(nameof(Resources.OSPlatformAttributesShouldBeConsistentTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.OSPlatformAttributesShouldBeConsistentMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.OSPlatformAttributesShouldBeConsistentDescription), Resources.ResourceManager, typeof(Resources));
@@ -288,35 +297,34 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
 
     private static bool TryMapPlatform(string platformName, out int operatingSystem)
     {
-        operatingSystem = platformName.ToUpperInvariant() switch
+        platformName = string.Equals(platformName, "MACOS", StringComparison.OrdinalIgnoreCase)
+            ? "OSX"
+            : platformName;
+        foreach ((string name, int bit) in OperatingSystemBits)
         {
-            // Bit positions must match the OperatingSystems enum in Microsoft.VisualStudio.TestTools.UnitTesting.
-            "LINUX" => 1 << 0,
-            "OSX" or "MACOS" => 1 << 1,
-            "WINDOWS" => 1 << 2,
-            "FREEBSD" => 1 << 3,
-            _ => 0,
-        };
+            if (string.Equals(platformName, name, StringComparison.OrdinalIgnoreCase))
+            {
+                operatingSystem = bit;
+                return true;
+            }
+        }
 
-        return operatingSystem != 0;
+        operatingSystem = 0;
+        return false;
     }
 
     private static string CreateOperatingSystemsExpression(int operatingSystems)
     {
         var names = new List<string>();
-        AddNameIfSet(names, operatingSystems, 1 << 0, "Linux");
-        AddNameIfSet(names, operatingSystems, 1 << 1, "OSX");
-        AddNameIfSet(names, operatingSystems, 1 << 2, "Windows");
-        AddNameIfSet(names, operatingSystems, 1 << 3, "FreeBSD");
-        return string.Join("|", names);
-    }
-
-    private static void AddNameIfSet(List<string> names, int operatingSystems, int value, string name)
-    {
-        if ((operatingSystems & value) != 0)
+        foreach ((string name, int bit) in OperatingSystemBits)
         {
-            names.Add(name);
+            if ((operatingSystems & bit) != 0)
+            {
+                names.Add(name);
+            }
         }
+
+        return string.Join("|", names);
     }
 
     private static bool IsEquivalentOSCondition(
