@@ -33,6 +33,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     private readonly object _shutdownLock = new();
 
     private Task? _shutdown;
+    private int _skipConnectionReadLoopWait;
 
     /// <summary>
     /// The exit code captured during teardown, boxed so reads and writes are atomic on every target platform.
@@ -221,7 +222,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
 #pragma warning disable VSTHRD002 // Synchronously waiting on tasks - this IS the synchronous disposal path; ShutdownAsync is the awaitable one.
         try
         {
-            StartShutdownAsync().GetAwaiter().GetResult();
+            StartShutdownAsync(Connection.IsOnReadLoopFlow).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
@@ -245,14 +246,18 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     /// caller receives the same task, <see cref="Dispose"/> and <see cref="ShutdownAsync"/> are idempotent
     /// with respect to each other and to themselves.
     /// <para>
-    /// <see cref="Task.Run(Func{Task})"/> captures the ambient execution context, so the connection's
-    /// read-loop <see cref="AsyncLocal{T}"/> marker still flows into the teardown. Disposing from inside a
-    /// notification handler therefore continues to skip the connection's read-loop self-wait instead of
-    /// stalling for its shutdown timeout.
+    /// When disposal starts from a notification handler, the read-loop context is captured before the
+    /// teardown is scheduled and passed explicitly to the connection. This avoids relying on execution-context
+    /// flow across the thread-pool hop to decide whether the connection may wait for its own read loop.
     /// </para>
     /// </remarks>
-    private Task StartShutdownAsync()
+    private Task StartShutdownAsync(bool skipConnectionReadLoopWait = false)
     {
+        if (skipConnectionReadLoopWait)
+        {
+            Volatile.Write(ref _skipConnectionReadLoopWait, 1);
+        }
+
         lock (_shutdownLock)
         {
             return _shutdown ??= Task.Run(ShutdownCoreAsync);
@@ -272,7 +277,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             // Close the transport first. A server-mode application exits its message loop when the client's
             // connection reaches EOF, so this is the graceful stop signal even for a callback that ignores the
             // cancellation token (the common case: TestApplication.RunAsync takes none).
-            Connection.Dispose();
+            Connection.Dispose(waitForReadLoop: Volatile.Read(ref _skipConnectionReadLoopWait) == 0);
             SafeDispose(_client, _logger, "Disposing the accepted client socket");
             MtpServerConnector.SafeStop(_listener, _logger);
 
