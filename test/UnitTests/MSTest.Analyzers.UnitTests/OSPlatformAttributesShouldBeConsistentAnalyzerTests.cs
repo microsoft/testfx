@@ -821,4 +821,26 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             code,
             VerifyVB.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
     }
+
+    [TestMethod]
+    public async Task WhenOSConditionIsInconsistentInVisualBasic_Diagnostic()
+    {
+        string code = """
+            Imports System.Runtime.Versioning
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                <{|#0:SupportedOSPlatform("windows")|}>
+                <OSCondition(OperatingSystems.Linux)>
+                Public Sub TestMethod()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
+    }
 }
