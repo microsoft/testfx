@@ -180,7 +180,7 @@ public sealed partial class Assert
     #region DoesNotContainAll span/memory
 
     /// <summary>
-    /// Tests whether the specified array does not contain every element of <paramref name="notExpected"/>.
+    /// Tests whether <paramref name="collection"/> does not contain every element of the specified <paramref name="notExpected"/> array.
     /// </summary>
     /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
     /// <typeparam name="T">The type of the array items.</typeparam>

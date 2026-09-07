@@ -185,7 +185,7 @@ public sealed partial class Assert
     #region ContainsAll span/memory
 
     /// <summary>
-    /// Tests whether the specified array contains every element of <paramref name="expected"/>.
+    /// Tests whether <paramref name="collection"/> contains every element of the specified <paramref name="expected"/> array.
     /// </summary>
     /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
     /// <typeparam name="T">The type of the array items.</typeparam>
