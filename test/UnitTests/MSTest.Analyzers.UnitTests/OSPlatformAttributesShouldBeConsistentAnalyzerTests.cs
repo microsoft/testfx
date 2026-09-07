@@ -136,6 +136,46 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenExplicitIncludeOSConditionIsEquivalent_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [SupportedOSPlatform("windows")]
+            [TestClass]
+            [OSCondition(ConditionMode.Include, OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenContainingClassOSConditionIsEquivalentToMethodPlatform_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [SupportedOSPlatform("windows")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenOSConditionIsInconsistent_UpdatesCondition()
     {
         string code = """

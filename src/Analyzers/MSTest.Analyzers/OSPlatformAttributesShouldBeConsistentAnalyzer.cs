@@ -87,6 +87,11 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
 
         AttributeData? osConditionAttribute = attributes.FirstOrDefault(
             attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
+        if (osConditionAttribute is null && context.Symbol is IMethodSymbol methodSymbol)
+        {
+            osConditionAttribute = methodSymbol.ContainingType.GetAttributes().FirstOrDefault(
+                attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
+        }
 
         bool canFix = TryGetExpectedCondition(
             platformAttributes,
