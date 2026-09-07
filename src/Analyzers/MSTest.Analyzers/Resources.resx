@@ -1263,14 +1263,14 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="OSPlatformAttributesShouldBeConsistentTitle" xml:space="preserve">
     <value>Platform compatibility attributes should be consistent with '[OSCondition]'</value>
-    <comment>{Locked="[OSCondition]"}</comment>
+    <comment>{Locked="'[OSCondition]'"}</comment>
   </data>
   <data name="OSPlatformAttributesShouldBeConsistentMessageFormat" xml:space="preserve">
     <value>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</value>
-    <comment>{0} is the test method or test class name. {Locked="[OSCondition]"}</comment>
+    <comment>{0} is the test method or test class name. {Locked="'[OSCondition]'"}</comment>
   </data>
   <data name="OSPlatformAttributesShouldBeConsistentDescription" xml:space="preserve">
     <value>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</value>
-    <comment>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</comment>
+    <comment>{Locked="'SupportedOSPlatformAttribute'"}{Locked="'UnsupportedOSPlatformAttribute'"}{Locked="MSTest"}{Locked="'[OSCondition]'"}</comment>
   </data>
 </root>

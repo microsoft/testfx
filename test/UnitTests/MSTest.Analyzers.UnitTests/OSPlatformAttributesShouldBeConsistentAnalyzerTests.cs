@@ -56,6 +56,46 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenFreeBSDSupportedPlatformHasNoOSCondition_AddsIncludeCondition()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:SupportedOSPlatform("freebsd")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [SupportedOSPlatform("freebsd")]
+                [OSCondition(OperatingSystems.FreeBSD)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenUnsupportedPlatformsHaveNoOSCondition_AddsCombinedExcludeCondition()
     {
         string code = """
