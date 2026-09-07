@@ -282,6 +282,97 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenContainingClassCompatibilityAndConditionConstrainMethod_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [SupportedOSPlatform("windows")]
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [UnsupportedOSPlatform("linux")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyCompatibilityAndClassConditionConstrainMethod_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: SupportedOSPlatform("windows")]
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [UnsupportedOSPlatform("linux")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyCompatibilityConstrainsMethod_FixUsesEffectivePlatforms()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: SupportedOSPlatform("windows")]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:UnsupportedOSPlatform("linux")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: SupportedOSPlatform("windows")]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [UnsupportedOSPlatform("linux")]
+                [OSCondition(OperatingSystems.Windows)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenContainingClassOSConditionConflictsWithMethodPlatform_DiagnosticWithoutFix()
     {
         string code = """
