@@ -72,7 +72,6 @@ safe-outputs:
       - area/mstest-source-generation
       - area/mtp
       - area/mtp-azdo-report
-      - area/mtp-extensions
       - area/mtp-github-actions-report
       - area/mtp-migration
       - area/mtp-msbuild
@@ -90,7 +89,6 @@ safe-outputs:
       - area/timeout
       - area/trx
       - area/uwp
-      - area/vendored-sync
       - area/winui
       - external/azdo
       - external/code-coverage
@@ -235,7 +233,6 @@ label on a weak substring match.
 - performance, allocation, throughput, benchmark: `area/performance`
 - build, CI, repository automation, packaging infrastructure: `area/infrastructure`
 - agentic workflow or `gh-aw`: `area/agentic-workflows`
-- vendored-source drift: `area/vendored-sync`
 - branding, naming, icons: `area/branding`
 
 ## External component keyword map
