@@ -185,6 +185,40 @@ public sealed partial class Assert
     #region ContainsAll span/memory
 
     /// <summary>
+    /// Tests whether the specified array contains every element of <paramref name="expected"/>.
+    /// </summary>
+    /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The array of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The collection expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if an expected element does not occur enough times in <paramref name="collection"/>.</exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    [OverloadResolutionPriority(1)]
+    public static void ContainsAll<T>([NotNull] T[]? expected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll((IEnumerable<T>?)expected, collection, message, expectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+
+    /// <summary>
+    /// Tests whether the specified array contains every element of <paramref name="expected"/>.
+    /// </summary>
+    /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The array of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The array expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">The syntactic expression of expected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if an expected element does not occur enough times in <paramref name="collection"/>.</exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    [OverloadResolutionPriority(1)]
+    public static void ContainsAll<T>([NotNull] T[]? expected, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll((IEnumerable<T>?)expected, (IEnumerable<T>?)collection, message, expectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+
+    /// <summary>
     /// Tests whether the specified array contains every element of <paramref name="expected"/> using the specified equality comparer.
     /// </summary>
     /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>

@@ -13,6 +13,30 @@ public sealed partial class Assert
     #region ContainsSingle span/memory
 
     /// <summary>
+    /// Tests whether the specified array contains exactly one element.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <returns>The item.</returns>
+    public static T ContainsSingle<T>(T[] collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle((IEnumerable<T>)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified array contains exactly one element.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <returns>The item.</returns>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static T ContainsSingle<T>(T[] collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion(collectionExpression);
+
+    /// <summary>
     /// Tests whether the specified array contains exactly one element that matches the given predicate.
     /// </summary>
     /// <typeparam name="T">The type of the array items.</typeparam>

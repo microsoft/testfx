@@ -48,6 +48,18 @@ public sealed partial class Assert
         /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
         /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, TItem[] collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsNotEmptyInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, ReadOnlySpan<TItem> collection, out bool shouldAppend)
         {
             shouldAppend = collection.Length == 0;
@@ -169,6 +181,37 @@ public sealed partial class Assert
     }
 
 #if NETCOREAPP3_1_OR_GREATER
+
+    /// <summary>
+    /// Tests that the array is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(T[] collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => IsNotEmpty((IEnumerable<T>)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the array is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsNotEmpty<T>(T[] collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+        message.ComputeAssertion(collectionExpression);
+    }
 
     /// <summary>
     /// Tests that the span is not empty.

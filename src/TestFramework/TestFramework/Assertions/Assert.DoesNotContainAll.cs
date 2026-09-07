@@ -180,6 +180,40 @@ public sealed partial class Assert
     #region DoesNotContainAll span/memory
 
     /// <summary>
+    /// Tests whether the specified array does not contain every element of <paramref name="notExpected"/>.
+    /// </summary>
+    /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="notExpected">The array of items that must not all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The collection that must not contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if every unexpected element occurs enough times in <paramref name="collection"/>.</exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    [OverloadResolutionPriority(1)]
+    public static void DoesNotContainAll<T>([NotNull] T[]? notExpected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll((IEnumerable<T>?)notExpected, collection, message, notExpectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+
+    /// <summary>
+    /// Tests whether the specified array does not contain every element of <paramref name="notExpected"/>.
+    /// </summary>
+    /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="notExpected">The array of items that must not all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The array that must not contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="collectionExpression">The syntactic expression of collection as given by the compiler via caller argument expression.</param>
+    /// <exception cref="AssertFailedException">Thrown if every unexpected element occurs enough times in <paramref name="collection"/>.</exception>
+#pragma warning disable IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+    [OverloadResolutionPriority(1)]
+    public static void DoesNotContainAll<T>([NotNull] T[]? notExpected, [NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll((IEnumerable<T>?)notExpected, (IEnumerable<T>?)collection, message, notExpectedExpression, collectionExpression);
+#pragma warning restore IDE0004 // Casts are required to forward to the legacy IEnumerable overload.
+
+    /// <summary>
     /// Tests whether the specified array does not contain every element of <paramref name="notExpected"/> using the specified equality comparer.
     /// </summary>
     /// <remarks>Element multiplicity is significant: <c>[1]</c> does not contain all of <c>[1, 1]</c>.</remarks>

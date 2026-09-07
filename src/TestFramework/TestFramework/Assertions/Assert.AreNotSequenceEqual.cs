@@ -140,6 +140,68 @@ public sealed partial class Assert
     #region AreNotSequenceEqual span/memory
 
     /// <summary>
+    /// Tests whether two arrays differ in the same order.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="notExpected">The array not expected to equal <paramref name="actual"/>.</param>
+    /// <param name="actual">The sequence produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the arrays are equal.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    [OverloadResolutionPriority(1)]
+    public static void AreNotSequenceEqual<T>(T[]? notExpected, IEnumerable<T>? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotSequenceEqual((IEnumerable<T>?)notExpected, actual, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two arrays differ in the same order.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="notExpected">The array not expected to equal <paramref name="actual"/>.</param>
+    /// <param name="actual">The array produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the arrays are equal.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    [OverloadResolutionPriority(1)]
+    public static void AreNotSequenceEqual<T>(T[]? notExpected, T[]? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    {
+        IEnumerable<T>? notExpectedEnumerable = notExpected;
+        IEnumerable<T>? actualEnumerable = actual;
+        AreNotSequenceEqual(notExpectedEnumerable, actualEnumerable, message, notExpectedExpression, actualExpression);
+    }
+
+    /// <summary>
+    /// Tests whether two arrays differ using the specified order semantics.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="notExpected">The array not expected to equal <paramref name="actual"/>.</param>
+    /// <param name="actual">The sequence produced by the code under test.</param>
+    /// <param name="order">Specifies whether elements must appear in the same order or in any order.</param>
+    /// <param name="message">The message to include in the exception when the arrays are equal.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    [OverloadResolutionPriority(1)]
+    public static void AreNotSequenceEqual<T>(T[]? notExpected, IEnumerable<T>? actual, SequenceOrder order, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotSequenceEqual((IEnumerable<T>?)notExpected, actual, order, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two arrays differ using the specified order semantics.
+    /// </summary>
+    /// <typeparam name="T">The type of the array elements.</typeparam>
+    /// <param name="notExpected">The array not expected to equal <paramref name="actual"/>.</param>
+    /// <param name="actual">The array produced by the code under test.</param>
+    /// <param name="order">Specifies whether elements must appear in the same order or in any order.</param>
+    /// <param name="message">The message to include in the exception when the arrays are equal.</param>
+    /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
+    /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
+    [OverloadResolutionPriority(1)]
+    public static void AreNotSequenceEqual<T>(T[]? notExpected, T[]? actual, SequenceOrder order, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    {
+        IEnumerable<T>? notExpectedEnumerable = notExpected;
+        IEnumerable<T>? actualEnumerable = actual;
+        AreNotSequenceEqual(notExpectedEnumerable, actualEnumerable, order, message, notExpectedExpression, actualExpression);
+    }
+
+    /// <summary>
     /// Tests whether two arrays differ in the same order using the specified equality comparer.
     /// </summary>
     /// <typeparam name="T">The type of the array elements.</typeparam>

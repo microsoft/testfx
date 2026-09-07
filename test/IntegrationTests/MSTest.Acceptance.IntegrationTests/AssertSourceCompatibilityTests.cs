@@ -105,9 +105,15 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             {
                 Func<int, bool> predicate = value => value > 0;
 
+                Assert.AreAllDistinct<int>(values);
                 Assert.AreAllDistinct<int>(values, comparer);
+                Assert.AreAllNotNull<int>(values);
+                Assert.AreSequenceEqual<int>(values, other);
+                Assert.AreSequenceEqual<int>(values, other, SequenceOrder.InAnyOrder);
                 Assert.AreSequenceEqual<int>(values, other, comparer);
                 Assert.AreSequenceEqual<int>(values, other, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual<int>(values, other);
+                Assert.AreNotSequenceEqual<int>(values, other, SequenceOrder.InAnyOrder);
                 Assert.AreNotSequenceEqual<int>(values, other, comparer);
                 Assert.AreNotSequenceEqual<int>(values, other, comparer, SequenceOrder.InAnyOrder);
                 Assert.Contains<int>(1, values);
@@ -116,13 +122,25 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.DoesNotContain<int>(1, values);
                 Assert.DoesNotContain<int>(1, values, comparer);
                 Assert.DoesNotContain<int>(predicate, values);
+                Assert.ContainsAll<int>(values, other);
                 Assert.ContainsAll<int>(values, other, comparer);
+                Assert.DoesNotContainAll<int>(values, other);
                 Assert.DoesNotContainAll<int>(values, other, comparer);
+                _ = Assert.ContainsSingle<int>(values);
                 _ = Assert.ContainsSingle<int>(predicate, values);
+                Assert.HasCount<int>(1, values);
+                Assert.IsEmpty<int>(values);
+                Assert.IsNotEmpty<int>(values);
 
+                Assert.AreAllDistinct<int>(default!);
                 Assert.AreAllDistinct<int>(default!, comparer);
+                Assert.AreAllNotNull<int>(default!);
+                Assert.AreSequenceEqual<int>(default!, default!);
+                Assert.AreSequenceEqual<int>(default!, default!, SequenceOrder.InAnyOrder);
                 Assert.AreSequenceEqual<int>(default!, default!, comparer);
                 Assert.AreSequenceEqual<int>(default!, default!, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual<int>(default!, default!);
+                Assert.AreNotSequenceEqual<int>(default!, default!, SequenceOrder.InAnyOrder);
                 Assert.AreNotSequenceEqual<int>(default!, default!, comparer);
                 Assert.AreNotSequenceEqual<int>(default!, default!, comparer, SequenceOrder.InAnyOrder);
                 Assert.Contains<int>(1, default!);
@@ -131,9 +149,15 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.DoesNotContain<int>(1, default!);
                 Assert.DoesNotContain<int>(1, default!, comparer);
                 Assert.DoesNotContain<int>(predicate, default!);
+                Assert.ContainsAll<int>(default!, default!);
                 Assert.ContainsAll<int>(default!, default!, comparer);
+                Assert.DoesNotContainAll<int>(default!, default!);
                 Assert.DoesNotContainAll<int>(default!, default!, comparer);
+                _ = Assert.ContainsSingle<int>(default!);
                 _ = Assert.ContainsSingle<int>(predicate, default!);
+                Assert.HasCount<int>(1, default!);
+                Assert.IsEmpty<int>(default!);
+                Assert.IsNotEmpty<int>(default!);
             }
 
             internal static void GenericEnumerableCalls(
@@ -533,8 +557,15 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, source);
 
+        string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
+        var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["NUGET_PACKAGES"] = isolatedPackages,
+        };
+
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build -c Release {testAsset.TargetAssetPath}",
+            environmentVariables: environmentVariables,
             workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
 
