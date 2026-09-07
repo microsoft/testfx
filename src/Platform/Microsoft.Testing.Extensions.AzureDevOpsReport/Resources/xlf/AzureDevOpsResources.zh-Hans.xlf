@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
         <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
-        <target state="new">Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</target>
+        <target state="translated">Azure DevOps REST API 身份验证失败或被重定向到登录页(状态: {0})，这表明 SYSTEM_ACCESSTOKEN 无效或不可用。对于派生拉取请求验证构建，不要将机密暴露给不受信任的派生代码；请从单独的可信管道上下文发布结果，或禁用 Azure DevOps 实时发布。</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -169,7 +169,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
         <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
-        <target state="new">Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</target>
+        <target state="translated">Azure DevOps REST API 返回了意外的成功响应，状态代码为 {0}，内容类型为 '{1}'。</target>
         <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
