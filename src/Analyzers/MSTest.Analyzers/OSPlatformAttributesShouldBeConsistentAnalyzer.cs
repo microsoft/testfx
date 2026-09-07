@@ -148,6 +148,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
     {
         operatingSystem = platformName.ToUpperInvariant() switch
         {
+            // Bit positions must match the OperatingSystems enum in Microsoft.VisualStudio.TestTools.UnitTesting.
             "LINUX" => 1 << 0,
             "OSX" or "MACOS" => 1 << 1,
             "WINDOWS" => 1 << 2,

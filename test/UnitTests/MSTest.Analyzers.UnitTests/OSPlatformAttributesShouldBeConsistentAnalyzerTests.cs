@@ -1,11 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
-using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Text;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.OSPlatformAttributesShouldBeConsistentAnalyzer,
@@ -311,29 +307,6 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenDiagnosticHasNoSafeFix_DoesNotRegisterCodeFix()
-    {
-        using var workspace = new AdhocWorkspace();
-        Project project = workspace.AddProject("TestProject", LanguageNames.CSharp);
-        Document document = workspace.AddDocument(project.Id, "Test.cs", SourceText.From("class TestClass { }"));
-        SyntaxTree syntaxTree = (await document.GetSyntaxTreeAsync())!;
-        var diagnostic = Diagnostic.Create(
-            new OSPlatformAttributesShouldBeConsistentAnalyzer().SupportedDiagnostics[0],
-            Location.Create(syntaxTree!, new TextSpan(0, 0)),
-            "TestClass");
-        var actions = new List<CodeAction>();
-        var context = new CodeFixContext(
-            document,
-            diagnostic,
-            (action, _) => actions.Add(action),
-            CancellationToken.None);
-
-        await new OSPlatformAttributesShouldBeConsistentFixer().RegisterCodeFixesAsync(context);
-
-        Assert.HasCount(0, actions);
-    }
-
-    [TestMethod]
     public async Task WhenPlatformsUseMixedModes_DiagnosticWithoutFix()
     {
         string code = """
@@ -352,9 +325,10 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
     }
 
     [TestMethod]
@@ -375,9 +349,34 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenPlatformIsNotSupportedByOSCondition_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:SupportedOSPlatform("android")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
     }
 
     [TestMethod]
@@ -409,12 +408,14 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             <TestClass>
             Public Class MyTestClass
                 <TestMethod>
-                <[|SupportedOSPlatform("linux")|]>
+                <{|#0:SupportedOSPlatform("linux")|}>
                 Public Sub TestMethod()
                 End Sub
             End Class
             """;
 
-        await VerifyVB.VerifyAnalyzerAsync(code);
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic().WithLocation(0).WithArguments("TestMethod"));
     }
 }
