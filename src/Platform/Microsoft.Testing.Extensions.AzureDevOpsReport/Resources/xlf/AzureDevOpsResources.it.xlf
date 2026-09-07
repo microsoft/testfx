@@ -169,7 +169,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
         <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
-        <target state="new">Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</target>
+        <target state="translated">Azure DevOps REST API ha restituito una risposta riuscita imprevista con codice di stato {0} e tipo di contenuto '{1}'.</target>
         <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
