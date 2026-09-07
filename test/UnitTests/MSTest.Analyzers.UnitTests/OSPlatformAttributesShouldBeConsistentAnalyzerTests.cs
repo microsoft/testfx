@@ -49,8 +49,6 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             }
             """;
 
-        // The outer Windows-only scope and Linux-only method have an empty effective platform set, so the
-        // analyzer reports the inconsistency without registering an OSCondition code fix.
         await VerifyCS.VerifyCodeFixAsync(
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
@@ -331,7 +329,38 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssemblyCompatibilityConstrainsMethod_FixUsesEffectivePlatforms()
+    public async Task WhenOuterTypeCompatibilityConflictsWithNestedMethod_DiagnosticWithoutFix()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [SupportedOSPlatform("windows")]
+            public class OuterClass
+            {
+                [TestClass]
+                [OSCondition(OperatingSystems.Windows)]
+                public class MyTestClass
+                {
+                    [TestMethod]
+                    [{|#0:SupportedOSPlatform("linux")|}]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        // The outer Windows-only scope and Linux-only method have an empty effective platform set, so the
+        // analyzer reports the inconsistency without registering an OSCondition code fix.
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyOnlyRestrictsTestClass_AddsEffectiveCondition()
     {
         string code = """
             using System.Runtime.Versioning;
@@ -340,10 +369,9 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             [assembly: SupportedOSPlatform("windows")]
 
             [TestClass]
-            public class MyTestClass
+            public class {|#0:MyTestClass|}
             {
                 [TestMethod]
-                [{|#0:UnsupportedOSPlatform("linux")|}]
                 public void TestMethod()
                 {
                 }
@@ -357,11 +385,10 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             [assembly: SupportedOSPlatform("windows")]
 
             [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
             public class MyTestClass
             {
                 [TestMethod]
-                [UnsupportedOSPlatform("linux")]
-                [OSCondition(OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
@@ -370,12 +397,12 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"),
             fixedCode);
     }
 
     [TestMethod]
-    public async Task WhenOuterTypeCompatibilityConflictsWithNestedMethod_DiagnosticWithoutFix()
+    public async Task WhenOuterTypeOnlyRestrictsNestedTestClass_AddsEffectiveCondition()
     {
         string code = """
             using System.Runtime.Versioning;
@@ -385,10 +412,28 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             public class OuterClass
             {
                 [TestClass]
+                public class {|#0:MyTestClass|}
+                {
+                    [TestMethod]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [SupportedOSPlatform("windows")]
+            public class OuterClass
+            {
+                [TestClass]
+                [OSCondition(OperatingSystems.Windows)]
                 public class MyTestClass
                 {
                     [TestMethod]
-                    [{|#0:SupportedOSPlatform("linux")|}]
                     public void TestMethod()
                     {
                     }
@@ -398,8 +443,8 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
-            code);
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"),
+            fixedCode);
     }
 
     [TestMethod]

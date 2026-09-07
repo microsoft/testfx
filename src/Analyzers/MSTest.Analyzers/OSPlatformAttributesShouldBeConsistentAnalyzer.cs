@@ -80,10 +80,6 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
                 || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
             .ToImmutableArray();
-        if (platformAttributes.IsEmpty)
-        {
-            return;
-        }
 
         AttributeData? localOSConditionAttribute = attributes.FirstOrDefault(
             attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
@@ -103,6 +99,19 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         }
 
         ImmutableArray<AttributeData> assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+        bool hasInheritedPlatformAttributes = containingTypeAttributeScopes.Any(scope => HasPlatformAttributes(
+                scope,
+                supportedOSPlatformAttributeSymbol,
+                unsupportedOSPlatformAttributeSymbol))
+            || HasPlatformAttributes(
+                assemblyAttributes,
+                supportedOSPlatformAttributeSymbol,
+                unsupportedOSPlatformAttributeSymbol);
+        if (platformAttributes.IsEmpty
+            && (context.Symbol is IMethodSymbol || !hasInheritedPlatformAttributes))
+        {
+            return;
+        }
 
         bool canFix = TryGetExpectedCondition(
             platformAttributes,
@@ -129,8 +138,8 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
                 .Add(OperatingSystemsKey, operatingSystemsExpression)
             : ImmutableDictionary<string, string?>.Empty;
 
-        AttributeData diagnosticAttribute = platformAttributes[0];
-        if (diagnosticAttribute.ApplicationSyntaxReference is { } syntaxReference)
+        if (!platformAttributes.IsEmpty
+            && platformAttributes[0].ApplicationSyntaxReference is { } syntaxReference)
         {
             context.ReportDiagnostic(syntaxReference.GetSyntax(context.CancellationToken).CreateDiagnostic(Rule, properties, context.Symbol.Name));
         }
@@ -139,6 +148,14 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             context.ReportDiagnostic(context.Symbol.CreateDiagnostic(Rule, properties, context.Symbol.Name));
         }
     }
+
+    private static bool HasPlatformAttributes(
+        ImmutableArray<AttributeData> attributes,
+        INamedTypeSymbol supportedOSPlatformAttributeSymbol,
+        INamedTypeSymbol unsupportedOSPlatformAttributeSymbol)
+        => attributes.Any(attribute =>
+            SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
+            || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol));
 
     private static bool TryGetExpectedCondition(
         ImmutableArray<AttributeData> localPlatformAttributes,
