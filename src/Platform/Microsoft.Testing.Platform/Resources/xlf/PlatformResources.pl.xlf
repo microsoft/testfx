@@ -244,7 +244,7 @@
       </trans-unit>
       <trans-unit id="CommandLineParserRecursiveResponseFile">
         <source>A recursive response file reference was detected.</source>
-        <target state="new">A recursive response file reference was detected.</target>
+        <target state="translated">Wykryto rekursywne odwołanie do pliku odpowiedzi.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <target state="translated">Uruchom „--help”, aby zobaczyć opcje zarejestrowane przez tę aplikację testową. Jeśli opcja należy do rozszerzenia, upewnij się, że jego pakiet jest uwzględniony jako odwołanie i że rozszerzenie jest zarejestrowane.</target>
         <note>{Locked="'--help'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
@@ -1294,7 +1294,7 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">Moduł uruchamiający hosta testowego „{0}”" (UID: {1}) poprosił o autoryzację tożsamości zabezpieczeń „{2}” w testowym połączeniu kontrolera hosta, ale tylko tożsamość pojedynczej aplikacji w trybie środowiska testowego (w systemie Windows identyfikator zabezpieczeń w postaci „S-1-15-2-...”) może być autoryzowana. Użytkownikom, grupom i identyfikatorowi zabezpieczeń catch-all „{3}” nigdy nie udzielono dostępu.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
