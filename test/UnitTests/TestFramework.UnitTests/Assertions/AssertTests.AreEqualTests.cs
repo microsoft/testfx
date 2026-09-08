@@ -2059,6 +2059,28 @@ public partial class AssertTests : TestContainer
         }
     }
 
+    public void AreEqualStringDifferenceWhitespaceInLongValueUsesVisibleInlineMarkers()
+    {
+        string expected = """
+                       Assertion failed. Expected strings to be equal.
+
+                       expected: "Entity should not be null.'"
+                       actual:   "Entity should not be null."
+                       """;
+        string actual = """
+                     Assertion failed. Expected strings to be equal.
+
+                     expected:    "Entity should not be null.'"
+                     actual:      "Entity should not be null."
+                     """;
+
+        AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+
+        exception.Message.Should().Contain("[[<space>]]");
+        exception.Message.Should().NotContain("[[ ]]");
+        exception.Message.Should().Contain("difference:    mismatch marked with [[...]]");
+    }
+
     public void AreEqualStringDifferenceOversizedTextElementsUsePlaceholder()
     {
         string expected = "a" + new string('\u0301', 60) + new string('z', 100);

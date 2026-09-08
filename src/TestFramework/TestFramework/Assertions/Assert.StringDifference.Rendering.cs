@@ -37,7 +37,7 @@ public sealed partial class Assert
 
     private static StringPreview CreatePreview(StringTokenWindow window, bool useInlineMarker)
     {
-        string mismatch = RenderMismatch(window);
+        string mismatch = RenderMismatch(window, makeWhitespaceVisible: useInlineMarker);
         if (useInlineMarker)
         {
             mismatch = $"[[{mismatch}]]";
@@ -169,7 +169,7 @@ public sealed partial class Assert
         return lastIncludedIndex < window.Value.Length;
     }
 
-    private static string RenderMismatch(StringTokenWindow window)
+    private static string RenderMismatch(StringTokenWindow window, bool makeWhitespaceVisible = false)
     {
         if (window.Mismatch is not StringToken mismatch)
         {
@@ -181,9 +181,29 @@ public sealed partial class Assert
             return "<text element>";
         }
 
+        if (makeWhitespaceVisible && IsWhitespaceOnly(window.Value, mismatch))
+        {
+            return mismatch.Length == 1
+                ? "<space>"
+                : $"<{mismatch.Length} spaces>";
+        }
+
         StringBuilder builder = new(mismatch.RenderedLength);
         AppendEscapedToken(builder, window.Value, mismatch);
         return builder.ToString();
+    }
+
+    private static bool IsWhitespaceOnly(string value, StringToken token)
+    {
+        for (int i = token.Start; i < token.End; i++)
+        {
+            if (!char.IsWhiteSpace(value[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static StringTokenWindow CreateTokenWindow(string value, int mismatchIndex)
