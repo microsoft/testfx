@@ -117,6 +117,8 @@ public sealed partial class Assert
                 && !actualWindow.MismatchRequiresPlaceholder
                 && expectedWindow.IsRetainedPrefixSafe
                 && actualWindow.IsRetainedPrefixSafe
+                && IsMismatchSuitableForCaret(expectedWindow)
+                && IsMismatchSuitableForCaret(actualWindow)
                 && expectedPrefixLength == actualPrefixLength;
 
             string differenceText = useCaret
@@ -133,6 +135,8 @@ public sealed partial class Assert
             && !actualWindow.MismatchRequiresPlaceholder
             && expectedPreview.IsPrefixSafe
             && actualPreview.IsPrefixSafe
+            && IsMismatchSuitableForCaret(expectedWindow)
+            && IsMismatchSuitableForCaret(actualWindow)
             && expectedPreview.MismatchColumn == actualPreview.MismatchColumn;
 
         if (previewUsesCaret)
