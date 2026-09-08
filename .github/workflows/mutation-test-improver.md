@@ -90,6 +90,8 @@ safe-outputs:
     title-prefix: "[mutation-test-improver] "
     labels: [type/automation, type/test-gap]
     max: 2
+    allowed-files:
+      - test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/**/*.cs
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
@@ -156,7 +158,7 @@ If the conclusion is not `success`:
 
 ### Step 4: Attempt to fix the top survived mutants (bounded)
 
-For **at most 2** of the remaining highest-value survived mutants (favor ones in behaviorally meaningful code — public API surfaces, error handling, boundary conditions — over pure boilerplate or generated code):
+For **at most 2** of the remaining highest-value survived mutants (favor ones in behaviorally meaningful code — public API surfaces, error handling, boundary conditions — over pure boilerplate or generated code), and with **at most 2 total Stryker verification runs across the whole workflow run**:
 
 1. List open PRs with the `[mutation-test-improver]` title prefix. If there are already 3 or more open PRs, skip the rest of Step 4 for this run so the monthly report still updates without creating more PRs.
 2. From the repository root, run `./build.sh --binaryLog` before test or Stryker commands so the repo-local `.dotnet` SDK is provisioned from `global.json`.
@@ -166,7 +168,8 @@ For **at most 2** of the remaining highest-value survived mutants (favor ones in
 6. Otherwise, find (or create) the corresponding test file under `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` and add a focused test asserting the exact behavior the mutant would violate. Match the project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
 7. Build and run the unit test project with `$GITHUB_WORKSPACE/.dotnet/dotnet` to confirm the new test compiles and passes against the original (unmutated) code.
 8. **Verify the fix**: re-run `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore` then, from `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` with `MutationTesting=true`, run `$GITHUB_WORKSPACE/.dotnet/dotnet stryker --output ../../../artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
-   - If it did not flip, don't force it — try at most one more angle (different assertion, different input), otherwise abandon this mutant, record the attempt outcome in memory, and move to the next candidate.
+   - Count each Stryker invocation against the workflow's total verification budget. If the budget is exhausted, stop attempting fixes and continue to Step 5.
+   - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in memory, and move to the next candidate.
 9. For each mutant you successfully kill, create a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:
    - What mutant it kills (mutator, file, line, link) and why it represents a real test gap
    - The new test and why it distinguishes correct from mutated behavior
