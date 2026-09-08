@@ -52,10 +52,10 @@ jobs:
           # Strip ANSI escape codes before scraping the summary lines Stryker prints.
           clean_log=$(sed -E 's/\x1b\[[0-9;]*m//g' "$log")
 
-          killed=$(echo "$clean_log" | grep -oE 'Killed: *[0-9]+' | tail -n1 | grep -oE '[0-9]+')
-          survived=$(echo "$clean_log" | grep -oE 'Survived: *[0-9]+' | tail -n1 | grep -oE '[0-9]+')
-          timeout=$(echo "$clean_log" | grep -oE 'Timeout: *[0-9]+' | tail -n1 | grep -oE '[0-9]+')
-          score=$(echo "$clean_log" | grep -oE 'final mutation score is [0-9.]+ *%' | tail -n1 | grep -oE '[0-9.]+')
+          killed=$(echo "$clean_log" | grep -oE 'Killed: *[0-9]+' | tail -n1 | grep -oE '[0-9]+' || true)
+          survived=$(echo "$clean_log" | grep -oE 'Survived: *[0-9]+' | tail -n1 | grep -oE '[0-9]+' || true)
+          timeout=$(echo "$clean_log" | grep -oE 'Timeout: *[0-9]+' | tail -n1 | grep -oE '[0-9]+' || true)
+          score=$(echo "$clean_log" | grep -oE 'final mutation score is [0-9.]+ *%' | tail -n1 | grep -oE '[0-9.]+' || true)
 
           {
             echo "## Mutation testing (Stryker.NET)"

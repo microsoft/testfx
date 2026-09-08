@@ -30,26 +30,25 @@ on:
     - id: check
       # A full backlog is an expected activation gate, not a pre-activation failure.
       continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         MAX_OPEN_PRS=3
         if [[ "$GITHUB_EVENT_NAME" != "workflow_run" ]]; then exit 0; fi
-        # gh pr list exits with code 4 when --search returns no matches; treat that as 0 but
-        # let other failures (auth, API, rate limit) propagate so we don't silently proceed.
         set +e
         COUNT=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title "[mutation-test-improver]"' --json number --jq 'length' 2>/dev/null)
         rc=$?
         set -e
-        case $rc in
-          0) ;;
-          4) COUNT=0 ;;
-          *) echo "gh pr list failed with exit code $rc" >&2; exit $rc ;;
-        esac
+        if [[ "$rc" -ne 0 ]]; then
+          echo "gh pr list failed with exit code $rc" >&2
+          exit "$rc"
+        fi
         [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
       # exits 0 if not a workflow_run activation or <MAX_OPEN_PRS open PRs, 1 if >=MAX_OPEN_PRS
 
 if: needs.pre_activation.outputs.check_result == 'success'
 
-timeout-minutes: 60
+timeout-minutes: 120
 
 max-ai-credits: 1500
 
@@ -162,6 +161,7 @@ Read memory at the **start** of every run; update it at the **end**.
 
 - If activated by `workflow_dispatch`, find the most recently completed run of the "Mutation testing" workflow via the GitHub tools instead of relying on event context.
 - Otherwise use `${{ github.event.workflow_run.id }}` and `${{ github.event.workflow_run.conclusion }}`.
+- Preserve the identified upstream Mutation testing run id and head SHA in local variables (for example, `upstream_run_id` and `upstream_head_sha`) and use those variables consistently for artifact download, source links, report history links, and duplicate-run memory.
 - If memory shows this run id was already processed, call `noop` with an explanation and stop.
 
 ### Step 2: Handle a failed/cancelled run
@@ -176,7 +176,7 @@ If the conclusion is not `success`:
 
 1. Download the `mutation-testing-report` artifact from the run: `gh run download <run-id> --repo ${{ github.repository }} -n mutation-testing-report -D ./stryker-report`.
 2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/ignored counts and the overall mutation score (Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check).
-3. Rank files by number of `Survived` (and `Timeout`) mutants, since those are the actionable gaps. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<sha>/<path>#L<line>`, using the `sha` from `${{ github.event.workflow_run.head_sha }}` or the current default branch tip for a manual run).
+3. Rank files by number of `Survived` (and `Timeout`) mutants, since those are the actionable gaps. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Filter out mutants already recorded as equivalent or already attempted-and-failed in memory.
 
 ### Step 4: Attempt to fix the top survived mutants (bounded)
@@ -248,7 +248,7 @@ Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YY
    - Do not copy any existing gh-aw attribution footer, history/search link, rerun hint, or installation metadata into the replacement body — the safe-output handler appends current metadata after the update.
    - **Suggested Actions comes first**, immediately after the heading.
    - **Run History is in reverse chronological order** — prepend each new run's entry at the top.
-   - Use the run link `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}` (or the current workflow's run id for a manual invocation).
+   - Use the upstream Mutation testing run link `${{ github.server_url }}/${{ github.repository }}/actions/runs/<upstream_run_id>` in both trigger modes, not the current Mutation Test Improver run link.
    - **Actively remove completed items** from "Suggested Actions" instead of ticking them — the checklist holds only pending items.
 4. If nothing changed since the last update (duplicate run, `noop` case from Step 1), do not touch the issue.
 
