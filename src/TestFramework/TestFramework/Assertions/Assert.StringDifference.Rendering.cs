@@ -33,7 +33,7 @@ public sealed partial class Assert
     }
 
     private static string RenderMismatchFragment(StringTokenWindow window)
-        => $"[[{RenderMismatch(window)}]]";
+        => $"[[{RenderMismatch(window, makeWhitespaceVisible: true)}]]";
 
     private static StringPreview CreatePreview(StringTokenWindow window, bool useInlineMarker)
     {
@@ -183,9 +183,7 @@ public sealed partial class Assert
 
         if (makeWhitespaceVisible && IsWhitespaceOnly(window.Value, mismatch))
         {
-            return mismatch.Length == 1
-                ? "<space>"
-                : $"<{mismatch.Length} spaces>";
+            return RenderWhitespaceMismatch(window.Value, mismatch);
         }
 
         StringBuilder builder = new(mismatch.RenderedLength);
@@ -195,15 +193,90 @@ public sealed partial class Assert
 
     private static bool IsWhitespaceOnly(string value, StringToken token)
     {
-        for (int i = token.Start; i < token.End; i++)
+        for (int i = token.Start; i < token.End;)
         {
-            if (!char.IsWhiteSpace(value[i]))
+            ScalarInfo scalar = GetScalar(value, i);
+            if (scalar.Value > char.MaxValue || !char.IsWhiteSpace((char)scalar.Value))
             {
                 return false;
             }
+
+            i += scalar.Length;
         }
 
         return true;
+    }
+
+    private static bool IsMismatchSuitableForCaret(StringTokenWindow window)
+    {
+        if (window.Mismatch is not StringToken mismatch || !IsWhitespaceOnly(window.Value, mismatch))
+        {
+            return true;
+        }
+
+        for (int i = mismatch.Start; i < mismatch.End;)
+        {
+            ScalarInfo scalar = GetScalar(window.Value, i);
+            if (scalar.Value is not ('\t' or '\n' or '\r'))
+            {
+                return false;
+            }
+
+            i += scalar.Length;
+        }
+
+        return true;
+    }
+
+    private static string RenderWhitespaceMismatch(string value, StringToken token)
+    {
+        int spaceCount = 0;
+        StringBuilder builder = new();
+        for (int i = token.Start; i < token.End;)
+        {
+            ScalarInfo scalar = GetScalar(value, i);
+            if (scalar.Value == ' ')
+            {
+                spaceCount++;
+            }
+            else
+            {
+                switch (scalar.Value)
+                {
+                    case '\t':
+                        builder.Append("\\t");
+                        break;
+                    case '\n':
+                        builder.Append("\\n");
+                        break;
+                    case '\r':
+                        builder.Append("\\r");
+                        break;
+                    default:
+                        builder.Append("\\u");
+                        builder.Append(scalar.Value.ToString("X4", CultureInfo.InvariantCulture));
+                        break;
+                }
+            }
+
+            i += scalar.Length;
+        }
+
+        if (spaceCount > 0)
+        {
+            if (builder.Length > 0)
+            {
+                builder.Insert(0, $"{spaceCount} space(s) ");
+            }
+            else
+            {
+                return spaceCount == 1
+                    ? "<space>"
+                    : $"<{spaceCount} spaces>";
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static StringTokenWindow CreateTokenWindow(string value, int mismatchIndex)
