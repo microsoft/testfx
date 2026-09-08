@@ -19,6 +19,8 @@ public sealed class WindowsApplicationModelPackageTests
         // Classic UWP.
         "build/uap10.0/MSTest.TestAdapter.props",
         "build/uap10.0/MSTest.TestAdapter.targets",
+        "buildTransitive/uap10.0/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+        "buildTransitive/uap10.0/Microsoft.Testing.Platform.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
         "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.props",

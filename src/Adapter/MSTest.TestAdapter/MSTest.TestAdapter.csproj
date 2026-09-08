@@ -181,6 +181,11 @@ $(CommonProductDescription)]]></PackageDescription>
       <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestAdapter.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Include="$(TargetDir)MSTestAdapter.PlatformServices.dll" PackagePath="$(_BuildTransitiveDir)" />
 
+      <!-- Classic UWP's VSTest deployment only includes adapter dependencies declared by this package's targets.
+           Bundle the direct dependencies introduced by the native MTP integration so the adapter remains loadable. -->
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Platform.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" PackagePath="$(_BuildTransitiveDir)" />
+
       <!-- .NET Framework also bundles the TestFramework assemblies. -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.Extensions.dll" PackagePath="$(_BuildTransitiveDir)" />

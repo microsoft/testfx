@@ -18,6 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll"
+             Link="Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" />
+    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.dll"
+             Link="Microsoft.Testing.Platform.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
   </ItemGroup>
 
