@@ -441,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 有效值為 'auto' (預設值)、'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。
 即使 stdout 已重新導向，'on' 會強制 ANSI 逸出程式碼 (包括游標移動); 如果您只想要色彩，將它與 --progress off 配對。
 同時提供 --ansi 和 --no-ansi 時,--ansi 優先。</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="'off'"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

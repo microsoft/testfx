@@ -441,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 Les valeurs valides sont 'auto' (par défaut), 'on' (accepte également 'true', 'enable', '1') ou 'off' (accepte également 'false', 'disable', '0').
 'on' force les codes d’échappement ANSI (notamment le déplacement du curseur) même lorsque stdout est redirigé, associez-le à --progress off si vous ne voulez que des couleurs.
 Lorsque --ansi et --no-ansi sont fournis, --ansi est prioritaire.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="'off'"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

@@ -441,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 유효한 값은 'auto'(기본값), 'on' ('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
 'on'은 stdout이 리디렉션되어도 ANSI 이스케이프 코드(커서 이동 포함)를 강제로 적용합니다. 색상만 적용하려면 --progress off와 함께 사용하세요.
 --ansi와 --no-ansi가 모두 지정되면 --ansi가 우선합니다.</target>
-        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="'off'"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
