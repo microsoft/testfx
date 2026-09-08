@@ -32,7 +32,42 @@ jobs:
         env:
           MutationTesting: true
         run: |
-          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check
+          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+
+      - name: Summarize mutation testing results
+        if: ${{ always() }}
+        run: |
+          log="$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+          if [ ! -f "$log" ]; then
+            echo "## Mutation testing" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Stryker did not produce console output (the run likely failed before reporting)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Strip ANSI escape codes before scraping the summary lines Stryker prints.
+          clean_log=$(sed -E 's/\x1b\[[0-9;]*m//g' "$log")
+
+          killed=$(echo "$clean_log" | grep -oE 'Killed: *[0-9]+' | tail -n1 | grep -oE '[0-9]+')
+          survived=$(echo "$clean_log" | grep -oE 'Survived: *[0-9]+' | tail -n1 | grep -oE '[0-9]+')
+          timeout=$(echo "$clean_log" | grep -oE 'Timeout: *[0-9]+' | tail -n1 | grep -oE '[0-9]+')
+          score=$(echo "$clean_log" | grep -oE 'final mutation score is [0-9.]+ *%' | tail -n1 | grep -oE '[0-9.]+')
+
+          {
+            echo "## Mutation testing (Stryker.NET)"
+            echo ""
+            if [ -n "$score" ]; then
+              echo "**Mutation score: ${score}%**"
+            else
+              echo "⚠️ Could not determine the mutation score from Stryker's output; see the raw log below."
+            fi
+            echo ""
+            echo "| Killed | Survived | Timeout |"
+            echo "| --- | --- | --- |"
+            echo "| ${killed:-?} | ${survived:-?} | ${timeout:-?} |"
+            echo ""
+            echo "Full HTML/JSON report: download the \`mutation-testing-report\` artifact from this run."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload mutation report
         if: ${{ always() }}
