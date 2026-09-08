@@ -19,8 +19,12 @@ public static class ChatClientProviderExtensions
     /// <summary>
     /// Adds a chat client provider to the test application builder.
     /// </summary>
+    /// <remarks>
+    /// Only one chat client provider can be registered per test application.
+    /// </remarks>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="chatClientProvider">The factory function to create chat client providers.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the builder does not support AI extensions or a chat client provider has already been registered.</exception>
     public static void AddChatClientProvider(this ITestApplicationBuilder testApplicationBuilder, Func<IServiceProvider, IChatClientProvider> chatClientProvider)
     {
         if (testApplicationBuilder is not TestApplicationBuilder builder)
