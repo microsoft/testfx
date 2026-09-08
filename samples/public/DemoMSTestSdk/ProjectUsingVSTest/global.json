@@ -1,6 +1,6 @@
 {
   "test": {
-    "runner": "Microsoft.Testing.Platform"
+    "runner": "VSTest"
   },
   "msbuild-sdks": {
     "MSTest.Sdk": "4.4.0"

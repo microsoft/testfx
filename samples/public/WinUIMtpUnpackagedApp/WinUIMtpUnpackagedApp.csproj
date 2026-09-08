@@ -5,9 +5,13 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>WinUIMtpUnpackagedApp</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>x86;x64;ARM64</Platforms>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <Platforms>x64;x86;ARM64</Platforms>
+    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">x64</PlatformTarget>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
+    <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
 
     <!--
