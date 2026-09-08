@@ -162,7 +162,7 @@ Read memory at the **start** of every run; update it at the **end**.
 - If activated by `workflow_dispatch`, find the most recently completed run of the "Mutation testing" workflow via the GitHub tools instead of relying on event context.
 - Otherwise use `${{ github.event.workflow_run.id }}` and `${{ github.event.workflow_run.conclusion }}`.
 - Preserve the identified upstream Mutation testing run id and head SHA in local variables (for example, `upstream_run_id` and `upstream_head_sha`) and use those variables consistently for artifact download, source links, report history links, and duplicate-run memory.
-- If memory shows this run id was already processed, call `noop` with an explanation and stop.
+- If memory shows this run id was already processed, first confirm the current monthly report issue's Run History already contains the upstream run id. If it does, call `noop` with an explanation and stop. If it does not, continue to Step 5 to repair the missing report entry before treating the run as complete.
 
 ### Step 2: Handle a failed/cancelled run
 
