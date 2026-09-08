@@ -437,11 +437,11 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="translated">ANSI 이스케이프 문자를 출력할지 여부를 제어합니다.
+        <target state="needs-review-translation">ANSI 이스케이프 문자를 출력할지 여부를 제어합니다.
 유효한 값은 'auto'(기본값), 'on' ('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
 'on'은 stdout이 리디렉션되어도 ANSI 이스케이프 코드(커서 이동 포함)를 강제로 적용합니다. 색상만 적용하려면 --progress off와 함께 사용하세요.
 --ansi와 --no-ansi가 모두 지정되면 --ansi가 우선합니다.</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="'off'"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -461,14 +461,14 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="translated">터미널에 표시된 테스트별 결과 블록을 미리 설정합니다.
+        <target state="needs-review-translation">터미널에 표시된 테스트별 결과 블록을 미리 설정합니다.
 유효한 값은 'Minimal', 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다. 정확한 결과를 선택하기 위해 '--show-test-results'를 사용합니다.</target>
-        <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="translated">--output에는 값이 'Minimal', 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
-        <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
+        <target state="needs-review-translation">--output에는 값이 'Minimal', 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -546,27 +546,27 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="translated">--show-test-results 값 'all' 또는 'none'은 다른 값과 결합할 수 없습니다.</target>
-        <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
+        <target state="needs-review-translation">--show-test-results 값 'all' 또는 'none'은 다른 값과 결합할 수 없습니다.</target>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="translated">터미널에서 테스트별 결과 블록(정보 세부 정보, 스택 추적 및 캡처된 출력 포함)을 렌더링하는 테스트 결과를 선택합니다.
+        <target state="needs-review-translation">터미널에서 테스트별 결과 블록(정보 세부 정보, 스택 추적 및 캡처된 출력 포함)을 렌더링하는 테스트 결과를 선택합니다.
 유효한 값은 'passed', 'failed'(오류 발생, 시간 초과 및 취소된 테스트 포함), 'skipped', 'all' 및 'none'입니다. 여러 값을 쉼표 또는 공백으로 구분된 목록으로 결합하거나 옵션을 반복하여 결합합니다. 'all' 및 'none'은 다른 값과 결합할 수 없습니다.
 기본값은 '--output'이 'Minimal'일 때는 'failed'이고, 'Normal'이거나 생략된 경우에는 'failed'와 'skipped'이며, 'Detailed'일 때는 'all'입니다. 명시적 '--show-test-results'는 전달 순서에 관계없이 항상 '--output'보다 우선합니다.</target>
-        <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="translated">--show-test-results에는 'passed', 'failed', 'skipped', 'all' 또는 'none' 중 하나 이상의 값이 필요합니다.</target>
-        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+        <target state="needs-review-translation">--show-test-results에는 'passed', 'failed', 'skipped', 'all' 또는 'none' 중 하나 이상의 값이 필요합니다.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="translated">--show-test-results에는 'passed', 'failed', 'skipped', 'all' 또는 'none' 중 하나 이상의 쉼표 또는 공백으로 구분된 값이 필요합니다.</target>
-        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+        <target state="needs-review-translation">--show-test-results에는 'passed', 'failed', 'skipped', 'all' 또는 'none' 중 하나 이상의 쉼표 또는 공백으로 구분된 값이 필요합니다.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>

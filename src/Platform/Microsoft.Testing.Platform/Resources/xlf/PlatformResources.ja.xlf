@@ -284,13 +284,13 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="translated">このテスト アプリケーションに登録されているオプションを確認するには、'--help' を実行します。オプションが拡張機能に属している場合は、そのパッケージが参照され、拡張機能が登録されていることを確認してください。</target>
-        <note>{Locked="'--help'"}</note>
+        <target state="needs-review-translation">このテスト アプリケーションに登録されているオプションを確認するには、'--help' を実行します。オプションが拡張機能に属している場合は、そのパッケージが参照され、拡張機能が登録されていることを確認してください。</target>
+        <note>{Locked="--help"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
         <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
-        <target state="translated">代わりに、'--crashdump' または '--hangdump' を使用してください。MTP はクラッシュとハングの診断が分離されているため、VSTest の blame collector を 1 対 1 で置き換えるものはありません。</target>
-        <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
+        <target state="needs-review-translation">代わりに、'--crashdump' または '--hangdump' を使用してください。MTP はクラッシュとハングの診断が分離されているため、VSTest の blame collector を 1 対 1 で置き換えるものはありません。</target>
+        <note>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
         <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
@@ -299,13 +299,13 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
-        <target state="translated">同等のコンソールの詳細度を得るには、'--output {0}' を使用します。MTP コンソールの出力は異なる方法で構成されているため、これは完全な置き換えではありません。</target>
-        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
+        <target state="needs-review-translation">同等のコンソールの詳細度を得るには、'--output {0}' を使用します。MTP コンソールの出力は異なる方法で構成されているため、これは完全な置き換えではありません。</target>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
-        <target state="translated">MTP では、'--report-trx'、'--report-html'、'--report-junit' などのレポーター固有のオプションが使用されます。レポーター拡張機能の MTP オプションについては、拡張機能のドキュメントを参照してください。</target>
-        <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
+        <target state="needs-review-translation">MTP では、'--report-trx'、'--report-html'、'--report-junit' などのレポーター固有のオプションが使用されます。レポーター拡張機能の MTP オプションについては、拡張機能のドキュメントを参照してください。</target>
+        <note>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
         <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
@@ -319,8 +319,8 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
         <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
-        <target state="translated">MTP コード カバレッジには、'--coverage' を使用します。これは Coverlet の 'XPlat Code Coverage' コレクターを透過的に置き換えるものではありません。</target>
-        <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
+        <target state="needs-review-translation">MTP コード カバレッジには、'--coverage' を使用します。これは Coverlet の 'XPlat Code Coverage' コレクターを透過的に置き換えるものではありません。</target>
+        <note>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
@@ -434,18 +434,18 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="translated">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックは 'async void' として宣言されています。プラットフォームはフックを同期的に呼び出すため、最初の待機時に戻ります。その時点以降に登録する内容は、テスト アプリケーションのセットアップと競合し、失敗は失われます。フックを同期にします。</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
+        <target state="needs-review-translation">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックは 'async void' として宣言されています。プラットフォームはフックを同期的に呼び出すため、最初の待機時に戻ります。その時点以降に登録する内容は、テスト アプリケーションのセットアップと競合し、失敗は失われます。フックを同期にします。</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="translated">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックは '{4}' を返しますが、'void' を返す必要があります。プラットフォームはフックを同期的に呼び出すため、戻り値は使用されません。特に、返されたタスクは待機されず、その登録と失敗は失われます。</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
+        <target state="needs-review-translation">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックは '{4}' を返しますが、'void' を返す必要があります。プラットフォームはフックを同期的に呼び出すため、戻り値は使用されません。特に、返されたタスクは待機されず、その登録と失敗は失われます。</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="translated">拡張機能マニフェスト '{2}' で宣言されているアセンブリ '{1}' の型 '{0}' は、'ITestApplicationBuilder' と 'string[]' を受け取る '{3}' という名前の 'public static void' メソッドを公開していません。</target>
-        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
+        <target state="needs-review-translation">拡張機能マニフェスト '{2}' で宣言されているアセンブリ '{1}' の型 '{0}' は、'ITestApplicationBuilder' と 'string[]' を受け取る '{3}' という名前の 'public static void' メソッドを公開していません。</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
@@ -534,8 +534,8 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="translated">拡張マニフェスト '{0}' は読み込む拡張機能を宣言していますが、現在のランタイムはアセンブリの動的読み込みをサポートしていません(例: ネイティブ AOT で公開した場合)。各拡張機能の '{1}' プロパティを 'false' に設定するか、マニフェストを削除するか、コマンド ラインから '{2}' を削除してください。</target>
-        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
+        <target state="needs-review-translation">拡張マニフェスト '{0}' は読み込む拡張機能を宣言していますが、現在のランタイムはアセンブリの動的読み込みをサポートしていません(例: ネイティブ AOT で公開した場合)。各拡張機能の '{1}' プロパティを 'false' に設定するか、マニフェストを削除するか、コマンド ラインから '{2}' を削除してください。</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -913,8 +913,8 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="translated">テスト アプリケーションの横にある '*.testingplatformextensions.json' マニフェストで宣言されたテスト プラットフォーム拡張機能の読み込みを有効にします。既定では無効になっています。</target>
-        <note>{Locked="'*.testingplatformextensions.json'"}</note>
+        <target state="needs-review-translation">テスト アプリケーションの横にある '*.testingplatformextensions.json' マニフェストで宣言されたテスト プラットフォーム拡張機能の読み込みを有効にします。既定では無効になっています。</target>
+        <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -952,10 +952,10 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="translated">指定された終了コードについて、非成功の終了値を報告しないでください。
+        <target state="needs-review-translation">指定された終了コードについて、非成功の終了値を報告しないでください。
 たとえば、'--ignore-exit-code 8;9' では終了コード 8 および 9 を無視して 0 を返します。
 終了コードの詳細については、https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes を参照してください。</target>
-        <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
+        <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -1050,15 +1050,15 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="translated">'timeout' オプションには、引数として明示的な単位サフィックスと、サポートされている範囲内 (最大約 49.7 日) の正の数値を持つ時間値を 1 つ指定する必要があります。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
-        <note>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <target state="needs-review-translation">'timeout' オプションには、引数として明示的な単位サフィックスと、サポートされている範囲内 (最大約 49.7 日) の正の数値を持つ時間値を 1 つ指定する必要があります。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
+        <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="translated">グローバル テスト実行のタイムアウト。
+        <target state="needs-review-translation">グローバル テスト実行のタイムアウト。
 明示的な単位サフィックスを持つ時間値を 1 つ、引数として指定します。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
-        <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
@@ -1294,8 +1294,8 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="translated">テスト ホスト ランチャー '{0}' (UID: {1}) は、テスト ホスト コントローラー接続でセキュリティ ID '{2}' の認可を要求しましたが、認可できるのは 1 つのサンドボックス化されたアプリケーションの ID (Windows では 'S-1-15-2-...' 形式のセキュリティ ID) のみです。ユーザー、グループ、包括的な '{3}' セキュリティ ID には、アクセスが付与されません。</target>
-        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
+        <target state="needs-review-translation">テスト ホスト ランチャー '{0}' (UID: {1}) は、テスト ホスト コントローラー接続でセキュリティ ID '{2}' の認可を要求しましたが、認可できるのは 1 つのサンドボックス化されたアプリケーションの ID (Windows では 'S-1-15-2-...' 形式のセキュリティ ID) のみです。ユーザー、グループ、包括的な '{3}' セキュリティ ID には、アクセスが付与されません。</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>

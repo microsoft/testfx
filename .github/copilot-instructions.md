@@ -91,7 +91,8 @@ When making change to resource files, you MUST:
 - A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
 - `{Locked="…"}` markers in a resource `<comment>` are matched as **substrings, not whole words**. A short locked token therefore also freezes every longer word that contains it, which blocks a legitimately translatable word. For example, `{Locked="const"}` on a message that also contains the English word *constant* locks `const` inside `constant`, so translators cannot localize it. Make each locked token unambiguous:
   - Every locked token MUST occur verbatim in the corresponding `<value>`. Do not lock an option name or other contextual identifier that the user-facing string does not actually contain.
-  - Include the punctuation that surrounds the token in the message — usually the single quotes the message already uses — e.g. write `{Locked="'const'"}` rather than `{Locked="const"}`.
+  - Prefer locking the bare invariant token so translators can localize surrounding punctuation, including quotation marks.
+  - Include surrounding punctuation only when it is itself invariant or is required to prevent a substring collision. For example, write `{Locked="'const'"}` when the same message also contains *constant*.
   - Prefer the longest form that identifies the token (`{Locked="Assert.AreEqual"}`, `{Locked="[TestClass]"}`) over a bare fragment.
   - Before adding a marker, re-read the whole message and confirm the locked text does not appear as a substring of another word that should stay translatable.
 
