@@ -84,7 +84,7 @@ safe-outputs:
     max: 1
   update-issue:
     target: "*"
-    required-title-prefix: "[mutation-test-improver] "
+    required-title-prefix: "[mutation-test-improver] Monthly Report "
     required-labels: [type/automation, type/test-gap]
     max: 1
   create-pull-request:
@@ -106,7 +106,9 @@ tools:
   bash: true
   github:
     toolsets: [all]
-  repo-memory: true
+  cache-memory:
+    retention-days: 90
+    allowed-extensions: [".json", ".md"]
 ---
 
 # Mutation Test Improver
@@ -126,14 +128,14 @@ Mutation testing currently only covers `Client/**/*.cs` in `src/Platform/Microso
 
 ## Memory
 
-Use persistent repo memory to track:
+Use cache memory to track:
 
 - **score history**: date, mutation score, killed/survived/timeout counts for each run seen (so you can compute a trend without re-downloading old artifacts)
 - **known equivalent mutants**: stable mutant fingerprint + why it cannot be meaningfully killed, so you stop proposing tests for it
 - **mutants already attempted**: stable mutant fingerprint, source path, mutator name, replacement, original source snippet, status, and the PR/issue involved, so you don't retry the same active mutant every day. Safe-output PR creation happens after the agent turn, so record newly emitted PR attempts as `pending_pr` with the intended branch/title, not as `opened`, until a later run reconciles the actual GitHub PR.
 - **which run (id) was last processed**, so a re-triggered workflow_run for the same underlying Stryker run doesn't produce duplicate report entries
 
-Read memory at the **start** of every run; update it at the **end**.
+Treat the monthly report issue as the durable source of truth for maintainer-visible history, known equivalent mutants, and pending/opened PRs. Read cache memory and the monthly report issue at the **start** of every run; update cache memory at the **end** only after threat detection is clean.
 
 ## Workflow
 
