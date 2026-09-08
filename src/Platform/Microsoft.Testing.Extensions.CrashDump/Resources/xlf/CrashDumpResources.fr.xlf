@@ -170,7 +170,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
         <target state="translated">Contrôlez si un fichier de séquence, listant les tests démarrés et terminés au cours de la session de test, est généré parallèlement au vidage mémoire ou au rapport d'incident.
 Le fichier permet d'identifier les tests qui étaient en cours d'exécution au moment du plantage, sans avoir à inspecter le dump.
 Les valeurs valides sont 'on' (par défaut ; accepte également 'true', 'enable', '1') ou 'off' (accepte également 'false', 'disable', '0').</target>
-        <note>Do not localize option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
+        <note>Do not localize option values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

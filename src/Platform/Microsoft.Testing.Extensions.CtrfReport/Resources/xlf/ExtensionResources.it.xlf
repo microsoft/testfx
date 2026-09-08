@@ -54,7 +54,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</source>
         <target state="translated">Nome del report CTRF generato. Può includere un percorso relativo o assoluto; i percorsi relativi vengono risolti rispetto alla directory dei risultati dei test e le directory mancanti vengono create.
 Supporta i seguenti segnaposti: {pname} (nome dell'applicazione di test), {pid} (ID processo), {asm} (nome dell'assembly di immissione), {tfm} (moniker framework di destinazione), {time} (timestamp).
 Esempio: 'MyReport_{tfm}.ctrf.json'.</target>
-        <note>Do not localize format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="'MyReport_{tfm}.ctrf.json'"}.</note>
+        <note>Do not localize format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="MyReport_{tfm}.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>
