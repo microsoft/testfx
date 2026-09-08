@@ -441,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 有效值为 'auto' (默认值)、'on' (还接受 'true'、'enable'、'1')或 'off' (还接受 'false'、'disable'、'0')。
 'on' 会强制使用 ANSI 转义代码（包括光标移动），即使 stdout 被重定向也是如此；如果只需要颜色，请将其与 --progress off 一起使用。
 同时提供 --ansi 和 --no-ansi 时，--ansi 将生效。</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -463,12 +463,12 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
         <target state="translated">预设终端中显示的每测试结果块。
 有效值为 'Minimal'、'Normal'、'Detailed'。默认值为 'Normal'。使用 '--show-test-results' 进行精确的结果选择。</target>
-        <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
         <target state="translated">--output 需要值为 'Minimal'、'Normal'或 'Detailed' 的单个参数。</target>
-        <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -547,7 +547,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
         <target state="translated">--show-test-results 值 'all' 或 'none' 不能与任何其他值组合。</target>
-        <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
@@ -556,17 +556,17 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
         <target state="translated">选择哪些测试结果在终端中呈现每测试结果块(包含其信息性详细信息、堆栈跟踪和捕获的输出)。
 有效值为 'passed'、'failed'(还包括错误、超时和已取消的测试)、'skipped'、'all' 和 'none'。将多个值组合为逗号或空格分隔列表，或重复该选项；'all' 和 'none' 不能与任何其他值组合。
 当 '--output' 为 'Minimal' 时，默认值为 'failed'，当它为 'Normal' 或省略时，默认值为 'failed' 和 'skipped'，当它为 'Detailed' 时，则为 'all'。显式 '--show-test-results' 始终优先于 '--output'，而无论它们的传入顺序如何。</target>
-        <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
         <target state="translated">--show-test-results 至少需要一个来自 'passed'、'failed'、'skipped'、'all' 或 'none' 的值。</target>
-        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
         <target state="translated">--show-test-results 需要一个或多个 'passed'、'failed'、'skipped'、'all' 或 'none' 值并使用逗号或空格分隔。</target>
-        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
