@@ -716,6 +716,7 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public async Task DisableAsync_WithManyCanceledConsumersIgnoringTheToken_ShouldNotMultiplyTheBudget()
     {
         using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
