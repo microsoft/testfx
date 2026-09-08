@@ -64,7 +64,7 @@ Example: 'MyReport_{tfm}.xml'.</source>
         <target state="translated">Nome del report XML JUnit generato. Può includere un percorso relativo o assoluto. I percorsi relativi vengono risolti rispetto alla directory dei risultati dei test e vengono create le directory mancanti.
 Supporta i seguenti segnaposto: {pname} (nome dell'applicazione di test), {pid} (ID processo), {asm} (nome dell'assembly di immissione), {tfm} (moniker framework di destinazione), {arch} (architettura processo), {time} (timestamp).
 Esempio: 'MyReport_{tfm}.xml'.</target>
-        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="'MyReport_{tfm}.xml'"}.</note>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
