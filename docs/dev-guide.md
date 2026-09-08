@@ -185,7 +185,7 @@ MutationTesting=true dotnet stryker --output ../../../artifacts/mutation-testing
 
 The opt-in property selects Arcade's open strong-name key for the mutated assembly because Stryker's in-memory compiler cannot complete Microsoft delay signing.
 
-The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs weekly and can be started manually.
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs daily (so the mutation-test-improver workflow always has fresh data) and can be started manually; it publishes the mutation score and a killed/survived/timeout breakdown to the run's job summary, and uploads the full HTML/JSON report as the `mutation-testing-report` artifact.
 
 ## Working with Visual Studio
 
