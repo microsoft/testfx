@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Platform.AI;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests.AI;
@@ -29,7 +30,7 @@ public sealed class ChatClientManagerTests
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => manager.AddChatClientProvider(_ => new TestChatClientProvider()));
 
-        Assert.AreEqual("A chat client provider has already been registered.", exception.Message);
+        Assert.AreEqual(PlatformResources.ChatClientProviderAlreadyRegistered, exception.Message);
     }
 
     [TestMethod]

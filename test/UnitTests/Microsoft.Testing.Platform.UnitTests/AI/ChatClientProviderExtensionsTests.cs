@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 using Moq;
@@ -19,6 +20,28 @@ namespace Microsoft.Testing.Platform.UnitTests.AI;
 public sealed class ChatClientProviderExtensionsTests
 {
     [TestMethod]
+    public void AddChatClientProvider_WhenTestApplicationBuilderIsNull_Throws()
+    {
+        ITestApplicationBuilder builder = null!;
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => builder.AddChatClientProvider(_ => new UnavailableChatClientProvider()));
+
+        Assert.AreEqual("testApplicationBuilder", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void AddChatClientProvider_WhenChatClientProviderIsNull_Throws()
+    {
+        TestApplicationBuilder builder = CreateBuilder();
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => builder.AddChatClientProvider(null!));
+
+        Assert.AreEqual("chatClientProvider", exception.ParamName);
+    }
+
+    [TestMethod]
     public void AddChatClientProvider_WhenBuilderIsNotTestApplicationBuilder_Throws()
     {
         ITestApplicationBuilder builder = new Mock<ITestApplicationBuilder>().Object;
@@ -26,7 +49,7 @@ public sealed class ChatClientProviderExtensionsTests
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => builder.AddChatClientProvider(_ => new UnavailableChatClientProvider()));
 
-        Assert.AreEqual("AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'", exception.Message);
+        Assert.Contains("Microsoft.Testing.Platform.Builder.TestApplicationBuilder", exception.Message);
     }
 
     [TestMethod]
@@ -51,7 +74,18 @@ public sealed class ChatClientProviderExtensionsTests
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => builder.AddChatClientProvider(_ => new UnavailableChatClientProvider()));
 
-        Assert.AreEqual("A chat client provider has already been registered.", exception.Message);
+        Assert.AreEqual(PlatformResources.ChatClientProviderAlreadyRegistered, exception.Message);
+    }
+
+    [TestMethod]
+    public async Task GetChatClientAsync_WhenServiceProviderIsNull_Throws()
+    {
+        IServiceProvider serviceProvider = null!;
+
+        ArgumentNullException exception = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+            () => serviceProvider.GetChatClientAsync(CancellationToken.None)).ConfigureAwait(false);
+
+        Assert.AreEqual("serviceProvider", exception.ParamName);
     }
 
     [TestMethod]

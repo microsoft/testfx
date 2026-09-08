@@ -104,6 +104,8 @@ internal static partial class PlatformResources
     internal static string @SucceededLowercase => GetResourceString("SucceededLowercase");
 
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
+
+    internal static string @ChatClientProviderAlreadyRegistered => GetResourceString("ChatClientProviderAlreadyRegistered");
 #endif
 
 #endif
