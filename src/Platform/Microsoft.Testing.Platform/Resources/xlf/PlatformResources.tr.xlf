@@ -244,7 +244,7 @@
       </trans-unit>
       <trans-unit id="CommandLineParserRecursiveResponseFile">
         <source>A recursive response file reference was detected.</source>
-        <target state="new">A recursive response file reference was detected.</target>
+        <target state="translated">Yinelenen bir yanıt dosyası başvurusu algılandı.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
