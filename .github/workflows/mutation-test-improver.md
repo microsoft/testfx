@@ -129,8 +129,8 @@ Mutation testing currently only covers `Client/**/*.cs` in `src/Platform/Microso
 Use persistent repo memory to track:
 
 - **score history**: date, mutation score, killed/survived/timeout counts for each run seen (so you can compute a trend without re-downloading old artifacts)
-- **known equivalent mutants**: mutant id/location + why it cannot be meaningfully killed, so you stop proposing tests for it
-- **mutants already attempted**: which survived mutants you already tried to kill (successfully or not) and the PR/issue involved, so you don't retry the same one every day
+- **known equivalent mutants**: stable mutant fingerprint + why it cannot be meaningfully killed, so you stop proposing tests for it
+- **mutants already attempted**: stable mutant fingerprint, source path, mutator name, replacement, original source snippet, status, and the PR/issue involved, so you don't retry the same active mutant every day
 - **which run (id) was last processed**, so a re-triggered workflow_run for the same underlying Stryker run doesn't produce duplicate report entries
 
 Read memory at the **start** of every run; update it at the **end**.
@@ -158,7 +158,8 @@ If the conclusion is not `success`:
 1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
 2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
-4. Filter out mutants already recorded in memory as equivalent or already attempted while their outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later daily runs.
+4. Compute a stable fingerprint for every candidate before comparing it to memory. Include at least the normalized repository-relative source path, mutator name, replacement text, start/end line and column, and original source snippet at that location. Revalidate any memory match against the current report and current source snippet before suppressing it; Stryker mutant IDs and line locations alone are not stable enough.
+5. Filter out mutants already recorded in memory as equivalent or already attempted while their revalidated outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later daily runs.
 
 ### Step 4: Attempt to fix the top survived mutants (bounded)
 
@@ -178,8 +179,9 @@ For **at most 2** of the remaining highest-value `Survived` or `NoCoverage` muta
    - What mutant it kills (mutator, file, line, link) and why it represents a real test gap
    - The new test and why it distinguishes correct from mutated behavior
    - Local verification results (test pass + Stryker mutant flipped to Killed)
-10. After each PR snapshot or abandoned attempt, restore the test worktree before moving to the next mutant so a later PR cannot include earlier candidate edits.
-11. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run.
+10. Immediately before emitting the PR, re-read the default branch SHA that the safe-output job will use. If it differs from `upstream_head_sha`, restore the test worktree, rebase/reapply the test on the current default branch, and repeat the relevant unit test and Stryker verification before creating the PR. Do not create a PR from a source revision that was not built and mutation-tested.
+11. After each PR snapshot or abandoned attempt, restore the test worktree before moving to the next mutant so a later PR cannot include earlier candidate edits.
+12. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run, keyed by the stable fingerprint rather than Stryker's sequential mutant id alone.
 
 ### Step 5: Update the Monthly Report issue (always do this)
 
