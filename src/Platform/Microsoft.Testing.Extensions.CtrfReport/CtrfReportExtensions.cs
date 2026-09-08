@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -10,6 +10,9 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Provides extension methods for adding CTRF (Common Test Report Format) report generation to a test application.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class CtrfReportExtensions
 {
@@ -24,11 +27,15 @@ public static class CtrfReportExtensions
             throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
         }
 
-        ReportProviderRegistration.AddReportProvider(
+        ReportProviderRegistration.AddReportProvider<CtrfReportGenerator, CtrfReport.CapturedTestResult>(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
+            CtrfReportGeneratorCommandLine.CtrfReportOptionName,
+            CtrfReportGenerator.JournalEnvironmentVariableName,
             () => new CtrfReportGeneratorCommandLine(),
-            serviceProvider => new CtrfReportGenerator(serviceProvider));
+            serviceProvider => new CtrfReportGenerator(serviceProvider),
+            (serviceProvider, metadata) => new CtrfReportGenerator(serviceProvider, metadata),
+            CtrfReportGenerator.DeserializeJournalRecord);
 
         artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new CtrfArtifactPostProcessor());
     }

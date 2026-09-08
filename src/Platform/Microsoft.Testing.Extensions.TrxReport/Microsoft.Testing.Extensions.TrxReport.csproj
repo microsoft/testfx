@@ -39,6 +39,7 @@
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ArtifactPostProcessingHelper.cs" Link="Helpers\ArtifactPostProcessingHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileWriterHelper.cs" Link="Helpers\ReportFileWriterHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\NamedPipeServerFactory.cs" Link="Helpers\NamedPipeServerFactory.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\PipeNameEnvironmentVariableProviderBase.cs" Link="Helpers\PipeNameEnvironmentVariableProviderBase.cs" />
   </ItemGroup>
 

@@ -10,6 +10,9 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// This capability implementation allows to abstract away the various conditions that the test framework may need to consider
 /// to decide whether or not the banner message should be displayed.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IBannerMessageOwnerCapability : ITestFrameworkCapability
 {

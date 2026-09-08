@@ -47,6 +47,11 @@
         <target state="translated">Azure DevOps 라이브 게시에서 {0} 첨부 파일을 업로드할 수 없습니다. 해당 첨부 파일은 Azure DevOps 테스트 실행에서 누락됩니다.</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="translated">Azure DevOps REST API 인증에 실패했거나 로그인 화면으로 리디렉션되었습니다(상태: {0}). 이는 SYSTEM_ACCESSTOKEN이 유효하지 않거나 사용할 수 없음을 의미합니다. 포크된 끌어오기 요청 검증 빌드에서는 신뢰할 수 없는 포크 코드에 비밀 정보를 노출하지 마세요. 결과는 별도의 신뢰할 수 있는 파이프라인 컨텍스트에서 게시하거나 Azure DevOps 실시간 게시를 사용하지 않도록 설정하세요.</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps 라이브 게시에서 테스트 실행을 완료하지 못했습니다.</target>
@@ -161,6 +166,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">시간 제한: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="translated">Azure DevOps REST API에서 코드 {0} 및 콘텐츠 형식 '{1}'상태 예기치 않은 성공적인 응답을 반환했습니다.</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>

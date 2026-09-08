@@ -217,6 +217,81 @@
         <target state="translated">Ukončovací kód</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
+        <source>At least one test failed.</source>
+        <target state="translated">Nejméně jeden test se nepovedl.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Nebylo dosaženo minimálně jedné prahové hodnoty pokrytí kódu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeDependentProcessExitedDescription">
+        <source>A dependent process exited.</source>
+        <target state="translated">Závislý proces byl ukončen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeGenericFailureDescription">
+        <source>An unexpected error occurred.</source>
+        <target state="translated">Došlo k neočekávané chybě.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
+        <source>The test platform protocol version is incompatible.</source>
+        <target state="translated">Verze protokolu testovací platformy není kompatibilní.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidCommandLineDescription">
+        <source>The command-line arguments are invalid.</source>
+        <target state="translated">Argumenty příkazového řádku nejsou platné.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
+        <source>The test platform setup or extension configuration is invalid.</source>
+        <target state="translated">Nastavení testovací platformy nebo konfigurace rozšíření je neplatné.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
+        <source>Fewer tests ran than required by the minimum expected tests policy.</source>
+        <target state="translated">Spustilo se méně testů, než vyžaduje zásada minimálního očekávaného počtu testů.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">Testovací adaptér oznámil selhání testovací relace.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
+        <source>Test execution stopped because the configured deadline was approaching.</source>
+        <target state="translated">Provádění testu bylo zastaveno, protože se blížil nakonfigurovaný konečný termín.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
+        <source>Test execution stopped after reaching the maximum failed tests limit.</source>
+        <target state="translated">Provádění testu bylo zastaveno po dosažení maximálního počtu neúspěšných testů.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
+        <source>The test host process exited unexpectedly.</source>
+        <target state="translated">Hostitelský proces testu byl neočekávaně ukončen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestSessionAbortedDescription">
+        <source>The test session was aborted.</source>
+        <target state="translated">Testovací relace byla přerušená.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeUnknownDescription">
+        <source>The exit code is not recognized.</source>
+        <target state="translated">Ukončovací kód nebyl rozpoznán.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeZeroTestsDescription">
+        <source>No tests ran.</source>
+        <target state="translated">Nespustily se žádné testy.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">Očekáváno</target>
@@ -366,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -384,16 +459,16 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Podrobnosti výstupu při vytváření sestav testů.
-Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
-        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
+        <target state="translated">Přednastavte bloky výsledků jednotlivých testů zobrazené v terminálu.
+Platné hodnoty jsou Minimal, Normal a Detailed. Výchozí hodnota je Normal. K přesnému výběru výsledků použijte --show-test-results.</target>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">--output očekává jeden parametr s hodnotou Normal nebo Detailed.</target>
-        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
+        <target state="translated">--output očekává jeden parametr s hodnotou Minimal, Normal nebo Detailed.</target>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -469,6 +544,30 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
 Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All (nebo Failed, když se zjistí prostředí LLM / agenta AI).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="translated">Hodnotu all nebo none možnosti --show-test-results nelze kombinovat s žádnou jinou hodnotou.</target>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
+        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results vyžaduje minimálně jednu z hodnot passed, failed, skipped, all nebo none.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results očekává jednu nebo více hodnot oddělených čárkami nebo mezerami z následujících možností: passed, failed, skipped, all nebo none.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Zapíše výsledky testu do terminálu.</target>
@@ -479,10 +578,20 @@ Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All (nebo Failed, k
         <target state="translated">Oznamovatel testu terminálu</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestDiscoveryExitCode">
+        <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">Zjišťování testů bylo dokončeno s neúspěšným ukončovacím kódem: {0}. {1} Viz: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
+      </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
         <target state="translated">Souhrn zjišťování testů: nalezené testy: {0}</target>
         <note>{0} is the number of discovered tests.</note>
+      </trans-unit>
+      <trans-unit id="TestRunExitCode">
+        <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">Testovací běh byl dokončen s neúspěšným ukončovacím kódem: {0}. {1} Viz: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>

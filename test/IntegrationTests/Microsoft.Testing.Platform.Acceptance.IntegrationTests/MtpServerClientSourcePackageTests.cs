@@ -338,6 +338,56 @@ public sealed class MtpServerClientSourcePackageTests
     }
 
     [TestMethod]
+    public void SourcePackage_UnixApphostExecuteBitCheck_IsFencedOnTargetFramework_NotOnTheModernDotnetSymbol()
+    {
+        // File.GetUnixFileMode is .NET 7+, so the apphost execute-bit check is fenced on NET7_0_OR_GREATER,
+        // which the pack transform leaves alone and every net7.0+ consumer defines. It must NOT ride on
+        // MTP_CLIENT_USE_MODERN_DOTNET (what the transform makes of NETCOREAPP): that symbol records which
+        // JSON slice the consumer compiles and is defined only for net8.0+. NuGet serves the net5.0 slice to
+        // net5.0, net6.0 and net7.0 consumers, so reusing it here would drop a Linux net7.0 consumer back to
+        // the existence-only check, select a non-executable apphost, and abort with 'Permission denied'
+        // instead of falling back to `dotnet <dll>`.
+        const string Logical = "Client/MtpServerProcess.cs";
+        const string Fence = "#if NET7_0_OR_GREATER";
+        const string GuardedCall = "File.GetUnixFileMode(";
+
+        List<string> offenders = [];
+        foreach (string tfm in Package.TargetFrameworks)
+        {
+            if (!Package.PackedTextByTfm[tfm].TryGetValue(Logical, out string? text))
+            {
+                offenders.Add($"{tfm}: '{Logical}' is not packed.");
+                continue;
+            }
+
+            int call = text.IndexOf(GuardedCall, StringComparison.Ordinal);
+            if (call < 0)
+            {
+                offenders.Add($"{tfm}: no '{GuardedCall}' call, so the Unix apphost execute-bit check is gone.");
+                continue;
+            }
+
+            int fence = text.IndexOf(Fence, StringComparison.Ordinal);
+            if (fence < 0 || call < fence)
+            {
+                offenders.Add($"{tfm}: '{GuardedCall}' is not fenced on '{Fence}'.");
+                continue;
+            }
+
+            int endIf = text.IndexOf("#endif", fence, StringComparison.Ordinal);
+            if (endIf >= 0 && call > endIf)
+            {
+                offenders.Add($"{tfm}: '{GuardedCall}' sits outside the '{Fence}' block.");
+            }
+        }
+
+        Assert.IsEmpty(
+            offenders,
+            $"Every consumer that has File.GetUnixFileMode must require an execute bit before selecting a Unix apphost:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, offenders));
+    }
+
+    [TestMethod]
     public void SourcePackage_JsoniteNamespace_IsPackageQualified_NotTopLevel()
     {
         // The pack-time transform rewrites the vendored top-level `namespace Jsonite` to the

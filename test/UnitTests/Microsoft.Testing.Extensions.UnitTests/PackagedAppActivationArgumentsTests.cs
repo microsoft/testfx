@@ -278,6 +278,48 @@ public sealed class PackagedAppActivationArgumentsTests
         }
     }
 
+    [TestMethod]
+    public void ReadActivationArgumentsAndApplyConnectBack_RetryHandshake_RestoresEnvironmentAndConsumesHandshake()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(directory, AppxManifestInfo.AppxManifestFileName),
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications><Application Id="App" Executable="MyTestApp.exe" /></Applications>
+                </Package>
+                """);
+
+            string[] expectedArguments = ["--internal-retry-pipename", @"LOCAL\retry-pipe", "--help"];
+            string handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(expectedArguments)!;
+            string handshakePath = Path.Combine(directory, PackagedAppConnectBackHandshake.GetHandshakeFileName(handshakeId));
+            PackagedAppConnectBackHandshake.Write(
+                handshakePath,
+                new Dictionary<string, string?> { ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2" });
+            PackagedAppActivationData activation = PackagedAppActivationArguments.Create(expectedArguments, directory);
+            var restoredEnvironment = new Dictionary<string, string?>(StringComparer.Ordinal);
+
+            string[] actualArguments = PackagedAppConnectBackReader.ReadActivationArgumentsAndApplyConnectBack(
+                activation.Arguments,
+                directory,
+                directory,
+                () => directory,
+                (name, value) => restoredEnvironment[name] = value);
+
+            AssertArgumentsAreEqual(expectedArguments, actualArguments);
+            Assert.AreEqual("2", restoredEnvironment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
+            Assert.IsFalse(File.Exists(handshakePath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static string CreateTemporaryDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), "PackagedAppActivationArgumentsTests", Guid.NewGuid().ToString("N"));

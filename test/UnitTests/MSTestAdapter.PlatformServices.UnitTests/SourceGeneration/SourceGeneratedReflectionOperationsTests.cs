@@ -59,6 +59,47 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         operations.GetTestMethodInvoker(unregistered).Should().BeNull();
     }
 
+    public void TryGetTestMethodDescriptors_ReturnsRegisteredMethodsAndCompleteness()
+    {
+        MethodInfo method = typeof(Sample).GetMethod(nameof(Sample.Add))!;
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            DescriptorTestMethods = new Dictionary<Type, MethodInfo[]> { [typeof(Sample)] = [method] },
+            DescriptorCompleteTypes = new Dictionary<Type, bool> { [typeof(Sample)] = true },
+        };
+        var operations = new SourceGeneratedReflectionOperations(provider);
+
+        operations.TryGetTestMethodDescriptors(typeof(Sample), out MethodInfo[]? methods, out bool isComplete)
+            .Should().BeTrue();
+        methods.Should().ContainSingle().Which.Should().BeSameAs(method);
+        isComplete.Should().BeTrue();
+    }
+
+    public void TryGetTestMethodDescriptors_RetainsPerMethodFallbackWhenRegistrationIsIncomplete()
+    {
+        MethodInfo add = typeof(Sample).GetMethod(nameof(Sample.Add))!;
+        MethodInfo subtract = typeof(Sample).GetMethod(nameof(Sample.Subtract))!;
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            DescriptorTestMethods = new Dictionary<Type, MethodInfo[]> { [typeof(Sample)] = [add] },
+            DescriptorCompleteTypes = new Dictionary<Type, bool> { [typeof(Sample)] = true },
+        });
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            DescriptorTestMethods = new Dictionary<Type, MethodInfo[]> { [typeof(Sample)] = [subtract] },
+            DescriptorCompleteTypes = new Dictionary<Type, bool> { [typeof(Sample)] = false },
+        });
+        var operations = new SourceGeneratedReflectionOperations(composite);
+
+        operations.TryGetTestMethodDescriptors(typeof(Sample), out MethodInfo[]? methods, out bool isComplete)
+            .Should().BeTrue();
+        methods.Should().HaveCount(2);
+        methods.Should().Contain(add);
+        methods.Should().Contain(subtract);
+        isComplete.Should().BeFalse();
+    }
+
     public void GetConstructorInvoker_CreatesInstance_WithoutActivator()
     {
         SourceGeneratedReflectionDataProvider.ConstructorInvoker[] invokers =
@@ -336,6 +377,12 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         public int Add(int first, int second)
         {
             LastSum = first + second;
+            return LastSum;
+        }
+
+        public int Subtract(int first, int second)
+        {
+            LastSum = first - second;
             return LastSum;
         }
     }

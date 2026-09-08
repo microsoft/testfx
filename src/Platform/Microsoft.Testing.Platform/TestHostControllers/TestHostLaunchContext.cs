@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -7,6 +7,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// Carries the fully prepared information the platform would have used to start the test host,
 /// passed to an <see cref="ITestHostLauncher"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class TestHostLaunchContext
 {
@@ -14,10 +17,10 @@ public sealed class TestHostLaunchContext
     /// Initializes a new instance of the <see cref="TestHostLaunchContext"/> class.
     /// </summary>
     /// <param name="fileName">The test host executable path the platform would have started.</param>
-    /// <param name="arguments">The arguments, already including the test host controller PID option.</param>
+    /// <param name="arguments">The fully prepared arguments for the active launch mode.</param>
     /// <param name="environmentVariables">
-    /// The final environment for the test host, including the controller-to-host IPC pipe name the
-    /// host must connect back on.
+    /// The final environment for the test host, including any controller or orchestrator connection
+    /// metadata the host must consume.
     /// </param>
     /// <param name="workingDirectory">The working directory, or <see langword="null"/> to inherit the current one.</param>
     public TestHostLaunchContext(
@@ -38,14 +41,13 @@ public sealed class TestHostLaunchContext
     public string FileName { get; }
 
     /// <summary>
-    /// Gets the arguments, already including the test host controller PID option.
+    /// Gets the fully prepared arguments for the active launch mode.
     /// </summary>
     public IReadOnlyList<string> Arguments { get; }
 
     /// <summary>
-    /// Gets the final environment for the test host, after all
-    /// <see cref="ITestHostEnvironmentVariableProvider"/> ran. Includes the controller-to-host IPC
-    /// pipe name the host must connect back on.
+    /// Gets the final environment for the test host, including any controller or orchestrator connection
+    /// metadata required by the active launch mode.
     /// </summary>
     public IReadOnlyDictionary<string, string?> EnvironmentVariables { get; }
 

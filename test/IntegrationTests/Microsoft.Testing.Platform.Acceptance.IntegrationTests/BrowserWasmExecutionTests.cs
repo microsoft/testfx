@@ -140,9 +140,19 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public sealed class UnitTest1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void PassingTest()
-        => Assert.AreEqual(4, 2 + 2);
+    {
+        string? tempDirectory = TestContext.TestTempDirectory;
+        Assert.IsNotNull(tempDirectory);
+        Assert.IsTrue(Directory.Exists(tempDirectory));
+        string writeCheckPath = Path.Combine(tempDirectory, "write-check.txt");
+        File.WriteAllText(writeCheckPath, "data");
+        Assert.AreEqual("data", File.ReadAllText(writeCheckPath));
+        Assert.AreEqual(4, 2 + 2);
+    }
 
     [TestMethod]
     public void AnotherPassingTest()
@@ -882,12 +892,14 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
 
         // Only a missing 'wasm-tools' workload is an acceptable skip; any other build failure (compiler
         // error, a broken generated MTP entry point) is a real regression and must fail the test.
+        // The browser-WASM SDK's JsonToItemsTaskFactory cannot run in the out-of-process TaskHost used by -mt.
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -f {TargetFramework} -r {WasmRuntime.BrowserRid} -c Release",
             // Trimming/wasm builds can emit non-actionable warnings; we only assert on the build
             // succeeding and the entry point being generated, not on a warning-clean build.
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         if (buildResult.ExitCode != 0)

@@ -15,6 +15,9 @@
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
+    <Content Include="$(RepoRoot)test\Shared\WindowsAppModel\appx-manifest-conformance-vectors.json"
+             Link="AppxManifestConformanceVectors.json"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

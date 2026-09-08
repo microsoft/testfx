@@ -217,6 +217,81 @@
         <target state="translated">結束代碼</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
+        <source>At least one test failed.</source>
+        <target state="translated">至少有一個測試失敗。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">一或多個程式碼涵蓋率閾值未達標。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeDependentProcessExitedDescription">
+        <source>A dependent process exited.</source>
+        <target state="translated">相依處理序已結束。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeGenericFailureDescription">
+        <source>An unexpected error occurred.</source>
+        <target state="translated">發生意外的錯誤。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
+        <source>The test platform protocol version is incompatible.</source>
+        <target state="translated">測試平台通訊協定版本不相容。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidCommandLineDescription">
+        <source>The command-line arguments are invalid.</source>
+        <target state="translated">命令列引數無效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
+        <source>The test platform setup or extension configuration is invalid.</source>
+        <target state="translated">測試平台設定或延伸模組設定無效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
+        <source>Fewer tests ran than required by the minimum expected tests policy.</source>
+        <target state="translated">所執行的測試數少於最低預期測試原則所要求的次數。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">測試配接器報告測試工作階段失敗。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
+        <source>Test execution stopped because the configured deadline was approaching.</source>
+        <target state="translated">已停止測試執行，因為設定的期限即將到來。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
+        <source>Test execution stopped after reaching the maximum failed tests limit.</source>
+        <target state="translated">測試執行在達到最大失敗測試上限後停止。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
+        <source>The test host process exited unexpectedly.</source>
+        <target state="translated">測試主機處理序意外結束。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestSessionAbortedDescription">
+        <source>The test session was aborted.</source>
+        <target state="translated">測試工作階段已中止。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeUnknownDescription">
+        <source>The exit code is not recognized.</source>
+        <target state="translated">無法識別結束代碼。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeZeroTestsDescription">
+        <source>No tests ran.</source>
+        <target state="translated">未執行任何測試。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">預期</target>
@@ -366,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 有效值為 'auto' (預設值)、'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。
 即使 stdout 已重新導向，'on' 會強制 ANSI 逸出程式碼 (包括游標移動); 如果您只想要色彩，將它與 --progress off 配對。
 同時提供 --ansi 和 --no-ansi 時,--ansi 優先。</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -384,16 +459,16 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">報告測試時的輸出詳細程度。
-有效值為 'Normal'、'Detailed'。預設為 'Normal'。</target>
-        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
+        <target state="translated">預設終端機中顯示的每個測試結果區塊。
+有效值為 'Minimal'、'Normal'、'Detailed'。預設為 'Normal'。使用 '--show-test-results' 以精確選取結果。</target>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">--output 需要值為 'Normal' 或 'Detailed' 的單一參數。</target>
-        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
+        <target state="translated">--output 需要值為 'Minimal'、'Normal' 或 'Detailed' 的單一參數。</target>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -469,6 +544,30 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
 有效值為 'All'、'Failed'、'None'。預設值為 'All' (或偵測到 LLM/AI 代理程式環境時為 'Failed')。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="translated">--show-test-results 的值 'all' 或 'none' 不能與任何其他值組合。</target>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
+        <target state="translated">選取哪些測試結果會在終端機中顯示每個測試的結果區塊，以及其說明詳細資料、堆疊追蹤和擷取的輸出。
+有效值為 'passed'、'failed' (也包含發生錯誤、逾時和已取消的測試)、'skipped'、'all' 和 'none'。您可以將多個值組合成以逗號或空格分隔的清單，或重複使用此選項；'all' 和 'none' 不能與任何其他值組合。
+當 '--output' 為 'Minimal' 時，預設值為 'failed'；當為 'Normal' 或未指定時，預設值為 'failed' 和 'skipped'；當為 'Detailed' 時，預設值為 'all'。無論傳遞順序為何，明確指定的 '--show-test-results' 一律優先於 '--output'。</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results 至少需要一個值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results 接受一或多個以逗號或空格分隔的值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">將測試結果寫入終端機。</target>
@@ -479,10 +578,20 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
         <target state="translated">終端機測試報告者</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestDiscoveryExitCode">
+        <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">測試探索已完成，結束代碼為非成功: {0}。{1} 請參閱: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
+      </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
         <target state="translated">測試探索摘要: 找到 {0} 個測試</target>
         <note>{0} is the number of discovered tests.</note>
+      </trans-unit>
+      <trans-unit id="TestRunExitCode">
+        <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">已完成測試執行，結束代碼為非成功： {0}。{1} 請參閱: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>

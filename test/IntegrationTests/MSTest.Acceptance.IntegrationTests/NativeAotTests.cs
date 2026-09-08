@@ -42,6 +42,7 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 
 #file TestClass1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 #pragma warning disable MSTESTEXP
 
@@ -49,14 +50,29 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MyTests;
 
+public abstract class GenericBase<T>
+{
+    protected static IEnumerable<object[]> GenericData { get; }
+        = new[]
+        {
+            new object[] { 2, 3 }
+        };
+}
+
 public sealed class RunAllFilter : ITestFilter
 {
     public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
 }
 
 [TestClass]
-public class UnitTest1
+public class UnitTest1 : GenericBase<int>
 {
+    // These ordinary nested helper shapes used to be recursively rooted by
+    // DynamicDependency(All), surfacing IL2026 and IL3050 from their base types.
+    private sealed class NestedStream : MemoryStream { }
+    private sealed class NestedException : Exception { }
+    private enum ScenarioState { Ready }
+
     [TestMethod]
     public void TestMethod1()
     {
@@ -99,6 +115,27 @@ public class UnitTest1
         {
            new object[] { 1, 2 }
         };
+
+    // The protected source cannot be called by generated code, so this exercises the reflection
+    // fallback and requires the closed generic base's non-public properties to remain rooted.
+    [TestMethod]
+    [DynamicData(nameof(GenericData))]
+    public void TestMethodFromGenericBase(int a, int b)
+    {
+        Assert.AreEqual(2, a);
+        Assert.AreEqual(3, b);
+    }
+
+    [TestMethod]
+    [CombinatorialData]
+    public void TestMethod6(CustomValue? value)
+        => Assert.IsTrue(value is null or CustomValue.First or CustomValue.Second);
+}
+
+public enum CustomValue
+{
+    First,
+    Second,
 }
 """;
 
@@ -157,6 +194,14 @@ public sealed class AsyncVoidTests
             "MSTestReflectionMetadata.Registry.g.cs",
             SearchOption.AllDirectories).Single();
         string registry = File.ReadAllText(registryPath);
+        int synchronousMethodIndex = registry.IndexOf("Name = \"TestMethod1\"", StringComparison.Ordinal);
+        int synchronousNextMethodIndex = registry.IndexOf("Name = \"TestMethod2\"", synchronousMethodIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(-1, synchronousMethodIndex);
+        Assert.IsGreaterThan(synchronousMethodIndex, synchronousNextMethodIndex);
+        StringAssert.Contains(
+            registry.Substring(synchronousMethodIndex, synchronousNextMethodIndex - synchronousMethodIndex),
+            "IsDescriptorSupported = true");
+
         int asyncMethodIndex = registry.IndexOf("Name = \"TestMethod3\"", StringComparison.Ordinal);
         int nextMethodIndex = registry.IndexOf("Name = \"TestMethod4\"", asyncMethodIndex, StringComparison.Ordinal);
         Assert.IsGreaterThan(-1, asyncMethodIndex);
@@ -164,11 +209,14 @@ public sealed class AsyncVoidTests
         StringAssert.Contains(
             registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
             "AreAttributesComplete = true");
+        StringAssert.Contains(
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
+            "IsDescriptorSupported = false");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 0);
         result.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(

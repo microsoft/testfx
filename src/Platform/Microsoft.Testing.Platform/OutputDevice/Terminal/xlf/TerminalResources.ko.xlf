@@ -217,6 +217,81 @@
         <target state="translated">종료 코드</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
+        <source>At least one test failed.</source>
+        <target state="translated">하나 이상의 테스트가 실패했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">하나 이상의 코드 검사 임계값을 충족하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeDependentProcessExitedDescription">
+        <source>A dependent process exited.</source>
+        <target state="translated">종속 프로세스가 종료되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeGenericFailureDescription">
+        <source>An unexpected error occurred.</source>
+        <target state="translated">오류가 발생했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
+        <source>The test platform protocol version is incompatible.</source>
+        <target state="translated">테스트 플랫폼 프로토콜 버전이 호환되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidCommandLineDescription">
+        <source>The command-line arguments are invalid.</source>
+        <target state="translated">명령줄 인수가 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
+        <source>The test platform setup or extension configuration is invalid.</source>
+        <target state="translated">테스트 플랫폼 설정 또는 확장 구성이 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
+        <source>Fewer tests ran than required by the minimum expected tests policy.</source>
+        <target state="translated">최소 예상 테스트 정책에 필요한 것보다 적은 수의 테스트가 실행되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">테스트 어댑터에서 테스트 세션 실패를 보고했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
+        <source>Test execution stopped because the configured deadline was approaching.</source>
+        <target state="translated">구성된 마감일이 임박하여 테스트 실행이 중지되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
+        <source>Test execution stopped after reaching the maximum failed tests limit.</source>
+        <target state="translated">실패한 최대 테스트 한도에 도달한 후 테스트 실행이 중지되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
+        <source>The test host process exited unexpectedly.</source>
+        <target state="translated">테스트 호스트 프로세스가 예기치 않게 종료되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestSessionAbortedDescription">
+        <source>The test session was aborted.</source>
+        <target state="translated">테스트 세션이 중단되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeUnknownDescription">
+        <source>The exit code is not recognized.</source>
+        <target state="translated">종료 코드를 인식할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeZeroTestsDescription">
+        <source>No tests ran.</source>
+        <target state="translated">테스트가 실행되지 않았습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">필요</target>
@@ -366,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 유효한 값은 'auto'(기본값), 'on' ('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
 'on'은 stdout이 리디렉션되어도 ANSI 이스케이프 코드(커서 이동 포함)를 강제로 적용합니다. 색상만 적용하려면 --progress off와 함께 사용하세요.
 --ansi와 --no-ansi가 모두 지정되면 --ansi가 우선합니다.</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -384,16 +459,16 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다.
-유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
-        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
+        <target state="translated">터미널에 표시된 테스트별 결과 블록을 미리 설정합니다.
+유효한 값은 'Minimal', 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다. 정확한 결과를 선택하기 위해 '--show-test-results'를 사용합니다.</target>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
-        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
+        <target state="translated">--output에는 값이 'Minimal', 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -469,6 +544,30 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
 유효한 값은 'All', 'Failed', 'None'입니다. LLM/AI 에이전트 환경이 감지되면 기본값은 'All'(또는 'Failed')입니다.</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="translated">--show-test-results 값 'all' 또는 'none'은 다른 값과 결합할 수 없습니다.</target>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
+        <target state="translated">터미널에서 테스트별 결과 블록(정보 세부 정보, 스택 추적 및 캡처된 출력 포함)을 렌더링하는 테스트 결과를 선택합니다.
+유효한 값은 'passed', 'failed'(오류 발생, 시간 초과 및 취소된 테스트 포함), 'skipped', 'all' 및 'none'입니다. 여러 값을 쉼표 또는 공백으로 구분된 목록으로 결합하거나 옵션을 반복하여 결합합니다. 'all' 및 'none'은 다른 값과 결합할 수 없습니다.
+기본값은 '--output'이 'Minimal'일 때는 'failed'이고, 'Normal'이거나 생략된 경우에는 'failed'와 'skipped'이며, 'Detailed'일 때는 'all'입니다. 명시적 '--show-test-results'는 전달 순서에 관계없이 항상 '--output'보다 우선합니다.</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results에는 'passed', 'failed', 'skipped', 'all' 또는 'none' 중 하나 이상의 값이 필요합니다.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results에는 'passed', 'failed', 'skipped', 'all' 또는 'none' 중 하나 이상의 쉼표 또는 공백으로 구분된 값이 필요합니다.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">테스트 결과를 터미널에 씁니다.</target>
@@ -479,10 +578,20 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
         <target state="translated">터미널 테스트 보고자</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestDiscoveryExitCode">
+        <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">테스트 검색이 완료되었지만 성공하지 않은 종료 코드: {0}. {1} 참조: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
+      </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
         <target state="translated">테스트 검색 요약: {0}개의 테스트를 찾음</target>
         <note>{0} is the number of discovered tests.</note>
+      </trans-unit>
+      <trans-unit id="TestRunExitCode">
+        <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">테스트 실행이 성공하지 못한 종료 코드와 함께 완료되었습니다. {0}. {1} 참조: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>

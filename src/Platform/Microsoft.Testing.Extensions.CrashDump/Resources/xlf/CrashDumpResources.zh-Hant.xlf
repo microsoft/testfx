@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
-        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</target>
+        <target state="translated">[net6.0+ only] 測試執行流程意外損毀時會產生損毀傾印檔案。</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -51,7 +51,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
-        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes.</target>
+        <target state="translated">[net6.0+ only] 如果測試流程損毀，則產生傾印檔案。</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -108,9 +108,9 @@ Supports the following placeholders: {pname} (process executable name, deferred 
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
+        <target state="translated">指定傾印的類型。
+有效值為 'Mini'、'Heap'、'Triage' 或 'Full'。預設類型為 'Full'。
+如需詳細資訊，請瀏覽 https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps。</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
@@ -170,7 +170,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
         <target state="translated">控制是否在產生損毀傾印或損毀報告時，一併產生一個列出測試工作階段期間已開始與已結束測試的序列檔案。
 這個檔案可讓您在不檢查傾印的情況下，找出發生損毀時正在執行的測試。
 有效值為 'on' (預設值，也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。</target>
-        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
+        <note>Do not localize option values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

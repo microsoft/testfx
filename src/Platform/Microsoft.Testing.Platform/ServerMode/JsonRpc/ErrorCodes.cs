@@ -26,6 +26,7 @@ internal sealed class ErrorCodes
 
     #region Testing Platform error codes
     public static readonly int TestingPlatformErrorRangeStart = -31700;
+    public static readonly int ProtocolVersionNotSupported = -31699;
     public static readonly int TestingPlatformErrorRangeEnd = -31000;
     #endregion
 }

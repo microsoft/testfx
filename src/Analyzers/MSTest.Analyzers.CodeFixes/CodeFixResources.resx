@@ -256,7 +256,7 @@
   </data>
   <data name="UseExecutableConditionAttributeInsteadOfProcessCheckFix" xml:space="preserve">
     <value>Use '[ExecutableCondition]' attribute</value>
-    <comment>{Locked="'[ExecutableCondition]'"}</comment>
+    <comment>{Locked="[ExecutableCondition]"}</comment>
   </data>
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
@@ -297,5 +297,9 @@
   <data name="RemoveRedundantTestMethodDisplayNameFix" xml:space="preserve">
     <value>Remove redundant 'DisplayName'</value>
     <comment>{Locked="DisplayName"}</comment>
+  </data>
+  <data name="MakeOSConditionConsistentFix" xml:space="preserve">
+    <value>Make '[OSCondition]' consistent with platform compatibility attributes</value>
+    <comment>{Locked="[OSCondition]"}</comment>
   </data>
 </root>

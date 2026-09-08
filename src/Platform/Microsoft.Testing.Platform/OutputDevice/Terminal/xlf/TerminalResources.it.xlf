@@ -217,6 +217,81 @@
         <target state="translated">Codice di uscita</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
+        <source>At least one test failed.</source>
+        <target state="translated">Almeno un test non è riuscito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Una o più soglie di copertura del codice non sono state raggiunte.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeDependentProcessExitedDescription">
+        <source>A dependent process exited.</source>
+        <target state="translated">Un processo dipendente è terminato.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeGenericFailureDescription">
+        <source>An unexpected error occurred.</source>
+        <target state="translated">Si è verificato un errore imprevisto.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
+        <source>The test platform protocol version is incompatible.</source>
+        <target state="translated">La versione del protocollo della piattaforma di test non è compatibile.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidCommandLineDescription">
+        <source>The command-line arguments are invalid.</source>
+        <target state="translated">Gli argomenti della riga di comando non sono validi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
+        <source>The test platform setup or extension configuration is invalid.</source>
+        <target state="translated">L'installazione della piattaforma di test o la configurazione dell'estensione non è valida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
+        <source>Fewer tests ran than required by the minimum expected tests policy.</source>
+        <target state="translated">È stato eseguito un numero di test inferiore a quello richiesto dal criterio minimo previsto per i test.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">L'adattatore di test ha segnalato un errore della sessione di test.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
+        <source>Test execution stopped because the configured deadline was approaching.</source>
+        <target state="translated">L'esecuzione dei test è stata arrestata perché la scadenza configurata si stava avvicinando.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
+        <source>Test execution stopped after reaching the maximum failed tests limit.</source>
+        <target state="translated">L'esecuzione dei test è stata interrotta dopo aver raggiunto il limite massimo di test non superati.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
+        <source>The test host process exited unexpectedly.</source>
+        <target state="translated">Il processo host di test è terminato in modo imprevisto.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestSessionAbortedDescription">
+        <source>The test session was aborted.</source>
+        <target state="translated">Sessione di test interrotta.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeUnknownDescription">
+        <source>The exit code is not recognized.</source>
+        <target state="translated">Il codice di uscita non è riconosciuto.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeZeroTestsDescription">
+        <source>No tests ran.</source>
+        <target state="translated">Non sono stati eseguiti test.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">Previsto</target>
@@ -366,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 I valori validi sono ''auto'' (impostazione predefinita), ''on'' (accetta anche ''true'', ''enable'', ''1'') o ''off'' (accetta anche ''false'', ''disable'', '0').
 ''on'' forza i codici di escape ANSI (incluso lo spostamento del cursore) anche quando stdout viene reindirizzato; associarlo a --progress off se si desiderano solo colori.
 Quando vengono specificati sia --ansi sia --no-ansi, --ansi ha la priorità.</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -384,16 +459,16 @@ Quando vengono specificati sia --ansi sia --no-ansi, --ansi ha la priorità.</ta
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Livello di dettaglio di output durante la creazione di report di test.
-I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal'.</target>
-        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
+        <target state="translated">Preimposta i blocchi dei risultati per test mostrati nel terminale.
+I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinita è 'Normal'. Usa '--show-test-results' per selezionare con precisione i risultati.</target>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">l’--output prevede un singolo parametro con un valore 'Normal' o 'Detailed'.</target>
-        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
+        <target state="translated">--output prevede un singolo parametro con un valore 'Minimal', 'Normal' o 'Detailed'.</target>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -469,6 +544,30 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
 I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All' (o 'Failed' quando viene rilevato un ambiente agente LLM/IA).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="translated">Non è possibile combinare il valore '--show-test-results' 'all' o 'none' con altri valori.</target>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
+        <target state="translated">Consente di selezionare quali risultati di test visualizzare in un blocco di risultati per test (con i dettagli informativi, l'analisi dello stack e l'output acquisito) nel terminale.
+I valori validi sono 'passed', 'failed' (comprende anche i test con errori, in timeout e annullati), 'skipped', 'all' e 'none'. Combina più valori come elenco separato da virgole o spazi, oppure ripetendo l'opzione; non è possibile combinare 'all' e 'none' con altri valori.
+Il valore predefinito è 'failed' quando '--output' è 'Minimal', 'failed' e 'skipped' quando è 'Normal', oppure non è specificato, e 'all' quando è 'Detailed'. Un '--show-test-results' esplicito ha sempre la precedenza su '--output', indipendentemente dall'ordine in cui vengono passati.</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results richiede almeno un valore tra 'passed', 'failed', 'skipped', 'all' o 'none'.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results si aspetta uno o più valori, separati da virgole o spazi, tra 'passed', 'failed', 'skipped', 'all' o 'none'.</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Scrive i risultati del test nel terminale.</target>
@@ -479,10 +578,20 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
         <target state="translated">Reporter test terminale</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestDiscoveryExitCode">
+        <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">Individuazione dei test completata con codice di uscita non riuscito: {0}. {1} Vedere: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
+      </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
         <target state="translated">Riepilogo individuazione test: trovati {0} test</target>
         <note>{0} is the number of discovered tests.</note>
+      </trans-unit>
+      <trans-unit id="TestRunExitCode">
+        <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">Esecuzione dei test completata con codice di uscita non riuscito: {0}. {1} Vedere: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>

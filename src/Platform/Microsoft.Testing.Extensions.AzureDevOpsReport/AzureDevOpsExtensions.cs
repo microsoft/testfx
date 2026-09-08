@@ -83,7 +83,7 @@ public static class AzureDevOpsExtensions
                    serviceProvider.GetOutputDevice(),
                    serviceProvider.GetTestApplicationModuleInfo(),
                    serviceProvider.GetTestApplicationProcessExitCode(),
-                   new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+                   new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock(), serviceProvider.GetLoggerFactory()),
                    serviceProvider.GetTask(),
                    serviceProvider.GetClock(),
                    serviceProvider.GetLoggerFactory()));
@@ -127,7 +127,7 @@ public static class AzureDevOpsExtensions
                 serviceProvider.GetFileSystem(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestApplicationModuleInfo(),
-                new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+                new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock(), serviceProvider.GetLoggerFactory()),
                 serviceProvider.GetTask(),
                 serviceProvider.GetClock(),
                 serviceProvider.GetLoggerFactory()));

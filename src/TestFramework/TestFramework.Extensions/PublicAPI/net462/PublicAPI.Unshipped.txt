@@ -1,2 +1,1 @@
 #nullable enable
-virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestTempDirectory.get -> string?

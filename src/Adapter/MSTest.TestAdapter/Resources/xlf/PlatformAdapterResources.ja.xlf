@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="MSTestExtensionDescription">
         <source>MSTest Framework for Microsoft Testing Platform.</source>
-        <target state="new">MSTest Framework for Microsoft Testing Platform.</target>
+        <target state="translated">Microsoft Testing Platform 用 MSTest フレームワーク。</target>
         <note>Do not localize {Locked="MSTest"} or {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="MissingRunSettingsAttribute">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</source>
-        <target state="new">The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</target>
+        <target state="translated">.runsettings ファイルへの相対または絶対パス。テスト実行を構成する方法の詳細と例については、https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file を参照してください。</target>
         <note>Do not localize file extension {Locked=".runsettings"} or link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file"}.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</source>
-        <target state="new">Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</target>
+        <target state="translated">キーと値のペア パラメーターを指定またはオーバーライドします。詳細情報と例については、https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters を参照してください。</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunconfigurationSetting">

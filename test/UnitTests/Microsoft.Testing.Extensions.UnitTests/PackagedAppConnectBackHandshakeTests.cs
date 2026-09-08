@@ -5,6 +5,7 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -122,6 +123,49 @@ public sealed class PackagedAppConnectBackHandshakeTests
         string[] arguments = ["--internal-testhostcontroller-pid"];
 
         Assert.IsNull(PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
+    }
+
+    [TestMethod]
+    public void TryGetHandshakeId_UsesRetryPipeName_WhenControllerPidIsAbsent()
+    {
+        string[] arguments = ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"];
+
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments);
+
+        Assert.IsNotNull(handshakeId);
+        Assert.StartsWith("retry-", handshakeId);
+        Assert.AreEqual(handshakeId, PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
+        Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_IncludesRetryAttemptAndExcludesUnrelatedValues()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            [],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"] = "controller-pipe",
+                ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2",
+                ["TRXNAMEDPIPENAME"] = @"LOCAL\trx-pipe",
+                ["TESTINGPLATFORM_HANGDUMP_PIPENAME"] = @"LOCAL\hangdump-pipe",
+                ["TESTINGPLATFORM_TRX_TESTRUN_ID"] = "trx-run",
+                ["testingplatform_logical_run_id"] = "logical-run",
+                ["TESTINGPLATFORM_TESTCONFIGURATION"] = "secret",
+            },
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
+
+        Assert.HasCount(6, environment);
+        Assert.AreEqual("controller-pipe", environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"]);
+        Assert.AreEqual("2", environment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
+        Assert.AreEqual(@"LOCAL\trx-pipe", environment["TRXNAMEDPIPENAME"]);
+        Assert.AreEqual(@"LOCAL\hangdump-pipe", environment["TESTINGPLATFORM_HANGDUMP_PIPENAME"]);
+        Assert.AreEqual("trx-run", environment["TESTINGPLATFORM_TRX_TESTRUN_ID"]);
+        Assert.AreEqual("logical-run", environment["testingplatform_logical_run_id"]);
+        Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
     }
 }
 

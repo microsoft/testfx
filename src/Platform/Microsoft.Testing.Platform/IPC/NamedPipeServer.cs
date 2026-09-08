@@ -36,6 +36,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     private readonly ILogger _logger;
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lifecycleSync = new();
+#else
+    private readonly object _lifecycleSync = new();
+#endif
     private Task? _loopTask;
     private bool _disposed;
 
@@ -180,36 +185,81 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     public bool WasConnected { get; private set; }
 
+    internal async Task<bool> WaitForDisconnectAsync(TimeSpan timeout)
+    {
+        bool wasConnected;
+        Task? loopTask;
+        lock (_lifecycleSync)
+        {
+            wasConnected = WasConnected;
+            loopTask = _loopTask;
+        }
+
+        if (!wasConnected)
+        {
+            return true;
+        }
+
+        if (loopTask is null)
+        {
+            return false;
+        }
+
+        Task completedTask = await Task.WhenAny(loopTask, Task.Delay(timeout)).ConfigureAwait(false);
+        if (completedTask != loopTask)
+        {
+            return false;
+        }
+
+        await loopTask.ConfigureAwait(false);
+        return true;
+    }
+
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
-        // NOTE: _cancellationToken field is usually the "test session" cancellation token.
-        // And cancellationToken parameter may have hang mitigating timeout.
-        // The parameter should only be used for the call of WaitForConnectionAsync and Task.Run call.
-        // NOTE: The cancellation token passed to Task.Run will only have effect before the task is started by runtime.
-        // Once it starts, it won't be considered.
-        // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
-        // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
+        // NOTE: _cancellationToken field is usually the "test session" cancellation token, while the parameter
+        // may include a connection timeout. Once the connection is accepted, always schedule the loop: using the
+        // parameter for Task.Run creates a race where cancellation between acceptance and scheduling leaves a
+        // canceled loop task, and disposal then mistakes that for a loop failure. InternalLoopAsync observes the
+        // server lifetime token for its whole lifetime.
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-        WasConnected = true;
-        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
-        _loopTask = _task.Run(
-            async () =>
+        lock (_lifecycleSync)
         {
-            try
+            if (_disposed)
             {
-                await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
+                return;
             }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
-            {
-                // We are being canceled, so we don't need to wait anymore
-            }
-            catch (Exception ex)
-            {
-                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
-                _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
-            }
-        }, cancellationToken);
+
+            _loopTask = _task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
+                    {
+                        // We are being canceled, so we don't need to wait anymore
+                    }
+                    catch (Exception ex) when (
+                        _cancellationToken.IsCancellationRequested
+                        && ex is OperationCanceledException or IOException or ObjectDisposedException)
+                    {
+                        // .NET Framework does not reliably interrupt a pending pipe read when only the cancellation
+                        // token is canceled. Disposal closes the stream to release that read; the resulting transport
+                        // exception is expected shutdown rather than a server failure.
+                    }
+                    catch (Exception ex)
+                    {
+                        await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
+                        _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
+                    }
+                }, CancellationToken.None);
+            WasConnected = true;
+        }
+
+        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
     }
 
     /// <summary>
@@ -403,21 +453,39 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     public void Dispose()
     {
-        if (_disposed)
+        Task? loopTask;
+        bool wasConnected;
+        lock (_lifecycleSync)
         {
-            return;
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            wasConnected = WasConnected;
+            loopTask = _loopTask;
         }
 
-        if (WasConnected)
+        if (wasConnected)
         {
-            // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
-            // This is unexpected and we throw an exception.
-            ApplicationStateGuard.Ensure(_loopTask is not null);
+#if !NET
+            // On .NET Framework (netstandard2.0 build), PipeStream.ReadAsync(byte[], int, int, CancellationToken)
+            // does not reliably interrupt the underlying blocking read when only the cancellation token is
+            // canceled. Force-closing the stream here unblocks that pending read. On modern .NET the read uses
+            // the Memory<byte>-based overload, which honors cancellation without requiring the stream to be
+            // disposed mid-operation; eagerly disposing it there would race with the in-flight cancellation and
+            // can surface to the connected client as an abrupt reset instead of a graceful disconnect.
+            if (_cancellationToken.IsCancellationRequested)
+            {
+                _namedPipeServerStream.Dispose();
+            }
+#endif
 
             // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-            if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            if (loopTask is not null && !loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.");
+                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={loopTask.Status}.");
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
@@ -427,43 +495,52 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         _namedPipeServerStream.Dispose();
         DisposeBuffers();
-
-        _disposed = true;
     }
 
 #if NET
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
+        Task? loopTask;
+        bool wasConnected;
+        lock (_lifecycleSync)
         {
-            return;
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            wasConnected = WasConnected;
+            loopTask = _loopTask;
         }
 
-        if (WasConnected)
+        if (wasConnected)
         {
-            // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
-            // This is unexpected and we throw an exception.
-            ApplicationStateGuard.Ensure(_loopTask is not null);
-
-            try
+            // Unlike the netstandard2.0 build used by Dispose(), this method is only compiled for modern .NET,
+            // where PipeStream.ReadAsync(Memory<byte>, CancellationToken) honors cancellation without needing the
+            // stream to be force-disposed mid-operation. Eagerly disposing it here would race with the in-flight
+            // cancellation of the pending read and can surface to the connected client as an abrupt reset instead
+            // of a graceful disconnect.
+            if (loopTask is not null)
             {
-                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
-            }
-            catch (TimeoutException)
-            {
-                await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.").ConfigureAwait(false);
-                throw new InvalidOperationException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-                    nameof(InternalLoopAsync)));
+                try
+                {
+                    // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
+                    await loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+                }
+                catch (TimeoutException)
+                {
+                    await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={loopTask.Status}.").ConfigureAwait(false);
+                    throw new InvalidOperationException(string.Format(
+                        CultureInfo.InvariantCulture,
+                        PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+                        nameof(InternalLoopAsync)));
+                }
             }
         }
 
         _namedPipeServerStream.Dispose();
         DisposeBuffers();
-
-        _disposed = true;
     }
 #endif
 }

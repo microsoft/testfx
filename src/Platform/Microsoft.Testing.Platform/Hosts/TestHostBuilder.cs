@@ -82,7 +82,25 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         ApplicationStateGuard.Ensure(TestFramework is not null);
         BuildContext context = await SetupCommonServicesAsync(loggingState, testApplicationOptions, unhandledExceptionsHandler, createBuilderStart).ConfigureAwait(false);
-        return await BuildHostAsync(context).ConfigureAwait(false);
+        IHost host = await BuildHostAsync(context).ConfigureAwait(false);
+
+        // The timeout belongs exclusively to the test host. In a restarted run the controller keeps its
+        // application token alive while the child schedules the timeout, so controller extensions can finalize
+        // after the child reports an aborted run without two processes racing the same deadline.
+        if (context.EarlyHost is null
+            && context.PoliciesService.ProcessRole is TestProcessRole.TestHost
+            && context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
+            && context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        {
+            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
+        }
+
+        return host;
     }
 
     private sealed class BuildContext(

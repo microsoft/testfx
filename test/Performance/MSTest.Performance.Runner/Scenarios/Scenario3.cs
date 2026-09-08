@@ -123,7 +123,14 @@ internal class Scenario3 : IStep<NoInputOutput, SingleProject>
             addPublicFeeds: true);
 
         context.AddDisposable(generator);
-        return new SingleProject([_tfm], generator, nameof(Scenario3));
+        return new SingleProject(
+            [_tfm],
+            generator,
+            nameof(Scenario3),
+            TestPlatform.Mtp,
+            MSTestSourceGenerationMode.Disabled,
+            _numberOfClass * _methodsPerClass,
+            _workers == 0 ? Environment.ProcessorCount : _workers);
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)

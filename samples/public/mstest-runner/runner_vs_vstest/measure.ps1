@@ -14,7 +14,7 @@ foreach ($project in $projects) {
     $runner = $sw.ElapsedMilliseconds; 
     
     $sw.Restart()
-    dotnet test $dir --no-restore --no-build --logger trx # --collect "Code Coverage"
+    dotnet test $dir --no-restore --no-build -p:EnableMSTestRunner=false --logger trx # --collect "Code Coverage"
     $vstest = $sw.ElapsedMilliseconds
 
     $entry = "| $name | $user | $vstest | $runner | $([math]::round($vstest/$runner * 100 , 0))% |`n"

@@ -12,6 +12,28 @@ This document describes the JSON-RPC server-mode protocol. The separate, binary
 [`dotnet test` named-pipe protocol](./004-protocol-dotnet-test-pipe.md) (`--server dotnettestcli`)
 is specified in its own document.
 
+The machine-readable JSON Schema for the base protocol is
+[`server-mode-1.0.schema.json`](./server-mode-1.0.schema.json).
+
+## Reference client
+
+Rather than implementing this protocol by hand, clients can consume the canonical, source-only
+[`Microsoft.Testing.Platform.ServerMode.Client.Sources`](https://www.nuget.org/packages/Microsoft.Testing.Platform.ServerMode.Client.Sources)
+package. It compiles the same protocol and serialization source files the server uses, so it is wire
+compatible by construction, and it offers two launch paths:
+
+- `MtpServerClient.LaunchAsync(path)` starts the test application as a **child process**. This is the
+  default for IDE, CLI and CI tooling.
+- `MtpServerClient.LaunchInProcessAsync(callback)` hosts the test application **in the caller's own
+  process** through a callback, for embedded runners (MAUI, Android/iOS test apps) that cannot spawn a
+  process. The client generates the complete server-mode argument array
+  (`--server jsonrpc --client-host <host> --client-port <port> --no-banner`) and hands it to the
+  callback, which forwards it verbatim to `TestApplication.CreateBuilderAsync`.
+
+Both paths use loopback TCP, so neither works on browser/WASM; the in-process path fails fast with a
+`PlatformNotSupportedException` there. See the package's `PACKAGE.md` for ownership, cancellation and
+shutdown-bound details.
+
 ## API overview
 
 Here's the current list of APIs that supported by the client.
@@ -24,8 +46,6 @@ Here's the current list of APIs that supported by the client.
   - [testing/testUpdates/tests](#discovery-of-tests) - Notifies client about test updates (test cases and test results)
   - [testing/testUpdates/attachments](#execution-of-tests) - Notifies client about additional attachments (trx/coverage)
 - Client notifications updates
-  - [client/launchDebugger](#launch-debugger) - Requests a client to launch a process with debugger attached to it
-  - [client/attachDebugger](#attach-debugger) - Requests a client to attach a debugger to a process by pid
   - [client/log](#logging-of-messages) - Notifies a client to logs a message to the output window
 - Miscellaneous requests
   - [telemetry/update](#telemetry) - Sends telemetry data to the client
@@ -148,6 +168,9 @@ namespace ErrorCodes {
 
     export const testingPlatformErrorRangeStart = -31700;
 
+    // The initialize request did not contain a protocol version supported by the server.
+    export const ProtocolVersionNotSupported: integer = -31699;
+
     // If a top level assertion has failed when running tests.
     // TODO: Decide if we can forward all assertion failures and attach them to test nodes.
     export const AssertionFailed: integer = -31001;
@@ -181,6 +204,15 @@ what the client supports and limit functionality based on unsupported features.
 > Since the capabilities are fetched by sending an RPC request to a started executable, these can only be queried by the client after
 > the project was successfully built.
 
+The `initialize` request MUST be the first request sent on a connection:
+
+- Before `initialize` is received, requests are rejected with `ServerNotInitialized` (`-32002`) and
+  notifications other than `exit` and `$/cancelRequest` are ignored.
+- While initialization is in progress, non-initialize requests wait for it to complete. A second
+  `initialize` request is rejected with `InvalidRequest` (`-32600`).
+- After initialization succeeds, normal requests are processed and another `initialize` request is rejected.
+  If initialization fails, the client may correct the request and try again.
+
 ### Determine capabilities during test runner initialization
 
 > [!NOTE]
@@ -194,25 +226,24 @@ Request:
 
 ```typescript
 interface InitializeParams {
-    // The process Id of the parent process that started the server. Is null if
-    // the process has not been started by another process. If the parent
-    // process is not alive then the server should exit (see exit notification)
-    // its process.
+    // The process ID of the client process that started the server.
+    // Protocol 1.0 requires this value to be an integer.
     processId: PID,
 
     clientInfo: {
         // The name of the client.
         name: string,
 
-        // This is the version of the client's protocol and should follow
-        // semver.
-        // The client and the server should be able to communicate
-        // only if the major version stays the same.
-        // The client can attempt to fallback on the older protocol
-        // version if it has such a fallback and send another INITIALIZE
-        // request.
+        // Client compatibility version. Existing server integrations use this
+        // to gate client-specific behavior, so it remains separate from the
+        // independently negotiated wire-protocol version below.
         version: string,
     },
+
+    // OPTIONAL for compatibility with clients predating protocol negotiation.
+    // The server selects its most preferred mutually supported version.
+    // If omitted, null, or empty, the server uses the legacy base protocol (1.0.0).
+    protocolVersions?: string[] | null,
 
     capabilities: {
         // Note: Since the initialize message is compatible with the LSP protocol,
@@ -220,14 +251,17 @@ interface InitializeParams {
         // As such, we put all of them under a single testing namespace.
         // This reduces collisions with other LSP capabilities.
         testing: {
-            // If true, the client supports the client/attachDebugger and client/launchDebugger requests.
+            // Reserved for future debugger callbacks. Protocol 1.0 accepts this field
+            // for compatibility but does not send debugger requests.
             debuggerProvider: boolean,
 
             // If true, the client is stateful: it persists an addressable set of test nodes for the
             // whole session and keeps each node in its last-known state until it is explicitly updated
-            // (for example, an IDE test explorer). If false or missing, the client is stateless: it
-            // consumes test updates as a stream and does not retain node state after the run
-            // (for example, `dotnet test`). Defaults to false.
+            // (for example, an IDE test explorer). If false, the client explicitly declares that it is
+            // stateless and consumes test updates as a stream without retaining node state after the run
+            // (for example, `dotnet test`). If missing, the client does not support or did not declare
+            // the capability, allowing consumers to apply compatibility behavior for known legacy clients.
+            // This is independent of connection lifetime and experimental_multiRequestSupport.
             isStateful?: boolean,
         },
     }
@@ -247,9 +281,13 @@ interface InitializeResponse {
         // The name of the server.
         name: string,
 
-        // The server's protocol version.
+        // Product/build version of the server. This is not the wire-protocol version.
         version: string
     },
+
+    // Independently negotiated wire-protocol version.
+    protocolVersion?: string | null,
+
     capabilities: {
         testing: {
             // If true, the server supports test discovery.
@@ -276,8 +314,10 @@ interface InitializeResponse {
 
             // If true, the server understands the first-class test-coverage message contract.
             // This advertises protocol support only; it does not imply that an enabled extension
-            // will produce coverage during the run. The current server always advertises true.
-            supportsTestCoverageMessages: true;
+            // will produce coverage during the run.
+            // This MUST only be true when first-class coverage messages are actually
+            // forwarded over this JSON-RPC connection.
+            supportsTestCoverageMessages: boolean;
         },
     }
 }
@@ -288,6 +328,11 @@ interface InitializeResponse {
 Any behavior changes should be announced via capabilities, where the client/server
 should announce what kinds of additional RPC requests and responses they can handle.
 
+The independently negotiated `protocolVersion` versions the base wire contract. It is intentionally
+separate from `clientInfo.version` and `serverInfo.version`, which identify the client compatibility
+surface and server product build. Protocol `1.0.0` is the legacy base. An unsupported set is rejected
+with `ProtocolVersionNotSupported` (`-31699`).
+
 For instance, let's say the server would like to be make the file/line location lazy.
 The client should announce that is supports lazy locations.
 If the capability is present the server can then send lazy location data.
@@ -297,6 +342,14 @@ lazy locations and send the full location.
 > [!NOTE]
 > The TestNode format specified in the initial release of the protocol should be supported by all
 > clients and servers. As such, it is not expressed via capabilities.
+
+## Additional passive connections
+
+A server advertising `multipleConnectionProvider` can use additional passive connections to push
+artifacts from child or watcher processes. The endpoint is configured by the client out of band when
+the process is launched; protocol 1.0 does not define a `testing.callbackProvider` initialize capability.
+This is used, for example, to preserve hang-dump or crash-dump attachments if the primary test-host
+process terminates.
 
 ## Discovery and run requests
 
@@ -467,7 +520,7 @@ type ExecutionState =
     | 'failed'
     | 'timed-out'
     | 'error'
-    | "cancelled"
+    | "canceled"
 
 interface Trait {
     key: string;
@@ -492,6 +545,12 @@ Request:
 
 ```typescript
 interface DiscoverTestsParams {
+    // Optional explicit test selection. If omitted, all tests matching the filter are discovered.
+    tests?: TestNode[],
+
+    // Optional graph filter that narrows discovery.
+    filter?: string,
+
     runId: GUID
 }
 ```
@@ -511,7 +570,7 @@ Notifications:
         // These should be processed in order and also should be complete,
         // i.e. a server will send an update for the test, if it already sent updates
         // for all of the parent nodes.
-        changes: TestUpdateChange[]
+        changes: TestUpdateChange[] | null
 
         // Run id for which the notification is sent. It should match the id sent during the discovery request.
         runId: GUID
@@ -535,7 +594,11 @@ Notifications:
       processing all node update notifications.
   - Implementation detail: if a server sends callback notifications and returns a JSON-RPC response, vs-streamjsonrpc may resolve them in any order. As such, awaiting of the response is insufficient to guarantee that all updates were processed by the callback handler.
   - method: `testing/testUpdates/tests`
-  - params: `TestUpdateNotificationParams` where `params.children == null`.
+  - params: `TestUpdateNotificationParams` where `params.changes == null`.
+  - The server sends this terminal notification before the final success or error response for requests
+    whose discovery/run params were successfully deserialized, including requests canceled while queued
+    during initialization. Requests rejected by lifecycle checks and requests whose params could not be
+    deserialized receive only the error response.
 
 Response:
 
@@ -567,6 +630,9 @@ interface RunTestsParams {
     // If not specified all tests will run.
     tests?: TestNode[],
 
+    // Optional graph filter that narrows execution.
+    filter?: string,
+
     // Token which should be specified for all update notifications.
     // This way the client can under which the update notifications should be reported.
     runId: GUID
@@ -583,21 +649,16 @@ Notifications:
       As soon as the client processes this notification it is guaranteed to be done
       processing all node update notifications.
   - method: `testing/testUpdates/tests`
-  - params: `TestUpdateNotificationParams` where `params.testCases == null`.
+  - params: `TestUpdateNotificationParams` where `params.changes == null`.
 - Attachment updates
   - method: `testing/testUpdates/attachments`
   - params: `AttachmentUpdatesParams` defined as follows:
 
     ```typescript
     interface AttachmentUpdatesParams {
-        attachments?: Attachment[],
-        runId: GUID
+        attachments: Attachment[],
     }
     ```
-
-- Attachment updates completes
-    method: `testing/testUpdates/attachments`
-    params: `AttachmentUpdatesParams` where `params.attachments == null`
 
 Response:
 
@@ -609,33 +670,33 @@ interface RunTestsResponse {
     // rather than to a single test result.
     // Note: If multiple data collectors are generating attachments, they should send separate
     // attachment events.
-    attachments?: Attachment[]
+    attachments: Attachment[]
 }
 
 interface Attachment {
-    // OPTIONAL: If the attachment is based on a file (and the client can show a hyperlink to it)
-    //           the file's location should be specified by this property.
+    // If the attachment is based on a file (and the client can show a hyperlink to it),
+    // the file's location should be specified; otherwise this value is null.
     // Example: "uri": "file://some/coverage.trx"
-    uri: string,
+    uri: string | null,
 
     // The name of the extension that generated the attachment.
     // Note: For the time being the client does not special case attachments
     //       based on their producer.
     // Example: "producer": "TrxReportGeneratorProcessLifetimeHandler"
-    producer: string,
+    producer: string | null,
 
-    // OPTIONAL: The file extension can be used to resolve the attachment type
-    //           if that isn't ambiguous.
+    // The file extension can be used to resolve the attachment type if that isn't ambiguous;
+    // otherwise this value is null.
     // Note: For the time being the client does not special case attachments
     //       based on their type.
     // Example: "type": "file"
-    type: string,
+    type: string | null,
 
     // How the attachment can be displayed as by the client.
     // Example: "display-name": "Code Coverage"
-    displayName: string;
+    'display-name': string | null;
 
-    description: string;
+    description: string | null;
 }
 ```
 
@@ -696,8 +757,11 @@ Notification:
 - params: `CancelParams` defined as follows:
 
 ```typescript
+type NumericStringId = `${bigint}`;
+
 interface CancelParams {
-    id: number;
+    // String IDs use the canonical decimal integer representation and signed 32-bit range.
+    id: number | NumericStringId;
 }
 ```
 
@@ -706,6 +770,8 @@ interface CancelParams {
 ### Launch debugger
 
 > Message direction: Server -> Client
+> [!NOTE]
+> Reserved protocol shape. Microsoft.Testing.Platform 1.0 does not currently send this request.
 
 Requests a client to attach a debugger to the spawned child process.
 
@@ -737,6 +803,8 @@ interface LaunchDebuggerParams {
 ### Attach debugger
 
 > Message direction: Server -> Client
+> [!NOTE]
+> Reserved protocol shape. Microsoft.Testing.Platform 1.0 does not currently send this request.
 
 Requests a client to attach a debugger to the spawned child process.
 
@@ -781,17 +849,13 @@ interface LogMessageParams {
     level: TestingPlatformLogLevel;
     message: string;
 }
-```
 
-```typescript
-enum TestingPlatformLogLevel
-{
-    Trace = 0,
-    Debug = 1,
-    Information = 2,
-    Warning = 3,
-    Error = 4,
-    Critical = 5,
-    None = 6,
-}
+type TestingPlatformLogLevel =
+    'Trace'
+    | 'Debug'
+    | 'Information'
+    | 'Warning'
+    | 'Error'
+    | 'Critical'
+    | 'None';
 ```

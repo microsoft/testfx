@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.Json;
-
+#if USE_EXTERNAL_COMBINATORIAL
 using Combinatorial.MSTest;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+#endif
+
+using System.Text.Json;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -34,6 +38,7 @@ public abstract class AcceptanceTestBase
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
         MicrosoftTestingExtensionsGitHubActionsReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
         MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
+        MicrosoftTestingExtensionsRetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Retry.");
         MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
         MicrosoftTestingExtensionsAzureFoundryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesNonShipping, "Microsoft.Testing.Extensions.AzureFoundry.");
     }
@@ -97,6 +102,12 @@ public abstract class AcceptanceTestBase
             "1",
             StringComparison.Ordinal);
 
+    public static bool IsWinAppCliInteropTestEnvironment
+        => string.Equals(
+            Environment.GetEnvironmentVariable("TESTFX_RUN_WINAPP_CLI_INTEROP_TESTS"),
+            "1",
+            StringComparison.Ordinal);
+
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
@@ -108,6 +119,8 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftTestingExtensionsGitHubActionsReportVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsRetryVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
 

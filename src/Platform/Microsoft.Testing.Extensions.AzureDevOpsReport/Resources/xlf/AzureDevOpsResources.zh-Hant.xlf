@@ -47,6 +47,11 @@
         <target state="translated">Azure DevOps 即時發佈無法上傳 {0} 個附件; 這些附件將不會出現在 Azure DevOps 測試執行中。</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="translated">Azure DevOps REST API 驗證失敗或已重新導向至登入畫面 (狀態: {0})，這表示 SYSTEM_ACCESSTOKEN 無效或無法使用。對於派生提取要求驗證組建，請不要將密碼資訊公開給不受信任的派生程式碼；請改從另一個受信任的管線內容發佈結果，或停用 Azure DevOps 即時發佈。</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps 即時發佈無法完成測試執行。</target>
@@ -161,6 +166,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">逾時: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="translated">Azure DevOps REST API 傳回未預期的成功回應，狀態碼為 {0}，內容類型為 '{1}'。</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>

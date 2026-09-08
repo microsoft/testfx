@@ -83,7 +83,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         int skipped = 0;
         int timedout = 0;
         int errored = 0;
-        TimeSpan totalDuration = TimeSpan.Zero;
+        TimeSpan elapsedTime = finishTime - _testStartTime;
 
         // First pass: count how many entries each UID is going to produce so we can
         // annotate rows that share a UID with "attemptIndex"/"attemptOf". This lets the
@@ -123,6 +123,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         AppendStringPair(sb, "endTime", finishTime.ToString("O", CultureInfo.InvariantCulture));
         sb.Append(',');
         AppendNumberPair(sb, "exitCode", _exitCode.ToString(CultureInfo.InvariantCulture));
+        if (_isIncomplete)
+        {
+            sb.Append(',');
+            AppendBooleanPair(sb, "incomplete", true);
+            sb.Append(',');
+            AppendStringPair(sb, "runStatus", "aborted");
+        }
+
         sb.Append(',');
         AppendKey(sb, "tests");
         sb.Append('[');
@@ -139,8 +147,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             first = false;
 
             CountOutcome(r.Outcome, ref passed, ref failed, ref skipped, ref timedout, ref errored);
-            totalDuration += r.Duration;
-
             int attemptOf = countByUid[r.Uid];
             int attemptIndex = emittedByUid.TryGetValue(r.Uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
             emittedByUid[r.Uid] = attemptIndex;
@@ -155,6 +161,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             AppendStringPair(sb, "outcome", r.Outcome);
             sb.Append(',');
             AppendNumberPair(sb, "durationMs", r.Duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+
+            if (r.RetryAttemptNumber is int retryAttemptNumber)
+            {
+                sb.Append(',');
+                AppendNumberPair(sb, "retryAttemptNumber", retryAttemptNumber.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',');
+                AppendBooleanPair(sb, "isSupersededRetryAttempt", r.IsSupersededRetryAttempt == true);
+            }
 
             if (attemptOf > 1)
             {
@@ -260,7 +274,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         sb.Append(',');
         AppendNumberPair(sb, "errored", errored.ToString(CultureInfo.InvariantCulture));
         sb.Append(',');
-        AppendNumberPair(sb, "totalDurationMs", totalDuration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+        AppendNumberPair(sb, "totalDurationMs", elapsedTime.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
         sb.Append('}');
 
         sb.Append('}');
@@ -307,6 +321,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     {
         AppendKey(sb, key);
         sb.Append(number);
+    }
+
+    private static void AppendBooleanPair(StringBuilder sb, string key, bool value)
+    {
+        AppendKey(sb, key);
+        sb.Append(value ? "true" : "false");
     }
 
     private static void AppendString(StringBuilder sb, string value)

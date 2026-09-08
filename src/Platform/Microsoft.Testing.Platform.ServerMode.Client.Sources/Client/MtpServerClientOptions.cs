@@ -17,31 +17,35 @@ internal sealed class MtpServerClientOptions
     public string ClientName { get; set; } = "Microsoft.Testing.Platform.ServerMode.Client";
 
     /// <summary>
-    /// Gets or sets the client protocol/tool version reported to the server (<c>clientInfo.version</c>).
+    /// Gets or sets the client compatibility version reported to the server (<c>clientInfo.version</c>).
+    /// This is separate from <see cref="SupportedProtocolVersions"/>.
     /// </summary>
     public string ClientVersion { get; set; } = "1.0.0";
 
     /// <summary>
-    /// Gets or sets a value indicating whether the client advertises that it can provide a debugger
-    /// (<c>capabilities.testing.debuggerProvider</c>). When <see langword="true"/> the server may send
-    /// <c>client/attachDebugger</c> / <c>client/launchDebugger</c> requests, which the caller must answer via
-    /// a debugger callback. Defaults to <see langword="false"/>.
+    /// Gets or sets the server-mode protocol versions supported by the client. The server selects its most
+    /// preferred mutually supported version.
+    /// </summary>
+    public IReadOnlyCollection<string> SupportedProtocolVersions { get; set; } = JsonRpcProtocolVersions.Supported;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the client advertises the reserved debugger-provider
+    /// capability (<c>capabilities.testing.debuggerProvider</c>). Microsoft.Testing.Platform protocol 1.0
+    /// accepts this field for compatibility but does not currently send debugger requests.
     /// </summary>
     public bool DebuggerProvider { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the client keeps the connection alive for multiple requests
-    /// (<c>capabilities.testing.isStateful</c> / <c>experimental_multiRequestSupport</c>). When
-    /// <see langword="false"/> the client performs a single discover or run and then exits. Defaults to
-    /// <see langword="false"/>.
+    /// Gets or sets a value indicating whether the client persists an addressable set of test nodes for the
+    /// whole session and keeps each node in its last-known state until explicitly updated
+    /// (<c>capabilities.testing.isStateful</c>). <see langword="null"/> omits the capability from the initialize
+    /// handshake. Defaults to <see langword="null"/>.
     /// </summary>
     /// <remarks>
-    /// This flag only advertises the client's willingness to the server during the handshake; it does not by
-    /// itself guarantee multi-request behavior. Real keep-alive additionally requires the server to negotiate
-    /// it back via <c>ServerCapabilities.MultiRequestSupport</c>. Setting this to <see langword="true"/>
-    /// against a server that does not support it has no effect.
+    /// This capability describes how the client consumes test-node updates. It is independent of connection
+    /// lifetime and the server's <c>ServerCapabilities.MultiRequestSupport</c> capability.
     /// </remarks>
-    public bool IsStateful { get; set; }
+    public bool? IsStateful { get; set; }
 
     /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback
@@ -51,9 +55,28 @@ internal sealed class MtpServerClientOptions
     public TimeSpan ConnectionTimeout { get; set; } = TimeSpan.FromSeconds(90);
 
     /// <summary>
+    /// Gets or sets how long disposal waits for an in-process hosted application (see
+    /// <c>MtpServerClient.LaunchInProcessAsync</c>) to stop after the transport has been closed, before the
+    /// callback's cancellation token is canceled. Defaults to 30 seconds.
+    /// </summary>
+    /// <remarks>
+    /// Disposal waits at most <see cref="MtpServerClientOptions.ServerShutdownTimeout"/> after the transport
+    /// is closed, plus a further fixed 5 seconds after the callback's token is canceled. This option has no
+    /// effect on the external-process launch path, which kills the child process instead, and it does not
+    /// apply to a <em>failed</em> launch: nothing is connected there, so the callback is canceled immediately
+    /// and only the fixed 5-second grace applies.
+    /// </remarks>
+    public TimeSpan ServerShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
     /// Gets the environment variables injected into the launched test-app process (in addition to the
     /// inherited environment). Useful for passing configuration such as diagnostics switches.
     /// </summary>
+    /// <remarks>
+    /// Only applies to the external-process launch path. An application hosted in the caller's own process
+    /// shares the caller's environment, so <c>MtpServerClient.LaunchInProcessAsync</c> ignores this
+    /// collection (and logs a warning when it is non-empty).
+    /// </remarks>
     public IDictionary<string, string?> EnvironmentVariables { get; } = new Dictionary<string, string?>(StringComparer.Ordinal);
 
     /// <summary>

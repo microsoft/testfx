@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
@@ -37,7 +37,6 @@ internal static class MetadataRegistryEmitter
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
         {
-            sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
                 // The stored Type flows into the generated Initialize method's direct GetMethods /
@@ -48,6 +47,8 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("public bool AreAttributesComplete { get; set; }");
+                sb.AppendLine("public bool SupportsGeneratedDescriptors { get; set; }");
+                sb.AppendLine("public bool AreGeneratedDescriptorsComplete { get; set; }");
                 sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
@@ -57,24 +58,22 @@ internal static class MetadataRegistryEmitter
             using (sb.Block("internal sealed class TestMethodReflectionInfo"))
             {
                 sb.AppendLine("public string Name { get; set; } = string.Empty;");
-                sb.AppendLine("/// <summary>True when this method is a <c>[TestMethod]</c> (used to populate the test-method roots); false for fixtures and other registered methods.</summary>");
+                sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
                 sb.AppendLine("public bool IsTestMethod { get; set; }");
                 sb.AppendLine("public bool IsStatic { get; set; }");
                 sb.AppendLine("public bool IsAsync { get; set; }");
                 sb.AppendLine("public bool ReturnsTask { get; set; }");
                 sb.AppendLine("public bool ReturnsValueTask { get; set; }");
                 sb.AppendLine("public bool ReturnsVoid { get; set; }");
+                sb.AppendLine("public bool IsDescriptorSupported { get; set; }");
                 sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("public bool AreAttributesComplete { get; set; }");
-                sb.AppendLine("/// <summary>Source-generated accessors for this method's <c>[DynamicData]</c> sources (empty when none were resolved), registered with <c>DynamicDataSourceResolver</c> so the data is read without runtime reflection.</summary>");
                 sb.AppendLine("public IReadOnlyList<DynamicDataSourceReflectionInfo> DynamicDataSources { get; set; } = Array.Empty<DynamicDataSourceReflectionInfo>();");
-                sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
                 sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
             }
 
             sb.AppendLine();
-            sb.AppendLine("/// <summary>A compile-time-resolved <c>[DynamicData]</c> source: the declaring type, the source name, an accessor that returns the raw data object, and (optionally) a custom display-name accessor.</summary>");
             using (sb.Block("internal sealed class DynamicDataSourceReflectionInfo"))
             {
                 sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
@@ -122,7 +121,6 @@ internal static class MetadataRegistryEmitter
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
         {
-            sb.AppendLine($"/// <summary>Source-generated reflection metadata for assembly <c>{assemblyName}</c>.</summary>");
             using (sb.Block($"internal static class {RegistryClassName}"))
             {
                 sb.AppendLine($"public const string AssemblyName = \"{Escape(assemblyName)}\";");
@@ -192,6 +190,8 @@ internal static class MetadataRegistryEmitter
             EmitAttributesProperty(sb, "Attributes", model.Attributes);
             sb.AppendLine(",");
             sb.AppendLine($"AreAttributesComplete = {Bool(model.AreAttributesComplete)},");
+            sb.AppendLine($"SupportsGeneratedDescriptors = {Bool(model.SupportsGeneratedDescriptors)},");
+            sb.AppendLine($"AreGeneratedDescriptorsComplete = {Bool(model.AreGeneratedDescriptorsComplete)},");
 
             EmitConstructors(sb, fqn, model);
             sb.AppendLine(",");
@@ -244,12 +244,14 @@ internal static class MetadataRegistryEmitter
                 using (sb.Block(null))
                 {
                     sb.AppendLine($"Name = \"{Escape(method.Name)}\",");
+                    sb.AppendLine($"DeclaringType = typeof({method.DeclaringTypeFullyQualifiedName}),");
                     sb.AppendLine($"IsTestMethod = {Bool(method.IsTestMethod)},");
                     sb.AppendLine($"IsStatic = {Bool(method.IsStatic)},");
                     sb.AppendLine($"IsAsync = {Bool(method.IsAsync)},");
                     sb.AppendLine($"ReturnsTask = {Bool(method.ReturnsTask)},");
                     sb.AppendLine($"ReturnsValueTask = {Bool(method.ReturnsValueTask)},");
                     sb.AppendLine($"ReturnsVoid = {Bool(method.ReturnsVoid)},");
+                    sb.AppendLine($"IsDescriptorSupported = {Bool(method.IsDescriptorSupported)},");
                     EmitParameterTypes(sb, method.Parameters);
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
@@ -523,7 +525,7 @@ internal static class MetadataRegistryEmitter
     {
         string? typeName = constant.FullyQualifiedType;
         string raw = FormatPrimitive(constant.PrimitiveValue);
-        return typeName is null ? raw : $"({typeName}){raw}";
+        return typeName is null ? raw : $"({typeName})({raw})";
     }
 
     private static string BuildArrayLiteral(TypedConstantModel constant)
@@ -545,17 +547,29 @@ internal static class MetadataRegistryEmitter
     }
 
     private static string BuildPrimitiveLiteral(TypedConstantModel constant)
-        => FormatPrimitive(constant.PrimitiveValue);
+    {
+        string literal = FormatPrimitive(constant.PrimitiveValue);
+        return constant.PrimitiveValue is byte or sbyte or short or ushort
+            && constant.FullyQualifiedType is { } typeName
+                ? $"({typeName}){(literal.StartsWith("-", StringComparison.Ordinal) ? $"({literal})" : literal)}"
+                : literal;
+    }
 
     private static string FormatPrimitive(object? value)
         => value switch
         {
             null => "null",
-            string s => $"\"{Escape(s)}\"",
+            string s => Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(s, quote: true),
             bool b => Bool(b),
-            char c => $"'{(c == '\'' ? "\\'" : c.ToString())}'",
-            float f => f.ToString("R", CultureInfo.InvariantCulture) + "f",
-            double d => d.ToString("R", CultureInfo.InvariantCulture) + "d",
+            char c => Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(c, quote: true),
+            float f when float.IsNaN(f) => "global::System.Single.NaN",
+            float f when float.IsPositiveInfinity(f) => "global::System.Single.PositiveInfinity",
+            float f when float.IsNegativeInfinity(f) => "global::System.Single.NegativeInfinity",
+            float f => f.ToString("R", CultureInfo.InvariantCulture) + "F",
+            double d when double.IsNaN(d) => "global::System.Double.NaN",
+            double d when double.IsPositiveInfinity(d) => "global::System.Double.PositiveInfinity",
+            double d when double.IsNegativeInfinity(d) => "global::System.Double.NegativeInfinity",
+            double d => d.ToString("R", CultureInfo.InvariantCulture) + "D",
             decimal m => m.ToString(CultureInfo.InvariantCulture) + "m",
             long l => l.ToString(CultureInfo.InvariantCulture) + "L",
             ulong ul => ul.ToString(CultureInfo.InvariantCulture) + "UL",

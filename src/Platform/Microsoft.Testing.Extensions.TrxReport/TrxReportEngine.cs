@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
@@ -163,7 +163,7 @@ internal sealed partial class TrxReportEngine
     private string ResolveTrxOutputPath(string testAppModule)
     {
         string reportFileName;
-        if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
+        if (_commandLineOptionsService.TryGetOptionArgumentListOrDefault(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
         {
             // The argument may be a bare file name, a relative path or an absolute path. Placeholders
             // are resolved first against the whole input. Only the leaf file name is sanitized for

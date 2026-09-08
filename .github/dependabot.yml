@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 15
+    labels:
+      - dependencies
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
@@ -16,6 +18,8 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    labels:
+      - dependencies
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
@@ -27,6 +31,8 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
+    labels:
+      - dependencies
     ignore:
       - dependency-name: '*'
         update-types:
@@ -36,6 +42,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    labels:
+      - dependencies
     ignore:
       # The github/gh-aw-actions/* and github/gh-aw/actions/setup actions are
       # pinned by `gh aw compile` and
@@ -47,6 +55,12 @@ updates:
       # updated via `gh aw upgrade` / the Agentic Maintenance workflow instead.
       - dependency-name: "github/gh-aw-actions/*"
       - dependency-name: "github/gh-aw/actions/setup"
+      # DavidAnson/markdownlint-cli2-action pins the CLI version it bundles, and
+      # `.github/workflows/markdown-linter.md` installs that same version by hand so the
+      # scheduled report and the pull request gate apply identical rules. Dependabot can
+      # only see the action, so letting it bump alone would silently give the two different
+      # rule sets. Move both pins together, by hand, when updating the action.
+      - dependency-name: "DavidAnson/markdownlint-cli2-action"
     commit-message:
       prefix: '[main] '
     cooldown:

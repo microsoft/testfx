@@ -24,9 +24,13 @@ internal static class EnvironmentVariableConstants
 
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME);
+    public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME);
+
+    // Overrides, in seconds, the total post-exit budget for controller callbacks, output, and disposal.
+    public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS);
 
     public const string TESTINGPLATFORM_DIAGNOSTIC = nameof(TESTINGPLATFORM_DIAGNOSTIC);
     public const string TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = nameof(TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
@@ -90,4 +94,12 @@ internal static class EnvironmentVariableConstants
 
     // Trx
     public const string TESTINGPLATFORM_TRX_TESTRUN_ID = nameof(TESTINGPLATFORM_TRX_TESTRUN_ID);
+
+    // Deadline-aware cancellation. TESTINGPLATFORM_DEADLINE is an absolute wall-clock instant
+    // (ISO 8601 round-trip, parsed to UTC) that the CI runner will hard-cancel the process at.
+    // The margins are the lead time before the deadline at which the platform reacts: graceful
+    // stop (stop scheduling new tests, let reporters finalize) and hang dump (out-of-proc dump).
+    public const string TESTINGPLATFORM_DEADLINE = nameof(TESTINGPLATFORM_DEADLINE);
+    public const string TESTINGPLATFORM_DEADLINE_STOP_MARGIN = nameof(TESTINGPLATFORM_DEADLINE_STOP_MARGIN);
+    public const string TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = nameof(TESTINGPLATFORM_DEADLINE_DUMP_MARGIN);
 }

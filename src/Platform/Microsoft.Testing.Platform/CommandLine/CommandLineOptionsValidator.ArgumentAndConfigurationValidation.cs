@@ -13,6 +13,7 @@ internal static partial class CommandLineOptionsValidator
     private static async Task<ValidationResult> ValidateOptionsArgumentsAsync(
         CommandLineParseResult parseResult,
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         if (parseResult is null)
@@ -35,13 +36,21 @@ internal static partial class CommandLineOptionsValidator
             }
         }
 
-        // Apply the per-option argument validators to JSON-sourced entries as well. Skip disabled
-        // entries (nothing to validate) and entries that the prior arity pass already flagged
-        // (calling a provider's validator with too-few/too-many arguments may produce confusing
-        // secondary errors or, worse, index out of bounds inside the validator itself).
-        if (jsonCommandLineOptions is { Count: > 0 })
+        await ValidateJsonEntriesAsync(jsonCommandLineOptions, PlatformConfigurationConstants.CommandLineOptionsSectionName).ConfigureAwait(false);
+        await ValidateJsonEntriesAsync(jsonCommandLineOptionDefaults, PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName).ConfigureAwait(false);
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
+
+        async Task ValidateJsonEntriesAsync(IReadOnlyList<JsonCommandLineOptionEntry>? entries, string sectionName)
         {
-            foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
+            if (entries is null)
+            {
+                return;
+            }
+
+            foreach (JsonCommandLineOptionEntry entry in entries)
             {
                 if (entry.IsDisabled)
                 {
@@ -64,14 +73,10 @@ internal static partial class CommandLineOptionsValidator
                 {
                     stringBuilder ??= new();
                     string innerError = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, entry.OptionName, result.ErrorMessage);
-                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
+                    stringBuilder.AppendLine(FormatJsonValidationError(sectionName, innerError));
                 }
             }
         }
-
-        return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
-            : ValidationResult.Valid();
     }
 
     private static async Task<ValidationResult> ValidateConfigurationAsync(

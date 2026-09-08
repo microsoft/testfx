@@ -38,6 +38,7 @@ public sealed class DotnetTestDataConsumerTests
         yield return [typeof(StandardOutputProperty), new StandardOutputProperty("first"), new StandardOutputProperty("second")];
         yield return [typeof(StandardErrorProperty), new StandardErrorProperty("first"), new StandardErrorProperty("second")];
         yield return [typeof(AssertionFailureProperty), new AssertionFailureProperty("first", null), new AssertionFailureProperty("second", null)];
+        yield return [typeof(RetryAttemptProperty), new RetryAttemptProperty(1, true), new RetryAttemptProperty(2, false)];
     }
 
     [TestMethod]
@@ -135,6 +136,37 @@ public sealed class DotnetTestDataConsumerTests
         Assert.AreEqual(TestStates.Error, details.State);
         Assert.IsNull(details.Expected);
         Assert.IsNull(details.Actual);
+    }
+
+    [TestMethod]
+    public void GetTestNodeDetails_WhenSupersededRetryAttemptFailed_PopulatesRetryAttemptNumberAndIsSuperseded()
+    {
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(
+            [new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true)]);
+
+        Assert.AreEqual(TestStates.Failed, details.State);
+        Assert.AreEqual(1, details.RetryAttemptNumber);
+        Assert.IsTrue(details.IsSuperseded);
+    }
+
+    [TestMethod]
+    public void GetTestNodeDetails_WhenFinalRetryAttemptPassed_PopulatesRetryAttemptNumberAndIsSupersededFalse()
+    {
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(
+            [PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false)]);
+
+        Assert.AreEqual(TestStates.Passed, details.State);
+        Assert.AreEqual(2, details.RetryAttemptNumber);
+        Assert.IsFalse(details.IsSuperseded);
+    }
+
+    [TestMethod]
+    public void GetTestNodeDetails_WhenNoRetryAttemptProperty_DoesNotPopulateRetryAttemptNumberOrIsSuperseded()
+    {
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.IsNull(details.RetryAttemptNumber);
+        Assert.IsNull(details.IsSuperseded);
     }
 
     [TestMethod]

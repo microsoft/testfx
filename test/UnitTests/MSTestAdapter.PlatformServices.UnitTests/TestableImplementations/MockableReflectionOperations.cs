@@ -58,6 +58,9 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
     public Func<object?[]?, object>? GetConstructorInvoker(Type type)
         => mock.Object.GetConstructorInvoker(type);
 
+    public bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported)
+        => mock.Object.TryGetTestMethodDescriptors(type, out methods, out areAllTestMethodsSupported);
+
     public Action<object?, object?>? GetPropertySetter(PropertyInfo property)
         => mock.Object.GetPropertySetter(property);
 

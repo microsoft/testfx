@@ -19,7 +19,9 @@ internal class Context : IContext, IDisposable
 
     public void Dispose()
     {
-        foreach (IDisposable item in _disposables)
+        List<IDisposable> disposables = _disposables;
+        _disposables = [];
+        foreach (IDisposable item in disposables)
         {
             Console.WriteLine($"Disposing: '{item.GetType()}'");
             item.Dispose();

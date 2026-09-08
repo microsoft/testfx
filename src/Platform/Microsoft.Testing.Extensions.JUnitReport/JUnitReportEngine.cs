@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
@@ -52,7 +52,7 @@ internal sealed class JUnitReportEngine : ReportEngineBase
         // prevents concurrent runs that happen to produce the same default file name
         // (same second / same results dir) from clobbering each other's tmp file.
         string tempPath = finalPath + "." + Path.GetRandomFileName() + ".tmp";
-        await new JUnitXmlWriter(_fileSystem, _environment, _testFramework, _exitCode, _cancellationToken)
+        await new JUnitXmlWriter(_fileSystem, _environment, _testFramework, _exitCode, _cancellationToken, _isIncomplete)
             .WriteXmlAsync(tempPath, suites)
             .ConfigureAwait(false);
 

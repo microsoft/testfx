@@ -20,6 +20,7 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -43,7 +44,8 @@ internal sealed class TrxProcessLifetimeHandler :
     private readonly ITask _task;
     private readonly IOutputDevice _outputDevice;
     private readonly ILogger<TrxProcessLifetimeHandler> _logger;
-    private readonly PipeNameDescription _pipeNameDescription;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly NamedPipeServerEndpoint _endpoint;
     private readonly Dictionary<IDataProducer, List<FileArtifact>> _fileArtifacts = [];
     private readonly DateTimeOffset _startTime;
 
@@ -64,7 +66,8 @@ internal sealed class TrxProcessLifetimeHandler :
         IClock clock,
         ITask task,
         IOutputDevice outputDevice,
-        PipeNameDescription pipeNameDescription)
+        IServiceProvider serviceProvider,
+        NamedPipeServerEndpoint endpoint)
     {
         _commandLineOptions = commandLineOptions;
         _environment = environment;
@@ -75,7 +78,8 @@ internal sealed class TrxProcessLifetimeHandler :
         _clock = clock;
         _task = task;
         _outputDevice = outputDevice;
-        _pipeNameDescription = pipeNameDescription;
+        _serviceProvider = serviceProvider;
+        _endpoint = endpoint;
         _logger = loggerFactory.CreateLogger<TrxProcessLifetimeHandler>();
         _startTime = _clock.UtcNow;
     }
@@ -97,8 +101,9 @@ internal sealed class TrxProcessLifetimeHandler :
         => Task.FromResult(
            // TrxReportGenerator is enabled only when trx report is enabled
            _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
-           // If crash dump is not enabled we run trx in-process only
-           && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
+           // TRX requires (and will trigger) a controller-managed test host whenever the current
+           // platform supports process restart; this is what makes plain --report-trx controller-backed.
+           && TrxModeHelpers.IsTestHostControllerSupported);
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
@@ -106,7 +111,7 @@ internal sealed class TrxProcessLifetimeHandler :
         // IsEnabledAsync will only return true if we are out of process.
         // If we are not out of process, then we are disabled. Hence, this won't be called.
         // The extra check is to let the platform compatibility analyzer know that we are not running in browser.
-        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions))
+        if (!TrxModeHelpers.IsTestHostControllerSupported)
         {
             throw ApplicationStateGuard.Unreachable();
         }
@@ -117,10 +122,21 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
-    [UnsupportedOSPlatform("BROWSER")]
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     private void BeforeTestHostProcessStartCore(CancellationToken cancellationToken)
     {
-        _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
+        _singleConnectionNamedPipeServer = NamedPipeServerFactory.CreateAndBind(
+            _endpoint,
+            CallbackAsync,
+            _environment,
+            _logger,
+            _task,
+            _serviceProvider,
+            cancellationToken);
         _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new TrxStreamLocationRequestSerializer(), typeof(TrxStreamLocationRequest));
@@ -204,10 +220,13 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostProcessInformation.ExitCode);
 #endif
 
+            string testHostExitInfo = testHostProcessInformation.ExitCode == (int)ExitCode.TestSessionAborted
+                ? $"Test host process pid: {testHostProcessInformation.PID} was terminated because the test session was aborted."
+                : $"Test host process pid: {testHostProcessInformation.PID} crashed.";
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 recoveredResults,
                 isTestHostCrashed: true,
-                testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
+                testHostCrashInfo: testHostExitInfo).ConfigureAwait(false);
             if (warning is not null)
             {
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
@@ -217,9 +236,13 @@ internal sealed class TrxProcessLifetimeHandler :
 
             // Tell the user how many records survived the crash. Without this they have to grep the TRX
             // (or the controller logs) to know whether recovery did anything useful.
-            string recoverySummary = recoveredResults.Count == 0
-                ? "Test host crashed and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
-                : $"Test host crashed; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).";
+            string recoverySummary = testHostProcessInformation.ExitCode == (int)ExitCode.TestSessionAborted
+                ? recoveredResults.Count == 0
+                    ? "Test session was aborted and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
+                    : $"Test session was aborted; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at termination time may be missing)."
+                : recoveredResults.Count == 0
+                    ? "Test host crashed and no test results could be recovered from the TRX streaming sidecar; the TRX is empty."
+                    : $"Test host crashed; recovered {recoveredResults.Count} test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).";
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(recoverySummary), cancellationToken).ConfigureAwait(false);
 
             await _messageBus.PublishAsync(
@@ -352,7 +375,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 results.Add(enumerator.Current);
             }
 
-            await _logger.LogInformationAsync($"Recovered {results.Count} test result(s) from TRX streaming sidecar after test host crash.").ConfigureAwait(false);
+            await _logger.LogInformationAsync($"Recovered {results.Count} test result(s) from TRX streaming sidecar after test host termination.").ConfigureAwait(false);
             return results;
         }
         catch (Exception ex)
@@ -389,7 +412,7 @@ internal sealed class TrxProcessLifetimeHandler :
 
     public void Dispose()
     {
-        if (TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions))
+        if (TrxModeHelpers.IsTestHostControllerSupported)
         {
             _singleConnectionNamedPipeServer?.Dispose();
         }

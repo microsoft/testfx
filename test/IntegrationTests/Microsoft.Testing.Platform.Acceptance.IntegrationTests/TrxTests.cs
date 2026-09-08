@@ -38,6 +38,67 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string configFile = Path.Combine(testHost.DirectoryName, $"{TestAssetFixture.AssetName}.testconfig.json");
+        await File.WriteAllTextAsync(
+            configFile,
+            """
+            {
+              "commandLineOptionDefaults": {
+                "report-trx-filename": "configured-{asm}.trx"
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsEmpty(Directory.GetFiles(testHost.DirectoryName, "configured-*.trx", SearchOption.AllDirectories));
+
+        string defaultResultsPath = Path.Combine(testHost.DirectoryName, "default-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --results-directory \"{defaultResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(Path.Combine(defaultResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
+
+        string explicitResultsPath = Path.Combine(testHost.DirectoryName, "explicit-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename explicit.trx --results-directory \"{explicitResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(Path.Combine(explicitResultsPath, "explicit.trx")));
+        Assert.IsFalse(File.Exists(Path.Combine(explicitResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenOnlyReportTrxIsSpecified_UsesControllerBackedRecoveryByDefault(string tfm)
+    {
+        // Plain --report-trx (no --crashdump, no --timeout, no other extension requiring isolation) must
+        // be controller-backed by default on this platform. The "Out of process" heading is only emitted
+        // when the surviving controller (rather than the test host itself) reports the TRX file artifact,
+        // so its presence here is direct proof that a bare --report-trx run went through the controller.
+        string fileName = Guid.NewGuid().ToString("N");
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+
+        string[] trxFiles = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+    }
+
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Trx_WhenOutOfProcessReportHasNoSelectedTests_LifetimeHandshakeCompletes(string tfm)
@@ -47,7 +108,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--filter-uid 2 --ignore-exit-code 8 --crashdump --report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\"",
+            $"--filter-uid 2 --ignore-exit-code 8 --report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\"",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -177,10 +238,12 @@ Out of process file artifacts produced:
     [TestMethod]
     public async Task Trx_WhenTestHostCrash_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
+        // Plain --report-trx (no --crashdump, no other extension) is controller-backed by default on
+        // this platform, so it alone is enough to recover a failed-run TRX when the test host crashes.
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
+            $"--report-trx --report-trx-filename {fileName}.trx",
             new() { ["CRASHPROCESS"] = "1" }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
@@ -195,13 +258,43 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Trx_WhenTimeoutTerminatesTestHost_RecoversCompletedResults(string tfm)
+    {
+        string fileName = $"{Guid.NewGuid():N}.trx";
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\" --timeout 2s",
+            new() { ["WAIT_FOR_TIMEOUT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertOutputContains("Test session was aborted; recovered 1 test result(s)");
+        testHostResult.AssertOutputContains("Canceling the test session");
+        testHostResult.AssertOutputDoesNotContain("Test run summary: Passed!");
+
+        string[] trxFiles = Directory.GetFiles(testResultsPath, fileName, SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+        string trxContent = File.ReadAllText(trxFiles[0]);
+        Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
+        Assert.Contains("was terminated because the test session was aborted", trxContent, trxContent);
+        var trxDocument = XDocument.Parse(trxContent);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement recoveredResult = trxDocument.Descendants(ns + "UnitTestResult")
+            .Single(result => result.Attribute("testName")?.Value == "Test");
+        Assert.AreEqual("Passed", recoveredResult.Attribute("outcome")?.Value, trxContent);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenTestHostCrash_RunningUnderDotnetTest_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
         string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
             workingDirectory: AssetFixture.TargetAssetPath,
             environmentVariables: new() { ["CRASHPROCESS"] = "1" },
             failIfReturnValueIsNotZero: false,
@@ -317,8 +410,10 @@ Out of process file artifacts produced:
     {
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
+        // Plain --report-trx is controller-backed by default on this platform: the TRX artifact is
+        // reported by the surviving controller process, not the test host, hence "Out of process".
         string outputPattern = $"""
-  In process file artifacts produced:
+  Out of process file artifacts produced:
     - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);
@@ -450,6 +545,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
             new TestNode() { Uid = "0", DisplayName = "Test", Properties = properties }));
+        if (Environment.GetEnvironmentVariable("WAIT_FOR_TIMEOUT") == "1")
+        {
+            Thread.Sleep(10000);
+        }
+
         context.Complete();
     }
 }

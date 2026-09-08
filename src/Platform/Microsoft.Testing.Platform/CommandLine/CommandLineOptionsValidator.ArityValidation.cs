@@ -13,6 +13,7 @@ internal static partial class CommandLineOptionsValidator
     private static ValidationResult ValidateOptionsArgumentArity(
         CommandLineParseResult parseResult,
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         StringBuilder? stringBuilder = null;
@@ -28,15 +29,24 @@ internal static partial class CommandLineOptionsValidator
             string optionName = groupedOptions.Key;
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionName];
 
-            AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, arity, optionName, provider, option, jsonPrefix: false);
+            AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, arity, optionName, provider, option, jsonSectionName: null);
         }
 
-        // Apply the same arity rules to entries sourced from testconfig.json. We skip
-        // explicit disable entries ("foo": false) because they convey "the option is not set" —
-        // there are no arguments to validate. Unknown options were rejected earlier.
-        if (jsonCommandLineOptions is { Count: > 0 })
+        ValidateJsonEntries(jsonCommandLineOptions, PlatformConfigurationConstants.CommandLineOptionsSectionName);
+        ValidateJsonEntries(jsonCommandLineOptionDefaults, PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName);
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
+
+        void ValidateJsonEntries(IReadOnlyList<JsonCommandLineOptionEntry>? entries, string sectionName)
         {
-            foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
+            if (entries is null)
+            {
+                return;
+            }
+
+            foreach (JsonCommandLineOptionEntry entry in entries)
             {
                 if (entry.IsDisabled)
                 {
@@ -48,13 +58,9 @@ internal static partial class CommandLineOptionsValidator
                     continue;
                 }
 
-                AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, entry.Arguments.Count, entry.OptionName, match.Provider, match.Option, jsonPrefix: true);
+                AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, entry.Arguments.Count, entry.OptionName, match.Provider, match.Option, sectionName);
             }
         }
-
-        return stringBuilder?.Length > 0
-            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
-            : ValidationResult.Valid();
     }
 
     private static void AppendArityErrorIfNeeded(
@@ -63,7 +69,7 @@ internal static partial class CommandLineOptionsValidator
         string optionName,
         ICommandLineOptionsProvider provider,
         CommandLineOption option,
-        bool jsonPrefix)
+        string? jsonSectionName)
     {
         string? message = null;
         if (arity > option.Arity.Max && option.Arity.Max == 0)
@@ -85,8 +91,8 @@ internal static partial class CommandLineOptionsValidator
         }
 
         stringBuilder ??= new();
-        stringBuilder.AppendLine(jsonPrefix
-            ? string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, message)
+        stringBuilder.AppendLine(jsonSectionName is not null
+            ? FormatJsonValidationError(jsonSectionName, message)
             : message);
     }
 }

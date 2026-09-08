@@ -28,7 +28,8 @@ internal class EntryPoint
             pipelineNameFilter,
         };
         executeTests.SetHandler(
-            pipelineNameFilter => _ = Pipelines(pipelineNameFilter), pipelineNameFilter);
+            context =>
+                context.ExitCode = Pipelines(context.ParseResult.GetValueForOption(pipelineNameFilter) ?? string.Empty));
 
         rootCommand.AddCommand(executeTests);
 
@@ -86,7 +87,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario1_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -96,7 +97,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario1_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario1_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -107,8 +108,68 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
-            .NextStep(() => new DotnetTestProcess("Scenario1_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new DotnetTestProcess("Scenario1_DotnetTest_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        pipelineRunner.AddPipeline("Default", "Scenario1_Rooting_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(
+                () => new Scenario1(
+                    numberOfClass: 100,
+                    methodsPerClass: 100,
+                    tfm: "net9.0",
+                    executionScope: ExecutionScope.MethodLevel,
+                    sourceGenerationMode: MSTestSourceGenerationMode.Rooting),
+                parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new PlainProcess("Scenario1_Rooting_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        pipelineRunner.AddPipeline("Default", "Scenario1_ReflectionFree_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(
+                () => new Scenario1(
+                    numberOfClass: 100,
+                    methodsPerClass: 100,
+                    tfm: "net9.0",
+                    executionScope: ExecutionScope.MethodLevel,
+                    sourceGenerationMode: MSTestSourceGenerationMode.ReflectionFree),
+                parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new PlainProcess("Scenario1_ReflectionFree_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        pipelineRunner.AddPipeline("Default", "Scenario1_NativeAot_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(
+                () => new Scenario1(
+                    numberOfClass: 100,
+                    methodsPerClass: 100,
+                    tfm: "net9.0",
+                    executionScope: ExecutionScope.MethodLevel,
+                    sourceGenerationMode: MSTestSourceGenerationMode.NativeAot),
+                parametersBag)
+            .NextStep(() => new DotnetPublisher())
+            .NextStep(() => new PlainProcess("Scenario1_NativeAot_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        pipelineRunner.AddPipeline("Default", "Scenario1_VSTest_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(
+                () => new Scenario1(
+                    numberOfClass: 100,
+                    methodsPerClass: 100,
+                    tfm: "net9.0",
+                    executionScope: ExecutionScope.MethodLevel,
+                    testPlatform: TestPlatform.VSTest),
+                parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new DotnetTestProcess("Scenario1_VSTest_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
@@ -118,7 +179,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario2_DataDriven_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -127,7 +188,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario2_DataDriven_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -136,8 +197,8 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
-            .NextStep(() => new DotnetTestProcess("Scenario2_DataDriven_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new DotnetTestProcess("Scenario2_DataDriven_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
@@ -148,7 +209,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario3_Lifecycle_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -157,7 +218,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario3_Lifecycle_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -166,8 +227,8 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
-            .NextStep(() => new DotnetTestProcess("Scenario3_Lifecycle_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new DotnetTestProcess("Scenario3_Lifecycle_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
@@ -179,7 +240,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario4_ClassInit_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -188,7 +249,7 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
             .NextStep(() => new PlainProcess("Scenario4_ClassInit_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
@@ -197,8 +258,8 @@ internal class EntryPoint
         pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
-            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
-            .NextStep(() => new DotnetTestProcess("Scenario4_ClassInit_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Release))
+            .NextStep(() => new DotnetTestProcess("Scenario4_ClassInit_DotnetTest_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 

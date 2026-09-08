@@ -5,11 +5,15 @@ using System.Runtime.ExceptionServices;
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -17,6 +21,60 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TestHostBuilderTests
 {
+    [TestMethod]
+    public async Task ControllerPreLaunch_StartsLifetimeHandlersBeforePublishingEnvironment()
+    {
+        string endpoint = "unqualified";
+        string? publishedEndpoint = null;
+        Mock<ITestHostProcessLifetimeHandler> handler = new();
+        handler.Setup(x => x.BeforeTestHostProcessStartAsync(It.IsAny<CancellationToken>()))
+            .Callback(() => endpoint = @"LOCAL\qualified")
+            .Returns(Task.CompletedTask);
+        Mock<ITestHostEnvironmentVariableProvider> provider = new();
+        provider.Setup(x => x.UpdateAsync(It.IsAny<IEnvironmentVariables>()))
+            .Callback(() => publishedEndpoint = endpoint)
+            .Returns(Task.CompletedTask);
+
+        await TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(
+            [handler.Object],
+            [provider.Object],
+            new EnvironmentVariables(new Mock<ILoggerFactory>().Object),
+            CancellationToken.None);
+
+        Assert.AreEqual(@"LOCAL\qualified", publishedEndpoint);
+    }
+
+    [TestMethod]
+    public async Task ControllerPreLaunch_CooperativeShutdownTimeoutUsesFinalProviderValue()
+    {
+        Mock<ITestHostEnvironmentVariableProvider> provider = new();
+        provider.SetupGet(x => x.Uid).Returns("provider");
+        provider.SetupGet(x => x.DisplayName).Returns("provider");
+        provider.Setup(x => x.UpdateAsync(It.IsAny<IEnvironmentVariables>()))
+            .Callback<IEnvironmentVariables>(environmentVariables => environmentVariables.SetVariable(new(
+                EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS,
+                "60",
+                isSecret: false,
+                isLocked: false)))
+            .Returns(Task.CompletedTask);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        var environmentVariables = new EnvironmentVariables(loggerFactory.Object);
+
+        await TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(
+            [],
+            [provider.Object],
+            environmentVariables,
+            CancellationToken.None);
+
+        Assert.AreEqual(
+            TimeSpan.FromSeconds(75),
+            TestHostControllersTestHost.GetTestHostCooperativeShutdownTimeout(environmentVariables));
+        Assert.AreEqual(
+            TimeSpan.FromSeconds(60),
+            ShutdownTimeouts.GetCanceledConsumerCompletion("60"));
+    }
+
     [TestMethod]
     public async Task ConnectToTestHostProcessMonitorIfAvailableAsync_MissingPipeName_ReportsPidQualifiedEnvironmentVariable()
     {

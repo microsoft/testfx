@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright(c) 2016, Alexandre Mutel
@@ -124,6 +124,19 @@ namespace Jsonite
 
                 return null;
             }
+
+#if MTP_MSBUILD_TASKS
+            public object ParseDocument(object existingObject, Type expectedType, bool expectValue)
+            {
+                object result = Parse(existingObject, expectedType, expectValue);
+                if (c != Eof)
+                {
+                    RaiseUnexpected("after the end of the JSON document");
+                }
+
+                return result;
+            }
+#endif
 
             private void IncrementLevel()
             {

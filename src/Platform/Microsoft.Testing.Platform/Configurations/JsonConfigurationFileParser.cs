@@ -61,7 +61,17 @@ internal sealed class JsonConfigurationFileParser
         SetNullIfElementIsEmpty(isEmpty);
     }
 
-    private void SavePropertyToAllChildren(JsonProperty property)
+    private void SavePropertyToAllChildren(JsonProperty property) => SaveRawTextToAllChildren(property.Value.GetRawText());
+
+    // A JSON null array element flattens to a non-null placeholder string in _singleValueData (see
+    // VisitValue), so kvp.Value alone cannot tell a real empty-string scalar apart from a null element.
+    // Array elements are not JsonProperty instances (they have no name) like object properties are, so
+    // record the null element's raw JSON text ("null") separately, mirroring SavePropertyToAllChildren, to
+    // give callers the token-kind information needed to reject it. Non-null elements need no such marker:
+    // their flattened string already unambiguously distinguishes them from a null placeholder.
+    private void SaveNullArrayElementToAllChildren(JsonElement element) => SaveRawTextToAllChildren(element.GetRawText());
+
+    private void SaveRawTextToAllChildren(string rawText)
     {
         string key = _paths.Peek();
         if (_propertyToAllChildren.ContainsKey(key))
@@ -69,7 +79,7 @@ internal sealed class JsonConfigurationFileParser
             throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
         }
 
-        _propertyToAllChildren[key] = property.Value.GetRawText();
+        _propertyToAllChildren[key] = rawText;
     }
 
     private void VisitArrayElement(JsonElement element)
@@ -79,6 +89,11 @@ internal sealed class JsonConfigurationFileParser
         foreach (JsonElement arrayElement in element.EnumerateArray())
         {
             EnterContext(index.ToString(CultureInfo.InvariantCulture));
+            if (arrayElement.ValueKind == JsonValueKind.Null)
+            {
+                SaveNullArrayElementToAllChildren(arrayElement);
+            }
+
             VisitValue(arrayElement);
             ExitContext();
             index++;

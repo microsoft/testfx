@@ -24,7 +24,7 @@ internal sealed class ConsoleTestHost(
     : CommonHost(serviceProvider)
 {
     private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", PlatformVersion.Version);
-    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", PlatformVersion.Version, new ClientCapabilitiesService(IsStateful: false));
+    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", PlatformVersion.Version, new ClientCapabilitiesService(DeclaredIsStateful: false));
 
     private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
     private readonly IClock _clock = serviceProvider.GetClock();
@@ -35,7 +35,7 @@ internal sealed class ConsoleTestHost(
 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> _)
     {
         var consoleRunStarted = Stopwatch.StartNew();
         DateTimeOffset consoleRunStart = _clock.UtcNow;
@@ -93,7 +93,8 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
-                ClientInfoHost).ConfigureAwait(false);
+                ClientInfoHost,
+                ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)).ConfigureAwait(false);
             requestExecuteStop = _clock.UtcNow;
 
             // Get the exit code service to be able to set the exit code

@@ -2,6 +2,31 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pl" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
+        <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
+        <target state="translated">Zmienna środowiskowa „{0}” jest ustawiona, ale struktura testowa nie obsługuje elementu „{1}”. Platforma nie może zatrzymać przebiegu testu przed upływem terminu ostatecznego.</target>
+        <note>{0} is the environment variable name. {1} is the capability interface name.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineDescription">
+        <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
+        <target state="translated">Rozszerzenie, które bezpiecznie zatrzymuje przebieg testu na krótko przed terminem ustalonym przez ciągłą integrację, aby można było finalizować raporty.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
+        <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
+        <target state="translated">Zmienna środowiskowa „{0}” jest ustawiona na wartość „{1}”, ale nie jest prawidłowym bezwzględnym elementem ISO 8601 instant. Anulowanie z uwzględnieniem terminu jest wyłączone.</target>
+        <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
+        <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
+        <target state="translated">Margines zrzutu terminu ostatecznego ({0}) jest większy lub równy marginesowi zatrzymania ({1}). Zrzut pamięci może rozpocząć się przed kontrolowanym zakończeniem działania.</target>
+        <note>{0} is the dump margin. {1} is the stop margin.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineMessage">
+        <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
+        <target state="translated">Zbliża się termin ostateczny: bezpiecznie zatrzymaj przebieg testu, aby raporty mogły zostać sfinalizowane przed twardym anulowaniem ciągłej integracji.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
         <target state="translated">Bieżąca platforma testowa nie implementuje interfejsu "IGracefulStopTestExecutionCapability", który jest wymagany dla funkcji "--maximum-failed-tests".</target>
@@ -197,6 +222,16 @@
         <target state="translated">Opcja „--{0}” od dostawcy „{1}” (UID: {2}) używa zastrzeżonego prefiksu „--internal”</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
       </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="translated">Opcja „--{0}” jest dostarczana przez rozszerzenie „{1}”. Dodaj odwołanie do pakietu, aby móc z niej korzystać.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="translated">Czy chodziło Ci o element „--{0}”?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
+      </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
         <target state="translated">Obiekt ICommandLineOptions nie został jeszcze skompilowany.</target>
@@ -206,6 +241,11 @@
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">Niepowodzenie odczytu pliku odpowiedzi „{0}”. {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserRecursiveResponseFile">
+        <source>A recursive response file reference was detected.</source>
+        <target state="translated">Wykryto rekursywne odwołanie do pliku odpowiedzi.</target>
+        <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
@@ -241,6 +281,46 @@
         <source>Unknown option '--{0}'</source>
         <target state="translated">Nieznana opcja: „--{0}”</target>
         <note>{0} is the unknown option name without the leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineUnknownOptionsHint">
+        <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
+        <target state="translated">Uruchom „--help”, aby zobaczyć opcje zarejestrowane przez tę aplikację testową. Jeśli opcja należy do rozszerzenia, upewnij się, że jego pakiet jest uwzględniony jako odwołanie i że rozszerzenie jest zarejestrowane.</target>
+        <note>{Locked="--help"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestBlameReplacement">
+        <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
+        <target state="translated">Zamiast tego użyj '--crashdump' i/lub '--hangdump'. MTP rozdziela diagnostykę awarii i zawieszeń, więc nie ma tu zamiennika jeden do jednego dla kolektora blame w VSTest.</target>
+        <note>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestCollectorGuidance">
+        <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
+        <target state="translated">MTP używa opcji specyficznych dla kolektora. Zapoznaj się z dokumentacją rozszerzenia, aby zapoznać się z jego opcją MTP.</target>
+        <note>{Locked="MTP"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
+        <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
+        <target state="translated">Aby uzyskać porównywalną szczegółowość danych wyjściowych konsoli, użyj '--output {0}'. Dane wyjściowe konsoli MTP są skonfigurowane inaczej, więc nie jest to dokładny zamiennik.</target>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestLoggerGuidance">
+        <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
+        <target state="translated">MTP używa opcji specyficznych dla raportera, takich jak '--report-trx', '--report-html', i '--report-junit'. Informacje o opcjach MTP znajdziesz w dokumentacji rozszerzenia raportera.</target>
+        <note>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestOptionUnsupported">
+        <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
+        <target state="translated">Opcja „--{0}” używa składni VSTest, która nie jest obsługiwana przez Microsoft.Testing.Platform.</target>
+        <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestReplacementSuggestion">
+        <source>Use {0} instead.</source>
+        <target state="translated">Zamiast niego użyj ciągu {0}.</target>
+        <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
+        <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
+        <target state="translated">Aby uzyskać pokrycie kodu w MTP, użyj '--coverage'. Nie jest to bezpośredni zamiennik kolektora 'XPlat Code Coverage' w Coverlet.</target>
+        <note>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
@@ -355,17 +435,17 @@
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
         <target state="translated">Element zaczepienia rozszerzenia „{0}.{1}” z zestawu „{2}” zadeklarowany w manifeście rozszerzenia „{3}” jest zadeklarowany jako 'async void'. Platforma wywołuje punkt zaczepienia synchronicznie, więc wróci po pierwszym oczekiwaniu: wszystko, co zarejestruje po tym punkcie, spowoduje wyścig z konfiguracją aplikacji testowej, a wszelkie awarie zostaną utracone. Ustaw element wpięcia jako synchroniczny.</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
         <target state="translated">Element zaczepienia rozszerzenia "{0}.{1}” z zestawu „{2}” zadeklarowany w manifeście rozszerzenia „{3}” zwraca wartość „{4}”, ale musi zwracać wartość 'void'. Platforma wywołuje element zaczepienia synchronicznie, więc zwracana wartość nigdy nie jest obserwowana; zwrócone zadanie w szczególności nigdy nie będzie oczekiwane, a jego rejestracje i błędy zostaną utracone.</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
         <target state="translated">Typ „{0}” w zestawie „{1}” zadeklarowany w manifeście rozszerzenia „{2}” nie ujawnia metody 'public static void' o nazwie „{3}” przyjmującej element 'ITestApplicationBuilder' i 'string[]'.</target>
-        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
@@ -455,7 +535,7 @@
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
         <target state="translated">Manifest rozszerzenia „{0}” deklaruje rozszerzenia do załadowania, ale bieżące środowisko uruchomieniowe nie obsługuje dynamicznego ładowania zestawów (na przykład w przypadku publikowania z natywnym kodem AOT). Ustaw właściwość „{1}” każdego rozszerzenia na wartość 'false', usuń manifest lub usuń element „{2}” z wiersza polecenia.</target>
-        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -569,10 +649,20 @@
         <target state="translated">Nieprawidłowe argumenty wiersza polecenia:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
+        <target state="translated">Wpis „{0}” w sekcji „{1}” w pliku testconfig.json („{2}”) musi zawierać niepustą wartość skalarną inną niż null albo niepustą tablicę wartości skalarnych.</target>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
+        <target state="translated">W testconfig.json w obszarze „commandLineOptionDefaults”: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
-        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
-        <target state="translated">Opcja „--{0}” jest odczytywana podczas ładowania początkowego platformy (przed załadowaniem pliku testconfig.json) i dlatego musi być przekazywana w wierszu polecenia, a nie zadeklarowana w obszarze „commandLineOptions” w pliku testconfig.json.</target>
-        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
+        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under '{1}' in testconfig.json.</source>
+        <target state="translated">Opcja „--{0}” jest odczytywana podczas ładowania początkowego platformy (przed załadowaniem pliku testconfig.json) i dlatego musi zostać przekazana w wierszu polecenia, a nie zadeklarowana w obszarze „{1}” w testconfig.json.</target>
+        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {1} is the JSON section name. {Locked="--"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
@@ -716,8 +806,8 @@ Pamiętaj, że to spowalnia wykonywanie testu.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="translated">Włącz rejestrowanie diagnostyczne. Domyślny poziom dziennika to „Trace”.
+Plik zostanie zapisany w katalogu wyjściowym pod nazwą log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -739,7 +829,7 @@ W katalogu domyślnym „TestResults” zostanie wygenerowany plik, jeśli nie z
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
+        <target state="translated">Zastąp „[log]_.” określonym prefiksem nazwy pliku dziennika.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -824,7 +914,7 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
         <target state="translated">Włącz ładowanie rozszerzeń platformy testowej zadeklarowanych przez manifesty '*.testingplatformextensions.json' znajdujące się obok aplikacji testowej. Domyślnie wyłączone.</target>
-        <note>{Locked="'*.testingplatformextensions.json'"}</note>
+        <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -865,7 +955,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <target state="translated">Nie zgłaszaj wartości niepomyślnego zakończenia dla określonych kodów zakończenia.
 Na przykład '--ignore-exit-code 8;9' ignoruje kody zakończenia 8 i 9 i zwraca wartość 0 w tych przypadkach.
 Aby uzyskać więcej informacji na temat kodów zakończenia, zobacz stronę https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
-        <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
+        <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -921,7 +1011,7 @@ Aby uzyskać więcej informacji na temat kodów zakończenia, zobacz stronę htt
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="new">Microsoft Testing Platform command line provider.</target>
+        <target state="translated">Dostawca wiersza polecenia platformy testowania firmy Microsoft.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,7 +1040,7 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="new">For testing purposes.</target>
+        <target state="translated">Do celów testowych.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -961,14 +1051,14 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="new">A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
@@ -1204,8 +1294,8 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
-        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
+        <target state="translated">Moduł uruchamiający hosta testowego „{0}”" (UID: {1}) poprosił o autoryzację tożsamości zabezpieczeń „{2}” w testowym połączeniu kontrolera hosta, ale tylko tożsamość pojedynczej aplikacji w trybie środowiska testowego (w systemie Windows identyfikator zabezpieczeń w postaci „S-1-15-2-...”) może być autoryzowana. Użytkownikom, grupom i identyfikatorowi zabezpieczeń catch-all „{3}” nigdy nie udzielono dostępu.</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>

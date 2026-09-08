@@ -61,20 +61,39 @@ internal static partial class SerializerUtilities
             [JsonRpcStrings.Version] = info.Version,
         });
 
-        Serializers[typeof(ClientCapabilities)] = new ObjectSerializer<ClientCapabilities>(capabilities => new Dictionary<string, object?>
+        Serializers[typeof(ClientCapabilities)] = new ObjectSerializer<ClientCapabilities>(capabilities =>
         {
-            [JsonRpcStrings.Testing] = new Dictionary<string, object?>
+            Dictionary<string, object?> testingCapabilities = new()
             {
                 [JsonRpcStrings.DebuggerProvider] = capabilities.DebuggerProvider,
-                [JsonRpcStrings.IsStateful] = capabilities.IsStateful,
-            },
+            };
+
+            if (capabilities.IsStateful is { } isStateful)
+            {
+                testingCapabilities[JsonRpcStrings.IsStateful] = isStateful;
+            }
+
+            return new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = testingCapabilities,
+            };
         });
 
-        Serializers[typeof(InitializeRequestArgs)] = new ObjectSerializer<InitializeRequestArgs>(args => new Dictionary<string, object?>
+        Serializers[typeof(InitializeRequestArgs)] = new ObjectSerializer<InitializeRequestArgs>(args =>
         {
-            [JsonRpcStrings.ProcessId] = args.ProcessId,
-            [JsonRpcStrings.ClientInfo] = Serialize(args.ClientInfo),
-            [JsonRpcStrings.Capabilities] = Serialize(args.Capabilities),
+            Dictionary<string, object?> properties = new()
+            {
+                [JsonRpcStrings.ProcessId] = args.ProcessId,
+                [JsonRpcStrings.ClientInfo] = Serialize(args.ClientInfo),
+                [JsonRpcStrings.Capabilities] = Serialize(args.Capabilities),
+            };
+
+            if (args.ProtocolVersions is not null)
+            {
+                properties[JsonRpcStrings.ProtocolVersions] = args.ProtocolVersions;
+            }
+
+            return properties;
         });
 
         Serializers[typeof(DiscoverRequestArgs)] = new ObjectSerializer<DiscoverRequestArgs>(SerializeRequestArgs);
@@ -126,17 +145,21 @@ internal static partial class SerializerUtilities
             if (properties.TryGetValue(JsonRpcStrings.Method, out object? methodObj) && methodObj is not null)
             {
                 string method = (string)methodObj;
-                object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
+                bool hasId = properties.TryGetValue(JsonRpcStrings.Id, out object? idObj);
+                if (hasId && idObj is null)
+                {
+                    throw new MessageFormatException($"'{JsonRpcStrings.Id}' field cannot be null");
+                }
 
                 // Keep the params as the raw dictionary; the client decodes it based on the method name.
                 object? @params = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Params);
 
-                int? id = idObj is null
+                int? id = !hasId
                     ? null
                     : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
                 return id.HasValue
-                    ? new RequestMessage(id.Value, method, @params)
+                    ? new RequestMessage(id.Value, method, @params) { StringId = idObj as string }
                     : new NotificationMessage(method, @params);
             }
             else if (properties.TryGetValue(JsonRpcStrings.Error, out _))
@@ -149,7 +172,7 @@ internal static partial class SerializerUtilities
                 var result = resultObj as IDictionary<string, object?>;
                 int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-                return new ResponseMessage(id, result);
+                return new ResponseMessage(id, result) { StringId = idObj as string };
             }
 
             throw new MessageFormatException();

@@ -148,6 +148,21 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>().Should().BeTrue();
     }
 
+    public void ToDiscoveredTestNode_AddsTrxWorkItems_OnlyWhenTrxEnabled()
+    {
+        UnitTestElement element = CreateElement();
+        element.WorkItemIds = ["123", "456"];
+
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false)
+            .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>().Should().BeFalse();
+
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty property = MSTestTestNodeConverter
+            .ToDiscoveredTestNode(element, isTrxEnabled: true)
+            .Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+        property.WorkItemIds.Should().Equal("123", "456");
+        property.WorkItemIds.Should().NotBeSameAs(element.WorkItemIds);
+    }
+
     public void RepeatedConversions_ReuseImmutableBaseProperties_WithoutSharingNodesOrPropertyBags()
     {
         UnitTestElement element = CreateElement();
@@ -220,6 +235,25 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         {
             secondMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
         }
+    }
+
+    public void TrxWorkItems_AreCopiedPerNode_AndCannotCrossMutate()
+    {
+        UnitTestElement element = CreateElement();
+        element.WorkItemIds = ["123", "456"];
+
+        TestNode first = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        TestNode second = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true);
+
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty firstWorkItems =
+            first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty secondWorkItems =
+            second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+
+        firstWorkItems.Should().NotBeSameAs(secondWorkItems);
+        firstWorkItems.WorkItemIds.Should().NotBeSameAs(secondWorkItems.WorkItemIds);
+        firstWorkItems.WorkItemIds[0] = "Mutated";
+        secondWorkItems.WorkItemIds.Should().Equal("123", "456");
     }
 
     public void ResultDisplayNameOverride_RemainsPerResult_WhileTrxDefinitionUsesTestDefinitionName()

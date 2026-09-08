@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MSTest.Analyzers.Shared;
@@ -36,7 +36,7 @@ internal enum ConstantValueKind
     Null,
 }
 
-internal sealed record TestParameterModel(string FullyQualifiedType, string Name);
+internal sealed record TestParameterModel(string FullyQualifiedType, string Name, string? EnumFullyQualifiedType);
 
 /// <summary>
 /// The kind of member a <c>[DynamicData]</c> source resolves to at compile time, so the generator can
@@ -65,12 +65,14 @@ internal sealed record DynamicDataSourceModel(
 
 internal sealed record TestMethodModel(
     string Name,
+    string DeclaringTypeFullyQualifiedName,
     bool IsStatic,
     bool IsAsync,
     bool ReturnsTask,
     bool ReturnsValueTask,
     bool ReturnsVoid,
     bool IsTestMethod,
+    bool IsDescriptorSupported,
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
     bool AreAttributesComplete,
@@ -106,4 +108,6 @@ internal sealed record TestClassModel(
     EquatableArray<TestPropertyModel> Properties,
     EquatableArray<AttributeApplicationModel> Attributes,
     bool AreAttributesComplete,
+    bool SupportsGeneratedDescriptors,
+    bool AreGeneratedDescriptorsComplete,
     EquatableArray<string> BaseTypeFullyQualifiedNames);

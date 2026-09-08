@@ -12,6 +12,7 @@ using StackTraceSourceLocationResolver = ghactions::Microsoft.Testing.Extensions
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
+[ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
 public sealed class StackTraceSourceLocationResolverTests
 {
     [TestMethod]

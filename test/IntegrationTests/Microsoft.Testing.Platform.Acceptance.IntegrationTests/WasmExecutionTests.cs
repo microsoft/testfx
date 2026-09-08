@@ -31,7 +31,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// (see <c>BrowserWasmExecutionTests</c>), not here.
 /// </para>
 ///
-/// <para>Two complementary assertions:</para>
+/// <para>Three complementary assertions:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="RawPlatform_BuildsForWasi"/> is an always-on build assertion. It only relies on
@@ -43,6 +43,12 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     end-to-end under <c>wasmtime</c>, asserting the single passing test reports success. It is
 ///     skipped (inconclusive) when the wasm publish toolchain (<c>wasm-tools</c> workload) or
 ///     <c>wasmtime</c> is not available, so it only runs where the wasm runtime exists.
+///   </item>
+///   <item>
+///     <see cref="RawPlatform_TrxReport_FallsBackInProcessUnderWasi"/> runs the same app with
+///     <c>--report-trx</c> and asserts the TRX artifact is reported "In process" (never "Out of
+///     process"), proving that TRX automatically falls back to its in-process implementation on wasi
+///     instead of attempting controller-backed recovery, which wasi cannot support.
 ///   </item>
 /// </list>
 /// </summary>
@@ -87,11 +93,13 @@ public sealed class WasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
 </Project>
 
 #file Program.cs
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -99,6 +107,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyFramework());
+testApplicationBuilder.AddTrxReportProvider();
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 
@@ -208,6 +217,67 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
             $"Expected 0 failed tests in the wasm run summary.{Environment.NewLine}{combined}");
 
         // MTP returns a zero exit code when every test passes.
+        Assert.AreEqual(
+            0,
+            exitCode,
+            $"Expected a zero exit code because all tests pass.{Environment.NewLine}{combined}");
+    }
+
+    [TestMethod]
+    public async Task RawPlatform_TrxReport_FallsBackInProcessUnderWasi()
+    {
+        // WASI cannot launch a test-host controller process, so --report-trx must fall back to the
+        // in-process implementation automatically: the TRX artifact must still be generated and
+        // reported as an "In process" file artifact (never "Out of process"), and no controller
+        // registration should be attempted.
+        using TestAsset generator = await GenerateAssetAsync();
+
+        DotnetMuxerResult publishResult = await WasmRuntime.PublishForWasiAsync(
+            generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
+        if (publishResult.ExitCode != 0)
+        {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r wasi-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
+            Assert.Inconclusive(
+                $"Skipping wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
+            return;
+        }
+
+        string appBundle = WasmRuntime.GetAppBundlePath(generator.TargetAssetPath, TargetFramework);
+        Assert.IsTrue(
+            Directory.Exists(appBundle),
+            $"Expected the wasi AppBundle directory at '{appBundle}'.");
+        WasmRuntime.StageIcuData(appBundle);
+
+        string? wasmtime = WasmRuntime.LocateWasmtime();
+        if (wasmtime is null)
+        {
+            Assert.Inconclusive(WasmRuntime.WasmtimeUnavailableMessage);
+            return;
+        }
+
+        const string TrxFileName = "wasi.trx";
+        (int exitCode, _, _, string combined) = await WasmRuntime.RunUnderWasmtimeAsync(
+            wasmtime, appBundle, "WasmPlatformProject", TestContext.CancellationToken,
+            $"--report-trx --report-trx-filename {TrxFileName}");
+
+        Assert.IsFalse(
+            combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
+            $"--report-trx must not hit a PlatformNotSupportedException under wasi-wasm.{Environment.NewLine}{combined}");
+
+        Assert.IsTrue(
+            combined.Contains("succeeded: 1", StringComparison.Ordinal) && combined.Contains("failed: 0", StringComparison.Ordinal),
+            $"Expected the wasi-wasm run summary to be unaffected by TRX reporting.{Environment.NewLine}{combined}");
+
+        // The heading only reads "In process" when the test host itself reported the artifact — a
+        // controller-backed run would instead say "Out of process". This is the direct, observable
+        // proof that TRX did not attempt controller registration on wasi.
+        Assert.Contains("In process file artifacts produced:", combined);
+        Assert.DoesNotContain("Out of process file artifacts produced:", combined);
+
+        Assert.HasCount(1, Directory.GetFiles(appBundle, TrxFileName, SearchOption.AllDirectories));
+
         Assert.AreEqual(
             0,
             exitCode,

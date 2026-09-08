@@ -94,6 +94,13 @@ internal sealed class AzureDevOpsResultIdStore
     /// Records the result id Azure DevOps assigned to a newly created result, along with its first attempt.
     /// </summary>
     public void RecordCreated(AzureDevOpsTestCaseResult result, int resultId)
+        => RecordCreated(result, resultId, [result]);
+
+    /// <summary>
+    /// Records the result id Azure DevOps assigned to a newly created result, along with every execution
+    /// already performed by an in-process retry.
+    /// </summary>
+    public void RecordCreated(AzureDevOpsTestCaseResult result, int resultId, IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
     {
         string key = CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle);
         if (_ambiguousKeys.Contains(key))
@@ -116,13 +123,43 @@ internal sealed class AzureDevOpsResultIdStore
             result.AutomatedTestName,
             result.TestCaseTitle,
             resultId,
-            [ToSubResult(result, sequenceId: 1)])
+            CreateAttempts(attempts, firstSequenceId: 1))
         {
-            TotalDurationInMs = result.DurationInMs,
-            StartedDate = result.StartedDate,
-            CompletedDate = result.CompletedDate,
+            TotalDurationInMs = SumResultDurations(attempts),
+            StartedDate = GetEarliestStartedDate(attempts),
+            CompletedDate = GetLatestCompletedDate(attempts),
         };
         _hasUnsavedChanges = true;
+    }
+
+    /// <summary>
+    /// Records the highest attempt sequence Azure DevOps has accepted as a sub-result for a newly created result.
+    /// </summary>
+    public void RecordPublishedSubResults(AzureDevOpsTestCaseResult result, int resultId, int lastPublishedSubResultSequenceId)
+    {
+        string key = CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle);
+        if (_results.TryGetValue(key, out AzureDevOpsPublishedResult? published) && published.Id == resultId)
+        {
+            _results[key] = published with { LastPublishedSubResultSequenceId = lastPublishedSubResultSequenceId };
+            _hasUnsavedChanges = true;
+        }
+    }
+
+    public static AzureDevOpsTestSubResult CreateFirstAttempt(AzureDevOpsTestCaseResult result)
+        => ToSubResult(result, sequenceId: 1);
+
+    public static IReadOnlyList<AzureDevOpsTestSubResult> CreateAttempts(
+        IReadOnlyList<AzureDevOpsTestCaseResult> results,
+        int firstSequenceId)
+    {
+        var attempts = new List<AzureDevOpsTestSubResult>(results.Count);
+        for (int i = 0; i < results.Count; i++)
+        {
+            attempts.Add(ToSubResult(results[i], firstSequenceId + i));
+        }
+
+        TrimAttempts(attempts);
+        return attempts;
     }
 
     /// <summary>
@@ -135,16 +172,16 @@ internal sealed class AzureDevOpsResultIdStore
     /// leaving the same execution listed twice under the test.
     /// </remarks>
     public static IReadOnlyList<AzureDevOpsTestSubResult> BuildNextAttempts(AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResult result)
+        => BuildNextAttempts(published, [result]);
+
+    public static IReadOnlyList<AzureDevOpsTestSubResult> BuildNextAttempts(
+        AzureDevOpsPublishedResult published,
+        IReadOnlyList<AzureDevOpsTestCaseResult> results)
     {
         int nextSequenceId = published.Attempts.Count == 0 ? 1 : published.Attempts[^1].SequenceId + 1;
-        List<AzureDevOpsTestSubResult> attempts = [.. published.Attempts, ToSubResult(result, nextSequenceId)];
+        List<AzureDevOpsTestSubResult> attempts = [.. published.Attempts, .. CreateAttempts(results, nextSequenceId)];
 
-        // Azure DevOps caps sub-results per result; keep the most recent attempts because they are the ones
-        // that explain the parent outcome. A retry sequence never gets close to this.
-        if (attempts.Count > AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult)
-        {
-            attempts.RemoveRange(0, attempts.Count - AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult);
-        }
+        TrimAttempts(attempts);
 
         return attempts;
     }
@@ -156,12 +193,35 @@ internal sealed class AzureDevOpsResultIdStore
     public static long? BuildNextTotalDuration(AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResult result)
         => AddDurations(published.TotalDurationInMs ?? SumDurations(published.Attempts), result.DurationInMs);
 
+    public static long? BuildNextTotalDuration(
+        AzureDevOpsPublishedResult published,
+        IReadOnlyList<AzureDevOpsTestCaseResult> results)
+        => AddDurations(published.TotalDurationInMs ?? SumDurations(published.Attempts), SumResultDurations(results));
+
+    public static long? SumResultDurations(IReadOnlyList<AzureDevOpsTestCaseResult> results)
+    {
+        long? total = null;
+        foreach (AzureDevOpsTestCaseResult result in results)
+        {
+            total = AddDurations(total, result.DurationInMs);
+        }
+
+        return total;
+    }
+
+    public static DateTimeOffset? GetEarliestStartedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
+        => attempts.Where(attempt => attempt.StartedDate is not null).Min(attempt => attempt.StartedDate);
+
+    public static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
+        => attempts.Where(attempt => attempt.CompletedDate is not null).Max(attempt => attempt.CompletedDate);
+
     /// <summary>
     /// Records an attempt history that Azure DevOps has accepted.
     /// </summary>
     public void RecordAttempts(
         AzureDevOpsPublishedResult published,
         IReadOnlyList<AzureDevOpsTestSubResult> attempts,
+        int lastPublishedSubResultSequenceId,
         long? totalDurationInMs,
         DateTimeOffset? startedDate,
         DateTimeOffset? completedDate)
@@ -169,6 +229,7 @@ internal sealed class AzureDevOpsResultIdStore
         _results[CreateKey(published.Storage, published.Name, published.Title)] = published with
         {
             Attempts = attempts,
+            LastPublishedSubResultSequenceId = lastPublishedSubResultSequenceId,
             TotalDurationInMs = totalDurationInMs,
             StartedDate = startedDate,
             CompletedDate = completedDate,
@@ -250,6 +311,7 @@ internal sealed class AzureDevOpsResultIdStore
             {
                 entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Title, published.Id, published.Attempts)
                 {
+                    LastPublishedSubResultSequenceId = published.LastPublishedSubResultSequenceId,
                     TotalDurationInMs = published.TotalDurationInMs,
                     StartedDate = published.StartedDate,
                     CompletedDate = published.CompletedDate,
@@ -360,6 +422,15 @@ internal sealed class AzureDevOpsResultIdStore
                         continue;
                     }
 
+                    bool hasUnpublishedFirstAttempt = entry.LastPublishedSubResultSequenceId == 0
+                        && entry.Attempts.Count == 1
+                        && entry.Attempts[0].SequenceId == 1;
+                    bool hasFullyPublishedHistory = entry.LastPublishedSubResultSequenceId == entry.Attempts[^1].SequenceId;
+                    if (!hasUnpublishedFirstAttempt && !hasFullyPublishedHistory)
+                    {
+                        continue;
+                    }
+
                     long? retainedDuration = SumDurations(entry.Attempts);
                     if (entry.TotalDurationInMs is < 0
                         || (entry.TotalDurationInMs is { } totalDuration && retainedDuration is { } retained && totalDuration < retained))
@@ -381,6 +452,7 @@ internal sealed class AzureDevOpsResultIdStore
 
                 _results[key] = new AzureDevOpsPublishedResult(entry.Storage!, entry.Name!, entry.Title!, entry.Id, entry.Attempts!)
                 {
+                    LastPublishedSubResultSequenceId = entry.LastPublishedSubResultSequenceId!.Value,
                     TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
                     StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts!),
                     CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts!),
@@ -452,6 +524,16 @@ internal sealed class AzureDevOpsResultIdStore
     private static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
         => attempts.Where(attempt => attempt.CompletedDate is not null).Max(attempt => attempt.CompletedDate);
 
+    private static void TrimAttempts(List<AzureDevOpsTestSubResult> attempts)
+    {
+        // Azure DevOps caps sub-results per result; keep the most recent attempts because they are the ones
+        // that explain the parent outcome. A retry sequence never gets close to this.
+        if (attempts.Count > AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult)
+        {
+            attempts.RemoveRange(0, attempts.Count - AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult);
+        }
+    }
+
     private void TryDeleteFile(string path)
     {
         try
@@ -504,6 +586,8 @@ internal sealed record AzureDevOpsPublishedResult(
     int Id,
     IReadOnlyList<AzureDevOpsTestSubResult> Attempts)
 {
+    public int LastPublishedSubResultSequenceId { get; init; }
+
     public long? TotalDurationInMs { get; init; }
 
     public DateTimeOffset? StartedDate { get; init; }
@@ -526,6 +610,9 @@ internal sealed record AzureDevOpsResultMapEntry(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("attempts")] IReadOnlyList<AzureDevOpsTestSubResult>? Attempts)
 {
+    [JsonPropertyName("lastPublishedSubResultSequenceId")]
+    public int? LastPublishedSubResultSequenceId { get; init; }
+
     [JsonPropertyName("totalDurationInMs")]
     public long? TotalDurationInMs { get; init; }
 

@@ -97,7 +97,7 @@ internal sealed class AssemblyEnumeratorWrapper
         // of strings normally (by reference), and we were mutating that collection in the appdomain.
         // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
         bool mustSerialize = !isMTP || isolationHost is TestSourceHost { UsesAppDomain: true };
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize);
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize, useGeneratedDescriptors: isMTP);
     }
 
     private static bool IsManagedAssembly(string fileName)

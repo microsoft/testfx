@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -45,6 +45,23 @@ public class TrxTestResultExtractorTests
         Assert.IsFalse(wasTruncated);
         Assert.AreEqual("small", result.ExceptionMessage);
         Assert.AreEqual("stack", result.ExceptionStackTrace);
+    }
+
+    [TestMethod]
+    public void Extract_WorkItems_CopiesIds()
+    {
+        string[] workItemIds = ["123", "456"];
+        var bag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TrxWorkItemsProperty(workItemIds));
+
+        (TrxTestResult result, _) = TrxTestResultExtractor.Extract(new TestNodeUpdateMessage(
+            new SessionUid("1"),
+            new TestNode { Uid = "u", DisplayName = "d", Properties = bag }));
+
+        Assert.IsNotNull(result.WorkItemIds);
+        Assert.AreSequenceEqual(workItemIds, result.WorkItemIds.ToArray());
+        Assert.AreNotSame(workItemIds, result.WorkItemIds);
     }
 
     [TestMethod]

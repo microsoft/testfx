@@ -190,6 +190,42 @@ public static class ReflectionMetadataHook
         IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
         IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
         IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters)
+        => Register(
+            assembly,
+            types,
+            testMethods,
+            typeAttributes,
+            assemblyAttributes,
+            methodAttributes,
+            methodInvokers,
+            constructorInvokers,
+            propertySetters,
+            EmptyDescriptorTestMethods,
+            []);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes reflection metadata and the deliberately constrained test
+    /// descriptors that native Microsoft.Testing.Platform discovery may consume directly.
+    /// </summary>
+    /// <remarks>
+    /// Descriptor methods must have complete, compatibility-safe metadata. A type listed in
+    /// <paramref name="descriptorCompleteTypes"/> declares that every test method on that type is
+    /// represented in <paramref name="descriptorTestMethods"/>; omitted types retain per-method
+    /// fallback to legacy discovery. This API is exclusively for generated code.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Attribute[]> methodAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters,
+        IReadOnlyDictionary<Type, MethodInfo[]> descriptorTestMethods,
+        Type[] descriptorCompleteTypes)
     {
         if (assembly is null)
         {
@@ -236,6 +272,16 @@ public static class ReflectionMetadataHook
             throw new ArgumentNullException(nameof(propertySetters));
         }
 
+        if (descriptorTestMethods is null)
+        {
+            throw new ArgumentNullException(nameof(descriptorTestMethods));
+        }
+
+        if (descriptorCompleteTypes is null)
+        {
+            throw new ArgumentNullException(nameof(descriptorCompleteTypes));
+        }
+
         // Ownership transfer (see the remarks on this method): the source generator hands over
         // freshly-built, throwaway collections and never mutates them after the call, so we store
         // the passed arrays and read-only dictionaries directly instead of copying them.
@@ -273,6 +319,13 @@ public static class ReflectionMetadataHook
             }
         }
 
+        var descriptorCompleteTypeSet = new HashSet<Type>(descriptorCompleteTypes);
+        var descriptorCompleteness = new Dictionary<Type, bool>(descriptorTestMethods.Count);
+        foreach (Type type in descriptorTestMethods.Keys)
+        {
+            descriptorCompleteness[type] = descriptorCompleteTypeSet.Contains(type);
+        }
+
         var provider = new SourceGeneratedReflectionDataProvider
         {
             Assembly = assembly,
@@ -286,6 +339,8 @@ public static class ReflectionMetadataHook
             TypeMethodInvokers = methodInvokers,
             TypeConstructorsInvoker = constructorInvokersMap,
             TypePropertySetters = propertySetters,
+            DescriptorTestMethods = descriptorTestMethods,
+            DescriptorCompleteTypes = descriptorCompleteness,
         };
 
         lock (Lock)
@@ -311,4 +366,6 @@ public static class ReflectionMetadataHook
     private static readonly Dictionary<Type, ConstructorInvokerInfo[]> EmptyConstructorInvokers = [];
 
     private static readonly Dictionary<PropertyInfo, Action<object?, object?>> EmptyPropertySetters = [];
+
+    private static readonly Dictionary<Type, MethodInfo[]> EmptyDescriptorTestMethods = [];
 }

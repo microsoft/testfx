@@ -131,6 +131,15 @@ internal sealed class UnitTestElement
 #endif
     internal Guid? CachedTestNodeUid { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether native MTP discovery materialized this element from
+    /// a complete source-generated descriptor instead of the legacy runtime-method scan.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal bool IsFromGeneratedDescriptor { get; set; }
+
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();

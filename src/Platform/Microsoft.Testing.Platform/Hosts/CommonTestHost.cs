@@ -20,6 +20,15 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IHost
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _activeGracefulStopCapabilitiesSync = new();
+#else
+    private readonly object _activeGracefulStopCapabilitiesSync = new();
+#endif
+    private readonly List<IGracefulStopTestExecutionCapability> _activeGracefulStopCapabilities = [];
+    private CancellationToken _gracefulSessionStopCancellationToken;
+    private bool _isGracefulSessionStopRequested;
+
     public ServiceProvider ServiceProvider => serviceProvider;
 
     protected IPushOnlyProtocol? PushOnlyProtocol => ServiceProvider.GetService<IPushOnlyProtocol>();
@@ -149,18 +158,34 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
             // Dispose the activity
             activity?.Dispose();
 
-            await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed, isProcessShutdown: true).ConfigureAwait(false);
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
+            await DisposeServiceProviderCoreAsync(
+                ServiceProvider,
+                filter: null,
+                alreadyDisposed: alreadyDisposed,
+                isProcessShutdown: true,
+                disposeServiceAsync: DisposeProcessShutdownServiceAsync).ConfigureAwait(false);
+            if (ServiceProvider.GetService<FileLoggerProvider>() is { } fileLoggerProvider
+                && !alreadyDisposed.Contains(fileLoggerProvider))
+            {
+                await DisposeProcessShutdownServiceAsync(fileLoggerProvider).ConfigureAwait(false);
+                alreadyDisposed.Add(fileLoggerProvider);
+            }
 
             // Dispose the LoggerFactoryProxy last so that all user-registered logger providers
             // (e.g., Microsoft.Extensions.Logging providers added via the Microsoft.Testing.Extensions.Logging
             // bridge such as Serilog, Application Insights, OpenTelemetry) get a chance to flush their buffers.
             // The proxy is skipped by DisposeServiceProviderAsync for ordering reasons.
-            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<LoggerFactoryProxy>()).ConfigureAwait(false);
+            if (ServiceProvider.GetService<LoggerFactoryProxy>() is { } loggerFactoryProxy
+                && !alreadyDisposed.Contains(loggerFactoryProxy))
+            {
+                await DisposeProcessShutdownServiceAsync(loggerFactoryProxy).ConfigureAwait(false);
+                alreadyDisposed.Add(loggerFactoryProxy);
+            }
 
             if (PushOnlyProtocol is not null && !alreadyDisposed.Contains(PushOnlyProtocol))
             {
-                await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
+                await DisposeProcessShutdownServiceAsync(PushOnlyProtocol).ConfigureAwait(false);
+                alreadyDisposed.Add(PushOnlyProtocol);
             }
 
             // This is intentional that we are not disposing the CTS.
@@ -204,14 +229,52 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
     // stop so the framework stops scheduling new tests but still emits trx/logs/artifacts for whatever completed
     // (mirroring the local '--maximum-failed-tests' behavior). Fall back to hard cancellation when the running
     // framework has no graceful-stop capability (e.g. the test host controller), which is the only lever left.
-    private async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    protected Task RegisterActiveGracefulStopCapabilityAsync(IGracefulStopTestExecutionCapability capability)
     {
-        IGracefulStopTestExecutionCapability? capability =
+        CancellationToken cancellationToken;
+        bool stopCapability;
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            stopCapability = _isGracefulSessionStopRequested && !_activeGracefulStopCapabilities.Contains(capability);
+            cancellationToken = _gracefulSessionStopCancellationToken;
+            _activeGracefulStopCapabilities.Add(capability);
+        }
+
+        return stopCapability
+            ? capability.StopTestExecutionAsync(cancellationToken)
+            : Task.CompletedTask;
+    }
+
+    protected void UnregisterActiveGracefulStopCapability(IGracefulStopTestExecutionCapability capability)
+    {
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            _activeGracefulStopCapabilities.Remove(capability);
+        }
+    }
+
+    protected async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    {
+        IGracefulStopTestExecutionCapability[] capabilities;
+        lock (_activeGracefulStopCapabilitiesSync)
+        {
+            _isGracefulSessionStopRequested = true;
+            _gracefulSessionStopCancellationToken = cancellationToken;
+            capabilities = [.. _activeGracefulStopCapabilities.Distinct()];
+        }
+
+        if (capabilities.Length > 0)
+        {
+            await Task.WhenAll(capabilities.Select(capability => capability.StopTestExecutionAsync(cancellationToken))).ConfigureAwait(false);
+            return;
+        }
+
+        IGracefulStopTestExecutionCapability? applicationCapability =
             ServiceProvider.GetService<ITestFrameworkCapabilities>()?.GetCapability<IGracefulStopTestExecutionCapability>();
 
-        if (capability is not null)
+        if (applicationCapability is not null)
         {
-            await capability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
+            await applicationCapability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -237,7 +300,7 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         int exitCode;
         using (platformOTelService?.StartActivity("Run"))
         {
-            exitCode = await InternalRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+            exitCode = await InternalRunAsync(testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false);
         }
 
         if (RunTestApplicationLifeCycleCallbacks)
@@ -257,5 +320,8 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
         return exitCode;
     }
 
-    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken);
+    protected abstract Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed);
+
+    protected virtual Task DisposeProcessShutdownServiceAsync(object service)
+        => DisposeHelper.DisposeAsync(service);
 }

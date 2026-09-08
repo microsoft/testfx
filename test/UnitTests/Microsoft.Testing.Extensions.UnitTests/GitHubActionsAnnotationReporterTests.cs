@@ -5,9 +5,12 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
@@ -16,6 +19,79 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class GitHubActionsAnnotationReporterTests
 {
+    [TestMethod]
+    public void AppendHistoryContext_AddsPriorFailureCounts()
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount: 7, failCount: 3));
+
+        string? message = reporter.AppendHistoryContext(
+            "flaky-id",
+            "Tests.Flaky",
+            "Flaky",
+            "boom",
+            exception: null);
+
+        Assert.AreEqual("boom Historical context: failed 3 and flaked 0 of 10 prior runs within the 14-day history window.", message);
+    }
+
+    [TestMethod]
+    public void AppendHistoryContext_AddsFlakyOnlyContext()
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount: 6, failCount: 0, flakyCount: 2));
+
+        string? message = reporter.AppendHistoryContext(
+            "flaky-id",
+            "Tests.Flaky",
+            "Flaky",
+            "boom",
+            exception: null);
+
+        Assert.AreEqual("boom Historical context: flaked 2 of 6 prior runs within the 14-day history window.", message);
+    }
+
+    [TestMethod]
+    [DataRow(4, "boom")]
+    [DataRow(5, "boom Historical context: passed all 5 prior runs within the 14-day history window.")]
+    public void AppendHistoryContext_AppliesRegressionSampleBoundary(int passCount, string expected)
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(passCount, failCount: 0));
+
+        string? message = reporter.AppendHistoryContext(
+            "stable-id",
+            "Tests.Stable",
+            "Stable",
+            "boom",
+            exception: null);
+
+        Assert.AreEqual(expected, message);
+    }
+
+    [TestMethod]
+    public void AppendHistoryContext_AddsHistoricalDuration()
+    {
+        GitHubActionsAnnotationReporter reporter = CreateReporter(
+            new GitHubActionsHistoryStats(
+                passCount: 5,
+                failCount: 0,
+                p95DurationTicks: TimeSpan.FromSeconds(2).Ticks,
+                p99DurationTicks: TimeSpan.FromSeconds(3).Ticks,
+                durationSampleCount: 20));
+
+        string? message = reporter.AppendHistoryContext(
+            "stable-id",
+            "Tests.Stable",
+            "Stable",
+            "boom",
+            exception: null);
+
+        Assert.AreEqual(
+            "boom Historical context: passed all 5 prior runs within the 14-day history window. Historical duration: p95 2.00s, p99 3.00s across 20 prior samples.",
+            message);
+    }
+
     [TestMethod]
     public void GetErrorAnnotation_ReportsResolvedFileWithLineColTitleAndEscaping()
     {
@@ -249,6 +325,25 @@ public sealed class GitHubActionsAnnotationReporterTests
         return fileSystem.Object;
     }
 
+    private static GitHubActionsAnnotationReporter CreateReporter(GitHubActionsHistoryStats stats)
+    {
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        return new GitHubActionsAnnotationReporter(
+            new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            }),
+            environment.Object,
+            Mock.Of<IFileSystem>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ITestApplicationProcessExitCode>(),
+            loggerFactory.Object,
+            new FakeHistoryService(stats, historyWindowInDays: 14));
+    }
+
     // Exception whose StackTrace is a caller-supplied synthetic string, letting tests exercise the
     // frame-parsing/path-remapping branches deterministically without relying on real PDB-derived paths.
     private sealed class StackTraceException : Exception
@@ -271,6 +366,32 @@ public sealed class GitHubActionsAnnotationReporterTests
         }
 
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Task.CompletedTask;
+    }
+
+    private sealed class FakeHistoryService(
+        GitHubActionsHistoryStats stats,
+        int historyWindowInDays) : IGitHubActionsHistoryService
+    {
+        public bool IsEnabled => true;
+
+        public string? HistoryPath => null;
+
+        public int HistoryWindowInDays { get; } = historyWindowInDays;
+
+        public bool TryGetStats(
+            string testId,
+            string fullyQualifiedName,
+            string displayName,
+            out GitHubActionsHistoryStats result)
+        {
+            result = stats;
+            return true;
+        }
+
+        public Task WriteAsync(
+            IReadOnlyList<ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule> modules,
+            CancellationToken cancellationToken)
             => Task.CompletedTask;
     }
 }

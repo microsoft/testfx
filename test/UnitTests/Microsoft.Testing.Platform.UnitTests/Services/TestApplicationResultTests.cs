@@ -124,6 +124,99 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public async Task GetProcessExitCode_WithFailedTestAndDeadline_ReturnsTestFailure()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                new TestNode
+                {
+                    Uid = "failed-test",
+                    DisplayName = "FailedTest",
+                    Properties = new PropertyBag(new FailedTestNodeStateProperty("failure")),
+                }),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithAbortAndDeadline_ReturnsAbort()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsAbortTriggered).Returns(true);
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object);
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithNoTestsAndDeadline_ReturnsDeadline()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object);
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCode_WithOverlappingRequestDeadline_IsolatedPerRequest()
+    {
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        StopPoliciesService firstRequestPolicies = new(cancellationTokenSource.Object);
+        StopPoliciesService secondRequestPolicies = new(cancellationTokenSource.Object);
+        using TestApplicationResult firstRequestResult = CreateTestApplicationResult(firstRequestPolicies);
+        using TestApplicationResult secondRequestResult = CreateTestApplicationResult(secondRequestPolicies);
+
+        await firstRequestPolicies.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, firstRequestResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, secondRequestResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public void GetProcessExitCode_WithMinimumExpectedTestsViolationAndDeadline_ReturnsDeadline()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(
+            policiesService.Object,
+            new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["1"]));
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCode_WithCoverageThresholdFailureAndDeadline_ReturnsDeadline()
+    {
+        Mock<IStopPoliciesService> policiesService = new();
+        policiesService.SetupGet(service => service.IsDeadlineTriggered).Returns(true);
+        Mock<ITestCoverageResult> coverageResult = new();
+        coverageResult.SetupGet(result => result.HasThresholdFailure).Returns(true);
+        using TestApplicationResult testApplicationResult = CreateTestApplicationResult(policiesService.Object, coverageResult: coverageResult.Object);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                new TestNode
+                {
+                    Uid = "passed-test",
+                    DisplayName = "PassedTest",
+                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+                }),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_SupersededRetryAttempt_DoesNotCloseTheTestActivity()
     {
         // A test framework that retries in-process reports one in-progress update (which opens the OpenTelemetry
@@ -524,6 +617,18 @@ public sealed class TestApplicationResultTests : IDisposable
             Assert.AreEqual(expectedExitCode, testApplicationResult.GetProcessExitCode());
         }
     }
+
+    private static TestApplicationResult CreateTestApplicationResult(
+        IStopPoliciesService policiesService,
+        ICommandLineOptions? commandLineOptions = null,
+        ITestCoverageResult? coverageResult = null)
+        => new(
+            Mock.Of<IOutputDevice>(),
+            commandLineOptions ?? Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            policiesService,
+            null,
+            coverageResult);
 
     internal static IEnumerable<object[]> FailedState()
     {

@@ -21,6 +21,24 @@
       "additionalProperties": {
         "type": ["string", "number", "boolean", "null"]
       }
+    },
+    "commandLineOptionDefaults": {
+      "type": "object",
+      "description": "Passive argument defaults for registered command-line options. Keys omit the leading '--'. A default is used only when an enabled feature reads that option and no explicit value was supplied; it never enables the option or feature. Explicit command-line values and commandLineOptions entries take precedence.",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": ["string", "number", "boolean"]
+          },
+          {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": ["string", "number", "boolean"]
+            }
+          }
+        ]
+      }
     }
   },
   "additionalProperties": true,

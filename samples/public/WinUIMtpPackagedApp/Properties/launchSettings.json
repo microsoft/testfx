@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinUIMtpPackagedApp (MTP)": {
+      "commandName": "Project"
+    },
+    "WinUIMtpPackagedApp (Package)": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

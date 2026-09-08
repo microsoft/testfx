@@ -49,9 +49,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
         InputArtifact[] orderedInputs =
         [
-            .. inputs
-                .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+            .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
         ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
@@ -71,7 +69,15 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
         // outside the supplied output directory (Directory.CreateDirectory succeeds on an existing link).
         // Materialize the directory here and refuse to merge through a reparse point instead. Returning
         // null leaves the per-module reports untouched, matching the never-fail-the-run invariant.
-        Directory.CreateDirectory(mergedDirectory);
+        try
+        {
+            Directory.CreateDirectory(mergedDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
         if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;

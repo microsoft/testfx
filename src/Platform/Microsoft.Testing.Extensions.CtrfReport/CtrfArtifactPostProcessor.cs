@@ -50,9 +50,7 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             ? [.. inputs]
             :
             [
-                .. inputs
-                    .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                    .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+                .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
             ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         string[] identityInputs =
@@ -62,7 +60,15 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
         ];
         Guid artifactId = CtrfReportMerger.CreateDeterministicId(identityInputs);
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
-        Directory.CreateDirectory(mergedDirectory);
+        try
+        {
+            Directory.CreateDirectory(mergedDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
         if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;

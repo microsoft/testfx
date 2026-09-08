@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,6 +32,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The filter runs <em>before</em> the test type is loaded, before <c>[AssemblyInitialize]</c>,
 /// before <c>[ClassInitialize]</c>, and before the test constructor is invoked, so dropping or
 /// skipping a test through <see cref="ITestFilter"/> avoids paying any of those costs.
+/// </para>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
 /// </para>
 /// </remarks>
 /// <example>

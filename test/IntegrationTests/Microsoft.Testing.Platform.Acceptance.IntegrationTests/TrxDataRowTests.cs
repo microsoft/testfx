@@ -24,8 +24,10 @@ public sealed class TrxDataRowTests : AcceptanceTestBase<TrxDataRowTests.TestAss
     {
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
+        // Plain --report-trx is controller-backed by default on this platform: the TRX artifact is
+        // reported by the surviving controller process, not the test host, hence "Out of process".
         string outputPattern = $"""
-  In process file artifacts produced:
+  Out of process file artifacts produced:
     - {trxPathPattern}
 """;
         testHostResult.AssertOutputMatchesRegex(outputPattern);

@@ -189,7 +189,7 @@ internal sealed partial class TerminalTestReporter
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
         _terminalWithProgress.NotifyTestCompleted();
-        if (outcome != TestOutcome.Passed || GetShowPassedTests())
+        if (IsTestResultVisible(outcome))
         {
             // Resolve the attempt from the result's instance so multiple instances can participate in one attempt.
             int hostAttempt = asm.GetAttemptNumber(instanceId);
@@ -216,11 +216,21 @@ internal sealed partial class TerminalTestReporter
         }
     }
 
-    private bool GetShowPassedTests()
+    /// <summary>
+    /// Determines whether a completed test's per-test terminal block (result line, informative details, stack
+    /// trace, expected/actual, and captured stdout/stderr) should be rendered, based on
+    /// <see cref="TerminalTestReporterOptions.ShowTestResults"/>. <see cref="TestOutcome.Fail"/>,
+    /// <see cref="TestOutcome.Error"/>, <see cref="TestOutcome.Timeout"/>, and <see cref="TestOutcome.Canceled"/> are
+    /// all gated by <see cref="TestResultVisibility.Failed"/>: they render identically (see
+    /// <see cref="RenderTestCompleted"/>) and are indistinguishable to a user deciding what to see.
+    /// </summary>
+    private bool IsTestResultVisible(TestOutcome outcome) => outcome switch
     {
-        _shouldShowPassedTests ??= _options.ShowPassedTests();
-        return _shouldShowPassedTests.Value;
-    }
+        TestOutcome.Passed => (_options.ShowTestResults & TestResultVisibility.Passed) != 0,
+        TestOutcome.Skipped => (_options.ShowTestResults & TestResultVisibility.Skipped) != 0,
+        TestOutcome.Fail or TestOutcome.Error or TestOutcome.Timeout or TestOutcome.Canceled => (_options.ShowTestResults & TestResultVisibility.Failed) != 0,
+        _ => throw new NotSupportedException(),
+    };
 
     private void RenderTestCompleted(
         ITerminal terminal,
@@ -236,11 +246,8 @@ internal sealed partial class TerminalTestReporter
         string? standardOutput,
         string? errorOutput)
     {
-        if (outcome == TestOutcome.Passed && !GetShowPassedTests())
-        {
-            return;
-        }
-
+        // The caller (TestCompleted) only queues this render when IsTestResultVisible(outcome) is true, so there
+        // is no need to re-check visibility here.
         TerminalColor color = outcome switch
         {
             TestOutcome.Error or TestOutcome.Fail or TestOutcome.Canceled or TestOutcome.Timeout => TerminalColor.DarkRed,

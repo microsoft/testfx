@@ -223,6 +223,34 @@ public sealed class CtrfArtifactPostProcessorTests
         }
     }
 
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedPathIsAFile_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        File.WriteAllText(Path.Combine(resultsDirectory, "merged"), string.Empty);
+        try
+        {
+            string firstPath = WriteReport(resultsDirectory, "first.ctrf.json", "first");
+            string secondPath = WriteReport(resultsDirectory, "second.ctrf.json", "second");
+
+            ProcessedArtifact? output = await new CtrfArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath, "execution-1"), CreateInput(secondPath, "execution-2")],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsTrue(File.Exists(firstPath));
+            Assert.IsTrue(File.Exists(secondPath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
 #if NETCOREAPP
     [TestMethod]
     public async Task ProcessAsync_WhenMergedDirectoryIsAReparsePoint_DoesNotMerge()
@@ -256,6 +284,45 @@ public sealed class CtrfArtifactPostProcessorTests
 
             Assert.IsNull(output);
             Assert.IsEmpty(Directory.GetFileSystemEntries(outsideDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsADanglingReparsePoint_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        string missingDirectory = Path.Combine(root, "missing");
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), missingDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = WriteReport(resultsDirectory, "first.ctrf.json", "first");
+            string secondPath = WriteReport(resultsDirectory, "second.ctrf.json", "second");
+
+            ProcessedArtifact? output = await new CtrfArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath, "execution-1"), CreateInput(secondPath, "execution-2")],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsTrue(File.Exists(firstPath));
+            Assert.IsTrue(File.Exists(secondPath));
+            Assert.IsFalse(Directory.Exists(missingDirectory));
         }
         finally
         {

@@ -2,6 +2,31 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
+        <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
+        <target state="translated">Proměnná prostředí {0} je nastavená, ale testovací architektura nepodporuje {1}. Platforma nemůže zastavit testovací běh před konečným termínem.</target>
+        <note>{0} is the environment variable name. {1} is the capability interface name.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineDescription">
+        <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
+        <target state="translated">Rozšíření, které krátce před časovým limitem stanoveným systémem CI korektně zastaví spuštění testů, aby bylo možné dokončit sestavy.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
+        <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
+        <target state="translated">Proměnná prostředí {0} je nastavená na {1}, ale tato hodnota není platným absolutním časovým okamžikem ve formátu ISO 8601. Zrušení s podporou konečného termínu je zakázáno.</target>
+        <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
+        <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
+        <target state="translated">Rezerva pro výpis před konečným termínem ({0}) je větší nebo rovna rezervě pro zastavení ({1}). Výpis zablokování se může spustit před korektním zastavením.</target>
+        <note>{0} is the dump margin. {1} is the stop margin.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineMessage">
+        <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
+        <target state="translated">Blíží se konečný termín: testovací běh se korektně zastavuje, aby bylo možné dokončit sestavy před nuceným zrušením systémem CI.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
         <target state="translated">Aktuální testovací architektura neimplementuje rozhraní IGracefulStopTestExecutionCapability, které je vyžadováno pro funkci --maximum-failed-tests.</target>
@@ -197,6 +222,16 @@
         <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
       </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="translated">Možnost --{0} je poskytována rozšířením {1}. Pro použití přidejte odkaz na balíček.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="translated">Měli jste na mysli --{0}?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
+      </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
         <target state="translated">Rozhraní ICommandLineOptions ještě není sestavené.</target>
@@ -206,6 +241,11 @@
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">Čtení souboru odpovědí {0} selhalo. {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserRecursiveResponseFile">
+        <source>A recursive response file reference was detected.</source>
+        <target state="translated">Byl zjištěn rekurzivní odkaz na soubor odpovědí.</target>
+        <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
@@ -241,6 +281,46 @@
         <source>Unknown option '--{0}'</source>
         <target state="translated">Neznámá možnost --{0}</target>
         <note>{0} is the unknown option name without the leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineUnknownOptionsHint">
+        <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
+        <target state="translated">Spuštěním --help zobrazíte možnosti zaregistrované touto testovací aplikací. Pokud tato možnost patří k rozšíření, ujistěte se, že se odkazuje na jeho balíček a že je rozšíření zaregistrované.</target>
+        <note>{Locked="--help"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestBlameReplacement">
+        <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
+        <target state="translated">Místo toho použijte '--crashdump' nebo '--hangdump', případně obojí. MTP odděluje diagnostiku chybových ukončení a zablokování, takže za kolektor blame nástroje VSTest neexistuje náhrada jedna ku jedné.</target>
+        <note>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestCollectorGuidance">
+        <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
+        <target state="translated">MTP používá možnosti specifické pro jednotlivé kolektory. Informace o příslušné možnosti MTP najdete v dokumentaci k rozšíření.</target>
+        <note>{Locked="MTP"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
+        <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
+        <target state="translated">Pokud chcete dosáhnout srovnatelné úrovně podrobností výstupu konzoly, použijte '--output {0}'. Výstup konzoly MTP je nakonfigurovaný jinak, takže nejde o přesnou náhradu.</target>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestLoggerGuidance">
+        <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
+        <target state="translated">MTP používá možnosti specifické pro jednotlivé reportéry, například '--report-trx', '--report-html' a '--report-junit'. Informace o příslušné možnosti MTP najdete v dokumentaci k rozšíření reportéru.</target>
+        <note>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestOptionUnsupported">
+        <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
+        <target state="translated">Možnost --{0} používá VSTest syntaxi, kterou Microsoft.Testing.Platform nepodporuje.</target>
+        <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestReplacementSuggestion">
+        <source>Use {0} instead.</source>
+        <target state="translated">Místo toho použijte {0}.</target>
+        <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
+        <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
+        <target state="translated">Pro pokrytí kódu v MTP použijte '--coverage'. Nejde o přímou náhradu kolektoru 'XPlat Code Coverage' z frameworku Coverlet.</target>
+        <note>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
@@ -354,18 +434,18 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
+        <target state="translated">Háček rozšíření {0}.{1} ze sestavení {2}, který je deklarovaný v manifestu rozšíření {3}, je deklarovaný jako „async void“. Platforma volá háček synchronně, takže by se vrátila při prvním čekání: vše, co se zaregistruje po tomto bodu, by se zahodilo ve vlastním nastavení testovací aplikace a všechny chyby by se ztratily. Nastavte háček jako synchronní.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
+        <target state="translated">Háček rozšíření {0}.{1} ze sestavení {2}, který je deklarovaný v manifestu rozšíření {3}, vrací {4}, ale musí vracet „void“. Platforma volá háček synchronně, takže se nikdy nezpozoruje návratová hodnota. Konkrétně vrácená úloha by se nikdy neočekávaná a jeho registrace a selhání by se ztratily.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
-        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
+        <target state="translated">Typ {0} v sestavení '{1}, které je deklarováno v manifestu rozšíření {2}, nezpřístupňuje metodu „public static void“ s názvem {3}, která přijímá „ITestApplicationBuilder“ a „string[]“.</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
@@ -454,8 +534,8 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
-        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
+        <target state="translated">Manifest rozšíření {0} deklaruje načtení rozšíření, ale aktuální modul runtime nepodporuje dynamické načítání sestavení (například při publikování s nativním AOT). Nastavte vlastnost {1} každého rozšíření na „false“, odeberte manifest nebo odeberte {2} z příkazového řádku.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -569,10 +649,20 @@
         <target state="translated">Neplatné argumenty příkazového řádku:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
+        <target state="translated">Položka „{0}“ v oddílu „{1}“ v souboru testconfig.json („{2}“) musí poskytnout neprázdnou skalární hodnotu nebo neprázdné pole skalárních hodnot.</target>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
+        <target state="translated">V testconfig.json v části commandLineOptionDefaults: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
-        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
-        <target state="translated">Možnost --{0} se načítá během spouštění platformy (před načtením souboru testconfig.json), a proto musí být předána v příkazovém řádku, nikoli deklarována v části commandLineOptions souboru testconfig.json.</target>
-        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
+        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under '{1}' in testconfig.json.</source>
+        <target state="translated">Možnost --{0} se načítá během spouštění platformy (před načtením souboru testconfig.json), a proto musí být předána v příkazovém řádku, nikoli deklarována v části {1} souboru testconfig.json.</target>
+        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {1} is the JSON section name. {Locked="--"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
@@ -716,8 +806,8 @@ Poznámka: Toto zpomaluje provádění testu.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="translated">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Trace.
+Soubor se zapíše do výstupního adresáře pod názvem log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -739,7 +829,7 @@ Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
+        <target state="translated">Nahraďte „[log]_.“ zadanou předponou názvu souboru protokolu.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -823,8 +913,8 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
-        <note>{Locked="'*.testingplatformextensions.json'"}</note>
+        <target state="translated">Povolte načítání rozšíření testovací platformy deklarovaných manifesty „*.testingplatformextensions.json“ nalezenými vedle testovací aplikace. Ve výchozím nastavení je to zakázané.</target>
+        <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -862,10 +952,10 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
-        <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
+        <target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu zadaných ukončovacích kódů.
+Například „--ignore-exit-code 8;9“ ignoruje ukončovací kódy 8 a 9 a v těchto případech vrátí hodnotu 0.
+Další informace o ukončovacích kódech najdete na https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -921,7 +1011,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="new">Microsoft Testing Platform command line provider.</target>
+        <target state="translated">Poskytovatel příkazového řádku platformy Microsoft Testing Platform.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,7 +1040,7 @@ Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplika
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="new">For testing purposes.</target>
+        <target state="translated">Pro účely testování.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -961,14 +1051,14 @@ Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplika
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="new">A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
@@ -1205,7 +1295,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
         <target state="translated">Spouštěč testovacího hostitele {0} (UID: {1}) požádal o autorizaci identity zabezpečení {2} v připojení ke kontroleru testovacího hostitele, ale autorizovat je možné jen identitu jedné aplikace v sandboxu (ve Windows identifikátor zabezpečení ve tvaru 'S-1-15-2-...'). Uživatelům, skupinám ani univerzálnímu identifikátoru zabezpečení {3} se přístup nikdy neuděluje.</target>
-        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>

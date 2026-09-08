@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !IS_CORE_MTP
@@ -117,6 +117,36 @@ internal static partial class TerminalResources
 
     internal static string @ExitCode => GetResourceString("ExitCode");
 
+    internal static string @ExitCodeAtLeastOneTestFailedDescription => GetResourceString("ExitCodeAtLeastOneTestFailedDescription");
+
+    internal static string @ExitCodeCoverageThresholdFailedDescription => GetResourceString("ExitCodeCoverageThresholdFailedDescription");
+
+    internal static string @ExitCodeDependentProcessExitedDescription => GetResourceString("ExitCodeDependentProcessExitedDescription");
+
+    internal static string @ExitCodeGenericFailureDescription => GetResourceString("ExitCodeGenericFailureDescription");
+
+    internal static string @ExitCodeIncompatibleProtocolVersionDescription => GetResourceString("ExitCodeIncompatibleProtocolVersionDescription");
+
+    internal static string @ExitCodeInvalidCommandLineDescription => GetResourceString("ExitCodeInvalidCommandLineDescription");
+
+    internal static string @ExitCodeInvalidPlatformSetupDescription => GetResourceString("ExitCodeInvalidPlatformSetupDescription");
+
+    internal static string @ExitCodeMinimumExpectedTestsPolicyViolationDescription => GetResourceString("ExitCodeMinimumExpectedTestsPolicyViolationDescription");
+
+    internal static string @ExitCodeTestAdapterTestSessionFailureDescription => GetResourceString("ExitCodeTestAdapterTestSessionFailureDescription");
+
+    internal static string @ExitCodeTestExecutionStoppedAtDeadlineDescription => GetResourceString("ExitCodeTestExecutionStoppedAtDeadlineDescription");
+
+    internal static string @ExitCodeTestExecutionStoppedForMaxFailedTestsDescription => GetResourceString("ExitCodeTestExecutionStoppedForMaxFailedTestsDescription");
+
+    internal static string @ExitCodeTestHostProcessExitedNonGracefullyDescription => GetResourceString("ExitCodeTestHostProcessExitedNonGracefullyDescription");
+
+    internal static string @ExitCodeTestSessionAbortedDescription => GetResourceString("ExitCodeTestSessionAbortedDescription");
+
+    internal static string @ExitCodeUnknownDescription => GetResourceString("ExitCodeUnknownDescription");
+
+    internal static string @ExitCodeZeroTestsDescription => GetResourceString("ExitCodeZeroTestsDescription");
+
     internal static string @Expected => GetResourceString("Expected");
 
     internal static string @Failed => GetResourceString("Failed");
@@ -205,11 +235,23 @@ internal static partial class TerminalResources
 
     internal static string @TerminalShowStdoutOptionDescription => GetResourceString("TerminalShowStdoutOptionDescription");
 
+    internal static string @TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument => GetResourceString("TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument");
+
+    internal static string @TerminalShowTestResultsOptionDescription => GetResourceString("TerminalShowTestResultsOptionDescription");
+
+    internal static string @TerminalShowTestResultsOptionEmptySelectionInvalidArgument => GetResourceString("TerminalShowTestResultsOptionEmptySelectionInvalidArgument");
+
+    internal static string @TerminalShowTestResultsOptionUnknownValueInvalidArgument => GetResourceString("TerminalShowTestResultsOptionUnknownValueInvalidArgument");
+
     internal static string @TerminalTestReporterDescription => GetResourceString("TerminalTestReporterDescription");
 
     internal static string @TerminalTestReporterDisplayName => GetResourceString("TerminalTestReporterDisplayName");
 
     internal static string @TestDiscoverySummarySingular => GetResourceString("TestDiscoverySummarySingular");
+
+    internal static string @TestDiscoveryExitCode => GetResourceString("TestDiscoveryExitCode");
+
+    internal static string @TestRunExitCode => GetResourceString("TestRunExitCode");
 
     internal static string @TestRunSummary => GetResourceString("TestRunSummary");
 

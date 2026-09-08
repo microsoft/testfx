@@ -4,8 +4,8 @@
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 #if !NETCOREAPP
 using Polyfills;
@@ -43,11 +43,11 @@ public static class HangDumpExtensions
             throw new PlatformNotSupportedException("Hang dump extension is not available on wasi");
         }
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        NamedPipeServerEndpoint endpoint = NamedPipeServerFactory.CreateEndpoint();
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(
-                pipeNameDescription,
+                endpoint,
                 serviceProvider.GetMessageBus(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetCommandLineOptions(),
@@ -56,10 +56,11 @@ public static class HangDumpExtensions
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetProcessHandler(),
-                serviceProvider.GetClock()));
+                serviceProvider.GetClock(),
+                serviceProvider));
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
-            => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name));
+            => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), endpoint));
 
         builder.CommandLine.AddProvider(()
             => new HangDumpCommandLineProvider());

@@ -8,6 +8,7 @@ root = false
 
 #### .NET Coding Conventions ####
 
+dotnet_diagnostic.VSTHRD103.severity = suggestion  # VSTHRD103: Call async methods when in an async method
 dotnet_diagnostic.VSTHRD200.severity = suggestion   # VSTHRD200: Use "Async" suffix for async methods
 
 dotnet_diagnostic.SA1118.severity = suggestion      # SA1118: Parameter should not span multiple lines

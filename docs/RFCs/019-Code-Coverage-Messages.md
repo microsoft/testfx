@@ -737,6 +737,11 @@ public sealed class CoverageReportReference
 }
 ```
 
+`ITestCoverageCapabilities.SupportsTestCoverageMessages` describes the platform's in-process message
+and consumer contract. It is distinct from the JSON-RPC server-mode capability with the same suffix:
+`capabilities.testing.supportsTestCoverageMessages` remains `false` until those first-class messages
+are forwarded over the server-mode wire.
+
 None of these public properties use `init`, per platform guidelines.
 
 ## How consumers use it — two tiers

@@ -9,12 +9,12 @@
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts.</source>
-        <target state="new">Extension used to pass parameters from MSBuild node and the hosts.</target>
+        <target state="translated">Erweiterung, die zum Übergeben von Parametern vom MSBuild-Knoten und den Hosts verwendet wird.</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="MSBuildNodeOptionDescription">
         <source>Used to pass the MSBuild node handle.</source>
-        <target state="new">Used to pass the MSBuild node handle.</target>
+        <target state="translated">Dient zum Übergeben des MSBuild-Knotenhandles.</target>
         <note>Do not localize option name {Locked="--internal-msbuild-node"} or {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>

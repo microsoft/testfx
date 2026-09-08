@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// <c>Activator.CreateInstance</c> / <c>PropertyInfo.SetValue</c>). The reflection objects that
 /// the adapter still keys on (<see cref="System.Reflection.MethodInfo"/>,
 /// <see cref="System.Reflection.PropertyInfo"/>) are resolved once at module-load time under the
-/// <c>[DynamicDependency(All)]</c> roots emitted below.
+/// member-scoped <c>[DynamicDependency]</c> roots emitted below.
 /// </para>
 /// </summary>
 internal static class RuntimeRegistrationEmitter
@@ -49,9 +49,10 @@ internal static class RuntimeRegistrationEmitter
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
         {
-            sb.AppendLine("/// <summary>Source-generated MSTest reflection metadata hook for this test assembly.</summary>");
             using (sb.Block($"internal static class {GeneratedTypeName}"))
             {
+                EmitTestClassMemberTypes(sb);
+                sb.AppendLine();
                 sb.AppendLine("[ModuleInitializer]");
                 EmitDynamicDependencies(sb, testClasses);
 
@@ -70,12 +71,27 @@ internal static class RuntimeRegistrationEmitter
         return sb.ToString();
     }
 
+    private static void EmitTestClassMemberTypes(IndentedStringBuilder sb)
+    {
+        sb.AppendLine("private const DynamicallyAccessedMemberTypes TestClassMemberTypes =");
+        sb.IndentationLevel++;
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicConstructors |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicConstructors |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicMethods |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicMethods |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicFields |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicFields |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.PublicProperties |");
+        sb.AppendLine("DynamicallyAccessedMemberTypes.NonPublicProperties;");
+        sb.IndentationLevel--;
+    }
+
     private static void EmitDynamicDependencies(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)
     {
         var emittedBases = new HashSet<string>(StringComparer.Ordinal);
         foreach (TestClassModel cls in testClasses)
         {
-            sb.AppendLine($"[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({cls.FullyQualifiedTypeName}))]");
+            sb.AppendLine($"[DynamicDependency(TestClassMemberTypes, typeof({cls.FullyQualifiedTypeName}))]");
         }
 
         foreach (TestClassModel cls in testClasses)
@@ -84,7 +100,22 @@ internal static class RuntimeRegistrationEmitter
             {
                 if (emittedBases.Add(baseType))
                 {
-                    sb.AppendLine($"[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({baseType}))]");
+                    sb.AppendLine($"[DynamicDependency(TestClassMemberTypes, typeof({baseType}))]");
+                }
+            }
+        }
+
+        var emittedEnums = new HashSet<string>(StringComparer.Ordinal);
+        foreach (TestClassModel cls in testClasses)
+        {
+            foreach (TestMethodModel method in cls.Methods)
+            {
+                foreach (TestParameterModel parameter in method.Parameters)
+                {
+                    if (parameter.EnumFullyQualifiedType is string enumType && emittedEnums.Add(enumType))
+                    {
+                        sb.AppendLine($"[DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof({enumType}))]");
+                    }
                 }
             }
         }
@@ -123,6 +154,8 @@ internal static class RuntimeRegistrationEmitter
         sb.AppendLine($"var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>({methodCount});");
         sb.AppendLine($"var constructorInvokers = new Dictionary<Type, {ConstructorInvokerInfoFullName}[]>(testClasses.Count);");
         sb.AppendLine($"var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>({propertySetterCount});");
+        sb.AppendLine("var descriptorTestMethods = new Dictionary<Type, MethodInfo[]>(testClasses.Count);");
+        sb.AppendLine("var descriptorCompleteTypes = new List<Type>(testClasses.Count);");
         sb.AppendLine();
 
         using (sb.Block("for (int classIndex = 0; classIndex < testClasses.Count; classIndex++)"))
@@ -131,6 +164,7 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine("Type type = testClass.Type;");
             sb.AppendLine("types[classIndex] = type;");
             sb.AppendLine("MethodInfo[]? availableMethods = null;");
+            sb.AppendLine("bool areDescriptorMethodsResolved = true;");
             using (sb.Block("if (testClass.AreAttributesComplete)"))
             {
                 sb.AppendLine("typeAttributes[type] = testClass.Attributes;");
@@ -149,6 +183,7 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine();
 
             sb.AppendLine("var testMethodRoots = new List<MethodInfo>(testClass.Methods.Count);");
+            sb.AppendLine("var descriptorMethodRoots = new List<MethodInfo>(testClass.Methods.Count);");
             using (sb.Block("for (int methodIndex = 0; methodIndex < testClass.Methods.Count; methodIndex++)"))
             {
                 sb.AppendLine($"{RegistryNamespace}.TestMethodReflectionInfo method = testClass.Methods[methodIndex];");
@@ -157,7 +192,7 @@ internal static class RuntimeRegistrationEmitter
                 // reflection for that one method) rather than throwing out of the [ModuleInitializer],
                 // which would fault registration for the whole assembly.
                 sb.AppendLine("availableMethods ??= type.GetMethods(memberFlags);");
-                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(availableMethods, method.Name, method.ParameterTypes);");
+                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes);");
                 using (sb.Block("if (methodInfo is not null)"))
                 {
                     sb.AppendLine("methodInvokers[methodInfo] = method.Invoke;");
@@ -184,7 +219,16 @@ internal static class RuntimeRegistrationEmitter
                     using (sb.Block("if (method.IsTestMethod)"))
                     {
                         sb.AppendLine("testMethodRoots.Add(methodInfo);");
+                        using (sb.Block("if (testClass.SupportsGeneratedDescriptors && method.IsDescriptorSupported)"))
+                        {
+                            sb.AppendLine("descriptorMethodRoots.Add(methodInfo);");
+                        }
                     }
+                }
+
+                using (sb.Block("else if (testClass.SupportsGeneratedDescriptors && method.IsDescriptorSupported)"))
+                {
+                    sb.AppendLine("areDescriptorMethodsResolved = false;");
                 }
 
                 // Register the source-generated DynamicData accessors so the runtime reads dynamic data
@@ -201,6 +245,12 @@ internal static class RuntimeRegistrationEmitter
             }
 
             sb.AppendLine("testMethods[type] = testMethodRoots.ToArray();");
+            sb.AppendLine("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
+            using (sb.Block("if (testClass.AreGeneratedDescriptorsComplete && areDescriptorMethodsResolved)"))
+            {
+                sb.AppendLine("descriptorCompleteTypes.Add(type);");
+            }
+
             sb.AppendLine();
             sb.AppendLine("PropertyInfo[]? availableProperties = null;");
 
@@ -225,17 +275,17 @@ internal static class RuntimeRegistrationEmitter
 
         sb.AppendLine();
         sb.AppendLine($"object[] assemblyAttributes = {RegistryNamespace}.MSTestReflectionMetadata.AssemblyAttributes;");
-        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
     }
 
     private static void EmitResolveMethodHelper(IndentedStringBuilder sb)
     {
-        sb.AppendLine("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, string name, Type[] parameterTypes)");
+        sb.AppendLine("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, Type declaringType, string name, Type[] parameterTypes)");
         using (sb.Block(null))
         {
             using (sb.Block("foreach (MethodInfo candidate in availableMethods)"))
             {
-                using (sb.Block("if (candidate.Name != name)"))
+                using (sb.Block("if (candidate.DeclaringType != declaringType || candidate.Name != name)"))
                 {
                     sb.AppendLine("continue;");
                 }

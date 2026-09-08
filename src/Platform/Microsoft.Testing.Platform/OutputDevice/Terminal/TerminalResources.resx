@@ -216,7 +216,7 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</value>
-    <comment>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</comment>
+    <comment>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</comment>
   </data>
   <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
     <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
@@ -256,13 +256,13 @@ This option takes precedence over the deprecated --no-progress flag.</value>
     <value>Terminal test reporter</value>
   </data>
   <data name="TerminalOutputOptionDescription" xml:space="preserve">
-    <value>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
-    <comment>{Locked="Normal"}{Locked="Detailed"}</comment>
+    <value>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</value>
+    <comment>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</comment>
   </data>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
-    <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
-    <comment>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</comment>
+    <value>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</value>
+    <comment>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</comment>
   </data>
   <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
     <value>Determines when to show captured standard output of a test.
@@ -295,6 +295,24 @@ Passing the option without a value turns it on.</value>
     <value>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</value>
     <comment>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</comment>
   </data>
+  <data name="TerminalShowTestResultsOptionDescription" xml:space="preserve">
+    <value>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</value>
+    <comment>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionUnknownValueInvalidArgument" xml:space="preserve">
+    <value>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
+    <comment>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionEmptySelectionInvalidArgument" xml:space="preserve">
+    <value>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
+    <comment>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument" xml:space="preserve">
+    <value>--show-test-results value 'all' or 'none' cannot be combined with any other value.</value>
+    <comment>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</comment>
+  </data>
   <data name="StandardError" xml:space="preserve">
     <value>Error output</value>
   </data>
@@ -304,6 +322,14 @@ Passing the option without a value turns it on.</value>
   <data name="TestDiscoverySummarySingular" xml:space="preserve">
     <value>Test discovery summary: found {0} test(s)</value>
     <comment>{0} is the number of discovered tests.</comment>
+  </data>
+  <data name="TestDiscoveryExitCode" xml:space="preserve">
+    <value>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</value>
+    <comment>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</comment>
+  </data>
+  <data name="TestRunExitCode" xml:space="preserve">
+    <value>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</value>
+    <comment>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</comment>
   </data>
   <data name="ActiveTestsRunning_MoreTestsCount" xml:space="preserve">
     <value>and {0} more</value>
@@ -324,6 +350,51 @@ Passing the option without a value turns it on.</value>
   </data>
   <data name="ExitCode" xml:space="preserve">
     <value>Exit code</value>
+  </data>
+  <data name="ExitCodeAtLeastOneTestFailedDescription" xml:space="preserve">
+    <value>At least one test failed.</value>
+  </data>
+  <data name="ExitCodeCoverageThresholdFailedDescription" xml:space="preserve">
+    <value>One or more code coverage thresholds were not met.</value>
+  </data>
+  <data name="ExitCodeDependentProcessExitedDescription" xml:space="preserve">
+    <value>A dependent process exited.</value>
+  </data>
+  <data name="ExitCodeGenericFailureDescription" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
+  <data name="ExitCodeIncompatibleProtocolVersionDescription" xml:space="preserve">
+    <value>The test platform protocol version is incompatible.</value>
+  </data>
+  <data name="ExitCodeInvalidCommandLineDescription" xml:space="preserve">
+    <value>The command-line arguments are invalid.</value>
+  </data>
+  <data name="ExitCodeInvalidPlatformSetupDescription" xml:space="preserve">
+    <value>The test platform setup or extension configuration is invalid.</value>
+  </data>
+  <data name="ExitCodeMinimumExpectedTestsPolicyViolationDescription" xml:space="preserve">
+    <value>Fewer tests ran than required by the minimum expected tests policy.</value>
+  </data>
+  <data name="ExitCodeTestAdapterTestSessionFailureDescription" xml:space="preserve">
+    <value>The test adapter reported a test session failure.</value>
+  </data>
+  <data name="ExitCodeTestExecutionStoppedAtDeadlineDescription" xml:space="preserve">
+    <value>Test execution stopped because the configured deadline was approaching.</value>
+  </data>
+  <data name="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription" xml:space="preserve">
+    <value>Test execution stopped after reaching the maximum failed tests limit.</value>
+  </data>
+  <data name="ExitCodeTestHostProcessExitedNonGracefullyDescription" xml:space="preserve">
+    <value>The test host process exited unexpectedly.</value>
+  </data>
+  <data name="ExitCodeTestSessionAbortedDescription" xml:space="preserve">
+    <value>The test session was aborted.</value>
+  </data>
+  <data name="ExitCodeUnknownDescription" xml:space="preserve">
+    <value>The exit code is not recognized.</value>
+  </data>
+  <data name="ExitCodeZeroTestsDescription" xml:space="preserve">
+    <value>No tests ran.</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>

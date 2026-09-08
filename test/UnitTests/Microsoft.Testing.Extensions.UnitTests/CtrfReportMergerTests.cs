@@ -166,6 +166,24 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_WhenAnyInputIsIncomplete_PropagatesRecoveryMetadata(bool collapseRetryAttempts)
+    {
+        JsonObject incomplete = JsonNode.Parse(BuildReport(testEntries: [Test("incomplete", "failed")]))!.AsObject();
+        incomplete["results"]!["environment"]!["extra"]!["incomplete"] = true;
+        incomplete["results"]!["environment"]!["extra"]!["runStatus"] = "aborted";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge(
+            [incomplete.ToJsonString(), BuildReport(testEntries: [Test("complete", "passed")])],
+            collapseRetryAttempts ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate))!;
+        JsonNode extra = merged["results"]!["environment"]!["extra"]!;
+
+        Assert.IsTrue((bool)extra["incomplete"]!);
+        Assert.AreEqual("aborted", (string?)extra["runStatus"]);
+    }
+
+    [TestMethod]
     public void Merge_DerivesDeterministicReportIdNotReusingInput()
     {
         string a = BuildReport();

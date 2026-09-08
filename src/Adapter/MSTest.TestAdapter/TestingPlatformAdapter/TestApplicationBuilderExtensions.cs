@@ -72,7 +72,7 @@ public static class TestApplicationBuilderExtensions
             serviceProvider => new TestFrameworkCapabilities(
                 new MSTestCapabilities(),
                 new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
-                MSTestGracefulStopTestExecutionCapability.Instance),
+                MSTestGracefulStopTestExecutionCapability.Create()),
             (capabilities, serviceProvider) => new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
     }
 }

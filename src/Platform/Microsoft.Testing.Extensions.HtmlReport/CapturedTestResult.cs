@@ -6,4 +6,8 @@ namespace Microsoft.Testing.Extensions.HtmlReport;
 internal sealed class CapturedTestResult : CapturedTestResultBase
 {
     public required string Outcome { get; init; }
+
+    public int? RetryAttemptNumber { get; init; }
+
+    public bool? IsSupersededRetryAttempt { get; init; }
 }

@@ -77,12 +77,19 @@ internal sealed partial class VideoRecorderSessionHandler
         lock (_stateGate)
         {
             _inFlight.Remove(testUid);
+            _testRecords.Add(new TestRecord(update.TestNode.DisplayName, start, end, isFailure, OutcomeText(state)));
             if (isFailure)
             {
                 _anyTestFailed = true;
+                DateTimeOffset? recordingStart = _recorder.RecordingStartUtc;
+                if (recordingStart is not null)
+                {
+                    _failedWindows = new FailedWindow(
+                        (start - recordingStart.Value).TotalSeconds,
+                        (end - recordingStart.Value).TotalSeconds,
+                        _failedWindows);
+                }
             }
-
-            _testRecords.Add(new TestRecord(update.TestNode.DisplayName, start, end, isFailure, OutcomeText(state)));
         }
 
         TryPruneOldSegments();

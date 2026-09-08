@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Extensions;
 /// Extension methods on <see cref="ITestApplicationBuilder"/> for forwarding the
 /// Microsoft Testing Platform diagnostic logs to <c>Microsoft.Extensions.Logging</c> providers.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class MicrosoftExtensionsLoggingBuilderExtensions
 {

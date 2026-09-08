@@ -33,3 +33,15 @@ Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through t
 | `None` | No extensions |
 
 Individual extensions can be enabled or disabled with their `Enable*` MSBuild properties. See the [complete MSTest.Sdk property reference](https://github.com/microsoft/testfx/blob/main/docs/glossary.md#mstestsdk) for profiles, runner compatibility, test-library usage, NativeAOT restrictions, and advanced version controls.
+
+### GitHub Actions reporting
+
+The `--report-gh` option is provided by `Microsoft.Testing.Extensions.GitHubActionsReport`; it is not included in the `Default` profile. Enable it explicitly:
+
+```xml
+<PropertyGroup>
+  <EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
+</PropertyGroup>
+```
+
+Alternatively, select the `AllMicrosoft` profile. After the extension is included, `--help` lists `--report-gh` and its related options.

@@ -41,6 +41,17 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    internal static IEnumerable<(bool RetryArgumentsInResponseFile, bool UseInlineDelimiters, string Tfm)> GetResponseFileMatrix()
+    {
+        foreach (string tfm in TargetFrameworks.Net)
+        {
+            yield return (true, false, tfm);
+            yield return (true, true, tfm);
+            yield return (false, false, tfm);
+            yield return (false, true, tfm);
+        }
+    }
+
     [TestMethod]
     [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_OnlyRetryTimes_Succeeds(string tfm, bool failOnly)
@@ -113,6 +124,62 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    [TestMethod]
+    [DynamicData(nameof(GetResponseFileMatrix))]
+    public async Task RetryFailedTests_WithArgumentsInResponseFile_Succeeds(bool retryArgumentsInResponseFile, bool useInlineDelimiters, string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, $"response file results {Guid.NewGuid():N}");
+        string responseFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.rsp");
+
+        try
+        {
+            File.WriteAllText(
+                responseFile,
+                (retryArgumentsInResponseFile, useInlineDelimiters) switch
+                {
+                    (true, true) => $"""
+                                    --retry-failed-tests=1
+                                    --retry-failed-tests-max-tests:50
+                                    --results-directory="{resultDirectory}"
+                                    """,
+                    (true, false) => $"""
+                                     --retry-failed-tests 1
+                                     --retry-failed-tests-max-tests 50
+                                     --results-directory "{resultDirectory}"
+                                     """,
+                    (false, true) => $"--results-directory=\"{resultDirectory}\"",
+                    (false, false) => $"--results-directory \"{resultDirectory}\"",
+                });
+
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                retryArgumentsInResponseFile
+                    ? $"@{responseFile}"
+                    : useInlineDelimiters
+                        ? $"@{responseFile} --retry-failed-tests=1 --retry-failed-tests-max-tests:50"
+                        : $"@{responseFile} --retry-failed-tests 1 --retry-failed-tests-max-tests 50",
+                new()
+                {
+                    { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                    { "METHOD1", "1" },
+                    { "FAIL", "0" },
+                    { "RESULTDIR", resultDirectory },
+                    { "CHECK_RETRY_RESPONSE_FILE_CLEANUP", "1" },
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
+            Assert.IsEmpty(
+                Directory.GetFiles(resultDirectory, "retry-*.rsp", SearchOption.AllDirectories),
+                "Generated retry response files must be deleted after each attempt.");
+        }
+        finally
+        {
+            File.Delete(responseFile);
+        }
+    }
+
     /// <summary>
     /// A test that fails and then comes back <em>skipped</em> on the retry has not recovered, so it must not be
     /// counted or listed as flaky. This guards the accounting against inferring recovery from "was retried and is
@@ -124,11 +191,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string summaryPath = Path.Combine(resultDirectory, "github-step-summary.md");
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 1 --results-directory {resultDirectory} --report-gh --report-gh-annotations off --report-gh-groups off",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "GITHUB_ACTIONS", "true" },
+                { "GITHUB_STEP_SUMMARY", summaryPath },
                 { "METHOD1", "1" },
                 { "FAIL", "1" },
                 { "SKIPONRETRY", "1" },
@@ -155,6 +225,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputContains("  failed: 0");
         testHostResult.AssertOutputContains("  succeeded: 3");
         testHostResult.AssertOutputContains("  skipped: 0");
+        Assert.IsFalse(
+            File.Exists(summaryPath),
+            "GitHub summary aggregation must fail closed while the final passed/skipped split is ambiguous.");
     }
 
     /// <summary>
@@ -170,7 +243,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 1 --results-directory {resultDirectory} --report-html --report-junit",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
@@ -196,6 +269,50 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         // Nothing recovered, so nothing is flaky.
         testHostResult.AssertOutputDoesNotContain("  flaky:");
         testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+
+        string htmlReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single());
+        const string htmlDataStart = "<script id=\"mtp-data\" type=\"application/json\">";
+        const string htmlDataEnd = "</script>";
+        int htmlDataStartIndex = htmlReport.IndexOf(htmlDataStart, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, htmlDataStartIndex, htmlReport);
+        htmlDataStartIndex += htmlDataStart.Length;
+        int htmlDataEndIndex = htmlReport.IndexOf(htmlDataEnd, htmlDataStartIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(htmlDataStartIndex, htmlDataEndIndex, htmlReport);
+        using var htmlDocument = System.Text.Json.JsonDocument.Parse(
+            htmlReport.Substring(htmlDataStartIndex, htmlDataEndIndex - htmlDataStartIndex));
+        System.Text.Json.JsonElement htmlRoot = htmlDocument.RootElement;
+        Assert.AreEqual(3, htmlRoot.GetProperty("summary").GetProperty("total").GetInt32());
+        Assert.AreEqual(1, htmlRoot.GetProperty("summary").GetProperty("failed").GetInt32());
+        Assert.IsTrue(htmlRoot.GetProperty("incomplete").GetBoolean());
+        Assert.AreEqual("aborted", htmlRoot.GetProperty("runStatus").GetString());
+        string[] htmlTestNames =
+        [
+            .. htmlRoot.GetProperty("tests").EnumerateArray()
+                .Select(test => test.GetProperty("displayName").GetString()!),
+        ];
+        Assert.Contains("TestMethod2", htmlTestNames);
+        Assert.Contains("TestMethod3", htmlTestNames);
+
+        string junitReport = File.ReadAllText(Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single());
+        var junitDocument = System.Xml.Linq.XDocument.Parse(junitReport);
+        System.Xml.Linq.XElement junitRoot = junitDocument.Root!;
+        Assert.AreEqual("3", junitRoot.Attribute("tests")!.Value);
+        Assert.AreEqual("1", junitRoot.Attribute("failures")!.Value);
+        string[] junitTestNames =
+        [
+            .. junitRoot.Descendants("testcase").Select(test => test.Attribute("name")!.Value),
+        ];
+        Assert.Contains("TestMethod2", junitTestNames);
+        Assert.Contains("TestMethod3", junitTestNames);
+        System.Xml.Linq.XElement[] junitProperties = [.. junitRoot.Descendants("property")];
+        Assert.Contains(
+            property => property.Attribute("name")?.Value == "incomplete"
+                && property.Attribute("value")?.Value == "true",
+            junitProperties);
+        Assert.Contains(
+            property => property.Attribute("name")?.Value == "run-status"
+                && property.Attribute("value")?.Value == "aborted",
+            junitProperties);
     }
 
     /// <summary>
@@ -681,6 +798,72 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_GitHubActionsSummary_ReportsFlakyTest(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string summaryPath = Path.Combine(resultDirectory, "github-step-summary.md");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-gh --report-gh-annotations off --report-gh-groups off",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "GITHUB_ACTIONS", "true" },
+                { "GITHUB_STEP_SUMMARY", summaryPath },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(summaryPath));
+        string summary = File.ReadAllText(summaryPath);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Duration |", summary, summary);
+        Assert.Contains("| 3 | 3 | 0 | 0 | 1 |", summary, summary);
+        Assert.Contains("### ⚠️ Flaky tests (1)", summary, summary);
+        Assert.Contains("`DummyClassName.TestMethod1`", summary, summary);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_HtmlAndJUnitReports_AreConsolidatedWithRetryHistory(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory \"{resultDirectory}\" --report-html --report-junit",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        string htmlReportPath = Directory.GetFiles(resultDirectory, "*.html", SearchOption.TopDirectoryOnly).Single();
+        string htmlReport = File.ReadAllText(htmlReportPath);
+        Assert.Contains(@"""total"":3", htmlReport, htmlReport);
+        Assert.Contains(@"""passed"":3", htmlReport, htmlReport);
+        Assert.Contains(@"""flaky"":1", htmlReport, htmlReport);
+        Assert.Contains(@"""retryAttempts""", htmlReport, htmlReport);
+        Assert.Contains("Retry history", htmlReport, htmlReport);
+        Assert.Contains("badge flaky", htmlReport, htmlReport);
+
+        string junitReportPath = Directory.GetFiles(resultDirectory, "*.xml", SearchOption.TopDirectoryOnly).Single();
+        string junitReport = File.ReadAllText(junitReportPath);
+        Assert.Contains(@"tests=""3"" failures=""0""", junitReport, junitReport);
+        Assert.HasCount(1, Regex.Matches(junitReport, @"<testcase name=""TestMethod1"""), junitReport);
+
+        string retriesDirectory = Path.Combine(resultDirectory, "Retries");
+        Assert.HasCount(2, Directory.GetFiles(retriesDirectory, "*.html", SearchOption.AllDirectories));
+        Assert.HasCount(2, Directory.GetFiles(retriesDirectory, "*.xml", SearchOption.AllDirectories));
+    }
+
     private static string ReadRequiredStringProperty(string filePath, string propertyName)
     {
         using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(filePath));
@@ -701,7 +884,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion));
 
         private const string TestCode = """
 #file RetryFailedTests.csproj
@@ -718,6 +903,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
@@ -757,7 +945,10 @@ public class Program
         builder.AddTrxReportProvider();
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
         builder.AddCtrfReportProvider();
+        builder.AddJUnitReportProvider();
 #pragma warning restore TPEXP
+        builder.AddGitHubActionsProvider();
+        builder.AddHtmlReportProvider();
         builder.AddRetryProvider();
         builder.AddMSBuild();
         builder.AddTreeNodeFilterService(treeNodeFilterExtension);
@@ -813,6 +1004,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         var filter = (context.Request as TestExecutionRequest)?.Filter;
         var uidFilter = filter as TestNodeUidListFilter;
         var treeNodeFilter = filter as TreeNodeFilter;
+
+        if (Environment.GetEnvironmentVariable("CHECK_RETRY_RESPONSE_FILE_CLEANUP") == "1"
+            && Environment.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER") == "2"
+            && Directory.GetFiles(Path.Combine(resultDir, "Retries"), "retry-arguments-1.rsp", SearchOption.AllDirectories).Length != 0)
+        {
+            throw new InvalidOperationException("The response file from retry attempt 1 still exists during attempt 2.");
+        }
 
         var testMethod1Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod1", 0, Array.Empty<string>(), string.Empty);
         var testMethod2Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod2", 0, Array.Empty<string>(), string.Empty);

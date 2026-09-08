@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Extensions;
@@ -30,6 +30,9 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// because the message bus skips delivering a producer's data back to that same producer; the deadlock
 /// risk is specifically re-entrant publishing that routes back to this consumer under a
 /// <em>different</em> producer UID.
+/// </para>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
 /// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]

@@ -272,6 +272,34 @@ public sealed class PackagedAppTestHostLauncherTests
             Assert.AreEqual(expected, await launcher.IsEnabledAsync());
         });
 
+    [TestMethod]
+    public void GetConnectBackEnvironment_IncludesReporterRecoveryTransport()
+    {
+#pragma warning disable TPEXP // TestHostLaunchContext is experimental.
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            [],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_CTRFREPORT_JOURNAL"] = "ctrf.jsonl",
+                ["TESTINGPLATFORM_HTMLREPORT_JOURNAL"] = "html.jsonl",
+                ["TESTINGPLATFORM_JUNITREPORT_JOURNAL"] = "junit.jsonl",
+                ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = "retry.txt",
+                ["TESTINGPLATFORM_SECRET"] = "must-not-flow",
+            },
+            workingDirectory: null);
+#pragma warning restore TPEXP
+
+        var environment =
+            PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
+
+        Assert.AreEqual("ctrf.jsonl", environment["TESTINGPLATFORM_CTRFREPORT_JOURNAL"]);
+        Assert.AreEqual("html.jsonl", environment["TESTINGPLATFORM_HTMLREPORT_JOURNAL"]);
+        Assert.AreEqual("junit.jsonl", environment["TESTINGPLATFORM_JUNITREPORT_JOURNAL"]);
+        Assert.AreEqual("retry.txt", environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
+        Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_SECRET"));
+    }
+
     /// <summary>
     /// Places a manifest at the layout root and the app <paramref name="appSubdirectoryDepth"/>
     /// directory levels below it, then asserts whether the launcher's upward probe still finds it.

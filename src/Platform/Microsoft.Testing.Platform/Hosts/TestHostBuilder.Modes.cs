@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -131,6 +132,19 @@ internal sealed partial class TestHostBuilder
             return null;
         }
 
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
+            static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
+        {
+            ITestHostLauncher? testHostLauncher =
+                await ((TestHostControllersManager)TestHostControllers).BuildTestHostLauncherAsync(context.ServiceProvider).ConfigureAwait(false);
+            ExecutableInfo executableInfo = context.ServiceProvider.GetTestApplicationModuleInfo().GetCurrentExecutableInfo();
+            await context.ServiceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                testHostLauncher,
+                executableInfo.FilePath,
+                context.LoggerFactory.CreateLogger<TestHostBuilder>(),
+                context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        }
+
         context.PoliciesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
         await context.ProxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
@@ -212,30 +226,53 @@ internal sealed partial class TestHostBuilder
         context.TestHostControllerInfo.IsCurrentProcessTestHostController = false;
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        NamedPipeClient? testControllerConnection = await ConnectToTestHostProcessMonitorIfAvailableAsync(
-            context.TestApplicationCancellationTokenSource,
-            context.LoggerFactory.CreateLogger(nameof(ConnectToTestHostProcessMonitorIfAvailableAsync)),
-            context.TestHostControllerInfo,
-            context.Configuration,
-            context.SystemEnvironment).ConfigureAwait(false);
+        TestHostControllerCancellationListener? testHostControllerCancellationListener =
+            CreateTestHostControllerCancellationListenerIfAvailable(
+                context.TestApplicationCancellationTokenSource,
+                context.LoggerFactory.CreateLogger(nameof(TestHostControllerCancellationListener)),
+                context.TestHostControllerInfo,
+                context.SystemEnvironment);
+        NamedPipeClient? testControllerConnection = null;
+        try
+        {
+            // Start the auxiliary listener before awaiting the primary handshake so cancellation can reach
+            // the child even while its primary connection or PID request is still in progress.
+            testControllerConnection = await ConnectToTestHostProcessMonitorIfAvailableAsync(
+                context.TestApplicationCancellationTokenSource,
+                context.LoggerFactory.CreateLogger(nameof(ConnectToTestHostProcessMonitorIfAvailableAsync)),
+                context.TestHostControllerInfo,
+                context.Configuration,
+                context.SystemEnvironment).ConfigureAwait(false);
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
 #pragma warning disable CS0618 // Type or member is obsolete
-        ITestHostApplicationLifetime[] testApplicationLifecycleCallback =
-            await ((TestHostManager)TestHost).BuildTestApplicationLifecycleCallbackAsync(context.ServiceProvider).ConfigureAwait(false);
+            ITestHostApplicationLifetime[] testApplicationLifecycleCallback =
+                await ((TestHostManager)TestHost).BuildTestApplicationLifecycleCallbackAsync(context.ServiceProvider).ConfigureAwait(false);
 #pragma warning restore CS0618 // Type or member is obsolete
-        context.ServiceProvider.AddServices(testApplicationLifecycleCallback);
+            context.ServiceProvider.AddServices(testApplicationLifecycleCallback);
 
-        ITestExecutionFilterProvider[] testExecutionFilterProviders =
-            await ((TestHostManager)TestHost).BuildTestExecutionFilterProvidersAsync(context.ServiceProvider).ConfigureAwait(false);
-        context.ServiceProvider.AddServices(testExecutionFilterProviders);
+            ITestExecutionFilterProvider[] testExecutionFilterProviders =
+                await ((TestHostManager)TestHost).BuildTestExecutionFilterProvidersAsync(context.ServiceProvider).ConfigureAwait(false);
+            context.ServiceProvider.AddServices(testExecutionFilterProviders);
 
-        return context.IsJsonRpcProtocol
-            ? await BuildServerTestHostAsync(context, testControllerConnection).ConfigureAwait(false)
-            : await BuildConsoleTestHostAsync(context, testControllerConnection).ConfigureAwait(false);
+            return context.IsJsonRpcProtocol
+                ? await BuildServerTestHostAsync(context, testControllerConnection, testHostControllerCancellationListener).ConfigureAwait(false)
+                : await BuildConsoleTestHostAsync(context, testControllerConnection, testHostControllerCancellationListener).ConfigureAwait(false);
+        }
+        catch
+        {
+            await DisposeHelper.DisposeAsync(testHostControllerCancellationListener).ConfigureAwait(false);
+#pragma warning disable CA1416 // This method only creates named-pipe connections on supported platforms.
+            testControllerConnection?.Dispose();
+#pragma warning restore CA1416
+            throw;
+        }
     }
 
-    private async Task<IHost> BuildServerTestHostAsync(BuildContext context, NamedPipeClient? testControllerConnection)
+    private async Task<IHost> BuildServerTestHostAsync(
+        BuildContext context,
+        NamedPipeClient? testControllerConnection,
+        TestHostControllerCancellationListener? testHostControllerCancellationListener)
     {
         IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(context.ServiceProvider);
         ServerTestHost serverTestHost = new(
@@ -246,13 +283,17 @@ internal sealed partial class TestHostBuilder
             (TestHostManager)TestHost);
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(
+        IHost actualTestHost = serverTestHost;
+        if (testControllerConnection is not null)
+        {
+            var controlledHost = new TestHostControlledHost(
                 testControllerConnection,
                 serverTestHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
-                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
-            : serverTestHost;
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCancellationListener(testHostControllerCancellationListener);
+            actualTestHost = controlledHost;
+        }
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
         // The TestHostBuilt telemetry event must be sent through the collector previously registered
@@ -279,7 +320,10 @@ internal sealed partial class TestHostBuilder
         return actualTestHost;
     }
 
-    private async Task<IHost> BuildConsoleTestHostAsync(BuildContext context, NamedPipeClient? testControllerConnection)
+    private async Task<IHost> BuildConsoleTestHostAsync(
+        BuildContext context,
+        NamedPipeClient? testControllerConnection,
+        TestHostControllerCancellationListener? testHostControllerCancellationListener)
     {
         ActionResult<ITestExecutionFilterFactory> testExecutionFilterFactoryResult = await ((TestHostManager)TestHost).TryBuildTestExecutionFilterFactoryAsync(context.ServiceProvider).ConfigureAwait(false);
         if (testExecutionFilterFactoryResult.IsSuccess)
@@ -306,13 +350,17 @@ internal sealed partial class TestHostBuilder
             (TestHostManager)TestHost);
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(
+        IHost actualTestHost = consoleHost;
+        if (testControllerConnection is not null)
+        {
+            var controlledHost = new TestHostControlledHost(
                 testControllerConnection,
                 consoleHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
-                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
-            : consoleHost;
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCancellationListener(testHostControllerCancellationListener);
+            actualTestHost = controlledHost;
+        }
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
 #pragma warning disable SA1118 // Parameter should not span multiple lines

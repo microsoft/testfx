@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -7,58 +7,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
-    private async Task UploadPendingRunAttachmentsAsync(CancellationToken cancellationToken)
-    {
-        if (_publishConfiguration is null || CurrentRunId is null)
-        {
-            return;
-        }
-
-        while (_pendingRunAttachments.TryDequeue(out AzureDevOpsTestResultAttachment? attachment))
-        {
-            try
-            {
-                await _client.UploadTestRunAttachmentAsync(_publishConfiguration, CurrentRunId.Value, attachment, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // Cancellation aborts the drain; the attachment is lost. The only caller is session
-                // finishing, where cancellation means the test host is tearing down anyway.
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Interlocked.Increment(ref _failedAttachmentCount);
-                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
-            }
-        }
-    }
-
-    private async Task UploadResultAttachmentsAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
-    {
-        if (_publishConfiguration is null || CurrentRunId is null || attachments.Count == 0)
-        {
-            return;
-        }
-
-        foreach (AzureDevOpsTestResultAttachment attachment in attachments)
-        {
-            try
-            {
-                await _client.UploadTestResultAttachmentAsync(_publishConfiguration, CurrentRunId.Value, testCaseResultId, attachment, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Interlocked.Increment(ref _failedAttachmentCount);
-                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
-            }
-        }
-    }
-
     private async Task BackgroundFlushLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -127,7 +75,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 // orchestrated run has a store, so an ordinary run takes the create path for everything.
                 List<AzureDevOpsTestCaseResultWithAttachments> creations = [];
                 List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updateCandidates = [];
-                List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments = [];
+                List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments = [];
                 foreach (AzureDevOpsTestCaseResultWithAttachments item in batch)
                 {
                     if (_resultIdStore?.TryGet(item.Result) is { } published)
@@ -163,7 +111,29 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     }
                 }
 
-                if (creations.Count > 0 && !await TryCreateResultsAsync(creations, deferredAttachments, cancellationToken).ConfigureAwait(false))
+                bool creationsAccepted = true;
+                if (creations.Count > 0)
+                {
+                    try
+                    {
+                        creationsAccepted = await TryCreateResultsAsync(creations, deferredAttachments, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (FirstAttemptSeedCanceledException)
+                    {
+                        // Creation already reached Azure DevOps, but its follow-up seed was canceled before
+                        // these updates were attempted. Release their claims and put them back so session
+                        // finalization can retry them or include them in the unpublished-result warning.
+                        foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
+                        {
+                            _claimedResultIds.Remove(published.Id);
+                        }
+
+                        RequeueUnsafe([.. updates.Select(update => update.Attempt)]);
+                        throw;
+                    }
+                }
+
+                if (!creationsAccepted)
                 {
                     // Nothing in this batch reached Azure DevOps: the creations failed, and the updates were
                     // not attempted. Release every parent claimed while classifying this untouched batch,
@@ -223,248 +193,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     }
 
     /// <summary>
-    /// Publishes results Azure DevOps has not seen in this build yet, recording the ids it assigns them so
-    /// that a later attempt can update them.
-    /// </summary>
-    /// <returns>
-    /// <see langword="false"/> when the batch did not reach Azure DevOps and the caller should requeue it.
-    /// </returns>
-    private async Task<bool> TryCreateResultsAsync(
-        List<AzureDevOpsTestCaseResultWithAttachments> batch,
-        List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
-        CancellationToken cancellationToken)
-    {
-        IReadOnlyList<int>? resultIds;
-        try
-        {
-            if (_coordinatedRun is not null && _runIdCoordinator is not null)
-            {
-                await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-            }
-
-            var resultsOnly = new AzureDevOpsTestCaseResult[batch.Count];
-            for (int i = 0; i < batch.Count; i++)
-            {
-                resultsOnly[i] = batch[i].Result;
-            }
-
-            resultIds = await _client.PublishTestResultsAsync(_publishConfiguration!, CurrentRunId!.Value, resultsOnly, cancellationToken).ConfigureAwait(false);
-            _lastFlushTime = _clock.UtcNow;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            // Transport/HTTP failure — AzDO may not have accepted the batch, so it's safe to requeue and
-            // retry. Reset the interval countdown so a transient failure does not cause a tight retry loop.
-            _lastFlushTime = _clock.UtcNow;
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
-            return false;
-        }
-
-        // POST succeeded. If we couldn't parse the response we cannot upload result-level attachments for
-        // this batch, nor remember the ids for a later attempt, but we MUST NOT republish (that would
-        // create duplicate result rows in AzDO).
-        if (resultIds is null)
-        {
-            if (BatchHasAttachments(batch))
-            {
-                Interlocked.Add(ref _failedAttachmentCount, CountAttachments(batch));
-                TryLogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
-            }
-
-            return true;
-        }
-
-        // Record the whole accepted batch before any cancellable attachment upload. Azure DevOps accepted
-        // every result in one operation, so the map must describe all of them even if cancellation
-        // interrupts the best-effort attachment phase.
-        for (int i = 0; i < batch.Count; i++)
-        {
-            // Folded data-driven rows share one uid. A failure in any row retries the whole uid, including
-            // rows that passed or were skipped, so every row must retain its own result id and history.
-            if (_resultIdStore is not null)
-            {
-                _resultIdStore.RecordCreated(batch[i].Result, resultIds[i]);
-                _claimedResultIds.Add(resultIds[i]);
-            }
-
-            if (batch[i].Attachments.Count > 0)
-            {
-                deferredAttachments.Add((
-                    resultIds[i],
-                    _resultIdStore is null ? batch[i].Attachments : RenameForAttempt(batch[i].Attachments, attemptNumber: 1)));
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Folds further attempts into the results that already represent those tests, so that one test that
-    /// ran several times stays one result with the attempts recorded underneath it.
-    /// </summary>
-    /// <remarks>
-    /// The parent takes the latest attempt's outcome and detail, because that is the outcome the test
-    /// ultimately had and the one the pipeline's own exit code already reflects — a test rescued by a retry
-    /// should stop being reported as failed. Azure DevOps computes run metrics from the parent, so this is
-    /// also what decides whether the run is counted as passing. The earlier attempts are not lost: they
-    /// stay visible as sub-results, which is what makes the flakiness apparent.
-    /// </remarks>
-    private async Task<bool> TryUpdateResultsAsync(
-        List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updates,
-        List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
-        CancellationToken cancellationToken)
-    {
-        var parents = new AzureDevOpsTestCaseResult[updates.Count];
-        var attemptHistories = new IReadOnlyList<AzureDevOpsTestSubResult>[updates.Count];
-        long?[] totalDurations = new long?[updates.Count];
-        var startedDates = new DateTimeOffset?[updates.Count];
-        var completedDates = new DateTimeOffset?[updates.Count];
-        for (int i = 0; i < updates.Count; i++)
-        {
-            // Built but not recorded yet: the map may only advance once Azure DevOps has accepted the
-            // update, otherwise retrying a failed update would list the same execution twice.
-            attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, updates[i].Attempt.Result);
-            totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, updates[i].Attempt.Result);
-            startedDates[i] = Min(updates[i].Published.StartedDate, updates[i].Attempt.Result.StartedDate);
-            completedDates[i] = Max(updates[i].Published.CompletedDate, updates[i].Attempt.Result.CompletedDate);
-            parents[i] = updates[i].Attempt.Result with
-            {
-                Id = updates[i].Published.Id,
-                ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-                SubResults = attemptHistories[i],
-                DurationInMs = totalDurations[i],
-                StartedDate = startedDates[i],
-                CompletedDate = completedDates[i],
-            };
-        }
-
-        try
-        {
-            if (_coordinatedRun is not null && _runIdCoordinator is not null)
-            {
-                await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-            }
-
-            await _client.UpdateTestResultsAsync(_publishConfiguration!, CurrentRunId!.Value, parents, cancellationToken).ConfigureAwait(false);
-            _lastFlushTime = _clock.UtcNow;
-        }
-        catch (Exception ex)
-        {
-            foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
-            {
-                _resultIdStore!.Forget(published);
-            }
-
-            if (ex is OperationCanceledException)
-            {
-                throw;
-            }
-
-            _lastFlushTime = _clock.UtcNow;
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
-            return false;
-        }
-
-        // The PATCH accepted the whole batch. Advance every history before an attachment upload can be
-        // canceled, otherwise only a prefix of the accepted updates would survive into the next attempt.
-        for (int i = 0; i < updates.Count; i++)
-        {
-            _resultIdStore!.RecordAttempts(
-                updates[i].Published,
-                attemptHistories[i],
-                totalDurations[i],
-                startedDates[i],
-                completedDates[i]);
-        }
-
-        for (int i = 0; i < updates.Count; i++)
-        {
-            if (updates[i].Attempt.Attachments.Count > 0)
-            {
-                deferredAttachments.Add((
-                    updates[i].Published.Id,
-                    RenameForAttempt(updates[i].Attempt.Attachments, attemptHistories[i][^1].SequenceId)));
-            }
-        }
-
-        return true;
-    }
-
-    private async Task UploadDeferredAttachmentsAsync(
-        List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
-        CancellationToken cancellationToken)
-    {
-        foreach ((int resultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments) in deferredAttachments)
-        {
-            await UploadAttachmentsForResultAsync(resultId, attachments, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    /// <summary>
-    /// Qualifies attachment names with the attempt that produced them.
-    /// </summary>
-    /// <remarks>
-    /// Every attempt uploads against the same parent result, where Azure DevOps accumulates attachments
-    /// rather than replacing them, so two attempts would otherwise both contribute a <c>stdout.log</c> with
-    /// no way to tell them apart.
-    /// </remarks>
-    private static IReadOnlyList<AzureDevOpsTestResultAttachment> RenameForAttempt(IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, int attemptNumber)
-    {
-        if (attachments.Count == 0)
-        {
-            return attachments;
-        }
-
-        var renamed = new AzureDevOpsTestResultAttachment[attachments.Count];
-        for (int i = 0; i < attachments.Count; i++)
-        {
-            string fileName = attachments[i].FileName;
-            string extension = Path.GetExtension(fileName);
-            renamed[i] = attachments[i].WithFileName(
-                $"{Path.GetFileNameWithoutExtension(fileName)}.attempt-{attemptNumber.ToString(CultureInfo.InvariantCulture)}{extension}");
-        }
-
-        return renamed;
-    }
-
-    private static DateTimeOffset? Min(DateTimeOffset? left, DateTimeOffset? right)
-        => left is null ? right : right is null || left <= right ? left : right;
-
-    private static DateTimeOffset? Max(DateTimeOffset? left, DateTimeOffset? right)
-        => left is null ? right : right is null || left >= right ? left : right;
-
-    private async Task UploadAttachmentsForResultAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
-    {
-        if (attachments.Count == 0)
-        {
-            return;
-        }
-
-        try
-        {
-            if (_coordinatedRun is not null && _runIdCoordinator is not null)
-            {
-                await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-            }
-
-            await UploadResultAttachmentsAsync(testCaseResultId, attachments, cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            // Individual upload failures are already counted inside UploadResultAttachmentsAsync (whose
-            // logging is non-throwing), so reaching here means RenewLeaseAsync threw and no upload was
-            // attempted at all. Count the whole set, otherwise these attachments are dropped uncounted and
-            // the end-of-session summary under-reports.
-            Interlocked.Add(ref _failedAttachmentCount, attachments.Count);
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
-        }
-    }
-
-    /// <summary>
     /// Returns results to the front of the queue so the next flush retries them in their original order.
     /// </summary>
     /// <remarks>Call only while holding <see cref="_flushSemaphore"/>.</remarks>
@@ -475,30 +203,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         {
             _retryResults.Push(batch[i]);
         }
-    }
-
-    private static bool BatchHasAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
-    {
-        for (int i = 0; i < batch.Count; i++)
-        {
-            if (batch[i].Attachments.Count > 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static int CountAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
-    {
-        int count = 0;
-        for (int i = 0; i < batch.Count; i++)
-        {
-            count += batch[i].Attachments.Count;
-        }
-
-        return count;
     }
 
     private bool ShouldFlushUnsafe(bool force)

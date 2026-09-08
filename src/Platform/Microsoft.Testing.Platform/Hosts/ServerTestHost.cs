@@ -20,11 +20,10 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
-    // The value is the build-time version stamp (e.g. "2.4.0-dev" locally vs "2.4.0-ci" on CI), so it is an
-    // implementation detail rather than a stable API surface and must not be tracked by the internal API analyzers.
-#pragma warning disable RS0051 // Add internal types and members to the declared API
-    public const string ProtocolVersion = PlatformVersion.Version;
-#pragma warning restore RS0051 // Add internal types and members to the declared API
+    private const int NotInitialized = 0;
+    private const int Initializing = 1;
+    private const int Initialized = 2;
+
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
 
     private readonly IMessageHandlerFactory _messageHandlerFactory;
@@ -40,19 +39,26 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     // We start by one so we can wait all other requests
     private readonly CountdownEvent _requestCounter = new(1);
     private readonly IClock _clock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _initializeStateLock = new();
+#else
+    private readonly object _initializeStateLock = new();
+#endif
 
     // In-flight requests from the client to the server.
     // The client can cancel these requests at any time.
     // When the server completes the handler it will complete the backing RpcRequest.
-    private ConcurrentDictionary<int, RpcInvocationState> _clientToServerRequests;
+    private ConcurrentDictionary<(int Id, bool IsString), RpcInvocationState> _clientToServerRequests;
 
     // In-flight requests from the server to the client.
     // Whenever a client responds with a result or an error, the requests
     // get completed.
-    private ConcurrentDictionary<int, RpcInvocationState> _serverToClientRequests;
+    private ConcurrentDictionary<(int Id, bool IsString), RpcInvocationState> _serverToClientRequests;
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
     private IClientInfo? _clientInfoService;
+    private TaskCompletionSource<bool>? _initializationCompletionSource;
+    private int _initializeState;
 
     public ServerTestHost(
         ServiceProvider serviceProvider,
@@ -141,7 +147,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         }
     }
 
-    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> _)
     {
         using IPlatformActivity? activity = ServiceProvider.GetPlatformOTelService()?.StartActivity("ServerTestHost");
 

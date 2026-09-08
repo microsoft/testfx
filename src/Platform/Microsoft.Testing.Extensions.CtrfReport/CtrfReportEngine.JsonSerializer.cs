@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -12,23 +12,17 @@ internal sealed partial class CtrfReportEngine
 {
     private byte[] BuildCtrfJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        // Collapse multiple captures sharing the same UID into a single CTRF test
-        // entry. The CTRF spec models retries as nested `retryAttempts[]` records
-        // and exposes `flaky: true` on the final passing row; emitting separate
-        // top-level rows for retries would inflate `summary.tests` and double-count
-        // outcomes.
-        List<CollapsedTestResult> collapsed = CollapseAttempts(results);
+        List<ReportTestResult> preparedResults = PrepareResults(results);
 
-        // Aggregate summary counts from the collapsed (final) outcomes only.
         int passed = 0;
         int failed = 0;
         int skipped = 0;
         int pending = 0;
         int other = 0;
         int flaky = 0;
-        foreach (CollapsedTestResult c in collapsed)
+        foreach (ReportTestResult result in preparedResults)
         {
-            switch (c.Final.Status)
+            switch (result.Final.Status)
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
@@ -37,7 +31,7 @@ internal sealed partial class CtrfReportEngine
                 default: other++; break;
             }
 
-            if (c.IsFlaky)
+            if (result.IsFlaky)
             {
                 flaky++;
             }
@@ -106,7 +100,7 @@ internal sealed partial class CtrfReportEngine
             // results.summary
             writer.WritePropertyName("summary");
             writer.WriteStartObject();
-            writer.WriteNumber("tests", collapsed.Count);
+            writer.WriteNumber("tests", preparedResults.Count);
             writer.WriteNumber("passed", passed);
             writer.WriteNumber("failed", failed);
             writer.WriteNumber("skipped", skipped);
@@ -138,6 +132,12 @@ internal sealed partial class CtrfReportEngine
             writer.WriteString("machine", _environment.MachineName);
             writer.WriteNumber("exitCode", _exitCode);
             writer.WriteString("testApplication", _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+            if (_isIncomplete)
+            {
+                writer.WriteBoolean("incomplete", true);
+                writer.WriteString("runStatus", "aborted");
+            }
+
             writer.WriteEndObject();
             writer.WriteEndObject();
 
@@ -145,9 +145,9 @@ internal sealed partial class CtrfReportEngine
             writer.WritePropertyName("tests");
             writer.WriteStartArray();
 
-            foreach (CollapsedTestResult c in collapsed)
+            foreach (ReportTestResult result in preparedResults)
             {
-                WriteTest(writer, c);
+                WriteTest(writer, result);
             }
 
             writer.WriteEndArray();

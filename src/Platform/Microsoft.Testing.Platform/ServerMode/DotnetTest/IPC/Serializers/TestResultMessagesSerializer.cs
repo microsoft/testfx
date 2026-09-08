@@ -55,6 +55,14 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---SuccessfulTestMessageList[0].SessionUid Size---| (4 bytes)
       |---SuccessfulTestMessageList[0].SessionUid Value---| (n bytes)
 
+      |---SuccessfulTestMessageList[0].RetryAttemptNumber Id---| (2 bytes)
+      |---SuccessfulTestMessageList[0].RetryAttemptNumber Size---| (4 bytes)
+      |---SuccessfulTestMessageList[0].RetryAttemptNumber Value---| (n bytes)
+
+      |---SuccessfulTestMessageList[0].IsSuperseded Id---| (2 bytes)
+      |---SuccessfulTestMessageList[0].IsSuperseded Size---| (1 byte)
+      |---SuccessfulTestMessageList[0].IsSuperseded Value---| (n bytes)
+
   |---FailedTestMessageList Id---| (2 bytes)
   |---FailedTestMessageList Size---| (4 bytes)
   |---FailedTestMessageList Value---| (n bytes)
@@ -109,6 +117,14 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---FailedTestMessageList[0].Actual Id---| (2 bytes)
       |---FailedTestMessageList[0].Actual Size---| (4 bytes)
       |---FailedTestMessageList[0].Actual Value---| (n bytes)
+
+      |---FailedTestMessageList[0].RetryAttemptNumber Id---| (2 bytes)
+      |---FailedTestMessageList[0].RetryAttemptNumber Size---| (4 bytes)
+      |---FailedTestMessageList[0].RetryAttemptNumber Value---| (n bytes)
+
+      |---FailedTestMessageList[0].IsSuperseded Id---| (2 bytes)
+      |---FailedTestMessageList[0].IsSuperseded Size---| (1 byte)
+      |---FailedTestMessageList[0].IsSuperseded Value---| (n bytes)
   */
 
 internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestResultMessages>, INamedPipeSerializer
@@ -178,13 +194,15 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                     ref fields,
                     SuccessfulTestResultMessageFieldsId.StandardOutput,
                     SuccessfulTestResultMessageFieldsId.ErrorOutput,
-                    SuccessfulTestResultMessageFieldsId.SessionUid))
+                    SuccessfulTestResultMessageFieldsId.SessionUid,
+                    SuccessfulTestResultMessageFieldsId.RetryAttemptNumber,
+                    SuccessfulTestResultMessageFieldsId.IsSuperseded))
                 {
                     SetPosition(stream, stream.Position + fieldSize);
                 }
             }
 
-            successfulTestResultMessages[i] = new SuccessfulTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid);
+            successfulTestResultMessages[i] = new SuccessfulTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, fields.RetryAttemptNumber, fields.IsSuperseded);
         }
 
         return successfulTestResultMessages;
@@ -232,7 +250,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                             ref fields,
                             FailedTestResultMessageFieldsId.StandardOutput,
                             FailedTestResultMessageFieldsId.ErrorOutput,
-                            FailedTestResultMessageFieldsId.SessionUid))
+                            FailedTestResultMessageFieldsId.SessionUid,
+                            FailedTestResultMessageFieldsId.RetryAttemptNumber,
+                            FailedTestResultMessageFieldsId.IsSuperseded))
                         {
                             SetPosition(stream, stream.Position + fieldSize);
                         }
@@ -241,17 +261,17 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                 }
             }
 
-            failedTestResultMessages[i] = new FailedTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, exceptionMessages, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, expected, actual);
+            failedTestResultMessages[i] = new FailedTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, exceptionMessages, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, expected, actual, fields.RetryAttemptNumber, fields.IsSuperseded);
         }
 
         return failedTestResultMessages;
     }
 
     // The Uid, DisplayName, State, Duration and Reason field ids are identical for successful and failed test
-    // result messages, so they can be matched directly. The StandardOutput, ErrorOutput and SessionUid field ids
-    // differ between the two message types (a failed message inserts ExceptionMessageList before them), so they
-    // are passed in by the caller.
-    private static bool TryReadCommonTestResultField(Stream stream, ushort fieldId, int fieldSize, ref CommonTestResultFields fields, ushort standardOutputFieldId, ushort errorOutputFieldId, ushort sessionUidFieldId)
+    // result messages, so they can be matched directly. The StandardOutput, ErrorOutput, SessionUid,
+    // RetryAttemptNumber and IsSuperseded field ids differ between the two message types (a failed message
+    // inserts ExceptionMessageList/Expected/Actual before them), so they are passed in by the caller.
+    private static bool TryReadCommonTestResultField(Stream stream, ushort fieldId, int fieldSize, ref CommonTestResultFields fields, ushort standardOutputFieldId, ushort errorOutputFieldId, ushort sessionUidFieldId, ushort retryAttemptNumberFieldId, ushort isSupersededFieldId)
     {
         switch (fieldId)
         {
@@ -291,6 +311,18 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         if (fieldId == sessionUidFieldId)
         {
             fields.SessionUid = ReadStringValue(stream, fieldSize);
+            return true;
+        }
+
+        if (fieldId == retryAttemptNumberFieldId)
+        {
+            fields.RetryAttemptNumber = ReadInt(stream);
+            return true;
+        }
+
+        if (fieldId == isSupersededFieldId)
+        {
+            fields.IsSuperseded = ReadBool(stream);
             return true;
         }
 
@@ -363,6 +395,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             WriteField(s, SuccessfulTestResultMessageFieldsId.StandardOutput, successfulTestResultMessage.StandardOutput);
             WriteField(s, SuccessfulTestResultMessageFieldsId.ErrorOutput, successfulTestResultMessage.ErrorOutput);
             WriteField(s, SuccessfulTestResultMessageFieldsId.SessionUid, successfulTestResultMessage.SessionUid);
+            WriteField(s, SuccessfulTestResultMessageFieldsId.RetryAttemptNumber, successfulTestResultMessage.RetryAttemptNumber);
+            WriteField(s, SuccessfulTestResultMessageFieldsId.IsSuperseded, successfulTestResultMessage.IsSuperseded);
         });
 
     private static void WriteFailedTestMessagesPayload(Stream stream, FailedTestResultMessage[]? failedTestResultMessages)
@@ -377,6 +411,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             WriteField(s, FailedTestResultMessageFieldsId.SessionUid, failedTestResultMessage.SessionUid);
             WriteField(s, FailedTestResultMessageFieldsId.Expected, failedTestResultMessage.Expected);
             WriteField(s, FailedTestResultMessageFieldsId.Actual, failedTestResultMessage.Actual);
+            WriteField(s, FailedTestResultMessageFieldsId.RetryAttemptNumber, failedTestResultMessage.RetryAttemptNumber);
+            WriteField(s, FailedTestResultMessageFieldsId.IsSuperseded, failedTestResultMessage.IsSuperseded);
         });
 
     // The Uid, DisplayName, State, Duration and Reason field ids are identical for successful and failed test
@@ -408,7 +444,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         (successfulTestResultMessage.Reason is null ? 0 : 1) +
         (successfulTestResultMessage.StandardOutput is null ? 0 : 1) +
         (successfulTestResultMessage.ErrorOutput is null ? 0 : 1) +
-        (successfulTestResultMessage.SessionUid is null ? 0 : 1));
+        (successfulTestResultMessage.SessionUid is null ? 0 : 1) +
+        (successfulTestResultMessage.RetryAttemptNumber is null ? 0 : 1) +
+        (successfulTestResultMessage.IsSuperseded is null ? 0 : 1));
 
     private static ushort GetFieldCount(FailedTestResultMessage failedTestResultMessage) =>
         (ushort)((failedTestResultMessage.Uid is null ? 0 : 1) +
@@ -421,7 +459,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         (failedTestResultMessage.ErrorOutput is null ? 0 : 1) +
         (failedTestResultMessage.SessionUid is null ? 0 : 1) +
         (failedTestResultMessage.Expected is null ? 0 : 1) +
-        (failedTestResultMessage.Actual is null ? 0 : 1));
+        (failedTestResultMessage.Actual is null ? 0 : 1) +
+        (failedTestResultMessage.RetryAttemptNumber is null ? 0 : 1) +
+        (failedTestResultMessage.IsSuperseded is null ? 0 : 1));
 
     private static ushort GetFieldCount(ExceptionMessage exceptionMessage) =>
         (ushort)((exceptionMessage.ErrorMessage is null ? 0 : 1) +
@@ -448,5 +488,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         public string? ErrorOutput { get; set; }
 
         public string? SessionUid { get; set; }
+
+        public int? RetryAttemptNumber { get; set; }
+
+        public bool? IsSuperseded { get; set; }
     }
 }
