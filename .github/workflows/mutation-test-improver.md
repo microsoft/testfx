@@ -96,6 +96,8 @@ safe-outputs:
   push-to-pull-request-branch:
     target: "*"
     required-title-prefix: "[mutation-test-improver] "
+    allowed-files:
+      - test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/**/*.cs
     max: 2
 
 tools:
@@ -151,7 +153,7 @@ If the conclusion is not `success`:
 
 ### Step 3: Download and parse the report
 
-1. Download the `mutation-testing-report` artifact from the run: `gh run download <run-id> --repo ${{ github.repository }} -n mutation-testing-report -D ./stryker-report`.
+1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
 2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/ignored counts and the overall mutation score (Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check).
 3. Rank files by number of `Survived` (and `Timeout`) mutants, since those are the actionable gaps. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Filter out mutants already recorded as equivalent or already attempted-and-failed in memory.
