@@ -985,7 +985,7 @@ public sealed class CrashDumpTests
             outputDevice,
             new CrashDumpConfiguration());
 
-        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None);
+        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None).ConfigureAwait(false);
 
         Assert.IsEmpty(outputDevice.Displayed);
     }
