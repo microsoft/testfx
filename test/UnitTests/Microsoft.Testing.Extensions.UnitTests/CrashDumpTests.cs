@@ -974,6 +974,39 @@ public sealed class CrashDumpTests
         Assert.IsNull(result.ErrorMessage);
     }
 
+    [TestMethod]
+    public async Task BeforeTestHostProcessStartAsync_WhenIfSupportedNotSet_EmitsNoMessage()
+    {
+        var commandLineOptions = new TestCommandLineOptions([]);
+        var outputDevice = new CapturingOutputDevice();
+        var handler = new CrashDumpProcessLifetimeHandler(
+            commandLineOptions,
+            new RecordingMessageBus(),
+            outputDevice,
+            new CrashDumpConfiguration());
+
+        await handler.BeforeTestHostProcessStartAsync(CancellationToken.None).ConfigureAwait(false);
+
+        Assert.IsEmpty(outputDevice.Displayed);
+    }
+
+    [TestMethod]
+    public void CrashDumpProcessLifetimeHandler_MetadataProperties_ReturnExpectedValues()
+    {
+        var handler = new CrashDumpProcessLifetimeHandler(
+            new TestCommandLineOptions([]),
+            new RecordingMessageBus(),
+            new NullOutputDevice(),
+            new CrashDumpConfiguration());
+
+        Assert.AreEqual(nameof(CrashDumpProcessLifetimeHandler), handler.Uid);
+        Assert.AreEqual(new CrashDumpCommandLineProvider().Version, handler.Version);
+        Assert.IsFalse(string.IsNullOrEmpty(handler.Version));
+        Assert.AreEqual(CrashDumpResources.CrashDumpDisplayName, handler.DisplayName);
+        Assert.AreEqual(CrashDumpResources.CrashDumpDescription, handler.Description);
+        Assert.AreSequenceEqual([typeof(FileArtifact)], handler.DataTypesProduced);
+    }
+
     private sealed class RecordingMessageBus : IMessageBus
     {
         public List<IData> Published { get; } = [];

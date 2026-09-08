@@ -196,10 +196,7 @@ module MicrosoftTestingPlatformEntryPoint =
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
 
-        await using (FileStream stream = new(copiedTaskAssembly, FileMode.Append, FileAccess.Write, FileShare.None))
-        {
-            stream.WriteByte(0);
-        }
+        await AppendByteWithRetryAsync(copiedTaskAssembly, TestContext.CancellationToken);
 
         buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
@@ -225,10 +222,7 @@ module MicrosoftTestingPlatformEntryPoint =
             $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
             cancellationToken: TestContext.CancellationToken);
 
-        await using (FileStream stream = new(copiedTaskAssembly, FileMode.Append, FileAccess.Write, FileShare.None))
-        {
-            stream.WriteByte(0);
-        }
+        await AppendByteWithRetryAsync(copiedTaskAssembly, TestContext.CancellationToken);
 
         buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
@@ -247,6 +241,29 @@ module MicrosoftTestingPlatformEntryPoint =
             target.FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains(
                 $"Skipping target \"{targetName}\" because all output files are up-to-date with respect to the input files.",
                 StringComparison.OrdinalIgnoreCase)));
+    }
+
+    // Even with node reuse disabled (-nr:false), the OS can take a moment to fully release the file handle an
+    // MSBuild worker process held on the custom task assembly after that process has already exited (observed as
+    // a transient "being used by another process" IOException immediately following the preceding build). Retry
+    // for a bounded time instead of failing outright, mirroring the polling pattern used elsewhere in this suite
+    // (see CrashDumpTests) for tolerating short-lived, externally-owned file locks.
+    private static async Task AppendByteWithRetryAsync(string path, CancellationToken cancellationToken)
+    {
+        DateTime deadline = DateTime.UtcNow.AddSeconds(30);
+        while (true)
+        {
+            try
+            {
+                await using FileStream stream = new(path, FileMode.Append, FileAccess.Write, FileShare.None);
+                stream.WriteByte(0);
+                return;
+            }
+            catch (IOException) when (DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(50, cancellationToken);
+            }
+        }
     }
 
     private async Task GenerateAndVerifyLanguageSpecificEntryPointAsync(string assetName, string sourceCode, string languageFileExtension, string tfm,
