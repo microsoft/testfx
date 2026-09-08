@@ -1,5 +1,13 @@
 <Project>
 
+  <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
+  <PropertyGroup>
+    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+
+    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="MSTest.TestAdapter">
       <HintPath>$(MSBuildThisFileDirectory)MSTest.TestAdapter.dll</HintPath>

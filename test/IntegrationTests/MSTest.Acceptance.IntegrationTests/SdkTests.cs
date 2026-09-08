@@ -976,19 +976,20 @@ namespace MSTestWebTest
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_RejectsExplicitMtpSelection()
+    public async Task MSTestSdk_ModernUwp_AllowsExplicitMtpSelection()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpMtpSdk",
             """
             <UseUwp>true</UseUwp>
             <UseVSTest>false</UseVSTest>
-            """,
-            failIfReturnValueIsNotZero: false,
-            target: "Build");
+            """);
 
-        Assert.AreNotEqual(0, result.ExitCode);
-        result.AssertOutputContains("Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts.");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false");
+        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputContains("MSTest.TestFramework");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
     }
 
     [TestMethod]
