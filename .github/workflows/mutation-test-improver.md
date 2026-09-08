@@ -130,7 +130,7 @@ Use persistent repo memory to track:
 
 - **score history**: date, mutation score, killed/survived/timeout counts for each run seen (so you can compute a trend without re-downloading old artifacts)
 - **known equivalent mutants**: stable mutant fingerprint + why it cannot be meaningfully killed, so you stop proposing tests for it
-- **mutants already attempted**: stable mutant fingerprint, source path, mutator name, replacement, original source snippet, status, and the PR/issue involved, so you don't retry the same active mutant every day
+- **mutants already attempted**: stable mutant fingerprint, source path, mutator name, replacement, original source snippet, status, and the PR/issue involved, so you don't retry the same active mutant every day. Safe-output PR creation happens after the agent turn, so record newly emitted PR attempts as `pending_pr` with the intended branch/title, not as `opened`, until a later run reconciles the actual GitHub PR.
 - **which run (id) was last processed**, so a re-triggered workflow_run for the same underlying Stryker run doesn't produce duplicate report entries
 
 Read memory at the **start** of every run; update it at the **end**.
@@ -144,6 +144,7 @@ Read memory at the **start** of every run; update it at the **end**.
 - Preserve the identified upstream Mutation testing run id and head SHA in local variables (for example, `upstream_run_id` and `upstream_head_sha`) and use those variables consistently for artifact download, source links, report history links, and duplicate-run memory.
 - Before inspecting source, verifying mutants, or preparing a PR, fetch and check out the upstream head SHA (`git fetch --no-tags --depth=1 origin <upstream_head_sha>` then `git checkout --detach <upstream_head_sha>`) so the workspace source exactly matches the downloaded mutation report.
 - If memory shows this run id was already processed, first confirm the current monthly report issue's Run History already contains the upstream run id. If it does, call `noop` with an explanation and stop. If it does not, continue to Step 5 to repair the missing report entry before treating the run as complete.
+- Before suppressing any candidate because memory says a PR was opened, reconcile pending PR attempts by searching GitHub for the recorded branch/title prefix. Only mark a memory entry as `opened` and add a PR number/link to the report after an actual open PR is found. If no matching PR exists, keep the entry pending for this run and allow future runs to retry after confirming the safe-output PR creation failed or never materialized.
 
 ### Step 2: Handle a failed/cancelled run
 
@@ -175,13 +176,14 @@ For **at most 2** of the remaining highest-value `Survived` or `NoCoverage` muta
 8. **Verify the fix**: re-run `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore` then, from `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` with `MutationTesting=true`, run `$GITHUB_WORKSPACE/.dotnet/dotnet stryker --output ../../../artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
    - Count each Stryker invocation against the workflow's total verification budget. If the budget is exhausted, stop attempting fixes and continue to Step 5.
    - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in memory, restore the test worktree to remove the abandoned edits, and move to the next candidate.
-9. For each mutant you successfully kill, create a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:
+9. For each mutant you successfully kill, emit a safe-output request for a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:
    - What mutant it kills (mutator, file, line, link) and why it represents a real test gap
    - The new test and why it distinguishes correct from mutated behavior
    - Local verification results (test pass + Stryker mutant flipped to Killed)
 10. Immediately before emitting the PR, re-read the default branch SHA that the safe-output job will use. If it differs from `upstream_head_sha`, restore the test worktree, rebase/reapply the test on the current default branch, and repeat the relevant unit test and Stryker verification before creating the PR. Do not create a PR from a source revision that was not built and mutation-tested.
-11. After each PR snapshot or abandoned attempt, restore the test worktree before moving to the next mutant so a later PR cannot include earlier candidate edits.
-12. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run, keyed by the stable fingerprint rather than Stryker's sequential mutant id alone.
+11. Because safe-output PR creation is queued and applied only after the agent finishes, do not claim "PR opened" in same-run memory or the monthly report and do not write placeholder PR numbers or links. Record the verified fix as a `pending_pr` attempt with its stable mutant fingerprint, intended branch/title, upstream run id, verified base SHA, and verification summary. A later run must reconcile the actual PR before changing that status to `opened` or adding a `#<number>`/link to the report.
+12. After each PR snapshot or abandoned attempt, restore the test worktree before moving to the next mutant so a later PR cannot include earlier candidate edits.
+13. Update memory with the outcome (`pending_pr` / equivalent found / attempt abandoned) for every mutant you looked at this run, keyed by the stable fingerprint rather than Stryker's sequential mutant id alone.
 
 ### Step 5: Update the Monthly Report issue (always do this)
 
@@ -196,6 +198,7 @@ Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YY
    ## Suggested Actions for Maintainer
 
    * [ ] **Review PR** #<number>: kills mutant in `<file>:<line>` - [Review](<link>)
+   * [ ] **Pending PR creation** for `<file>:<line>`: verified fix was queued by safe outputs and will be reconciled on the next run
    * [ ] **Investigate survived hotspot** `<file>`: <N> survived mutants, none auto-fixed this run - [View report](<link to artifact or line>)
    * [ ] **Consider scope change**: <e.g. "expand mutate: to include X" - only if you have a concrete, evidence-backed reason>
 
@@ -224,6 +227,7 @@ Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YY
    ### <YYYY-MM-DD HH:MM UTC> - [Run](<https://github.com/<repo>/actions/runs/<run-id>>)
    - Score: NN.NN% (Killed N / Survived N / Timeout N)
    - 🔧 Opened PR #<number>: kills mutant in `<file>:<line>`
+   - 🕒 Pending PR creation: verified fix queued for mutant in `<file>:<line>`; reconcile the actual PR on the next run before marking it opened
    - 🟰 No fix attempted / no viable candidate
 
    ### <YYYY-MM-DD HH:MM UTC> - [Run](<https://github.com/<repo>/actions/runs/<run-id>>)
