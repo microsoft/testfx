@@ -169,7 +169,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="needs-review-translation">Начиная с MSTest 3.8, 'DynamicDataSourceType.AutoDetect' используется по умолчанию и автоматически определяет свойства, методы и поля, уменьшая многословность и зависимость от вида элемента.</target>
+        <target state="translated">Начиная с MSTest 3.8, 'DynamicDataSourceType.AutoDetect' используется по умолчанию и автоматически определяет свойства, методы и поля, уменьшая многословность и зависимость от вида элемента.</target>
         <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
@@ -312,7 +312,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="needs-review-translation">Методы 'CollectionAssert' имеют эквивалентные аналоги в 'Assert'. Использование одного API утверждений улучшает согласованность и возможность обнаружения.</target>
+        <target state="translated">Методы 'CollectionAssert' имеют эквивалентные аналоги в 'Assert'. Использование одного API утверждений улучшает согласованность и возможность обнаружения.</target>
         <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
@@ -417,12 +417,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="needs-review-translation">TestContext, переданный для инициализации сборки или класса, относится только к этому контексту и не обновляется при каждом выполнении теста. Его повторное использование в элементе 'static' может привести к предоставлению устаревшего контекста.</target>
+        <target state="translated">TestContext, переданный для инициализации сборки или класса, относится только к этому контексту и не обновляется при каждом выполнении теста. Его повторное использование в элементе 'static' может привести к предоставлению устаревшего контекста.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
-        <target state="new">MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</target>
+        <target state="translated">MSTest сопоставляет унаследованные атрибуты жизненного цикла "[TestInitialize]", "[TestCleanup]", "[ClassInitialize]" и "[ClassCleanup]", а также тестовые атрибуты "[TestMethod]" и "[DataTestMethod]" по их точному удостоверению типа в рамках платформы. Имя сборки платформы было изменено с "Microsoft.VisualStudio.TestPlatform.TestFramework" на "MSTest.TestFramework", поэтому базовый класс, скомпилированный для другой основной версии MSTest, предоставляет эти атрибуты с другим удостоверением типа. Если такой базовый класс наследуется классом теста, скомпилированным для другой версии, унаследованные действия настройки и очистки не выполняются, а унаследованные методы теста не обнаруживаются, при этом нет ни ошибки сборки, ни ошибки обнаружения. Перекомпилируйте базовую сборку, а для пользовательских атрибутов — сборку, в которой определен атрибут, с той же версией MSTest, что и тестовый проект.</target>
         <note>{Locked="MSTest"}{Locked="[TestInitialize]"}{Locked="[TestCleanup]"}{Locked="[ClassInitialize]"}{Locked="[ClassCleanup]"}{Locked="[TestMethod]"}{Locked="[DataTestMethod]"}{Locked="Microsoft.VisualStudio.TestPlatform.TestFramework"}{Locked="MSTest.TestFramework"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
@@ -777,7 +777,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="needs-review-translation">'Assert.Fail' явно указывает на намеренный сбой и позволяет с помощью сообщения о сбое задокументировать, почему невозможно продолжить тест.</target>
+        <target state="translated">'Assert.Fail' явно указывает на намеренный сбой и позволяет с помощью сообщения о сбое задокументировать, почему невозможно продолжить тест.</target>
         <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -822,22 +822,22 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="needs-review-translation">Конструкторы позволяют выполнять инициализацию через поля 'readonly' и обеспечивают более надежную обратную связь от компилятора, особенно при использовании ссылочных типов, допускающих значение null. Это правило согласия на стиль является взаимоисключающим с MSTEST0019.</target>
+        <target state="translated">Конструкторы позволяют выполнять инициализацию через поля 'readonly' и обеспечивают более надежную обратную связь от компилятора, особенно при использовании ссылочных типов, допускающих значение null. Это правило согласия на стиль является взаимоисключающим с MSTEST0019.</target>
         <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="needs-review-translation">'Dispose' и 'DisposeAsync' следуют стандартным шаблонам жизненного цикла .NET, что делает очистку тестов согласованной с кодом рабочей среды. Это правило согласия на стиль является взаимоисключающим с MSTEST0022.</target>
+        <target state="translated">'Dispose' и 'DisposeAsync' следуют стандартным шаблонам жизненного цикла .NET, что делает очистку тестов согласованной с кодом рабочей среды. Это правило согласия на стиль является взаимоисключающим с MSTEST0022.</target>
         <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="needs-review-translation">'[TestCleanup]' поддерживает асинхронную очистку на целевых платформах, где 'IAsyncDisposable' недоступен. Это правило согласия на стиль является взаимоисключающим с MSTEST0021.</target>
+        <target state="translated">'[TestCleanup]' поддерживает асинхронную очистку на целевых платформах, где 'IAsyncDisposable' недоступен. Это правило согласия на стиль является взаимоисключающим с MSTEST0021.</target>
         <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
         <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
-        <target state="needs-review-translation">'[TestInitialize]' поддерживает как синхронную, так и асинхронную инициализацию, тогда как конструкторы нельзя ожидать. Это правило согласия на стиль является взаимоисключающим с MSTEST0020.</target>
+        <target state="translated">'[TestInitialize]' поддерживает как синхронную, так и асинхронную инициализацию, тогда как конструкторы нельзя ожидать. Это правило согласия на стиль является взаимоисключающим с MSTEST0020.</target>
         <note>{Locked="[TestInitialize]"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -972,7 +972,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="needs-review-translation">Методы 'StringAssert' имеют эквивалентные аналоги в 'Assert'. Использование одного API утверждений улучшает согласованность и возможность обнаружения.</target>
+        <target state="translated">Методы 'StringAssert' имеют эквивалентные аналоги в 'Assert'. Использование одного API утверждений улучшает согласованность и возможность обнаружения.</target>
         <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -1379,7 +1379,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="needs-review-translation">MSTest игнорирует '[DeploymentItem]', если его применяют вне класса теста или метода теста.</target>
+        <target state="translated">MSTest игнорирует '[DeploymentItem]', если его применяют вне класса теста или метода теста.</target>
         <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

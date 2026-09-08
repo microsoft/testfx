@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="new">At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</target>
+        <target state="translated">Wymagana jest co najmniej jedna sekcja podsumowania zadania funkcji GitHub Actions. Prawidłowe wartości to „test-results”, „slow-tests”, „coverage” lub „all”.</target>
         <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
@@ -139,7 +139,7 @@
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="needs-review-translation">Włącz lub wyłącz opcję rozwijania każdego nieudanego testu w podsumowaniu zadania do sekcji, którą można zwinąć, zawierającej komunikat o niepowodzeniu, typ wyjątku, lokalizację źródłową oraz ślad stosu. Dopuszczalne wartości to 'on' (akceptowane są również wartości 'true', 'enable', '1') lub 'off' (akceptowane są również wartości 'false', 'disable', '0'). Wartość domyślna to 'on' podczas uruchamiania w funkcji GitHub Actions.</target>
+        <target state="translated">Włącz lub wyłącz opcję rozwijania każdego nieudanego testu w podsumowaniu zadania do sekcji, którą można zwinąć, zawierającej komunikat o niepowodzeniu, typ wyjątku, lokalizację źródłową oraz ślad stosu. Dopuszczalne wartości to 'on' (akceptowane są również wartości 'true', 'enable', '1') lub 'off' (akceptowane są również wartości 'false', 'disable', '0'). Wartość domyślna to 'on' podczas uruchamiania w funkcji GitHub Actions.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="'disable'"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">Odczytaj i zaktualizuj powiązaną migawkę historii testów funkcji GitHub Actions w określonej ścieżce. Przepływ pracy odpowiada za pobranie poprzedniej migawki przed uruchomieniem testów i przekazanie zaktualizowanego pliku po jego zakończeniu. Wymaga elementu „--report-gh”.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">Liczba dni historii testów do zachowania i użycia do kontekstu dla niestabilnych testów (1–90). Wartość domyślna to 30. Wymaga elementu „--report-gh-history”.</target>
         <note>{Locked="--report-gh-history"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
@@ -224,7 +224,7 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="new">Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</target>
+        <target state="translated">Nieprawidłowa sekcja podsumowania zadania funkcji GitHub Actions „{0}”. Prawidłowe wartości to „test-results”, „slow-tests”, „coverage” lub „all”. Wartości można powtarzać, rozdzielać spacjami lub przecinkami.</target>
         <note>{0} is the invalid section name. {Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
@@ -294,7 +294,7 @@
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="new">Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</target>
+        <target state="translated">Wybierz zawartość zawartą w podsumowaniu zadania funkcji GitHub Actions. Określ jedną lub więcej wartości, powtórz je albo rozdziel spacjami lub przecinkami: „test-results”, „slow-tests”, „coverage” lub „all”. Wartość domyślna to „all”. Wymaga elementu „--report-gh”.</target>
         <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
@@ -304,7 +304,7 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="new">The GitHub Actions report sub-options require '--{0}' to be specified.</target>
+        <target state="translated">Opcje podrzędne raportu funkcji GitHub Actions wymagają określenia parametru „--{0}”.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">

@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="needs-review-translation">Je vyžadováno alespoň jedno oddělení souhrnu úlohy GitHub Actions. Platné hodnoty jsou 'test-results', 'slow-tests', 'coverage' nebo 'all'.</target>
+        <target state="translated">Je vyžadováno alespoň jedno oddělení souhrnu úlohy GitHub Actions. Platné hodnoty jsou 'test-results', 'slow-tests', 'coverage' nebo 'all'.</target>
         <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
@@ -139,7 +139,7 @@
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="needs-review-translation">Povolte nebo zakažte rozbalení každého neúspěšného testu v souhrnu úlohy do sbalitelné části se zprávou o chybě, typem výjimky, umístěním zdroje a trasováním zásobníku. Platné hodnoty jsou 'on' (přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0'). Při spuštění na GitHub Actions je výchozí hodnota 'on'.</target>
+        <target state="translated">Povolte nebo zakažte rozbalení každého neúspěšného testu v souhrnu úlohy do sbalitelné části se zprávou o chybě, typem výjimky, umístěním zdroje a trasováním zásobníku. Platné hodnoty jsou 'on' (přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0'). Při spuštění na GitHub Actions je výchozí hodnota 'on'.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="'disable'"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">Na zadané cestě načte a aktualizuje omezený snímek historie testů GitHub Actions. Workflow musí před spuštěním testu stáhnout předchozí snímek a po testu nahrát aktualizovaný soubor. Vyžaduje --report-gh.</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">Počet dnů historie testů, které se mají uchovávat a používat jako kontext nestabilních testů (1–90). Výchozí hodnota je 30. Vyžaduje --report-gh-history.</target>
         <note>{Locked="--report-gh-history"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
@@ -224,12 +224,12 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="needs-review-translation">Neplatná část souhrnu úlohy GitHub Actions '{0}'. Platné hodnoty jsou 'test-results', 'slow-tests', 'coverage' nebo 'all'. Hodnoty se můžou opakovat a můžou být oddělené mezerami nebo čárkami.</target>
+        <target state="translated">Neplatná část souhrnu úlohy GitHub Actions '{0}'. Platné hodnoty jsou 'test-results', 'slow-tests', 'coverage' nebo 'all'. Hodnoty se můžou opakovat a můžou být oddělené mezerami nebo čárkami.</target>
         <note>{0} is the invalid section name. {Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="needs-review-translation">Neplatná hodnota '{0}'. Platné hodnoty jsou 'on' (nebo 'true', 'enable', '1'), 'off' (nebo 'false', 'disable', '0') nebo 'on-failure'.</target>
+        <target state="translated">Neplatná hodnota '{0}'. Platné hodnoty jsou 'on' (nebo 'true', 'enable', '1'), 'off' (nebo 'false', 'disable', '0') nebo 'on-failure'.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="'0'"}{Locked="on-failure"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
@@ -294,7 +294,7 @@
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="needs-review-translation">Vyberte obsah zahrnutý do souhrnu úlohy GitHub Actions. Zadejte jednu nebo více hodnot, opakovaně, oddělených mezerami nebo čárkami: 'test-results', 'slow-tests', 'coverage' nebo 'all'. Výchozí hodnota je 'all'. Vyžaduje '--report-gh'.</target>
+        <target state="translated">Vyberte obsah zahrnutý do souhrnu úlohy GitHub Actions. Zadejte jednu nebo více hodnot, opakovaně, oddělených mezerami nebo čárkami: 'test-results', 'slow-tests', 'coverage' nebo 'all'. Výchozí hodnota je 'all'. Vyžaduje '--report-gh'.</target>
         <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
@@ -304,7 +304,7 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="needs-review-translation">Dílčí možnosti sestavy GitHub Actions vyžadují zadání parametru '--{0}'.</target>
+        <target state="translated">Dílčí možnosti sestavy GitHub Actions vyžadují zadání parametru '--{0}'.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">

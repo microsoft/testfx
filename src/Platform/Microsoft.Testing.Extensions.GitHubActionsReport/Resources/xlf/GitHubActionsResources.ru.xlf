@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="needs-review-translation">Требуется по крайней мере один раздел сводки действий GitHub. Допустимые значения: 'test-results', 'slow-tests', 'coverage' или 'all'.</target>
+        <target state="translated">Требуется по крайней мере один раздел сводки действий GitHub. Допустимые значения: 'test-results', 'slow-tests', 'coverage' или 'all'.</target>
         <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="new">Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</target>
+        <target state="translated">Читает и обновляет ограниченный снимок журнала тестов GitHub Actions по указанному пути. Рабочий процесс отвечает за скачивание предыдущего снимка перед запуском теста и за отправку обновленного файла после его завершения. Требуется "--report-gh".</target>
         <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="new">Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</target>
+        <target state="translated">Число дней журнала тестов, которые нужно сохранять и использовать в качестве контекста для нестабильных тестов (1–90). По умолчанию 30. Требует "--report-gh-history".</target>
         <note>{Locked="--report-gh-history"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
@@ -224,12 +224,12 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="needs-review-translation">Недопустимый раздел сводки задания GitHub Actions '{0}'. Допустимые значения: 'test-results', 'slow-tests', 'coverage' или 'all'. Значения могут повторяться, разделяться пробелами или запятыми.</target>
+        <target state="translated">Недопустимый раздел сводки задания GitHub Actions '{0}'. Допустимые значения: 'test-results', 'slow-tests', 'coverage' или 'all'. Значения могут повторяться, разделяться пробелами или запятыми.</target>
         <note>{0} is the invalid section name. {Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="needs-review-translation">Недопустимое значение '{0}'. Допустимые значения: 'on' (или 'true', 'enable', '1'), 'off' (или 'false', 'disable', '0') или 'on-failure'.</target>
+        <target state="translated">Недопустимое значение '{0}'. Допустимые значения: 'on' (или 'true', 'enable', '1'), 'off' (или 'false', 'disable', '0') или 'on-failure'.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="'0'"}{Locked="on-failure"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
@@ -294,7 +294,7 @@
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="needs-review-translation">Выберите содержимое, включенное в сводку задания действий GitHub. Укажите одно или несколько значений, повторяющихся, разделенных пробелами или запятыми: 'test-results', 'slow-tests', 'coverage' или 'all'. Значение по умолчанию: 'all'. Требуется '--report-gh'.</target>
+        <target state="translated">Выберите содержимое, включенное в сводку задания действий GitHub. Укажите одно или несколько значений, повторяющихся, разделенных пробелами или запятыми: 'test-results', 'slow-tests', 'coverage' или 'all'. Значение по умолчанию: 'all'. Требуется '--report-gh'.</target>
         <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
@@ -304,7 +304,7 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="needs-review-translation">Для подпараметров отчета GitHub Actions необходимо указать '--{0}'.</target>
+        <target state="translated">Для подпараметров отчета GitHub Actions необходимо указать '--{0}'.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">
