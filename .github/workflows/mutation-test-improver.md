@@ -84,6 +84,7 @@ safe-outputs:
     max: 1
   update-issue:
     target: "*"
+    required-title-prefix: "[mutation-test-improver] "
     required-labels: [type/automation, type/test-gap]
     max: 1
   create-pull-request:
@@ -155,13 +156,13 @@ If the conclusion is not `success`:
 ### Step 3: Download and parse the report
 
 1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
-2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/ignored counts and the overall mutation score (Stryker counts `Killed` and `Timeout` as detected mutants, so the score numerator is detected mutants divided by all non-ignored mutants; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check).
+2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
-4. Filter out mutants already recorded as equivalent or already attempted-and-failed in memory.
+4. Filter out mutants already recorded in memory as equivalent or already attempted while their outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later daily runs.
 
 ### Step 4: Attempt to fix the top survived mutants (bounded)
 
-For **at most 2** of the remaining highest-value survived mutants (favor ones in behaviorally meaningful code — public API surfaces, error handling, boundary conditions — over pure boilerplate or generated code), and with **at most 2 total Stryker verification runs across the whole workflow run**:
+For **at most 2** of the remaining highest-value `Survived` or `NoCoverage` mutants (favor ones in behaviorally meaningful code — public API surfaces, error handling, boundary conditions — over pure boilerplate or generated code), and with **at most 2 total Stryker verification runs across the whole workflow run**:
 
 1. List open PRs with the `[mutation-test-improver]` title prefix. If there are already 3 or more open PRs, skip the rest of Step 4 for this run so the monthly report still updates without creating more PRs.
 2. From the repository root, run `./build.sh --binaryLog` before test or Stryker commands so the repo-local `.dotnet` SDK is provisioned from `global.json`.
@@ -172,12 +173,13 @@ For **at most 2** of the remaining highest-value survived mutants (favor ones in
 7. Build and run the unit test project with `$GITHUB_WORKSPACE/.dotnet/dotnet` to confirm the new test compiles and passes against the original (unmutated) code.
 8. **Verify the fix**: re-run `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore` then, from `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` with `MutationTesting=true`, run `$GITHUB_WORKSPACE/.dotnet/dotnet stryker --output ../../../artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
    - Count each Stryker invocation against the workflow's total verification budget. If the budget is exhausted, stop attempting fixes and continue to Step 5.
-   - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in memory, and move to the next candidate.
+   - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in memory, restore the test worktree to remove the abandoned edits, and move to the next candidate.
 9. For each mutant you successfully kill, create a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:
    - What mutant it kills (mutator, file, line, link) and why it represents a real test gap
    - The new test and why it distinguishes correct from mutated behavior
    - Local verification results (test pass + Stryker mutant flipped to Killed)
-10. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run.
+10. After each PR snapshot or abandoned attempt, restore the test worktree before moving to the next mutant so a later PR cannot include earlier candidate edits.
+11. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run.
 
 ### Step 5: Update the Monthly Report issue (always do this)
 
@@ -207,7 +209,7 @@ Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YY
 
    ## Top Survived-Mutant Hotspots
 
-   {File-ranked list of the highest-value remaining survived/timeout mutants, with links, from this run}
+   {File-ranked list of the highest-value remaining `Survived`/`NoCoverage` mutants, with links, from this run. Track `Timeout`, `CompileError`, and `RuntimeError` separately when present, but do not present them as test-gap hotspots.}
 
    *(If none, state "No actionable survived mutants identified this run.")*
 
