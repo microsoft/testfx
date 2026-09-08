@@ -36,13 +36,10 @@
     <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsTrxReport>
     <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
 
-    <!-- Packaged WinUI and UWP applications must be registered and activated by AUMID. -->
+    <!-- Packaged WinUI applications must be registered and activated by AUMID. -->
     <MicrosoftTestingExtensionsPackagedAppVersion Condition=" '$(MicrosoftTestingExtensionsPackagedAppVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsPackagedAppVersion>
     <EnableMicrosoftTestingExtensionsPackagedApp
       Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None' ">true</EnableMicrosoftTestingExtensionsPackagedApp>
-    <!-- UWP test applications are always packaged AppContainer apps. -->
-    <EnableMicrosoftTestingExtensionsPackagedApp
-      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' ">false</EnableMicrosoftTestingExtensionsPackagedApp>
 
     <!-- MS Code Coverage -->
