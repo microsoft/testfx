@@ -1038,10 +1038,6 @@ public sealed class CrashDumpTests
             {
                 Displayed.Add(errorData.Message);
             }
-            else if (data is TextOutputDeviceData textData)
-            {
-                Displayed.Add(textData.Text);
-            }
 
             return Task.CompletedTask;
         }
