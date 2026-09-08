@@ -2,6 +2,9 @@ name: Mutation testing
 
 on:
   schedule:
+    # Runs daily (rather than weekly) so the mutation-test-improver workflow has fresh
+    # data every day to act on. Stryker only mutates the small, focused Client sources
+    # scope, so the added runner cost of daily execution is small in absolute terms.
     - cron: '0 5 * * *'
   workflow_dispatch:
 
@@ -32,6 +35,7 @@ jobs:
         env:
           MutationTesting: true
         run: |
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/mutation-testing"
           "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
 
       - name: Summarize mutation testing results
@@ -59,7 +63,7 @@ jobs:
             if [ -n "$score" ]; then
               echo "**Mutation score: ${score}%**"
             else
-              echo "⚠️ Could not determine the mutation score from Stryker's output; see the raw log below."
+              echo "⚠️ Could not determine the mutation score from Stryker's output; see the \`mutation-testing-report\` artifact uploaded by this run for the raw log."
             fi
             echo ""
             echo "| Killed | Survived | Timeout |"

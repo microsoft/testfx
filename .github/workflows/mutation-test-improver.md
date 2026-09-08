@@ -28,6 +28,8 @@ on:
   # re-run to verify, so keep the outstanding backlog small.
   steps:
     - id: check
+      # A full backlog is an expected activation gate, not a pre-activation failure.
+      continue-on-error: true
       run: |
         MAX_OPEN_PRS=3
         if [[ "$GITHUB_EVENT_NAME" != "workflow_run" ]]; then exit 0; fi
@@ -104,9 +106,11 @@ safe-outputs:
   create-issue:
     title-prefix: "[mutation-test-improver] "
     labels: [type/automation, type/test-gap]
+    allowed-fields: [Type]
     max: 1
   update-issue:
     target: "*"
+    required-labels: [type/automation, type/test-gap]
     max: 1
   create-pull-request:
     draft: true
@@ -164,9 +168,9 @@ Read memory at the **start** of every run; update it at the **end**.
 
 If the conclusion is not `success`:
 
-1. Update the monthly report issue's Run History (see Step 5 format) with a one-line failure entry and a link to the run.
+1. Carry a one-line failure entry and a link to the run forward for Step 5 to add to the monthly report issue's Run History.
 2. Do not attempt to parse a report or open PRs — there is no fresh data.
-3. Update memory with the processed run id, then stop.
+3. Complete Step 5, update memory with the processed run id, then stop.
 
 ### Step 3: Download and parse the report
 
@@ -194,9 +198,9 @@ For **at most 2** of the remaining highest-value survived mutants (favor ones in
 
 ### Step 5: Update the Monthly Report issue (always do this)
 
-Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YYYY}-{MM}` (label `testing`) as a rolling summary for the current month.
+Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YYYY}-{MM}` (labels `type/automation` and `type/test-gap`) as a rolling summary for the current month.
 
-1. Search for an open `[mutation-test-improver] Monthly Report` issue. If it's for the current month, update it; if for a previous month, close it and create a new one. Read maintainer comments first — they may contain priorities or corrections; note them in memory.
+1. Search for an open `[mutation-test-improver] Monthly Report` issue. If it's for the current month, update it; if for a previous month, close it and create a new one with Issue Type `Task`. Read maintainer comments first — they may contain priorities or corrections; note them in memory.
 2. **Issue body format** — use **exactly** this structure (do not add your own AI attribution header/footer; the safe-outputs footer is appended automatically):
 
    ```markdown
