@@ -469,10 +469,18 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         if (wasConnected)
         {
+#if !NET
+            // On .NET Framework (netstandard2.0 build), PipeStream.ReadAsync(byte[], int, int, CancellationToken)
+            // does not reliably interrupt the underlying blocking read when only the cancellation token is
+            // canceled. Force-closing the stream here unblocks that pending read. On modern .NET the read uses
+            // the Memory<byte>-based overload, which honors cancellation without requiring the stream to be
+            // disposed mid-operation; eagerly disposing it there would race with the in-flight cancellation and
+            // can surface to the connected client as an abrupt reset instead of a graceful disconnect.
             if (_cancellationToken.IsCancellationRequested)
             {
                 _namedPipeServerStream.Dispose();
             }
+#endif
 
             // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (loopTask is not null && !loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
@@ -508,11 +516,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
         if (wasConnected)
         {
-            if (_cancellationToken.IsCancellationRequested)
-            {
-                _namedPipeServerStream.Dispose();
-            }
-
+            // Unlike the netstandard2.0 build used by Dispose(), this method is only compiled for modern .NET,
+            // where PipeStream.ReadAsync(Memory<byte>, CancellationToken) honors cancellation without needing the
+            // stream to be force-disposed mid-operation. Eagerly disposing it here would race with the in-flight
+            // cancellation of the pending read and can surface to the connected client as an abrupt reset instead
+            // of a graceful disconnect.
             if (loopTask is not null)
             {
                 try
