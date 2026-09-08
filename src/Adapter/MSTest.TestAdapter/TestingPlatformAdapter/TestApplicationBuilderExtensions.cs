@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -76,4 +75,3 @@ public static class TestApplicationBuilderExtensions
             (capabilities, serviceProvider) => new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
     }
 }
-#endif

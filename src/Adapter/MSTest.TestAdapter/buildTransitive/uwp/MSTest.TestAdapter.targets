@@ -1,5 +1,13 @@
 <Project>
 
+  <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
+  <PropertyGroup>
+    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+
+    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="MSTest.TestAdapter">
       <HintPath>$(MSBuildThisFileDirectory)MSTest.TestAdapter.dll</HintPath>
@@ -7,6 +15,13 @@
     <Reference Include="MSTestAdapter.PlatformServices">
       <HintPath>$(MSBuildThisFileDirectory)MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll"
+             Link="Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" />
+    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.dll"
+             Link="Microsoft.Testing.Platform.dll" />
   </ItemGroup>
 
   <ItemGroup>
