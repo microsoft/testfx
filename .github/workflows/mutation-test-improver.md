@@ -54,6 +54,7 @@ safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821).
   threat-detection:
+    continue-on-error: false
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
       is trusted redaction metadata added by gh-aw. A safe-output JSON envelope or
