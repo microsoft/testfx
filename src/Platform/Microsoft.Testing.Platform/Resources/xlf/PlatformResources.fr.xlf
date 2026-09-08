@@ -289,7 +289,7 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
         <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
-        <target state="new">Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</target>
+        <target state="translated">Utilisez « --crashdump » et/ou « --hangdump » à la place. MTP sépare les diagnostics de plantage et de blocage, il n’existe donc pas de remplacement un à un du collecteur de défaillance VSTest.</target>
         <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
@@ -299,12 +299,12 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
-        <target state="new">For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</target>
+        <target state="translated">Pour obtenir une verbosité de console comparable, utilisez « --output {0} ». La sortie de la console MTP est configurée différemment, donc il ne s’agit pas d’un remplacement exact.</target>
         <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
-        <target state="new">MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</target>
+        <target state="translated">MTP utilise des options spécifiques au rapporteur, telles que « --report-trx », « --report-html » et « --report-junit ». Consultez la documentation de l’extension du rapporteur pour connaître son option MTP.</target>
         <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
@@ -319,7 +319,7 @@
       </trans-unit>
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
         <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
-        <target state="new">For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</target>
+        <target state="translated">Pour la couverture du code MTP, utilisez « --coverage ». Il ne s’agit pas d’un remplacement transparent du collecteur « XPlat Code Coverage » de Coverlet.</target>
         <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
@@ -1050,7 +1050,7 @@ La valeur par défaut est TestResults dans le répertoire qui contient l’appli
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">L’option « timeout » doit avoir un argument correspondant à une valeur de temps avec un suffixe d’unité explicite et une valeur numérique positive dans la plage prise en charge (jusqu’à environ 49,7 jours). Les suffixes acceptés sont 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' et 'd'/'day(s)', par exemple '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
@@ -1294,7 +1294,7 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">Le lanceur d’hôte de test « {0} » (UID : {1}) a demandé à autoriser l’identité de sécurité « {2} » sur la connexion du contrôleur d’hôte de test, mais seule l’identité d’une application isolée en bac à sable peut être autorisée (sous Windows, identificateur de sécurité au format « S-1-15-2-... »). Les utilisateurs, les groupes et l’identificateur de sécurité « {3} » fourre-tout ne bénéficient jamais d’un accès.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">

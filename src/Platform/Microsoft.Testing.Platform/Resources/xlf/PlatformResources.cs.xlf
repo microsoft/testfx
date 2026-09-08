@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <target state="translated">Spuštěním --help zobrazíte možnosti zaregistrované touto testovací aplikací. Pokud tato možnost patří k rozšíření, ujistěte se, že se odkazuje na jeho balíček a že je rozšíření zaregistrované.</target>
         <note>{Locked="'--help'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
@@ -434,17 +434,17 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
+        <target state="translated">Háček rozšíření {0}.{1} ze sestavení {2}, který je deklarovaný v manifestu rozšíření {3}, je deklarovaný jako „async void“. Platforma volá háček synchronně, takže by se vrátila při prvním čekání: vše, co se zaregistruje po tomto bodu, by se zahodilo ve vlastním nastavení testovací aplikace a všechny chyby by se ztratily. Nastavte háček jako synchronní.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
+        <target state="translated">Háček rozšíření {0}.{1} ze sestavení {2}, který je deklarovaný v manifestu rozšíření {3}, vrací {4}, ale musí vracet „void“. Platforma volá háček synchronně, takže se nikdy nezpozoruje návratová hodnota. Konkrétně vrácená úloha by se nikdy neočekávaná a jeho registrace a selhání by se ztratily.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
+        <target state="translated">Typ {0} v sestavení '{1}, které je deklarováno v manifestu rozšíření {2}, nezpřístupňuje metodu „public static void“ s názvem {3}, která přijímá „ITestApplicationBuilder“ a „string[]“.</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
@@ -534,7 +534,7 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <target state="translated">Manifest rozšíření {0} deklaruje načtení rozšíření, ale aktuální modul runtime nepodporuje dynamické načítání sestavení (například při publikování s nativním AOT). Nastavte vlastnost {1} každého rozšíření na „false“, odeberte manifest nebo odeberte {2} z příkazového řádku.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -913,7 +913,7 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <target state="translated">Povolte načítání rozšíření testovací platformy deklarovaných manifesty „*.testingplatformextensions.json“ nalezenými vedle testovací aplikace. Ve výchozím nastavení je to zakázané.</target>
         <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -952,9 +952,9 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu zadaných ukončovacích kódů.
+Například „--ignore-exit-code 8;9“ ignoruje ukončovací kódy 8 a 9 a v těchto případech vrátí hodnotu 0.
+Další informace o ukončovacích kódech najdete na https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">

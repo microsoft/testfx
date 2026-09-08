@@ -284,7 +284,7 @@
       </trans-unit>
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
-        <target state="new">Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</target>
+        <target state="translated">Ejecute "--help" para ver las opciones registradas por esta aplicación de prueba. Si la opción pertenece a una extensión, asegúrese de que se hace referencia a su paquete y de que la extensión está registrada.</target>
         <note>{Locked="'--help'"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
@@ -434,17 +434,17 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
+        <target state="translated">El enlace de extensión "{0}.{1}" del ensamblado "{2}" declarado en el manifiesto de extensión "{3}" se declara como "async void". La plataforma invoca el enlace de forma sincrónica, por lo que devolvería en su primera espera: cualquier cosa que registre después de ese punto ejecutaría la propia configuración de la aplicación de prueba y se perdería cualquier error. Haga que el enlace sea sincrónico.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
+        <target state="translated">El enlace de extensión "{0}.{1}" del ensamblado "{2}" declarado en el manifiesto de extensión "{3}" devuelve "{4}", pero debe devolver "void". La plataforma invoca el gancho de forma síncrona, por lo que nunca se observa ningún valor devuelto; en particular, una tarea devuelta nunca se esperaría, y sus registros y errores se perderían.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
+        <target state="translated">El tipo "{0}" del ensamblado "{1}" declarado en el manifiesto de extensión "{2}" no expone un método "public static void" denominado "{3}" que tome "ITestApplicationBuilder" y "string[]".</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
@@ -534,7 +534,7 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <target state="translated">El manifiesto de extensión "{0}" declara las extensiones que se van a cargar, pero el tiempo de ejecución actual no admite la carga dinámica de ensamblados (por ejemplo, cuando se publica con AOT nativo). Establezca la propiedad "{1}" de cada extensión en "false", quite el manifiesto o quite "{2}" de la línea de comandos.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -913,7 +913,7 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <target state="translated">Habilite la carga de extensiones de plataforma de prueba declaradas por los manifiestos "*.testingplatformextensions.json" que se encuentran junto a la aplicación de prueba. Esta opción está deshabilitada de forma predeterminada.</target>
         <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
