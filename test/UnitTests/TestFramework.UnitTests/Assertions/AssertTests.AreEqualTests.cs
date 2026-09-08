@@ -1668,7 +1668,7 @@ public partial class AssertTests : TestContainer
 
             expected:   "aa\ta"
             actual:     "aa a"
-            difference: ---^
+            difference: expected [[\t]]; actual [[<space>]]
 
             Assert.AreEqual("aa\ta", "aa a")
             """);
@@ -2079,6 +2079,26 @@ public partial class AssertTests : TestContainer
         exception.Message.Should().Contain("[[<space>]]");
         exception.Message.Should().NotContain("[[ ]]");
         exception.Message.Should().Contain("difference:    mismatch marked with [[...]]");
+    }
+
+    public void AreEqualStringDifferenceWhitespaceCharactersRenderUnambiguously()
+    {
+        (string Expected, string Actual, string Marker)[] cases =
+        [
+            (new string('a', 120) + " " + "z", new string('a', 120) + "  " + "z", "[[<space>]]"),
+            (new string('a', 120) + "\t" + "z", new string('a', 120) + " " + "z", "[[\\t]]"),
+            (new string('a', 120) + "\r\n" + "z", new string('a', 120) + " " + "z", "[[\\r\\n]]"),
+            (new string('a', 120) + "\u00A0" + "z", new string('a', 120) + " " + "z", "[[\\u00A0]]"),
+            (new string('a', 120) + "\u2009" + "z", new string('a', 120) + " " + "z", "[[\\u2009]]"),
+        ];
+
+        foreach ((string expected, string actual, string marker) in cases)
+        {
+            AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+
+            exception.Message.Should().Contain(marker);
+            exception.Message.Should().NotContain("[[ ]]");
+        }
     }
 
     public void AreEqualStringDifferenceOversizedTextElementsUsePlaceholder()
