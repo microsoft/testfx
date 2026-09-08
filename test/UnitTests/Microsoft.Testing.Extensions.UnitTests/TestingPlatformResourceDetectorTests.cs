@@ -11,12 +11,16 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <summary>
 /// Direct tests for the internal <see cref="TestingPlatformResourceDetector"/> that backs the stable
 /// <c>AddTestingPlatformResource()</c> helper. These tests mutate process-global environment variables (the CI
-/// markers and <c>OTEL_SERVICE_NAME</c>), so the class is <see cref="DoNotParallelizeAttribute"/> and every method
-/// runs against a snapshot that is neutralised first and restored afterwards, otherwise the ambient CI environment
-/// this suite itself runs in would leak into the assertions.
+/// markers and <c>OTEL_SERVICE_NAME</c>), so the class carries a class-level
+/// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
+/// used by <c>AzureFoundryChatClientProviderTests</c> in this project) and every method runs against a snapshot
+/// that is neutralised first and restored afterwards, otherwise the ambient CI environment this suite itself runs
+/// in would leak into the assertions. The lock still serializes this class against itself and against every other
+/// test in the assembly that mutates environment variables, but allows it to run in parallel with tests that never
+/// touch environment variables at all.
 /// </summary>
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(WellKnownResources.EnvironmentVariables)]
 public sealed class TestingPlatformResourceDetectorTests
 {
     // Every environment variable the detector reads. They are all cleared before a test body runs so that the CI
