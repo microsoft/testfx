@@ -22,32 +22,6 @@ on:
   reaction: "eyes"
   permissions:
     pull-requests: read
-  # For workflow_run activations, check if there are already MAX_OPEN_PRS open
-  # PRs with the "[mutation-test-improver]" prefix. If so, skip the run to
-  # avoid spamming maintainers - each PR here requires a full local Stryker
-  # re-run to verify, so keep the outstanding backlog small.
-  steps:
-    - id: check
-      # A full backlog is an expected activation gate, not a pre-activation failure.
-      continue-on-error: true
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        MAX_OPEN_PRS=3
-        if [[ "$GITHUB_EVENT_NAME" != "workflow_run" ]]; then exit 0; fi
-        set +e
-        COUNT=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title "[mutation-test-improver]"' --json number --jq 'length' 2>/dev/null)
-        rc=$?
-        set -e
-        if [[ "$rc" -ne 0 ]]; then
-          echo "gh pr list failed with exit code $rc" >&2
-          exit "$rc"
-        fi
-        [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
-      # exits 0 if not a workflow_run activation or <MAX_OPEN_PRS open PRs, 1 if >=MAX_OPEN_PRS
-
-if: needs.pre_activation.outputs.check_result == 'success'
-
 timeout-minutes: 120
 
 max-ai-credits: 1500
@@ -162,6 +136,7 @@ Read memory at the **start** of every run; update it at the **end**.
 - If activated by `workflow_dispatch`, find the most recently completed run of the "Mutation testing" workflow via the GitHub tools instead of relying on event context.
 - Otherwise use `${{ github.event.workflow_run.id }}` and `${{ github.event.workflow_run.conclusion }}`.
 - Preserve the identified upstream Mutation testing run id and head SHA in local variables (for example, `upstream_run_id` and `upstream_head_sha`) and use those variables consistently for artifact download, source links, report history links, and duplicate-run memory.
+- Before inspecting source, verifying mutants, or preparing a PR, fetch and check out the upstream head SHA (`git fetch --no-tags --depth=1 origin <upstream_head_sha>` then `git checkout --detach <upstream_head_sha>`) so the workspace source exactly matches the downloaded mutation report.
 - If memory shows this run id was already processed, first confirm the current monthly report issue's Run History already contains the upstream run id. If it does, call `noop` with an explanation and stop. If it does not, continue to Step 5 to repair the missing report entry before treating the run as complete.
 
 ### Step 2: Handle a failed/cancelled run
@@ -183,18 +158,20 @@ If the conclusion is not `success`:
 
 For **at most 2** of the remaining highest-value survived mutants (favor ones in behaviorally meaningful code — public API surfaces, error handling, boundary conditions — over pure boilerplate or generated code):
 
-1. Read the mutated file and surrounding context to understand the intended behavior and what the specific mutation (e.g. a boundary flip, boolean negation, removed block) would break.
-2. If you cannot confidently explain the intended behavior, skip this mutant — do not guess.
-3. If the mutant looks behaviorally equivalent (the mutated code cannot be distinguished from the original by any observable behavior), record it in memory as a known equivalent mutant with your reasoning, and skip it.
-4. Otherwise, find (or create) the corresponding test file under `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` and add a focused test asserting the exact behavior the mutant would violate. Match the project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
-5. Build and run the unit test project to confirm the new test compiles and passes against the original (unmutated) code.
-6. **Verify the fix**: re-run `dotnet tool restore` then, from `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` with `MutationTesting=true`, run `dotnet stryker --output ../../../artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
+1. List open PRs with the `[mutation-test-improver]` title prefix. If there are already 3 or more open PRs, skip the rest of Step 4 for this run so the monthly report still updates without creating more PRs.
+2. From the repository root, run `./build.sh --binaryLog` before test or Stryker commands so the repo-local `.dotnet` SDK is provisioned from `global.json`.
+3. Read the mutated file and surrounding context to understand the intended behavior and what the specific mutation (e.g. a boundary flip, boolean negation, removed block) would break.
+4. If you cannot confidently explain the intended behavior, skip this mutant — do not guess.
+5. If the mutant looks behaviorally equivalent (the mutated code cannot be distinguished from the original by any observable behavior), record it in memory as a known equivalent mutant with your reasoning, and skip it.
+6. Otherwise, find (or create) the corresponding test file under `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` and add a focused test asserting the exact behavior the mutant would violate. Match the project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
+7. Build and run the unit test project with `$GITHUB_WORKSPACE/.dotnet/dotnet` to confirm the new test compiles and passes against the original (unmutated) code.
+8. **Verify the fix**: re-run `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore` then, from `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` with `MutationTesting=true`, run `$GITHUB_WORKSPACE/.dotnet/dotnet stryker --output ../../../artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
    - If it did not flip, don't force it — try at most one more angle (different assertion, different input), otherwise abandon this mutant, record the attempt outcome in memory, and move to the next candidate.
-7. For each mutant you successfully kill, create a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:
+9. For each mutant you successfully kill, create a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:
    - What mutant it kills (mutator, file, line, link) and why it represents a real test gap
    - The new test and why it distinguishes correct from mutated behavior
    - Local verification results (test pass + Stryker mutant flipped to Killed)
-8. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run.
+10. Update memory with the outcome (PR opened / equivalent found / attempt abandoned) for every mutant you looked at this run.
 
 ### Step 5: Update the Monthly Report issue (always do this)
 
