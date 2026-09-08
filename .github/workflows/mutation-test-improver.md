@@ -28,21 +28,11 @@ max-ai-credits: 1500
 
 permissions:
   actions: read
-  attestations: read
-  checks: read
   contents: read
   copilot-requests: write
-  deployments: read
-  discussions: read
   issues: read
   models: read
-  packages: read
-  pages: read
   pull-requests: read
-  repository-projects: read
-  security-events: read
-  statuses: read
-  vulnerability-alerts: read
 
 network:
   allowed:
@@ -106,7 +96,7 @@ safe-outputs:
 tools:
   bash: true
   github:
-    toolsets: [all]
+    toolsets: [actions, issues, pull_requests, repos]
 ---
 
 # Mutation Test Improver
@@ -128,7 +118,7 @@ Mutation testing currently only covers `Client/**/*.cs` in `src/Platform/Microso
 
 Do not use repo-memory, cache-memory, or any other cross-run memory backend. Use only GitHub state that is already protected by safe outputs:
 
-- **score history**: read it from the current monthly report issue's Score Trend and Run History sections.
+- **score history**: read it from the current monthly report issue's Score Trend and Run History sections, including `NoCoverage` because it is part of Stryker's score denominator.
 - **known equivalent mutants**: read them from the current monthly report issue's Known Equivalent Mutants section.
 - **mutants already attempted**: read them from the current monthly report issue's Suggested Actions and Run History sections, then reconcile any pending/open PRs from GitHub by title prefix and branch.
 - **which run (id) was last processed**: read it from the current monthly report issue's Run History, so a re-triggered workflow_run for the same underlying Stryker run doesn't produce duplicate report entries.
@@ -206,9 +196,9 @@ Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YY
 
    ## Score Trend
 
-   | Date | Score | Killed | Survived | Timeout | Δ vs previous |
-   | --- | --- | --- | --- | --- | --- |
-   | <YYYY-MM-DD> | NN.NN% | N | N | N | +/-N.NN pts |
+   | Date | Score | Killed | Survived | No Coverage | Timeout | Δ vs previous |
+   | --- | --- | --- | --- | --- | --- | --- |
+   | <YYYY-MM-DD> | NN.NN% | N | N | N | N | +/-N.NN pts |
 
    *(Keep the most recent ~14 rows; drop older ones - full history remains in Run History below.)*
 
@@ -225,7 +215,7 @@ Maintain a single open issue titled `[mutation-test-improver] Monthly Report {YY
    ## Run History
 
    ### <YYYY-MM-DD HH:MM UTC> - [Run](<https://github.com/<repo>/actions/runs/<run-id>>)
-   - Score: NN.NN% (Killed N / Survived N / Timeout N)
+   - Score: NN.NN% (Killed N / Survived N / No Coverage N / Timeout N)
    - 🔧 Opened PR #<number>: kills mutant in `<file>:<line>`
    - 🕒 Pending PR creation: verified fix queued for mutant in `<file>:<line>`; reconcile the actual PR on the next run before marking it opened
    - 🟰 No fix attempted / no viable candidate
