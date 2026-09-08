@@ -37,7 +37,7 @@ internal sealed partial class TestContextImplementation
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        string? msg = EscapeNul(message);
+        string? msg = message?.Replace("\0", "\\0");
         TestContextMessageBuilder.Append(msg);
         WriteLive(msg, appendLine: false);
     }
@@ -50,7 +50,7 @@ internal sealed partial class TestContextImplementation
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, EscapeNul(format), args);
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         TestContextMessageBuilder.Append(message);
         WriteLive(message, appendLine: false);
     }
@@ -62,7 +62,7 @@ internal sealed partial class TestContextImplementation
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        string? msg = EscapeNul(message);
+        string? msg = message?.Replace("\0", "\\0");
         TestContextMessageBuilder.AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
@@ -75,22 +75,10 @@ internal sealed partial class TestContextImplementation
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, EscapeNul(format), args);
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         TestContextMessageBuilder.AppendLine(message);
         WriteLive(message, appendLine: true);
     }
-
-    /// <summary>
-    /// Escapes NUL characters in <paramref name="message"/> so that they can be safely appended to the
-    /// diagnostic output buffer. Avoids the unconditional allocation performed by <see cref="string.Replace(string, string)"/>
-    /// when no NUL character is present, which matters on TFMs (e.g. netstandard2.0/.NET Framework) whose
-    /// <see cref="string.Replace(string, string)"/> implementation always allocates even without a match.
-    /// </summary>
-    [return: NotNullIfNotNull(nameof(message))]
-    private static string? EscapeNul(string? message)
-        => message is null || message.IndexOf('\0') < 0
-            ? message
-            : message.Replace("\0", "\\0");
 
     /// <summary>
     /// Gets messages from the testContext writeLines.
