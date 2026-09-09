@@ -285,12 +285,12 @@
       <trans-unit id="CommandLineUnknownOptionsHint">
         <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
         <target state="translated">Execute ''--help'' para ver as opções registradas por este aplicativo de teste. Se a opção pertencer a uma extensão, certifique-se de que o pacote é referenciado e se a extensão está registrada.</target>
-        <note>{Locked="'--help'"}</note>
+        <note>{Locked="--help"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestBlameReplacement">
         <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
         <target state="translated">Use '--crashdump' e/ou '--hangdump' em vez disso. O MTP separa os diagnósticos de falha e de travamento, então não existe um substituto direto para o coletor de blame do VSTest.</target>
-        <note>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</note>
+        <note>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestCollectorGuidance">
         <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
@@ -300,12 +300,12 @@
       <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
         <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
         <target state="translated">Para obter detalhes comparáveis do console, use '--output {0}'. MTP saída do console está configurada de forma diferente, portanto, essa não é uma substituição exata.</target>
-        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</note>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestLoggerGuidance">
         <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
         <target state="translated">O MTP usa opções específicas do relator, como '--report-trx', '--report-html' e '--report-junit'. Consulte a documentação da extensão do relator para obter sua opção de MTP.</target>
-        <note>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</note>
+        <note>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</note>
       </trans-unit>
       <trans-unit id="CommandLineVSTestOptionUnsupported">
         <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
@@ -320,7 +320,7 @@
       <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
         <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
         <target state="translated">Para cobertura de código no MTP, use '--coverage'. Isso não é um substituto direto para o coletor 'XPlat Code Coverage' do Coverlet.</target>
-        <note>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</note>
+        <note>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
@@ -435,17 +435,17 @@
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
         <target state="translated">O gancho de extensão ''{0}.{1}'' do assembly ''{2}'', declarado no manifesto de extensão ''{3}'', está marcado como ''async void''. A plataforma invoca o gancho de forma síncrona, portanto, ele retornaria no primeiro await: tudo o que ele registrar depois desse ponto concorreria com a configuração do próprio aplicativo de teste, e qualquer falha seria perdida. Torne o gancho síncrono.</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
         <target state="translated">O gancho de extensão ''{0}.{1}'' do assembly ''{2}'', declarado no manifesto de extensão ''{3}'', retorna ''{4}'', mas deve retornar ''void''. A plataforma invoca o gancho de forma síncrona, portanto, um valor de retorno nunca é observado; em particular, uma tarefa retornada nunca seria aguardada, e suas inscrições e falhas seriam perdidas.</target>
-        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
         <target state="translated">O tipo ''{0}'' no assembly ''{1}'', declarado no manifesto de extensão ''{2}'', não expõe um método ''public static void'' chamado ''{3}'', que receba um ''ITestApplicationBuilder'' e um ''string[]''.</target>
-        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
@@ -535,7 +535,7 @@
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
         <target state="translated">O manifesto de extensão ''{0}'' declara as extensões para carregar, mas o runtime atual não dá suporte ao carregamento dinâmico de assemblies (por exemplo, quando publicado com AOT nativo). Defina a propriedade ''{1}'' de cada extensão como ''false'', remova o manifesto ou remova ''{2}'' da linha de comando.</target>
-        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -914,7 +914,7 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
         <target state="translated">Ative o carregamento de extensões da plataforma de teste declaradas por manifestos ''*.testingplatformextensions.json'' encontrados ao lado do aplicativo de teste. Desabilitado por padrão.</target>
-        <note>{Locked="'*.testingplatformextensions.json'"}</note>
+        <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -955,7 +955,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <target state="translated">Não relate um valor de saída não bem-sucedido para os códigos de saída especificados.
 Por exemplo, ''--ignore-exit-code 8;9'' ignora os códigos de saída 8 e 9 e retorna 0 nesses casos.
 Para obter mais informações sobre os códigos de saída, veja https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
-        <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
+        <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -1051,14 +1051,14 @@ O padrão é TestResults no diretório que contém o aplicativo de teste.</targe
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="translated">A opção 'timeout' deve ter um argumento como valor temporal, com um sufixo de unidade explícito, e um valor numérico positivo dentro do intervalo compatível (até ~49,7 dias). Os sufixos aceitos são 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' e 'd'/'day(s)'. Por exemplo: '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="translated">Um tempo limite global de execução de teste.
 Recebe um argumento como valor temporal, com um sufixo de unidade explícito. Os sufixos aceitos são 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' e 'd'/'day(s)'. Por exemplo: '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+        <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
@@ -1295,7 +1295,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
         <target state="translated">O inicializador de host de teste "{0}" (UID: {1}) solicitou autorizar a identidade de segurança "{2}" na conexão do controlador de host de teste, mas apenas a identidade de um único aplicativo em área restrita (no Windows, um identificador de segurança do formato 'S-1-15-2-...') pode ser autorizado. Usuários, grupos e o identificador de segurança catch-all "{3}" nunca recebem acesso.</target>
-        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>

@@ -81,19 +81,19 @@
   </data>
   <data name="StepSummaryOptionDescription" xml:space="preserve">
     <value>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
+    <comment>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="on-failure"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
   </data>
   <data name="StepSummarySectionsOptionDescription" xml:space="preserve">
     <value>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</value>
-    <comment>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</comment>
+    <comment>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}{Locked="--report-gh"}</comment>
   </data>
   <data name="EmptyStepSummarySections" xml:space="preserve">
     <value>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</value>
-    <comment>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</comment>
+    <comment>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</comment>
   </data>
   <data name="InvalidStepSummarySection" xml:space="preserve">
     <value>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</value>
-    <comment>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</comment>
+    <comment>{0} is the invalid section name. {Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</comment>
   </data>
   <data name="StepSummaryWriteFailedWarning" xml:space="preserve">
     <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
@@ -132,11 +132,11 @@
   </data>
   <data name="HistoryOptionDescription" xml:space="preserve">
     <value>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</value>
-    <comment>{Locked="'--report-gh'"}</comment>
+    <comment>{Locked="--report-gh"}</comment>
   </data>
   <data name="HistoryWindowOptionDescription" xml:space="preserve">
     <value>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</value>
-    <comment>{Locked="'--report-gh-history'"}</comment>
+    <comment>{Locked="--report-gh-history"}</comment>
   </data>
   <data name="InvalidHistoryWindow" xml:space="preserve">
     <value>Invalid GitHub Actions test history window '{0}'. Specify a whole number of days from 1 through 90.</value>
@@ -147,7 +147,7 @@
   </data>
   <data name="HistoryWindowRequiresHistory" xml:space="preserve">
     <value>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</value>
-    <comment>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</comment>
+    <comment>{Locked="--report-gh-history-window"}{Locked="'--report-gh-history'"}</comment>
   </data>
   <data name="HistoryLoadFailedWarning" xml:space="preserve">
     <value>Failed to load the GitHub Actions test history snapshot from '{0}': {1}</value>
@@ -179,11 +179,11 @@
   </data>
   <data name="InvalidStepSummaryValue" xml:space="preserve">
     <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</value>
-    <comment>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</comment>
+    <comment>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="'0'"}{Locked="on-failure"}{0} is the invalid value.</comment>
   </data>
   <data name="SubOptionsRequireReportGh" xml:space="preserve">
     <value>The GitHub Actions report sub-options require '--{0}' to be specified.</value>
-    <comment>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</comment>
+    <comment>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</comment>
   </data>
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
@@ -248,7 +248,7 @@
   </data>
   <data name="FailureDetailsOptionDescription" xml:space="preserve">
     <value>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</comment>
+    <comment>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="'disable'"}{Locked="0"}</comment>
   </data>
   <data name="FailureDetailExceptionLabel" xml:space="preserve">
     <value>Exception</value>

@@ -332,6 +332,7 @@ cause.
 | [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual | Runs Markdown quality checks using markdownlint-cli2 and opens issues for violations. |
 | [`link-checker.md`](./link-checker.md) | Daily | Daily automated link checker that finds and fixes broken links in documentation files. |
 | [`glossary-maintainer.md`](./glossary-maintainer.md) | Schedule + manual | Maintains and updates the documentation glossary based on codebase changes. |
+| [`mutation-test-improver.md`](./mutation-test-improver.md) | Mutation testing workflow completion + manual | Tracks daily Stryker.NET mutation-testing results in a monthly report issue and may open focused draft PRs for verified test gaps. |
 
 #### Issue & PR housekeeping
 

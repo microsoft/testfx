@@ -441,7 +441,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 I valori validi sono ''auto'' (impostazione predefinita), ''on'' (accetta anche ''true'', ''enable'', ''1'') o ''off'' (accetta anche ''false'', ''disable'', '0').
 ''on'' forza i codici di escape ANSI (incluso lo spostamento del cursore) anche quando stdout viene reindirizzato; associarlo a --progress off se si desiderano solo colori.
 Quando vengono specificati sia --ansi sia --no-ansi, --ansi ha la priorità.</target>
-        <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -463,12 +463,12 @@ Quando vengono specificati sia --ansi sia --no-ansi, --ansi ha la priorità.</ta
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
         <target state="translated">Preimposta i blocchi dei risultati per test mostrati nel terminale.
 I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinita è 'Normal'. Usa '--show-test-results' per selezionare con precisione i risultati.</target>
-        <note>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</note>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
         <target state="translated">--output prevede un singolo parametro con un valore 'Minimal', 'Normal' o 'Detailed'.</target>
-        <note>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</note>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
@@ -547,7 +547,7 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
         <target state="translated">Non è possibile combinare il valore '--show-test-results' 'all' o 'none' con altri valori.</target>
-        <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
@@ -556,17 +556,17 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
         <target state="translated">Consente di selezionare quali risultati di test visualizzare in un blocco di risultati per test (con i dettagli informativi, l'analisi dello stack e l'output acquisito) nel terminale.
 I valori validi sono 'passed', 'failed' (comprende anche i test con errori, in timeout e annullati), 'skipped', 'all' e 'none'. Combina più valori come elenco separato da virgole o spazi, oppure ripetendo l'opzione; non è possibile combinare 'all' e 'none' con altri valori.
 Il valore predefinito è 'failed' quando '--output' è 'Minimal', 'failed' e 'skipped' quando è 'Normal', oppure non è specificato, e 'all' quando è 'Detailed'. Un '--show-test-results' esplicito ha sempre la precedenza su '--output', indipendentemente dall'ordine in cui vengono passati.</target>
-        <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</note>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
         <target state="translated">--show-test-results richiede almeno un valore tra 'passed', 'failed', 'skipped', 'all' o 'none'.</target>
-        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
         <target state="translated">--show-test-results si aspetta uno o più valori, separati da virgole o spazi, tra 'passed', 'failed', 'skipped', 'all' o 'none'.</target>
-        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>

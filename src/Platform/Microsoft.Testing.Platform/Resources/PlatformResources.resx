@@ -485,19 +485,19 @@
   </data>
   <data name="CommandLineVSTestConsoleLoggerReplacement" xml:space="preserve">
     <value>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</value>
-    <comment>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="'--output {0}'"}</comment>
+    <comment>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</comment>
   </data>
   <data name="CommandLineVSTestXPlatCoverageReplacement" xml:space="preserve">
     <value>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</value>
-    <comment>{Locked="MTP"}{Locked="'--coverage'"}{Locked="Coverlet"}{Locked="'XPlat Code Coverage'"}</comment>
+    <comment>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</comment>
   </data>
   <data name="CommandLineVSTestBlameReplacement" xml:space="preserve">
     <value>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</value>
-    <comment>{Locked="'--crashdump'"}{Locked="'--hangdump'"}{Locked="MTP"}{Locked="VSTest"}</comment>
+    <comment>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</comment>
   </data>
   <data name="CommandLineVSTestLoggerGuidance" xml:space="preserve">
     <value>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</value>
-    <comment>{Locked="MTP"}{Locked="'--report-trx'"}{Locked="'--report-html'"}{Locked="'--report-junit'"}</comment>
+    <comment>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</comment>
   </data>
   <data name="CommandLineVSTestCollectorGuidance" xml:space="preserve">
     <value>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</value>
@@ -509,7 +509,7 @@
   </data>
   <data name="CommandLineUnknownOptionsHint" xml:space="preserve">
     <value>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</value>
-    <comment>{Locked="'--help'"}</comment>
+    <comment>{Locked="--help"}</comment>
   </data>
   <data name="CommandLineOptionRequiresExtension" xml:space="preserve">
     <value>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</value>
@@ -781,13 +781,13 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage" xml:space="preserve">
     <value>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</value>
-    <comment>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</comment>
+    <comment>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</comment>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</value>
-    <comment>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</comment>
+    <comment>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</comment>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitOptionDescription" xml:space="preserve">
     <value>Exit the test process if dependent process exits. PID must be provided.</value>
@@ -879,12 +879,12 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
   </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
     <value>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
-    <comment>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</comment>
+    <comment>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</comment>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
-    <comment>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</comment>
+    <comment>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</comment>
   </data>
   <data name="LoggerFactoryNotReady" xml:space="preserve">
     <value>The ILoggerFactory has not been built yet.</value>
@@ -1063,7 +1063,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   </data>
   <data name="PlatformCommandLineEnableDynamicExtensionsOptionDescription" xml:space="preserve">
 <value>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</value>
-    <comment>{Locked="'*.testingplatformextensions.json'"}</comment>
+    <comment>{Locked="*.testingplatformextensions.json"}</comment>
   </data>
   <data name="DynamicExtensionsLoadedHeader" xml:space="preserve">
     <value>Dynamically loaded test platform extensions ({0}):</value>
@@ -1139,11 +1139,11 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   </data>
   <data name="DynamicExtensionHookNotFoundErrorMessage" xml:space="preserve">
     <value>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</value>
-    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</comment>
+    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</comment>
   </data>
   <data name="DynamicExtensionHookMustReturnVoidErrorMessage" xml:space="preserve">
     <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</value>
-    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</comment>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</comment>
   </data>
   <data name="DynamicExtensionDuplicateIdConflictErrorMessage" xml:space="preserve">
     <value>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</value>
@@ -1163,10 +1163,10 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   </data>
   <data name="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage" xml:space="preserve">
     <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</value>
-    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</comment>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</comment>
   </data>
   <data name="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage" xml:space="preserve">
     <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</value>
-    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</comment>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</comment>
   </data>
 </root>

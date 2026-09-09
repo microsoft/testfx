@@ -59,7 +59,7 @@ Example: 'MyReport_{tfm}.html'.</source>
         <target state="translated">Nome del report HTML generato. Può includere un percorso relativo o assoluto. I percorsi relativi vengono risolti rispetto alla directory dei risultati del test e le directory mancanti vengono create.
 Supporta i seguenti segnaposto: {pname} (nome dell'applicazione di test), {pid} (ID processo), {asm} (nome dell'assembly di immissione), {tfm} (moniker framework di destinazione), {arch} (architettura processo), {time} (timestamp).
 Esempio: 'MyReport_{tfm}.html'.</target>
-        <note>Do not localize format name {Locked="HTML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".html"}, or example file name {Locked="'MyReport_{tfm}.html'"}.</note>
+        <note>Do not localize format name {Locked="HTML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".html"}, or example file name {Locked="MyReport_{tfm}.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>

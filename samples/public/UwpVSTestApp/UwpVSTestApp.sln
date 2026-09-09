@@ -7,12 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UwpVSTestApp", "UwpVSTestAp
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|arm64 = Debug|arm64
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
-		Release|arm64 = Release|arm64
+		Debug|arm64 = Debug|arm64
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Release|arm64 = Release|arm64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D9E66319-BE72-4384-93FC-CA0C1B79C7FC}.Debug|arm64.ActiveCfg = Debug|arm64
