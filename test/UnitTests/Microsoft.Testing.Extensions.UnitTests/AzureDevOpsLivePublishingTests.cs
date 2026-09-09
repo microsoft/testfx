@@ -4040,6 +4040,7 @@ public sealed class AzureDevOpsLivePublishingTests
         JsonElement result = document.RootElement[0];
         Assert.AreEqual(777, result.GetProperty("id").GetInt32());
         Assert.AreEqual("rerun", result.GetProperty("resultGroupType").GetString());
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, result.GetProperty("state").GetString());
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
@@ -4455,6 +4456,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         using var document = JsonDocument.Parse(capturedBody!);
         JsonElement created = document.RootElement[0];
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, created.GetProperty("state").GetString());
         Assert.IsFalse(created.TryGetProperty("id", out _));
         Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
         Assert.IsFalse(created.TryGetProperty("subResults", out _));
