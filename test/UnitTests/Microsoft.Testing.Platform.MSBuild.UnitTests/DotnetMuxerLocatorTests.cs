@@ -214,9 +214,31 @@ public sealed class DotnetMuxerLocatorTests
 
     private static byte[] CreateMachoHeader(uint magic, DotnetMuxerLocator.MacOsCpuType cpuType)
     {
+        if (magic == MachOMagicFatBigEndian)
+        {
+            return CreateFatMachoHeader(magic, cpuType);
+        }
+
         byte[] bytes = new byte[8];
         BitConverter.GetBytes(magic).CopyTo(bytes, 0);
         BitConverter.GetBytes((uint)cpuType).CopyTo(bytes, 4);
+        return bytes;
+    }
+
+    // Builds a structurally valid 'fat_header' followed by a single 'fat_arch' entry, matching
+    // https://opensource.apple.com/source/xnu/xnu-4570.41.2/EXTERNAL_HEADERS/mach-o/fat.h.auto.html
+    // fat_header: magic (4 bytes) + nfat_arch (4 bytes)
+    // fat_arch: cputype (4 bytes) + cpusubtype (4 bytes) + offset (4 bytes) + size (4 bytes) + align (4 bytes)
+    private static byte[] CreateFatMachoHeader(uint magic, DotnetMuxerLocator.MacOsCpuType cpuType)
+    {
+        byte[] bytes = new byte[28];
+        BitConverter.GetBytes(magic).CopyTo(bytes, 0);
+        BitConverter.GetBytes(1u).CopyTo(bytes, 4); // nfat_arch
+        BitConverter.GetBytes((uint)cpuType).CopyTo(bytes, 8); // fat_arch[0].cputype
+        BitConverter.GetBytes(0u).CopyTo(bytes, 12); // fat_arch[0].cpusubtype
+        BitConverter.GetBytes((uint)bytes.Length).CopyTo(bytes, 16); // fat_arch[0].offset
+        BitConverter.GetBytes(0u).CopyTo(bytes, 20); // fat_arch[0].size
+        BitConverter.GetBytes(0u).CopyTo(bytes, 24); // fat_arch[0].align
         return bytes;
     }
 
