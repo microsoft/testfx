@@ -8,7 +8,7 @@
     <DefineConstants>$(DefineConstants);IS_MTP_UNIT_TESTS</DefineConstants>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
-    <!-- OSCondition cannot represent the browser platform used by this project's compatibility annotations. -->
+    <!-- OSCondition cannot express browser, so it cannot mirror [UnsupportedOSPlatform("browser")]. -->
     <NoWarn>$(NoWarn);MSTEST0084</NoWarn>
   </PropertyGroup>
 

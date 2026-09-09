@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="MakeOSConditionConsistentFix">
         <source>Make '[OSCondition]' consistent with platform compatibility attributes</source>
-        <target state="new">Make '[OSCondition]' consistent with platform compatibility attributes</target>
+        <target state="translated">讓 '[OSCondition]' 與平台相容性屬性一致</target>
         <note>{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">

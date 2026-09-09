@@ -341,15 +341,20 @@ public sealed class AzureDevOpsLivePublishingTests
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, passed?.State);
         Assert.AreEqual(2000L, passed?.DurationInMs);
         Assert.AreEqual(startTime, passed?.StartedDate);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, failed?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, failed?.State);
         Assert.AreEqual("boom", failed?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.NotExecutedTestOutcome, skipped?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, skipped?.State);
         Assert.AreEqual("skip", skipped?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, timeout?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, timeout?.State);
         Assert.AreEqual("Timeout: too slow", timeout?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, cancelled?.State);
         Assert.AreEqual("stopped", cancelled?.ErrorMessage);
     }
 
@@ -644,7 +649,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(7, runId);
         Assert.HasCount(1, task.DelayCalls);
         Assert.AreEqual(TimeSpan.FromSeconds(3), task.DelayCalls[0]);
-        Assert.AreSequenceEqual(new[] { "send:1", "delay:3", "send:2" }, events);
+        Assert.AreSequenceEqual(["send:1", "delay:3", "send:2"], events);
     }
 
     [TestMethod]
@@ -4035,6 +4040,7 @@ public sealed class AzureDevOpsLivePublishingTests
         JsonElement result = document.RootElement[0];
         Assert.AreEqual(777, result.GetProperty("id").GetInt32());
         Assert.AreEqual("rerun", result.GetProperty("resultGroupType").GetString());
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, result.GetProperty("state").GetString());
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
@@ -4450,6 +4456,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         using var document = JsonDocument.Parse(capturedBody!);
         JsonElement created = document.RootElement[0];
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, created.GetProperty("state").GetString());
         Assert.IsFalse(created.TryGetProperty("id", out _));
         Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
         Assert.IsFalse(created.TryGetProperty("subResults", out _));

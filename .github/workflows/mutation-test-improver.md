@@ -84,12 +84,14 @@ safe-outputs:
     labels: [type/automation, type/test-gap]
     max: 2
     allowed-files:
+      - test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/*.cs
       - test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/**/*.cs
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
     required-title-prefix: "[mutation-test-improver] "
     allowed-files:
+      - test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/*.cs
       - test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/**/*.cs
     max: 2
 

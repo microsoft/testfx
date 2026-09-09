@@ -236,6 +236,47 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only on Windows.")]
+    public async Task SatelliteResourceLanguages_FiltersClassicUwpMtpAdapterResources()
+    {
+        const string Source = """
+            #file ClassicUwpMtpSatelliteResources.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <EnableMSTestRunner>true</EnableMSTestRunner>
+                <SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>
+              </PropertyGroup>
+
+              <ItemGroup>
+                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+              </ItemGroup>
+
+              <Import Project="$(PkgMSTest_TestAdapter)\buildTransitive\uap10.0\MSTest.TestAdapter.targets"
+                      Condition=" '$(PkgMSTest_TestAdapter)' != '' " />
+
+              <Target Name="PrintSatelliteCultures" DependsOnTargets="GetMSTestV2CultureHierarchy">
+                <Message Text="SatelliteCultures=[@(MSTestV2Files->'%(Culture)')]" Importance="High" />
+              </Target>
+            </Project>
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"{AssetName}ClassicUwpMtpSatellites",
+            Source
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild {testAsset.TargetAssetPath} -restore -t:PrintSatelliteCultures",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "de" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains("SatelliteCultures=[fr;fr;ja;ja]");
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
