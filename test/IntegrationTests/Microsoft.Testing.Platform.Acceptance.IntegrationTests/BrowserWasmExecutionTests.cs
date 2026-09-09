@@ -638,6 +638,7 @@ const summary = {
     createRunRequests: 0,
     createRunStates: [],
     publishedTestOutcomes: [],
+    publishedTestStates: [],
     attachments: [],
     patchedStates: [],
     authorizedRequests: 0,
@@ -679,6 +680,7 @@ const server = http.createServer(async (request, response) => {
             count: results.length,
             value: results.map((result, index) => {
                 summary.publishedTestOutcomes.push(result.testCaseTitle + '=' + result.outcome);
+                summary.publishedTestStates.push(result.testCaseTitle + '=' + (result.state ?? '<missing>'));
                 return { id: 5000 + index, automatedTestName: result.automatedTestName };
             }),
         });
@@ -1241,12 +1243,18 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             root.GetProperty("patchedStates").EnumerateArray().Select(static element => element.GetString()).ToArray(),
             combined);
 
-        // Both tests are published with their real outcomes, and the run ends with the
-        // "at least one test failed" exit code (so the publisher did not swallow the failure).
+        // Both tests are published with their real outcomes and terminal states, and the run ends with
+        // the "at least one test failed" exit code (so the publisher did not swallow the failure).
         Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, root.GetProperty("exitCode").GetInt32(), combined);
         string[] publishedTestOutcomes = [.. root.GetProperty("publishedTestOutcomes").EnumerateArray().Select(static element => element.GetString()!)];
         Assert.ContainsSingle(publishedTestOutcomes.Where(static outcome => outcome == "PassingTest=Passed"), combined);
         Assert.ContainsSingle(publishedTestOutcomes.Where(static outcome => outcome == "FailingTestWithAttachment=Failed"), combined);
+
+        // Regression for https://github.com/microsoft/testfx/issues/11122: a terminal outcome does not
+        // transition the Azure DevOps result out of Pending unless the result-level state is also sent.
+        string[] publishedTestStates = [.. root.GetProperty("publishedTestStates").EnumerateArray().Select(static element => element.GetString()!)];
+        Assert.ContainsSingle(publishedTestStates.Where(static state => state == "PassingTest=Completed"), combined);
+        Assert.ContainsSingle(publishedTestStates.Where(static state => state == "FailingTestWithAttachment=Completed"), combined);
 
         // The file-backed attachment proves TryBuildAttachmentRequest reads from the wasm virtual
         // filesystem and base64-encodes the real bytes; the inline console attachments come from the
