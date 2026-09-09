@@ -220,6 +220,55 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public async Task TestHostControllerConnectionTimeout_IsHandledWithoutThrowing()
+    {
+        bool timeoutHandled = false;
+
+        bool connected = await TestHostControllersTestHost.WaitForTestHostControllerConnectionAsync(
+            token => Task.Delay(Timeout.InfiniteTimeSpan, token),
+            timeoutSeconds: 0.01,
+            CancellationToken.None,
+            () =>
+            {
+                timeoutHandled = true;
+                return Task.CompletedTask;
+            });
+
+        Assert.IsFalse(connected);
+        Assert.IsTrue(timeoutHandled);
+    }
+
+    [TestMethod]
+    public async Task TestHostControllerConnectionTimeout_PreservesApplicationCancellation()
+    {
+        using CancellationTokenSource cancellationTokenSource = new();
+        cancellationTokenSource.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => TestHostControllersTestHost.WaitForTestHostControllerConnectionAsync(
+                token => Task.Delay(Timeout.InfiniteTimeSpan, token),
+                timeoutSeconds: 1,
+                cancellationTokenSource.Token,
+                () => throw new AssertFailedException("The connection timeout handler should not run for application cancellation.")));
+    }
+
+    [TestMethod]
+    public void TestHostControllerConnectionFailureMessage_ReportsProcessState()
+    {
+        Mock<IProcess> process = new();
+        process.SetupGet(x => x.HasExited).Returns(true);
+        process.SetupGet(x => x.ExitCode).Returns(134);
+
+        string message = TestHostControllersTestHost.CreateTestHostControllerConnectionFailureMessage(
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(5),
+            process.Object);
+
+        Assert.Contains("5", message);
+        Assert.Contains("exited with code '134'", message);
+    }
+
+    [TestMethod]
     public async Task TestHostControllerProcessTermination_FaultedWaitAdvancesToTermination()
     {
         Mock<IProcess> process = new();

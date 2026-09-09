@@ -45,6 +45,7 @@ internal sealed partial class TestHostControllersTestHost
         using IDisposable forceExitRegistration = applicationCancellationTokenSource.RegisterForceExitAction(testHostProcess.Kill);
 
         int? testHostProcessId = null;
+        bool testHostControllerConnectionTimedOut = false;
         try
         {
             testHostProcessId = testHostProcess.Id;
@@ -69,6 +70,18 @@ internal sealed partial class TestHostControllersTestHost
         if (testHostProcess.HasExited)
         {
             await _logger.LogDebugAsync("Test host process exited prematurely").ConfigureAwait(false);
+            await outputDevice.DisplayAsync(
+                this,
+                new ErrorMessageOutputDeviceData(CreateTestHostControllerConnectionFailureMessage(
+                    waitDuration: TimeSpan.Zero,
+                    timeout: null,
+                    testHostProcess)),
+                CancellationToken.None).ConfigureAwait(false);
+            int fallbackPid = testHostProcessId ?? 0;
+            return (
+                (int)ExitCode.GenericFailure,
+                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
+                telemetryInformation.IsEnabled ? "[]" : null);
         }
         else
         {
@@ -80,11 +93,25 @@ internal sealed partial class TestHostControllersTestHost
                     await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'").ConfigureAwait(false);
 
                     // Wait for the test host controller to connect.
-                    using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
-                    using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, applicationCancellationToken))
+                    await _logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
+                    bool connected = await WaitForTestHostControllerConnectionAsync(
+                        testHostControllerIpc.WaitConnectionAsync,
+                        timeoutSeconds,
+                        applicationCancellationToken,
+                        async () =>
+                        {
+                            testHostControllerConnectionTimedOut = true;
+                            await outputDevice.DisplayAsync(
+                                this,
+                                new ErrorMessageOutputDeviceData(CreateTestHostControllerConnectionFailureMessage(
+                                    TimeSpan.FromSeconds(timeoutSeconds),
+                                    TimeSpan.FromSeconds(timeoutSeconds),
+                                    testHostProcess)),
+                                CancellationToken.None).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+                    if (!connected)
                     {
-                        await _logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
-                        await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
+                        return;
                     }
 
                     // Wait for the test host controller to send the PID of the test host process.
@@ -137,6 +164,16 @@ internal sealed partial class TestHostControllersTestHost
                 _logger,
                 TestHostCooperativeShutdownTimeout,
                 TestHostTerminationTimeout).ConfigureAwait(false);
+        }
+
+        if (testHostControllerConnectionTimedOut)
+        {
+            await TerminateTestHostAfterConnectionFailureAsync(testHostProcess, _logger).ConfigureAwait(false);
+            int fallbackPid = testHostProcessId ?? 0;
+            return (
+                (int)ExitCode.GenericFailure,
+                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
+                telemetryInformation.IsEnabled ? "[]" : null);
         }
 
         if (_testHostPID is null && applicationCancellationToken.IsCancellationRequested)
@@ -355,6 +392,61 @@ internal sealed partial class TestHostControllersTestHost
         await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
 
         return (exitCode, testHostProcessInformation, extensionInformation);
+    }
+
+    internal static async Task<bool> WaitForTestHostControllerConnectionAsync(
+        Func<CancellationToken, Task> waitConnectionAsync,
+        double timeoutSeconds,
+        CancellationToken applicationCancellationToken,
+        Func<Task> onTimeoutAsync)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, applicationCancellationToken);
+        try
+        {
+            await waitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested && !applicationCancellationToken.IsCancellationRequested)
+        {
+            await onTimeoutAsync().ConfigureAwait(false);
+            return false;
+        }
+    }
+
+    internal static string CreateTestHostControllerConnectionFailureMessage(
+        TimeSpan waitDuration,
+        TimeSpan? timeout,
+        IProcess testHostProcess)
+    {
+        bool hasExited = testHostProcess.HasExited;
+        string processState = hasExited
+            ? $"The test host process exited with code '{testHostProcess.ExitCode}'."
+            : "The test host process is still running.";
+
+        string timeoutDetails = timeout is null
+            ? string.Empty
+            : $" The configured connection timeout was '{timeout.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.";
+        return $"The test host controller did not connect to the named pipe after '{waitDuration.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.{timeoutDetails} {processState}";
+    }
+
+    private static async Task TerminateTestHostAfterConnectionFailureAsync(IProcess testHostProcess, ILogger logger)
+    {
+        if (testHostProcess.HasExited)
+        {
+            return;
+        }
+
+        try
+        {
+            testHostProcess.Kill();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogDebugAsync($"Ignoring failure while terminating the test host after a connection failure: {ex}").ConfigureAwait(false);
+        }
+
+        await WaitForExitAfterTerminationAsync(testHostProcess, TestHostTerminationTimeout, logger).ConfigureAwait(false);
     }
 
     private CancellationTokenSource EnsureControllerFinalizationCancellationTokenSource()
