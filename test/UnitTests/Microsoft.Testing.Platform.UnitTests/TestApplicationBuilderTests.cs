@@ -260,12 +260,29 @@ public sealed class TestApplicationBuilderTests
         process.SetupGet(x => x.ExitCode).Returns(134);
 
         string message = TestHostControllersTestHost.CreateTestHostControllerConnectionFailureMessage(
-            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(3),
             TimeSpan.FromSeconds(5),
             process.Object);
 
-        Assert.Contains("5", message);
+        Assert.Contains("after '3' seconds", message);
+        Assert.Contains("timeout was '5' seconds", message);
         Assert.Contains("exited with code '134'", message);
+    }
+
+    [TestMethod]
+    public void TestHostControllerConnectionFailureMessage_ReportsRunningProcess()
+    {
+        Mock<IProcess> process = new();
+        process.SetupGet(x => x.HasExited).Returns(false);
+
+        string message = TestHostControllersTestHost.CreateTestHostControllerConnectionFailureMessage(
+            TimeSpan.FromSeconds(3),
+            TimeSpan.FromSeconds(5),
+            process.Object);
+
+        Assert.Contains("after '3' seconds", message);
+        Assert.Contains("timeout was '5' seconds", message);
+        Assert.Contains("still running", message);
     }
 
     [TestMethod]
