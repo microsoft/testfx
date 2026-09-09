@@ -760,6 +760,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">문자열 메서드의 반환 값을 무시하지 마세요.</target>
         <note />
       </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
+        <target state="translated">'SupportedOSPlatformAttribute' 및 'UnsupportedOSPlatformAttribute' 플랫폼 호환성 분석을 알리지만 MSTest 실행을 제어하지는 않습니다. 이러한 특성을 사용하는 테스트 메서드 및 테스트 클래스는 지원되지 않는 테스트가 런타임에 건너뛰도록 동등 '[OSCondition]' 선언해야 합니다.</target>
+        <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
+        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
+        <target state="translated">테스트 '{0}'의 플랫폼 호환성 특성은 동등한 '[OSCondition]' 특성으로 표시되지 않습니다.</target>
+        <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
+        <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
+        <target state="translated">플랫폼 호환성 특성은 '[OSCondition]'과 일치해야 함</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
         <target state="needs-review-translation">'Assert.Fail'은 의도적인 실패를 명시적으로 나타내고 실패 메시지가 테스트를 계속할 수 없는 이유를 문서화할 수 있도록 합니다.</target>
