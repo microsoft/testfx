@@ -1,7 +1,7 @@
 ---
 emoji: label
 name: Issue labeler
-description: Add high-confidence canonical labels to newly opened issues from their title and body.
+description: Add high-confidence canonical labels to newly opened issues and assign owners from exact label mappings.
 
 on:
   issues:
@@ -111,6 +111,43 @@ safe-outputs:
     pull-requests: false
     max: 4
     target: triggering
+  scripts:
+    reconcile-area-owner:
+      name: Reconcile area owner
+      description: Assign the triggering issue owner from its exact current labels.
+      script: |
+        const labelOwners = new Map([
+          ["external/test-explorer", "drognanar"],
+          ["external/fakes", "drognanar"],
+          ["external/code-coverage", "fhnaseer"],
+        ]);
+
+        const { owner, repo } = context.repo;
+        const issue_number = context.issue.number;
+        const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number });
+        const matchingOwners = new Set(
+          issue.labels
+            .map(label => typeof label === "string" ? label : label.name)
+            .filter(label => labelOwners.has(label))
+            .map(label => labelOwners.get(label)),
+        );
+
+        if (matchingOwners.size !== 1) {
+          return { success: true };
+        }
+
+        const [assignee] = matchingOwners;
+        if ((issue.assignees ?? []).some(existingAssignee => existingAssignee.login === assignee)) {
+          return { success: true };
+        }
+
+        await github.rest.issues.addAssignees({
+          owner,
+          repo,
+          issue_number,
+          assignees: [assignee],
+        });
+        return { success: true };
   noop:
     report-as-issue: false
   report-failure-as-issue: false
@@ -138,14 +175,14 @@ found in them.
 ## Task
 
 Read the triggering issue once with `gh issue view`, including its title, body, and
-current labels. Add only high-confidence labels from the configured allowlist. Do not
-assign users; the separate assignment workflow handles exact owner mappings from labels.
+current labels. Add only high-confidence labels from the configured allowlist, then
+enqueue deterministic owner reconciliation.
 
 1. Select one most-specific `area/*` label. Add a second area only when the issue
    clearly spans two independently actionable components.
 2. Optionally add one `type/*` label only when the title or body explicitly supports it.
 3. Optionally add one `external/*` label when the reported behavior clearly originates
-   in a component this repository does not own (see the ownership and keyword maps).
+   in a component this repository does not own (see the external component keyword map).
    An `external/*` label is additive: still pick the best `area/*` label when one
    applies, and never use `external/*` merely because a third-party tool is mentioned
    in passing.
@@ -163,6 +200,9 @@ assign users; the separate assignment workflow handles exact owner mappings from
 9. If no label is strongly supported, or all selected labels already exist, use `noop`
    instead of the `add-labels` safe output.
 10. Otherwise use the `add-labels` safe output exactly once with all selected labels.
+11. Call the `reconcile_area_owner` safe-output tool exactly once, after the `add_labels`
+    or `noop` call. Do not select or pass an assignee; the handler derives it only from
+    the issue's exact labels after earlier safe outputs have been applied.
 
 ## High-confidence keyword map
 
