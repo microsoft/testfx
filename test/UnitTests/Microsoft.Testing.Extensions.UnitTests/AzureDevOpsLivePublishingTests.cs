@@ -341,15 +341,20 @@ public sealed class AzureDevOpsLivePublishingTests
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, passed?.State);
         Assert.AreEqual(2000L, passed?.DurationInMs);
         Assert.AreEqual(startTime, passed?.StartedDate);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, failed?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, failed?.State);
         Assert.AreEqual("boom", failed?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.NotExecutedTestOutcome, skipped?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, skipped?.State);
         Assert.AreEqual("skip", skipped?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, timeout?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, timeout?.State);
         Assert.AreEqual("Timeout: too slow", timeout?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, cancelled?.State);
         Assert.AreEqual("stopped", cancelled?.ErrorMessage);
     }
 
