@@ -50,7 +50,7 @@ public sealed class CtrfReportMergerTests
 
         var testArray = (JsonArray)merged["results"]!["tests"]!;
         Assert.HasCount(3, testArray);
-        List<string?> names = [.. testArray.Select(t => (string?)t!["name"])];
+        List<string> names = [.. testArray.Select(t => (string)t!["name"]!)];
         Assert.Contains("TestA", names);
         Assert.Contains("TestC", names);
     }
