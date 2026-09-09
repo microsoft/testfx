@@ -91,10 +91,12 @@ public sealed partial class Assert
             diagnostic));
     }
 
-    private static bool AreWindowsCaretEligible(StringTokenWindow expectedWindow, StringTokenWindow actualWindow)
+    private static bool DoWindowsAvoidMismatchPlaceholders(StringTokenWindow expectedWindow, StringTokenWindow actualWindow)
         => !expectedWindow.MismatchRequiresPlaceholder
-            && !actualWindow.MismatchRequiresPlaceholder
-            && IsMismatchSuitableForCaret(expectedWindow)
+            && !actualWindow.MismatchRequiresPlaceholder;
+
+    private static bool AreWindowMismatchesSuitableForCaret(StringTokenWindow expectedWindow, StringTokenWindow actualWindow)
+        => IsMismatchSuitableForCaret(expectedWindow)
             && IsMismatchSuitableForCaret(actualWindow);
 
     private static StringDifferenceDiagnostic CreateStringDifferenceDiagnostic(
@@ -119,9 +121,10 @@ public sealed partial class Assert
             int expectedPrefixLength = GetShortPrefixLength(expectedWindow);
             int actualPrefixLength = GetShortPrefixLength(actualWindow);
             bool useCaret =
-                AreWindowsCaretEligible(expectedWindow, actualWindow)
+                DoWindowsAvoidMismatchPlaceholders(expectedWindow, actualWindow)
                 && expectedWindow.IsRetainedPrefixSafe
                 && actualWindow.IsRetainedPrefixSafe
+                && AreWindowMismatchesSuitableForCaret(expectedWindow, actualWindow)
                 && expectedPrefixLength == actualPrefixLength;
 
             string differenceText = useCaret
@@ -134,9 +137,10 @@ public sealed partial class Assert
         StringPreview expectedPreview = CreatePreview(expectedWindow, useInlineMarker: false);
         StringPreview actualPreview = CreatePreview(actualWindow, useInlineMarker: false);
         bool previewUsesCaret =
-            AreWindowsCaretEligible(expectedWindow, actualWindow)
+            DoWindowsAvoidMismatchPlaceholders(expectedWindow, actualWindow)
             && expectedPreview.IsPrefixSafe
             && actualPreview.IsPrefixSafe
+            && AreWindowMismatchesSuitableForCaret(expectedWindow, actualWindow)
             && expectedPreview.MismatchColumn == actualPreview.MismatchColumn;
 
         if (previewUsesCaret)
