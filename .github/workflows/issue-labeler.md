@@ -1,7 +1,7 @@
 ---
 emoji: label
 name: Issue labeler
-description: Add high-confidence canonical labels to newly opened issues from their title and body, and assign the area owner when one is known.
+description: Add high-confidence canonical labels to newly opened issues from their title and body.
 
 on:
   issues:
@@ -111,14 +111,6 @@ safe-outputs:
     pull-requests: false
     max: 4
     target: triggering
-  assign-to-user:
-    # Area owners for components that are owned outside the core testfx team.
-    # Keep this list in sync with the "Area ownership" table in the prompt.
-    allowed:
-      - drognanar
-      - fhnaseer
-    max: 1
-    target: triggering
   noop:
     report-as-issue: false
   report-failure-as-issue: false
@@ -146,8 +138,8 @@ found in them.
 ## Task
 
 Read the triggering issue once with `gh issue view`, including its title, body, and
-current labels. Add only high-confidence labels from the configured allowlist, then
-apply the exact-label ownership lookup below.
+current labels. Add only high-confidence labels from the configured allowlist. Do not
+assign users; the separate assignment workflow handles exact owner mappings from labels.
 
 1. Select one most-specific `area/*` label. Add a second area only when the issue
    clearly spans two independently actionable components.
@@ -170,36 +162,8 @@ apply the exact-label ownership lookup below.
    - Prefer `area/trx` or `area/dump` over `area/mtp-extensions`.
    - Prefer a focused MSTest label over `area/mstest`.
 9. If no label is strongly supported, or all selected labels already exist, use `noop`
-   instead of the `add-labels` safe output. An assignment may still be emitted when the
-   already-present labels map to an owner and that owner is not assigned yet.
+   instead of the `add-labels` safe output.
 10. Otherwise use the `add-labels` safe output exactly once with all selected labels.
-
-## Area ownership
-
-Some components are owned outside the core testfx team. When the labels you selected —
-or the labels already on the issue — match a row below, call the `assign-to-user` safe
-output exactly once with that owner.
-
-| Label | Owner |
-| --- | --- |
-| `external/test-explorer` | `drognanar` |
-| `external/fakes` | `drognanar` |
-| `external/code-coverage` | `fhnaseer` |
-
-Assignment rules:
-
-1. Build the ownership lookup set from the literal current label names plus the literal
-   label names in the `add-labels` output. Do not use the issue title, body, comments,
-   package names, APIs, or inferred subject matter for this lookup.
-2. A table row matches only when its `Label` value appears verbatim in that set. Labels
-   not listed in the table — including every other `external/*` label — never trigger
-   assignment. For example, `external/dotnet-sdk` must not assign `fhnaseer`.
-3. If no table row matches, assignment is forbidden. If exactly one owner matches,
-   assign that owner unless they are already assigned. If rows with different owners
-   match, leave the issue unassigned for a maintainer.
-4. Assign at most one user, and only from the table above. Never infer or substitute an
-   owner from related labels, the issue text, `git blame`, or a mention inside the issue.
-5. Assignment does not replace labeling: still emit `add-labels` for any new labels.
 
 ## High-confidence keyword map
 

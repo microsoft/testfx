@@ -1,0 +1,50 @@
+name: Assign issue area owner
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: none
+  issues: write
+
+jobs:
+  assign:
+    if: contains(fromJSON('["external/test-explorer","external/fakes","external/code-coverage"]'), github.event.label.name)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign owner from exact labels
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const labelOwners = new Map([
+              ["external/test-explorer", "drognanar"],
+              ["external/fakes", "drognanar"],
+              ["external/code-coverage", "fhnaseer"],
+            ]);
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number });
+            const matchingOwners = new Set(
+              issue.labels
+                .map(label => typeof label === "string" ? label : label.name)
+                .filter(label => labelOwners.has(label))
+                .map(label => labelOwners.get(label)),
+            );
+
+            if (matchingOwners.size !== 1) {
+              return;
+            }
+
+            const [assignee] = matchingOwners;
+            if ((issue.assignees ?? []).some(existingAssignee => existingAssignee.login === assignee)) {
+              return;
+            }
+
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number,
+              assignees: [assignee],
+            });
