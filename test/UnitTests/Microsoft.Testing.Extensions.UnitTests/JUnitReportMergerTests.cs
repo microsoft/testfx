@@ -63,7 +63,7 @@ public sealed class JUnitReportMergerTests
         List<XElement> suites = [.. root.Elements().Where(e => e.Name.LocalName == "testsuite")];
         Assert.HasCount(3, suites);
         List<string> ids = [.. suites.Select(s => s.Attribute("id")!.Value)];
-        Assert.AreSequenceEqual(new[] { "0", "1", "2" }, ids);
+        Assert.AreSequenceEqual(["0", "1", "2"], ids);
         List<string> names = [.. suites.Select(s => s.Attribute("name")!.Value)];
         Assert.Contains("SuiteA", names);
         Assert.Contains("SuiteC", names);
@@ -154,7 +154,7 @@ public sealed class JUnitReportMergerTests
         Assert.AreEqual("2", suite.Attribute("tests")!.Value);
         Assert.AreEqual("0", suite.Attribute("failures")!.Value);
         Assert.AreSequenceEqual(
-            new[] { "AlwaysPasses", "Flaky" },
+            ["AlwaysPasses", "Flaky"],
             suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
         Assert.IsEmpty(suite.Elements("testcase").Single(testCase => testCase.Attribute("name")!.Value == "Flaky").Elements("failure"));
     }
@@ -194,7 +194,7 @@ public sealed class JUnitReportMergerTests
         Assert.AreEqual("2", suite.Attribute("tests")!.Value);
         Assert.AreEqual("0", suite.Attribute("failures")!.Value);
         Assert.AreSequenceEqual(
-            new[] { "Parameterized [attempt 1]", "Parameterized" },
+            ["Parameterized [attempt 1]", "Parameterized"],
             suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
     }
 

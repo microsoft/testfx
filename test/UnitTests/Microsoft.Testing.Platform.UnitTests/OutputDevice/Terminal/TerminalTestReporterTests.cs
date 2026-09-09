@@ -681,7 +681,7 @@ public sealed class TerminalTestReporterTests
         progressAwareTerminal.WriteToTerminal(static _ => { });
 
         Assert.AreSequenceEqual(
-            new[] { "base", "other instance", "updated execution" },
+            ["base", "other instance", "updated execution"],
             renderer.Messages.Select(static message => message.Text).OrderBy(static message => message));
     }
 

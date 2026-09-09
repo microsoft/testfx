@@ -28,9 +28,9 @@ public sealed class HtmlArtifactPostProcessorTests
     {
         HtmlArtifactPostProcessor processor = new();
 
-        Assert.AreSequenceEqual(new[] { HtmlReportGenerator.HtmlArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual([HtmlReportGenerator.HtmlArtifactKind], processor.SupportedKinds);
         Assert.AreSequenceEqual(
-            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts],
             processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
@@ -152,7 +152,7 @@ public sealed class HtmlArtifactPostProcessorTests
             Assert.AreEqual(1, (int?)summary["failed"]);
             Assert.AreEqual(7_200_000d, (double?)summary["totalDurationMs"]);
             Assert.AreSequenceEqual(
-                new[] { "first.html", "second.html" },
+                ["first.html", "second.html"],
                 Directory.GetFiles(directory, "*.html").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
         }
         finally

@@ -254,7 +254,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             Assert.AreSequenceEqual(
                 [firstManifestPath, secondPath],
                 artifacts[0].InputArtifactPaths);
-            Assert.DoesNotContain(unrelatedPath, artifacts[0].InputArtifactPaths);
+            Assert.DoesNotContain(unrelatedPath, artifacts[0].InputArtifactPaths!);
         }
         finally
         {

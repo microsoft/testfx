@@ -16,9 +16,9 @@ public sealed class TrxArtifactPostProcessorTests
     {
         TrxArtifactPostProcessor processor = new();
 
-        Assert.AreSequenceEqual(new[] { TrxReportEngine.TrxArtifactKind }, processor.SupportedKinds);
-        Assert.AreSequenceEqual(new[] { ArtifactPostProcessingMode.TestModules }, processor.SupportedModes);
-        Assert.AreSequenceEqual(new[] { ".trx" }, processor.SupportedFileExtensionsFallback);
+        Assert.AreSequenceEqual([TrxReportEngine.TrxArtifactKind], processor.SupportedKinds);
+        Assert.AreSequenceEqual([ArtifactPostProcessingMode.TestModules], processor.SupportedModes);
+        Assert.AreSequenceEqual([".trx"], processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }
 
@@ -71,7 +71,7 @@ public sealed class TrxArtifactPostProcessorTests
                 Path.GetFullPath(directory),
                 Path.GetFullPath(Path.Combine(Path.GetDirectoryName(output.Path)!, "..")));
             Assert.AreSequenceEqual(
-                new[] { "first.trx", "second.trx" },
+                ["first.trx", "second.trx"],
                 Directory.GetFiles(directory, "*.trx").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
         }
         finally
