@@ -91,6 +91,12 @@ public sealed partial class Assert
             diagnostic));
     }
 
+    private static bool AreWindowsCaretEligible(StringTokenWindow expectedWindow, StringTokenWindow actualWindow)
+        => !expectedWindow.MismatchRequiresPlaceholder
+            && !actualWindow.MismatchRequiresPlaceholder
+            && IsMismatchSuitableForCaret(expectedWindow)
+            && IsMismatchSuitableForCaret(actualWindow);
+
     private static StringDifferenceDiagnostic CreateStringDifferenceDiagnostic(
         string expected,
         string actual,
@@ -113,12 +119,9 @@ public sealed partial class Assert
             int expectedPrefixLength = GetShortPrefixLength(expectedWindow);
             int actualPrefixLength = GetShortPrefixLength(actualWindow);
             bool useCaret =
-                !expectedWindow.MismatchRequiresPlaceholder
-                && !actualWindow.MismatchRequiresPlaceholder
+                AreWindowsCaretEligible(expectedWindow, actualWindow)
                 && expectedWindow.IsRetainedPrefixSafe
                 && actualWindow.IsRetainedPrefixSafe
-                && IsMismatchSuitableForCaret(expectedWindow)
-                && IsMismatchSuitableForCaret(actualWindow)
                 && expectedPrefixLength == actualPrefixLength;
 
             string differenceText = useCaret
@@ -131,12 +134,9 @@ public sealed partial class Assert
         StringPreview expectedPreview = CreatePreview(expectedWindow, useInlineMarker: false);
         StringPreview actualPreview = CreatePreview(actualWindow, useInlineMarker: false);
         bool previewUsesCaret =
-            !expectedWindow.MismatchRequiresPlaceholder
-            && !actualWindow.MismatchRequiresPlaceholder
+            AreWindowsCaretEligible(expectedWindow, actualWindow)
             && expectedPreview.IsPrefixSafe
             && actualPreview.IsPrefixSafe
-            && IsMismatchSuitableForCaret(expectedWindow)
-            && IsMismatchSuitableForCaret(actualWindow)
             && expectedPreview.MismatchColumn == actualPreview.MismatchColumn;
 
         if (previewUsesCaret)
