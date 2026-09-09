@@ -1084,7 +1084,7 @@ public sealed class CtrfReportMergerTests
 
         Assert.HasCount(4, tests, "Rows differing only by parameters or filePath are distinct tests.");
         Assert.AreSequenceEqual(
-            (string?[])["failed", "passed", "skipped", "passed"],
+            ["failed", "passed", "skipped", "passed"],
             tests.Select(t => (string?)t!["status"]).ToArray());
     }
 

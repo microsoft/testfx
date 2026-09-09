@@ -8,6 +8,8 @@
     <DefineConstants>$(DefineConstants);IS_MTP_UNIT_TESTS</DefineConstants>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
+    <!-- OSCondition cannot represent the browser platform used by this project's compatibility annotations. -->
+    <NoWarn>$(NoWarn);MSTEST0084</NoWarn>
   </PropertyGroup>
 
   <!-- start netstandard2.0 polyfill -->

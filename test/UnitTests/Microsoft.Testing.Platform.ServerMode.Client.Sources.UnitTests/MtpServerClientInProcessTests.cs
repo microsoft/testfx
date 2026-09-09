@@ -41,7 +41,7 @@ public sealed class MtpServerClientInProcessTests
 
         string[] arguments = server.Arguments;
         Assert.AreSequenceEqual(
-            new[] { "--server", "jsonrpc", "--client-host", "127.0.0.1", "--client-port" },
+            ["--server", "jsonrpc", "--client-host", "127.0.0.1", "--client-port"],
             arguments.Take(5),
             $"The client must hand the callback a complete, ordered server-mode argument array. Actual: {string.Join(" ", arguments)}");
         Assert.IsTrue(
@@ -737,13 +737,12 @@ public sealed class MtpServerClientInProcessTests
             server.ConnectionCount,
             "A stateful session must serve every request over the single connection the launch established.");
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 JsonRpcMethods.Initialize,
                 JsonRpcMethods.TestingDiscoverTests,
                 JsonRpcMethods.TestingRunTests,
                 JsonRpcMethods.TestingRunTests,
-            },
+            ],
             server.Value.ReceivedRequestMethods,
             "The stateful session must reuse one connection for the expected initialize, discover, and run requests.");
     }
