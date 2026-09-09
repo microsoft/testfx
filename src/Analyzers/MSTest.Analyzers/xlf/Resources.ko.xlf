@@ -762,7 +762,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</target>
+        <target state="translated">'SupportedOSPlatformAttribute' 및 'UnsupportedOSPlatformAttribute' 플랫폼 호환성 분석을 알리지만 MSTest 실행을 제어하지는 않습니다. 이러한 특성을 사용하는 테스트 메서드 및 테스트 클래스는 지원되지 않는 테스트가 런타임에 건너뛰도록 동등 '[OSCondition]' 선언해야 합니다.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">

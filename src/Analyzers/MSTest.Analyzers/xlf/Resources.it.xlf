@@ -767,7 +767,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</target>
+        <target state="translated">Gli attributi di compatibilità della piattaforma nei test '{0}' non sono rappresentati da un attributo '[OSCondition]' equivalente</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">

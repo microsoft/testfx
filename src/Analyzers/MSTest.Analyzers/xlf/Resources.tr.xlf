@@ -762,17 +762,17 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</target>
+        <target state="translated">'SupportedOSPlatformAttribute' ve 'UnsupportedOSPlatformAttribute', platform uyumluluk analizini bilgilendirir ancak MSTest yürütmesini denetlemez. Bu öznitelikleri kullanan test yöntemleri ve test sınıfları, desteklenmeyen testlerin çalışma zamanında atlanması için eşdeğer bir '[OSCondition]' da bildirmelidir.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</target>
+        <target state="translated">'{0}' testindeki platform uyumluluk öznitelikleri eşdeğer bir '[OSCondition]' özniteliğiyle temsil edilmiyor</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
         <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
-        <target state="new">Platform compatibility attributes should be consistent with '[OSCondition]'</target>
+        <target state="translated">Platform uyumluluk öznitelikleri '[OSCondition]' ile tutarlı olmalıdır</target>
         <note>{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
