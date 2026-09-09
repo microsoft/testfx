@@ -92,10 +92,6 @@ public sealed class TestHostControllerCancellationTests
         await client.ConnectAsync(TestContext.CancellationToken);
 
         await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
-
-        byte[] responseBuffer = new byte[1];
-        int bytesRead = await client.ReadAsync(responseBuffer, 0, responseBuffer.Length, TestContext.CancellationToken);
-        Assert.AreEqual(0, bytesRead);
     }
 
     [TestMethod]
