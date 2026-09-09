@@ -147,7 +147,7 @@ found in them.
 
 Read the triggering issue once with `gh issue view`, including its title, body, and
 current labels. Add only high-confidence labels from the configured allowlist, then
-assign the area owner when the selected labels map to one.
+apply the exact-label ownership lookup below.
 
 1. Select one most-specific `area/*` label. Add a second area only when the issue
    clearly spans two independently actionable components.
@@ -188,12 +188,18 @@ output exactly once with that owner.
 
 Assignment rules:
 
-1. Assign at most one user, and only from the table above. Never infer an owner from
-   the issue text, from `git blame`, or from a mention inside the issue.
-2. Assign only when the owning label is high confidence — the same bar as adding it.
-3. Do not assign when the issue already has that owner assigned, or when two rows with
-   different owners match; leave those for a maintainer.
-4. Assignment does not replace labeling: still emit `add-labels` for any new labels.
+1. Build the ownership lookup set from the literal current label names plus the literal
+   label names in the `add-labels` output. Do not use the issue title, body, comments,
+   package names, APIs, or inferred subject matter for this lookup.
+2. A table row matches only when its `Label` value appears verbatim in that set. Labels
+   not listed in the table — including every other `external/*` label — never trigger
+   assignment. For example, `external/dotnet-sdk` must not assign `fhnaseer`.
+3. If no table row matches, assignment is forbidden. If exactly one owner matches,
+   assign that owner unless they are already assigned. If rows with different owners
+   match, leave the issue unassigned for a maintainer.
+4. Assign at most one user, and only from the table above. Never infer or substitute an
+   owner from related labels, the issue text, `git blame`, or a mention inside the issue.
+5. Assignment does not replace labeling: still emit `add-labels` for any new labels.
 
 ## High-confidence keyword map
 
