@@ -91,6 +91,7 @@ def inspect_archive(archive: str) -> None:
 def extract_archive(archive: str, destination: str) -> None:
     destination_root = os.path.abspath(destination)
     try:
+        os.makedirs(destination_root, exist_ok=True)
         with zipfile.ZipFile(archive) as zip_file:
             seen_names: set[str] = set()
             entry_count = 0
