@@ -4,13 +4,13 @@
 
 | Application model | Recommended test configuration | Test host |
 | --- | --- | --- |
-| Legacy UWP (`uap10.0`) | Existing non-SDK project with `MSTest.TestAdapter` and `MSTest.TestFramework` | VSTest AppContainer by default; MTP available |
-| Modern UWP (.NET 9+, `UseUwp`) | `MSTest.Sdk` | VSTest AppContainer by default; MTP with `<UseVSTest>false</UseVSTest>` |
+| Legacy UWP (`uap10.0`) | Existing non-SDK project with `MSTest.TestAdapter` and `MSTest.TestFramework` | VSTest AppContainer |
+| Modern UWP (.NET 9+, `UseUwp`) | `MSTest.Sdk` | VSTest AppContainer, selected automatically |
 | Packaged full-trust WinUI 3 (`UseWinUI`) | `MSTest.Sdk` | MTP with automatic package registration and AUMID activation |
 | Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | `MSTest.Sdk` | MTP direct executable launch |
 | AppContainer-configured WinUI 3 | VSTest | MTP is not currently supported |
 
-`MSTest.TestAdapter` ships the Microsoft.Testing.Platform integration for every target framework it supports, including both `uap10.0` and modern UWP, so a UWP test application can register MSTest with MTP. `MSTest.Sdk` still *defaults* `UseUwp=true` to VSTest, because that is the established host for AppContainer applications and existing projects rely on it; set `<UseVSTest>false</UseVSTest>` to opt into MTP instead. Legacy `uap10.0` projects consume the adapter's `buildTransitive/uap10.0` assets, which now honour `EnableMSTestRunner` in the same way as every other target framework.
+True UWP/AppContainer test hosts cannot use MTP. `MSTest.Sdk` therefore selects VSTest when `UseUwp=true` and reports a build error if a project explicitly selects MTP for that application model. Legacy `uap10.0` projects remain on their existing package-based setup because they do not use the SDK-style project system.
 
 ### Packaging and sandboxing are separate choices
 
@@ -21,7 +21,7 @@ Two independent settings describe a Windows app:
 
 A packaged WinUI 3 desktop app is full trust by default. Packaging gives it identity and MSIX file/registry virtualization, but does not put it in AppContainer. A WinUI 3 app can be explicitly configured for AppContainer with `uap10:TrustLevel="appContainer"` in its package manifest; it then has the same MTP communication restrictions as UWP.
 
-`Microsoft.Testing.Extensions.PackagedApp` supports packaged **full-trust** desktop hosts end to end. It also provides both communication primitives an AppContainer host needs: a reusable launch-activation argument bootstrap and exact package-SID authorization on the controller pipe. Combined with the adapter's MTP integration now shipping for the UWP target frameworks, a UWP test application can run on MTP; `MSTest.Sdk` keeps VSTest as the default for `UseUwp=true` for compatibility.
+`Microsoft.Testing.Extensions.PackagedApp` currently supports packaged **full-trust** desktop hosts end to end. It also provides both communication primitives an AppContainer host needs: a reusable launch-activation argument bootstrap and exact package-SID authorization on the controller pipe. Those primitives do not by themselves make true UWP/AppContainer an MTP test-host mode: `MSTest.Sdk` still routes `UseUwp=true` to VSTest and rejects forced MTP, and the existing MTP startup path still expects an ordinary initial controller process.
 
 #### AppContainer communication primitives
 
@@ -30,7 +30,7 @@ MTP's controller must give the new test host its command-line options and then e
 1. **Activation arguments are not process arguments.** For a packaged full-trust desktop app, AUMID activation starts an ordinary Win32 process and the activation string becomes its command line, which .NET exposes through `Environment.GetCommandLineArgs()`. A true UWP/AppContainer app instead receives one opaque string through [`LaunchActivatedEventArgs.Arguments`](https://learn.microsoft.com/uwp/api/windows.applicationmodel.activation.launchactivatedeventargs.arguments) in `Application.OnLaunched`. `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` restores that value to the `string[]` expected by the platform before `TestApplication.CreateBuilderAsync`.
 2. **The controller pipe must authorize the app identity.** MTP normally creates its named pipe with [`PipeOptions.CurrentUserOnly`](https://learn.microsoft.com/dotnet/api/system.io.pipes.pipeoptions), granting the creating token's owner SID access. An AppContainer token is additionally restricted by its package SID, and Windows grants access only when both the normal and restricted identity checks succeed. The packaged-app launcher now contributes the selected application's exact package SID; the platform grants only the minimum client rights and explicitly rejects `ALL APPLICATION PACKAGES`.
 
-The packaged-app handshake transfers the controller pipe name and related environment values through the package's `LocalState`. Together these mechanisms solve activation argument delivery and pipe access, and `MSTest.TestAdapter` now provides the MTP registration hook for the UWP target frameworks, so a UWP project can opt into MTP with `<UseVSTest>false</UseVSTest>`.
+The packaged-app handshake transfers the controller pipe name and related environment values through the package's `LocalState`. Together these mechanisms solve activation argument delivery and pipe access. The remaining limitation is earlier in the lifecycle: selecting and starting a true UWP/AppContainer application as an MTP test host is not yet supported by the SDK/platform routing described above.
 
 For modern UWP, the test-related part of the project is reduced to the SDK declaration:
 
@@ -211,7 +211,7 @@ The launcher therefore decides for itself, per run:
 | --- | --- | --- |
 | Not Windows | no | Nothing changes. Packaged Windows apps are a Windows-only concept. |
 | Supported packaged full-trust layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
-| True UWP/AppContainer packaged layout | yes | Registration, activation arguments, and exact package-SID pipe authorization are implemented, and `MSTest.TestAdapter` ships the MTP integration for the UWP target frameworks. `MSTest.Sdk` defaults `UseUwp=true` to VSTest; opt in with `<UseVSTest>false</UseVSTest>`. |
+| True UWP/AppContainer packaged layout | yes, but unsupported | Registration, activation arguments, and exact package-SID pipe authorization are implemented; SDK/platform routing still does not support starting it as an MTP test host. |
 | Any other layout — including unpackaged WinUI and ordinary console test apps | no | The platform keeps its default in-process / `Process.Start` path. |
 
 So an **unpackaged** WinUI app that references `Microsoft.Testing.Extensions.PackagedApp` (directly, or transitively through a shared `Directory.Packages.props`) pays nothing for it: no extra process, and no copy of the build output into a deployment directory.

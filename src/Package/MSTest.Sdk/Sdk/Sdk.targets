@@ -6,8 +6,7 @@
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' AND '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard' ">false</IsTestApplication>
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
 
-    <!-- UWP/AppContainer test applications default to the VSTest host, but Microsoft.Testing.Platform can be
-         opted into explicitly with <UseVSTest>false</UseVSTest>. -->
+    <!-- True UWP/AppContainer test applications require the VSTest host. -->
     <UseVSTest Condition=" '$(UseVSTest)' == '' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') ">true</UseVSTest>
     <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
   </PropertyGroup>
@@ -21,6 +20,8 @@
   <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
     <Error Condition=" '$(UseWinUI)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') "
            Text="A test project cannot use both WinUI and UWP application models." />
+    <Error Condition=" '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') AND '$(UseVSTest)' != 'true' "
+           Text="Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts. Remove the explicit UseVSTest setting or set &lt;UseVSTest&gt;true&lt;/UseVSTest&gt;." />
     <Error Condition=" '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' == 'None' AND '$(UseVSTest)' == 'true' "
            Text="VSTest does not support unpackaged WinUI test applications. Remove UseVSTest or set &lt;UseVSTest&gt;false&lt;/UseVSTest&gt; to use Microsoft.Testing.Platform." />
   </Target>
