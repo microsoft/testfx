@@ -1,7 +1,7 @@
 ---
 emoji: label
 name: Issue labeler
-description: Add high-confidence canonical labels to newly opened issues from their title and body, and assign the area owner when one is known.
+description: Add high-confidence canonical labels to newly opened issues and assign owners from exact label mappings.
 
 on:
   issues:
@@ -46,79 +46,155 @@ safe-outputs:
     engine:
       id: copilot
       model: detection
-  add-labels:
-    # Keep this explicit because the pinned gh-aw compiler uses exact matching for
-    # allowed labels. `create-if-missing` stays off, so hallucinated labels are
-    # rejected.
-    blocked:
-      # Legacy/ambiguous labels that must never be applied automatically.
-      - area/testing-platform
-      - external/other
-      - "~*"
-      - "*[bot]"
-    allowed:
-      - area/agentic-workflows
-      - area/analyzers
-      - area/assertion
-      - area/branding
-      - area/deployment-item
-      - area/documentation
-      - area/dump
-      - area/fixtures
-      - area/infrastructure
-      - area/localization
-      - area/mstest
-      - area/mstest-sdk
-      - area/mstest-source-generation
-      - area/mtp
-      - area/mtp-azdo-report
-      - area/mtp-github-actions-report
-      - area/mtp-migration
-      - area/mtp-msbuild
-      - area/mtp-observability
-      - area/mtp-reporting
-      - area/mtp-retry
-      - area/mtp-vstest-bridge
-      - area/native-aot
-      - area/parameterized-tests
-      - area/performance
-      - area/server-mode-jsonrpc
-      - area/server-mode-pipe
-      - area/terminal-reporter
-      - area/test-framework
-      - area/timeout
-      - area/trx
-      - area/uwp
-      - area/winui
-      - external/azdo
-      - external/code-coverage
-      - external/dotnet-sdk
-      - external/dotnet-test
-      - external/fakes
-      - external/nuget
-      - external/nunit
-      - external/test-explorer
-      - external/tunit
-      - external/vstest
-      - external/xunit
-      - type/breaking-change
-      - type/flaky-test
-      - type/question
-      - type/regression
-      - type/tech-debt
-      - type/test-gap
-    issues: true
-    pull-requests: false
-    max: 4
-    target: triggering
-  assign-to-user:
-    # Area owners for components that are owned outside the core testfx team.
-    # Keep this list in sync with the "Area ownership" table in the prompt.
-    allowed:
-      - drognanar
-      - fhnaseer
-    max: 1
-    target: triggering
+  jobs:
+    apply-issue-labels:
+      name: Apply issue labels
+      description: Validate and apply canonical labels, then assign the owner from exact resulting labels.
+      runs-on: ubuntu-slim
+      if: needs.detection.outputs.detection_success == 'true'
+      output: Applied issue labels and reconciled the area owner.
+      inputs:
+        labels:
+          description: Comma-separated canonical labels to add, or an empty string.
+          required: true
+          type: string
+      permissions:
+        issues: write
+      steps:
+        - name: Apply labels and reconcile owner
+          uses: actions/github-script@v9.0.0
+          with:
+            script: |
+              const fs = require("fs");
+              const agentOutput = JSON.parse(fs.readFileSync(process.env.GH_AW_AGENT_OUTPUT, "utf8"));
+              const item = agentOutput.items.find(item => item.type === "apply_issue_labels");
+              if (!item || typeof item.labels !== "string") {
+                throw new Error("Missing apply_issue_labels output.");
+              }
+
+              const allowedLabels = new Set([
+                "area/agentic-workflows",
+                "area/analyzers",
+                "area/assertion",
+                "area/branding",
+                "area/deployment-item",
+                "area/documentation",
+                "area/dump",
+                "area/fixtures",
+                "area/infrastructure",
+                "area/localization",
+                "area/mstest",
+                "area/mstest-sdk",
+                "area/mstest-source-generation",
+                "area/mtp",
+                "area/mtp-azdo-report",
+                "area/mtp-github-actions-report",
+                "area/mtp-migration",
+                "area/mtp-msbuild",
+                "area/mtp-observability",
+                "area/mtp-reporting",
+                "area/mtp-retry",
+                "area/mtp-vstest-bridge",
+                "area/native-aot",
+                "area/parameterized-tests",
+                "area/performance",
+                "area/server-mode-jsonrpc",
+                "area/server-mode-pipe",
+                "area/terminal-reporter",
+                "area/test-framework",
+                "area/timeout",
+                "area/trx",
+                "area/uwp",
+                "area/winui",
+                "external/azdo",
+                "external/code-coverage",
+                "external/dotnet-sdk",
+                "external/dotnet-test",
+                "external/fakes",
+                "external/nuget",
+                "external/nunit",
+                "external/test-explorer",
+                "external/tunit",
+                "external/vstest",
+                "external/xunit",
+                "type/breaking-change",
+                "type/flaky-test",
+                "type/question",
+                "type/regression",
+                "type/tech-debt",
+                "type/test-gap",
+              ]);
+              const requestedLabels = [...new Set(
+                item.labels.split(",").map(label => label.trim()).filter(Boolean),
+              )];
+              if (requestedLabels.length > 4) {
+                throw new Error("At most four labels may be added.");
+              }
+
+              const invalidLabels = requestedLabels.filter(label => !allowedLabels.has(label));
+              if (invalidLabels.length > 0) {
+                throw new Error(`Labels are not allowed: ${invalidLabels.join(", ")}`);
+              }
+
+              const { owner, repo } = context.repo;
+              const issue_number = context.issue.number;
+              const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number });
+              const currentLabels = new Set(
+                issue.labels.map(label => typeof label === "string" ? label : label.name),
+              );
+              const labelsToAdd = requestedLabels.filter(label => !currentLabels.has(label));
+              if (labelsToAdd.length > 0) {
+                await github.rest.issues.addLabels({ owner, repo, issue_number, labels: labelsToAdd });
+              }
+
+              const labelOwners = new Map([
+                ["external/test-explorer", "drognanar"],
+                ["external/fakes", "drognanar"],
+                ["external/code-coverage", "fhnaseer"],
+              ]);
+              const resultingLabels = new Set([...currentLabels, ...labelsToAdd]);
+              const matchingOwners = new Set(
+                [...resultingLabels]
+                  .filter(label => labelOwners.has(label))
+                  .map(label => labelOwners.get(label)),
+              );
+              if (matchingOwners.size !== 1) {
+                return;
+              }
+
+              const [assignee] = matchingOwners;
+              if (!(issue.assignees ?? []).some(existingAssignee => existingAssignee.login === assignee)) {
+                try {
+                  await github.rest.issues.addAssignees({
+                    owner,
+                    repo,
+                    issue_number,
+                    assignees: [assignee],
+                  });
+                } catch (assignmentError) {
+                  if (labelsToAdd.length > 0) {
+                    const rollbackResults = await Promise.allSettled(
+                      labelsToAdd.map(name => github.rest.issues.removeLabel({
+                        owner,
+                        repo,
+                        issue_number,
+                        name,
+                      })),
+                    );
+                    const rollbackErrors = rollbackResults
+                      .filter(result => result.status === "rejected")
+                      .map(result => result.reason);
+                    if (rollbackErrors.length > 0) {
+                      throw new AggregateError(
+                        [assignmentError, ...rollbackErrors],
+                        "Owner assignment failed and newly added labels could not be fully rolled back.",
+                      );
+                    }
+                  }
+
+                  throw assignmentError;
+                }
+              }
   noop:
     report-as-issue: false
   report-failure-as-issue: false
@@ -146,54 +222,34 @@ found in them.
 ## Task
 
 Read the triggering issue once with `gh issue view`, including its title, body, and
-current labels. Add only high-confidence labels from the configured allowlist, then
-assign the area owner when the selected labels map to one.
+current labels. Select only high-confidence labels from the configured allowlist, then
+call the atomic label-and-owner safe-output job.
 
 1. Select one most-specific `area/*` label. Add a second area only when the issue
    clearly spans two independently actionable components.
 2. Optionally add one `type/*` label only when the title or body explicitly supports it.
 3. Optionally add one `external/*` label when the reported behavior clearly originates
-   in a component this repository does not own (see the ownership and keyword maps).
+   in a component this repository does not own (see the external component keyword map).
    An `external/*` label is additive: still pick the best `area/*` label when one
    applies, and never use `external/*` merely because a third-party tool is mentioned
    in passing.
 4. Prefer exact package, API, option, or feature names over broad semantic similarity.
 5. Do not remove or replace labels. Do not add priority, state, needs, resolution, or
    dependency labels.
-6. Only use labels that appear in the keyword maps or the ownership table below and
-   in the explicit safe-output allowlist. Never invent a label, and never add a label
-   the issue already has.
+6. Only use labels that appear in the keyword maps below and in the explicit safe-output
+   allowlist. Never invent a label, and never add a label the issue already has.
 7. Keep `needs/triage`; automated labels are suggestions for maintainers to confirm.
 8. Do not add a broad label together with its specific child unless both components
    are independently involved:
    - Prefer a dedicated `area/mtp-*` label over `area/mtp-extensions`.
    - Prefer `area/trx` or `area/dump` over `area/mtp-extensions`.
    - Prefer a focused MSTest label over `area/mstest`.
-9. If no label is strongly supported, or all selected labels already exist, use `noop`
-   instead of the `add-labels` safe output. An assignment may still be emitted when the
-   already-present labels map to an owner and that owner is not assigned yet.
-10. Otherwise use the `add-labels` safe output exactly once with all selected labels.
-
-## Area ownership
-
-Some components are owned outside the core testfx team. When the labels you selected —
-or the labels already on the issue — match a row below, call the `assign-to-user` safe
-output exactly once with that owner.
-
-| Label | Owner |
-| --- | --- |
-| `external/test-explorer` | `drognanar` |
-| `external/fakes` | `drognanar` |
-| `external/code-coverage` | `fhnaseer` |
-
-Assignment rules:
-
-1. Assign at most one user, and only from the table above. Never infer an owner from
-   the issue text, from `git blame`, or from a mention inside the issue.
-2. Assign only when the owning label is high confidence — the same bar as adding it.
-3. Do not assign when the issue already has that owner assigned, or when two rows with
-   different owners match; leave those for a maintainer.
-4. Assignment does not replace labeling: still emit `add-labels` for any new labels.
+9. Call the `apply_issue_labels` safe-output tool exactly once. Pass the selected labels
+   as one comma-separated string, excluding labels already on the issue. Pass an empty
+   string when no new label is strongly supported.
+10. Do not call `noop` and do not select or pass an assignee. The safe-output job
+    validates and applies the labels, then derives the owner only from exact resulting
+    labels in the same deterministic operation.
 
 ## High-confidence keyword map
 
