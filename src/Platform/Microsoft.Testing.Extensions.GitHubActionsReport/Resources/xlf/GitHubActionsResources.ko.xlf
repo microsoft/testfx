@@ -24,8 +24,8 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="translated">하나 이상의 GitHub Actions 작업 요약 섹션이 필요합니다. 유효한 값은 'test-results', 'slow-tests', 'coverage' 또는 'all'입니다.</target>
-        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+        <target state="needs-review-translation">하나 이상의 GitHub Actions 작업 요약 섹션이 필요합니다. 유효한 값은 'test-results', 'slow-tests', 'coverage' 또는 'all'입니다.</target>
+        <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
         <source>Test run failed (exit code {0}: {1})</source>
@@ -139,8 +139,8 @@
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="translated">작업 요약에서 실패한 각 테스트를 실패 메시지, 예외 유형, 원본 위치 및 스택 추적이 포함된 접을 수 있는 섹션으로 확장할지 여부를 설정합니다. 유효한 값은 'on'('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다. GitHub Actions에서 실행할 때 기본값은 'on'입니다.</target>
-        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
+        <target state="needs-review-translation">작업 요약에서 실패한 각 테스트를 실패 메시지, 예외 유형, 원본 위치 및 스택 추적이 포함된 접을 수 있는 섹션으로 확장할지 여부를 설정합니다. 유효한 값은 'on'('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다. GitHub Actions에서 실행할 때 기본값은 'on'입니다.</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="'disable'"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
         <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
@@ -179,8 +179,8 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="translated">지정된 경로에서 바인딩된 GitHub Actions 테스트 기록 스냅샷을 읽고 업데이트합니다. 워크플로는 테스트 실행 전에 이전 스냅샷을 다운로드하고 나중에 업데이트된 파일을 업로드합니다. '--report-gh'가 필요합니다.</target>
-        <note>{Locked="'--report-gh'"}</note>
+        <target state="needs-review-translation">지정된 경로에서 바인딩된 GitHub Actions 테스트 기록 스냅샷을 읽고 업데이트합니다. 워크플로는 테스트 실행 전에 이전 스냅샷을 다운로드하고 나중에 업데이트된 파일을 업로드합니다. '--report-gh'가 필요합니다.</target>
+        <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
@@ -189,13 +189,13 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="translated">불안정한 테스트 컨텍스트에 보존하고 사용할 테스트 기록의 일 수입니다(1-90). 기본값은 30입니다. '--report-gh-history'가 필요합니다.</target>
-        <note>{Locked="'--report-gh-history'"}</note>
+        <target state="needs-review-translation">불안정한 테스트 컨텍스트에 보존하고 사용할 테스트 기록의 일 수입니다(1-90). 기본값은 30입니다. '--report-gh-history'가 필요합니다.</target>
+        <note>{Locked="--report-gh-history"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
-        <target state="translated">'--report-gh-history-window' 옵션을 사용하려면 '--report-gh-history'를 지정해야 합니다.</target>
-        <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
+        <target state="needs-review-translation">'--report-gh-history-window' 옵션을 사용하려면 '--report-gh-history'를 지정해야 합니다.</target>
+        <note>{Locked="--report-gh-history-window"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
@@ -224,13 +224,13 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="translated">잘못된 GitHub Actions 작업 요약 섹션 '{0}'입니다. 유효한 값은 'test-results', 'slow-tests', 'coverage' 또는 'all'입니다. 값은 반복되거나 공백이나 쉼표로 구분할 수 있습니다.</target>
-        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+        <target state="needs-review-translation">잘못된 GitHub Actions 작업 요약 섹션 '{0}'입니다. 유효한 값은 'test-results', 'slow-tests', 'coverage' 또는 'all'입니다. 값은 반복되거나 공백이나 쉼표로 구분할 수 있습니다.</target>
+        <note>{0} is the invalid section name. {Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="translated">값 '{0}'이(가) 잘못되었습니다. 유효한 값은 'on'(또는 'true', 'enable', '1'), 'off'(또는 'false', 'disable', '0') 또는 'on-failure'입니다.</target>
-        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+        <target state="needs-review-translation">값 '{0}'이(가) 잘못되었습니다. 유효한 값은 'on'(또는 'true', 'enable', '1'), 'off'(또는 'false', 'disable', '0') 또는 'on-failure'입니다.</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="'0'"}{Locked="on-failure"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
         <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
@@ -289,13 +289,13 @@
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
         <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="translated">GITHUB_STEP_SUMMARY 파일에 markdown 작업 요약을 작성하는 것을 제어합니다. 유효한 값은 'on'('true', 'enable', '1'도 허용), 'off'('false', 'disable', '0'도 허용) 또는 테스트 호출이 실패할 때만 작성하는 'on-failure'입니다. GitHub Actions에서 실행할 때 기본값은 'on'입니다.</target>
-        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <target state="needs-review-translation">GITHUB_STEP_SUMMARY 파일에 markdown 작업 요약을 작성하는 것을 제어합니다. 유효한 값은 'on'('true', 'enable', '1'도 허용), 'off'('false', 'disable', '0'도 허용) 또는 테스트 호출이 실패할 때만 작성하는 'on-failure'입니다. GitHub Actions에서 실행할 때 기본값은 'on'입니다.</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="on-failure"}{Locked="GITHUB_STEP_SUMMARY"}</note>
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="translated">GitHub Actions 작업 요약에 포함된 콘텐츠를 선택합니다. 'test-results', 'slow-tests', 'coverage' 또는 'all' 값을 하나 이상 지정하세요. 값은 반복되거나 공백이나 쉼표로 구분할 수 있습니다. 기본값은 'all'입니다. '--report-gh'가 필요합니다.</target>
-        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
+        <target state="needs-review-translation">GitHub Actions 작업 요약에 포함된 콘텐츠를 선택합니다. 'test-results', 'slow-tests', 'coverage' 또는 'all' 값을 하나 이상 지정하세요. 값은 반복되거나 공백이나 쉼표로 구분할 수 있습니다. 기본값은 'all'입니다. '--report-gh'가 필요합니다.</target>
+        <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
@@ -304,8 +304,8 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="translated">GitHub Actions 보고서 하위 옵션을 사용하려면 '--{0}'을(를) 지정해야 합니다.</target>
-        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
+        <target state="needs-review-translation">GitHub Actions 보고서 하위 옵션을 사용하려면 '--{0}'을(를) 지정해야 합니다.</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">
         <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>

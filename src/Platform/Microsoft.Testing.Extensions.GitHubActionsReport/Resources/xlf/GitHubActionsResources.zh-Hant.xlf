@@ -24,8 +24,8 @@
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
-        <target state="translated">至少需要一個 GitHub Actions 作業摘要區段。有效值為 'test-results'、'slow-tests'、'coverage' 或 'all'。</target>
-        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+        <target state="needs-review-translation">至少需要一個 GitHub Actions 作業摘要區段。有效值為 'test-results'、'slow-tests'、'coverage' 或 'all'。</target>
+        <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeAnnotationTitle">
         <source>Test run failed (exit code {0}: {1})</source>
@@ -139,8 +139,8 @@
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="translated">啟用或停用將工作摘要中的每個失敗測試展開為可摺疊區段，並顯示其失敗訊息、例外狀況類型、來源位置和堆疊追蹤。有效值為 'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。在 GitHub Actions 上執行時，預設為 'on'。</target>
-        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}</note>
+        <target state="needs-review-translation">啟用或停用將工作摘要中的每個失敗測試展開為可摺疊區段，並顯示其失敗訊息、例外狀況類型、來源位置和堆疊追蹤。有效值為 'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。在 GitHub Actions 上執行時，預設為 'on'。</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="'disable'"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="FailureListTruncated">
         <source>Showing the first {0} of {1} failed tests. See the workflow log or the test report for the remaining failures.</source>
@@ -179,8 +179,8 @@
       </trans-unit>
       <trans-unit id="HistoryOptionDescription">
         <source>Read and update a bounded GitHub Actions test history snapshot at the specified path. The workflow is responsible for downloading the prior snapshot before the test run and uploading the updated file afterward. Requires '--report-gh'.</source>
-        <target state="translated">讀取並更新位於指定路徑的 GitHub Actions 測試歷程記錄快照。此工作流程負責在測試執行前下載先前的快照，並在執行後上傳更新後的檔案。需要 '--report-gh'。</target>
-        <note>{Locked="'--report-gh'"}</note>
+        <target state="needs-review-translation">讀取並更新位於指定路徑的 GitHub Actions 測試歷程記錄快照。此工作流程負責在測試執行前下載先前的快照，並在執行後上傳更新後的檔案。需要 '--report-gh'。</target>
+        <note>{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="HistoryRegressionContext">
         <source>Historical context: passed all {0} prior runs within the {1}-day history window.</source>
@@ -189,13 +189,13 @@
       </trans-unit>
       <trans-unit id="HistoryWindowOptionDescription">
         <source>Number of days of test history to retain and use for flaky-test context (1-90). Defaults to 30. Requires '--report-gh-history'.</source>
-        <target state="translated">要保留並用於不穩定測試內容的測試歷程記錄天數 (1-90)。預設為 30。需要 '--report-gh-history'。</target>
-        <note>{Locked="'--report-gh-history'"}</note>
+        <target state="needs-review-translation">要保留並用於不穩定測試內容的測試歷程記錄天數 (1-90)。預設為 30。需要 '--report-gh-history'。</target>
+        <note>{Locked="--report-gh-history"}</note>
       </trans-unit>
       <trans-unit id="HistoryWindowRequiresHistory">
         <source>The '--report-gh-history-window' option requires '--report-gh-history' to be specified.</source>
-        <target state="translated">'--report-gh-history-window' 選項需要指定 '--report-gh-history'。</target>
-        <note>{Locked="'--report-gh-history-window'"}{Locked="'--report-gh-history'"}</note>
+        <target state="needs-review-translation">'--report-gh-history-window' 選項需要指定 '--report-gh-history'。</target>
+        <note>{Locked="--report-gh-history-window"}{Locked="'--report-gh-history'"}</note>
       </trans-unit>
       <trans-unit id="HistoryWriteFailedWarning">
         <source>Failed to write the GitHub Actions test history snapshot to '{0}': {1}</source>
@@ -224,13 +224,13 @@
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
-        <target state="translated">GitHub Actions 作業摘要區段 '{0}' 無效。有效值為 'test-results'、'slow-tests'、'coverage' 或 'all'。值可以重複，並以空格或逗號分隔。</target>
-        <note>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</note>
+        <target state="needs-review-translation">GitHub Actions 作業摘要區段 '{0}' 無效。有效值為 'test-results'、'slow-tests'、'coverage' 或 'all'。值可以重複，並以空格或逗號分隔。</target>
+        <note>{0} is the invalid section name. {Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummaryValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
-        <target state="translated">'{0}' 值無效。有效值為 'on' (或 'true'、'enable'、'1') 或 'off' (或 'false'、'disable'、'0') 或 'on-failure'。</target>
-        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+        <target state="needs-review-translation">'{0}' 值無效。有效值為 'on' (或 'true'、'enable'、'1') 或 'off' (或 'false'、'disable'、'0') 或 'on-failure'。</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="'0'"}{Locked="on-failure"}{0} is the invalid value.</note>
       </trans-unit>
       <trans-unit id="ModuleDetailsOmitted">
         <source>Failure details were omitted for {0} of {1} test project(s) because the error details already take up too much space. See the workflow log or the test report for their full diagnostics.</source>
@@ -289,13 +289,13 @@
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
         <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="translated">控制將 Markdown 工作摘要寫入至 GITHUB_STEP_SUMMARY 檔案。有效值為 'on' (也接受 'true'、'enable'、'1')、'off' (也接受 'false'、'disable'、'0')，或 'on-failure'，僅在測試叫用失敗時寫入。在 GitHub Actions 上執行時，預設為 'on'。</target>
-        <note>{Locked="'on'"}{Locked="'off'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <target state="needs-review-translation">控制將 Markdown 工作摘要寫入至 GITHUB_STEP_SUMMARY 檔案。有效值為 'on' (也接受 'true'、'enable'、'1')、'off' (也接受 'false'、'disable'、'0')，或 'on-failure'，僅在測試叫用失敗時寫入。在 GitHub Actions 上執行時，預設為 'on'。</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="on-failure"}{Locked="GITHUB_STEP_SUMMARY"}</note>
       </trans-unit>
       <trans-unit id="StepSummarySectionsOptionDescription">
         <source>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</source>
-        <target state="translated">選取要包含在 GitHub Actions 作業摘要中的內容。請指定一或多個值，可重複，並以空格或逗號分隔：'test-results'、'slow-tests'、'coverage' 或 'all'。預設為 'all'。需要 '--report-gh'。</target>
-        <note>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</note>
+        <target state="needs-review-translation">選取要包含在 GitHub Actions 作業摘要中的內容。請指定一或多個值，可重複，並以空格或逗號分隔：'test-results'、'slow-tests'、'coverage' 或 'all'。預設為 'all'。需要 '--report-gh'。</target>
+        <note>{Locked="test-results"}{Locked="slow-tests"}{Locked="coverage"}{Locked="all"}{Locked="--report-gh"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
@@ -304,8 +304,8 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="translated">GitHub Actions 報告子選項需要指定 '--{0}'。</target>
-        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
+        <target state="needs-review-translation">GitHub Actions 報告子選項需要指定 '--{0}'。</target>
+        <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">
         <source>condensed to one line because the summary already takes up too much space. See the workflow log or the test report for full results.</source>
