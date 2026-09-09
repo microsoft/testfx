@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Adapted from https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs
+using System.Buffers.Binary;
+
 using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
@@ -414,7 +416,7 @@ internal sealed class DotnetMuxerLocator
             headerReader.Read(magicBytes, 0, magicBytes.Length);
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 
-            uint magic = BitConverter.ToUInt32(magicBytes, 0);
+            uint magic = BinaryPrimitives.ReadUInt32BigEndian(magicBytes);
 
             // Validate magic bytes to ensure this is a valid Mach-O binary
             if (magic is not (MachOMagic32BigEndian or MachOMagic64BigEndian or MachOMagic32LittleEndian or MachOMagic64LittleEndian or MachOMagicFatBigEndian))
@@ -439,7 +441,9 @@ internal sealed class DotnetMuxerLocator
             headerReader.Read(cpuInfoBytes, 0, cpuInfoBytes.Length);
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 
-            uint cpuInfo = BitConverter.ToUInt32(cpuInfoBytes, 0);
+            uint cpuInfo = magic is MachOMagic32LittleEndian or MachOMagic64LittleEndian
+                ? BinaryPrimitives.ReadUInt32LittleEndian(cpuInfoBytes)
+                : BinaryPrimitives.ReadUInt32BigEndian(cpuInfoBytes);
             PlatformArchitecture? architecture = (MacOsCpuType)cpuInfo switch
             {
                 MacOsCpuType.Arm64Magic or MacOsCpuType.Arm64Cigam => PlatformArchitecture.ARM64,

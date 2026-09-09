@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers.Binary;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 
@@ -232,13 +233,13 @@ public sealed class DotnetMuxerLocatorTests
     private static byte[] CreateFatMachoHeader(uint magic, DotnetMuxerLocator.MacOsCpuType cpuType)
     {
         byte[] bytes = new byte[28];
-        BitConverter.GetBytes(magic).CopyTo(bytes, 0);
-        BitConverter.GetBytes(1u).CopyTo(bytes, 4); // nfat_arch
-        BitConverter.GetBytes((uint)cpuType).CopyTo(bytes, 8); // fat_arch[0].cputype
-        BitConverter.GetBytes(0u).CopyTo(bytes, 12); // fat_arch[0].cpusubtype
-        BitConverter.GetBytes((uint)bytes.Length).CopyTo(bytes, 16); // fat_arch[0].offset
-        BitConverter.GetBytes(0u).CopyTo(bytes, 20); // fat_arch[0].size
-        BitConverter.GetBytes(0u).CopyTo(bytes, 24); // fat_arch[0].align
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(0, 4), magic);
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(4, 4), 1u); // nfat_arch
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(8, 4), (uint)cpuType); // fat_arch[0].cputype
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(12, 4), 0u); // fat_arch[0].cpusubtype
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(16, 4), (uint)bytes.Length); // fat_arch[0].offset
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(20, 4), 0u); // fat_arch[0].size
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(24, 4), 0u); // fat_arch[0].align
         return bytes;
     }
 
