@@ -767,12 +767,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</target>
+        <target state="translated">테스트 '{0}'의 플랫폼 호환성 특성은 동등한 '[OSCondition]' 특성으로 표시되지 않습니다.</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
         <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
-        <target state="new">Platform compatibility attributes should be consistent with '[OSCondition]'</target>
+        <target state="translated">플랫폼 호환성 특성은 '[OSCondition]'과 일치해야 함</target>
         <note>{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">

@@ -762,17 +762,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</target>
+        <target state="translated">'SupportedOSPlatformAttribute' と 'UnsupportedOSPlatformAttribute' は、プラットフォーム互換性の分析に使用されますが、MSTest の実行を制御するものではありません。これらの属性を使用するテスト メソッドとテスト クラスでは、サポートされていないテストが実行時にスキップされるように、同等の '[OSCondition]' も宣言する必要があります。</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</target>
+        <target state="translated">テスト '{0}' のプラットフォーム互換性属性が、同等の '[OSCondition]' 属性で表されていません</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
         <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
-        <target state="new">Platform compatibility attributes should be consistent with '[OSCondition]'</target>
+        <target state="translated">プラットフォーム互換性属性は '[OSCondition]' と一致している必要があります</target>
         <note>{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
