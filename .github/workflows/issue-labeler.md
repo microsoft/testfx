@@ -51,6 +51,7 @@ safe-outputs:
       name: Apply issue labels
       description: Validate and apply canonical labels, then assign the owner from exact resulting labels.
       runs-on: ubuntu-slim
+      if: needs.detection.outputs.detection_success == 'true'
       output: Applied issue labels and reconciled the area owner.
       inputs:
         labels:
@@ -163,12 +164,36 @@ safe-outputs:
 
               const [assignee] = matchingOwners;
               if (!(issue.assignees ?? []).some(existingAssignee => existingAssignee.login === assignee)) {
-                await github.rest.issues.addAssignees({
-                  owner,
-                  repo,
-                  issue_number,
-                  assignees: [assignee],
-                });
+                try {
+                  await github.rest.issues.addAssignees({
+                    owner,
+                    repo,
+                    issue_number,
+                    assignees: [assignee],
+                  });
+                } catch (assignmentError) {
+                  if (labelsToAdd.length > 0) {
+                    const rollbackResults = await Promise.allSettled(
+                      labelsToAdd.map(name => github.rest.issues.removeLabel({
+                        owner,
+                        repo,
+                        issue_number,
+                        name,
+                      })),
+                    );
+                    const rollbackErrors = rollbackResults
+                      .filter(result => result.status === "rejected")
+                      .map(result => result.reason);
+                    if (rollbackErrors.length > 0) {
+                      throw new AggregateError(
+                        [assignmentError, ...rollbackErrors],
+                        "Owner assignment failed and newly added labels could not be fully rolled back.",
+                      );
+                    }
+                  }
+
+                  throw assignmentError;
+                }
               }
   noop:
     report-as-issue: false
