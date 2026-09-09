@@ -216,7 +216,7 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</value>
-    <comment>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</comment>
+    <comment>{Locked=&quot;auto&quot;}{Locked=&quot;&apos;on&apos;&quot;}{Locked=&quot;true&quot;}{Locked=&quot;enable&quot;}{Locked=&quot;1&quot;}{Locked=&quot;off&quot;}{Locked=&quot;false&quot;}{Locked=&quot;disable&quot;}{Locked=&quot;0&quot;}{Locked=&quot;--progress off&quot;}{Locked=&quot;--ansi&quot;}{Locked=&quot;--no-ansi&quot;}</comment>
   </data>
   <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
     <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
@@ -258,11 +258,11 @@ This option takes precedence over the deprecated --no-progress flag.</value>
   <data name="TerminalOutputOptionDescription" xml:space="preserve">
     <value>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</value>
-    <comment>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</comment>
+    <comment>{Locked=&quot;Minimal&quot;}{Locked=&quot;Normal&quot;}{Locked=&quot;Detailed&quot;}{Locked=&quot;--show-test-results&quot;}</comment>
   </data>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
     <value>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</value>
-    <comment>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</comment>
+    <comment>{Locked=&quot;--output&quot;}{Locked=&quot;Minimal&quot;}{Locked=&quot;Normal&quot;}{Locked=&quot;Detailed&quot;}</comment>
   </data>
   <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
     <value>Determines when to show captured standard output of a test.
@@ -299,19 +299,19 @@ Passing the option without a value turns it on.</value>
     <value>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</value>
-    <comment>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</comment>
+    <comment>Do not localize the values {Locked=&quot;&apos;passed&apos;&quot;}{Locked=&quot;failed&quot;}{Locked=&quot;skipped&quot;}{Locked=&quot;all&quot;}{Locked=&quot;none&quot;}{Locked=&quot;--output&quot;}{Locked=&quot;Minimal&quot;}{Locked=&quot;Normal&quot;}{Locked=&quot;Detailed&quot;}{Locked=&quot;--show-test-results&quot;}.</comment>
   </data>
   <data name="TerminalShowTestResultsOptionUnknownValueInvalidArgument" xml:space="preserve">
     <value>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
-    <comment>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</comment>
+    <comment>{Locked=&quot;--show-test-results&quot;}{Locked=&quot;passed&quot;}{Locked=&quot;failed&quot;}{Locked=&quot;skipped&quot;}{Locked=&quot;all&quot;}{Locked=&quot;none&quot;}</comment>
   </data>
   <data name="TerminalShowTestResultsOptionEmptySelectionInvalidArgument" xml:space="preserve">
     <value>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
-    <comment>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</comment>
+    <comment>{Locked=&quot;--show-test-results&quot;}{Locked=&quot;passed&quot;}{Locked=&quot;failed&quot;}{Locked=&quot;skipped&quot;}{Locked=&quot;all&quot;}{Locked=&quot;none&quot;}</comment>
   </data>
   <data name="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument" xml:space="preserve">
     <value>--show-test-results value 'all' or 'none' cannot be combined with any other value.</value>
-    <comment>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</comment>
+    <comment>{Locked=&quot;--show-test-results&quot;}{Locked=&quot;all&quot;}{Locked=&quot;none&quot;}</comment>
   </data>
   <data name="StandardError" xml:space="preserve">
     <value>Error output</value>
