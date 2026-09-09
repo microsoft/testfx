@@ -2,11 +2,15 @@ name: Assign issue area owner
 
 on:
   issues:
-    types: [labeled]
+    types: [labeled, unlabeled]
 
 permissions:
   contents: none
   issues: write
+
+concurrency:
+  group: assign-issue-area-owner-${{ github.event.issue.number }}
+  cancel-in-progress: false
 
 jobs:
   assign:
@@ -22,6 +26,7 @@ jobs:
               ["external/fakes", "drognanar"],
               ["external/code-coverage", "fhnaseer"],
             ]);
+            const mappedOwners = new Set(labelOwners.values());
 
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
@@ -33,18 +38,52 @@ jobs:
                 .map(label => labelOwners.get(label)),
             );
 
-            if (matchingOwners.size !== 1) {
-              return;
-            }
-
-            const [assignee] = matchingOwners;
-            if ((issue.assignees ?? []).some(existingAssignee => existingAssignee.login === assignee)) {
-              return;
-            }
-
-            await github.rest.issues.addAssignees({
+            const events = await github.paginate(github.rest.issues.listEventsForTimeline, {
               owner,
               repo,
               issue_number,
-              assignees: [assignee],
+              per_page: 100,
             });
+            const assignmentActors = new Map();
+            for (const event of events) {
+              const assignee = event.assignee?.login;
+              if (!mappedOwners.has(assignee)) {
+                continue;
+              }
+
+              if (event.event === "assigned") {
+                assignmentActors.set(assignee, event.actor?.login);
+              } else if (event.event === "unassigned") {
+                assignmentActors.delete(assignee);
+              }
+            }
+
+            const currentAssignees = new Set(
+              (issue.assignees ?? []).map(existingAssignee => existingAssignee.login),
+            );
+            const automatedMappedAssignees = [...currentAssignees].filter(
+              assignee => mappedOwners.has(assignee)
+                && assignmentActors.get(assignee) === "github-actions[bot]",
+            );
+            const [desiredAssignee] = matchingOwners.size === 1 ? matchingOwners : [];
+            const assigneesToRemove = automatedMappedAssignees.filter(
+              assignee => assignee !== desiredAssignee,
+            );
+
+            if (assigneesToRemove.length > 0) {
+              await github.rest.issues.removeAssignees({
+                owner,
+                repo,
+                issue_number,
+                assignees: assigneesToRemove,
+              });
+            }
+
+            if (desiredAssignee && !currentAssignees.has(desiredAssignee)) {
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number,
+                assignees: [desiredAssignee],
+              });
+            }

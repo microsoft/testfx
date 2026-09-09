@@ -152,9 +152,8 @@ assign users; the separate assignment workflow handles exact owner mappings from
 4. Prefer exact package, API, option, or feature names over broad semantic similarity.
 5. Do not remove or replace labels. Do not add priority, state, needs, resolution, or
    dependency labels.
-6. Only use labels that appear in the keyword maps or the ownership table below and
-   in the explicit safe-output allowlist. Never invent a label, and never add a label
-   the issue already has.
+6. Only use labels that appear in the keyword maps below and in the explicit safe-output
+   allowlist. Never invent a label, and never add a label the issue already has.
 7. Keep `needs/triage`; automated labels are suggestions for maintainers to confirm.
 8. Do not add a broad label together with its specific child unless both components
    are independently involved:
