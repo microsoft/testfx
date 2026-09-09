@@ -194,7 +194,6 @@ internal sealed partial class GitHubActionsSummaryReporter
             module.SkippedTests,
             module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
 
-
     private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
         => modules.Count(candidate =>
             string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)

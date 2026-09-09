@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
-using Microsoft.Testing.Platform;
-
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal sealed partial class GitHubActionsSummaryReporter
@@ -39,7 +36,6 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// than <see cref="DetailsOmittedNoticeStrength"/>, because results are missing rather than merely shortened.
     /// </summary>
     internal const int SectionsRemovedNoticeStrength = 2;
-
 
     /// <summary>
     /// What a combined <c>dotnet test</c> rendering produced, and what it had to give up to fit GitHub's cap.

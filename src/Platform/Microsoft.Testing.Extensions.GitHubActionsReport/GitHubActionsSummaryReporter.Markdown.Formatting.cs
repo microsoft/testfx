@@ -10,7 +10,6 @@ internal sealed partial class GitHubActionsSummaryReporter
     private static string FormatDuration(TimeSpan duration)
         => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
 
-
     private static string EscapeInlineCode(string value)
         => RoslynString.IsNullOrEmpty(value)
             ? value
