@@ -221,8 +221,16 @@ public sealed class DotnetMuxerLocatorTests
         }
 
         byte[] bytes = new byte[8];
-        BitConverter.GetBytes(magic).CopyTo(bytes, 0);
-        BitConverter.GetBytes((uint)cpuType).CopyTo(bytes, 4);
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(0, 4), magic);
+        if (magic is MachOMagic32LittleEndian or MachOMagic64LittleEndian)
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(4, 4), (uint)cpuType);
+        }
+        else
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(4, 4), (uint)cpuType);
+        }
+
         return bytes;
     }
 
