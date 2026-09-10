@@ -6,6 +6,7 @@ using System.Xml.Linq;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public class TrxTests : AcceptanceTestBase<TrxTests.TestAssetFixture>
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
