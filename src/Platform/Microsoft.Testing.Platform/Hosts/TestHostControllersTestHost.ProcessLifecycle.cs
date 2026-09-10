@@ -97,8 +97,8 @@ internal sealed partial class TestHostControllersTestHost
                     await _logger.LogDebugAsync(
                         $"Test host controller named-pipe connection timeout is '{timeoutSeconds}' seconds.").ConfigureAwait(false);
 
-                    // Wait for the test host controller to connect.
-                    await _logger.LogDebugAsync("Waiting for the test host controller to connect to the named pipe.").ConfigureAwait(false);
+                    // Wait for the test host process to connect.
+                    await _logger.LogDebugAsync("Waiting for the test host process to connect to the named pipe.").ConfigureAwait(false);
                     bool connected = await WaitForTestHostControllerConnectionAsync(
                         testHostControllerIpc.WaitConnectionAsync,
                         timeoutSeconds,
