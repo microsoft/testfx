@@ -28,10 +28,12 @@ executing repository or artifact code.
    `TestResults_*` and `Windows_App_Model_Diagnostics_*` artifacts for up to 12
    completed builds in the previous 30 days. Read CTRF first, then TRX and JUnit
    when CTRF is absent or lacks the relevant test. If `incomplete` is true,
-   report the gap and do not claim the absence of prior occurrences. Prefer
-   native CTRF retry metadata and matching unaffected matrix legs over broad
-   build-level inference. Do not infer retry or flaky state from TRX/JUnit
-   unless separate attempt records prove fail-then-pass.
+   report the causes listed in `incompleteReasons` and do not claim the absence
+   of prior occurrences. Prefer native CTRF retry metadata and matching
+   unaffected matrix legs over broad build-level inference. Do not infer retry
+   or flaky state from TRX/JUnit unless separate attempt records prove
+   fail-then-pass. Pull-request history excludes slow-only candidates because
+   duration trends are evaluated only on branch builds.
 4. A retry is not evidence of flakiness by itself. Call a test flaky only when a
    failed attempt later passed for the same code and environment. Distinguish a
    likely environmental flake (runner loss, network/service timeout, disk
@@ -95,18 +97,18 @@ Every pull-request comment must:
 
 - target `GH_AW_PR_NUMBER` explicitly in the `add_comment` call;
 - state whether the analysis is preliminary or final;
-- identify the Azure build and affected build legs;
+- start with exactly
+  `**Preliminary test-triage analysis — Azure Pipelines build <build-id>**` or
+  `**Final test-triage resolution — Azure Pipelines build <build-id>**`,
+  substituting the actual build ID;
+- identify the Azure build and affected build legs without emitting an Azure
+  DevOps URL, because safe-output URL sanitization can corrupt those links;
 - summarize the failure signatures, affected tests, confidence, and next
   concrete diagnostic or fix step;
 - state that other build legs may still change the conclusion when
   `metadata.json.analysisMode` is `early`;
 - report an inconclusive final resolution rather than claiming the tests are
-  clean when `metadata.json.evidenceIncomplete` is `true`;
-- end with exactly one durable state marker, substituting the actual build ID:
-  `<!-- testfx-pipeline-triage-state: preliminary; build: <build-id> -->` for
-  early analysis or
-  `<!-- testfx-pipeline-triage-state: final; build: <build-id> -->` for completed
-  analysis.
+  clean when `metadata.json.evidenceIncomplete` is `true`.
 
 Every created issue must:
 

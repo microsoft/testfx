@@ -164,6 +164,7 @@ jobs:
           BUILD_PR_SHA=$(jq -r '.triggerInfo["pr.sourceSha"] // empty' "${BUILD_JSON}")
           BUILD_MERGE_SHA=$(jq -r '.sourceVersion // empty' "${BUILD_JSON}")
           HISTORY_BRANCH="${SOURCE_BRANCH}"
+          HISTORY_INCLUDE_SLOW=true
           HISTORY_BRANCH_INCOMPLETE=false
           HAS_PENDING_PRELIMINARY_COMMENT=false
           if [[ -n "${PR_NUMBER}" ]]; then
@@ -203,11 +204,14 @@ jobs:
               "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
               --jq '.[] | select(.user.login == "'"${SAFE_OUTPUT_AUTHOR}"'") |
                 (.body // "") as $body |
-                if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
-                    ($body | contains("<!-- testfx-pipeline-triage-state: preliminary; build: '"${BUILD_ID}"' -->"))) then
+                if (($body | contains("<!-- gh-aw-workflow-call-id: '"${GH_REPOSITORY}"'/pipeline-test-triage -->")) and
+                    (($body | contains("**Preliminary test-triage analysis — Azure Pipelines build '"${BUILD_ID}"'**")) or
+                     ($body | contains("**Preliminary analysis** of Azure Pipelines build ['"${BUILD_ID}"']")))) then
                   [.id, "preliminary"]
-                elif (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
-                      ($body | contains("<!-- testfx-pipeline-triage-state: final; build: '"${BUILD_ID}"' -->"))) then
+                elif (($body | contains("<!-- gh-aw-workflow-call-id: '"${GH_REPOSITORY}"'/pipeline-test-triage -->")) and
+                      (($body | contains("**Final test-triage resolution — Azure Pipelines build '"${BUILD_ID}"'**")) or
+                       (($body | contains("## Pipeline Test Triage — Final Resolution")) and
+                        ($body | contains("**Build:** ['"${BUILD_ID}"']"))))) then
                   [.id, "final"]
                 else
                   empty
@@ -227,11 +231,13 @@ jobs:
                 "repos/${GH_REPOSITORY}/issues/${PR_NUMBER}/comments" \
                 --jq '.[] | select(.user.login == "'"${SAFE_OUTPUT_AUTHOR}"'") |
                   (.body // "") as $body |
-                  if (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
-                      ($body | contains("<!-- testfx-pipeline-triage-state: preliminary;"))) then
+                  if (($body | contains("<!-- gh-aw-workflow-call-id: '"${GH_REPOSITORY}"'/pipeline-test-triage -->")) and
+                      (($body | contains("**Preliminary test-triage analysis — Azure Pipelines build ")) or
+                       ($body | contains("**Preliminary analysis** of Azure Pipelines build ")))) then
                     [.id, "preliminary"]
-                  elif (($body | contains("<!-- gh-aw-workflow-id: pipeline-test-triage -->")) and
-                        ($body | contains("<!-- testfx-pipeline-triage-state: final;"))) then
+                  elif (($body | contains("<!-- gh-aw-workflow-call-id: '"${GH_REPOSITORY}"'/pipeline-test-triage -->")) and
+                        (($body | contains("**Final test-triage resolution — Azure Pipelines build ")) or
+                         ($body | contains("## Pipeline Test Triage — Final Resolution")))) then
                     [.id, "final"]
                   else
                     empty
@@ -251,6 +257,7 @@ jobs:
               HISTORY_BRANCH="refs/heads/main"
               HISTORY_BRANCH_INCOMPLETE=true
             fi
+            HISTORY_INCLUDE_SLOW=false
           fi
           FINAL_PR_RESOLUTION=false
           if [[ "${ANALYSIS_MODE}" == "full" &&
@@ -537,20 +544,24 @@ jobs:
 
           HISTORY_JSON="${EVIDENCE_DIR}/history.json"
           if [[ "${ANALYSIS_MODE}" == "early" ]]; then
-            printf '{"builds":[],"incomplete":true}\n' > "${HISTORY_JSON}"
+            printf '{"builds":[],"incomplete":true,"incompleteReasons":["early-analysis"]}\n' > "${HISTORY_JSON}"
           else
             if ! python3 "${TRIAGE_TOOL}" history \
               "${ADO_API}" \
               "${ADO_BUILD_DEFINITION_ID}" \
               "${HISTORY_BRANCH}" \
               "${BUILD_ID}" \
+              "${HISTORY_INCLUDE_SLOW}" \
               "${RESULTS_JSON}" \
               "${HISTORY_JSON}"; then
               echo "::warning::Historical test evidence collection failed."
-              printf '{"builds":[],"incomplete":true}\n' > "${HISTORY_JSON}"
+              printf '{"builds":[],"incomplete":true,"incompleteReasons":["history-collection-failed"]}\n' > "${HISTORY_JSON}"
             fi
             if [[ "${HISTORY_BRANCH_INCOMPLETE}" == "true" ]]; then
-              jq '.incomplete = true' "${HISTORY_JSON}" > "${HISTORY_JSON}.tmp"
+              jq '
+                .incomplete = true |
+                .incompleteReasons = ((.incompleteReasons // []) + ["base-branch-unresolved"] | unique)
+              ' "${HISTORY_JSON}" > "${HISTORY_JSON}.tmp"
               mv "${HISTORY_JSON}.tmp" "${HISTORY_JSON}"
             fi
           fi
@@ -733,7 +744,7 @@ safe-outputs:
       id: copilot
       model: detection
   messages:
-    footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})"
+    footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix}"
   create-issue:
     title-prefix: "[pipeline-test-triage] "
     labels: [type/automation, type/ai-inspected]
@@ -768,7 +779,10 @@ The trusted collector has placed bounded evidence under
   carry retry attempts, flakiness, and extension metadata.
 - `history.json` contains bounded, securely collected matching results from up
   to 12 completed builds in the previous 30 days. Its `incomplete` flag means
-  the analyst must not claim the absence of prior occurrences.
+  the analyst must not claim the absence of prior occurrences, and
+  `incompleteReasons` explains which collection limit or failure caused the gap.
+  Pull-request history is limited to failures and retries because duration
+  trends are evaluated only on branch builds.
 - `timeline.compact.json` contains failed/warned/retried pipeline records.
 - `artifacts.compact.json` contains links to relevant test and diagnostic
   artifacts.
@@ -795,11 +809,6 @@ explicitly preliminary comment to `GH_AW_PR_NUMBER` with `add_comment`, naming
 request, post one final resolution comment that supersedes the preliminary
 comment, including a clearing or inconclusive resolution when no issue is
 warranted, and create an issue only when the playbook's durable threshold is met.
-End preliminary comments with
-`<!-- testfx-pipeline-triage-state: preliminary; build: GH_AW_ADO_BUILD_ID -->`
-and final comments with
-`<!-- testfx-pipeline-triage-state: final; build: GH_AW_ADO_BUILD_ID -->`,
-substituting the actual build ID. Emit exactly one state marker per comment.
 Immediately before any `add_comment` or `create_issue` call for a pull-request build,
 re-read that PR with the GitHub tool and compare its current head and merge SHAs
 with `GH_AW_EXPECTED_PR_HEAD_SHA` and `GH_AW_EXPECTED_PR_MERGE_SHA`. Call `noop`

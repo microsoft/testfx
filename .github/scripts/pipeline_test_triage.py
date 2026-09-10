@@ -124,6 +124,68 @@ def artifact_name(path: str, artifact_dir: str) -> str:
     return relative.split("/", 1)[0]
 
 
+def artifact_family(name: str) -> str:
+    return re.sub(r"_Attempt[0-9]+$", "", name, flags=re.IGNORECASE).casefold()
+
+
+def select_history_artifacts(
+    artifacts: list[dict[str, object]],
+    candidate_artifact_families: set[str],
+) -> list[dict[str, object]]:
+    return sorted(
+        [
+            artifact
+            for artifact in artifacts
+            if re.match(
+                r"^(TestResults_|Windows_App_Model_Diagnostics_)",
+                str(artifact.get("name", "")),
+                re.IGNORECASE,
+            )
+            and (
+                not candidate_artifact_families
+                or artifact_family(str(artifact.get("name", "")))
+                in candidate_artifact_families
+            )
+        ],
+        key=lambda artifact: str(artifact.get("name", "")),
+    )
+
+
+def history_candidates(
+    current_results: list[dict[str, object]],
+    include_slow: bool,
+) -> tuple[set[str], set[str]]:
+    candidate_names: set[str] = set()
+    candidate_artifact_families: set[str] = set()
+    for result in current_results:
+        status = result.get("status")
+        duration = result.get("duration")
+        is_candidate = (
+            status in ("failed", "other")
+            or result.get("flaky") is True
+            or bool(result.get("retryAttempts"))
+            or (
+                include_slow
+                and isinstance(duration, (int, float))
+                and duration >= 60000
+            )
+        )
+        if not is_candidate:
+            continue
+
+        source_file = result.get("sourceFile")
+        if isinstance(source_file, str) and source_file:
+            artifact = source_file.replace("\\", "/").split("/", 1)[0]
+            candidate_artifact_families.add(artifact_family(artifact))
+        extra = result.get("extra")
+        display_name = extra.get("displayName") if isinstance(extra, dict) else None
+        for name in (result.get("name"), display_name):
+            if isinstance(name, str) and name:
+                candidate_names.add(name.casefold())
+
+    return candidate_names, candidate_artifact_families
+
+
 def local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
@@ -599,37 +661,26 @@ def collect_history(
     definition_id: str,
     source_branch: str,
     current_build_id: str,
+    include_slow: bool,
     current_results_path: str,
     output_path: str,
 ) -> None:
     with open(current_results_path, encoding="utf-8") as current_file:
         current_results = json.load(current_file)
 
-    candidate_names: set[str] = set()
-    for result in current_results:
-        if not isinstance(result, dict):
-            continue
-        status = result.get("status")
-        duration = result.get("duration")
-        is_candidate = (
-            status in ("failed", "other")
-            or result.get("flaky") is True
-            or bool(result.get("retryAttempts"))
-            or isinstance(duration, (int, float)) and duration >= 60000
-        )
-        if not is_candidate:
-            continue
-        extra = result.get("extra")
-        display_name = extra.get("displayName") if isinstance(extra, dict) else None
-        for name in (result.get("name"), display_name):
-            if isinstance(name, str) and name:
-                candidate_names.add(name.casefold())
+    candidates = [result for result in current_results if isinstance(result, dict)]
+    candidate_names, candidate_artifact_families = history_candidates(
+        candidates,
+        include_slow=include_slow,
+    )
 
     history = {
         "branch": "refs/heads/main" if source_branch.startswith("refs/pull/") else source_branch,
         "candidateNames": sorted(candidate_names),
+        "candidateArtifactFamilies": sorted(candidate_artifact_families),
         "builds": [],
         "incomplete": False,
+        "incompleteReasons": [],
         "downloadedBytes": 0,
         "selectedUncompressedBytes": 0,
         "slowRegressions": [],
@@ -656,11 +707,13 @@ def collect_history(
         builds_payload = fetch_json(f"{api_base.rstrip('/')}/build/builds?{query}")
     except (OSError, ValueError, json.JSONDecodeError):
         history["incomplete"] = True
+        history["incompleteReasons"].append("build-list-fetch-failed")
         builds_payload = {"value": []}
 
     with tempfile.TemporaryDirectory(prefix="testfx-triage-history-") as temporary_directory:
+        budget_exhausted = False
         for build in builds_payload.get("value", []):
-            if len(history["builds"]) >= 12:
+            if len(history["builds"]) >= 12 or budget_exhausted:
                 break
             build_id = str(build.get("id", ""))
             if not build_id.isdigit() or build_id == current_build_id:
@@ -680,23 +733,21 @@ def collect_history(
                 )
             except (OSError, ValueError, json.JSONDecodeError):
                 history["incomplete"] = True
+                history["incompleteReasons"].append("artifact-list-fetch-failed")
                 history["builds"].append(build_record)
                 continue
 
-            all_artifacts = sorted(
+            all_artifacts = select_history_artifacts(
                 [
                     artifact
                     for artifact in artifacts_payload.get("value", [])
-                    if re.match(
-                        r"^(TestResults_|Windows_App_Model_Diagnostics_)",
-                        str(artifact.get("name", "")),
-                        re.IGNORECASE,
-                    )
+                    if isinstance(artifact, dict)
                 ],
-                key=lambda artifact: str(artifact.get("name", "")),
+                candidate_artifact_families,
             )
             if len(all_artifacts) > 8:
                 history["incomplete"] = True
+                history["incompleteReasons"].append("artifact-count-limit")
             artifacts = all_artifacts[:8]
             if not artifacts:
                 continue
@@ -705,6 +756,8 @@ def collect_history(
                 remaining_download = MAX_HISTORY_DOWNLOAD_BYTES - int(history["downloadedBytes"])
                 if remaining_download <= 0:
                     history["incomplete"] = True
+                    history["incompleteReasons"].append("download-budget-exhausted")
+                    budget_exhausted = True
                     break
                 maximum_download = min(MAX_HISTORY_ARTIFACT_BYTES, remaining_download)
                 archive = os.path.join(temporary_directory, f"{build_id}-{index}.zip")
@@ -721,6 +774,8 @@ def collect_history(
                         > MAX_HISTORY_EXTRACTED_BYTES
                     ):
                         history["incomplete"] = True
+                        history["incompleteReasons"].append("extraction-budget-exhausted")
+                        budget_exhausted = True
                         os.remove(archive)
                         break
                     history["selectedUncompressedBytes"] = (
@@ -733,6 +788,7 @@ def collect_history(
                         int(history["downloadedBytes"]) + error.downloaded_bytes,
                     )
                     history["incomplete"] = True
+                    history["incompleteReasons"].append("artifact-download-failed")
                     continue
                 except (
                     OSError,
@@ -741,6 +797,7 @@ def collect_history(
                     zipfile.BadZipFile,
                 ):
                     history["incomplete"] = True
+                    history["incompleteReasons"].append("artifact-read-failed")
                     continue
                 finally:
                     if os.path.exists(archive):
@@ -758,10 +815,12 @@ def collect_history(
                         build_record["results"].append(record)
                         if len(build_record["results"]) >= 500:
                             history["incomplete"] = True
+                            history["incompleteReasons"].append("result-count-limit")
                             break
 
             history["builds"].append(build_record)
 
+    history["incompleteReasons"] = sorted(set(history["incompleteReasons"]))
     historical_results = [
         result
         for build in history["builds"]
@@ -803,6 +862,7 @@ def main() -> None:
     history_parser.add_argument("definition_id")
     history_parser.add_argument("source_branch")
     history_parser.add_argument("current_build_id")
+    history_parser.add_argument("include_slow", choices=("true", "false"))
     history_parser.add_argument("current_results")
     history_parser.add_argument("output")
 
@@ -826,6 +886,7 @@ def main() -> None:
             args.definition_id,
             args.source_branch,
             args.current_build_id,
+            args.include_slow == "true",
             args.current_results,
             args.output,
         )
