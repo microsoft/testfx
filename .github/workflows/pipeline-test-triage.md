@@ -206,10 +206,12 @@ jobs:
                 (.body // "") as $body |
                 if (($body | contains("<!-- gh-aw-workflow-call-id: '"${GH_REPOSITORY}"'/pipeline-test-triage -->")) and
                     (($body | contains("**Preliminary test-triage analysis — Azure Pipelines build '"${BUILD_ID}"'**")) or
+                     ($body | contains("**Preliminary test-triage analysis — Azure Pipelines build ['"${BUILD_ID}"']")) or
                      ($body | contains("**Preliminary analysis** of Azure Pipelines build ['"${BUILD_ID}"']")))) then
                   [.id, "preliminary"]
                 elif (($body | contains("<!-- gh-aw-workflow-call-id: '"${GH_REPOSITORY}"'/pipeline-test-triage -->")) and
                       (($body | contains("**Final test-triage resolution — Azure Pipelines build '"${BUILD_ID}"'**")) or
+                       ($body | contains("**Final test-triage resolution — Azure Pipelines build ['"${BUILD_ID}"']")) or
                        (($body | contains("## Pipeline Test Triage — Final Resolution")) and
                         ($body | contains("**Build:** ['"${BUILD_ID}"']"))))) then
                   [.id, "final"]
