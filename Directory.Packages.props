@@ -37,7 +37,12 @@
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>18.10.0</MicrosoftNETTestSdkVersion>
+    <!-- Microsoft.NET.Test.Sdk 18.10.0 breaks browser-wasm execution with missing
+         System.MemoryExtensions.AsSpan methods and net462 execution with a System.Memory assembly
+         mismatch. Keep the test SDK on 18.9.0 while updating the independently referenced test
+         platform packages to 18.10.0. -->
+    <MicrosoftNETTestSdkVersion>18.9.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftTestPlatformVersion>18.10.0</MicrosoftTestPlatformVersion>
     <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
@@ -86,9 +91,9 @@
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageVersion Include="Azure.Core" Version="1.62.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
-    <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftTestPlatformVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftTestPlatformVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftTestPlatformVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
@@ -113,7 +118,7 @@
     <!-- Used by Microsoft.Testing.Platform acceptance tests, which consume the released MSTest packages
          rather than MSTest from source. -->
     <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
-    <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftTestPlatformVersion)" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.3.246" />
