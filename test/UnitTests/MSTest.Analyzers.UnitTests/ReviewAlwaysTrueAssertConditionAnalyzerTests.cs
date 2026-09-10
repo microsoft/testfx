@@ -965,6 +965,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                     Assert.AreEqual(actual: (int)ReportDumpType.Heap, expected: 3);
                     Assert.AreEqual(-1, (int)ReportDumpType.All);
                     Assert.AreEqual(+1, (int)ReportDumpType.Micro);
+                    Assert.AreEqual((1), ((int)ReportDumpType.Micro));
                 }
             }
             """;
