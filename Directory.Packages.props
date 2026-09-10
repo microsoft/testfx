@@ -38,6 +38,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>18.9.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftTestPlatformFilterSourceVersion>18.10.0</MicrosoftTestPlatformFilterSourceVersion>
     <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
@@ -88,7 +89,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="$(MicrosoftTestPlatformFilterSourceVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
