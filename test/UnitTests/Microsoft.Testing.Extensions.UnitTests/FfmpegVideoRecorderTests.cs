@@ -50,8 +50,15 @@ public sealed class FfmpegVideoRecorderTests
         }
     }
 
+    // No [ResourceLock]/[DoNotParallelize] needed for the CultureInfo.CurrentCulture mutation below: on every TFM
+    // this project targets (net462/net472 are >= .NET Framework 4.6, plus net8.0/net9.0), the current culture is
+    // stored in the thread's ExecutionContext and flows only to this test's own continuations. The thread pool
+    // captures/restores ExecutionContext per work item, so the mutation cannot leak forward to a concurrently
+    // scheduled sibling test under the assembly's method-level parallelization. The value is still restored in
+    // `finally` because FfmpegVideoRecorder.ReadSegments itself parses with CultureInfo.InvariantCulture (see
+    // FfmpegVideoRecorder.ProcessManagement.cs) and does not depend on CurrentCulture, so this is purely
+    // defensive hygiene, not a correctness requirement.
     [TestMethod]
-    [DoNotParallelize]
     public void ReadSegments_RelativeEntry_CombinesDirectoryAndParsesInvariantNumbers()
     {
         string directory = CreateTemporaryDirectory();
