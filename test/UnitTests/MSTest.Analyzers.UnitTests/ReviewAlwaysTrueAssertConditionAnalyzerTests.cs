@@ -5,6 +5,10 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
@@ -933,6 +937,169 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                 public void TestMethod()
                 {
                     [|Assert.AreEqual(true, true)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsEnumUnderlyingValue_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public enum ReportDumpType
+            {
+                Micro = 1,
+                Mini = 2,
+                Heap = 3,
+                All = -1,
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(1, (int)ReportDumpType.Micro);
+                    Assert.AreEqual((int)ReportDumpType.Mini, 2);
+                    Assert.AreEqual(actual: (int)ReportDumpType.Heap, expected: 3);
+                    Assert.AreEqual(-1, (int)ReportDumpType.All);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsEnumsWithAllUnderlyingTypes_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public enum SByteEnum : sbyte { Value = 1 }
+            public enum ByteEnum : byte { Value = 1 }
+            public enum ShortEnum : short { Value = 1 }
+            public enum UShortEnum : ushort { Value = 1 }
+            public enum IntEnum : int { Value = 1 }
+            public enum UIntEnum : uint { Value = 1 }
+            public enum LongEnum : long { Value = 1 }
+            public enum ULongEnum : ulong { Value = 1 }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual<sbyte>(1, (sbyte)SByteEnum.Value);
+                    Assert.AreEqual<byte>(1, (byte)ByteEnum.Value);
+                    Assert.AreEqual<short>(1, (short)ShortEnum.Value);
+                    Assert.AreEqual<ushort>(1, (ushort)UShortEnum.Value);
+                    Assert.AreEqual(1, (int)IntEnum.Value);
+                    Assert.AreEqual(1U, (uint)UIntEnum.Value);
+                    Assert.AreEqual(1L, (long)LongEnum.Value);
+                    Assert.AreEqual(1UL, (ulong)ULongEnum.Value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsEnumUnderlyingValueInVisualBasic_NoDiagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Enum ReportDumpType
+                Micro = 1
+                All = -1
+            End Enum
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Assert.AreEqual(1, CInt(ReportDumpType.Micro))
+                    Assert.AreEqual(-1, CInt(ReportDumpType.All))
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualUsesOtherConstantExpressions_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const int Field = 1;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    const int local = 1;
+
+                    [|Assert.AreEqual(1, 1)|];
+                    [|Assert.AreEqual(-1, -1)|];
+                    [|Assert.AreEqual(+1, +1)|];
+                    [|Assert.AreEqual((byte)1, (byte)1)|];
+                    [|Assert.AreEqual(1, (int)1)|];
+                    [|Assert.AreEqual(local, 1)|];
+                    [|Assert.AreEqual(Field, 1)|];
+                    [|Assert.AreEqual(1 + 1, 2)|];
+                    [|Assert.AreEqual('a', 'a')|];
+                    [|Assert.AreEqual(1.0, 1.0)|];
+                    [|Assert.AreEqual(1m, 1m)|];
+                    [|Assert.AreEqual("value", "value")|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualUsesOtherEnumConstantExpressions_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [Flags]
+            public enum Options
+            {
+                None = 0,
+                First = 1,
+                Second = 2,
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const Options Field = Options.First;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    const Options local = Options.First;
+
+                    [|Assert.AreEqual(Options.First, Options.First)|];
+                    [|Assert.AreEqual((int)Options.First, (int)Options.First)|];
+                    [|Assert.AreEqual(1, (int)local)|];
+                    [|Assert.AreEqual(1, (int)Field)|];
+                    [|Assert.AreEqual(3, (int)(Options.First | Options.Second))|];
                 }
             }
             """;

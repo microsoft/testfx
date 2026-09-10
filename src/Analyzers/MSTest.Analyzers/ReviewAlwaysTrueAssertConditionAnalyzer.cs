@@ -69,6 +69,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
             "IsTrue" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
             "IsFalse" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
             "AreEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
+                && !IsEnumUnderlyingValueContractAssertion(operation)
                 && (AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal
                     || AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActualWithBuiltInEquality(operation, AssertConditionAnalyzerHelper.ExpectedParameterName)),
             "AreNotEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
@@ -77,5 +78,65 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
             "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
             _ => false,
+        };
+
+    private static bool IsEnumUnderlyingValueContractAssertion(IInvocationOperation operation)
+    {
+        IOperation? expectedArgument = operation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == AssertConditionAnalyzerHelper.ExpectedParameterName)?.Value;
+        IOperation? actualArgument = operation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == AssertConditionAnalyzerHelper.ActualParameterName)?.Value;
+
+        return expectedArgument is not null
+            && actualArgument is not null
+            && ((IsNumericLiteral(expectedArgument) && IsEnumMemberConvertedToUnderlyingType(actualArgument))
+                || (IsEnumMemberConvertedToUnderlyingType(expectedArgument) && IsNumericLiteral(actualArgument)));
+    }
+
+    private static bool IsNumericLiteral(IOperation operation)
+        => WalkDownImplicitConversionsAndParentheses(operation) switch
+        {
+            ILiteralOperation { Type.SpecialType: var specialType } => IsIntegralNumericType(specialType),
+            IUnaryOperation { OperatorKind: UnaryOperatorKind.Plus or UnaryOperatorKind.Minus, Operand: { } operand } => IsNumericLiteral(operand),
+            _ => false,
+        };
+
+    private static bool IsIntegralNumericType(SpecialType specialType)
+        => specialType is SpecialType.System_SByte
+            or SpecialType.System_Byte
+            or SpecialType.System_Int16
+            or SpecialType.System_UInt16
+            or SpecialType.System_Int32
+            or SpecialType.System_UInt32
+            or SpecialType.System_Int64
+            or SpecialType.System_UInt64;
+
+    private static bool IsEnumMemberConvertedToUnderlyingType(IOperation operation)
+    {
+        operation = WalkDownImplicitConversionsAndParentheses(operation);
+        if (operation is not IConversionOperation
+            {
+                IsImplicit: false,
+                Type: { } convertedType,
+                Operand: { } operand,
+            })
+        {
+            return false;
+        }
+
+        operand = WalkDownImplicitConversionsAndParentheses(operand);
+        return GetEnumUnderlyingType(operand) is { } underlyingType
+            && SymbolEqualityComparer.Default.Equals(convertedType, underlyingType);
+    }
+
+    private static ITypeSymbol? GetEnumUnderlyingType(IOperation operation)
+        => operation is IFieldReferenceOperation { Field: { HasConstantValue: true, ContainingType: { TypeKind: TypeKind.Enum } enumType } }
+            ? enumType.EnumUnderlyingType
+            : null;
+
+    private static IOperation WalkDownImplicitConversionsAndParentheses(IOperation operation)
+        => operation switch
+        {
+            IConversionOperation { IsImplicit: true } conversion => WalkDownImplicitConversionsAndParentheses(conversion.Operand),
+            IParenthesizedOperation parenthesizedOperation => WalkDownImplicitConversionsAndParentheses(parenthesizedOperation.Operand),
+            _ => operation,
         };
 }
