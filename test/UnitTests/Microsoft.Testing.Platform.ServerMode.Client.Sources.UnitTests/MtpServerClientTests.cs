@@ -25,6 +25,23 @@ public sealed class MtpServerClientTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public void Options_DefaultValues_AreStable()
+    {
+        var options = new MtpServerClientOptions();
+
+        Assert.AreEqual("Microsoft.Testing.Platform.ServerMode.Client", options.ClientName);
+        Assert.AreEqual("1.0.0", options.ClientVersion);
+    }
+
+    [TestMethod]
+    public void ConnectionClosedException_DefaultMessage_ExplainsFailure()
+    {
+        var exception = new MtpServerConnectionClosedException();
+
+        Assert.AreEqual("The connection to the test host process was closed unexpectedly.", exception.Message);
+    }
+
+    [TestMethod]
     public async Task InitializeAsync_DecodesServerCapabilities()
     {
         using FakeMtpServer server = new();
