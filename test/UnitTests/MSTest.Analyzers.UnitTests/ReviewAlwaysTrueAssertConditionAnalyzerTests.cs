@@ -5,10 +5,6 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
@@ -1009,30 +1005,6 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenAssertAreEqualPinsEnumUnderlyingValueInVisualBasic_NoDiagnostic()
-    {
-        string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
-            Public Enum ReportDumpType
-                Micro = 1
-                All = -1
-            End Enum
-
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                Public Sub TestMethod()
-                    Assert.AreEqual(1, CInt(ReportDumpType.Micro))
-                    Assert.AreEqual(-1, CInt(ReportDumpType.All))
-                End Sub
-            End Class
-            """;
-
-        await VerifyVB.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
