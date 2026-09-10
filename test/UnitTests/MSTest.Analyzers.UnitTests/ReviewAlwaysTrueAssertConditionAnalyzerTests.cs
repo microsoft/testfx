@@ -1056,6 +1056,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                     [|Assert.AreEqual(+1, +1)|];
                     [|Assert.AreEqual((byte)1, (byte)1)|];
                     [|Assert.AreEqual(1, (int)1)|];
+                    [|Assert.AreEqual<object>((int)1, (int)1)|];
                     [|Assert.AreEqual(local, 1)|];
                     [|Assert.AreEqual(Field, 1)|];
                     [|Assert.AreEqual(1 + 1, 2)|];
@@ -1100,6 +1101,8 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                     [|Assert.AreEqual(1, (int)local)|];
                     [|Assert.AreEqual(1, (int)Field)|];
                     [|Assert.AreEqual(3, (int)(Options.First | Options.Second))|];
+                    [|Assert.AreEqual<long>(1, (long)Options.First)|];
+                    [|Assert.AreEqual<object>((int)1, (int)Options.First)|];
                 }
             }
             """;
