@@ -35,9 +35,9 @@ tests to understand the changed behavior before commenting.
 - Treat overload additions as potentially source-breaking. Check representative
   call shapes and older supported language versions, not only the repository's
   preview language version.
-- New public API must be minimal, documented, avoid `init`, and be recorded in
-  the relevant `PublicAPI.Unshipped.txt`. Also check internal API baselines in
-  projects that track them.
+- New public API must be minimal, documented, MUST NOT use `init`, and be
+  recorded in the relevant `PublicAPI.Unshipped.txt`. Also check internal API
+  baselines in projects that track them.
 - Check every target framework affected by the change. Do not assume an API
   available on modern .NET exists on older targets.
 - Review concurrency and lifecycle ordering carefully. Test execution is
