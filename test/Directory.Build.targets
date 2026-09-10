@@ -51,7 +51,9 @@
 
   <ItemGroup>
     <!-- Persist this preference into each test host so direct solution and test-module runs also honor it.
-         Explicit command-line values can still override the default. Skipped tests remain in summaries and reports. -->
+         Explicit command-line values can still override the default. The public CI commands also pass the
+         option explicitly because the outer dotnet test reporter cannot consume per-project passive defaults.
+         Skipped tests remain in summaries and reports. -->
     <TestingPlatformCommandLineOptionDefault Include="show-test-results" Value="failed" />
   </ItemGroup>
 
