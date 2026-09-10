@@ -760,21 +760,6 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Rückgabewert von Zeichenfolgenmethoden nicht ignorieren</target>
         <note />
       </trans-unit>
-      <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
-        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="translated">'SupportedOSPlatformAttribute' und 'UnsupportedOSPlatformAttribute' informieren über die Plattformkompatibilitätsanalyse, steuern aber nicht die MSTest-Ausführung. Testmethoden und Testklassen, die diese Attribute verwenden, sollten auch eine entsprechende '[OSCondition]' deklarieren, damit nicht unterstützte Tests zur Laufzeit übersprungen werden.</target>
-        <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
-      </trans-unit>
-      <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
-        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="translated">Plattformkompatibilitätsattribute im Test „{0}“ werden nicht durch ein entsprechendes '[OSCondition]'-Attribut dargestellt</target>
-        <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
-      </trans-unit>
-      <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
-        <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
-        <target state="translated">Plattformkompatibilitätsattribute sollten mit '[OSCondition]' konsistent sein</target>
-        <note>{Locked="[OSCondition]"}</note>
-      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
         <target state="needs-review-translation">'Assert.Fail' macht einen absichtlichen Fehler explizit und ermöglicht es, anhand der Fehlermeldung zu dokumentieren, warum der Test nicht fortgesetzt werden kann.</target>
