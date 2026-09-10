@@ -94,8 +94,21 @@ public sealed class TestHostControllerCancellationTests
         await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
 
         byte[] responseBuffer = new byte[1];
-        int bytesRead = await client.ReadAsync(responseBuffer, 0, responseBuffer.Length, TestContext.CancellationToken);
-        Assert.AreEqual(0, bytesRead);
+        try
+        {
+            Task<int> readTask = client.ReadAsync(responseBuffer, 0, responseBuffer.Length, TestContext.CancellationToken);
+            Task completedTask = await Task.WhenAny(readTask, Task.Delay(DisposalTestTimeout, TestContext.CancellationToken));
+            Assert.AreSame(readTask, completedTask, "The client remained connected after server disposal.");
+            int bytesRead = await readTask;
+            Assert.AreEqual(0, bytesRead);
+        }
+        catch (IOException ex) when (ex.InnerException is System.Net.Sockets.SocketException
+        {
+            SocketErrorCode: System.Net.Sockets.SocketError.ConnectionReset,
+        })
+        {
+            // Unix can report a forced close of an idle pipe as a connection reset instead of EOF.
+        }
     }
 
     [TestMethod]
