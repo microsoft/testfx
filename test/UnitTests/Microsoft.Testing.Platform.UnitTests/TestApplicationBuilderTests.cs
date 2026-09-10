@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -250,6 +251,79 @@ public sealed class TestApplicationBuilderTests
                 timeoutSeconds: 1,
                 cancellationTokenSource.Token,
                 () => throw new AssertFailedException("The connection timeout handler should not run for application cancellation.")));
+    }
+
+    [TestMethod]
+    public async Task TestHostControllerConnectionTimeout_TerminatesCustomHandleDefersDisposalAndReturnsFailure()
+    {
+        TaskCompletionSource<bool> exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> disposed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITestHostHandle> handle = new();
+        handle.SetupGet(x => x.Identifier).Returns("custom-host");
+        handle.SetupGet(x => x.HasExited).Returns(() => exited.Task.IsCompleted);
+        handle.SetupSequence(x => x.WaitForExitAsync(It.IsAny<CancellationToken>()))
+            .Returns(exited.Task)
+            .ThrowsAsync(new IOException("remote wait failed"))
+            .Returns(exited.Task);
+        handle.Setup(x => x.Dispose()).Callback(() => disposed.TrySetResult(true));
+
+        Mock<ITestHostLauncher> launcher = new();
+        launcher.SetupGet(x => x.Uid).Returns("custom-launcher");
+        launcher.SetupGet(x => x.DisplayName).Returns("Custom launcher");
+        launcher.Setup(x => x.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(handle.Object);
+
+        ServiceProvider serviceProvider = new();
+        using var cancellationTokenSource = new CTRLPlusCCancellationTokenSource();
+        serviceProvider.AddService(cancellationTokenSource);
+        var task = new SystemTask();
+        serviceProvider.AddService(task);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        Mock<IClock> clock = new();
+        clock.SetupGet(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
+        using var host = new TestHostControllersTestHost(
+            new([], [], [], launcher.Object, requireProcessRestart: true),
+            serviceProvider,
+            passiveNode: null,
+            new SystemEnvironment(),
+            loggerFactory.Object,
+            clock.Object);
+        Mock<IConfiguration> configuration = new();
+        configuration
+            .SetupGet(x => x[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds])
+            .Returns("0.01");
+        var outputDevice = new ProxyOutputDevice(new NopPlatformOutputDevice(), serverModeOutputDevice: null);
+        var telemetryInformation = new TelemetryInformation(isEnabled: false, version: "test");
+        using IDisposable testHostControllerIpc = CreateTestHostControllerIpc(host, CancellationToken.None);
+        using var cancellationServer = new TestHostControllerCancellationServer(
+            authorizedSecurityIdentities: null,
+            new SystemEnvironment(),
+            loggerFactory.Object,
+            task);
+
+        (int exitCode, TestHostProcessInformation processInformation, _) = await RunTestHostProcessAsync(
+            host,
+            new ProcessStartInfo("custom-test-host"),
+            [],
+            currentPid: 42,
+            Mock.Of<IProcessHandler>(),
+            configuration.Object,
+            testHostControllerIpc,
+            cancellationServer,
+            outputDevice,
+            telemetryInformation,
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
+        Assert.AreEqual((int)ExitCode.GenericFailure, processInformation.ExitCode);
+        Assert.IsFalse(processInformation.HasExitedGracefully);
+        handle.Verify(x => x.Terminate(), Times.Once);
+        handle.Verify(x => x.Dispose(), Times.Never);
+
+        exited.SetResult(true);
+        await disposed.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        handle.Verify(x => x.Dispose(), Times.Once);
     }
 
     [TestMethod]
@@ -646,6 +720,53 @@ public sealed class TestApplicationBuilderTests
             ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.WaitForExitAfterTerminationAsync.");
         return (Task<bool>?)method.Invoke(null, [process, timeout, logger])
             ?? throw new InvalidOperationException("TestHostControllersTestHost.WaitForExitAfterTerminationAsync returned null.");
+    }
+
+    private static Task<(int ExitCode, TestHostProcessInformation ProcessInformation, string? ExtensionInformation)> RunTestHostProcessAsync(
+        TestHostControllersTestHost host,
+        ProcessStartInfo processStartInfo,
+        IReadOnlyList<string> partialCommandLine,
+        int currentPid,
+        IProcessHandler process,
+        IConfiguration configuration,
+        object testHostControllerIpc,
+        TestHostControllerCancellationServer testHostControllerCancellationServer,
+        ProxyOutputDevice outputDevice,
+        ITelemetryInformation telemetryInformation,
+        CancellationToken applicationCancellationToken)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "RunTestHostProcessAsync",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.RunTestHostProcessAsync.");
+        return (Task<(int ExitCode, TestHostProcessInformation ProcessInformation, string? ExtensionInformation)>?)method.Invoke(
+            host,
+            [
+                processStartInfo,
+                partialCommandLine,
+                currentPid,
+                process,
+                configuration,
+                testHostControllerIpc,
+                testHostControllerCancellationServer,
+                outputDevice,
+                telemetryInformation,
+                Stopwatch.StartNew(),
+                applicationCancellationToken,
+            ])
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.RunTestHostProcessAsync returned null.");
+    }
+
+    private static IDisposable CreateTestHostControllerIpc(
+        TestHostControllersTestHost host,
+        CancellationToken cancellationToken)
+    {
+        MethodInfo method = typeof(TestHostControllersTestHost).GetMethod(
+            "CreateTestHostControllerIpc",
+            BindingFlags.NonPublic | BindingFlags.Instance)
+            ?? throw new InvalidOperationException("Could not find TestHostControllersTestHost.CreateTestHostControllerIpc.");
+        return (IDisposable?)method.Invoke(host, [null, cancellationToken])
+            ?? throw new InvalidOperationException("TestHostControllersTestHost.CreateTestHostControllerIpc returned null.");
     }
 
     private static void MarkOutputDeviceStillRunning(List<object> servicesStillRunning, ProxyOutputDevice outputDevice)
