@@ -97,8 +97,8 @@ internal sealed partial class TestHostControllersTestHost
                     await _logger.LogDebugAsync(
                         $"Test host controller named-pipe connection timeout is '{timeoutSeconds}' seconds.").ConfigureAwait(false);
 
-                    // Wait for the test host process to connect.
-                    await _logger.LogDebugAsync("Waiting for the test host process to connect to the named pipe.").ConfigureAwait(false);
+                    // Wait for the test host process to connect to the controller's named pipe.
+                    await _logger.LogDebugAsync("Waiting for the test host process to connect to the controller's named pipe.").ConfigureAwait(false);
                     bool connected = await WaitForTestHostControllerConnectionAsync(
                         testHostControllerIpc.WaitConnectionAsync,
                         timeoutSeconds,
@@ -173,7 +173,7 @@ internal sealed partial class TestHostControllersTestHost
 
         if (testHostControllerConnectionTimedOut)
         {
-            await TerminateTestHostAfterConnectionFailureAsync(testHostProcess, _logger).ConfigureAwait(false);
+            await TerminateTestHostAfterConnectionFailureAsync(testHostProcess, _logger, TestHostTerminationTimeout).ConfigureAwait(false);
             int fallbackPid = testHostProcessId ?? 0;
             return (
                 (int)ExitCode.GenericFailure,
@@ -433,10 +433,13 @@ internal sealed partial class TestHostControllersTestHost
         string timeoutDetails = timeout is null
             ? string.Empty
             : $" The configured connection timeout was '{timeout.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.";
-        return $"The test host controller did not connect to the named pipe after '{waitDuration.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.{timeoutDetails} {processState}";
+        return $"The test host process did not connect to the controller's named pipe after '{waitDuration.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.{timeoutDetails} {processState}";
     }
 
-    private static async Task TerminateTestHostAfterConnectionFailureAsync(IProcess testHostProcess, ILogger logger)
+    internal static async Task TerminateTestHostAfterConnectionFailureAsync(
+        IProcess testHostProcess,
+        ILogger logger,
+        TimeSpan terminationTimeout)
     {
         if (testHostProcess.HasExited)
         {
@@ -452,7 +455,7 @@ internal sealed partial class TestHostControllersTestHost
             await logger.LogDebugAsync($"Test host termination after a connection failure failed; continuing cleanup. {ex}").ConfigureAwait(false);
         }
 
-        bool exited = await WaitForExitAfterTerminationAsync(testHostProcess, TestHostTerminationTimeout, logger).ConfigureAwait(false);
+        bool exited = await WaitForExitAfterTerminationAsync(testHostProcess, terminationTimeout, logger).ConfigureAwait(false);
         if (!exited && testHostProcess is TestHostHandleToProcessAdapter adapter)
         {
             adapter.DeferDisposalUntilExit();
