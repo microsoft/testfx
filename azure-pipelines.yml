@@ -263,6 +263,8 @@ stages:
         steps:
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+        - template: /eng/pipelines/steps/prepare-isolated-coverage.yml
+
         - task: PowerShell@2
           displayName: 'Enable local dumps'
           inputs:
@@ -396,6 +398,8 @@ stages:
 
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+        - template: /eng/pipelines/steps/prepare-isolated-coverage.yml
+
         - template: /eng/pipelines/steps/test-windows-app-model.yml
 
       - job: Linux
@@ -412,6 +416,8 @@ stages:
             Release:
               _BuildConfig: Release
         steps:
+        - template: /eng/pipelines/steps/prepare-isolated-coverage.yml
+
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -449,6 +455,8 @@ stages:
             Release:
               _BuildConfig: Release
         steps:
+        - template: /eng/pipelines/steps/prepare-isolated-coverage.yml
+
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -486,6 +494,8 @@ stages:
             Release:
               _BuildConfig: Release
         steps:
+        - template: /eng/pipelines/steps/prepare-isolated-coverage.yml
+
         - task: PowerShell@2
           displayName: 'Install Windows SDK'
           inputs:

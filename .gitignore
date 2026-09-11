@@ -140,6 +140,7 @@ project.fragment.lock.json
 # Arcade files
 .dotnet/
 .packages/
+.isolated-coverage-feed/
 .tools/
 
 # ===========================

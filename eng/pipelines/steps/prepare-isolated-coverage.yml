@@ -1,0 +1,6 @@
+steps:
+- pwsh: |
+    ./eng/prepare-isolated-coverage.ps1
+    $hook = Join-Path '$(Build.SourcesDirectory)' 'eng/IsolatedCoverage.targets'
+    Write-Host "##vso[task.setvariable variable=CustomAfterMicrosoftCommonTargets]$hook"
+  displayName: Prepare pinned isolated coverage experiment

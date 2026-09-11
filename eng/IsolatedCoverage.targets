@@ -1,0 +1,57 @@
+<Project>
+  <PropertyGroup>
+    <_IsolatedCoverageVersion>18.10.1-isolation.9525c65c197a</_IsolatedCoverageVersion>
+    <_IsolatedCoverageHash>876987F310CC2B7BD471E8C328832DF1B2EA64388D80B2C93AE4D284FBE5897E</_IsolatedCoverageHash>
+    <_IsolatedCoverageFeed>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../.isolated-coverage-feed'))</_IsolatedCoverageFeed>
+  </PropertyGroup>
+
+  <!-- Run after all SDK/package imports, including MSTest.Sdk's implicit references.
+       The MSTest metapackage carries this direct dependency to its current consumers. -->
+  <Target Name="_SelectIsolatedCoverage" BeforeTargets="CollectPackageReferences">
+    <PropertyGroup>
+      <_IsolatedCentralSdk>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.NET.Test.Sdk')->'%(Version)')</_IsolatedCentralSdk>
+      <_IsolatedCentralCoverage>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.CodeCoverage')->'%(Version)')</_IsolatedCentralCoverage>
+    </PropertyGroup>
+    <ItemGroup>
+      <_IsolatedCurrentSdk Include="@(PackageReference)"
+                           Condition=" '%(PackageReference.Identity)' == 'Microsoft.NET.Test.Sdk' and ('%(PackageReference.Version)' == '18.10.0' or '%(PackageReference.VersionOverride)' == '18.10.0' or ('%(PackageReference.Version)' == '' and '%(PackageReference.VersionOverride)' == '' and '$(_IsolatedCentralSdk)' == '18.10.0')) " />
+      <_IsolatedExistingCoverage Include="@(PackageReference)" Condition=" '%(PackageReference.Identity)' == 'Microsoft.CodeCoverage' " />
+      <PackageReference Include="Microsoft.CodeCoverage" Version="$(_IsolatedCoverageVersion)"
+                        Condition=" '@(_IsolatedCurrentSdk)' != '' and '@(_IsolatedExistingCoverage)' == '' and '$(ManagePackageVersionsCentrally)' != 'true' "
+                        PrivateAssets="none" />
+      <PackageReference Include="Microsoft.CodeCoverage" VersionOverride="$(_IsolatedCoverageVersion)"
+                        Condition=" '@(_IsolatedCurrentSdk)' != '' and '@(_IsolatedExistingCoverage)' == '' and '$(ManagePackageVersionsCentrally)' == 'true' "
+                        PrivateAssets="none" />
+      <PackageReference Condition=" '%(PackageReference.Identity)' == 'Microsoft.CodeCoverage' and '%(PackageReference.Version)' == '18.10.0' ">
+        <Version>$(_IsolatedCoverageVersion)</Version>
+      </PackageReference>
+      <PackageReference Condition=" '%(PackageReference.Identity)' == 'Microsoft.CodeCoverage' and ('%(PackageReference.VersionOverride)' == '18.10.0' or ('%(PackageReference.Version)' == '' and '%(PackageReference.VersionOverride)' == '' and '$(_IsolatedCentralCoverage)' == '18.10.0')) ">
+        <VersionOverride>$(_IsolatedCoverageVersion)</VersionOverride>
+      </PackageReference>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_VerifyIsolatedCoverage" AfterTargets="ResolvePackageAssets"
+          Condition="Exists('$(ProjectAssetsFile)')">
+    <PropertyGroup>
+      <_IsolatedCurrentSdkResolved>$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Microsoft.NET.Test.Sdk/18.10.0'))</_IsolatedCurrentSdkResolved>
+      <_IsolatedCoverageResolved>$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Microsoft.CodeCoverage/$(_IsolatedCoverageVersion)'))</_IsolatedCoverageResolved>
+      <_IsolatedTargetPath>$([MSBuild]::EnsureTrailingSlash('$(NuGetPackageRoot)'))microsoft.codecoverage/$(_IsolatedCoverageVersion)/build/netstandard2.0/Microsoft.CodeCoverage.targets</_IsolatedTargetPath>
+      <_IsolatedNuGetTargets>$(MSBuildProjectExtensionsPath)$(MSBuildProjectFile).nuget.g.targets</_IsolatedNuGetTargets>
+    </PropertyGroup>
+    <Error Condition=" '$(_IsolatedCurrentSdkResolved)' == 'true' and '$(_IsolatedCoverageResolved)' != 'true' "
+           Text="SDK 18.10 must consume the isolated coverage experiment, not stock coverage: $(MSBuildProjectFullPath)" />
+    <Error Condition=" '$(_IsolatedCoverageResolved)' == 'true' and !Exists('$(_IsolatedTargetPath)') "
+           Text="Missing isolated coverage target: $(_IsolatedTargetPath)" />
+    <VerifyFileHash File="$(_IsolatedTargetPath)" Hash="$(_IsolatedCoverageHash)" Algorithm="SHA256"
+                    Condition=" '$(_IsolatedCoverageResolved)' == 'true' " />
+    <PropertyGroup Condition=" '$(_IsolatedCoverageResolved)' == 'true' and Exists('$(_IsolatedNuGetTargets)') ">
+      <_IsolatedImports>$([System.IO.File]::ReadAllText('$(_IsolatedNuGetTargets)'))</_IsolatedImports>
+      <_IsolatedPackageMetadata>$([System.IO.File]::ReadAllText('$([MSBuild]::EnsureTrailingSlash('$(NuGetPackageRoot)'))microsoft.codecoverage/$(_IsolatedCoverageVersion)/.nupkg.metadata'))</_IsolatedPackageMetadata>
+    </PropertyGroup>
+    <Error Condition=" '$(_IsolatedCoverageResolved)' == 'true' and (!$(_IsolatedImports.Contains('$(_IsolatedCoverageVersion)')) or !$(_IsolatedImports.Contains('Microsoft.CodeCoverage.targets'))) "
+           Text="Isolated coverage build assets were not imported: $(_IsolatedNuGetTargets)" />
+    <Message Importance="high" Condition=" '$(_IsolatedCoverageResolved)' == 'true' "
+             Text="ISOLATED_COVERAGE_CONSUMED project=$(MSBuildProjectFullPath) tfm=$(TargetFramework) version=$(_IsolatedCoverageVersion) target=$(_IsolatedTargetPath) sha256=$(_IsolatedCoverageHash) metadata=$(_IsolatedPackageMetadata)" />
+  </Target>
+</Project>

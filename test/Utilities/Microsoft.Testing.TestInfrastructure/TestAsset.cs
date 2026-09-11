@@ -127,6 +127,7 @@ public class TestAsset : IDisposable
     <packageSources>
         <clear/>
         {publicFeedsFragment}
+        <add key="isolated-coverage" value="{Path.Combine(Constants.Root, ".isolated-coverage-feed")}" />
         <add key="local-nonshipping" value="{Constants.ArtifactsPackagesNonShipping}" />
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
         <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
@@ -137,6 +138,9 @@ public class TestAsset : IDisposable
     </packageSources>
     <packageSourceMapping>
         {publicFeedsMapping}
+        <packageSource key="isolated-coverage">
+            <package pattern="*" />
+        </packageSource>
         <packageSource key="local-nonshipping">
             <package pattern="*" />
         </packageSource>
