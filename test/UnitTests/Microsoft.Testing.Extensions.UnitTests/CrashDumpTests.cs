@@ -21,6 +21,13 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class CrashDumpTests
 {
+    // AppDomain.CurrentDomain.GetData/SetData("ProcessKilledByHangDump") is a process-wide data slot
+    // (see CrashDumpProcessLifetimeHandler.OnTestHostProcessExitedAsync and
+    // HangDumpProcessLifetimeHandler.DumpTaking). Only the single test method below reads or writes it,
+    // so a method-level lock on that one test is enough to serialize it against itself without forcing
+    // the whole class to run sequentially.
+    private const string ProcessKilledByHangDumpAppDomainDataResource = "Microsoft.Testing.Extensions.CrashDump.ProcessKilledByHangDumpAppDomainData";
+
     [TestMethod]
     [DataRow("Mini")]
     [DataRow("Heap")]
@@ -498,7 +505,7 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(ProcessKilledByHangDumpAppDomainDataResource)]
     public async Task OnTestHostProcessExitedAsync_ProcessKilledByHangDump_DeletesSequenceFileAndDoesNotPublishArtifacts()
     {
         string sequenceFile = Path.GetTempFileName();
