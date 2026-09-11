@@ -19,8 +19,15 @@ using Moq;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
+[ResourceLock(ProcessKilledByHangDumpAppDomainDataResource, Mode = ResourceAccessMode.Read)]
 public sealed class CrashDumpTests
 {
+    // AppDomain.CurrentDomain.GetData/SetData("ProcessKilledByHangDump") is a process-wide data slot
+    // read by CrashDumpProcessLifetimeHandler.OnTestHostProcessExitedAsync. The class-level read lock
+    // lets its tests remain concurrent with each other, while the method-level read-write lock below
+    // excludes every indirect reader while that test mutates the slot.
+    private const string ProcessKilledByHangDumpAppDomainDataResource = "Microsoft.Testing.Extensions.CrashDump.ProcessKilledByHangDumpAppDomainData";
+
     [TestMethod]
     [DataRow("Mini")]
     [DataRow("Heap")]
@@ -498,7 +505,7 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(ProcessKilledByHangDumpAppDomainDataResource)]
     public async Task OnTestHostProcessExitedAsync_ProcessKilledByHangDump_DeletesSequenceFileAndDoesNotPublishArtifacts()
     {
         string sequenceFile = Path.GetTempFileName();
