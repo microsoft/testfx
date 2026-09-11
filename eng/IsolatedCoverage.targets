@@ -32,10 +32,19 @@
   </Target>
 
   <Target Name="_VerifyIsolatedCoverage" AfterTargets="ResolvePackageAssets"
-          Condition="Exists('$(ProjectAssetsFile)')">
+          Condition=" '@(PackageDependencies->WithMetadataValue('Identity', 'Microsoft.NET.Test.Sdk'))' != '' or '@(PackageDependencies->WithMetadataValue('Identity', 'Microsoft.CodeCoverage'))' != '' ">
+    <!-- Use active TFM edges: the assets file also contains historical and SDK-free sibling TFMs. -->
+    <ResolvePackageDependencies ProjectPath="$(MSBuildProjectFullPath)" ProjectAssetsFile="$(ProjectAssetsFile)"
+                                ProjectLanguage="$(Language)" TargetFramework="$(TargetFramework)">
+      <Output TaskParameter="PackageDependencies" ItemName="_IsolatedDependencyEdges" />
+    </ResolvePackageDependencies>
+    <ItemGroup>
+      <_IsolatedActiveDependencies Include="@(_IsolatedDependencyEdges)"
+                                   Condition=" '%(_IsolatedDependencyEdges.ParentTarget)' == '$(TargetFramework)' or '%(_IsolatedDependencyEdges.ParentTarget)' == '$(TargetFramework)/$(RuntimeIdentifier)' " />
+    </ItemGroup>
     <PropertyGroup>
-      <_IsolatedCurrentSdkResolved>$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Microsoft.NET.Test.Sdk/18.10.0'))</_IsolatedCurrentSdkResolved>
-      <_IsolatedCoverageResolved>$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Microsoft.CodeCoverage/$(_IsolatedCoverageVersion)'))</_IsolatedCoverageResolved>
+      <_IsolatedCurrentSdkResolved Condition=" '@(_IsolatedActiveDependencies->WithMetadataValue('Identity', 'Microsoft.NET.Test.Sdk/18.10.0'))' != '' ">true</_IsolatedCurrentSdkResolved>
+      <_IsolatedCoverageResolved Condition=" '@(_IsolatedActiveDependencies->WithMetadataValue('Identity', 'Microsoft.CodeCoverage/$(_IsolatedCoverageVersion)'))' != '' ">true</_IsolatedCoverageResolved>
       <_IsolatedTargetPath>$([MSBuild]::EnsureTrailingSlash('$(NuGetPackageRoot)'))microsoft.codecoverage/$(_IsolatedCoverageVersion)/build/netstandard2.0/Microsoft.CodeCoverage.targets</_IsolatedTargetPath>
       <_IsolatedNuGetTargets>$(MSBuildProjectExtensionsPath)$(MSBuildProjectFile).nuget.g.targets</_IsolatedNuGetTargets>
     </PropertyGroup>
