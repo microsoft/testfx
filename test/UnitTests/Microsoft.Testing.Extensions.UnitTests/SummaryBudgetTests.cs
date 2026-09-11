@@ -148,45 +148,44 @@ public sealed class SummaryBudgetTests
     public void GrantModuleShare_DividesUngrantedPool_AcrossRemainingModules()
     {
         var budget = SummaryBudget.ForAggregate(consumedBytes: 0, moduleCount: 4);
+        int ungrantedPool = (int)(DetailBudgetLength - (4L * ProjectOverheadReserve));
+        int expectedFirstShare = ungrantedPool / 4;
 
         budget.GrantModuleShare(remainingModuleCount: 4);
-        int firstShare = budget.DetailBytesAvailable;
 
-        Assert.IsGreaterThan(0, firstShare);
+        Assert.AreEqual(expectedFirstShare, budget.DetailBytesAvailable);
 
         budget.GrantModuleShare(remainingModuleCount: 3);
-        int afterSecondGrant = budget.DetailBytesAvailable;
+        int expectedSecondShare = (ungrantedPool - expectedFirstShare) / 3;
 
-        // A second, equal-sized grant against the (now smaller) remaining pool adds more allowance.
-        Assert.IsGreaterThan(firstShare, afterSecondGrant);
+        Assert.AreEqual(expectedFirstShare + expectedSecondShare, budget.DetailBytesAvailable);
     }
 
     [TestMethod]
     public void GrantModuleShare_LeavesUnspentAllowanceForLaterModules()
     {
         var budget = SummaryBudget.ForAggregate(consumedBytes: 0, moduleCount: 2);
+        int ungrantedPool = (int)(DetailBudgetLength - (2L * ProjectOverheadReserve));
+        int expectedFirstShare = ungrantedPool / 2;
 
         budget.GrantModuleShare(remainingModuleCount: 2);
-        int firstModuleShare = budget.DetailBytesAvailable;
 
-        // First module doesn't spend any of its share.
+        Assert.AreEqual(expectedFirstShare, budget.DetailBytesAvailable);
+
         budget.GrantModuleShare(remainingModuleCount: 1);
-        int secondModuleAvailable = budget.DetailBytesAvailable;
 
-        // The second (and last) module's grant absorbs the entire remaining ungranted pool, so it should
-        // end up with at least as much as the first module got, since nothing was spent in between.
-        Assert.IsGreaterThanOrEqualTo(firstModuleShare, secondModuleAvailable);
+        Assert.AreEqual(ungrantedPool, budget.DetailBytesAvailable);
     }
 
     [TestMethod]
     public void GrantModuleShare_WithZeroRemainingModuleCount_DoesNotThrow_AndGrantsEntirePool()
     {
         var budget = SummaryBudget.ForAggregate(consumedBytes: 0, moduleCount: 1);
+        int ungrantedPool = (int)(DetailBudgetLength - ProjectOverheadReserve);
 
-        // remainingModuleCount of 0 must not cause a division by zero; Math.Max(1, ...) guards it.
         budget.GrantModuleShare(remainingModuleCount: 0);
 
-        Assert.IsGreaterThan(0, budget.DetailBytesAvailable);
+        Assert.AreEqual(ungrantedPool, budget.DetailBytesAvailable);
     }
 
     [TestMethod]
