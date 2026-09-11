@@ -8,6 +8,7 @@
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Project="eng/validation/Option1Coverage.targets" />
 
   <!-- Pack config -->
   <PropertyGroup>

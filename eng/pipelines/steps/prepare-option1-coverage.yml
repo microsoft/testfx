@@ -1,0 +1,7 @@
+# Temporary, target-only validation of microsoft/vstest#16477. No public package is published.
+steps:
+- pwsh: |
+    $python = if ($IsWindows) { 'python' } else { 'python3' }
+    & $python eng/validation/prepare-option1-coverage.py --output-directory artifacts/option1-validation-feed
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  displayName: Prepare pinned option1 coverage package

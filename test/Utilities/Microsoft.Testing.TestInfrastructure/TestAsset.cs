@@ -127,6 +127,7 @@ public class TestAsset : IDisposable
     <packageSources>
         <clear/>
         {publicFeedsFragment}
+        <add key="option1-validation" value="{Constants.Root}/artifacts/option1-validation-feed" />
         <add key="local-nonshipping" value="{Constants.ArtifactsPackagesNonShipping}" />
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
         <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
@@ -137,6 +138,9 @@ public class TestAsset : IDisposable
     </packageSources>
     <packageSourceMapping>
         {publicFeedsMapping}
+        <packageSource key="option1-validation">
+            <package pattern="*" />
+        </packageSource>
         <packageSource key="local-nonshipping">
             <package pattern="*" />
         </packageSource>

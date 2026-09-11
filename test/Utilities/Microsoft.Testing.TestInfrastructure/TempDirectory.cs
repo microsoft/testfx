@@ -189,6 +189,7 @@ public class TempDirectory : IDisposable
         File.WriteAllText(directoryBuildTarget, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+    <Import Project="{RepoRoot}/eng/validation/Option1Coverage.targets" />
     <ItemGroup>
         <!-- EnableMicrosoftTestingPlatform is already handled by MSTest.Sdk, but not when using MSTest metapackage -->
         <!-- Historically, EnableMicrosoftTestingPlatform existed first in MSTest.Sdk with the goal of fixing our tests -->

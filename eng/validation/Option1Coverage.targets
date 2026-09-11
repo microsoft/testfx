@@ -1,0 +1,82 @@
+<Project>
+  <PropertyGroup>
+    <_Option1CoverageVersion>18.10.1-option1.9017a6fc</_Option1CoverageVersion>
+    <_Option1CoverageHash>FB9D4C1A52897F3CD0524AC3EB053B56CBAD981D8E67BFBD20C7F0981533A519</_Option1CoverageHash>
+    <_Option1RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '../..'))</_Option1RepoRoot>
+  </PropertyGroup>
+
+  <!-- Run after evaluation so SDK-authored references participate. Historical SDK scenarios are untouched. -->
+  <Target Name="_SelectOption1Coverage" BeforeTargets="CollectPackageReferences">
+    <ItemGroup>
+      <_Option1SdkReference Include="@(PackageReference)"
+                            Condition="'%(PackageReference.Identity)' == 'Microsoft.NET.Test.Sdk' and ('%(PackageReference.VersionOverride)' == '18.10.0' or ('%(PackageReference.VersionOverride)' == '' and '%(PackageReference.Version)' == '18.10.0'))" />
+      <_Option1CentralSdkVersion Include="@(PackageVersion)"
+                               Condition="'%(PackageVersion.Identity)' == 'Microsoft.NET.Test.Sdk' and '%(PackageVersion.Version)' == '18.10.0'" />
+      <_Option1SdkReference Include="@(PackageReference)"
+                            Condition="'%(PackageReference.Identity)' == 'Microsoft.NET.Test.Sdk' and '%(PackageReference.Version)' == '' and '%(PackageReference.VersionOverride)' == '' and '@(_Option1CentralSdkVersion)' != ''" />
+    </ItemGroup>
+    <ItemGroup Condition="'@(_Option1SdkReference)' != ''">
+      <PackageReference Remove="Microsoft.CodeCoverage" />
+      <PackageReference Include="Microsoft.CodeCoverage" PrivateAssets="none" GeneratePathProperty="true">
+        <Version Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(_Option1CoverageVersion)</Version>
+        <VersionOverride Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(_Option1CoverageVersion)</VersionOverride>
+      </PackageReference>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_VerifyOption1Coverage" AfterTargets="ResolvePackageAssets"
+          Condition="'$(TargetFramework)' != '' and Exists('$(ProjectAssetsFile)') and '@(PackageDependencies->WithMetadataValue('Identity', 'Microsoft.NET.Test.Sdk'))' != ''">
+    <!-- The assets file spans TFMs. Select dependency edges for this TFM, not a different framework's SDK. -->
+    <ResolvePackageDependencies ProjectPath="$(MSBuildProjectFullPath)"
+                                ProjectAssetsFile="$(ProjectAssetsFile)"
+                                ProjectLanguage="$(Language)"
+                                TargetFramework="$(TargetFramework)">
+      <Output TaskParameter="PackageDependencies" ItemName="_Option1Dependencies" />
+    </ResolvePackageDependencies>
+    <ItemGroup>
+      <_Option1ActiveDependencies Include="@(_Option1Dependencies)"
+                                  Condition="'%(_Option1Dependencies.ParentTarget)' == '$(TargetFramework)' or '%(_Option1Dependencies.ParentTarget)' == '$(TargetFramework)/$(RuntimeIdentifier)'" />
+      <_Option1CurrentSdk Include="@(_Option1ActiveDependencies->WithMetadataValue('Identity', 'Microsoft.NET.Test.Sdk/18.10.0'))" />
+      <_Option1CurrentCoverage Include="@(_Option1ActiveDependencies->WithMetadataValue('Identity', 'Microsoft.CodeCoverage/$(_Option1CoverageVersion)'))" />
+    </ItemGroup>
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and '@(_Option1CurrentCoverage)' == ''"
+           Text="SDK 18.10.0 did not resolve the pinned option1 coverage package: $(ProjectAssetsFile)" />
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and '$(ExcludeRestorePackageImports)' == 'true'"
+           Text="SDK 18.10.0 disabled the NuGet imports required for option1 validation." />
+    <PropertyGroup Condition="'@(_Option1CurrentSdk)' != ''">
+      <_Option1GeneratedImports>$(MSBuildProjectExtensionsPath)$(MSBuildProjectFile).nuget.g.targets</_Option1GeneratedImports>
+      <_Option1PackageDirectory>$(NuGetPackageRoot)/microsoft.codecoverage/$(_Option1CoverageVersion)/</_Option1PackageDirectory>
+    </PropertyGroup>
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and !Exists('$(_Option1GeneratedImports)')" Text="Missing NuGet imports: $(_Option1GeneratedImports)" />
+    <PropertyGroup Condition="'@(_Option1CurrentSdk)' != ''">
+      <_Option1ImportText>$([System.IO.File]::ReadAllText('$(_Option1GeneratedImports)').Replace('\', '/'))</_Option1ImportText>
+    </PropertyGroup>
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and !$(_Option1ImportText.Contains('microsoft.codecoverage/$(_Option1CoverageVersion)/build/'))"
+           Text="The pinned option1 coverage target is not in the NuGet imports: $(_Option1GeneratedImports)" />
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and '$(NETCoreSdkVersion)' != '' and '$(DisableMsCoverageReferencedPathMaps)' != 'true' and '$(_msCoverageSdkMinVersionWithDependencyTarget)' != '6.0.100'"
+           Text="The pinned option1 coverage target was not evaluated: $(MSBuildProjectFullPath)" />
+    <ItemGroup Condition="'@(_Option1CurrentSdk)' != ''">
+      <_Option1TargetFiles Include="$(_Option1PackageDirectory)build/**/Microsoft.CodeCoverage.targets" />
+    </ItemGroup>
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and '@(_Option1TargetFiles)' == ''" Text="Missing option1 coverage targets under $(_Option1PackageDirectory)" />
+    <GetFileHash Files="@(_Option1TargetFiles)" Algorithm="SHA256" Condition="'@(_Option1CurrentSdk)' != ''">
+      <Output TaskParameter="Items" ItemName="_Option1HashedTargets" />
+    </GetFileHash>
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and '%(_Option1HashedTargets.FileHash)' != '$(_Option1CoverageHash)'"
+           Text="Option1 target hash mismatch: %(_Option1HashedTargets.Identity) = %(_Option1HashedTargets.FileHash)" />
+    <GetFileHash Files="$(_Option1PackageDirectory)microsoft.codecoverage.$(_Option1CoverageVersion).nupkg" Algorithm="SHA256" Condition="'@(_Option1CurrentSdk)' != ''">
+      <Output TaskParameter="Items" ItemName="_Option1HashedPackage" />
+    </GetFileHash>
+    <Error Condition="'@(_Option1CurrentSdk)' != '' and '%(_Option1HashedPackage.FileHash)' != '58786562B8A7950B4630DCA098F0532C0BB79E3344D340A3AD594E29D4061C13'"
+           Text="Option1 package hash mismatch: %(_Option1HashedPackage.Identity) = %(_Option1HashedPackage.FileHash)" />
+    <PropertyGroup Condition="'@(_Option1CurrentSdk)' != ''">
+      <_Option1EvidenceDirectory>$(_Option1RepoRoot)artifacts/log/$(Configuration)/option1-consumption/</_Option1EvidenceDirectory>
+      <_Option1EvidenceFile>$(_Option1EvidenceDirectory)$(MSBuildProjectName)-$([MSBuild]::StableStringHash('$(MSBuildProjectFullPath);$(TargetFramework)')).txt</_Option1EvidenceFile>
+    </PropertyGroup>
+    <MakeDir Directories="$(_Option1EvidenceDirectory)" Condition="'@(_Option1CurrentSdk)' != ''" />
+    <WriteLinesToFile File="$(_Option1EvidenceFile)"
+                      Lines="Project=$(MSBuildProjectFullPath);Framework=$(TargetFramework);SDK=18.10.0;Coverage=$(_Option1CoverageVersion);Assets=$(ProjectAssetsFile);Imports=$(_Option1GeneratedImports);@(_Option1HashedTargets->'Target=%(Identity) SHA256=%(FileHash)');@(_Option1HashedPackage->'Package=%(Identity) SHA256=%(FileHash)')"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" Condition="'@(_Option1CurrentSdk)' != ''" />
+    <Message Importance="high" Text="Option1 coverage provenance: $(_Option1EvidenceFile)" Condition="'@(_Option1CurrentSdk)' != ''" />
+  </Target>
+</Project>
