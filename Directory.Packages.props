@@ -37,11 +37,7 @@
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <!-- Microsoft.NET.Test.Sdk 18.10.0 breaks browser-wasm execution with missing
-         System.MemoryExtensions.AsSpan methods and net462 execution with a System.Memory assembly
-         mismatch. Keep the test SDK on 18.9.0 while updating the independently referenced test
-         platform packages to 18.10.0. -->
-    <MicrosoftNETTestSdkVersion>18.9.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>18.10.0</MicrosoftNETTestSdkVersion>
     <MicrosoftTestPlatformVersion>18.10.0</MicrosoftTestPlatformVersion>
     <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4

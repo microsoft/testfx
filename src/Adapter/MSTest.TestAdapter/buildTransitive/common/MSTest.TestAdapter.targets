@@ -49,6 +49,39 @@
     <CompilerVisibleProperty Include="MSTestSourceGenMode" />
   </ItemGroup>
 
+  <!-- Microsoft.CodeCoverage copies private compatibility assemblies directly into PublishDir after
+       publish assets have been resolved. Those assemblies can replace runtime-provided assemblies
+       on modern .NET or newer package-resolved assemblies on .NET Framework. Remove the incompatible
+       copies and restore the resolved application dependencies when they exist. -->
+  <Target Name="_MSTestRestoreResolvedFrameworkAssembliesAfterCodeCoveragePublish"
+          AfterTargets="CopyTraceDataCollectorArtifacts"
+          Condition="'$(PublishDir)' != '' AND Exists('$(PublishDir)System.Memory.dll')">
+    <ItemGroup>
+      <_MSTestCodeCoverageFrameworkAssembly Remove="@(_MSTestCodeCoverageFrameworkAssembly)" />
+      <_MSTestResolvedFrameworkAssembly Remove="@(_MSTestResolvedFrameworkAssembly)" />
+
+      <_MSTestCodeCoverageFrameworkAssembly Include="$(PublishDir)System.*.dll;$(PublishDir)Microsoft.Bcl.AsyncInterfaces.dll"
+                                            Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" />
+      <_MSTestCodeCoverageFrameworkAssembly Include="$(PublishDir)System.Memory.dll"
+                                            Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+
+      <_MSTestResolvedFrameworkAssembly Include="@(ReferenceCopyLocalPaths)"
+                                        Condition="'%(Filename)' == 'Microsoft.Bcl.AsyncInterfaces'
+                                          OR '%(Filename)' == 'System.Buffers'
+                                          OR '%(Filename)' == 'System.Memory'
+                                          OR '%(Filename)' == 'System.Runtime.CompilerServices.Unsafe'
+                                          OR '%(Filename)' == 'System.Text.Encodings.Web'
+                                          OR '%(Filename)' == 'System.Text.Json'
+                                          OR '%(Filename)' == 'System.Threading.Tasks.Extensions'" />
+    </ItemGroup>
+
+    <Delete Files="@(_MSTestCodeCoverageFrameworkAssembly)" />
+    <Copy SourceFiles="@(_MSTestResolvedFrameworkAssembly)"
+          DestinationFolder="$(PublishDir)"
+          SkipUnchangedFiles="true"
+          Condition="'@(_MSTestResolvedFrameworkAssembly)' != ''" />
+  </Target>
+
   <PropertyGroup>
     <MSTestSourceGenMode Condition=" '$(MSTestSourceGenMode)' == '' ">ReflectionFree</MSTestSourceGenMode>
   </PropertyGroup>
