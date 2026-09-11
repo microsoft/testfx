@@ -21,7 +21,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
-            CurrentMSTestSourceCode
+            ExcludeMicrosoftCodeCoverageAssets(CurrentMSTestSourceCode)
                 .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
@@ -48,7 +48,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
-            (CurrentMSTestSourceCode + """
+            (ExcludeMicrosoftCodeCoverageAssets(CurrentMSTestSourceCode) + """
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -75,6 +75,16 @@ return await app.RunAsync();
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
+
+    // These MTP-only assets do not use VSTest's collector. Exclude its build assets so they are not
+    // copied into the published application and substituted for its resolved framework assemblies.
+    private static string ExcludeMicrosoftCodeCoverageAssets(string sourceCode)
+        => sourceCode.PatchCodeWithReplace(
+            """    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />""",
+            """
+                <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+                <PackageReference Include="Microsoft.CodeCoverage" Version="$MicrosoftNETTestSdkVersion$" ExcludeAssets="all" />
+            """);
 
     [TestMethod]
     [CombinatorialData]

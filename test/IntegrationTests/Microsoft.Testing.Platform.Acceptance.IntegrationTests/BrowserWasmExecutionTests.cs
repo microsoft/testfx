@@ -1399,9 +1399,10 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     private Task<TestAsset> GenerateBrowserWasmAssetAsync()
         => TestAsset.GenerateAssetAsync(
             "BrowserTestProject",
-            SourceCode
+            ExcludeMicrosoftCodeCoverageAssets(SourceCode)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
     private Task<TestAsset> GenerateBrowserWasmWarningAssetAsync()
@@ -1431,9 +1432,10 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
 
         return TestAsset.GenerateAssetAsync(
             "BrowserCustomHostProject",
-            CustomHostSourceCode
+            ExcludeMicrosoftCodeCoverageAssets(CustomHostSourceCode)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", publishedMSTestVersion),
             addPublicFeeds: true);
     }
@@ -1441,19 +1443,31 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     private Task<TestAsset> GenerateBrowserWasmRunSettingsAssetAsync()
         => TestAsset.GenerateAssetAsync(
             "BrowserRunSettingsProject",
-            RunSettingsSourceCode
+            ExcludeMicrosoftCodeCoverageAssets(RunSettingsSourceCode)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
     private Task<TestAsset> GenerateBrowserWasmAzureDevOpsAssetAsync()
         => TestAsset.GenerateAssetAsync(
             "BrowserAzureDevOpsProject",
-            AzureDevOpsSourceCode
+            ExcludeMicrosoftCodeCoverageAssets(AzureDevOpsSourceCode)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$AttachmentFileName$", AzureDevOpsAttachmentFileName)
                 .PatchCodeWithReplace("$AttachmentContent$", AzureDevOpsAttachmentContent));
+
+    // These MTP-only assets do not use VSTest's collector. Exclude its build assets so they are not
+    // copied into the browser bundle and substituted for the runtime's framework assemblies.
+    private static string ExcludeMicrosoftCodeCoverageAssets(string sourceCode)
+        => sourceCode.PatchCodeWithReplace(
+            """    <PackageReference Include="MSTest" Version="$MSTestVersion$" />""",
+            """
+                <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+                <PackageReference Include="Microsoft.CodeCoverage" Version="$MicrosoftNETTestSdkVersion$" ExcludeAssets="all" />
+            """);
 }
