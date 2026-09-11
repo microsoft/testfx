@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Services;
@@ -84,7 +83,8 @@ internal sealed class MSTestRunSettings : IRunSettings
     private static XDocument Patch(string? runSettingsXml, IConfiguration configuration, IClientInfo client, ICommandLineOptions commandLineOptions)
     {
         // Keep recognizing older Visual Studio clients that predate the statefulness capability.
-        bool isDesignMode = client.Capabilities.IsStateful || client.Id == WellKnownClients.VisualStudio;
+        bool isDesignMode = client.Capabilities.GetIsStateful()
+            ?? client.Id == WellKnownClients.VisualStudio;
         XDocument runSettingsDocument = PatchSettingsWithDefaults(runSettingsXml, isDesignMode, configuration);
         PatchTestRunParameters(runSettingsDocument, commandLineOptions);
         return runSettingsDocument;
@@ -212,4 +212,3 @@ internal sealed class MSTestRunSettings : IRunSettings
         }
     }
 }
-#endif

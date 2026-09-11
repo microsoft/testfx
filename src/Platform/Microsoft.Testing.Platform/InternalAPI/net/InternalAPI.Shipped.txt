@@ -1,5 +1,6 @@
 #nullable enable
 abstract Microsoft.Testing.Platform.ServerMode.Json.JsonCollectionDeserializer<TCollection>.CreateObject(Microsoft.Testing.Platform.ServerMode.Json.Json! json, System.Text.Json.JsonElement element) -> TCollection
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Helpers.IEnvironment.ProcessPath.get -> string?
 Microsoft.Testing.Platform.Helpers.IMainModule.FileName.get -> string?
 Microsoft.Testing.Platform.Helpers.SystemEnvironment.ProcessPath.get -> string?
@@ -12,14 +13,15 @@ Microsoft.Testing.Platform.Logging.FileLogger.DisposeAsync() -> System.Threading
 Microsoft.Testing.Platform.Logging.FileLoggerProvider.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Logging.LoggerFactory.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Logging.LoggerFactoryProxy.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! consumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! consumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice
-Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.BrowserOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void
-Microsoft.Testing.Platform.ServerMode.FormatterUtilities.MessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
-Microsoft.Testing.Platform.ServerMode.IMessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
+Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.BrowserOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void
+Microsoft.Testing.Platform.ServerMode.FormatterUtilities.MessageFormatter.Deserialize<T>(System.ReadOnlyMemory<byte> serializedUtf8Content) -> T
+Microsoft.Testing.Platform.ServerMode.IMessageFormatter.Deserialize<T>(System.ReadOnlyMemory<byte> serializedUtf8Content) -> T
 Microsoft.Testing.Platform.ServerMode.Json.Json
 Microsoft.Testing.Platform.ServerMode.Json.Json.Bind<T>(System.Text.Json.JsonElement element, string? property = null) -> T
-Microsoft.Testing.Platform.ServerMode.Json.Json.Deserialize<T>(System.ReadOnlyMemory<char> utf8Json) -> T
+Microsoft.Testing.Platform.ServerMode.Json.Json.Deserialize<T>(System.ReadOnlyMemory<byte> utf8Json) -> T
 Microsoft.Testing.Platform.ServerMode.Json.Json.Json(System.Collections.Generic.Dictionary<System.Type!, Microsoft.Testing.Platform.ServerMode.Json.JsonSerializer!>? serializers = null, System.Collections.Generic.Dictionary<System.Type!, Microsoft.Testing.Platform.ServerMode.Json.JsonDeserializer!>? deserializers = null) -> void
 Microsoft.Testing.Platform.ServerMode.Json.Json.SerializeAsync(object! obj) -> System.Threading.Tasks.Task<string!>!
 Microsoft.Testing.Platform.ServerMode.Json.Json.TryArrayBind<T>(System.Text.Json.JsonElement element, out T[]? value, string? property = null) -> bool
@@ -47,6 +49,7 @@ Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer.Serialize.set -> 
 Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer<T>
 Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer<T>.JsonValueSerializer(System.Action<System.Text.Json.Utf8JsonWriter!, T>! value) -> void
 override Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.Description.get -> string!
+override Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.DisplayActiveTestProgress.get -> bool
 override Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.DisplayName.get -> string!
 override Microsoft.Testing.Platform.ServerMode.DiscoverRequestArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.DiscoverRequestArgs!
 override Microsoft.Testing.Platform.ServerMode.DiscoverResponseArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.DiscoverResponseArgs!
@@ -56,3 +59,7 @@ override Microsoft.Testing.Platform.ServerMode.RequestMessage.<Clone>$() -> Micr
 override Microsoft.Testing.Platform.ServerMode.ResponseMessage.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.ResponseMessage!
 override Microsoft.Testing.Platform.ServerMode.RunRequestArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RunRequestArgs!
 override Microsoft.Testing.Platform.ServerMode.RunResponseArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RunResponseArgs!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void

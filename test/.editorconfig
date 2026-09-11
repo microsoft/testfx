@@ -34,6 +34,7 @@ dotnet_diagnostic.CA2201.severity = none            # CA2201: Do not raise reser
 dotnet_diagnostic.CA3075.severity = none            # CA3075: Insecure DTD processing in XML
 
 dotnet_diagnostic.IDE0060.severity = none           # IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0300.severity = suggestion     # IDE0300: Simplify collection initialization
 
 dotnet_diagnostic.MSTEST0001.severity = warning     # MSTEST0001: Explicitly enable or disable tests parallelization
 dotnet_diagnostic.MSTEST0016.severity = warning     # MSTEST0016: Test class should have test method

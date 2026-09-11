@@ -289,7 +289,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerDescription" xml:space="preserve">
     <value>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</value>
-    <comment>{Locked="TestContext"}{Locked="'static'"}</comment>
+    <comment>{Locked="TestContext"}{Locked="static"}</comment>
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerMessageFormat" xml:space="preserve">
     <value>Do not store TestContext in a static member</value>
@@ -301,7 +301,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsDescription" xml:space="preserve">
     <value>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</value>
-    <comment>{Locked="'Assert.Fail'"}</comment>
+    <comment>{Locked="Assert.Fail"}</comment>
   </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</value>
@@ -313,7 +313,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferConstructorOverTestInitializeDescription" xml:space="preserve">
     <value>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</value>
-    <comment>{Locked="'readonly'"}{Locked="MSTEST0019"}</comment>
+    <comment>{Locked="readonly"}{Locked="MSTEST0019"}</comment>
   </data>
   <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
@@ -325,7 +325,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferDisposeOverTestCleanupDescription" xml:space="preserve">
     <value>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</value>
-    <comment>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</comment>
+    <comment>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</comment>
   </data>
   <data name="PreferDisposeOverTestCleanupMessageFormat" xml:space="preserve">
     <value>Prefer 'Dispose' over TestCleanup methods</value>
@@ -337,7 +337,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferTestCleanupOverDisposeDescription" xml:space="preserve">
     <value>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</value>
-    <comment>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</comment>
+    <comment>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</comment>
   </data>
   <data name="PreferTestCleanupOverDisposeMessageFormat" xml:space="preserve">
     <value>Prefer TestCleanup over 'Dispose' methods</value>
@@ -349,7 +349,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferTestInitializeOverConstructorDescription" xml:space="preserve">
     <value>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</value>
-    <comment>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</comment>
+    <comment>{Locked="[TestInitialize]"}{Locked="MSTEST0020"}</comment>
   </data>
   <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
@@ -620,7 +620,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassDescription" xml:space="preserve">
     <value>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</value>
-    <comment>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</comment>
+    <comment>{Locked="MSTest"}{Locked="[DeploymentItem]"}</comment>
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
@@ -657,7 +657,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="StringAssertToAssertDescription" xml:space="preserve">
     <value>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</value>
-    <comment>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</comment>
+    <comment>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</comment>
   </data>
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'StringAssert'</value>
@@ -669,7 +669,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="CollectionAssertToAssertDescription" xml:space="preserve">
     <value>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</value>
-    <comment>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</comment>
+    <comment>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</comment>
   </data>
   <data name="CollectionAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'CollectionAssert'</value>
@@ -851,7 +851,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeDescription" xml:space="preserve">
     <value>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</value>
-    <comment>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</comment>
+    <comment>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</comment>
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
     <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
@@ -1259,6 +1259,18 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="InheritedMemberFromDifferentMSTestVersionDescription" xml:space="preserve">
     <value>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</value>
-    <comment>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</comment>
+    <comment>{Locked="MSTest"}{Locked="[TestInitialize]"}{Locked="[TestCleanup]"}{Locked="[ClassInitialize]"}{Locked="[ClassCleanup]"}{Locked="[TestMethod]"}{Locked="[DataTestMethod]"}{Locked="Microsoft.VisualStudio.TestPlatform.TestFramework"}{Locked="MSTest.TestFramework"}</comment>
+  </data>
+  <data name="OSPlatformAttributesShouldBeConsistentTitle" xml:space="preserve">
+    <value>Platform compatibility attributes should be consistent with '[OSCondition]'</value>
+    <comment>{Locked="[OSCondition]"}</comment>
+  </data>
+  <data name="OSPlatformAttributesShouldBeConsistentMessageFormat" xml:space="preserve">
+    <value>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</value>
+    <comment>{0} is the test method or test class name. {Locked="[OSCondition]"}</comment>
+  </data>
+  <data name="OSPlatformAttributesShouldBeConsistentDescription" xml:space="preserve">
+    <value>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</value>
+    <comment>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</comment>
   </data>
 </root>

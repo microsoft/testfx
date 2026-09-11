@@ -43,7 +43,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restored"), CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { "Restoring", "Restored" }, device.Messages);
+        Assert.AreSequenceEqual(["Restoring", "Restored"], device.Messages);
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", null), CancellationToken.None);
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { "Restoring", "Restoring" }, device.Messages);
+        Assert.AreSequenceEqual(["Restoring", "Restoring"], device.Messages);
     }
 
     [TestMethod]
@@ -69,7 +69,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await device.OnTestSessionFinishingAsync(Mock.Of<ITestSessionContext>());
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { "Restoring", "Restoring" }, device.Messages);
+        Assert.AreSequenceEqual(["Restoring", "Restoring"], device.Messages);
     }
 
     [TestMethod]
@@ -84,7 +84,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             CreateTestNodeUpdate(new FileArtifactProperty(artifact, "Test Result")),
             CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { $"Test Result: {artifact.FullName}" }, device.Messages);
+        Assert.AreSequenceEqual([$"Test Result: {artifact.FullName}"], device.Messages);
     }
 
     [TestMethod]
@@ -99,7 +99,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             new SessionFileArtifact(new SessionUid("session"), artifact, "Session Result"),
             CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { $"Session Result: {artifact.FullName}" }, device.Messages);
+        Assert.AreSequenceEqual([$"Session Result: {artifact.FullName}"], device.Messages);
     }
 
     [TestMethod]
@@ -114,7 +114,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             new FileArtifact(artifact, "Run Result"),
             CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { $"Run Result: {artifact.FullName}" }, device.Messages);
+        Assert.AreSequenceEqual([$"Run Result: {artifact.FullName}"], device.Messages);
     }
 
     [TestMethod]
@@ -127,7 +127,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await device.ConsumeAsync(null!, update, CancellationToken.None);
         await device.ConsumeAsync(null!, update, CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { "running BrowserTests.HangingTest" }, device.Messages);
+        Assert.AreSequenceEqual(["running BrowserTests.HangingTest"], device.Messages);
     }
 
     [TestMethod]
@@ -164,7 +164,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             CancellationToken.None);
 
         Assert.AreSequenceEqual(
-            new[] { "running BrowserTests.HangingTest", "running BrowserTests.HangingTest" },
+            ["running BrowserTests.HangingTest", "running BrowserTests.HangingTest"],
             device.Messages);
     }
 
@@ -188,7 +188,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             CancellationToken.None);
 
         Assert.AreSequenceEqual(
-            new[] { "running BrowserTests.HangingTest", "running BrowserTests.HangingTest" },
+            ["running BrowserTests.HangingTest", "running BrowserTests.HangingTest"],
             device.Messages);
     }
 

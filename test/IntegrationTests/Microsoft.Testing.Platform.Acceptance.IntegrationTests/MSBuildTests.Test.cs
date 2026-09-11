@@ -3,6 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
+// InvokeTestingPlatformTask does not yet preserve its terminal summary and artifacts in -mt's
+// out-of-process TaskHost, so tests that exercise the MSBuild Test target must opt out.
 [TestClass]
 public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 {
@@ -53,7 +55,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -85,10 +87,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = testCommand.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             ? await DotnetCli.RunAsync(
                 $"{testCommand} -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\" -- --treenode-filter <whatever> --results-directory \"{testResultFolder}\"",
-                workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken)
+                workingDirectory: testAsset.TargetAssetPath, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken)
             : await DotnetCli.RunAsync(
                 $"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter <whatever> --results-directory \"{testResultFolder}\"\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"",
-                workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+                workingDirectory: testAsset.TargetAssetPath, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -145,6 +147,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x86.log", SearchOption.AllDirectories);
@@ -178,6 +181,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             $"build -t:Test --arch {incompatibleArchitecture} \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         // The build should fail and the failure should mention the incompatible target architecture
@@ -262,6 +266,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x64.log", SearchOption.AllDirectories);
@@ -315,7 +320,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{tfm}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("error test failed: Test2 (");
         compilationResult.AssertOutputContains("FAILED: Expected 'true', but got 'false'.");
@@ -332,7 +337,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", "true")
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
     }
@@ -359,6 +364,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
                 // process by inheritance from the MSBuild process.
                 ["MTP_ENV_INHERITED"] = "inherited-value",
             },
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("[env] MTP_ENV_SIMPLE=simple-value");
@@ -397,6 +403,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             $"build -t:Test -p:TestingPlatformCaptureOutput=False \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: CreateEnvironmentVariables(),
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         string dotnetRootOutputPrefix = $"[env] {dotnetRootVariableName}=";
@@ -420,6 +427,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
                 // existing directory without a dotnet installation to prove the explicit item clears this override.
                 [dotnetRootVariableName] = Path.GetTempPath(),
             },
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         explicitResult.AssertOutputContains($"[env] DOTNET_ROOT={dotnetRoot}");
@@ -429,6 +437,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:TestingPlatformDisableAppHostDotnetRoot=true \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: CreateEnvironmentVariables(),
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         disabledResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");

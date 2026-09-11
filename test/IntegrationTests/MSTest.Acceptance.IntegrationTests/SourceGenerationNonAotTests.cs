@@ -190,7 +190,7 @@ public class UnitTest1
 
         string registration = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registration.g.cs", StringComparison.Ordinal)));
         StringAssert.Contains(registration, "availableMethods ??= type.GetMethods(memberFlags)");
-        StringAssert.Contains(registration, "ResolveMethod(availableMethods, method.Name, method.ParameterTypes)");
+        StringAssert.Contains(registration, "ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes)");
         StringAssert.Contains(registration, "methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false)");
         StringAssert.Contains(registration, "methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false)");
         StringAssert.Contains(registration, "descriptorTestMethods[type] = descriptorMethodRoots.ToArray()");

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
@@ -72,9 +72,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// </list>
 /// <para>
 /// <b>Trim/AOT safety.</b> Reflection-free mode directly references modeled attributes and
-/// invocation targets; rooting mode uses <c>[DynamicDependency(All, typeof(T))]</c> for each
-/// <c>[TestClass]</c> and accessible base type. Reflection fallback remains for unsupported,
-/// unresolved, cross-assembly, and general enumeration operations.
+/// invocation targets; both modes use member-scoped <c>[DynamicDependency]</c> roots for each
+/// <c>[TestClass]</c> and accessible base type. Nested types are deliberately excluded from those
+/// roots. Reflection fallback remains for unsupported, unresolved, cross-assembly, and general
+/// enumeration operations.
 /// </para>
 /// <para>
 /// <b>Adding a new fallback?</b> Mark the method with a <c>// Category A/B/C</c> comment and

@@ -355,42 +355,42 @@
       </trans-unit>
       <trans-unit id="CombinatorialMultipleValueProviders">
         <source>Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</source>
-        <target state="new">Parameter '{0}' on '{1}' has multiple combinatorial value providers: {2}. Apply exactly one attribute that implements {3}.</target>
+        <target state="translated">Le paramètre '{0}' sur '{1}' a plusieurs fournisseurs de valeurs combinatoires : {2}. Appliquez exactement un attribut qui implémente {3}.</target>
         <note>{0} is the parameter name. {1} is the test method name. {2} is the comma-separated list of provider attribute types. {3} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountExceedsRange">
         <source>{0} requests more unique random values than the range between {1} and {2} contains.</source>
-        <target state="new">{0} requests more unique random values than the range between {1} and {2} contains.</target>
+        <target state="translated">{0} demande plus de valeurs aléatoires uniques que la plage comprise entre {1} et {2} contient.</target>
         <note>{0} is the count property name. {1} is the minimum property name. {2} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomCountMustBePositive">
         <source>{0} must be positive.</source>
-        <target state="new">{0} must be positive.</target>
+        <target state="translated">{0} doit être positif.</target>
         <note>{0} is the random data count property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRandomMinimumExceedsMaximum">
         <source>{0} must not be greater than {1}.</source>
-        <target state="new">{0} must not be greater than {1}.</target>
+        <target state="translated">{0} ne doit pas être supérieur à {1}.</target>
         <note>{0} is the minimum property name. {1} is the maximum property name.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsInt32">
         <source>The range exceeds the maximum integer value.</source>
-        <target state="new">The range exceeds the maximum integer value.</target>
+        <target state="translated">La plage dépasse la valeur maximale d’un entier.</target>
         <note>Error message shown when a signed combinatorial range exceeds Int32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeExceedsUInt32">
         <source>The range exceeds the maximum unsigned integer value.</source>
-        <target state="new">The range exceeds the maximum unsigned integer value.</target>
+        <target state="translated">La plage dépasse la valeur maximale d’un entier non signé.</target>
         <note>Error message shown when an unsigned combinatorial range exceeds UInt32.MaxValue.</note>
       </trans-unit>
       <trans-unit id="CombinatorialRangeTooManyValues">
         <source>The range contains too many values.</source>
-        <target state="new">The range contains too many values.</target>
+        <target state="translated">La plage contient trop de valeurs.</target>
         <note>Error message shown when a combinatorial range cannot be represented in an array.</note>
       </trans-unit>
       <trans-unit id="CombinatorialUnableToInferValues">
         <source>Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</source>
-        <target state="new">Unable to automatically generate values for parameter of type {0}. Apply an attribute that implements {1} to specify the values.</target>
+        <target state="translated">Impossible de générer automatiquement des valeurs pour le paramètre de type {0}. Appliquez un attribut qui implémente {1} pour spécifier les valeurs.</target>
         <note>{0} is the parameter type. {1} is the provider interface name.</note>
       </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">

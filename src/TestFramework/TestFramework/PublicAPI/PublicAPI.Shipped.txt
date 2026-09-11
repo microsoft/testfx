@@ -11,6 +11,7 @@
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext() -> void
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AddResult(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.AllResults.get -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.RetryResult() -> void
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction.Drop = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
@@ -65,6 +66,10 @@
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.GroupName.get -> string!
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IsConditionMet.get -> bool
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryBaseAttribute.TestCategories.get -> System.Collections.Generic.IList<string!>!
+const Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.NoSeed = 0 -> int
+const Microsoft.VisualStudio.TestTools.UnitTesting.WellKnownResources.Console = "System.Console" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.WellKnownResources.CurrentDirectory = "System.Environment.CurrentDirectory" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.WellKnownResources.EnvironmentVariables = "System.Environment.Variables" -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute.AssemblyCleanupAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute
@@ -388,6 +393,33 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ClassIniti
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ClassInitializeAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.CombinatorialDataAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialDataAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.CombinatorialRandomDataAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Count.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Count.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object![]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Maximum.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Maximum.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Minimum.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Minimum.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Seed.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRandomDataAttribute.Seed.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(int from, int count) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(int from, int to, int step) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(uint from, uint count) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.CombinatorialRangeAttribute(uint from, uint to, uint step) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialRangeAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object![]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.CombinatorialValuesAttribute(params object?[]? values) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValuesAttribute.Values.get -> object?[]!
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider
+Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.ICombinatorialValuesProvider.GetValues(System.Reflection.ParameterInfo! parameter) -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.ConditionBaseAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.IgnoreMessage.get -> string?
@@ -424,6 +456,14 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMet
 Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
 Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType.Constant = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
 Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType.Exponential = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.DependsOnAttribute(string! testMethodName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.DependsOnAttribute(System.Type! testClass, string! testMethodName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.DependsOnAttribute(System.Type! testClass) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.ProceedOnFailure.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.ProceedOnFailure.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.TestClass.get -> System.Type?
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.TestMethodName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.Description.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.DescriptionAttribute(string? description) -> void
@@ -446,6 +486,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.GetData(System
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.IgnoreMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Field = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
@@ -522,6 +563,14 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute.Workers.set ->
 Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute.Priority.get -> int
 Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute.PriorityAttribute(int priority) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode.Read = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode.ReadWrite = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute.Mode.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute.Mode.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute.Resource.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute.ResourceLockAttribute(string! resource) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DelayBackoffType
 Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute.BackoffType.set -> void
@@ -638,6 +687,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotRunnable = 8 -> 
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Passed = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Timeout = 5 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Unknown = 7 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+Microsoft.VisualStudio.TestTools.UnitTesting.WellKnownResources
 Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute.Id.get -> int
 Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute.WorkItemAttribute(int id) -> void
@@ -857,6 +907,8 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.ReferenceEquals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDataProvider(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, System.Func<object?[]!, object?>! dataProvider) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDisplayNameProvider(System.Type! declaringType, string! methodName, System.Func<System.Reflection.MethodInfo!, object?[]?, string?>! displayNameProvider) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage(string! format, params object?[]! args) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage -> Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler?
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message) -> void

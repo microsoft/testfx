@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -41,6 +42,37 @@ public sealed class TestHostBuilderTests
             CancellationToken.None);
 
         Assert.AreEqual(@"LOCAL\qualified", publishedEndpoint);
+    }
+
+    [TestMethod]
+    public async Task ControllerPreLaunch_CooperativeShutdownTimeoutUsesFinalProviderValue()
+    {
+        Mock<ITestHostEnvironmentVariableProvider> provider = new();
+        provider.SetupGet(x => x.Uid).Returns("provider");
+        provider.SetupGet(x => x.DisplayName).Returns("provider");
+        provider.Setup(x => x.UpdateAsync(It.IsAny<IEnvironmentVariables>()))
+            .Callback<IEnvironmentVariables>(environmentVariables => environmentVariables.SetVariable(new(
+                EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS,
+                "60",
+                isSecret: false,
+                isLocked: false)))
+            .Returns(Task.CompletedTask);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        var environmentVariables = new EnvironmentVariables(loggerFactory.Object);
+
+        await TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(
+            [],
+            [provider.Object],
+            environmentVariables,
+            CancellationToken.None);
+
+        Assert.AreEqual(
+            TimeSpan.FromSeconds(75),
+            TestHostControllersTestHost.GetTestHostCooperativeShutdownTimeout(environmentVariables));
+        Assert.AreEqual(
+            TimeSpan.FromSeconds(60),
+            ShutdownTimeouts.GetCanceledConsumerCompletion("60"));
     }
 
     [TestMethod]

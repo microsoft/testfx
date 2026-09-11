@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -19,13 +19,13 @@ internal static class TestMemberValidationHelper
     // Restricted to accessibilities the emitted helper class (a separate static type
     // declared in MSTest.SourceGenerated, not a derived type) can legally call.
     // 'protected' and 'private protected' members require the caller to be a derived
-    // type, so they are excluded; 'protected internal' is included because the internal
-    // half is satisfied (the generated helper lives in the same assembly).
-    internal static bool IsAccessibleFromConsumer(ISymbol symbol)
-        => symbol.DeclaredAccessibility is
-            Accessibility.Public
-            or Accessibility.Internal
-            or Accessibility.ProtectedOrInternal;
+    // type, so they are excluded. Internal access is available only for members declared
+    // in the consuming assembly.
+    internal static bool IsAccessibleFromConsumer(ISymbol symbol, IAssemblySymbol consumingAssembly)
+        => SymbolReferenceabilityHelper.IsMemberAccessibleFrom(
+            symbol.DeclaredAccessibility,
+            symbol.ContainingAssembly,
+            consumingAssembly);
 
     internal static bool IsTestMethodAttributePresent(ImmutableArray<AttributeData> attributes)
     {
@@ -85,44 +85,79 @@ internal static class TestMemberValidationHelper
                 && parameters[0].Type.ToDisplayString(SymbolDisplayFormats.FullyQualified) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
     }
 
-    internal static string BuildMethodSignatureKey(IMethodSymbol method)
+    // Mirrors TypeEnumerator's MethodInfo.ToString()-based discovery identity. In particular,
+    // generic parameter names remain significant because reflection formats them into that string.
+    internal static bool HaveSameRuntimeDiscoverySignature(IMethodSymbol left, IMethodSymbol right)
     {
-        var sb = new StringBuilder();
-        sb.Append(method.IsStatic ? "S:" : "I:");
-        sb.Append(method.Name);
-        if (method.Arity > 0)
+        if (!string.Equals(left.Name, right.Name, StringComparison.Ordinal)
+            || left.Arity != right.Arity
+            || left.Parameters.Length != right.Parameters.Length
+            || (left.IsStatic && !right.IsStatic)
+            || !AreSignatureTypesEquivalent(left.ReturnType, right.ReturnType))
         {
-            sb.Append('`');
-            sb.Append(method.Arity);
+            return false;
         }
 
-        sb.Append('(');
-        bool first = true;
-        foreach (IParameterSymbol p in method.Parameters)
+        for (int index = 0; index < left.Parameters.Length; index++)
         {
-            if (!first)
+            IParameterSymbol leftParameter = left.Parameters[index];
+            IParameterSymbol rightParameter = right.Parameters[index];
+            if ((leftParameter.RefKind == RefKind.None) != (rightParameter.RefKind == RefKind.None)
+                || !AreSignatureTypesEquivalent(leftParameter.Type, rightParameter.Type))
             {
-                sb.Append(',');
+                return false;
             }
-
-            first = false;
-            switch (p.RefKind)
-            {
-                case RefKind.Ref:
-                    sb.Append("ref ");
-                    break;
-                case RefKind.Out:
-                    sb.Append("out ");
-                    break;
-                case RefKind.In:
-                    sb.Append("in ");
-                    break;
-            }
-
-            sb.Append(p.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified));
         }
 
-        sb.Append(')');
-        return sb.ToString();
+        return true;
+    }
+
+    private static bool AreSignatureTypesEquivalent(ITypeSymbol left, ITypeSymbol right)
+    {
+        if (left is IDynamicTypeSymbol)
+        {
+            return right is IDynamicTypeSymbol || right.SpecialType == SpecialType.System_Object;
+        }
+
+        if (right is IDynamicTypeSymbol)
+        {
+            return left.SpecialType == SpecialType.System_Object;
+        }
+
+        if (left is ITypeParameterSymbol leftTypeParameter && right is ITypeParameterSymbol rightTypeParameter)
+        {
+            return leftTypeParameter.TypeParameterKind == rightTypeParameter.TypeParameterKind
+                && string.Equals(leftTypeParameter.Name, rightTypeParameter.Name, StringComparison.Ordinal);
+        }
+
+        if (left is IArrayTypeSymbol leftArray && right is IArrayTypeSymbol rightArray)
+        {
+            return leftArray.Rank == rightArray.Rank
+                && AreSignatureTypesEquivalent(leftArray.ElementType, rightArray.ElementType);
+        }
+
+        if (left is INamedTypeSymbol leftNamed && right is INamedTypeSymbol rightNamed)
+        {
+            if (leftNamed.TypeArguments.Length != rightNamed.TypeArguments.Length
+                || !SymbolEqualityComparer.Default.Equals(leftNamed.OriginalDefinition, rightNamed.OriginalDefinition)
+                || (leftNamed.ContainingType is null) != (rightNamed.ContainingType is null)
+                || (leftNamed.ContainingType is not null
+                    && !AreSignatureTypesEquivalent(leftNamed.ContainingType, rightNamed.ContainingType!)))
+            {
+                return false;
+            }
+
+            for (int index = 0; index < leftNamed.TypeArguments.Length; index++)
+            {
+                if (!AreSignatureTypesEquivalent(leftNamed.TypeArguments[index], rightNamed.TypeArguments[index]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return SymbolEqualityComparer.Default.Equals(left, right);
     }
 }

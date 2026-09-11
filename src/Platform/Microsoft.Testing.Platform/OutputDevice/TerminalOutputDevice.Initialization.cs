@@ -206,18 +206,17 @@ internal sealed partial class TerminalOutputDevice
             }
             : isLLMEnvironment ? OutputShowMode.Failed : OutputShowMode.All;
 
-    // Resolves which per-test terminal blocks are rendered. An explicit --show-test-results always wins over
-    // --output, regardless of the order the two options appear on the command line (only --show-test-results is
-    // consulted for the override, via TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility).
-    // Absent --show-test-results, 'minimal' shows only failed results, 'detailed' shows every outcome, and
-    // everything else (including no --output at all) shows failed and skipped results (passed tests stay hidden).
+    // Resolves which per-test terminal blocks are rendered. An explicit --show-test-results value or its passive
+    // configuration default wins over --output; an explicit value wins over the passive default. When neither is
+    // present, 'minimal' shows only failed results, 'detailed' shows every outcome, and everything else (including
+    // no --output at all) shows failed and skipped results (passed tests stay hidden).
     // Internal for unit testing the parse seam that feeds
     // TerminalTestReporterOptions.ShowTestResults.
     internal static TestResultVisibility GetShowTestResultsVisibility(ICommandLineOptions commandLineOptions)
     {
-        if (TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(commandLineOptions) is { } explicitVisibility)
+        if (TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(commandLineOptions) is { } configuredVisibility)
         {
-            return explicitVisibility;
+            return configuredVisibility;
         }
 
         string? outputArgument = commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? outputArguments)

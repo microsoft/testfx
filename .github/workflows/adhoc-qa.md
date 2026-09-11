@@ -51,7 +51,10 @@ permissions:
   statuses: read
   vulnerability-alerts: read
 
-network: defaults
+network:
+  allowed:
+    - defaults
+    - dotnet
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced

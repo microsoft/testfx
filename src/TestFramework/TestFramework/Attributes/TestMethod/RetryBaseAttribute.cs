@@ -34,6 +34,9 @@ public abstract class RetryBaseAttribute : Attribute
     /// reported, tagged as superseded, so tooling can surface the retry (attempt count, flaky detection,
     /// per-attempt error messages). The VSTest host receives only the final result.
     /// </returns>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
     protected internal abstract Task<RetryResult> ExecuteAsync(RetryContext retryContext);
 

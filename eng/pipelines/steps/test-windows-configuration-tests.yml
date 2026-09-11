@@ -1,4 +1,4 @@
-# Windows Release full-test and coverage steps plus Debug unit tests, shared by PR validation and main-branch cache seeding.
+# Windows Release full-test and coverage steps plus Debug unit tests, shared by PR and main-branch validation.
 #
 # Assumes the consuming job declares:
 #   - the matrix variable `_BuildConfig` (Debug or Release)
@@ -17,13 +17,6 @@ parameters:
 - name: affectedTestsCacheVersion
   type: string
   default: v1
-- name: acceptanceTestCacheMode
-  type: string
-  default: disabled
-  values:
-  - disabled
-  - read
-  - write
 
 steps:
 # Because the build step is using -ci, restore is done in a local .packages directory.
@@ -34,14 +27,11 @@ steps:
 - ${{ if eq(parameters.enableAffectedTests, false) }}:
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
     name: Test
     displayName: Test
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       # Secret variables are not automatically exposed to scripts. Fork PR builds do not receive this token,
       # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -62,15 +52,12 @@ steps:
 
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --collect-test-map
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed --collect-test-map
     name: Test
     displayName: Test and collect affected-test map
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
@@ -85,7 +72,7 @@ steps:
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
 
   - pwsh: |
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --affected-tests
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed --affected-tests
       $exitCode = $LASTEXITCODE
       if ($exitCode -eq 0) {
         Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
@@ -104,9 +91,6 @@ steps:
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   # Scheduled and manual runs keep their full-validation contract. PRs also fall back when the cache is absent or the
@@ -120,114 +104,22 @@ steps:
           Remove-Item -Force
       }
 
-      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+      dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
       exit $LASTEXITCODE
     name: Test
     displayName: Test (affected-test fallback)
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
     env:
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_MODE: ${{ parameters.acceptanceTestCacheMode }}
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCache\$(_BuildConfig)'
-      TESTFX_ACCEPTANCE_MSBUILD_CACHE_LOG_ROOT: '$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'disabled')) }}:
   - pwsh: throw "affectedTestsMode must be 'collect' or 'run' when enableAffectedTests is true."
     displayName: Reject invalid affected-test configuration
 
-- pwsh: |
-    $summaryRoot = "$(Agent.TempDirectory)\AcceptanceMSBuildCacheLogs\$(_BuildConfig)\Summaries"
-    $summaryFiles = if (Test-Path -LiteralPath $summaryRoot -PathType Container) {
-      @(Get-ChildItem -LiteralPath $summaryRoot -Filter '*.txt' -File -ErrorAction SilentlyContinue)
-    }
-    else {
-      @()
-    }
-
-    if ($summaryFiles.Count -eq 0) {
-      Write-Host "No acceptance MSBuild cache statistics were produced. Caching was either skipped or no generated acceptance assets ran."
-      exit 0
-    }
-
-    $records = @(
-      foreach ($file in $summaryFiles) {
-        try {
-          $values = ConvertFrom-StringData -StringData (Get-Content -LiteralPath $file.FullName -Raw)
-          [pscustomobject]@{
-            Variant = $values.Variant
-            Outcome = $values.Outcome
-            HasStatistics = $values.HasStatistics -eq 'True'
-            Hits = [int]$values.Hits
-            Misses = [int]$values.Misses
-            SavedProjectSeconds = [double]::Parse(
-              $values.SavedProjectSeconds,
-              [System.Globalization.CultureInfo]::InvariantCulture)
-          }
-        }
-        catch {
-          Write-Host "##vso[task.logissue type=warning]Could not read acceptance cache summary '$($file.FullName)': $($_.Exception.Message)"
-        }
-      }
-    )
-
-    if ($records.Count -eq 0) {
-      Write-Host "No parseable acceptance MSBuild cache statistics were produced."
-      exit 0
-    }
-
-    $hits = ($records | Measure-Object -Property Hits -Sum).Sum
-    $misses = ($records | Measure-Object -Property Misses -Sum).Sum
-    $totalNodes = $hits + $misses
-    $hitRatio = if ($totalNodes -eq 0) { 0 } else { $hits / $totalNodes }
-    $savedProjectSeconds = ($records | Measure-Object -Property SavedProjectSeconds -Sum).Sum
-    $fallbacks = @($records | Where-Object Outcome -EQ 'Fallback').Count
-    $missingStatistics = @(
-      $records | Where-Object { -not $_.HasStatistics -and $_.Outcome -ne 'Fallback' }
-    ).Count
-
-    Write-Host "Acceptance MSBuild cache [${{ parameters.acceptanceTestCacheMode }}]: $($records.Count) generated build attempt(s), $hits hit node(s), $misses miss node(s), $($hitRatio.ToString('P1')) hit ratio, $($savedProjectSeconds.ToString('F1')) project-seconds saved, $fallbacks fallback(s), $missingStatistics successful attempt(s) without statistics."
-
-    $summaryPath = "$(Agent.TempDirectory)\AcceptanceMSBuildCacheSummary-$(_BuildConfig).md"
-    try {
-      @(
-        '# Acceptance MSBuild cache'
-        ''
-        '| Mode | Generated build attempts | Hit nodes | Miss nodes | Hit ratio | Saved project time | Fallbacks | Successful attempts missing statistics |'
-        '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
-        "| ${{ parameters.acceptanceTestCacheMode }} | $($records.Count) | $hits | $misses | $($hitRatio.ToString('P1')) | $([TimeSpan]::FromSeconds($savedProjectSeconds).ToString()) | $fallbacks | $missingStatistics |"
-      ) | Set-Content -LiteralPath $summaryPath
-      Write-Host "##vso[task.uploadsummary]$summaryPath"
-    }
-    catch {
-      Write-Host "##vso[task.logissue type=warning]Could not publish acceptance MSBuild cache summary: $($_.Exception.Message)"
-    }
-  displayName: Report acceptance MSBuild cache usage
-  condition: and(always(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
-
-# A cache hit materializes compiled outputs but does not run Arcade's restore phase, which installs the .NET runtimes
-# declared in global.json. Release gets those runtimes from its sign/pack preparation; initialize them explicitly for
-# the cached Debug leg before launching its unit-test apphosts. This template is only included when tests are enabled.
-- pwsh: |
-    & ./eng/common/build.ps1 `
-      -ci `
-      -disablePipelineSetResult `
-      -configuration $(_BuildConfig) `
-      -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\PrepareTestRuntime.binlog" `
-      -restore `
-      -prepareMachine `
-      /p:ContinuousIntegrationBuild=true `
-      /p:FastAcceptanceTest=true `
-      /p:NoBuild=true `
-      /p:MSBuildCachePackageEnabled=true `
-      /p:MSBuildCacheEnabled=false
-    exit $LASTEXITCODE
-  displayName: Prepare cached Debug test runtime
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
-
 # The Debug leg exists to exercise DEBUG-conditional product code and tests. The Release integration suite
 # already creates child test assets in both configurations, so repeating that suite in Debug is redundant.
 # --test-modules bypasses MSBuild evaluation, so explicitly provide the reporting and diagnostics arguments.
-- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace --show-test-results failed
   name: TestDebug
   displayName: Test (unit tests only)
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))

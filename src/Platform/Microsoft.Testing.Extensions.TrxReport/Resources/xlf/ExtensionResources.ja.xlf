@@ -129,7 +129,7 @@ Example: 'MyReport_{tfm}.trx'.</source>
         <target state="translated">生成された TRX レポートの名前。相対パスまたは絶対パスを含めることができます。相対パスはテスト結果ディレクトリに対して解決され、存在しないディレクトリは作成されます。
 次のプレースホルダーがサポートされています: {pname} (テスト アプリケーション名)、{pid} (プロセス ID)、{asm} (エントリ アセンブリ名)、{tfm} (ターゲット フレームワーク モニカー)、{arch} (プロセス アーキテクチャ)、{time} (タイムスタンプ)。
 例: 'MyReport_{tfm}.trx'。</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</note>
+        <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>

@@ -129,7 +129,7 @@ Example: 'MyReport_{tfm}.trx'.</source>
         <target state="translated">Le nom du rapport TRX généré. Peut inclure un chemin d’accès relatif ou absolu. Les chemins relatifs sont résolus sur le répertoire des résultats des tests et les répertoires manquants sont créés.
 Permet de prendre en charge les espaces réservés suivants: {pname} (nom de l’application de test), {pid} (ID de processus), {asm} (nom de l’assembly d’entrée), {tfm} (moniker de framework cible), {arch} (architecture du processus), {time} (horodateur).
 Exemple : 'MyReport_{tfm}.trx'.</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</note>
+        <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>

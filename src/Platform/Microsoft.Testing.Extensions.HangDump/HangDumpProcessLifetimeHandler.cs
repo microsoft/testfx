@@ -70,6 +70,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     private static readonly TimeSpan InProgressTestsQueryTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan BestEffortDiagnosticsTimeout = TimeSpan.FromSeconds(1);
 
+    private readonly TimeSpan _disposeTimeout = TimeoutHelper.DefaultHangTimeSpanTimeout;
     private int _dumpTaken;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;

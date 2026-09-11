@@ -64,7 +64,7 @@ Example: 'MyReport_{tfm}.xml'.</source>
         <target state="translated">Oluşturulan JUnit XML raporunun adı. Göreli veya mutlak yol içerebilir; göreli yollar test sonuçları dizinine göre çözümlenir ve eksik dizinler oluşturulur.
 Şu yer tutucuları destekler: {pname} (test uygulaması adı), {pid} (işlem kimliği), {asm} (girdi derleme adı), {tfm} (hedef çerçeve bilinen adı), {arch} (işlem mimarisi), {time} (zaman damgası).
 Örnek: 'MyReport_{tfm}.xml'.</target>
-        <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="'MyReport_{tfm}.xml'"}.</note>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>

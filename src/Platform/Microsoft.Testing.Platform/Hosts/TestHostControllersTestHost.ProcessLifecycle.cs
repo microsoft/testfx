@@ -24,6 +24,7 @@ internal sealed partial class TestHostControllersTestHost
         IProcessHandler process,
         IConfiguration configuration,
         NamedPipeServer testHostControllerIpc,
+        TestHostControllerCancellationServer testHostControllerCancellationServer,
         ProxyOutputDevice outputDevice,
         ITelemetryInformation telemetryInformation,
         Stopwatch consoleRunStarted,
@@ -32,15 +33,21 @@ internal sealed partial class TestHostControllersTestHost
         // Launch the test host process
         string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);
-        await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid} '{testHostProcessStartupTime}'").ConfigureAwait(false);
-        await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'").ConfigureAwait(false);
+        await _logger.LogDebugAsync(
+            $"Test host process startup timestamp environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}' is '{testHostProcessStartupTime}'.").ConfigureAwait(false);
+        await _logger.LogDebugAsync(
+            $"Starting test host process '{processStartInfo.FileName}' with arguments '{processStartInfo.Arguments}'.").ConfigureAwait(false);
 
         ITestHostLauncher? testHostLauncher = _testHostsInformation.TestHostLauncher;
         using IProcess testHostProcess = testHostLauncher is null
             ? process.Start(processStartInfo)
             : await LaunchUsingCustomLauncherAsync(testHostLauncher, processStartInfo, partialCommandLine, applicationCancellationToken).ConfigureAwait(false);
+        var applicationCancellationTokenSource =
+            (CTRLPlusCCancellationTokenSource)ServiceProvider.GetTestApplicationCancellationTokenSource();
+        using IDisposable forceExitRegistration = applicationCancellationTokenSource.RegisterForceExitAction(testHostProcess.Kill);
 
         int? testHostProcessId = null;
+        bool testHostControllerConnectionTimedOut = false;
         try
         {
             testHostProcessId = testHostProcess.Id;
@@ -50,14 +57,14 @@ internal sealed partial class TestHostControllersTestHost
             // Access PID can throw InvalidOperationException if the process has already exited:
             // System.InvalidOperationException: No process is associated with this object.
             // A custom launcher may also legitimately not expose a local PID (e.g. container/remote).
-            await _logger.LogDebugAsync($"Unable to obtain test host PID; process had already exited or does not expose a PID (HasExited: {testHostProcess.HasExited}). {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
+            await _logger.LogDebugAsync(
+                $"Unable to obtain the test host PID because the process had already exited or does not expose a PID. HasExited: '{testHostProcess.HasExited}'. {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
         }
 
         testHostProcess.Exited += (_, _) =>
-            _logger.LogDebug($"Test host process exited, PID: '{testHostProcessId}'");
+            _logger.LogDebug($"Test host process exited. PID: '{testHostProcessId}'.");
 
-        await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}").ConfigureAwait(false);
-
+        await _logger.LogDebugAsync($"Started test host process. PID: '{testHostProcessId}'. HasExited: '{testHostProcess.HasExited}'.").ConfigureAwait(false);
         // Note: we intentionally gate on HasExited only and not on 'testHostProcessId is null'.
         // A custom ITestHostLauncher may legitimately not expose a local PID (e.g. container,
         // remote, or AUMID-activated apps); the real test host PID still arrives via the IPC
@@ -65,100 +72,126 @@ internal sealed partial class TestHostControllersTestHost
         // coincides with HasExited == true, so behavior is unchanged there.
         if (testHostProcess.HasExited)
         {
-            await _logger.LogDebugAsync("Test host process exited prematurely").ConfigureAwait(false);
+            await _logger.LogDebugAsync(
+                $"Test host process exited before connecting to the test host controller. Exit code: '{testHostProcess.ExitCode}'.").ConfigureAwait(false);
+            await outputDevice.DisplayAsync(
+                this,
+                new ErrorMessageOutputDeviceData(CreateTestHostControllerConnectionFailureMessage(
+                    waitDuration: TimeSpan.Zero,
+                    timeout: null,
+                    testHostProcess)),
+                CancellationToken.None).ConfigureAwait(false);
+            int fallbackPid = testHostProcessId ?? 0;
+            return (
+                (int)ExitCode.GenericFailure,
+                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
+                telemetryInformation.IsEnabled ? "[]" : null);
         }
         else
         {
-            string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
-            double timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : double.Parse(seconds, CultureInfo.InvariantCulture);
-            await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'").ConfigureAwait(false);
-
-            // Wait for the test host controller to connect
-            using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, applicationCancellationToken))
-            {
-                await _logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
-                await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
-            }
-
-            // Wait for the test host controller to send the PID of the test host process
-            using (CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                _waitForPid.Wait(timeout.Token);
-            }
-
-            await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync").ConfigureAwait(false);
-
-            if (_testHostPID is null)
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
-            bool startHandlersCompleted = true;
-            if (_testHostsInformation.LifetimeHandlers.Length > 0)
-            {
-                // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
-                // to block the execution of the test host should add an in-process extension like an 'ITestHostApplicationLifetime' and
-                // wait for a connection/signal to return.
-                // This is partial information because we don't yet know the exit code, as we are just starting.
-                // The full info contains the exit code and happens after WaitForExit.
-                TestHostProcessInformation partialTestHostProcessInformation = new(_testHostPID.Value);
-                foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+            await RunWithCancellationTeardownAsync(
+                async () =>
                 {
-                    startHandlersCompleted = await TryRunControllerExtensionAsync(
-                        token => lifetimeHandler.OnTestHostProcessStartedAsync(partialTestHostProcessInformation, token),
-                        applicationCancellationToken).ConfigureAwait(false);
+                    string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
+                    double timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : double.Parse(seconds, CultureInfo.InvariantCulture);
+                    await _logger.LogDebugAsync(
+                        $"Test host controller named-pipe connection timeout is '{timeoutSeconds}' seconds.").ConfigureAwait(false);
+
+                    // Wait for the test host process to connect to the controller's named pipe.
+                    await _logger.LogDebugAsync("Waiting for the test host process to connect to the controller's named pipe.").ConfigureAwait(false);
+                    bool connected = await WaitForTestHostControllerConnectionAsync(
+                        testHostControllerIpc.WaitConnectionAsync,
+                        timeoutSeconds,
+                        applicationCancellationToken,
+                        async () =>
+                        {
+                            testHostControllerConnectionTimedOut = true;
+                            await outputDevice.DisplayAsync(
+                                this,
+                                new ErrorMessageOutputDeviceData(CreateTestHostControllerConnectionFailureMessage(
+                                    TimeSpan.FromSeconds(timeoutSeconds),
+                                    TimeSpan.FromSeconds(timeoutSeconds),
+                                    testHostProcess)),
+                                CancellationToken.None).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+                    if (!connected)
+                    {
+                        return;
+                    }
+
+                    // Wait for the test host controller to send the PID of the test host process.
+                    using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(applicationCancellationToken))
+                    {
+                        timeout.CancelAfter(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                        _waitForPid.Wait(timeout.Token);
+                    }
+
+                    await _logger.LogDebugAsync("Invoking test-host-process-started lifecycle handlers.").ConfigureAwait(false);
+
+                    if (_testHostPID is null)
+                    {
+                        throw ApplicationStateGuard.Unreachable();
+                    }
+
+                    bool startHandlersCompleted = true;
+                    if (_testHostsInformation.LifetimeHandlers.Length > 0)
+                    {
+                        // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
+                        // to block the execution of the test host should add an in-process extension like an 'ITestHostApplicationLifetime' and
+                        // wait for a connection/signal to return.
+                        // This is partial information because we don't yet know the exit code, as we are just starting.
+                        // The full info contains the exit code and happens after WaitForExit.
+                        TestHostProcessInformation partialTestHostProcessInformation = new(_testHostPID.Value);
+                        foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
+                        {
+                            startHandlersCompleted = await TryRunControllerExtensionAsync(
+                                token => lifetimeHandler.OnTestHostProcessStartedAsync(partialTestHostProcessInformation, token),
+                                applicationCancellationToken).ConfigureAwait(false);
+                            if (!startHandlersCompleted)
+                            {
+                                _servicesStillRunning.Add(lifetimeHandler);
+                                break;
+                            }
+                        }
+                    }
+
+                    await _logger.LogDebugAsync("Waiting for the test host process to exit.").ConfigureAwait(false);
                     if (!startHandlersCompleted)
                     {
-                        _servicesStillRunning.Add(lifetimeHandler);
-                        break;
-                    }
-                }
-            }
-
-            await _logger.LogDebugAsync("Wait for test host process exit").ConfigureAwait(false);
-            try
-            {
-                if (!startHandlersCompleted)
-                {
-                    throw new OperationCanceledException(applicationCancellationToken);
-                }
-
-                await testHostProcess.WaitForExitAsync(applicationCancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (applicationCancellationToken.IsCancellationRequested)
-            {
-                // The run was canceled while waiting for the test host to exit. Tear the host down
-                // and wait (without cancellation) for it to fully exit, so the exit-code
-                // reconciliation below still observes a real OS exit code.
-                await _logger.LogDebugAsync("Test host execution was canceled; terminating the test host").ConfigureAwait(false);
-                try
-                {
-                    testHostProcess.Kill();
-                }
-                catch (Exception ex)
-                {
-                    // Termination is best-effort. The host may have exited between the cancellation
-                    // and this Kill call (InvalidOperationException), or Kill may delegate to a custom
-                    // ITestHostLauncher's Terminate() which can throw anything (e.g. NotSupportedException,
-                    // Win32Exception). Either way the host is on its way out, so swallow and log rather
-                    // than letting it mask the cancellation teardown flow.
-                    await _logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
-                }
-
-                if (!await WaitForExitAfterTerminationAsync(
-                    testHostProcess,
-                    TestHostTerminationTimeout).ConfigureAwait(false))
-                {
-                    if (testHostProcess is TestHostHandleToProcessAdapter adapter)
-                    {
-                        adapter.DeferDisposalUntilExit();
+                        throw new OperationCanceledException(applicationCancellationToken);
                     }
 
-                    await _logger.LogWarningAsync(
-                        $"Test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
-                }
-            }
+                    await testHostProcess.WaitForExitAsync(applicationCancellationToken).ConfigureAwait(false);
+                },
+                applicationCancellationToken,
+                testHostProcess,
+                testHostControllerCancellationServer.RequestCancellation,
+                _logger,
+                TestHostCooperativeShutdownTimeout,
+                TestHostTerminationTimeout).ConfigureAwait(false);
+        }
+
+        if (testHostControllerConnectionTimedOut)
+        {
+            await TerminateTestHostAfterConnectionFailureAsync(testHostProcess, _logger, TestHostTerminationTimeout).ConfigureAwait(false);
+            int fallbackPid = testHostProcessId ?? 0;
+            return (
+                (int)ExitCode.GenericFailure,
+                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
+                telemetryInformation.IsEnabled ? "[]" : null);
+        }
+
+        if (_testHostPID is null && applicationCancellationToken.IsCancellationRequested)
+        {
+            int fallbackPid = testHostProcessId ?? 0;
+            var canceledProcessInformation = new TestHostProcessInformation(
+                fallbackPid,
+                (int)ExitCode.TestSessionAborted,
+                testHostCompletedReceived: false);
+            return (
+                (int)ExitCode.TestSessionAborted,
+                canceledProcessInformation,
+                telemetryInformation.IsEnabled ? "[]" : null);
         }
 
         if (_testHostPID is null)
@@ -224,7 +257,7 @@ internal sealed partial class TestHostControllersTestHost
         {
             if (testHostProcessExited && _testHostsInformation.LifetimeHandlers.Length > 0)
             {
-                await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcessExitCode}").ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Invoking test-host-process-exited lifecycle handlers. Exit code: '{testHostProcessExitCode}'.").ConfigureAwait(false);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
                     if (_servicesStillRunning.Contains(lifetimeHandler))
@@ -361,9 +394,72 @@ internal sealed partial class TestHostControllersTestHost
         exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
         exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
 
-        await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
+        await _logger.LogInformationAsync(
+            $"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'.").ConfigureAwait(false);
 
         return (exitCode, testHostProcessInformation, extensionInformation);
+    }
+
+    internal static async Task<bool> WaitForTestHostControllerConnectionAsync(
+        Func<CancellationToken, Task> waitConnectionAsync,
+        double timeoutSeconds,
+        CancellationToken applicationCancellationToken,
+        Func<Task> onTimeoutAsync)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, applicationCancellationToken);
+        try
+        {
+            await waitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested && !applicationCancellationToken.IsCancellationRequested)
+        {
+            await onTimeoutAsync().ConfigureAwait(false);
+            return false;
+        }
+    }
+
+    internal static string CreateTestHostControllerConnectionFailureMessage(
+        TimeSpan waitDuration,
+        TimeSpan? timeout,
+        IProcess testHostProcess)
+    {
+        bool hasExited = testHostProcess.HasExited;
+        string processState = hasExited
+            ? $"The test host process exited with code '{testHostProcess.ExitCode}'."
+            : "The test host process is still running.";
+
+        string timeoutDetails = timeout is null
+            ? string.Empty
+            : $" The configured connection timeout was '{timeout.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.";
+        return $"The test host process did not connect to the controller's named pipe after '{waitDuration.TotalSeconds.ToString(CultureInfo.InvariantCulture)}' seconds.{timeoutDetails} {processState}";
+    }
+
+    internal static async Task TerminateTestHostAfterConnectionFailureAsync(
+        IProcess testHostProcess,
+        ILogger logger,
+        TimeSpan terminationTimeout)
+    {
+        if (testHostProcess.HasExited)
+        {
+            return;
+        }
+
+        try
+        {
+            testHostProcess.Kill();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogDebugAsync($"Test host termination after a connection failure failed; continuing cleanup. {ex}").ConfigureAwait(false);
+        }
+
+        bool exited = await WaitForExitAfterTerminationAsync(testHostProcess, terminationTimeout, logger).ConfigureAwait(false);
+        if (!exited && testHostProcess is TestHostHandleToProcessAdapter adapter)
+        {
+            adapter.DeferDisposalUntilExit();
+        }
     }
 
     private CancellationTokenSource EnsureControllerFinalizationCancellationTokenSource()
@@ -408,7 +504,8 @@ internal sealed partial class TestHostControllersTestHost
 
     private static async Task<bool> WaitForExitAfterTerminationAsync(
         IProcess testHostProcess,
-        TimeSpan timeout)
+        TimeSpan timeout,
+        ILogger logger)
     {
         try
         {
@@ -419,6 +516,78 @@ internal sealed partial class TestHostControllersTestHost
         catch (TimeoutException)
         {
             return false;
+        }
+        catch (Exception ex)
+        {
+            await logger.LogDebugAsync($"Waiting for the test host to exit during cancellation teardown failed; continuing cleanup. {ex}").ConfigureAwait(false);
+            return false;
+        }
+    }
+
+    internal static async Task HandleCanceledTestHostAsync(
+        IProcess testHostProcess,
+        Action requestCancellation,
+        ILogger logger,
+        TimeSpan cooperativeShutdownTimeout,
+        TimeSpan terminationTimeout)
+    {
+        requestCancellation();
+        if (await WaitForExitAfterTerminationAsync(testHostProcess, cooperativeShutdownTimeout, logger).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        await logger.LogDebugAsync($"Test host did not exit within '{cooperativeShutdownTimeout}' after cooperative cancellation; terminating it.").ConfigureAwait(false);
+        try
+        {
+            testHostProcess.Kill();
+        }
+        catch (Exception ex)
+        {
+            // Termination is best-effort. The host may have exited between the cancellation
+            // and this Kill call (InvalidOperationException), or Kill may delegate to a custom
+            // ITestHostLauncher's Terminate() which can throw anything (e.g. NotSupportedException,
+            // Win32Exception). Either way the host is on its way out, so swallow and log rather
+            // than letting it mask the cancellation teardown flow.
+            await logger.LogDebugAsync($"Test host termination during cancellation failed; continuing cleanup. {ex}").ConfigureAwait(false);
+        }
+
+        if (await WaitForExitAfterTerminationAsync(testHostProcess, terminationTimeout, logger).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        if (testHostProcess is TestHostHandleToProcessAdapter adapter)
+        {
+            adapter.DeferDisposalUntilExit();
+        }
+
+        await logger.LogWarningAsync(
+            $"Test host did not exit within {terminationTimeout} after termination was requested; continuing controller finalization.").ConfigureAwait(false);
+    }
+
+    internal static async Task RunWithCancellationTeardownAsync(
+        Func<Task> runAsync,
+        CancellationToken applicationCancellationToken,
+        IProcess testHostProcess,
+        Action requestCancellation,
+        ILogger logger,
+        TimeSpan cooperativeShutdownTimeout,
+        TimeSpan terminationTimeout)
+    {
+        try
+        {
+            await runAsync().ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (applicationCancellationToken.IsCancellationRequested)
+        {
+            await logger.LogDebugAsync("Test host execution was canceled; requesting cooperative test host cancellation.").ConfigureAwait(false);
+            await HandleCanceledTestHostAsync(
+                testHostProcess,
+                requestCancellation,
+                logger,
+                cooperativeShutdownTimeout,
+                terminationTimeout).ConfigureAwait(false);
         }
     }
 
@@ -481,9 +650,11 @@ internal sealed partial class TestHostControllersTestHost
         string? workingDirectory = RoslynString.IsNullOrEmpty(processStartInfo.WorkingDirectory) ? null : processStartInfo.WorkingDirectory;
         TestHostLaunchContext context = new(processStartInfo.FileName, arguments, environmentVariables, workingDirectory);
 
-        await _logger.LogDebugAsync($"Delegating test host launch to '{testHostLauncher.DisplayName}' (UID: {testHostLauncher.Uid})").ConfigureAwait(false);
+        await _logger.LogDebugAsync(
+            $"Delegating test host launch to '{testHostLauncher.DisplayName}' (UID: '{testHostLauncher.Uid}').").ConfigureAwait(false);
         ITestHostHandle handle = await testHostLauncher.LaunchTestHostAsync(context, cancellationToken).ConfigureAwait(false);
-        await _logger.LogDebugAsync($"Test host launched by '{testHostLauncher.Uid}' (Identifier: '{handle.Identifier ?? "<none>"}')").ConfigureAwait(false);
+        await _logger.LogDebugAsync(
+            $"Test host launched by '{testHostLauncher.Uid}'. Identifier: '{handle.Identifier ?? "<none>"}'.").ConfigureAwait(false);
         return new TestHostHandleToProcessAdapter(handle);
     }
 }

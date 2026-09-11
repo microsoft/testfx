@@ -54,7 +54,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</source>
         <target state="translated">O nome do relatório CTRF gerado. Pode incluir um caminho relativo ou absoluto; os caminhos relativos são resolvidos em relação ao diretório de resultados de teste, e os diretórios ausentes são criados.
 Dá suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino), {time} (carimbo de data/hora).
 Exemplo: 'MyReport_{tfm}.ctrf.json'.</target>
-        <note>Do not localize option name {Locked="--report-ctrf-filename"}, format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="'MyReport_{tfm}.ctrf.json'"}.</note>
+        <note>Do not localize format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="MyReport_{tfm}.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>

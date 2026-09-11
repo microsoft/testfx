@@ -170,7 +170,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
         <target state="translated">MSTest 3.8 以降では、'DynamicDataSourceType.AutoDetect' が既定値であり、プロパティ、メソッド、およびフィールドが自動的に識別されるため、冗長さとメンバーの種類への結合が減少します。</target>
-        <note>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</note>
+        <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
@@ -313,7 +313,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
         <target state="translated">'CollectionAssert' メソッドには、対応する同等の 'Assert' メソッドがあります。1 つのアサーション API を使用すると、一貫性と見つかりやすさが向上します。</target>
-        <note>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+        <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
@@ -418,12 +418,12 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
         <target state="translated">アセンブリまたはクラスの初期化に渡される TestContext は、そのコンテキストに固有であり、テストの実行ごとに更新されません。'static' メンバーで再利用すると、古いコンテキストが公開される可能性があります。</target>
-        <note>{Locked="TestContext"}{Locked="'static'"}</note>
+        <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
         <target state="translated">MSTest では、継承されたライフサイクル属性 '[TestInitialize]'、'[TestCleanup]'、'[ClassInitialize]'、'[ClassCleanup]' と、テスト属性 '[TestMethod]' および '[DataTestMethod]' が、厳密なフレームワークの型 ID で解決されます。フレームワーク アセンブリは 'Microsoft.VisualStudio.TestPlatform.TestFramework' から 'MSTest.TestFramework' に名前が変更されたため、異なる MSTest のメジャーに対してコンパイルされた基底クラスでは、異なる型 ID でこれらの属性が公開されます。こうした基底のものが、別のバージョンに対してコンパイルされたテスト クラスによって継承されると、継承されたセットアップとクリーンアップは実行されず、継承されたテスト メソッドは検出されず、ビルド エラーも検出エラーも発生しません。基本アセンブリと、カスタム属性の場合はその属性を定義しているアセンブリを、テスト プロジェクトと同じバージョンの MSTest に対して再コンパイルします。</target>
-        <note>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</note>
+        <note>{Locked="MSTest"}{Locked="[TestInitialize]"}{Locked="[TestCleanup]"}{Locked="[ClassInitialize]"}{Locked="[ClassCleanup]"}{Locked="[TestMethod]"}{Locked="[DataTestMethod]"}{Locked="Microsoft.VisualStudio.TestPlatform.TestFramework"}{Locked="MSTest.TestFramework"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
         <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' and, for custom attributes, the assembly that defines '[{2}]', against the same MSTest version as the test project.</source>
@@ -760,10 +760,25 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">文字列メソッドの戻り値を無視しない</target>
         <note />
       </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
+        <target state="translated">'SupportedOSPlatformAttribute' と 'UnsupportedOSPlatformAttribute' は、プラットフォーム互換性の分析に使用されますが、MSTest の実行を制御するものではありません。これらの属性を使用するテスト メソッドとテスト クラスでは、サポートされていないテストが実行時にスキップされるように、同等の '[OSCondition]' も宣言する必要があります。</target>
+        <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
+        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
+        <target state="translated">テスト '{0}' のプラットフォーム互換性属性が、同等の '[OSCondition]' 属性で表されていません</target>
+        <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
+        <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
+        <target state="translated">プラットフォーム互換性属性は '[OSCondition]' と一致している必要があります</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
         <target state="translated">'Assert.Fail' は意図的な失敗を明示し、エラー メッセージでテストを続行できない理由を文書化できるようにします。</target>
-        <note>{Locked="'Assert.Fail'"}</note>
+        <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
@@ -808,22 +823,22 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
         <target state="translated">コンストラクターを使用すると、'readonly' フィールドを使用して初期化でき、特に null 許容参照型では、より強力なコンパイラ フィードバックが得られます。このオプトイン スタイル ルールは、MSTEST0019 と相互に排他的です。</target>
-        <note>{Locked="'readonly'"}{Locked="MSTEST0019"}</note>
+        <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
         <target state="translated">'Dispose' と 'DisposeAsync' は標準の .NET 有効期間パターンに従い、テストのクリーンアップを運用コードと一貫性のあるものにしています。このオプトイン スタイル ルールは、MSTEST0022 と相互に排他的です。</target>
-        <note>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
+        <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
         <target state="translated">'[TestCleanup]' は、'IAsyncDisposable' を使用できないターゲット フレームワークでの非同期クリーンアップをサポートしています。このオプトイン スタイル ルールは、MSTEST0021 と相互に排他的です。</target>
-        <note>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</note>
+        <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
         <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
         <target state="translated">'[TestInitialize]' は同期および非同期初期化の両方をサポートしていますが、コンストラクターを待機することはできません。このオプトイン スタイル ルールは、MSTEST0020 と相互に排他的です。</target>
-        <note>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</note>
+        <note>{Locked="[TestInitialize]"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
@@ -958,7 +973,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
         <target state="translated">'StringAssert' メソッドには、対応する同等の 'Assert' メソッドがあります。1 つのアサーション API を使用すると、一貫性と見つかりやすさが向上します。</target>
-        <note>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+        <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
@@ -1365,7 +1380,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
         <target state="translated">MSTest は、テスト クラスまたはテスト メソッドの外で適用されている '[DeploymentItem]' を無視します。</target>
-        <note>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</note>
+        <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>

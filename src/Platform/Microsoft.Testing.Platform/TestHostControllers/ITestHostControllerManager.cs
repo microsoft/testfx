@@ -44,6 +44,9 @@ public interface ITestHostControllersManager
     /// default <c>Process.Start</c> behavior. At most one launcher can be registered.
     /// </summary>
     /// <param name="testHostLauncherFactory">The factory method that creates the test host launcher.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     void AddTestHostLauncher(Func<IServiceProvider, ITestHostLauncher> testHostLauncherFactory);
 
@@ -53,6 +56,9 @@ public interface ITestHostControllersManager
     /// </summary>
     /// <typeparam name="T">The type of the test host launcher.</typeparam>
     /// <param name="compositeServiceFactory">The factory method that creates the composite service.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     void AddTestHostLauncher<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostLauncher;

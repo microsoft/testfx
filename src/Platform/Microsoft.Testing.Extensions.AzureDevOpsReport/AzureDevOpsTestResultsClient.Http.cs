@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
+using Microsoft.Testing.Platform.Logging;
 
 #if !NETCOREAPP
 using Polyfills;
@@ -35,6 +36,11 @@ internal sealed partial class AzureDevOpsTestResultsClient
     internal static HttpClientHandler CreateHttpClientHandler()
     {
         HttpClientHandler handler = new();
+        if (!OperatingSystem.IsWasi())
+        {
+            handler.AllowAutoRedirect = false;
+        }
+
         if (ShouldOptInToAutomaticDecompression(handler))
         {
             handler.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
@@ -80,7 +86,7 @@ internal sealed partial class AzureDevOpsTestResultsClient
         using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, requestTimeout).ConfigureAwait(false);
     }
 
-    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken, TimeSpan attemptTimeout)
+    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken, TimeSpan attemptTimeout, bool throwOnUnexpectedContentType = true)
     {
         Exception? lastException = null;
 
@@ -97,6 +103,24 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     HttpResponseMessage response = await _httpClient.SendAsync(currentRequest, HttpCompletionOption.ResponseHeadersRead, attemptTimeoutSource.Token).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
+                        if (string.Equals(response.Content.Headers.ContentType?.MediaType, "text/html", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int statusCode = (int)response.StatusCode;
+                            string contentType = response.Content.Headers.ContentType?.ToString() ?? "text/html";
+                            string diagnostic = string.Format(
+                                CultureInfo.InvariantCulture,
+                                AzureDevOpsResources.AzureDevOpsLivePublishingUnexpectedContentType,
+                                statusCode,
+                                contentType);
+                            if (throwOnUnexpectedContentType)
+                            {
+                                response.Dispose();
+                                throw new InvalidOperationException(diagnostic);
+                            }
+
+                            await TryLogWarningAsync(diagnostic).ConfigureAwait(false);
+                        }
+
                         return response;
                     }
 
@@ -105,6 +129,17 @@ internal sealed partial class AzureDevOpsTestResultsClient
                     {
                         if (!ShouldRetry(response.StatusCode, attempt))
                         {
+                            if (IsAuthenticationFailure(response))
+                            {
+                                string status = response.StatusCode == 0
+                                    ? response.ReasonPhrase ?? "opaqueredirect"
+                                    : ((int)response.StatusCode).ToString(CultureInfo.InvariantCulture);
+                                throw new InvalidOperationException(string.Format(
+                                    CultureInfo.InvariantCulture,
+                                    AzureDevOpsResources.AzureDevOpsLivePublishingAuthenticationFailure,
+                                    status));
+                            }
+
                             string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
                             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
                         }
@@ -138,6 +173,28 @@ internal sealed partial class AzureDevOpsTestResultsClient
 
     private static bool ShouldRetry(HttpStatusCode statusCode, int attempt)
         => attempt < MaxAttempts && ((int)statusCode is >= 500 or 429);
+
+    private static bool IsAuthenticationFailure(HttpResponseMessage response)
+        => response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Redirect
+            || (response.StatusCode == 0 && string.Equals(response.ReasonPhrase, "opaqueredirect", StringComparison.Ordinal));
+
+    private async Task TryLogWarningAsync(string message)
+    {
+        if (_logger is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _logger.LogWarningAsync(message).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // There is nowhere left to report this, and a logger failure must not cause an accepted
+            // non-idempotent publish request to be retried.
+        }
+    }
 
     private static bool ShouldRetry(Exception exception, CancellationToken userCancellationToken, CancellationToken requestCancellationToken, int attempt)
         => attempt < MaxAttempts

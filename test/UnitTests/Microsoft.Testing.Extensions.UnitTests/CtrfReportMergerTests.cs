@@ -50,7 +50,7 @@ public sealed class CtrfReportMergerTests
 
         var testArray = (JsonArray)merged["results"]!["tests"]!;
         Assert.HasCount(3, testArray);
-        List<string?> names = [.. testArray.Select(t => (string?)t!["name"])];
+        List<string> names = [.. testArray.Select(t => t!["name"]!.GetValue<string>())];
         Assert.Contains("TestA", names);
         Assert.Contains("TestC", names);
     }
@@ -1084,7 +1084,7 @@ public sealed class CtrfReportMergerTests
 
         Assert.HasCount(4, tests, "Rows differing only by parameters or filePath are distinct tests.");
         Assert.AreSequenceEqual(
-            (string?[])["failed", "passed", "skipped", "passed"],
+            ["failed", "passed", "skipped", "passed"],
             tests.Select(t => (string?)t!["status"]).ToArray());
     }
 

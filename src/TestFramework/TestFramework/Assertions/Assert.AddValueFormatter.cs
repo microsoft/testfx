@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -44,6 +44,9 @@ public sealed partial class Assert
     /// <item><description><c>[ClassInitialize]</c>: all tests in the containing class.</description></item>
     /// <item><description><c>[AssemblyInitialize]</c>: all tests in the containing assembly.</description></item>
     /// </list>
+    /// <para>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </para>
     /// </remarks>
     /// <example>
     /// <code language="csharp">
@@ -97,6 +100,9 @@ public sealed partial class Assert
     /// disposal of other registrations is honored), not just once at registration time. Keep it cheap and
     /// side-effect free; perform any expensive setup outside the factory and have it return a formatter that
     /// closes over the precomputed state.
+    /// </para>
+    /// <para>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
     /// </para>
     /// </remarks>
     [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]

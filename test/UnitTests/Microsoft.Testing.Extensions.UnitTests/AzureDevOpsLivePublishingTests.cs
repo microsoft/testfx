@@ -341,15 +341,20 @@ public sealed class AzureDevOpsLivePublishingTests
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
 
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, passed?.State);
         Assert.AreEqual(2000L, passed?.DurationInMs);
         Assert.AreEqual(startTime, passed?.StartedDate);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, failed?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, failed?.State);
         Assert.AreEqual("boom", failed?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.NotExecutedTestOutcome, skipped?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, skipped?.State);
         Assert.AreEqual("skip", skipped?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, timeout?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, timeout?.State);
         Assert.AreEqual("Timeout: too slow", timeout?.ErrorMessage);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled?.Outcome);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, cancelled?.State);
         Assert.AreEqual("stopped", cancelled?.ErrorMessage);
     }
 
@@ -644,7 +649,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(7, runId);
         Assert.HasCount(1, task.DelayCalls);
         Assert.AreEqual(TimeSpan.FromSeconds(3), task.DelayCalls[0]);
-        Assert.AreSequenceEqual(new[] { "send:1", "delay:3", "send:2" }, events);
+        Assert.AreSequenceEqual(["send:1", "delay:3", "send:2"], events);
     }
 
     [TestMethod]
@@ -669,6 +674,130 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(8, runId);
         Assert.HasCount(1, task.DelayCalls);
         Assert.AreEqual(TimeSpan.FromMilliseconds(500), task.DelayCalls[0]);
+    }
+
+    [TestMethod]
+    [DataRow(HttpStatusCode.Redirect, "302")]
+    [DataRow(HttpStatusCode.Unauthorized, "401")]
+    public async Task AzureDevOpsTestResultsClient_AuthenticationFailure_ReportsInvalidAccessTokenGuidance(HttpStatusCode statusCode, string expectedStatus)
+    {
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(new HttpResponseMessage(statusCode)));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.Contains($"(status: {expectedStatus})", exception.Message);
+        Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
+        Assert.Contains("do not expose secrets to untrusted fork code", exception.Message);
+        Assert.Contains("separate trusted pipeline context", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_BrowserOpaqueRedirect_ReportsInvalidAccessTokenGuidance()
+    {
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(new HttpResponseMessage(0)
+            {
+                ReasonPhrase = "opaqueredirect",
+            }));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.Contains("(status: opaqueredirect)", exception.Message);
+        Assert.Contains("SYSTEM_ACCESSTOKEN is invalid or unavailable", exception.Message);
+        Assert.Contains("do not expose secrets to untrusted fork code", exception.Message);
+        Assert.Contains("separate trusted pipeline context", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_SuccessfulHtmlResponse_ReportsStatusAndContentType()
+    {
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("<!DOCTYPE html><html></html>", Encoding.UTF8, "text/html"),
+            }));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.Contains("status code 200", exception.Message);
+        Assert.Contains("content type 'text/html; charset=utf-8'", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_PublishTestResults_SuccessfulHtmlResponseReturnsNullAndReportsDiagnostic()
+    {
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("<!DOCTYPE html><html></html>", Encoding.UTF8, "text/html"),
+        };
+        QueueHttpMessageHandler handler = new((_, _) => Task.FromResult(response));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        CollectingLogger logger = new();
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock(), logger);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null);
+
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await client.PublishTestResultsWithSubResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
+
+        Assert.IsNull(publishedResults);
+        Assert.Contains("status code 200", string.Join(Environment.NewLine, logger.Logs));
+        Assert.Contains("content type 'text/html; charset=utf-8'", string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_PublishTestResults_LoggerFailureDoesNotReplaySuccessfulHtmlResponse()
+    {
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("<!DOCTYPE html><html></html>", Encoding.UTF8, "text/html"),
+        };
+        int sendCount = 0;
+        QueueHttpMessageHandler handler = new(
+            (_, _) =>
+            {
+                sendCount++;
+                return Task.FromResult(response);
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        CollectingLogger logger = new() { ThrowOnLog = true };
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock(), logger);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 1, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null);
+
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await client.PublishTestResultsWithSubResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
+
+        Assert.IsNull(publishedResults);
+        Assert.AreEqual(1, sendCount);
     }
 
     [TestMethod]
@@ -3911,6 +4040,7 @@ public sealed class AzureDevOpsLivePublishingTests
         JsonElement result = document.RootElement[0];
         Assert.AreEqual(777, result.GetProperty("id").GetInt32());
         Assert.AreEqual("rerun", result.GetProperty("resultGroupType").GetString());
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, result.GetProperty("state").GetString());
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
@@ -4326,6 +4456,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         using var document = JsonDocument.Parse(capturedBody!);
         JsonElement created = document.RootElement[0];
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, created.GetProperty("state").GetString());
         Assert.IsFalse(created.TryGetProperty("id", out _));
         Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
         Assert.IsFalse(created.TryGetProperty("subResults", out _));

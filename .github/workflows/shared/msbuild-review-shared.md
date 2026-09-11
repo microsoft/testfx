@@ -13,7 +13,9 @@ permissions:
   pull-requests: read
 
 tools:
+  cli-proxy: true
   github:
+    mode: gh-proxy
     toolsets: [issues, repos]
   bash: ["git", "grep", "find", "cat", "head", "tail", "sed", "wc", "sort", "date"]
 

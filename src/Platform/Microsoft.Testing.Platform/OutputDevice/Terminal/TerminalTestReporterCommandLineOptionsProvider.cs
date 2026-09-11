@@ -113,14 +113,15 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             || ShowOutputNoneArgument.Equals(argument, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Resolves <c>--show-test-results</c>, returning <see langword="null"/> when the option is absent so the
-    /// caller (<c>TerminalOutputDevice.InitializeAsync</c>) can fall back to its <c>--output</c>-based default.
+    /// Resolves <c>--show-test-results</c> or its passive configuration default, returning <see langword="null"/>
+    /// when neither is present so the caller (<c>TerminalOutputDevice.InitializeAsync</c>) can fall back to its
+    /// <c>--output</c>-based default.
     /// Arguments are already guaranteed valid by <see cref="ValidateOptionArgumentsAsync"/> by the time a real run
     /// reaches this method; an unexpected parse failure therefore indicates that command-line validation was
     /// bypassed and is reported as an invalid application state.
     /// </summary>
     internal static TestResultVisibility? GetShowTestResultsVisibility(ICommandLineOptions commandLineOptions)
-        => !commandLineOptions.TryGetOptionArgumentList(ShowTestResultsOption, out string[]? arguments)
+        => !commandLineOptions.TryGetOptionArgumentListOrDefault(ShowTestResultsOption, out string[]? arguments)
             ? null
             : TryParseShowTestResultsArguments(arguments ?? [], out TestResultVisibility visibility, out _)
             ? visibility

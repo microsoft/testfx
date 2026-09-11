@@ -64,9 +64,9 @@ $(CommonProductDescription)]]></PackageDescription>
 
     <!-- Curated package dependencies. PrivateAssets="none" so all assets (including build/buildTransitive
          targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" PrivateAssets="none" />
     <!-- On Windows the package depends on MSTest.TestFramework, matching the historical MSTest.TestAdapter.nuspec.
          The historical MSTest.TestAdapter.NonWindows.nuspec did NOT declare this dependency, so on non-Windows builds
          we keep the compile-time reference but suppress the package dependency via PrivateAssets="all" to keep the
@@ -88,10 +88,10 @@ $(CommonProductDescription)]]></PackageDescription>
          referenced explicitly for every TFM. -->
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
 
-    <!-- The native Microsoft.Testing.Platform integration (TestingPlatformAdapter\MSTestFilterContext, guarded by
-         !WINDOWS_UWP) parses VSTest filter expressions via the Filter source package. It flows in transitively via
-         the VSTestBridge today (PrivateAssets=all there), so reference it explicitly where the native path builds. -->
-    <PackageReference Include="Microsoft.TestPlatform.Filter.Source" PrivateAssets="all" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <!-- The native Microsoft.Testing.Platform integration (TestingPlatformAdapter\MSTestFilterContext) parses VSTest
+         filter expressions via the Filter source package. It flows in transitively via the VSTestBridge today
+         (PrivateAssets=all there), so reference it explicitly here. -->
+    <PackageReference Include="Microsoft.TestPlatform.Filter.Source" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -180,6 +180,11 @@ $(CommonProductDescription)]]></PackageDescription>
       <!-- Adapter + bundled platform services for every TFM. -->
       <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestAdapter.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Include="$(TargetDir)MSTestAdapter.PlatformServices.dll" PackagePath="$(_BuildTransitiveDir)" />
+
+      <!-- Classic UWP's VSTest deployment only includes adapter dependencies declared by this package's targets.
+           Bundle the direct dependencies introduced by the native MTP integration so the adapter remains loadable. -->
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Platform.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" PackagePath="$(_BuildTransitiveDir)" />
 
       <!-- .NET Framework also bundles the TestFramework assemblies. -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="$(_BuildTransitiveDir)" />

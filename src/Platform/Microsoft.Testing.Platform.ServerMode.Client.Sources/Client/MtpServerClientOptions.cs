@@ -38,13 +38,14 @@ internal sealed class MtpServerClientOptions
     /// <summary>
     /// Gets or sets a value indicating whether the client persists an addressable set of test nodes for the
     /// whole session and keeps each node in its last-known state until explicitly updated
-    /// (<c>capabilities.testing.isStateful</c>). Defaults to <see langword="false"/>.
+    /// (<c>capabilities.testing.isStateful</c>). <see langword="null"/> omits the capability from the initialize
+    /// handshake. Defaults to <see langword="null"/>.
     /// </summary>
     /// <remarks>
     /// This capability describes how the client consumes test-node updates. It is independent of connection
     /// lifetime and the server's <c>ServerCapabilities.MultiRequestSupport</c> capability.
     /// </remarks>
-    public bool IsStateful { get; set; }
+    public bool? IsStateful { get; set; }
 
     /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback

@@ -29,9 +29,10 @@ The selected mode determines the rest:
   assembly, and method attribute arrays; constructor and method invocation delegates; and
   applicable property setter delegates. It also emits direct references that root the
   modeled members.
-- **`Rooting` (compatibility mode)** emits `DynamicDependency(All, typeof(T))` for each
-  test class and accessible non-generic base type, plus the type/method registry. Its rich
-  attribute and delegate dictionaries are empty.
+- **`Rooting` (compatibility mode)** emits member-scoped `DynamicDependency` roots for
+  constructors, methods, fields, and properties on each test class and accessible
+  closed base type, plus the type/method registry. Nested types are deliberately not
+  rooted. Its rich attribute and delegate dictionaries are empty.
 
 Both modes still resolve the `MethodInfo` keys used by the adapter at module
 initialization. Reflection-free mode also resolves `PropertyInfo` keys for emitted setters.
@@ -176,9 +177,10 @@ their members. The choices are:
 #### Option 1 — The current source generator
 
 Reflection-free mode emits direct attribute construction and invocation references, which
-root the modeled members, while rooting mode emits
-`[DynamicDependency(All, typeof(MyTests))]` per `[TestClass]` and accessible base type.
-Both preserve test-related types while leaving unrelated code eligible for trimming.
+root the modeled members. Both modes emit member-scoped `[DynamicDependency]` attributes
+for constructors, methods, fields, and properties on each `[TestClass]` and accessible
+base type. Nested types are excluded so unrelated nested fakes and helpers remain eligible
+for trimming and cannot surface trim/AOT warnings through their inherited members.
 Unsupported shapes and missing provider entries can still require reflection-compatible
 preservation (see Category A above).
 
@@ -208,8 +210,8 @@ source generator**. The differences are concrete:
 - `TrimmerRootAssembly Include="$(AssemblyName)"` only preserves *your* assembly. Base
   classes that live in a shared library (a `TestCommon.dll` carrying
   `[AssemblyInitialize]`-bearing fixtures, etc.) are still trimmable. The source
-  generator emits `[DynamicDependency(All, typeof(BaseInOtherAssembly))]` which the
-  trimmer honors across assemblies.
+  generator emits member-scoped `[DynamicDependency]` roots for
+  `BaseInOtherAssembly`, which the trimmer honors across assemblies.
 - `TrimmerRootAssembly` keeps the entire test assembly — helpers, mocks, fixtures, dead
   code. Source generation roots only the test classes and their base chain; everything
   else remains trimmable. Smaller published binary.
@@ -228,8 +230,8 @@ below), but they are not interchangeable.
 
 #### Option 3 — Hand-written `[DynamicDependency]`
 
-The user puts `[DynamicDependency(All, typeof(MyTests))]` on a stub method per test
-class. **Pros:** preserves exactly what's needed. **Cons:** tedious, easy to forget; the
+The user puts member-scoped `[DynamicDependency]` attributes for `MyTests` on a stub
+method per test class. **Pros:** preserves exactly what's needed. **Cons:** tedious, easy to forget; the
 analyzer warning surface to catch missing roots would essentially have to reinvent the
 source generator. Not recommended in practice.
 
@@ -382,7 +384,7 @@ entries.
   necessary and must stay truthful for the explicitly documented fallback paths.
 - **Direct references provide rooting in reflection-free mode.** A static delegate
   `static (instance, args) => ((MyTests)instance).MyTest((int)args[0])` roots its target.
-  Rooting mode continues to emit the explicit `[DynamicDependency]` base chain.
+  Both modes also emit the explicit, member-scoped `[DynamicDependency]` base chain.
 - **Compile-time validation of attribute shapes becomes possible.** Reading
   `[DataRow]` / `[DataSource]` / `[ExpectedException]` etc. at compile time to bake them
   also lets the generator surface analyzer diagnostics for:

@@ -59,6 +59,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ArtifactPostProcessingHelper.cs" Link="Helpers\ArtifactPostProcessingHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.cs" Link="Helpers\ReportGeneratorBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.Journal.cs" Link="Helpers\ReportGeneratorBase.Journal.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProviderRegistration.cs" Link="Helpers\ReportProviderRegistration.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportRecovery.cs" Link="Helpers\ReportRecovery.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />

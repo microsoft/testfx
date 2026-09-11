@@ -27,6 +27,17 @@ Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.SegmentDirectory.
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.SegmentExtension.get -> string!
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.Start() -> void
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.StopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.ConcatAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.VideoRecorder.VideoSegment>! segments, string! outputFileName, string? ffmetadataPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<string?>!
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.DescribeLastFfmpegError() -> string!
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.FfmpegPath.get -> string?
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.IsAvailable.get -> bool
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.ReadSegments() -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.VideoRecorder.VideoSegment>!
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.RecordingStartUtc.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.SegmentDirectory.get -> string?
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.SegmentExtension.get -> string!
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.Start() -> void
+Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.StopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.VideoRecorderCommandLineProvider() -> void
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler
@@ -40,6 +51,7 @@ Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.OnTestSes
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.Uid.get -> string!
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.Version.get -> string!
+Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.VideoRecorderSessionHandler(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILogger<Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler!>! logger, Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder? recorder) -> void
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler.VideoRecorderSessionHandler(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILogger<Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler!>! logger) -> void
 Microsoft.Testing.Extensions.VideoRecorder.VideoSegment
 Microsoft.Testing.Extensions.VideoRecorder.VideoSegment.EndSeconds.get -> double
@@ -67,10 +79,13 @@ static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTar
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
 static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool

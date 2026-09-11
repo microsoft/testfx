@@ -25,6 +25,23 @@ public sealed class MtpServerClientTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public void Options_DefaultValues_AreStable()
+    {
+        var options = new MtpServerClientOptions();
+
+        Assert.AreEqual("Microsoft.Testing.Platform.ServerMode.Client", options.ClientName);
+        Assert.AreEqual("1.0.0", options.ClientVersion);
+    }
+
+    [TestMethod]
+    public void ConnectionClosedException_DefaultMessage_ExplainsFailure()
+    {
+        var exception = new MtpServerConnectionClosedException();
+
+        Assert.AreEqual("The connection to the test host process was closed unexpectedly.", exception.Message);
+    }
+
+    [TestMethod]
     public async Task InitializeAsync_DecodesServerCapabilities()
     {
         using FakeMtpServer server = new();
@@ -49,6 +66,40 @@ public sealed class MtpServerClientTests
         InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
         Assert.AreSequenceEqual(JsonRpcProtocolVersions.Supported, initializeArgs.ProtocolVersions);
         Assert.IsTrue(initializeArgs.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_DefaultOptions_LeaveStatefulnessUndeclared()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient();
+
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        InitializeRequestArgs initializeArgs = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.IsNull(initializeArgs.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void SerializeClientCapabilities_UndeclaredStatefulness_OmitsProperty()
+    {
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(
+            new ClientCapabilities(DebuggerProvider: false, IsStateful: null));
+        var testingCapabilities = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+
+        Assert.IsFalse(testingCapabilities.ContainsKey(JsonRpcStrings.IsStateful));
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void SerializeClientCapabilities_DeclaredStatefulness_IncludesProperty(bool isStateful)
+    {
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(
+            new ClientCapabilities(DebuggerProvider: false, IsStateful: isStateful));
+        var testingCapabilities = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+
+        Assert.AreEqual(isStateful, testingCapabilities[JsonRpcStrings.IsStateful]);
     }
 
     [TestMethod]

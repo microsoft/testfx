@@ -7,10 +7,47 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
-    internal readonly struct CommandSlot : IDisposable
-    {
-        public void Dispose() => s_maxOutstandingCommands_semaphore.Release();
-    }
+    private static readonly string[] DotNetTestOptionsWithValues =
+    [
+        "--arch",
+        "--artifacts-path",
+        "--blame-crash-dump-type",
+        "--blame-hang-dump-type",
+        "--blame-hang-timeout",
+        "--collect",
+        "--config-file",
+        "--configuration",
+        "--device",
+        "--diag",
+        "--diagnostic-output-directory",
+        "--environment",
+        "--filter",
+        "--framework",
+        "--logger",
+        "--max-parallel-test-modules",
+        "--maximum-failed-tests",
+        "--minimum-expected-tests",
+        "--os",
+        "--output",
+        "--results-directory",
+        "--results-directory-layout",
+        "--root-directory",
+        "--runtime",
+        "--settings",
+        "--solution",
+        "--test-adapter-path",
+        "--timeout",
+        "--verbosity",
+        "-a",
+        "-c",
+        "-e",
+        "-f",
+        "-l",
+        "-r",
+        "-s",
+        "-v",
+        "-verbosity",
+    ];
 
     private static readonly string[] CodeCoverageEnvironmentVariables =
     [
@@ -49,6 +86,8 @@ public static class DotnetCli
         }
     }
 
+    public static bool UseMultithreadedMSBuild { get; set; }
+
     public static async Task<DotnetMuxerResult> RunAsync(
         string args,
         string? workingDirectory = null,
@@ -58,70 +97,185 @@ public static class DotnetCli
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
+        bool useMultithreadedMSBuild = true,
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
-        using CommandSlot commandSlot = await AcquireCommandSlotAsync(cancellationToken);
-        environmentVariables = CreateEnvironmentVariables(environmentVariables, disableTelemetry, disableCodeCoverage);
-
-        string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
-        extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
-        if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
-        {
-            args = args.Insert(platformArgsIndex, extraArgs + " ");
-        }
-        else
-        {
-            args += extraArgs;
-        }
-
-        return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
-    }
-
-    internal static async Task<CommandSlot> AcquireCommandSlotAsync(CancellationToken cancellationToken)
-    {
         await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
-        return default;
+        try
+        {
+            environmentVariables ??= [];
+            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+            {
+                // Skip all unwanted environment variables.
+                string? key = entry.Key.ToString();
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (disableCodeCoverage)
+                {
+                    // Disable the code coverage during the build.
+                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
+                // We use TryAdd to let tests "overwrite" existing environment variables.
+                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
+            }
+
+            if (disableTelemetry)
+            {
+                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+            }
+
+            if (!useMultithreadedMSBuild)
+            {
+                RemoveEnvironmentVariable(environmentVariables, "MSBUILDENABLEMULTITHREADED");
+                RemoveEnvironmentVariable(environmentVariables, "MSBUILDFORCEMULTITHREADED");
+            }
+
+            bool shouldUseMultithreadedMSBuild = UseMultithreadedMSBuild
+                && useMultithreadedMSBuild
+                && IsMSBuildBackedBuildOrTest(args);
+            if (shouldUseMultithreadedMSBuild && IsCommand(args, "test"))
+            {
+                // The Microsoft.Testing.Platform mode of 'dotnet test' does not accept MSBuild's -mt switch.
+                environmentVariables["MSBUILDENABLEMULTITHREADED"] = "1";
+            }
+
+            string extraArgs = shouldUseMultithreadedMSBuild && IsCommand(args, "build") ? " -mt" : string.Empty;
+            extraArgs += warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
+            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
+            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+            {
+                args = args.Insert(platformArgsIndex, extraArgs + " ");
+            }
+            else
+            {
+                args += extraArgs;
+            }
+
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+        }
+        finally
+        {
+            s_maxOutstandingCommands_semaphore.Release();
+        }
     }
 
-    internal static Dictionary<string, string?> CreateEnvironmentVariables(
-        Dictionary<string, string?>? environmentVariables = null,
-        bool disableTelemetry = true,
-        bool disableCodeCoverage = true)
+    private static bool IsMSBuildBackedBuildOrTest(string args)
+        => IsCommand(args, "build")
+            || (IsCommand(args, "test") && !IsDirectDotNetTestInvocation(args));
+
+    private static bool IsCommand(string args, string command)
+        => args.StartsWith(command, StringComparison.OrdinalIgnoreCase)
+            && (args.Length == command.Length || char.IsWhiteSpace(args[command.Length]));
+
+    private static bool IsDirectDotNetTestInvocation(string args)
     {
-        environmentVariables ??= [];
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        string[] tokens = TokenizeArguments(args);
+        if (tokens.Length == 0 || !string.Equals(tokens[0], "test", StringComparison.OrdinalIgnoreCase))
         {
-            // Skip all unwanted environment variables.
-            string? key = entry.Key.ToString();
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            return false;
+        }
+
+        for (int i = 1; i < tokens.Length; i++)
+        {
+            string token = tokens[i];
+            if (token == "--")
             {
+                break;
+            }
+
+            string optionName = token.Split(['=', ':'], 2)[0];
+            if (string.Equals(optionName, "--test-modules", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(optionName, "--project", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (string.Equals(optionName, "--list-tests", StringComparison.OrdinalIgnoreCase))
+            {
+                if (token.Length == optionName.Length
+                    && i + 1 < tokens.Length
+                    && (string.Equals(tokens[i + 1], "text", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(tokens[i + 1], "json", StringComparison.OrdinalIgnoreCase)))
+                {
+                    i++;
+                }
+
                 continue;
             }
 
-            if (disableCodeCoverage
-                && CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            if (token.StartsWith('-'))
             {
+                if (token.Length == optionName.Length && DotNetTestOptionsWithValues.Contains(optionName, StringComparer.OrdinalIgnoreCase))
+                {
+                    i++;
+                }
+
                 continue;
             }
 
-            // We use TryAdd to let tests "overwrite" existing environment variables.
-            // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
-            // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
-            // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-            environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
+            string extension = Path.GetExtension(token);
+            return string.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(extension, ".exe", StringComparison.OrdinalIgnoreCase);
         }
 
-        if (disableTelemetry)
-        {
-            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-        }
-
-        return environmentVariables;
+        return false;
     }
 
-    private static bool IsDotNetTestWithExeOrDll(string args)
-        => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
+    private static string[] TokenizeArguments(string args)
+    {
+        List<string> tokens = [];
+        StringBuilder currentToken = new();
+        bool inQuotes = false;
+        foreach (char character in args)
+        {
+            if (character == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (char.IsWhiteSpace(character) && !inQuotes)
+            {
+                if (currentToken.Length > 0)
+                {
+                    tokens.Add(currentToken.ToString());
+                    currentToken.Clear();
+                }
+            }
+            else
+            {
+                currentToken.Append(character);
+            }
+        }
+
+        if (currentToken.Length > 0)
+        {
+            tokens.Add(currentToken.ToString());
+        }
+
+        return [.. tokens];
+    }
+
+    private static void RemoveEnvironmentVariable(Dictionary<string, string?> environmentVariables, string variableName)
+    {
+        foreach (string key in environmentVariables.Keys.Where(key => string.Equals(key, variableName, StringComparison.OrdinalIgnoreCase)).ToArray())
+        {
+            environmentVariables.Remove(key);
+        }
+    }
 
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
@@ -147,7 +301,7 @@ public static class DotnetCli
         }
 
         string? binlogFullPath = null;
-        if (!args.Contains("-bl:") && !IsDotNetTestWithExeOrDll(args))
+        if (!args.Contains("-bl:") && !IsDirectDotNetTestInvocation(args))
         {
             // We do this here rather than in the caller so that different retries produce different binlog file names.
             binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");

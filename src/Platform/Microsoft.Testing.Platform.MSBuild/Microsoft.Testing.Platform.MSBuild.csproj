@@ -101,10 +101,10 @@ $(CommonProductDescription)]]></PackageDescription>
     </ItemGroup>
 
     <Message Text="MSBuildAssetsBuildTargeting tests: @(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildAssetsBuildTargeting)" DestinationFiles="@(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTargeting)" DestinationFiles="@(MSBuildAssetsBuildTargeting->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildMultiTargeting/%(RecursiveDir)%(Filename)%(Extension)')" />
 
     <Message Text="MSBuildAssetsBuildTransitive tests: @(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
-    <Copy SourceFiles="@(MSBuildAssetsBuildTransitive)" DestinationFiles="@(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <Copy SourceFiles="@(MSBuildAssetsBuildTransitive)" DestinationFiles="@(MSBuildAssetsBuildTransitive->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/buildTransitive/%(RecursiveDir)%(Filename)%(Extension)')" />
 
     <Message Text="MSBuildAssetsBuild tests: @(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" Importance="low" />
     <Copy SourceFiles="@(MSBuildAssetsBuild)" DestinationFiles="@(MSBuildAssetsBuild->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/build/$(TargetFramework)/%(RecursiveDir)%(Filename)%(Extension)')" />

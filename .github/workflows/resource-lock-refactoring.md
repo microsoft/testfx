@@ -190,8 +190,20 @@ sample-input changes.
 
 ## Refactoring requirements
 
-- Prove a concrete shared resource and a concurrently reachable observer or
-  mutator before adding a lock. Do not decorate tests speculatively.
+- Prove a concrete shared resource and every concurrently reachable observer or
+  mutator before adding a lock. Do not decorate tests speculatively. Searching
+  test sources for the resource key is not proof of complete coverage: tests can
+  observe it indirectly through production methods that read the resource.
+- Before replacing any `[DoNotParallelize]`, write a resource coverage matrix in
+  your working notes with these columns: resource, direct test writers,
+  production readers/writers, tests that invoke those production paths, and the
+  matching declaration that protects each test. Follow the call graph from the
+  candidate test into production code, then search the owning test project for
+  every call site of each production reader/writer. Every concurrently runnable
+  observer must either declare the same key (use
+  `Mode = ResourceAccessMode.Read` for readers), inherit a class-level lock, or
+  be isolated from the resource. If any row is unknown or uncovered, retain
+  `[DoNotParallelize]` and select another candidate or call `noop`.
 - Prefer eliminating shared state. Use `TestContext.TestTempDirectory` for
   per-test filesystem state when available, and use unique
   `TestAssetFixture`/test-asset identifiers when generated projects would
@@ -222,6 +234,22 @@ sample-input changes.
   Do not weaken safety merely to produce a patch.
 
 ## Validate the selected change
+
+Before running tests, perform a declaration-reconciliation self-review using
+category C of `.github/workflows/shared/parallel-safety-audit-shared.md`. Rebuild
+the resource coverage matrix from the final diff and verify that:
+
+- the lock covers the production code's complete read/write set, not only the
+  API directly called by the changed test;
+- every test in the owning assembly that can invoke a reader or writer declares
+  the same key with a compatible access mode;
+- no correctness claim relies only on a literal-key grep; and
+- if `[DoNotParallelize]` was removed, there is a concrete interleaving showing
+  why the replacement declarations prevent every previously excluded race.
+
+If this self-review finds an uncovered observer, fix the declarations or revert
+the attempted replacement and call `noop`. A passing test run is not evidence
+that a scheduling race is impossible.
 
 Use the repository-pinned SDK and the smallest build and focused tests that cover
 the edited class or methods. Follow `.github/copilot-instructions.md` exactly:
@@ -259,8 +287,10 @@ changes, then call `create_pull_request` exactly once with:
 - a title describing the concrete refactoring (the safe output adds the
   `[ResourceLock]` prefix)
 - a body that names the selected test project, its current parallelization
-  scope, the shared resource and conflicting tests, why the attribute placement
-  is minimal, every validation command with its result, and the workflow run URL
+  scope, the shared resource, every direct and indirect conflicting test from the
+  resource coverage matrix, why the attribute placement covers every observer
+  while remaining minimal, every validation command with its result, and the
+  workflow run URL
 - an explicit note when the project remains sequential that this is preparation
   for a later parallelization opt-in, not an opt-in itself
 

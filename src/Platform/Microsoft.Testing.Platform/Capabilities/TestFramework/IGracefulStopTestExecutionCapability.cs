@@ -9,6 +9,9 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// </summary>
 /// <remarks>
 /// Test frameworks can choose to run any needed cleanup when cancellation is requested.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IGracefulStopTestExecutionCapability : ITestFrameworkCapability
@@ -27,6 +30,9 @@ public interface IGracefulStopTestExecutionCapability : ITestFrameworkCapability
 /// <remarks>
 /// Test frameworks should implement this capability when a successful stop request can be a no-op because
 /// execution has already completed.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IGracefulStopTestExecutionResultCapability : IGracefulStopTestExecutionCapability

@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Adapted from https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs
+using System.Buffers.Binary;
+
 using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
@@ -403,19 +405,18 @@ internal sealed class DotnetMuxerLocator
 
     // See https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h
     // https://opensource.apple.com/source/xnu/xnu-4570.41.2/osfmk/mach/machine.h.auto.html
+    // https://opensource.apple.com/source/xnu/xnu-4570.41.2/EXTERNAL_HEADERS/mach-o/fat.h.auto.html
     private PlatformArchitecture? GetMuxerArchitectureByMachoOnMac(string path)
     {
         try
         {
             using var headerReader = new FileStream(path, FileMode.Open, FileAccess.Read);
             byte[] magicBytes = new byte[4];
-            byte[] cpuInfoBytes = new byte[4];
 #pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
             headerReader.Read(magicBytes, 0, magicBytes.Length);
-            headerReader.Read(cpuInfoBytes, 0, cpuInfoBytes.Length);
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 
-            uint magic = BitConverter.ToUInt32(magicBytes, 0);
+            uint magic = BinaryPrimitives.ReadUInt32BigEndian(magicBytes);
 
             // Validate magic bytes to ensure this is a valid Mach-O binary
             if (magic is not (MachOMagic32BigEndian or MachOMagic64BigEndian or MachOMagic32LittleEndian or MachOMagic64LittleEndian or MachOMagicFatBigEndian))
@@ -424,7 +425,25 @@ internal sealed class DotnetMuxerLocator
                 return null;
             }
 
-            uint cpuInfo = BitConverter.ToUInt32(cpuInfoBytes, 0);
+            if (magic == MachOMagicFatBigEndian)
+            {
+                // A fat (multi-architecture) header is followed by 'nfat_arch' (4 bytes) and then
+                // one or more 'fat_arch' entries. The cputype we care about is the first field of
+                // the first 'fat_arch' entry, i.e. at offset 8 (magic + nfat_arch), not offset 4.
+                byte[] nfatArchBytes = new byte[4];
+#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
+                headerReader.Read(nfatArchBytes, 0, nfatArchBytes.Length);
+#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+            }
+
+            byte[] cpuInfoBytes = new byte[4];
+#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
+            headerReader.Read(cpuInfoBytes, 0, cpuInfoBytes.Length);
+#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+
+            uint cpuInfo = magic is MachOMagic32LittleEndian or MachOMagic64LittleEndian
+                ? BinaryPrimitives.ReadUInt32LittleEndian(cpuInfoBytes)
+                : BinaryPrimitives.ReadUInt32BigEndian(cpuInfoBytes);
             PlatformArchitecture? architecture = (MacOsCpuType)cpuInfo switch
             {
                 MacOsCpuType.Arm64Magic or MacOsCpuType.Arm64Cigam => PlatformArchitecture.ARM64,

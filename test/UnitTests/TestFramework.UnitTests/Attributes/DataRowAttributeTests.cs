@@ -261,6 +261,26 @@ public class DataRowAttributeTests : TestContainer
         }
     }
 
+    public void GetDisplayNameRefreshesLocalizedFormatWhenUICultureChanges()
+    {
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+            var attribute = new DataRowAttribute();
+
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            attribute.GetDisplayName(methodInfo, ["value"]).Should().Be("DataRowTestMethod (\"value\")");
+
+            CultureInfo.CurrentUICulture = new CultureInfo("ko-KR");
+            attribute.GetDisplayName(methodInfo, ["value"]).Should().Be("DataRowTestMethod(\"value\")");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
     private class DummyDataRowAttribute : DataRowAttribute
     {
         public override string GetDisplayName(MethodInfo methodInfo, object?[]? data) => "Overridden DisplayName";

@@ -153,6 +153,10 @@
     <value>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</value>
     <comment>{0} is the number of attachments that could not be uploaded.</comment>
   </data>
+  <data name="AzureDevOpsLivePublishingAuthenticationFailure" xml:space="preserve">
+    <value>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</value>
+    <comment>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</comment>
+  </data>
   <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to complete the test run.</value>
   </data>
@@ -231,6 +235,10 @@
   <data name="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason" xml:space="preserve">
     <value>Timeout: {0}</value>
     <comment>{0} is the timeout reason.</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingUnexpectedContentType" xml:space="preserve">
+    <value>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</value>
+    <comment>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingWarningDisplayFailed" xml:space="preserve">
     <value>Azure DevOps live publishing could not display a warning on the output device.</value>

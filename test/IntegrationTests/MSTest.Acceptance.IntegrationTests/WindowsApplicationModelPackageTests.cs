@@ -19,6 +19,8 @@ public sealed class WindowsApplicationModelPackageTests
         // Classic UWP.
         "build/uap10.0/MSTest.TestAdapter.props",
         "build/uap10.0/MSTest.TestAdapter.targets",
+        "buildTransitive/uap10.0/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+        "buildTransitive/uap10.0/Microsoft.Testing.Platform.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
         "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.props",
@@ -76,6 +78,23 @@ public sealed class WindowsApplicationModelPackageTests
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestAdapter"),
             RequiredTestAdapterEntries);
+
+    [TestMethod]
+    public void PackedMSTestTestAdapter_UwpPropsRegisterMSTestBuilderHook()
+    {
+        string packagePath = GetExactCurrentPackagePath("MSTest.TestAdapter");
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        ZipArchiveEntry propsEntry = archive.GetEntry("buildTransitive/uap10.0/MSTest.TestAdapter.props")
+            ?? throw new AssertFailedException($"Package '{packagePath}' does not contain the classic UWP props.");
+        using var reader = new StreamReader(propsEntry.Open());
+        string props = reader.ReadToEnd();
+
+        Assert.Contains("031F8871-2660-4208-8F6B-FC142B40ABFF", props, propsEntry.FullName);
+        Assert.Contains(
+            "Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook",
+            props,
+            propsEntry.FullName);
+    }
 
     [TestMethod]
     public void PackedMSTestTestFramework_ContainsRequiredWindowsApplicationModelAssets()

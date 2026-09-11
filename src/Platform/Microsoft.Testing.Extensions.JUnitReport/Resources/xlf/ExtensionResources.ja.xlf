@@ -64,7 +64,7 @@ Example: 'MyReport_{tfm}.xml'.</source>
         <target state="translated">生成された JUnit XML レポートの名前。相対または絶対パスを含めることができます。相対パスはテスト結果ディレクトリを基準に解決され、存在しないディレクトリは作成されます。
 次のプレースホルダーがサポートされています: {pname} (テスト アプリケーション名)、{pid} (プロセス ID)、{asm} (エントリ アセンブリ名)、{tfm} (ターゲット フレームワーク モニカー)、{arch} (プロセス アーキテクチャ)、{time} (タイムスタンプ)。
 例: 'MyReport_{tfm}.xml'。</target>
-        <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="'MyReport_{tfm}.xml'"}.</note>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>

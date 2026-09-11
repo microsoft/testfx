@@ -1,18 +1,1 @@
 #nullable enable
-static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueRenderer.IsBuiltInStringRendering(string! value, string! rendered) -> bool
-const Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.RequiredMemberTypes = (System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes)-1 -> System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes
-static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.GetTestMethodDeclaringType(System.Reflection.MethodInfo! methodInfo) -> System.Type?
-static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetData(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, object?[]! arguments, out object? data) -> bool
-static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetDisplayName(System.Type! declaringType, string! methodName, System.Reflection.MethodInfo! testMethodInfo, object?[]? data, out string? displayName) -> bool
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.RetryAttemptNumber.get -> int
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.RetryAttemptNumber.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IsSupersededRetryAttempt.get -> bool
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IsSupersededRetryAttempt.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilterProviderAttribute
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilterProviderAttribute.FilterType.get -> System.Type!
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.set -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities
-static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CombinatorialValuesUtilities.GetValuesFor(System.Reflection.ParameterInfo! parameter) -> System.Collections.Generic.IEnumerable<object?>!
