@@ -73,6 +73,7 @@ network:
 
 safe-outputs:
   report-failure-as-issue: false
+  github-token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821).
   threat-detection:
@@ -107,11 +108,28 @@ safe-outputs:
     title-prefix: "[test-improver] "
     labels: [type/automation, type/test-gap]
     max: 4
+    allowed-files:
+      - "src/**"
+      - "test/**"
+      - "eng/**"
+      - "samples/**"
+    excluded-files:
+      - "global.json"
+      - ".config/dotnet-tools.json"
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
     required-title-prefix: "[test-improver] "
     max: 4
+    allowed-files:
+      - "src/**"
+      - "test/**"
+      - "eng/**"
+      - "samples/**"
+    excluded-files:
+      - "global.json"
+      - ".config/dotnet-tools.json"
+    protected-files: fallback-to-issue
   create-issue:
     title-prefix: "[test-improver] "
     labels: [type/automation, type/test-gap]
