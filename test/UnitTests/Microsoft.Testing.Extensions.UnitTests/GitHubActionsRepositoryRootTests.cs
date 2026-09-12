@@ -6,6 +6,7 @@ extern alias ghactions;
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 
@@ -67,10 +68,12 @@ public sealed class GitHubActionsRepositoryRootTests
             .Setup(e => e.GetEnvironmentVariable("GITHUB_WORKSPACE"))
             .Returns(workspaceValue);
 
-        string? expected = GitHubActionsRepositoryRoot.FindGitRoot();
+        string expected = RootFinder.Find();
         string? root = GitHubActionsRepositoryRoot.Resolve(environment.Object);
 
         Assert.AreEqual(expected, root);
+        Assert.IsNotNull(root);
+        Assert.EndsWith(Path.DirectorySeparatorChar.ToString(), root, StringComparison.Ordinal);
     }
 
     [TestMethod]
