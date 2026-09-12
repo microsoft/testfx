@@ -207,6 +207,19 @@ public sealed class SummaryBudgetTests
     }
 
     [TestMethod]
+    public void ForAggregate_AlreadyConsumedBytes_ReduceGrantedShare()
+    {
+        const int consumedBytes = 1_000;
+        const int moduleCount = 2;
+        var budget = SummaryBudget.ForAggregate(consumedBytes, moduleCount);
+
+        budget.GrantModuleShare(remainingModuleCount: moduleCount);
+
+        long expectedShare = (DetailBudgetLength - consumedBytes - (moduleCount * ProjectOverheadReserve)) / moduleCount;
+        Assert.AreEqual(expectedShare, budget.DetailBytesAvailable);
+    }
+
+    [TestMethod]
     public void ForAggregate_AlreadyConsumedBytes_ReflectedInStage()
     {
         var budget = SummaryBudget.ForAggregate(consumedBytes: StopListingLength, moduleCount: 4);
