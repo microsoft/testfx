@@ -169,16 +169,18 @@ The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/in
 On Windows PowerShell:
 
 ```powershell
-dotnet tool restore
+dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
 $env:MutationTesting = "true"
-dotnet stryker --output artifacts/mutation-testing
+Push-Location .config/stryker
+dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing
+Pop-Location
 ```
 
 On Linux and macOS:
 
 ```shell
-dotnet tool restore
-MutationTesting=true dotnet stryker --output artifacts/mutation-testing
+dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
+(cd .config/stryker && MutationTesting=true dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing)
 ```
 
 The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.

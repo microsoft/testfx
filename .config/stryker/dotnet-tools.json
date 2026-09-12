@@ -2,10 +2,10 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "dotnet-coverage": {
-      "version": "18.11.1",
+    "dotnet-stryker": {
+      "version": "5.0.0",
       "commands": [
-        "dotnet-coverage"
+        "dotnet-stryker"
       ],
       "rollForward": false
     }

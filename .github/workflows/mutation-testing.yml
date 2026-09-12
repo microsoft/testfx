@@ -25,16 +25,17 @@ jobs:
       - name: Build repository
         run: ./build.sh --binaryLog
 
-      - name: Restore local tools
-        run: ./.dotnet/dotnet tool restore
+      - name: Restore Stryker.NET
+        run: ./.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
+        working-directory: .config/stryker
         env:
           MutationTesting: true
         run: |
           set -o pipefail
           mkdir -p "$GITHUB_WORKSPACE/artifacts/mutation-testing"
-          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
 
       - name: Summarize mutation testing results
         if: ${{ always() }}
