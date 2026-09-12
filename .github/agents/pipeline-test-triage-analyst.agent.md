@@ -112,9 +112,9 @@ Every pull-request comment must:
 
 Every created issue must:
 
-- provide a unique `temporary_id` in the `create_issue` call, then immediately
-  call `set_issue_type` with that temporary ID and `issue_type` set to `Bug` so
-  the native GitHub issue type is assigned to the created issue;
+- provide a unique `temporary_id` and
+  `fields: [{"name": "Type", "value": "Bug"}]` in the `create_issue` call so
+  the native GitHub issue type is assigned atomically with issue creation;
 - add exactly one relevant allowed label when applicable:
   `type/regression`, `type/flaky-test`, `area/dump`, or `area/performance`;
 - explain category and confidence, why the signal is actionable, first/last

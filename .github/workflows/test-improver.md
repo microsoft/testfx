@@ -103,15 +103,32 @@ safe-outputs:
     target: "*"
     hide-older-comments: true
   create-pull-request:
+    github-token: ${{ secrets.BACKPORT_MACHINE_USER_PAT || secrets.GITHUB_TOKEN }}
     draft: true
     title-prefix: "[test-improver] "
     labels: [type/automation, type/test-gap]
     max: 4
+    allowed-files:
+      - "src/**"
+      - "test/**"
+      - "samples/**"
+    excluded-files:
+      - "global.json"
+      - ".config/dotnet-tools.json"
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
+    github-token: ${{ secrets.BACKPORT_MACHINE_USER_PAT || secrets.GITHUB_TOKEN }}
     target: "*"
     required-title-prefix: "[test-improver] "
     max: 4
+    allowed-files:
+      - "src/**"
+      - "test/**"
+      - "samples/**"
+    excluded-files:
+      - "global.json"
+      - ".config/dotnet-tools.json"
+    protected-files: fallback-to-issue
   create-issue:
     title-prefix: "[test-improver] "
     labels: [type/automation, type/test-gap]
