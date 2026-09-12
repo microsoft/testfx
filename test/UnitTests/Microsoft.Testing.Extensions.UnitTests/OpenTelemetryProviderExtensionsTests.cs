@@ -24,11 +24,17 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// plus an end-to-end trace test that runs the real OpenTelemetry SDK pipeline.
 /// </summary>
 /// <remarks>
-/// Only the two methods that touch process-global state carry <see cref="DoNotParallelizeAttribute"/>: the one that
-/// mutates real environment variables, and the end-to-end test that stands up a real <see cref="TracerProvider"/>
-/// against the shared platform <c>ActivitySource</c>. The remaining methods use a pure in-memory environment fake
-/// (or only read process state) and stay in the parallel set. Captured spans in the end-to-end test are additionally
-/// filtered by a per-test unique name prefix so an ambient provider in the test host cannot pollute the assertions.
+/// The method that mutates real environment variables carries a method-level
+/// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
+/// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
+/// project): it still serializes against every other test in the assembly that mutates environment variables, but
+/// allows this test to run in parallel with tests that never touch environment variables at all. The end-to-end
+/// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
+/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c>, an unbounded process-global
+/// resource that a <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
+/// in-memory environment fake (or only read process state) and stay in the parallel set. Captured spans in the
+/// end-to-end test are additionally filtered by a per-test unique name prefix so an ambient provider in the test
+/// host cannot pollute the assertions.
 /// </remarks>
 [TestClass]
 public sealed class OpenTelemetryProviderExtensionsTests
@@ -67,7 +73,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
         => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddOpenTelemetryProviderFromEnvironment());
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task AddOpenTelemetryProviderFromEnvironment_RegistersProviderWithDelegateAndSkipsWhenSdkDisabled()
         => await WithEnvironmentAsync(
             new()
