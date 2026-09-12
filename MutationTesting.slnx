@@ -14,6 +14,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.PackagedApp/Microsoft.Testing.Extensions.PackagedApp.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VideoRecorder/Microsoft.Testing.Extensions.VideoRecorder.csproj" />
