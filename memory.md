@@ -1,13 +1,14 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-09-11 UTC
+2026-09-12 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-09-11, run 34650446726): **4 (verify no open efficiency PRs — confirmed 0), 2 (sub-agent scan of `src/Adapter/MSTest.TestAdapter` — no HIGH/MEDIUM found, one new LOW item added), 5 (searched for open performance/efficiency issues #8824/#3495 — no new activity, not re-engaged), 7 (September monthly summary #11023 — updated)**
-Last run before this: Task 4/2/5/7 (2026-09-10, run 34533452602 — scanned CtrfReport/Platform.MSBuild, no new findings)
-Next run should prioritise: Task 6 (measurement infrastructure) is now overdue given ~8 consecutive monitoring-only runs — narrow scope to gaps not already covered by sibling `[perf-improver]` agent (#10914), e.g. energy-specific proxy-metric tooling (allocation-diff helper script, hot/cold-path classification doc) rather than duplicating benchmark/regression-detection work. Alternatively re-scan `src/TestFramework/TestFramework` (Assertions folder scanned 2026-08-19, rest of TestFramework not deep-scanned since) for drift. Backlog remains LOW-priority only.
+Tasks run this session (2026-09-12, run 34720622795): **4 (verify no open efficiency PRs — confirmed 0), 2/3 (scanned `src/TestFramework/TestFramework` excl. Assertions — no HIGH/MEDIUM; scanned `src/Analyzers/MSTest.Analyzers` — found and FIXED a genuine MEDIUM/HIGH-frequency issue in `InheritedMemberFromDifferentMSTestVersionAnalyzer`), 5 (checked #8824 — still stale since 2026-08-27, not re-engaged), 7 (September monthly summary #11023 — full rewrite, see below)**
+Last run before this: Task 4/2/5/7 (2026-09-11, run 34650446726 — scanned MSTest.TestAdapter, no HIGH/MEDIUM found)
+**IMPORTANT process fix this run**: discovered #11023's body had accumulated ~4 duplicated copies of the "Activity for September 2026" section (looks like a prior run used append/create semantics instead of `operation: replace` on `update_issue`, or the tool call was retried). Rewrote the issue body completely clean this run using `operation: replace`. **Future runs: always fetch the full current issue body first and verify it's a single copy before editing; if duplicated, do a full clean rewrite rather than another append.**
+Next run should prioritise: Task 6 (measurement infrastructure) is now heavily overdue given ~9 consecutive monitoring-only runs before this run's PR. Narrow scope to gaps not covered by sibling `[perf-improver]` agent (#10914), e.g. energy-specific proxy-metric tooling. Also: watch this run's new PR (`efficiency/inherited-member-analyzer-precompute-references`) for CI/review status via Task 4. Consider following up on the new LOW backlog item — `OSPlatformAttributesShouldBeConsistentAnalyzer.AnalyzeSymbol`'s per-symbol LINQ overhead without a cheap pre-check short-circuit — as a smaller follow-up PR in the same `MSTest.Analyzers` area.
 
 ## 2026-09-06 Run Notes
 
@@ -20,6 +21,22 @@ Next run should prioritise: Task 6 (measurement infrastructure) is now overdue g
 - Task 5: searched `is:open performance efficiency energy allocation slow green-software` across issues — zero results (only the monthly tracker and now-closed historical issues exist under this search). No comment made (nothing actionable, anti-spam n/a since no target).
 - Task 7: updated #11023 (September monthly tracker) with this run's Run History entry; no completed items to remove from Suggested Actions (already "no suggested actions").
 - Pure monitoring pass — no new PR created this run (no genuinely measurable HIGH/MEDIUM opportunity found; two efficiency PRs already in flight from prior 2 runs — `efficiency/htmlreport-merger-identity-caching` and `efficiency/htmlreport-concatenate-identity-caching` — both maintainer-review-pending, not yet visible as open via search this run, likely already reviewed/merged/closed given the empty PR search result).
+
+## 2026-09-12 Run Notes (run 34720622795)
+
+- Task 4: confirmed via `search_pull_requests` no open `[efficiency-improver]`-prefixed PRs exist prior to this run — nothing to maintain.
+- Task 2/3: Ran two sub-agent scans:
+  - `src/TestFramework/TestFramework/` (excl. `Assertions/`, already reviewed) — covering `TestDataSourceUtilities.cs`, `DynamicDataAttribute.cs`, `ReflectionTestMethodInfo.cs`, `CombinatorialValuesUtilities.cs`, `RetryAttribute.cs`, `GitHubWorkItemAttribute.cs`. **No HIGH/MEDIUM findings** — already-cached reflection (`ConditionalWeakTable`, field-cached `ParameterInfo[]`), `[GeneratedRegex]`/cold-path regex, properly-async `RetryAttribute`, combinatorial LINQ only at discovery time.
+  - `src/Analyzers/MSTest.Analyzers/` (never deep-scanned before — only `MSTest.Analyzers.CodeFixes` and `MSTest.SourceGeneration` had been checked). **Found a genuine actionable issue**: `InheritedMemberFromDifferentMSTestVersionAnalyzer.GetFrameworkAssembly` (MSTEST0082) called `IsGloballyVisibleReference`/`HasGloballyVisibleFramework` per candidate test-class symbol, each re-scanning `compilation.References` via `.Any(...)` from scratch — O(test classes × references) per compilation. Given analyzers run on every IDE edit/CI build for every MSTest.Analyzers consumer, this is a genuine HIGH-frequency, MEDIUM-severity hotspot (algorithmic, not just constant-factor).
+  - Also flagged (not fixed, added to backlog as LOW): `OSPlatformAttributesShouldBeConsistentAnalyzer.AnalyzeSymbol`'s LINQ `.Where().ToImmutableArray()` runs per method/type symbol without a cheap "has any attributes" pre-check short-circuit — smaller/harder-to-measure win, left for a future run.
+- Task 3: Implemented the `InheritedMemberFromDifferentMSTestVersionAnalyzer` fix — precomputed a `HashSet<IAssemblySymbol>` of globally-visible referenced assemblies plus a `hasGloballyVisibleFramework` bool once in `RegisterCompilationStartAction`, replacing the two per-symbol `compilation.References.Any(...)` scans with an O(1) HashSet probe. No behavioral change (verified: same alias/global-visibility semantics, just precomputed).
+- **Measured** via a standalone (not committed) console app referencing `Microsoft.CodeAnalysis.CSharp`/`.Workspaces`: built a real `CSharpCompilation` with 2,000 class symbols and ~300 metadata references (sampled from installed NuGet packages under `~/.nuget/packages`, simulating a realistic large-solution reference count). Old approach (`compilation.References.Any(...)` per symbol): **13.43 ms, 304,120 B allocated**. New approach (HashSet built once + O(1) lookups for all 2,000 symbols): **0.68 ms total (0.32 ms setup + 0.36 ms lookups), 0 B allocated**. **~20x speedup, allocation eliminated** for the per-symbol lookup path at this representative scale.
+- Verified: `dotnet build src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj -c Debug` — 0 warnings/errors. `dotnet test test/UnitTests/MSTest.Analyzers.UnitTests -c Debug -f net8.0 --no-build` (full suite, no filter needed since fast enough): **1841/1841 passed**. Filtered run (`--filter "FullyQualifiedName~InheritedMemberFromDifferentMSTestVersion"`): 67/67 passed. `dotnet format --verify-no-changes` on the modified file surfaced only one pre-existing IDE0047 warning at an unrelated line (`AreSignatureTypesEquivalent`), confirmed present in `git stash`-restored original — not introduced by this change.
+- Created branch `efficiency/inherited-member-analyzer-precompute-references`, committed, opened **draft PR** "Precompute globally-visible references once per compilation in InheritedMemberFromDifferentMSTestVersionAnalyzer" (label `area/performance`) via `safeoutputs create_pull_request`.
+- Task 5: re-checked #8824 — `updated_at` still 2026-08-27 (unchanged since last review), no new human comments. Not re-engaged (anti-spam).
+- **Process issue found and fixed**: #11023 (September monthly tracker)'s body had accumulated **4 duplicated copies** of the entire "Activity for September 2026" section — evidently a prior run's `update_issue` call used append semantics or was retried without `operation: replace` actually taking effect, or a duplicate call landed. Did a full clean rewrite this run using `operation: replace`, consolidating Run History from all prior runs into a single canonical copy (kept the most detailed/recent ~8 entries, summarized older ones). **Lesson for future runs**: always sanity-check the fetched issue body isn't already duplicated before doing a "replace" edit — grep for repeated `## Activity for` headers as a duplication smell-test.
+- **Key technique learned**: for realistic Roslyn-analyzer-hotpath benchmarking, sampling installed NuGet-cache DLLs as `MetadataReference`s (`find ~/.nuget/packages -iname "*.dll" | shuf | head -N`) produces a compilation with a representative reference count without needing to check out or restore a real large solution — fast and effective for O(n×references)-style analyzer measurements.
+- Task 7: full clean rewrite of #11023 per canonical format (see process-issue note above); Suggested Actions now lists this run's new PR for review; Run History reverse-chronological with this run prepended.
 
 ## 2026-09-11 Run Notes (run 34650446726)
 
@@ -87,88 +104,13 @@ Next run should prioritise: Task 6 (measurement infrastructure) is now overdue g
 - Task 7: updated #10382 with full body rewrite — cleared "watch #10549" framing, backlog unchanged (LOW-only), no suggested actions pending.
 - Pure monitoring pass — no new PR created (no genuinely measurable HIGH/MEDIUM opportunity this run, consistent with prior ~6 runs). Repo continues to be very actively self-optimized by maintainers.
 
-## 2026-08-23 Run Notes
+## 2026-08-15 through 2026-08-23 Run Notes (condensed)
 
-- Verified Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain. Reviewed current ~24 open PRs (#10670, #10658, #10655, #10649, #10644, #10640, #10635, #10633, #10631, #10622/10621/10619/10581/10571/10565/10551 dependency/infra bumps, #10018/#9725/#8820 unrelated prototypes) — several maintainer-authored efficiency-relevant PRs already landed or in flight (#10670 "Reduce ServerMode notification allocations", #10661 regex caching, #10648 TRX reparse-point, #10658 "Read acceptance-test binlogs behind a lock") — all maintainer-driven, no action needed from us.
-- Ran a background sub-agent scan of `src/Platform/Microsoft.Testing.Extensions.CrashDump`, `Microsoft.Testing.Extensions.HangDump`, and `src/Package/MSTest.Sdk` (all previously unscanned this cycle): found only two LOW/LOW-MEDIUM items, both on rare/terminal (not per-test hot) paths — (1) `CrashDumpFileNameHelper.BuildDumpFileNameRegex` builds a fresh `Regex` per `PublishAsync` call, but that only runs once per test-host *crash* (rare terminal event); (2) `IProcessExtensions.ResolveChildren` in HangDump recursively re-filters the process list per node (O(n²) over `Process.GetProcesses()`), but only triggered on a hang-dump event, not per-test. `MSTest.Sdk` has no .cs files (MSBuild-only); reviewed `.targets` files, no per-item Regex/polling anti-patterns found. Not implementing either — energy impact is negligible given call frequency (cold/terminal paths only), consistent with "no improvement without measurement" — these wouldn't produce a measurable/attributable proxy-metric win worth a PR.
-- Checked #10549 (regression-gating proposal) — still open, zero comments after 7+ consecutive runs; not re-engaging (anti-spam).
-- Checked #8824 — no new comments since 2026-07-14; not re-engaged. No other open efficiency/performance/energy-labeled issues found needing comment.
-- Pure monitoring pass — no new PR created (no genuinely measurable HIGH/MEDIUM opportunity this run). Updated monthly summary issue #10382.
-
-## 2026-08-22 Run Notes
-
-- Verified Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain.
-- No new commits landed on `main` since 2026-08-20 (66b80b5, dependency bump) — repo activity paused this window.
-- Ran a sub-agent scan of `src/TestFramework/TestFramework/` (excluding already-reviewed `Assertions/`) and `src/TestFramework/TestFramework.Extensions/`: **no new HIGH/MEDIUM opportunities found**. `ExecutableConditionAttribute` caches probe results via `ConcurrentDictionary`; `DynamicDataSourceResolver` uses source-generated dictionary lookups (no runtime reflection for supported cases); `MemberConditionAttribute` lazily caches `Func<bool>[]` evaluators; `PrivateObject`'s generic-method cache is a Dictionary built once per type. No uncached Regex, no O(n²) loops, no hot-path string formatting found outside already-known cold/failure paths.
-- Checked #10549 (regression-gating proposal) — still open, zero comments; not re-engaging (anti-spam rule holds, consistent across 6+ runs now).
-- Checked #8824, #3495, #4166 (only open issues matching performance/efficiency/energy search) — no new comments since last review on any; not re-engaged.
-- Backlog remains essentially empty (LOW-only items unchanged). Pure monitoring pass — no new PR created. `src/TestFramework` is now fully reviewed (both Assertions and non-Assertions). Next run should pivot to `src/Package/MSTest.Sdk` or smaller Platform extensions (CrashDump/HangDump) not yet scanned, or Task 6 follow-up.
-
-## 2026-08-21 Run Notes
-
-- **Resolved**: issue #10659 (prior run's regex-caching proposal for `Assert.MatchesRegex`/`DoesNotMatchRegex`, created 2026-08-19 after `create_pull_request` failed due to repo-level "Actions cannot create PRs" permission) is now closed via maintainer PR #10661 "Cache regex assertion patterns safely" (Evangelink, branch `dev/amauryleve/optimize-regex-assertions`, not draft, `mergeable_state: clean`). Maintainer's implementation is more thorough than ours: FIFO-bounded 15-slot cache, culture-aware keys, pattern-length cap, benchmarked 9-10x speedup. No further action needed on this item.
-- Reconfirmed the repo-level "GitHub Actions is not permitted to create or approve pull requests" restriction caused the prior PR-creation failure — this is an org/repo settings issue outside agent control, not actionable by us; noting again for continuity in case it recurs.
-- Verified Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain.
-- PR #10648 (TRX reparse-point fix) — still open, unchanged, maintainer-authored, `mergeable_state: clean`. No action needed.
-- #10549 (regression-gating proposal) — still open, zero comments; not re-engaging (anti-spam rule holds, consistent across 5+ runs now).
-- #8824 — no new comments; not re-engaged.
-- Ran a sub-agent scan of `src/Adapter/MSTestAdapter.PlatformServices/` + `src/Platform/Microsoft.Testing.Extensions.VSTestBridge/` (Execution/Extensions files): **no new opportunities found** — attribute caching via `ConcurrentDictionary`, single-pass loops, pre-sized collections already in place everywhere. One LOW note: `SynchronousAwaiter.Await()` busy-spins via `SpinWait` in `FrameworkHandlerAdapter` — deliberate deadlock-avoidance tradeoff bridging VSTest's sync API to the async platform bus; not recommended to change.
-- Ran a second sub-agent scan of `src/Adapter/MSTest.TestAdapter/` (Execution/, VSTestAdapter/, Extensions/, Services/ — the adapter's own hot/cold paths, distinct from PlatformServices): **no HIGH/MEDIUM opportunities found**. `UnitTestElementExtensions.ToTestCase`/`GetTestId` already cache via `XxHash128` + `HostRecordingHandle`; `TestResultExtensions.ToTestResult`, `TcmTestPropertiesProvider`, `MSTestDiscoverer`, and Services/*Extensions bridges are all already optimal. One trivial LOW nit: `TestCaseExtensions.ToUnitTestElementWithUpdatedSource` double-enumerates `Traits` via `.Any()` + `.Select()`, but collections are 0-3 items — not worth the risk/change.
-- Backlog remains essentially empty (LOW-only items, unchanged from prior runs: OTel `.OfType()`, `TerminalTestReporter.TotalTests.Sum()`, `DynamicDataShouldBeValidAnalyzer`, `TestExecutionManager` array allocation, `TestContextImplementation.SanitizeName`, CI output-byte-count metric).
-- Pure monitoring pass this run — no new PR created. Adapter-side codebase (both PlatformServices and MSTest.TestAdapter proper) and VSTestBridge now all confirmed well-optimized across consecutive runs. Next run should pivot to `src/TestFramework` assertion internals (unreviewed area) or Task 6 measurement infrastructure.
-
-## 2026-08-19 Run Notes
-
-- Verified Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain.
-- **Resolved**: issue #10643 (bot's proposed TRX reparse-point syscall-reduction fix from 2026-08-18) is closed via PR #10648 "Optimize TRX reparse point confinement checks" (maintainer Evangelink, `mergeable_state: clean`, open). The maintainer implemented an equivalent-but-more-thorough fix directly (renamed to private probe, added TOCTOU hardening, broader test coverage) rather than using our branch. No further action needed; removing this from next-run priorities.
-- Checked #10549 (regression-gating proposal) — still open, zero comments; not re-engaging (anti-spam rule holds).
-- Reviewed commits on `main` since last run — only routine dependency bump (466d76410); nothing else new.
-- Ran a sub-agent scan of `src/Analyzers/MSTest.Analyzers.CodeFixes/` (incl. the new `UseExecutableConditionAttributeInsteadOfProcessCheckFixer.cs` and `SkipGuardCodeFixHelper.cs` from #10634) and `src/Platform/Microsoft.Testing.Platform.MSBuild/`. Result: **both areas well-optimized, no genuine HIGH/MEDIUM opportunities**. Small LINQ chains in code-fix helpers operate on tiny (0-5 item) bounded collections, user-initiated not per-keystroke. MSBuild task sync I/O (`File.ReadAllText`, `.Wait()` in `Dispose()`) is correct/expected since `ITask.Execute()`/`IDisposable.Dispose()` are inherently synchronous — not an anti-pattern.
-- Also directly inspected `UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer.cs` (283 lines, the recursive-walk backlog item flagged 2026-08-18): the recursion (`ContainsMatchingProcessStart`) walks operation *children* of a single guarded if-block's *subsequent statements* within one method body — bounded by one method's IL/syntax tree size, executed via Roslyn's incremental analyzer infra (already cached/re-triggered only on edit of the affected block by the Roslyn engine itself). This is a compile-time/IDE-only analyzer path with no unbounded or repeated-per-keystroke re-walk beyond what Roslyn's own incremental model provides. **Disposition: not a viable optimization target — removing from backlog** (similar to past "won't fix" analyzer items).
-- No new efficiency/performance/energy issues found via search (only the monthly issue and its known duplicates matched, which are already tracked).
-- Pure monitoring pass this run — no new PR created. Repo continues to be well self-optimized; recent daily/near-daily scans of already-reviewed areas are yielding diminishing returns. Next run should pivot to a genuinely unreviewed area.
-
-## 2026-08-18 Run Notes
-
-- Scanned recently merged commits since last run (#10634 executable-condition analyzer, #10632 reparse-point consolidation, #10574/#10579 test-only PRs) via a sub-agent.
-- Found a genuine I/O-efficiency opportunity in **pre-existing** (untouched by #10632) `TrxReportEngine.Merge.PathHelpers.cs`: `HasReparsePointComponent` did `Directory.Exists(current) && IsReparsePoint(current)` per ancestor directory level — 2 filesystem stat syscalls per level (`Directory.Exists` + `File.GetAttributes`).
-- **Implemented**: added `DirectoryExistsAndIsReparsePoint(path)` combining both checks into a single `File.GetAttributes()` call (try/catch for `IOException`/`UnauthorizedAccessException` to preserve `Directory.Exists()`'s silent-false semantics). Updated `HasReparsePointComponent` and an equivalent inline check in `TrxReportEngine.Merge.Attachments.cs` to use it. Left `IsReparsePoint(path)` (file-based) untouched — still used in `TrxReportEngine.Merge.AttachmentReferences.cs`.
-- Branch: `efficiency/trx-reparse-point-syscall`. Build: `./build.sh` succeeded, 0 warnings/errors. Tests: `TrxArtifactPostProcessorTests` (net8.0+net9.0) 16/16 passed.
-- Proxy metric used: filesystem syscalls per directory-ancestor level (2 → 1) — path is low-frequency (TRX merge post-processing), so wall-clock timing wasn't meaningful; syscall-count reduction is the honest proxy, documented as such in the PR.
-- Created draft PR `[efficiency-improver] Reduce duplicate filesystem stat calls in TRX reparse-point detection` (safeoutputs create_pull_request succeeded; PR number will be assigned downstream).
-- New backlog item noted (not acted on this run, higher risk/complexity): executable-condition analyzer (#10634) does a recursive tree walk that is not memoized — LOW-MEDIUM priority, gated behind narrow guards so not urgent. Candidate for a future Task 3 run.
-- Checked #10549 (regression-gating proposal) — still open, zero comments; not re-engaging (anti-spam rule).
-- No open `[efficiency-improver]` PRs existed at start of this run (Task 4 had nothing to maintain) — now one exists as of this run, for next run's Task 4.
-
-## 2026-08-17 Run Notes
-
-- Only 2 commits landed on `main` since last run (c2592c9 → de4791a): #10582 (dependabot codeql-action bump) and #10604 (cosmetic diagnostic-formatting fix in `AssemblyResolver.Resolution.cs`, 4 lines) — neither efficiency-relevant.
-- Reviewed current open PR list (~20 open): #10586 "Optimize VSTestBridge property lookup" still open, no new comments, `mergeable_state: blocked` (likely needs rebase/approval) — not something we can push to (not our PR). New PRs since last run (#10606 explicit-tests design, #10607 build-failure-analyst push capability, #10611 Weekly Issue Summary restore, #10613 skip binlog steps, #10614 merge main into deadline-cancellation prototype) are all infra/feature work, not efficiency-focused.
-- Scanned `src/Platform/Microsoft.Testing.Extensions.Retry` and `src/Platform/Microsoft.Testing.Extensions.HotReload` for new LINQ/polling hotspots (continuing prior run's plan to dive into less-recently-scanned Platform extension folders): `RetryArtifactProcessor.ProcessAsync`'s `Where`/`GroupBy`/`OrderBy`/`Select` chain only runs once per retry-attempt completion (not per-test, bounded by `attemptCount`, typically 2-5), not a hot loop. `RetryOrchestratorHelper.RemoveOption` uses manual `for` loop (no LINQ) — already efficient. No `Regex` allocations found in either extension. `CountDownEventExtensions.WaitSingleThreadedAsync` polls every 10ms but is WASM-only fallback path (guarded by `RuntimeFeatureHelper.IsMultiThreaded`), not applicable to normal desktop/server runs. `ConfigurationExtensions.TryGetCommandLineOptionArguments`'s indexed-lookup `while(true)` loop is bounded by actual argument count (typically 0-5), one-time per option lookup, not a concern. No new opportunities found.
-- Checked #10549 (regression-gating proposal, opened 2026-08-10) — still open, zero comments, no maintainer response; not re-engaging (anti-spam).
-- Checked #8824 — no new comments since 2026-07-14; not re-engaged.
-- No new efficiency/energy/green-software labeled open issues found via search.
-- No open `[efficiency-improver]` PRs to maintain (Task 4 — nothing to do).
-- Backlog remains empty for direct-PR opportunities — repo continues to be well self-optimized and low-activity this window (only 2 commits, mostly bot/cosmetic).
-- Next run: repo has been slow this week — if this persists, consider doing a wider one-time source-level scan (e.g. `src/TestFramework` assertion internals or `src/Adapter/MSTestAdapter.PlatformServices`) not yet covered by recent daily scans, since the "diff since last run" approach yields little when commit volume is low.
-
-## 2026-08-16 Run Notes
-
-- No new commits landed on `main` since c2592c9 (2026-08-12) — repo commit activity paused this window; open PRs unchanged (#10586 "Optimize VSTestBridge property lookup" still open/awaiting review; #10593/#10594 CI/action-pin fixes; dependabot bumps).
-- Scanned `src/Adapter` and `src/Analyzers` for new LINQ chains (`Where().Select()`, `GroupBy`, `OrderBy`) not previously reviewed: `TypeEnumerator.GetTests` (dedup-by-inheritance-depth path using `GroupBy`+`OrderBy`) only executes when duplicate test method names are detected (`foundDuplicateTests` guard) — a cold/rare path, not worth optimizing. `ClassCleanupManager` GroupBy runs once per test run (setup), not per-test. No new opportunities found.
-- Checked #10549 (regression-gating proposal, opened 2026-08-10) — still open, no maintainer response; not re-engaging (anti-spam).
-- Checked #8824 — no new comments since 2026-07-14; not re-engaged.
-- No new efficiency/energy/green-software labeled open issues found requiring comment.
-- No open `[efficiency-improver]` PRs to maintain (Task 4 — nothing to do).
-- Backlog remains empty for direct-PR opportunities. Next run should consider a deeper dive into `src/Platform` extension folders not recently re-scanned (e.g. Retry, HotReload) or revisit Task 6 follow-up on #10549.
-
-## 2026-08-15 Run Notes
-
-- No new commits landed on `main` since c2592c9 (2026-08-12). Open PRs are mostly CI/infra/dependency work (#10593, #10594, dependabot bumps) plus #10586 "Optimize VSTestBridge property lookup" (maintainer-authored, still open/unchanged from prior runs).
-- Scanned `Microsoft.Testing.Platform` for LINQ/Regex hotspots (`OrderBy`, `GroupBy`, `new Regex`) — all instances found in `CommandLineHandler` (`--help` display) and `ArtifactPostProcessingHandshakeProperties` (one-time handshake serialization) are cold paths, not hot loops. No action.
-- #5348 (duplicate in-progress/passed test updates) confirmed closed 2026-08-06 by Evangelink — removed from Suggested Actions in #10382.
-- #10549 (regression-gating proposal) still open, no maintainer response — not re-engaging this run (anti-spam).
-- Repo continues to be well self-optimized; backlog remains empty of HIGH/MEDIUM items. Consider next run doing a deeper dive into a specific less-recently-scanned area (e.g. Adapter/VSTestBridge, Analyzers) rather than a broad repeat scan, to find genuinely new opportunities.
+- Daily monitoring runs during a low-activity window (few commits landing on `main`). Scanned across these runs: `src/Adapter/MSTestAdapter.PlatformServices` + `MSTest.TestAdapter` (attribute caching via ConcurrentDictionary, hash-based TestCase identity — optimal), `src/Platform/Microsoft.Testing.Platform` core (cold-path LINQ/Regex only), `Microsoft.Testing.Extensions.Retry`/`HotReload` (bounded per-retry-attempt work, not hot), `src/TestFramework/TestFramework` non-Assertions (ExecutableConditionAttribute/DynamicDataSourceResolver/MemberConditionAttribute/PrivateObject all cache-optimal), `src/Analyzers/MSTest.Analyzers.CodeFixes` + executable-condition analyzer (#10634 recursive walk confirmed bounded by Roslyn's own incremental model — not a viable target, removed from backlog), `src/Package/MSTest.Sdk` (.targets only, no anti-patterns), `CrashDump`/`HangDump` (two LOW items on rare/terminal paths only, not worth fixing).
+- **Resolved by maintainers independently** (no further action needed): #10643/#10648 (TRX reparse-point, maintainer's fix superseded ours with added TOCTOU hardening), #10659/#10661 (regex-caching for Assert.MatchesRegex, maintainer's FIFO-bounded-cache implementation was more thorough — 9-10x speedup benchmarked by them).
+- **Repo-level constraint discovered**: "GitHub Actions is not permitted to create or approve pull requests" caused one PR-creation failure (2026-08-19) — an org/repo settings issue outside agent control; if it recurs, fall back to filing an issue instead of a PR.
+- #10549 (regression-gating proposal, opened 2026-08-10) sat with zero maintainer comments for 7+ consecutive runs before eventually being resolved by maintainer PR #10720 (see 2026-08-25 note below) — pattern: don't over-poll a silent issue, just note it once per run and move on.
+- #8824 checked repeatedly, no new comments in this window; not re-engaged each time (anti-spam).
 
 ## Known Process Issue (IMPORTANT)
 
@@ -214,10 +156,13 @@ Notes:
 - **MSTestTestNodeConverter** (new #10366): Uses `ConditionalWeakTable` to cache `ParsedManagedName` parsing per TestMethod — excellent. Maintainer independently implemented this caching.
 - **TestResult.cs** (new #10353): `FindAssertionTexts` uses bounded recursive walk (MaxDepth=10), only called on failure path. Well-optimized.
 - **AssertionFailureProperty.ToString()**: Uses StringBuilder for simple string — only called for debugging. No action needed.
+- **Analyzers ARE a hot path for energy purposes**: `src/Analyzers/MSTest.Analyzers` code runs on every IDE edit and every CI build across every consumer of the `MSTest.Analyzers` NuGet package — even non-"runtime" analyzer code has an outsized aggregate CPU/energy multiplier and is worth scanning like any other hot path. First deep scan done 2026-09-12: found and fixed `InheritedMemberFromDifferentMSTestVersionAnalyzer`'s O(classes×references) reference-scanning bug (see Completed Work). `OSPlatformAttributesShouldBeConsistentAnalyzer` has a smaller LINQ-overhead-per-symbol issue (LOW, in backlog). Most other analyzers already resolve well-known types once via `RegisterCompilationStartAction` and order cheap checks before expensive ones — good baseline pattern to check for in any remaining unscanned analyzer files.
+- **src/TestFramework/TestFramework (excl. Assertions)**: scanned 2026-09-12 — `TestDataSourceUtilities`, `ReflectionTestMethodInfo`, `DynamicDataAttribute`, `CombinatorialValuesUtilities`, `RetryAttribute`, `GitHubWorkItemAttribute` all already optimal (cached reflection via `ConditionalWeakTable`/field caching, `[GeneratedRegex]`, properly async, LINQ only at cold discovery time).
+- **Realistic analyzer-hotspot benchmarking technique**: build a real `CSharpCompilation` (via `Microsoft.CodeAnalysis.CSharp`/`.Workspaces` NuGet packages in a standalone throwaway console app) with N synthetic classes and M `MetadataReference`s sampled from `~/.nuget/packages` (`find ~/.nuget/packages -iname "*.dll" | shuf | head -M`) to get a realistic reference count without needing a real large solution checked out. Measure with `Stopwatch` + `GC.GetAllocatedBytesForCurrentThread()`. Delete the throwaway benchmark project before finalizing (not committed to the repo).
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-- No open PRs from Efficiency Improver at this time.
+- **Open (as of 2026-09-12)**: `efficiency/inherited-member-analyzer-precompute-references` — "Precompute globally-visible references once per compilation in InheritedMemberFromDifferentMSTestVersionAnalyzer" — draft, pending review.
 - Previous work:
   - #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
   - #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink
@@ -249,6 +194,7 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-09-12 | PR created (draft, `efficiency/inherited-member-analyzer-precompute-references`) | Precompute globally-visible referenced assemblies + framework-presence flag once per compilation (`RegisterCompilationStartAction`) in `InheritedMemberFromDifferentMSTestVersionAnalyzer.GetFrameworkAssembly`, replacing two per-symbol `compilation.References.Any(...)` O(n) scans with an O(1) `HashSet` probe; standalone Roslyn-compilation benchmark (2,000 classes, ~300 references) showed ~20x speedup (13.43ms→0.68ms) and 304KB→0B allocated for the per-symbol lookup path; 1841/1841 MSTest.Analyzers.UnitTests passed |
 | 2026-09-04 | PR created (draft, `efficiency/htmlreport-merger-identity-caching`) | Cache `CreateRetryBaseIdentity` per test in `HtmlReportMerger.CollapseRetryAttempts` (was computed twice per row: LINQ ambiguity scan + slot-assignment loop); GC-allocation micro-benchmark showed ~10.4MB reduction (≈6.2%) on 20K-test/40K-row synthetic report; build succeeded, 58/60 HtmlReport-filtered unit tests passed (2 pre-existing skips) |
 | 2026-08-19 | PR created (draft, `efficiency/cache-regex-matches`) | Cache compiled `Regex` instances in `Assert.Matches.cs`'s `ToRegex` helper (string-pattern overloads of `MatchesRegex`/`DoesNotMatchRegex`) via `ConcurrentDictionary<string, Regex>`; micro-benchmark showed ~300x per-call reduction (5.12µs uncached vs 0.016µs cached, 200K iterations); build succeeded, 1520/1520 TestFramework.UnitTests passed |
 | 2026-08-18 | PR created (draft, `efficiency/trx-reparse-point-syscall`) | Combine `Directory.Exists()` + `File.GetAttributes()` into one syscall in `TrxReportEngine`'s reparse-point ancestor-walk (`HasReparsePointComponent` + `TrxReportEngine.Merge.Attachments.cs`); build succeeded, TrxArtifactPostProcessorTests 16/16 passed |
@@ -273,126 +219,27 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: reviewed `src/TestFramework/TestFramework/Assertions/` fully this run (2026-08-19) — found and fixed the `Assert.Matches.cs` Regex-caching opportunity; all other files in that folder (CollectionAssert, AreEquivalent, ContainsAll, StringAssert.Regex, HasCount, TelemetryCollector) confirmed already optimal.
-- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14), #9712 ✅ — no new efficiency-labeled issues found as of 2026-08-19.
-- Next code scan area: `src/Analyzers` executable-condition analyzer (#10634) recursive tree walk — check if memoizable; also continue rotating through less-recently-scanned Platform extension folders (Adapter/VSTestBridge internals not yet scanned this cycle).
+- Code scan cursor: `src/TestFramework/TestFramework/` fully reviewed as of 2026-09-12 (Assertions/ done 2026-08-19, rest of the folder done 2026-09-12) — all optimal. `src/Analyzers/MSTest.Analyzers` first deep-scanned 2026-09-12 — found and fixed one MEDIUM issue (`InheritedMemberFromDifferentMSTestVersionAnalyzer`), one LOW item remains open (`OSPlatformAttributesShouldBeConsistentAnalyzer`).
+- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14, confirmed still stale as of 2026-09-12), #9712 ✅ — no new efficiency-labeled issues found.
+- Next code scan area: follow up on `OSPlatformAttributesShouldBeConsistentAnalyzer.AnalyzeSymbol`'s LINQ overhead (LOW backlog item below) as a smaller PR in the same `MSTest.Analyzers` area; or continue scanning remaining `MSTest.Analyzers` files not yet individually reviewed (only a sub-agent sampling pass was done, not exhaustive); or `src/Analyzers` executable-condition analyzer (#10634) recursive tree walk — check if memoizable (carried over from several runs ago, still unaddressed).
 
 ## Open Backlog Items
 
 | Priority | Focus Area | Item | Notes |
 |---|---|---|---|
 | LOW-MEDIUM | Code-Level | Executable-condition analyzer (#10634) recursive tree walk not memoized | Gated behind narrow guards, not urgent; analyzer code is riskier to change — evaluate memoization feasibility before attempting |
+| LOW | Code-Level | `OSPlatformAttributesShouldBeConsistentAnalyzer.AnalyzeSymbol`: LINQ `.Where().ToImmutableArray()` per method/type symbol, no cheap "has attributes" pre-check short-circuit | Found 2026-09-12; smaller/harder-to-isolate win than the InheritedMemberFromDifferentMSTestVersionAnalyzer fix already made this run |
 
 
-## 2026-08-19 Run Notes
+## 2026-08-04 through 2026-08-30 Run Notes (condensed, second cluster)
 
-- Scanned `src/TestFramework/TestFramework/Assertions/` (an area not recently reviewed) via sub-agent exploration: found one MEDIUM opportunity — `Assert.Matches.cs`'s private `ToRegex` helper constructed a fresh `Regex` on every call of the string-pattern overloads of `MatchesRegex`/`DoesNotMatchRegex`, even for repeated identical patterns. All other files scanned (CollectionAssert, Assert.AreEquivalent, Assert.ContainsAll, StringAssert.Regex, TelemetryCollector, Assert.HasCount) already optimal — no action needed.
-- Implemented the fix: added a `ConcurrentDictionary<string, Regex> RegexCache` field (naming matches repo convention — PascalCase static readonly fields per `.editorconfig`/StyleCop SA1311, confirmed via build warning when initially tried `s_` prefix). Branch `efficiency/cache-regex-matches`, committed.
-- Validated: full repo build (0 warnings/errors); `TestFramework.UnitTests` rebuilt standalone and run in full — 1520/1520 passed. Standalone micro-benchmark (200K iterations, Release, after warm-up): uncached ~5.12µs/call vs cached ~0.016µs/call (~300x reduction).
-- Created draft PR `[efficiency-improver] Cache compiled Regex instances in Assert.MatchesRegex/DoesNotMatchRegex` on branch `efficiency/cache-regex-matches`.
-- Task 4 (maintain own PRs): no open `[efficiency-improver]` PRs found prior to this run's new one — nothing to maintain.
-- Task 5: no new efficiency-labeled issues with unaddressed human comments found; #8824 still stale since 2026-07-14, not re-engaged.
-- Updated #10382 (canonical Aug summary) with new Run History entry.
-- Next run: continue rotating — scan `src/Analyzers` executable-condition analyzer recursive walk (#10634, carried over) or Adapter/VSTestBridge internals; watch #10549 (regression-gating proposal) for maintainer response; monitor new PR for CI results.
-
-## 2026-08-04 Run Notes
-
-- Verified #10382 is the canonical August summary issue (has maintainer's consolidation comment). Updated it in place rather than creating a new issue — avoided repeating the duplicate-issue mistake from earlier runs.
-- Reviewed recent commit history (2026-08-01 to 2026-08-04): all routine (dependency bumps, localization check-ins, coverage/CI infra, analyzer test coverage additions, AzDO reporter refinements). No new efficiency-relevant hot-path code changes spotted requiring action this run.
-- Energy efficiency backlog is currently empty per maintainer disposition — next run should do a fresh Task 2 scan across newly merged features (AzureFoundry extension, JUnitReport, GitHubActionsReport) for any un-reviewed hot paths, and prioritise Task 3 (implementation) since backlog needs repopulating with concrete measurable items.
-
-## 2026-08-05 Run Notes
-
-- Reviewed new DynamicExtensionLoader feature (#10406, merged 2026-08-05): JSON manifest discovery/parsing/loading for MTP extensions. Well-engineered — opt-in via `--enable-dynamic-extensions` flag (off by default, zero cost when unused), single-pass `GetFiles` + sort, `Dictionary`/`HashSet` for de-dup, no redundant I/O. Runs once at startup, not a hot path. No efficiency opportunities found.
-- Checked #5348 (in-progress/passed dedup) — no new human comments since 2026-06-15 maintainer/nohwnd reply confirming the small-benefit framing; own last comment already covers the analysis. No re-engagement needed (anti-spam rule).
-- Reviewed commits 2026-08-04→08-05: mostly CI/pipeline infra (cache seeding fallback, binlog capture, warnings-as-errors), localization check-ins, AzDO coordinator exception consolidation (already reviewed, minor cleanup only) — no new hot-path efficiency issues.
-- Confirmed #10382 remains the canonical August summary issue; #10419 (duplicate) still open, still flagged for maintainer closure.
-- Backlog remains empty (LOW-only items). No PR created this run — no new measurable HIGH/MEDIUM opportunity found.
-
-## 2026-08-07 Run Notes
-
-- #5348 (in-progress/passed dedup) — CLOSED by maintainer 2026-08-06, fixed by PR #10483 "Suppress redundant in-progress test updates". Removed from Suggested Actions.
-- Reviewed commits 2026-08-05 to 2026-08-07 (~50 commits): mostly AppContainer/WinUI acceptance work, artifact post-processing (JUnit/CTRF), MTP server-mode client package, analyzer test coverage, CI/pipeline infra. Notable already-implemented efficiency-relevant maintainer work: #10483 (redundant in-progress update suppression — reduces IPC/network chatter), #10509 ("Avoid rebuilding cached outputs during pack" — build efficiency). No un-reviewed hot-path opportunities found requiring an Efficiency Improver PR.
-- #10419 (duplicate August summary issue) still open — still flagged for maintainer closure.
-- Backlog remains empty (repo continues to be actively self-optimized by maintainers/Copilot coding agent). No new efficiency-labeled issues found via search this run.
-- Next run: consider Task 6 (measurement infrastructure) since Task 3 backlog has been empty for a week — investigate whether MSTest.Performance.Runner results are tracked over time in CI (regression detection), which would be a concrete infra contribution.
-
-## 2026-08-10 Run Notes
-
-- Reviewed commits 2026-08-09→08-10 (~13 commits): analyzer test coverage additions (File.CreateSymbolicLink, DependsOn target handling, test filter provider accessibility), test host controller split into partial files, WinUI acceptance coverage via MSTest.Sdk, dependency bumps. All routine/test-coverage work, no hot-path efficiency regressions or opportunities found.
-- **Task 6 (measurement infrastructure)**: Investigated `.github/workflows/perf-timing-nightly.yml` (Phase 1 of #9312, closed 2026-06-22) — confirmed it's artifact-only (no baseline comparison/regression gating), matching prior run's note. Created issue proposing Phase 2 (regression detection: baseline storage, comparison step, threshold, reporting) for maintainer discussion — NOT implementing directly per "infra changes are issue-only" rule. Checked #9480 (efficiency-improver's own prior related issue, closed) to avoid duplicating past asks — confirmed it addressed a different sub-topic (server-mode/JSON-RPC scenario addition, not regression gating).
-- Backlog remains empty for direct-PR opportunities (repo continues to be actively self-optimized). Task 6 issue is this run's concrete output.
-- Next run: check for maintainer response to the new regression-gating issue; continue monitoring commits for un-reviewed hot paths; consider Task 3 once/if backlog repopulates.
-
-## 2026-08-09 Run Notes
-
-- #10419 (duplicate August summary issue) — already closed by prior run (2026-08-08); confirmed gone from open-issue search. Removed from Suggested Actions this run (full body rewrite).
-- Reviewed all commits since 2026-08-08 (a6010ba) through 2026-08-09 HEAD (c229f8f): #10528 "Reduce data-driven display name allocations" (maintainer-authored, merged) — replaces LINQ pipeline for data-driven display-name computation with a single `StringBuilder` pass; maintainer's own measurement: -26.8% allocations, -13.0% median elapsed time per 200K calls. This is exactly the kind of code-level efficiency work in our focus area — already done independently, no action needed, noted as evidence repo continues to self-optimize.
-- #10527 "Fix process metric collection after exit" and #10529 "Add HTML report artifact consolidation" — reviewed; `HtmlReportMerger.Merge` uses single-pass iteration (`for` loops, `Dictionary` counting), no redundant O(n²) patterns; `ProcessMeasurement.cs` is a bugfix for metric timing, not an efficiency regression. No opportunities found.
-- `#10525` was the tracking issue for the display-name allocation fix (now closed via #10528) — no efficiency-improver action needed, maintainer beat us to it.
-- Search for open efficiency/energy/green-software labeled issues: only #8824 (RFC, no new comments since 2026-07-14) and #10382 (our own monthly tracker) found. No new issue to comment on this run (anti-spam: no re-engagement without new human comments).
-- Backlog remains empty. No PR created this run — all recently touched hot paths are already optimized by maintainers.
-
-## 2026-08-12 Run Notes
-
-- Reviewed ~19 commits since last run (2026-08-11 to 2026-08-12): #10548 "Split CommonHost into focused partial files" (refactor, no perf change), #10542 "Consolidate reports across retry attempts", #10531/#10530/#10532/#10540/#10539/#10541/#10546 — all CI/infra/test-coverage work, no new hot-path efficiency opportunities.
-- Checked open PRs: #10560 "Reduce assertion telemetry contention" (still open, awaiting review — previously noted, no change). New: #10575 "Optimize non-generic collection count assertions" (Evangelink) — uses `ICollection.Count` fast path for `Assert.HasCount`/`Assert.IsEmpty` instead of enumerating via `Cast<>` — exactly our Code-Level focus area, already implemented by maintainer, no action needed.
-- #10549 (regression-gating proposal, opened 2026-08-10) — still open, no maintainer response yet. Not re-engaging (anti-spam, no new human comments).
-- #8824 — no new comments since 2026-07-14; not re-engaged.
-- No new efficiency/energy/green-software labeled open issues found requiring comment this run.
-- Backlog remains empty for direct-PR opportunities — repo continues to be actively self-optimized (#10575, #10560, #10543, #10545, #10544, #10528 all maintainer-authored efficiency work in recent weeks).
-- No PR/issue created this run — pure monitoring pass (Tasks 2, 4-monitor, 5, 7).
-
-## 2026-08-08 Run Notes
-
-- Only one commit landed since last run (a6010ba, dependency/skills bump) — no efficiency-relevant code changes.
-- Closed duplicate issue #10419 (was a leftover from 2026-08-03 duplication bug); #10382 confirmed as sole canonical August summary issue.
-- IMPORTANT: `update_issue` safe-output has a limit of 1 per run. When both closing a duplicate issue AND updating the canonical monthly summary are needed in the same run, only one `update_issue` call succeeds — the other must be done via `add_comment` instead (comment appended to #10382 this run rather than full body rewrite). Next run: do a full body rewrite of #10382 to fold this comment into Run History and remove the now-closed #10419 reference from Suggested Actions.
-- Noted infra: `.github/workflows/perf-timing-nightly.yml` — nightly artifact-only PlainProcess timing collection via MSTest.Performance.Runner (Win+Linux), tracks #9312, no regression gating. Candidate for Task 6 follow-up (propose regression-gating via issue, not direct workflow edit).
-- Backlog remains empty. Next run: prioritise Task 6 (measurement infra proposal issue) or Task 3 (needs backlog repopulation via fresh Task 2 scan of any new merged features since 2026-08-08).
-
-## 2026-08-13 Run Notes
-
-- Reviewed commits since 2026-08-11 on main: only maintainer dependency-bump landed (c2592c9); most efficiency work sits in open PRs not yet merged.
-- Reviewed new open PR #10586 "Optimize VSTestBridge property lookup" — `testCase.Properties.Any(x => ...)` → `testCase.GetProperties().Any(static property => ...)`. Removes per-call closure capture via `static` lambda. Code-Level focus area, well-tested by maintainer.
-- Checked #10575, #10560, #10543 (still open, no CI failures needing us), #10549 (regression-gating proposal, still no maintainer response — not re-engaging).
-- Re-checked #3495 (slowest tests) — no new human comments since our 2026-07-30 comment; not re-engaging.
-- No open `[efficiency-improver]` PRs to maintain (Task 4 — nothing to do).
-- Backlog remains empty. Updated #10382 (canonical Aug summary) via full body rewrite — trimmed Run History to keep body length reasonable (kept ~8 most recent entries, dropped oldest 2026-08-04 duplicate line already folded).
-- Next run: continue monitoring commits/PRs for un-reviewed hot paths; watch #10549 for maintainer response.
-
-## 2026-08-24 Run Notes
-
-- Task 4: Reviewed ~18 open PRs and recent commits since 2026-08-23 — all maintainer/Copilot-authored (feature/infra/test work). #10694 "Cache MSTest MTP node properties" already merged, no action needed. No open `[efficiency-improver]` PRs exist — nothing to maintain.
-- Task 2: Scanned 8 previously-unreviewed Platform extension directories via sub-agent: `Microsoft.Testing.Extensions.GitHubActionsReport`, `Microsoft.Testing.Extensions.JUnitReport`, `Microsoft.Testing.Extensions.Logging`, `Microsoft.Testing.Extensions.VideoRecorder`, `Microsoft.Testing.Extensions.AzureFoundry`, `Microsoft.Testing.Platform.AI`, `Microsoft.Testing.Platform.ServerMode.Client.Sources`, `SharedExtensionHelpers`. No HIGH/MEDIUM opportunities found — all candidates were cold/one-time paths or already justified by design comments (e.g. VideoRecorder's `SegmentPruning` LINQ runs per prune-tick on small in-flight collections, LOW only; ServerMode polling loops are one-time startup steps, deliberate design).
-- **Milestone**: with this run, essentially all `src/Platform/*` subdirectories have now been scanned at least once across this and prior runs. Future runs should pivot away from folder-by-folder first-pass scanning toward: (a) re-scanning for drift/regressions in already-reviewed areas after significant new merges, or (b) Task 6 (measurement infrastructure) follow-up, since #10549 remains unanswered.
-- Task 5: Searched for efficiency/performance/energy/green-software issues — only #10549 (zero comments, 8+ runs, not re-engaged) and #8824 (stale since 2026-07-14, not re-engaged) are relevant. No new issues found requiring comment.
-- Task 7: Updated #10382 with full body rewrite (operation: replace) — new Run History entry prepended, Suggested Actions/Backlog unchanged in substance (still empty / LOW-only).
-- No PR created this run — pure monitoring pass again (4th+ consecutive monitoring-only run). Backlog remains empty for direct-PR opportunities.
-- Next run: given the Platform-folder milestone, consider re-scanning `src/TestFramework` and `src/Adapter` areas for drift since their last review, or advance Task 6 (measurement infra) given #10549's continued silence — maybe propose a smaller, self-contained infra script rather than waiting indefinitely for feedback on the full regression-gating proposal.
-
-## 2026-08-30 Run Notes (run 33337042103)
-
-- Task 4: confirmed via `search_pull_requests` that all `[efficiency-improver]`-titled PRs (~31 total across history) are closed — no open ones exist. Nothing to maintain.
-- Task 5: checked #8824 (RFC comment history) — no new human comments since 2026-07-14 (Evangelink's reconciliation comment); not re-engaged (anti-spam). General search for open performance/efficiency/energy/allocation/slow issues surfaced only #3495, #8824, #4166, #8828, #8761 (none new/actionable for us) plus our own #10382.
-- Task 2: Ran a sub-agent scan of `src/Adapter/MSTestAdapter.PlatformServices/` (drift check since 2026-08-21 review) and `test/Utilities/Microsoft.Testing.TestInfrastructure/` (never scanned before, 29 files). **No HIGH/MEDIUM findings.** PlatformServices: no drift/new Regex-per-call/O(n²) patterns since last review. TestInfrastructure: found only LOW-priority items — `DotnetCli.cs` regex on rare error-detection retry path, `SlowestTestsConsumer` LINQ on tiny (<10 item) PropertyBag collections, `TempDirectory.cs` bounded retry-delete loop (fixture teardown, not per-iteration), `DebuggerUtility.cs` polling loop (cold/dev-only debugger-attach path). All either cold, low-frequency, or negligible-scale — not worth a PR.
-- Task 7: updated #10382 — Run History entry added, backlog unchanged (LOW-only), no suggested actions pending.
-- Pure monitoring pass — no new PR created (repo commit volume very low: only dependency/localization/infra commits since last run, none in our focus areas). Consistent with ~11 prior consecutive monitoring-only runs; repo continues to be very actively self-optimized by maintainers/Copilot coding agent.
-
-## 2026-08-29 Run Notes (run 33276644998)
-
-- Task 4: no open `[efficiency-improver]`-prefixed PRs exist (search confirmed 0 results) — nothing to maintain.
-- Task 5: searched `is:issue is:open` for efficiency-improver monthly issues and general performance/efficiency/energy/green-software terms — only found the historical closed monthly-activity issues from prior months (May/June) and our own #10382. No open efficiency/performance-labeled issues found needing comment.
-- Task 2: Ran a sub-agent scan of `src/Platform/Microsoft.Testing.Extensions.Telemetry` (OpenTelemetry) and `src/Analyzers/MSTest.Analyzers` (non-CodeFix analyzers, not yet reviewed this cycle). Findings: **no new HIGH/MEDIUM opportunities**. `AppInsightsProvider.IngestLoopAsync` allocates per-event dictionaries but runs once per telemetry event (session-level, not per-test) via an already-batched async `Channel`; `Regex` usage is `[GeneratedRegex]` with a DEBUG-only fallback (cold/diagnostic path). `WellKnownTypeProvider` already caches `GetTypeByMetadataName` lookups via `ConcurrentDictionary`+`BoundedCacheWithFactory`; various analyzer LINQ (`.Any()`/`.Where()` on `GetAttributes()`/`AllInterfaces`) runs once per symbol during a single compile/analyzer pass on small bounded collections — compile-time/IDE-only, not per-test-execution hot paths.
-- Read #10382's full comment history — confirmed no new maintainer instructions beyond the 2026-08-03 consolidation note (already incorporated in prior runs) and the 2026-08-08 duplicate-issue-quota note (already resolved).
-- Pure monitoring pass — no new PR created (repo commit volume very low since last run: only 1 commit, #10811 CI/build-cache infra work, not in our focus areas). Consistent with ~10 prior consecutive monitoring-only runs; repo continues to be very actively self-optimized by maintainers/Copilot coding agent.
-
-## 2026-08-28 Run Notes (second run this day, run 33215984183)
-
-- Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain.
-- Task 5: no open efficiency/performance/energy-labeled issues found (only our own #10382 tracker under `area/performance`). No comment made.
-- Task 2/3: Ran a sub-agent scan of `Microsoft.Testing.Extensions.VideoRecorder` (checking for similar O(n²) re-scan patterns near the just-fixed `TryPruneOldSegments` bug from PR #10837), the new commit a7ea9ab ("Authorize extension pipes for sandboxed test hosts" — `NamedPipeServerSecurity.cs`), and `Hosts/`/`ServerMode/`. Found one borderline LOW item: `VideoProduction.cs`'s `ProducePerTestVideosAsync` does an O(tests × segments) linear scan for overlaps, but runs once at end-of-run (cold path) — not worth reporting. No genuine HIGH/MEDIUM opportunities found; the one prior known video-recorder inefficiency was already fixed by maintainer PR #10837 "Cache failed-test windows during video pruning" (merged 2026-08-28, resolves #10823).
-- Pure monitoring pass — no new PR created. Repo commit volume very low since last run (only 1 commit, a7ea9ab).
+- Continued daily monitoring during this window. Task 2 scans covered (all confirmed already-optimal, no HIGH/MEDIUM found): `src/Analyzers/MSTest.Analyzers` (non-CodeFix, general pass — attribute/symbol lookups cached via `ConcurrentDictionary`+`BoundedCacheWithFactory`, small bounded-collection LINQ only, `[GeneratedRegex]` used), `Microsoft.Testing.Extensions.Telemetry`/OpenTelemetry (batched async `Channel`, session-level not per-test), `test/Utilities/Microsoft.Testing.TestInfrastructure` (29 files, only cold/rare-path LOW items), `Microsoft.Testing.Extensions.VideoRecorder` (one LOW item, `ProducePerTestVideosAsync` O(tests×segments) but cold end-of-run path), `NamedPipeServerSecurity`/`Hosts`/`ServerMode`.
+- Implemented and shipped `efficiency/cache-regex-matches` (2026-08-19): cached compiled `Regex` in `Assert.Matches.cs`'s `ToRegex` helper via `ConcurrentDictionary<string, Regex>` — ~300x per-call reduction (5.12µs→0.016µs, 200K iterations), 1520/1520 tests passed.
+- **Maintainers independently shipped several efficiency-relevant fixes in this window** — all confirmed via review, no duplicate work needed: #10528 (data-driven display-name allocations, -26.8% allocations/-13.0% time), #10575 (`ICollection.Count` fast path for `Assert.HasCount`/`IsEmpty`), #10586 (VSTestBridge property-lookup static-lambda), #10694 (cache MTP node properties), #10837 (cache failed-test windows during video pruning).
+- **Task 6 milestone**: proposed a nightly-perf-regression-gating issue (#10549) since existing `.github/workflows/perf-timing-nightly.yml` was artifact-only (Phase 1, #9312) with no baseline comparison. Sat with zero maintainer comments for many runs before eventually being resolved by maintainer PR #10720 "Add nightly performance regression detection" (merged 2026-08-25) — added Phase 2 baseline/threshold/reporting. **Milestone closed, no further action needed.**
+- **Process lessons learned**: (1) duplicate August-summary issues (#10377, #10382, #10419) were created across 2026-08-01–03 by different runs instead of updating the canonical one — always search `is:issue is:open in:title "Monthly Activity"` before creating; (2) `update_issue` safe-output is limited to 1 call per run — if both closing a duplicate issue AND updating the canonical summary are needed, use `add_comment` for one of them and fold it into the next run's full rewrite; (3) malformed bracket-string labels (`[efficiency]`, `[[efficiency]]`, etc.) were found from a labels-as-string bug — always pass labels as a proper array.
+- By 2026-08-24, essentially all `src/Platform/*` subdirectories had been scanned at least once; by 2026-08-30, `src/Adapter`, `src/TestFramework`, and most Platform extensions had full first-pass coverage — pivoted from folder-by-folder scanning toward drift re-checks and Task 6 follow-ups going forward.
+- Across this whole window, PR count from Efficiency Improver stood at ~31 total historically (mix of merged/closed/superseded-by-maintainer); zero remained open at any check during this period.
 
 ## 2026-09-01 Run Notes (run 33562320421)
 
