@@ -103,9 +103,9 @@ must meet the concrete-scenario and observable-consequence bar in
   explicit invariant throws into silent fallbacks, warnings, or empty returns
   without a concrete external trigger or failing test that disproves the
   invariant.
-- Workflow, script, issue-template, and policy changes must use native GitHub
-  Issue Types and must not introduce the deprecated `type/bug`, `type/feature`,
-  or `type/task` labels.
+- Workflow, script, issue-template, and policy changes that create or triage
+  issues must use native GitHub Issue Types and must not introduce the
+  deprecated `type/bug`, `type/feature`, or `type/task` labels.
 - Do not allow untracked `TODO` comments.
 
 ## Security checks
