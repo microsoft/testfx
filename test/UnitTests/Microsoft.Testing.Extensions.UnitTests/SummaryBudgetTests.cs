@@ -30,9 +30,9 @@ public sealed class SummaryBudgetTests
     [TestMethod]
     public void ForProject_CapsDetailAllowance_AtMaxTotalDetailsLength()
     {
-        // Even with nothing written yet, a single project's detail allowance never exceeds
-        // MaxTotalDetailsLength (DetailBudgetLength - ProjectOverheadReserve).
-        var budget = SummaryBudget.ForProject(alreadyWrittenBytes: 0);
+        // A negative alreadyWrittenBytes makes the raw detail allowance exceed
+        // MaxTotalDetailsLength, so the cap must be applied.
+        var budget = SummaryBudget.ForProject(alreadyWrittenBytes: -1000);
 
         Assert.AreEqual(MaxTotalDetailsLength, budget.DetailBytesAvailable);
     }
