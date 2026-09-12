@@ -82,19 +82,24 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
-        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(context.Compilation, classSymbol);
 
         // A test class the adapter cannot discover never runs, so no inherited member can run for it: abstract and
         // generic types are rejected — including a concrete class nested in a generic container, which cannot be
         // constructed without the container's type arguments — and the type must be visible enough to be discovered
         // (public, or internal when the assembly opts into DiscoverInternals). Concrete, accessible, non-generic derived
         // classes are analyzed separately and still get the warning.
-        if (referenceAssembly is null
-            || classSymbol.IsAbstract
+        // These type-only checks are cheap and reject the majority of named-type symbols in a typical compilation, so
+        // they run first to avoid the more expensive GetFrameworkAssembly lookup for symbols filtered out anyway.
+        if (classSymbol.IsAbstract
             || classSymbol.IsGenericType
             || IsNestedInGenericType(classSymbol)
-            || !IsDiscoverableTestClassVisibility(classSymbol, canDiscoverInternals)
-            || !classSymbol.HasCorrectTestContextSignature())
+            || !IsDiscoverableTestClassVisibility(classSymbol, canDiscoverInternals))
+        {
+            return;
+        }
+
+        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(context.Compilation, classSymbol);
+        if (referenceAssembly is null || !classSymbol.HasCorrectTestContextSignature())
         {
             return;
         }
