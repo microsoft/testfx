@@ -6,6 +6,7 @@ Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool? IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool?
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.init -> void
+static Microsoft.Testing.Platform.ServerMode.SerializerUtilities.FormatException(string? explanation, System.Exception? exception) -> (string? Message, string? StackTrace)
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool? DeclaredIsStateful) -> void
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bool? DeclaredIsStateful) -> void
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.DeclaredIsStateful.get -> bool?
