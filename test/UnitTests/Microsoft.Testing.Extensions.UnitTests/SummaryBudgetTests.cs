@@ -73,7 +73,7 @@ public sealed class SummaryBudgetTests
     }
 
     [TestMethod]
-    public void Consume_IncreasesConsumedBytes_AndCanCrossStageThresholds()
+    public void Consume_AccumulatesConsumedBytes_AndCrossesStageThresholds()
     {
         var budget = SummaryBudget.ForProject(alreadyWrittenBytes: 0);
         Assert.AreEqual(SummaryStage.Full, budget.Stage);
@@ -81,6 +81,10 @@ public sealed class SummaryBudgetTests
         budget.Consume((int)CondenseLength);
 
         Assert.AreEqual(SummaryStage.Condensed, budget.Stage);
+
+        budget.Consume((int)(StopListingLength - CondenseLength));
+
+        Assert.AreEqual(SummaryStage.Unlisted, budget.Stage);
     }
 
     [TestMethod]
@@ -192,13 +196,13 @@ public sealed class SummaryBudgetTests
     public void ForAggregate_ReservesOverheadPerModule_ReducingUngrantedPoolAsModuleCountGrows()
     {
         var fewModules = SummaryBudget.ForAggregate(consumedBytes: 0, moduleCount: 1);
-        var manyModules = SummaryBudget.ForAggregate(consumedBytes: 0, moduleCount: 100);
+        var manyModules = SummaryBudget.ForAggregate(consumedBytes: 0, moduleCount: 2);
 
         fewModules.GrantModuleShare(remainingModuleCount: 1);
-        manyModules.GrantModuleShare(remainingModuleCount: 100);
+        manyModules.GrantModuleShare(remainingModuleCount: 2);
 
-        // More modules means more reserved overhead subtracted from the same total budget, so the
-        // per-module detail share shrinks as module count grows.
+        Assert.AreEqual(DetailBudgetLength - ProjectOverheadReserve, fewModules.DetailBytesAvailable);
+        Assert.AreEqual((DetailBudgetLength - (2 * ProjectOverheadReserve)) / 2, manyModules.DetailBytesAvailable);
         Assert.IsGreaterThan(manyModules.DetailBytesAvailable, fewModules.DetailBytesAvailable);
     }
 
