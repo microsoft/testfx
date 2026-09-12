@@ -24,6 +24,7 @@
 
   <!-- The TFMs to build and test against. -->
   <PropertyGroup>
+    <SkipUapTargetFramework Condition="'$(MutationTesting)' == 'true'">true</SkipUapTargetFramework>
     <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
     <!--
       $(UwpMinimum) (uap10.0.16299) requires desktop msbuild.exe because
@@ -102,7 +103,9 @@
   <!-- Sign config -->
   <PropertyGroup>
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
-    <StrongNameKeyId Condition="'$(MutationTesting)' == 'true' and ('$(MSBuildProjectName)' == 'Microsoft.Testing.Platform.ServerMode.Client.Sources' or '$(MSBuildProjectName)' == 'Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests')">Open</StrongNameKeyId>
+    <!-- Generated test applications bind to the Microsoft-signed platform assembly. -->
+    <StrongNameKeyId Condition="'$(MutationTesting)' == 'true' and '$(MSBuildProjectName)' != 'Microsoft.Testing.Platform'">Open</StrongNameKeyId>
+    <VsPublicKey Condition="'$(MutationTesting)' == 'true'">$(OpenPublicKey)</VsPublicKey>
   </PropertyGroup>
 
   <!-- Test config -->

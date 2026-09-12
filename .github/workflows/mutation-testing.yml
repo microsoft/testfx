@@ -2,9 +2,7 @@ name: Mutation testing
 
 on:
   schedule:
-    # Runs daily (rather than weekly) so the mutation-test-improver workflow has fresh
-    # data every day to act on. Stryker only mutates the small, focused Client sources
-    # scope, so the added runner cost of daily execution is small in absolute terms.
+    # Runs daily so the mutation-test-improver workflow has fresh data to act on.
     - cron: '0 5 * * *'
   workflow_dispatch:
 
@@ -19,7 +17,7 @@ jobs:
   stryker:
     name: Run Stryker.NET
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -27,17 +25,17 @@ jobs:
       - name: Build repository
         run: ./build.sh --binaryLog
 
-      - name: Restore local tools
-        run: ./.dotnet/dotnet tool restore
+      - name: Restore Stryker.NET
+        run: ./.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
-        working-directory: test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests
+        working-directory: .config/stryker
         env:
           MutationTesting: true
         run: |
           set -o pipefail
           mkdir -p "$GITHUB_WORKSPACE/artifacts/mutation-testing"
-          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
 
       - name: Summarize mutation testing results
         if: ${{ always() }}
