@@ -559,6 +559,69 @@ public sealed class FormatterUtilitiesTests
         Assert.DoesNotContain("legacy", serialized);
     }
 
+    [TestMethod]
+    public async Task Serialize_ExceptionStates_IncludeInnerExceptionMessagesAndStackTraces()
+    {
+        var innerException = new FixedStackTraceException("inner", "inner-stack");
+        var exception = new FixedStackTraceException("outer", "outer-stack", innerException);
+        string expectedMessage = $"explanation{Environment.NewLine} ---> {typeof(FixedStackTraceException).FullName}: inner";
+        string expectedStackTrace = $"outer-stack{Environment.NewLine}--- Inner exception stack trace ({typeof(FixedStackTraceException).FullName}) ---{Environment.NewLine}inner-stack";
+
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+        (TestNodeStateProperty State, string ExecutionState)[] states =
+        [
+            (new FailedTestNodeStateProperty(exception, "explanation"), "failed"),
+            (new ErrorTestNodeStateProperty(exception, "explanation"), "error"),
+            (new TimeoutTestNodeStateProperty(exception, "explanation"), "timed-out"),
+            (new CancelledTestNodeStateProperty(exception, "explanation"), "canceled"),
+        ];
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+
+        foreach ((TestNodeStateProperty state, string executionState) in states)
+        {
+            var testNode = new TestNode
+            {
+                Uid = $"test-{executionState}",
+                DisplayName = $"Test {executionState}",
+                Properties = new PropertyBag(state),
+            };
+
+            IDictionary<string, object?> properties = SerializerUtilities.Serialize(testNode);
+            string serialized = await _formatter.SerializeAsync(testNode);
+
+            Assert.AreEqual(expectedMessage, properties["error.message"]);
+            Assert.AreEqual(expectedStackTrace, properties["error.stacktrace"]);
+            Assert.Contains(EscapeJsonString(expectedMessage), serialized);
+            Assert.Contains(EscapeJsonString(expectedStackTrace), serialized);
+        }
+    }
+
+    [TestMethod]
+    public void FormatException_AggregateException_IncludesEveryBranch()
+    {
+        var firstException = new FixedStackTraceException("first", "first-stack");
+        var secondException = new FixedStackTraceException("second", "second-stack");
+        var aggregateException = new AggregateException("aggregate", firstException, secondException);
+
+        (string? message, string? stackTrace) = SerializerUtilities.FormatException(null, aggregateException);
+
+        Assert.AreEqual(
+            string.Join(
+                Environment.NewLine,
+                aggregateException.Message,
+                $" ---> {typeof(FixedStackTraceException).FullName}: first",
+                $" ---> {typeof(FixedStackTraceException).FullName}: second"),
+            message);
+        Assert.AreEqual(
+            string.Join(
+                Environment.NewLine,
+                $"--- Inner exception stack trace ({typeof(FixedStackTraceException).FullName}) ---",
+                "first-stack",
+                $"--- Inner exception stack trace ({typeof(FixedStackTraceException).FullName}) ---",
+                "second-stack"),
+            stackTrace);
+    }
+
     [DataRow(typeof(DiscoverRequestArgs))]
     [DataRow(typeof(RunRequestArgs))]
     [TestMethod]
@@ -1049,4 +1112,32 @@ public sealed class FormatterUtilitiesTests
             _ when type == typeof(ServerCapabilities) => Deserialize<ServerCapabilities>(instanceSerialized)!,
             _ => throw new NotImplementedException($"Deserializer for type not implemented '{type}'"),
         };
+
+    private static string EscapeJsonString(string value)
+    {
+        string escapedValue = value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\r", "\\r")
+            .Replace("\n", "\\n");
+
+#if NETCOREAPP
+        escapedValue = escapedValue
+            .Replace("+", "\\u002B")
+            .Replace(">", "\\u003E");
+#endif
+
+        return escapedValue;
+    }
+
+    private sealed class FixedStackTraceException : Exception
+    {
+        private readonly string _stackTrace;
+
+        public FixedStackTraceException(string message, string stackTrace, Exception? innerException = null)
+            : base(message, innerException)
+            => _stackTrace = stackTrace;
+
+        public override string StackTrace => _stackTrace;
+    }
 }
