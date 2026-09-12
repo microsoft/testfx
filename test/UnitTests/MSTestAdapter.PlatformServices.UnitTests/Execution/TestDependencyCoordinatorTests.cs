@@ -27,7 +27,8 @@ public sealed class TestDependencyCoordinatorTests : TestContainer
 
     private static TestDependencyCoordinator CreateCoordinator(params UnitTestElement[] tests)
     {
-        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)
+            ?? throw new InvalidOperationException("The test dependency graph could not be built.");
         return new TestDependencyCoordinator(graph);
     }
 
@@ -154,13 +155,27 @@ public sealed class TestDependencyCoordinatorTests : TestContainer
         }
 
         TestDependencyCoordinator coordinator = CreateCoordinator(tests);
+        var allReady = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int readyCount = 0;
 
-        bool[] skipped = await Task.WhenAll(
-            Enumerable.Range(0, PairCount).Select(i => Task.Run(() =>
+        Task<bool>[] tasks = Enumerable.Range(0, PairCount).Select(i => Task.Run(async () =>
+        {
+            if (Interlocked.Increment(ref readyCount) == PairCount)
             {
-                coordinator.RecordOutcome(prerequisites[i], passed: true);
-                return coordinator.ShouldSkip(dependents[i], out _);
-            })));
+                allReady.SetResult(true);
+            }
+
+            await start.Task;
+
+            coordinator.RecordOutcome(prerequisites[i], passed: true);
+            return coordinator.ShouldSkip(dependents[i], out _);
+        })).ToArray();
+
+        await allReady.Task;
+        start.SetResult(true);
+
+        bool[] skipped = await Task.WhenAll(tasks);
 
         skipped.Should().AllSatisfy(wasSkipped => wasSkipped.Should().BeFalse());
         dependents.Should().AllSatisfy(dependent => coordinator.ShouldSkip(dependent, out _).Should().BeFalse());
