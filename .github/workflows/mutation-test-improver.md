@@ -114,7 +114,7 @@ Always be:
 
 ## Scope
 
-Mutation testing currently only covers `Client/**/*.cs` in `src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources`, driven by `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/stryker-config.json` and run daily by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). **Do not** widen `mutate:` scope, add new mutated projects, or change thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
+Mutation testing covers the production projects exercised by the unit-test projects in `MutationTesting.slnx`, driven by the root `stryker-config.json` and run daily by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). **Do not** widen the solution, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
 
 ## Persistent state
 
@@ -163,9 +163,9 @@ For **at most 2** of the remaining highest-value `Survived` or `NoCoverage` muta
 3. Read the mutated file and surrounding context to understand the intended behavior and what the specific mutation (e.g. a boundary flip, boolean negation, removed block) would break.
 4. If you cannot confidently explain the intended behavior, skip this mutant — do not guess.
 5. If the mutant looks behaviorally equivalent (the mutated code cannot be distinguished from the original by any observable behavior), record it in the monthly report as a known equivalent mutant with your reasoning, and skip it.
-6. Otherwise, find (or create) the corresponding test file under `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` and add a focused test asserting the exact behavior the mutant would violate. Match the project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
+6. Otherwise, find (or create) the corresponding test file under the unit-test project associated with the mutated production project and add a focused test asserting the exact behavior the mutant would violate. Match that project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
 7. Build and run the unit test project with `$GITHUB_WORKSPACE/.dotnet/dotnet` to confirm the new test compiles and passes against the original (unmutated) code.
-8. **Verify the fix**: re-run `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore` then, from `test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests` with `MutationTesting=true`, run `$GITHUB_WORKSPACE/.dotnet/dotnet stryker --output ../../../artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
+8. **Verify the fix**: re-run `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore`, then from the repository root run `MutationTesting=true $GITHUB_WORKSPACE/.dotnet/dotnet stryker --output artifacts/mutation-testing-verify --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
    - Count each Stryker invocation against the workflow's total verification budget. If the budget is exhausted, stop attempting fixes and continue to Step 5.
    - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in the monthly report, restore the test worktree to remove the abandoned edits, and move to the next candidate.
 9. For each mutant you successfully kill, emit a safe-output request for a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:

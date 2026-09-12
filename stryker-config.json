@@ -1,11 +1,13 @@
 {
   "stryker-config": {
-    "project": "Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj",
-    "target-framework": "net8.0",
+    "solution": "MutationTesting.slnx",
     "test-runner": "mtp",
     "mutation-level": "Standard",
     "mutate": [
-      "Client/**/*.cs"
+      "!**/obj/**",
+      "!**/*.g.cs",
+      "!**/*.generated.cs",
+      "!**/*.Generated.cs"
     ],
     "reporters": [
       "html",

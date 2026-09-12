@@ -1,0 +1,49 @@
+<Solution>
+  <Folder Name="/src/Platform and Extensions/">
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport/Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureFoundry/Microsoft.Testing.Extensions.AzureFoundry.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.CrashDump/Microsoft.Testing.Extensions.CrashDump.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.CtrfReport/Microsoft.Testing.Extensions.CtrfReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/Microsoft.Testing.Extensions.GitHubActionsReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.HtmlReport/Microsoft.Testing.Extensions.HtmlReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.JUnitReport/Microsoft.Testing.Extensions.JUnitReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.Logging/Microsoft.Testing.Extensions.Logging.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.PackagedApp/Microsoft.Testing.Extensions.PackagedApp.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.VideoRecorder/Microsoft.Testing.Extensions.VideoRecorder.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources/Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" />
+    <!-- Microsoft.Testing.Platform stays Microsoft-signed because generated test applications bind to that identity. -->
+  </Folder>
+  <Folder Name="/src/MSTest/">
+    <Project Path="src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj" />
+    <Project Path="src/Adapter/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
+    <Project Path="src/Analyzers/MSTest.Analyzers.CodeFixes/MSTest.Analyzers.CodeFixes.csproj" />
+    <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
+    <Project Path="src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" />
+    <Project Path="src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj" />
+    <Project Path="src/TestFramework/TestFramework/TestFramework.csproj" />
+  </Folder>
+  <Folder Name="/test/UnitTests/">
+    <Project Path="test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTest.SourceGeneration.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/MSTestAdapter.PlatformServices.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTestAdapter.UnitTests/MSTestAdapter.UnitTests.csproj" />
+    <Project Path="test/UnitTests/TestFramework.UnitTests/TestFramework.UnitTests.csproj" />
+  </Folder>
+</Solution>
