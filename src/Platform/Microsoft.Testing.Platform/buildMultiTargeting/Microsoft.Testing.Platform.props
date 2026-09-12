@@ -1,5 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project>
+  <!-- Declare our capabilities early so project-system consumers can observe them during evaluation. -->
+  <ItemGroup>
+    <_TestingPlatformProjectCapability Include="TestingPlatformServer">
+      <TestingPlatformCapabilityOwner>Microsoft.Testing.Platform</TestingPlatformCapabilityOwner>
+    </_TestingPlatformProjectCapability>
+
+    <!-- Old capability expected by VS/VSCode -->
+    <_TestingPlatformProjectCapability Include="TestContainer">
+      <TestingPlatformCapabilityOwner>Microsoft.Testing.Platform</TestingPlatformCapabilityOwner>
+    </_TestingPlatformProjectCapability>
+
+    <ProjectCapability Include="@(_TestingPlatformProjectCapability)" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- For VS Test Explorer -->
     <ProjectCapability Include="TestingPlatformServer.ExitOnProcessExitCapability">
