@@ -411,12 +411,7 @@ internal sealed class DotnetMuxerLocator
         try
         {
             using var headerReader = new FileStream(path, FileMode.Open, FileAccess.Read);
-            byte[] magicBytes = new byte[4];
-#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
-            headerReader.Read(magicBytes, 0, magicBytes.Length);
-#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
-
-            uint magic = BinaryPrimitives.ReadUInt32BigEndian(magicBytes);
+            uint magic = BinaryPrimitives.ReadUInt32BigEndian(ReadFourBytes(headerReader));
 
             // Validate magic bytes to ensure this is a valid Mach-O binary
             if (magic is not (MachOMagic32BigEndian or MachOMagic64BigEndian or MachOMagic32LittleEndian or MachOMagic64LittleEndian or MachOMagicFatBigEndian))
@@ -430,17 +425,10 @@ internal sealed class DotnetMuxerLocator
                 // A fat (multi-architecture) header is followed by 'nfat_arch' (4 bytes) and then
                 // one or more 'fat_arch' entries. The cputype we care about is the first field of
                 // the first 'fat_arch' entry, i.e. at offset 8 (magic + nfat_arch), not offset 4.
-                byte[] nfatArchBytes = new byte[4];
-#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
-                headerReader.Read(nfatArchBytes, 0, nfatArchBytes.Length);
-#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+                ReadFourBytes(headerReader);
             }
 
-            byte[] cpuInfoBytes = new byte[4];
-#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
-            headerReader.Read(cpuInfoBytes, 0, cpuInfoBytes.Length);
-#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
-
+            byte[] cpuInfoBytes = ReadFourBytes(headerReader);
             uint cpuInfo = magic is MachOMagic32LittleEndian or MachOMagic64LittleEndian
                 ? BinaryPrimitives.ReadUInt32LittleEndian(cpuInfoBytes)
                 : BinaryPrimitives.ReadUInt32BigEndian(cpuInfoBytes);
@@ -461,6 +449,15 @@ internal sealed class DotnetMuxerLocator
         }
 
         return null;
+    }
+
+    private static byte[] ReadFourBytes(FileStream stream)
+    {
+        byte[] buffer = new byte[4];
+#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
+        stream.Read(buffer, 0, buffer.Length);
+#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+        return buffer;
     }
 
     internal enum MacOsCpuType : uint
