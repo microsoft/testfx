@@ -53,6 +53,7 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)../Features/WindowsUIAutomation.targets" Condition=" '$(EnableWindowsUIAutomation)' == 'true' " />
   <Import Project="$(MSBuildThisFileDirectory)../Features/Playwright.targets" Condition=" '$(EnablePlaywright)' == 'true' " />
 
 </Project>
