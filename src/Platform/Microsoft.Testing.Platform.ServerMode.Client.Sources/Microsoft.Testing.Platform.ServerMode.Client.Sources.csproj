@@ -119,6 +119,7 @@
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\IObjectSerializer.cs" Link="Linked\ServerMode\JsonRpc\IObjectSerializer.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\IObjectDeserializer.cs" Link="Linked\ServerMode\JsonRpc\IObjectDeserializer.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\MessageFormatException.cs" Link="Linked\ServerMode\JsonRpc\MessageFormatException.cs" />
+    <Compile Include="$(MTPDir)OutputDevice\Terminal\ExceptionFlattener.cs" Link="Linked\OutputDevice\Terminal\ExceptionFlattener.cs" />
     <!-- Transport: the LSP-style framing engine, reused verbatim by the client. -->
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\IMessageHandler.cs" Link="Linked\ServerMode\JsonRpc\IMessageHandler.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\TcpMessageHandler.cs" Link="Linked\ServerMode\JsonRpc\TcpMessageHandler.cs" />
