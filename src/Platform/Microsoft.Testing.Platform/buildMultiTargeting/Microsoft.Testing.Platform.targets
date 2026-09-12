@@ -5,6 +5,20 @@
     <IsTestingPlatformApplication Condition=" '$(IsTestingPlatformApplication)' == '' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
 
+  <!-- Remove the capabilities declared in props when this project does not use Testing Platform. -->
+  <!-- Note: DisableTestingPlatformServerCapability or IsTestingPlatformApplication may be set by TestAdapter targets -->
+  <!-- While TestAdapter targets file is imported *after* this file, MSBuild evaluates properties -->
+  <!-- first, then items. So, we will be able to pick up the correct value here. -->
+  <ItemGroup Condition=" '$(DisableTestingPlatformServerCapability)' == 'true' OR '$(IsTestingPlatformApplication)' != 'true' ">
+    <!-- Preserve same-named capabilities that were contributed by another package or the project. -->
+    <_TestingPlatformProjectCapabilityToPreserve
+      Include="@(ProjectCapability->WithMetadataValue('TestingPlatformCapabilityOwner', '')->WithMetadataValue('Identity', 'TestingPlatformServer'))" />
+    <_TestingPlatformProjectCapabilityToPreserve
+      Include="@(ProjectCapability->WithMetadataValue('TestingPlatformCapabilityOwner', '')->WithMetadataValue('Identity', 'TestContainer'))" />
+    <ProjectCapability Remove="TestingPlatformServer;TestContainer" />
+    <ProjectCapability Include="@(_TestingPlatformProjectCapabilityToPreserve)" />
+  </ItemGroup>
+
   <!-- Add assembly attribute metadata for reflection usage. -->
   <!-- This is an inner-build-only concern: in the cross-targeting (outer) build of a multi-targeted -->
   <!-- project, '$(TargetFramework)' is empty and no assembly is produced, so AssemblyMetadata items -->
