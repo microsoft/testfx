@@ -15,6 +15,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 public sealed class TestDependencyCoordinatorTests : TestContainer
 {
     private const string ClassA = "Ns.ClassA";
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
     private static UnitTestElement CreateElement(string methodName, params TestDependencyInfo[] dependencies)
         => new(new TestMethod(methodName, ClassA, "DummyAssembly", displayName: null))
@@ -42,7 +43,7 @@ public sealed class TestDependencyCoordinatorTests : TestContainer
         reason.Should().BeNull();
     }
 
-    public void RecordOutcome_ControlsWhetherDependentIsSkipped()
+    public void RecordOutcome_WhenPrerequisitePassed_DoesNotSkipDependent()
     {
         UnitTestElement prerequisite = CreateElement("Prerequisite");
         UnitTestElement dependent = CreateElement("Dependent", DependsOnMethod("Prerequisite"));
@@ -52,10 +53,17 @@ public sealed class TestDependencyCoordinatorTests : TestContainer
 
         coordinator.ShouldSkip(dependent, out string? reason).Should().BeFalse();
         reason.Should().BeNull();
+    }
+
+    public void RecordOutcome_WhenPrerequisiteFailed_SkipsDependent()
+    {
+        UnitTestElement prerequisite = CreateElement("Prerequisite");
+        UnitTestElement dependent = CreateElement("Dependent", DependsOnMethod("Prerequisite"));
+        TestDependencyCoordinator coordinator = CreateCoordinator(prerequisite, dependent);
 
         coordinator.RecordOutcome(prerequisite, passed: false);
 
-        coordinator.ShouldSkip(dependent, out reason).Should().BeTrue();
+        coordinator.ShouldSkip(dependent, out string? reason).Should().BeTrue();
         reason.Should().Be($"Test skipped because it depends on '{prerequisite.TestMethod.FullyQualifiedName}', which did not pass.");
     }
 
@@ -172,12 +180,25 @@ public sealed class TestDependencyCoordinatorTests : TestContainer
             return coordinator.ShouldSkip(dependents[i], out _);
         })).ToArray();
 
-        await allReady.Task;
-        start.SetResult(true);
+        try
+        {
+            await WaitFor(allReady.Task, "all workers should reach the start gate");
+        }
+        finally
+        {
+            start.TrySetResult(true);
+        }
 
-        bool[] skipped = await Task.WhenAll(tasks);
+        bool[] skipped = await WaitFor(Task.WhenAll(tasks), "all concurrent operations should complete");
 
         skipped.Should().AllSatisfy(wasSkipped => wasSkipped.Should().BeFalse());
         dependents.Should().AllSatisfy(dependent => coordinator.ShouldSkip(dependent, out _).Should().BeFalse());
+    }
+
+    private static async Task<T> WaitFor<T>(Task<T> task, string because)
+    {
+        Task completed = await Task.WhenAny(task, Task.Delay(Timeout));
+        completed.Should().BeSameAs(task, because);
+        return await task;
     }
 }
