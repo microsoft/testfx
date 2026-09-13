@@ -95,6 +95,9 @@ concurrency:
   cancel-in-progress: true
 
 timeout-minutes: 30
+# Generated framework jobs repeatedly failed to be acquired from the ubuntu-slim
+# pool before any steps ran. Use the standard hosted pool for reliable activation.
+runs-on-slim: ubuntu-latest
 
 # The agent job's default checkout uses the event ref, and for `check_run` that
 # is the repository's DEFAULT BRANCH — not the pull request. Without this block

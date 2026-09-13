@@ -31,6 +31,9 @@ concurrency:
 
 timeout-minutes: 30
 max-ai-credits: 1000
+# Generated framework jobs repeatedly failed to be acquired from the ubuntu-slim
+# pool before any steps ran. Use the standard hosted pool for reliable activation.
+runs-on-slim: ubuntu-latest
 
 jobs:
   collect-test-evidence:
