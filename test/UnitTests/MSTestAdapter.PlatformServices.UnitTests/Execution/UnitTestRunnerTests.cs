@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -42,6 +43,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         if (!IsDisposed)
         {
             base.Dispose(disposing);
+            AssertionFailureSettings.CaptureDiagnosticsOnFailure = null;
             PlatformServiceProvider.Instance = null;
         }
     }
@@ -72,6 +74,26 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         MSTestSettings.CurrentSettings.TestTimeout.Should().Be(12);
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    public void ConstructorShouldConfigureAssertionFailureDiagnosticsCallback()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTest>
+                <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+              </MSTest>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        _ = new UnitTestRunner(adapterSettings, []);
+
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().NotBeNull();
+    }
+#endif
 
     #endregion
 
@@ -153,6 +175,144 @@ public sealed class UnitTestRunnerTests : TestContainer
         results[0].Outcome.Should().Be(UnitTestOutcome.NotFound);
         results[0].IgnoreReason.Should().Be("Test method M was not found.");
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    public async Task RunSingleTestShouldAttachAssertionFailureDiagnostics()
+    {
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "MSTestAssertionFailureDiagnostics", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        _testRunParameters["TestResultsDirectory"] = resultsDirectory;
+
+        try
+        {
+            string runSettingsXml =
+                """
+                <RunSettings>
+                  <MSTest>
+                    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                  </MSTest>
+                </RunSettings>
+                """;
+            MSTestSettings settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+            Type type = typeof(DummyTestClassWithAssertionFailure);
+            MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassWithAssertionFailure.TestMethod))!;
+            TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var unitTestElement = new UnitTestElement(testMethod);
+            var unitTestRunner = new UnitTestRunner(settings, [unitTestElement]);
+
+            TestResult[] results = await unitTestRunner.RunSingleTestAsync(unitTestElement, _testRunParameters, null!);
+
+            results.Should().ContainSingle();
+            results[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+            string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
+            string json = File.ReadAllText(artifactPath);
+            json.Should().Contain($"\"fullyQualifiedName\":\"{type.FullName}.{methodInfo.Name}\"");
+            json.Should().Contain("\"expected\":\"42\"");
+            json.Should().Contain("\"actual\":\"41\"");
+            json.Should().Contain("\"activeTests\"");
+            json.Should().Contain("\"process\"");
+            json.Should().Contain("\"stackFrames\"");
+        }
+        finally
+        {
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+
+    public async Task RunSingleTestShouldAttachDiagnosticsForAssertionInCustomTestMethodAttribute()
+    {
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "MSTestAssertionFailureDiagnostics", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        _testRunParameters["TestResultsDirectory"] = resultsDirectory;
+
+        try
+        {
+            string runSettingsXml =
+                """
+                <RunSettings>
+                  <MSTest>
+                    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                  </MSTest>
+                </RunSettings>
+                """;
+            MSTestSettings settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+            Type type = typeof(DummyTestClassWithAttributeAssertionFailure);
+            MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassWithAttributeAssertionFailure.TestMethod))!;
+            TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var unitTestElement = new UnitTestElement(testMethod);
+            var unitTestRunner = new UnitTestRunner(settings, [unitTestElement]);
+
+            TestResult[] results = await unitTestRunner.RunSingleTestAsync(unitTestElement, _testRunParameters, null!);
+
+            results.Should().ContainSingle();
+            results[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+            string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
+            File.ReadAllText(artifactPath).Should().Contain("attribute failure");
+        }
+        finally
+        {
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+
+    public async Task RunSingleTestShouldAttachDiagnosticsWhenCustomAttributeReturnsNoResults()
+    {
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "MSTestAssertionFailureDiagnostics", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        _testRunParameters["TestResultsDirectory"] = resultsDirectory;
+
+        try
+        {
+            string runSettingsXml =
+                """
+                <RunSettings>
+                  <MSTest>
+                    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                  </MSTest>
+                </RunSettings>
+                """;
+            MSTestSettings settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+            Type type = typeof(DummyTestClassWithEmptyAttributeResult);
+            MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassWithEmptyAttributeResult.TestMethod))!;
+            TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var unitTestElement = new UnitTestElement(testMethod);
+            var unitTestRunner = new UnitTestRunner(settings, [unitTestElement]);
+
+            TestResult[] results = await unitTestRunner.RunSingleTestAsync(unitTestElement, _testRunParameters, null!);
+
+            results.Should().ContainSingle();
+            results[0].Outcome.Should().NotBe(UnitTestOutcome.Passed);
+            results[0].TestFailureException.Should().NotBeNull();
+            string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
+            File.ReadAllText(artifactPath).Should().Contain("empty result failure");
+        }
+        finally
+        {
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+#endif
 
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
     {
@@ -513,6 +673,70 @@ public sealed class UnitTestRunnerTests : TestContainer
         public void TestMethodToTestInProgress() => Assert.AreEqual(UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
 #pragma warning restore RS0030 // Do not use banned APIs
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    [DummyTestClass]
+    private class DummyTestClassWithAssertionFailure
+    {
+        public TestContext TestContext { get; set; } = null!;
+
+        [TestMethod]
+#pragma warning disable RS0030 // Do not use banned APIs - exercising the framework assertion hook through the adapter.
+        public async Task TestMethod()
+        {
+            await Task.Yield();
+            Assert.AreEqual(42, 41);
+        }
+#pragma warning restore RS0030 // Do not use banned APIs
+    }
+
+    private sealed class AssertionBeforeInvokeTestMethodAttribute : TestMethodAttribute
+    {
+#pragma warning disable RS0030 // Do not use banned APIs - exercising assertion capture in custom attribute code.
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            Assert.Fail("attribute failure");
+            return Task.FromResult(Array.Empty<TestResult>());
+        }
+#pragma warning restore RS0030 // Do not use banned APIs
+    }
+
+    private sealed class AssertionThenEmptyResultsTestMethodAttribute : TestMethodAttribute
+    {
+#pragma warning disable RS0030 // Do not use banned APIs - exercising assertion capture before an empty result.
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            try
+            {
+                Assert.Fail("empty result failure");
+            }
+            catch (AssertFailedException)
+            {
+            }
+
+            return Task.FromResult(Array.Empty<TestResult>());
+        }
+#pragma warning restore RS0030 // Do not use banned APIs
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithAttributeAssertionFailure
+    {
+        [AssertionBeforeInvokeTestMethod]
+        public void TestMethod()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithEmptyAttributeResult
+    {
+        [AssertionThenEmptyResultsTestMethod]
+        public void TestMethod()
+        {
+        }
+    }
+#endif
 
     [DummyTestClass]
     private class DummyTestClassWithInitializeMethods

@@ -180,6 +180,10 @@
               "description": "Controls whether the debugger is launched when an assertion fails.",
               "enum": ["Disabled", "Enabled", "EnabledExcludingCI"]
             },
+            "captureAssertionFailureDiagnostics": {
+              "type": "boolean",
+              "description": "When true, captures bounded JSON diagnostic artifacts for up to the first three assertion failures of each test execution attempt. Each artifact includes stack frames, concurrently running test names, and test-host CPU, memory, process I/O, and result-volume information. Defaults to false."
+            },
             "executionApartmentState": {
               "type": "string",
               "description": "COM apartment state used to run tests. Defaults to MTA. STA is only honored on Windows.",

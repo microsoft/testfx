@@ -32,6 +32,35 @@ public partial class AssertTests
             .WithMessage("Assertion failed.");
     }
 
+    public void AssertionFailureShouldInvokeDiagnosticsCallbackBeforeThrowing()
+    {
+        string? capturedMessage = null;
+        string? capturedExpected = null;
+        string? capturedActual = null;
+        Action<string, string?, string?>? previousCallback = AssertionFailureSettings.CaptureDiagnosticsOnFailure;
+
+        try
+        {
+            AssertionFailureSettings.CaptureDiagnosticsOnFailure = (message, expected, actual) =>
+            {
+                capturedMessage = message;
+                capturedExpected = expected;
+                capturedActual = actual;
+            };
+
+            Action action = () => Assert.AreEqual("expected", "actual");
+
+            action.Should().Throw<AssertFailedException>();
+            capturedMessage.Should().Contain("Assertion failed.");
+            capturedExpected.Should().Be("\"expected\"");
+            capturedActual.Should().Be("\"actual\"");
+        }
+        finally
+        {
+            AssertionFailureSettings.CaptureDiagnosticsOnFailure = previousCallback;
+        }
+    }
+
     public void InconclusiveWithoutMessageShouldUseInconclusivePrefix()
     {
         Action action = () => Assert.Inconclusive();
