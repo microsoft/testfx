@@ -404,14 +404,15 @@ inline suggestion in Step 4 needs:
   span, copied from the file at HEAD and edited, with the original indentation
   preserved. It must compile as written: real assertion APIs, real symbol
   names, no TODOs, no `...` elisions, no pseudo-code, and no abbreviated setup.
-  Prefer replacing the whole test method with a corrected method when its span
-  is available in one diff hunk. Otherwise, use the smallest contiguous
-  changed span that produces the complete fix. To insert setup or assertions,
-  a single changed anchor line may be replaced by that original line plus all
-  inserted lines. Exhaust these options before recording `Replacement: none`.
-  Use `none` only when no complete mechanical edit can be anchored to the diff.
-  When a newly added test method is wholly inside the changed lines, the
-  replacement must contain the complete corrected method, not an excerpt.
+  Use the contiguous changed span that makes the suggested change complete and
+  directly applicable. A full test-method replacement is valid when the entire
+  method is present in one diff hunk and the anchor covers that method's exact
+  first and last lines. For a smaller insertion, replace a nearby changed anchor
+  line with that original line plus the inserted lines. The replacement size
+  does not determine whether GitHub can apply it; the anchor range and
+  replacement content must describe the same edit. Exhaust these options before
+  recording `Replacement: none`; use `none` only when no complete mechanical
+  edit can be anchored to the diff.
 
 ### Step 4 — Post inline improvement suggestions
 
@@ -432,7 +433,7 @@ backticks so the inner `suggestion` fence survives verbatim):
 <the How to improve sentence from Step 3>
 
 ```suggestion
-<complete corrected method or complete compiling changed span>
+<complete compiling replacement for the exact anchored span>
 ```
 ````
 
@@ -447,12 +448,16 @@ Rules:
   by fully-qualified name) and leave the rest to the Step 5 table. The
   safe-output cap is higher only to absorb Copilot CLI retry amplification —
   do not treat it as the target.
-- **The suggestion must be complete and apply cleanly.** Its content replaces exactly the
+- **The suggestion must be a directly applicable GitHub suggested change.**
+  Use the exact fenced block shown above, with `suggestion` as the fence
+  language and no extra fence attributes. Its content replaces exactly the
   anchored span, so it has to include any anchored line you intend to keep.
-  Do not prefix it with the line number, the file path, a diff marker, or
-  `+`/`-`. An empty suggestion body deletes the anchored line. Never put a
-  sketch, partial implementation, placeholder, TODO, ellipsis, or explanatory
-  comment inside the `suggestion` fence.
+  When replacing a full method, set `start_line` to the method's first line and
+  `line` to its last line; when replacing one line, omit `start_line`. Do not
+  prefix the content with the line number, file path, a diff marker, or `+`/`-`.
+  An empty suggestion body deletes the anchored line. Never put a sketch,
+  partial implementation, placeholder, TODO, ellipsis, or explanatory comment
+  inside the `suggestion` fence.
 - **The suggestion must be valid, compiling C#** using the assertion style
   that project already uses (MSTest `Assert`/`StringAssert`/`CollectionAssert`,
   AwesomeAssertions `Should()`, or `TestFramework.ForTestingMSTest`'s
