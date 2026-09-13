@@ -2650,6 +2650,55 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void GetSummaryLength_ReturnsNull_WhenTheFileDoesNotExist()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(false);
+
+        long? measured = NewWriter(fileSystem.Object, "summary.md", 1).GetSummaryLength();
+
+        Assert.IsNull(measured);
+        fileSystem.Verify(
+            f => f.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public void GetSummaryLength_ReportsTheFileLength_WhenItExists()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            byte[] content = Encoding.UTF8.GetBytes("summary");
+            File.WriteAllBytes(path, content);
+
+            long? measured = NewWriter(new SystemFileSystem(), path, 1).GetSummaryLength();
+
+            Assert.AreEqual(content.Length, measured);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(typeof(IOException))]
+    [DataRow(typeof(UnauthorizedAccessException))]
+    [DataRow(typeof(NotSupportedException))]
+    public void GetSummaryLength_ReturnsNull_WhenOpeningTheFileFails(Type exceptionType)
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            .Throws((Exception)Activator.CreateInstance(exceptionType)!);
+
+        long? measured = NewWriter(fileSystem.Object, "summary.md", 1).GetSummaryLength();
+
+        Assert.IsNull(measured);
+    }
+
+    [TestMethod]
     public void GetSummaryLengthExcludingSection_ReportsTheRawLength_WithoutReadingAnOversizedFile()
     {
         // Discounting our own section requires reading the file, whose size other producers control. Past the

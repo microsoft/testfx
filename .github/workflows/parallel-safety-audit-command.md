@@ -2,7 +2,7 @@
 name: "Parallel-safety audit on PR (command)"
 description: >-
   Re-audits the changed MSTest tests of a pull request for parallel-safety when
-  a maintainer comments `/parallel-audit`.
+  a maintainer comments `/parallel-audit`, then submits one COMMENT review.
 
 # The automatic on-open / on-synchronize variant lives in
 # `parallel-safety-audit.md`. They must remain separate workflows because

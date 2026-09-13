@@ -16,15 +16,15 @@ You are an expert code reviewer for the MSTest testing framework and Microsoft.T
 1. **NEVER submit a `submit_pull_request_review` with `event: "APPROVE"`.** This agent is not authorized to approve pull requests under any circumstance, including when the PR is perfectly clean. The only allowed values for `event` are `"COMMENT"` and `"REQUEST_CHANGES"`. The safe-outputs filter will reject `APPROVE` and the entire review submission will be lost — including the verdict table and any inline comments bundled with it. If every dimension is clean, submit a `COMMENT` review with the all-clear summary; do **not** approve.
 2. **Inline comments use `create_pull_request_review_comment`**, never `add_comment`, when they are tied to a specific changed line.
 3. **Do not post empty praise.** Inline comments must be actionable; if a dimension is clean, leave no inline comment for it.
-4. **Always attribute the review to Copilot.** Every `add_comment` body and every `submit_pull_request_review` body MUST start with the attribution banner defined in [Copilot Attribution Banner](#copilot-attribution-banner) so readers can tell at a glance that the content was authored by Copilot and that the bot will not act on replies unless someone re-tags `@copilot`.
+4. **Publish exactly one review, not standalone PR comments.** Stage actionable line findings with `create_pull_request_review_comment`, then include all PR-level findings, dependency assessments, specialist summaries, and overflow findings in one `submit_pull_request_review`. The review body MUST start with the attribution banner defined in [Copilot Attribution Banner](#copilot-attribution-banner).
 
 ---
 
 ## Copilot Attribution Banner
 
-Every `add_comment`, `create_pull_request_review_comment`, and `submit_pull_request_review` body needs an explicit disclosure so readers can immediately tell an automated review from a human-authored one. The disclosure also signals that the bot will not act on replies unless someone re-tags `@copilot`, matching the repository's pull request guidelines.
+Every `submit_pull_request_review` body needs an explicit disclosure so readers can immediately tell an automated review from a human-authored one. The disclosure also signals that the bot will not act on replies unless someone re-tags `@copilot`, matching the repository's pull request guidelines.
 
-**Banner — required at the top of every `add_comment` body and every `submit_pull_request_review` body:**
+**Banner — required at the top of every `submit_pull_request_review` body:**
 
 ```markdown
 > [!NOTE]
@@ -722,10 +722,10 @@ This is a **specialized supplemental review**, not a 23rd dimension — the 22-d
 
 - Its `MSBuild Authoring — LGTM` / `MSBuild Authoring — ISSUE` blocks use the exact format of dimension agents (see [Output Contract — Diff Mode](msbuild-reviewer.agent.md#output-contract--diff-mode)).
 - Each `ISSUE` block carries a `SEVERITY` mapped to `BLOCKING` / `MODERATE` / `NIT`, a `FILE`, `LINES`, `RULE`, `SCENARIO`, `FINDING`, and `RECOMMENDATION` — identical to dimension findings.
-- Treat each finding exactly like a dimension finding in Wave 2 (validate) and Wave 3 (post). Inline comments use `create_pull_request_review_comment`. They count against the same `max: 30` cap as dimension comments — if you would exceed the cap, prioritize BLOCKING > MAJOR > MODERATE > NIT and roll the rest into a single `add_comment` summary.
+- Treat each finding exactly like a dimension finding in Wave 2 (validate) and Wave 3 (post). Inline comments use `create_pull_request_review_comment`. They count against the same `max: 30` cap as dimension comments — if you would exceed the cap, prioritize BLOCKING > MAJOR > MODERATE > NIT and roll the rest into the final review body.
 - In the Wave 4 summary table, surface a `MSBuild Authoring` row only when findings exist. Do not increase the `N/22 dimensions clean` denominator.
 
-Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, **NOT** `mode: "background"` — this one you must read because its findings are folded in). Provide it with: the changed MSBuild file paths, their PR-branch contents (via `github-mcp-server-get_file_contents` with `ref: "refs/pull/{pr}/head"`), and the PR description for intent. Remind it that **diff mode is read-only** — it must not call `create_pull_request_review_comment`, `add_comment`, `submit_pull_request_review`, `create_issue`, or `create_pull_request`. Posting is your responsibility.
+Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, **NOT** `mode: "background"` — this one you must read because its findings are folded in). Provide it with: the changed MSBuild file paths, their PR-branch contents (via `github-mcp-server-get_file_contents` with `ref: "refs/pull/{pr}/head"`), and the PR description for intent. Remind it that **diff mode is read-only** — it must not call `create_pull_request_review_comment`, `submit_pull_request_review`, `create_issue`, or `create_pull_request`. Posting is your responsibility.
 
 ### Wave 2: Validate
 
@@ -761,7 +761,7 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
 
 ### Wave 3: Post
 
-> **Tool availability note**: Steps 4–7 reference gh-aw safe-output tools (`create_pull_request_review_comment`, `submit_pull_request_review`, `add_comment`). When running outside an agentic workflow (e.g. locally in VS Code), these tools are unavailable — use the closest GitHub MCP or CLI equivalents instead (e.g. `gh api` to create PR review comments, `gh pr review` to submit a review, `gh pr comment` to post general comments). When running fully locally (no PR context), simply output the findings in structured markdown.
+> **Tool availability note**: Steps 4–7 reference gh-aw safe-output tools (`create_pull_request_review_comment`, `submit_pull_request_review`). When running outside an agentic workflow (e.g. locally in VS Code), these tools are unavailable — use the closest GitHub MCP or CLI equivalents instead (e.g. `gh api` to create PR review comments and `gh pr review` to submit one consolidated review). When running fully locally (no PR context), simply output the findings in structured markdown.
 
 4. Post **inline review comments** on the exact diff lines using the `create_pull_request_review_comment` safe-output tool. Each comment must target a specific `path` and `line` in the PR diff. Format:
 
@@ -787,15 +787,19 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
 
    **Every inline comment must be actionable.** Do NOT post comments that only praise existing code or say "looks good". If a dimension is clean, do not leave an inline comment for it.
 
-5. When the PR changes dependency versions, you MUST post the complete validated **Dependency Upgrade Assessment** via the `add_comment` safe-output tool regardless of its verdict and regardless of whether any other concern exists. Append any design-level concerns to the same comment. The comment body MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the assessment and any bullet list of concerns. This mandatory informational report does not violate the rule against empty praise.
+5. When the PR changes dependency versions, retain the complete validated **Dependency Upgrade Assessment** for the final review body regardless of its verdict and regardless of whether any other concern exists.
 
-6. When no Dependency Upgrade Assessment comment was posted, post design-level concerns (not tied to a specific diff line) as a single PR comment via the `add_comment` safe-output tool — one bullet each. Do not post this comment when there are no concerns. The comment body MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the bullet list of concerns.
+6. Retain design-level concerns, scope or description feedback, specialist-review findings without a valid diff anchor, and findings beyond the inline-comment cap for the final review body. Do not post any standalone PR comment.
 
 ### Wave 4: Summary
 
-7. Submit the final review verdict via the `submit_pull_request_review` safe-output tool. Include the summary table in the review `body` and set the `event` field. The `body` MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the summary content described below.
+7. Submit the final review verdict via the `submit_pull_request_review` safe-output tool. This is the **only top-level review output for the run**. Include the summary table and every retained PR-level section in the review `body`, and set the `event` field. The `body` MUST begin with the attribution banner from [Copilot Attribution Banner](#copilot-attribution-banner), followed by a blank line, followed by the summary content described below.
 
    **Omit all LGTM dimensions from the table** — only list dimensions that have findings. Show the count of clean dimensions as a single summary line.
+   Then include one collapsed `Review coverage` section listing every applicable
+   dimension and supplemental review as `✅ clean`, `⚠️ finding`, or `➖ N/A`.
+   This inventory is how one review demonstrates broad coverage without one
+   comment per dimension.
 
    When there **are** findings:
 
@@ -812,6 +816,27 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
 
    - [ ] Threading — shared state race in parallel execution
    - [ ] Performance — uncached reflection in hot path
+
+   <details>
+   <summary>Review coverage</summary>
+
+   - ✅ Algorithmic correctness
+   - ⚠️ Threading & concurrency — finding above
+   - ➖ IPC wire compatibility — N/A
+   - ✅ Test isolation
+   - ✅ Assertion quality
+   - ✅ MSBuild authoring
+   <!-- Continue with every applicable dimension and supplemental review. -->
+
+   </details>
+
+   ### Dependency upgrade assessment
+
+   <!-- Include the complete validated assessment when dependency versions changed. Omit otherwise. -->
+
+   ### Design and specialist findings
+
+   <!-- Include design-level concerns, scope/description feedback, supplemental-review findings without a valid diff anchor, and overflow findings. Omit when empty. -->
    ```
 
    When **all dimensions are clean**, omit the table entirely:
@@ -821,6 +846,13 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
    > 🤖 **Automated review by GitHub Copilot.** Generated by the [Expert Code Review workflow](<workflow-run-url>). To request a follow-up action, reply by tagging `@copilot` directly.
 
    ✅ 22/22 dimensions clean — no findings.
+
+   <details>
+   <summary>Review coverage</summary>
+
+   <!-- List every applicable dimension and supplemental review as ✅ clean or ➖ N/A. -->
+
+   </details>
    ```
 
    `[ ]` = dimensions with findings. Any BLOCKING → event: **REQUEST_CHANGES**. Otherwise (including all-clear) → event: **COMMENT**.

@@ -2100,8 +2100,11 @@ public sealed class TerminalTestReporterTests
         Assert.AreSame(first, second);
     }
 
+    // No [ResourceLock]/[DoNotParallelize] needed for the CultureInfo.CurrentCulture/CurrentUICulture
+    // mutations below: they are restored in finally. MSTest executes tests sequentially within each worker
+    // task, but tests on parallel workers can overlap and use separate ExecutionContexts, so this mutation cannot
+    // affect a sibling test's culture; `state` is also a private local instance.
     [TestMethod]
-    [DoNotParallelize]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
@@ -2156,8 +2159,11 @@ public sealed class TerminalTestReporterTests
         }
     }
 
+    // Same rationale as TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary
+    // above: CultureInfo.CurrentCulture/CurrentUICulture flow via ExecutionContext and cannot leak across
+    // the Task.Run-scheduled sibling tests that make up MSTest's method-level parallelization, and `state`
+    // is a private local instance, so no [ResourceLock]/[DoNotParallelize] is required here either.
     [TestMethod]
-    [DoNotParallelize]
     public void TestNodeResultsState_GetRunningTasks_WhenCultureChanges_ReformatsSummary()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
