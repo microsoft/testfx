@@ -391,6 +391,18 @@ The type declaring these methods should also respect the following rules:
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
+  <data name="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription" xml:space="preserve">
+    <value>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</value>
+    <comment>{Locked="MSTest"}{Locked="[TestClass]"}</comment>
+  </data>
+  <data name="TestClassAttributeShouldNotBeAppliedToAbstractClassMessageFormat" xml:space="preserve">
+    <value>'[TestClass]' has no effect on abstract class '{0}'</value>
+    <comment>{0} is the class name. {Locked="[TestClass]"}</comment>
+  </data>
+  <data name="TestClassAttributeShouldNotBeAppliedToAbstractClassTitle" xml:space="preserve">
+    <value>'[TestClass]' should not be applied to abstract classes</value>
+    <comment>{Locked="[TestClass]"}</comment>
+  </data>
   <data name="TestClassShouldHaveTestMethodDescription" xml:space="preserve">
     <value>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</value>
     <comment>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</comment>
