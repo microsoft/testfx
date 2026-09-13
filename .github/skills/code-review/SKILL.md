@@ -31,6 +31,24 @@ tests to understand the changed behavior before commenting.
    high-confidence findings over broad summaries or praise.
 6. If the change is correct, do not invent a finding merely to leave feedback.
 
+## Review publication
+
+- Publish review feedback as one pull-request review per run. Stage actionable
+  line findings as inline review comments, then bundle them with the final
+  review submission.
+- Put PR-level findings, scope and description feedback, dependency assessments,
+  specialist-review summaries, and overflow findings in the final review body.
+  Do not post separate top-level PR comments for review content.
+- Include a compact, collapsed coverage inventory in the review body so readers
+  can see which review dimensions and specialist checks ran without receiving a
+  separate comment for each clean area.
+- Do not duplicate a finding already covered by another live review thread.
+  Reference the existing thread from the review body when it remains the only
+  actionable item.
+- For automatic specialist checks that are fully clean, prefer `noop` when the
+  main review already covers that dimension. Explicit slash-command reviews may
+  still publish an informational `COMMENT` review.
+
 ## PR scope and review depth
 
 Be constructively critical. Challenge the change's assumptions, failure modes,
