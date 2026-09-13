@@ -2102,8 +2102,8 @@ public sealed class TerminalTestReporterTests
 
     // No [ResourceLock]/[DoNotParallelize] needed for the CultureInfo.CurrentCulture/CurrentUICulture
     // mutations below: they are restored in finally. MSTest executes tests sequentially within each worker
-    // task (and gives parallel workers separate ExecutionContexts), so this mutation cannot overlap a sibling
-    // test's execution; `state` is also a private local instance.
+    // task, but tests on parallel workers can overlap and use separate ExecutionContexts, so this mutation cannot
+    // affect a sibling test's culture; `state` is also a private local instance.
     [TestMethod]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary()
     {
