@@ -85,10 +85,17 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             return;
         }
 
-        var platformAttributes = attributes
-            .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
-                || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
-            .ToImmutableArray();
+        // Most test methods/classes carry no [SupportedOSPlatform]/[UnsupportedOSPlatform] attributes at all, so
+        // cheaply check for at least one match before paying for the Where().ToImmutableArray() allocation below.
+        ImmutableArray<AttributeData> platformAttributes = HasPlatformAttributes(
+                attributes,
+                supportedOSPlatformAttributeSymbol,
+                unsupportedOSPlatformAttributeSymbol)
+            ? attributes
+                .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
+                    || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
+                .ToImmutableArray()
+            : ImmutableArray<AttributeData>.Empty;
 
         AttributeData? localOSConditionAttribute = attributes.FirstOrDefault(
             attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
