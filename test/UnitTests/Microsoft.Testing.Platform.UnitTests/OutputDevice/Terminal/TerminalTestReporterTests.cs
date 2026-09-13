@@ -2100,8 +2100,16 @@ public sealed class TerminalTestReporterTests
         Assert.AreSame(first, second);
     }
 
+    // No [ResourceLock]/[DoNotParallelize] needed for the CultureInfo.CurrentCulture/CurrentUICulture
+    // mutations below: on every TFM this project targets (net8.0/net9.0, plus net462 on Windows), the
+    // current culture is stored in the thread's ExecutionContext and flows only to this test's own
+    // continuations. MSTest schedules every test through Task.Run (see
+    // TestExecutionManager/TestMethodInfo.Lifecycle), and the thread pool captures/restores
+    // ExecutionContext per work item, so the mutation cannot leak forward into a concurrently scheduled
+    // sibling test under the assembly's method-level parallelization. `state` is also a local instance
+    // private to this test, so there is no other shared resource in play. The original culture is still
+    // restored in `finally` as defensive hygiene, matching the precedent in FfmpegVideoRecorderTests.
     [TestMethod]
-    [DoNotParallelize]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
@@ -2156,8 +2164,11 @@ public sealed class TerminalTestReporterTests
         }
     }
 
+    // Same rationale as TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary
+    // above: CultureInfo.CurrentCulture/CurrentUICulture flow via ExecutionContext and cannot leak across
+    // the Task.Run-scheduled sibling tests that make up MSTest's method-level parallelization, and `state`
+    // is a private local instance, so no [ResourceLock]/[DoNotParallelize] is required here either.
     [TestMethod]
-    [DoNotParallelize]
     public void TestNodeResultsState_GetRunningTasks_WhenCultureChanges_ReformatsSummary()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
