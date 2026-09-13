@@ -188,6 +188,28 @@ public sealed class HtmlReportMergerTests
     }
 
     [TestMethod]
+    public void Merge_Concatenate_DoesNotAnnotateTestsWhoseIdentityPartsContainTheSeparatorAsAttempts()
+    {
+        JsonObject first = Test("failed", uid: "A");
+        first["testApplication"] = "B\0C";
+        JsonObject second = Test("passed", uid: "A\0B");
+        second["testApplication"] = "C";
+
+        JsonObject report = Merge([Report(first), Report(second)], HtmlMergeMode.Concatenate);
+
+        var tests = (JsonArray)report["tests"]!;
+        Assert.HasCount(2, tests);
+        Assert.AreEqual("A", (string?)tests[0]!["uid"]);
+        Assert.AreEqual("B\0C", (string?)tests[0]!["testApplication"]);
+        Assert.IsNull(tests[0]!["attemptIndex"]);
+        Assert.IsNull(tests[0]!["attemptOf"]);
+        Assert.AreEqual("A\0B", (string?)tests[1]!["uid"]);
+        Assert.AreEqual("C", (string?)tests[1]!["testApplication"]);
+        Assert.IsNull(tests[1]!["attemptIndex"]);
+        Assert.IsNull(tests[1]!["attemptOf"]);
+    }
+
+    [TestMethod]
     public void Merge_CollapseRetryAttempts_DoesNotFuseSameNamedRowsWithDifferentUids()
     {
         JsonObject parameterized = Test("failed", uid: "parameter-value-1", displayName: "same name");
@@ -205,9 +227,9 @@ public sealed class HtmlReportMergerTests
         Assert.AreEqual("b.cs", (string?)tests[1]!["filePath"]);
     }
 
-    private static JsonObject Merge(IReadOnlyList<string> reports)
+    private static JsonObject Merge(IReadOnlyList<string> reports, HtmlMergeMode mode = HtmlMergeMode.CollapseRetryAttempts)
         => JsonNode.Parse(HtmlReportEngine.ExtractReportJson(
-            HtmlReportMerger.Merge(reports, HtmlMergeMode.CollapseRetryAttempts)))!.AsObject();
+            HtmlReportMerger.Merge(reports, mode)))!.AsObject();
 
     private static string Report(params JsonObject[] tests)
     {
