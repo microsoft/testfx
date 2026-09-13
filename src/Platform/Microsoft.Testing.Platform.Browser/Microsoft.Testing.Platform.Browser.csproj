@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <UseAppHost>false</UseAppHost>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <VersionPrefix>$(MicrosoftTestingPlatformBrowserVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MicrosoftTestingPlatformBrowserPreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <PackageDescription><![CDATA[This optional package launches Microsoft Testing Platform browser-wasm test applications in an isolated headless Chromium-family browser and passes the SDK's authenticated dotnet test bootstrap directly into the browser runtime without relaying test results.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <Content Include="build/**">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+    </Content>
+    <Content Include="buildTransitive/**">
+      <Pack>true</Pack>
+      <PackagePath>buildTransitive</PackagePath>
+    </Content>
+    <None Include="$(TargetDir)$(AssemblyName).dll" Pack="true" PackagePath="tools\net8.0\any" />
+    <None Include="$(TargetDir)$(AssemblyName).deps.json" Pack="true" PackagePath="tools\net8.0\any" />
+    <None Include="$(TargetDir)$(AssemblyName).runtimeconfig.json" Pack="true" PackagePath="tools\net8.0\any" />
+  </ItemGroup>
+
+</Project>

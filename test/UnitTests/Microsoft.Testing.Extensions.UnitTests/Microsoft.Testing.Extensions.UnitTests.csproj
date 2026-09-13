@@ -67,6 +67,8 @@
     <!-- The PackagedApp extension only targets .NET (net8.0/net9.0), so it is referenced only for those TFMs. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.PackagedApp\Microsoft.Testing.Extensions.PackagedApp.csproj"
                       Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\Microsoft.Testing.Platform.Browser.csproj"
+                      Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
   </ItemGroup>
 
   <ItemGroup>
