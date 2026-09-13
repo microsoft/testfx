@@ -108,7 +108,7 @@ return await app.RunAsync();
 
     [TestMethod]
     [CombinatorialData]
-    public async SystemTask EnableMSTestRunner_False_Wont_Flow_TestingPlatform_Capabilities([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration, Verb verb)
+    public async SystemTask EnableMSTestRunner_False_Wont_Flow_TestingPlatformServer_Capability([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -120,8 +120,16 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", string.Empty)
                 .PatchCodeWithReplace("$Extra$", string.Empty)
                 .PatchCodeWithReplace("</Project>", """
+<ItemGroup>
+  <ProjectCapability Include="TestContainer" />
+</ItemGroup>
 <Target Name="PrintProjectCapabilities" BeforeTargets="CoreCompile">
+  <ItemGroup>
+    <_TestingPlatformOwnedTestContainerCapability
+      Include="@(ProjectCapability->WithMetadataValue('TestingPlatformCapabilityOwner', 'Microsoft.Testing.Platform')->WithMetadataValue('Identity', 'TestContainer'))" />
+  </ItemGroup>
   <Message Text="ProjectCapabilitiesEvaluated" Importance="high" />
+  <Message Text="TestingPlatformOwnedTestContainerCapabilityCount=@(_TestingPlatformOwnedTestContainerCapability->Count())" Importance="high" />
   <Message Text="ProjectCapability=[%(ProjectCapability.Identity)]" Importance="high" />
 </Target>
 </Project>
@@ -130,8 +138,9 @@ return await app.RunAsync();
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", cancellationToken: TestContext.CancellationToken);
 
         result.AssertOutputContains("ProjectCapabilitiesEvaluated");
+        result.AssertOutputContains("TestingPlatformOwnedTestContainerCapabilityCount=0");
+        result.AssertOutputContains("ProjectCapability=[TestContainer]");
         result.AssertOutputDoesNotContain("ProjectCapability=[TestingPlatformServer]");
-        result.AssertOutputDoesNotContain("ProjectCapability=[TestContainer]");
     }
 
     [TestMethod]

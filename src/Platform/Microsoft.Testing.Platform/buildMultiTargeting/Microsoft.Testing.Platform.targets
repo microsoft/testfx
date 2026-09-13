@@ -10,7 +10,13 @@
   <!-- While TestAdapter targets file is imported *after* this file, MSBuild evaluates properties -->
   <!-- first, then items. So, we will be able to pick up the correct value here. -->
   <ItemGroup Condition=" '$(DisableTestingPlatformServerCapability)' == 'true' OR '$(IsTestingPlatformApplication)' != 'true' ">
+    <!-- Preserve same-named capabilities that were contributed by another package or the project. -->
+    <_TestingPlatformProjectCapabilityToPreserve
+      Include="@(ProjectCapability->WithMetadataValue('TestingPlatformCapabilityOwner', '')->WithMetadataValue('Identity', 'TestingPlatformServer'))" />
+    <_TestingPlatformProjectCapabilityToPreserve
+      Include="@(ProjectCapability->WithMetadataValue('TestingPlatformCapabilityOwner', '')->WithMetadataValue('Identity', 'TestContainer'))" />
     <ProjectCapability Remove="TestingPlatformServer;TestContainer" />
+    <ProjectCapability Include="@(_TestingPlatformProjectCapabilityToPreserve)" />
   </ItemGroup>
 
   <!-- Add assembly attribute metadata for reflection usage. -->
