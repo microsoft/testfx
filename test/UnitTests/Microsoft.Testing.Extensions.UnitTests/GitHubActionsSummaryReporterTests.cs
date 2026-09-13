@@ -2683,12 +2683,15 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void GetSummaryLength_ReturnsNull_WhenOpeningTheFileFails()
+    [DataRow(typeof(IOException))]
+    [DataRow(typeof(UnauthorizedAccessException))]
+    [DataRow(typeof(NotSupportedException))]
+    public void GetSummaryLength_ReturnsNull_WhenOpeningTheFileFails(Type exceptionType)
     {
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
         fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            .Throws(new IOException("locked"));
+            .Throws((Exception)Activator.CreateInstance(exceptionType)!);
 
         long? measured = NewWriter(fileSystem.Object, "summary.md", 1).GetSummaryLength();
 
