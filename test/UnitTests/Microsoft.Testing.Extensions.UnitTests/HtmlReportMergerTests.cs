@@ -45,7 +45,9 @@ public class HtmlReportMergerTests
     {
         JsonObject report = Merge([Report(Test("passed")), Report(Test("passed"))]);
 
-        JsonNode test = ((JsonArray)report["tests"]!)[0]!;
+        var tests = (JsonArray)report["tests"]!;
+        Assert.HasCount(1, tests);
+        JsonNode test = tests[0]!;
         Assert.IsNull(test["flaky"]);
         Assert.AreEqual(0, (int)report["summary"]!["flaky"]!);
     }
@@ -55,7 +57,9 @@ public class HtmlReportMergerTests
     {
         JsonObject report = Merge([Report(Test("failed")), Report(Test("failed"))]);
 
-        JsonNode test = ((JsonArray)report["tests"]!)[0]!;
+        var tests = (JsonArray)report["tests"]!;
+        Assert.HasCount(1, tests);
+        JsonNode test = tests[0]!;
         Assert.AreEqual("failed", (string?)test["outcome"]);
         Assert.IsNull(test["flaky"]);
         Assert.AreEqual(0, (int)report["summary"]!["flaky"]!);
