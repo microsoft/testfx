@@ -293,8 +293,8 @@ cause.
 
 | Workflow | Trigger | Description |
 | --- | --- | --- |
-| [`review-on-open.agent.md`](./review-on-open.agent.md) | PR opened (non-draft) | Automatically runs the `expert-reviewer` agent when a non-draft PR is opened. |
-| [`review.agent.md`](./review.agent.md) | `/review` on a PR | Runs the `expert-reviewer` agent on a pull request when a contributor comments `/review`. |
+| [`review-on-open.agent.md`](./review-on-open.agent.md) | PR opened (non-draft) | Automatically runs the `expert-reviewer` agent and submits one consolidated review with all PR-level and inline findings. |
+| [`review.agent.md`](./review.agent.md) | `/review` on a PR | Runs the `expert-reviewer` agent and submits one consolidated review on demand. |
 | [`review-after-autofix.agent.md`](./review-after-autofix.agent.md) | PR push from Copilot or `copilot-autofix` label | Re-runs the expert code review after new commits are pushed; closes the autofix loop after `address-review.agent` pushes fixes. |
 | [`address-review.agent.md`](./address-review.agent.md) | PR review with `changes_requested` (Copilot PRs) | Automatically addresses code review feedback on Copilot-created PRs. Includes a circuit breaker (max 3 iterations). |
 | [`autofix.agent.md`](./autofix.agent.md) | `/autofix` on a PR | Same behavior as `address-review.agent` but manually triggered. |
@@ -309,10 +309,10 @@ cause.
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`pipeline-test-triage.md`](./pipeline-test-triage.md) | Failed `microsoft.testfx (Build ...)` child checks; completed aggregate `microsoft.testfx` check; manual | Posts deduplicated preliminary PR feedback from failed build legs, then analyzes the completed build for failures, retries/flakiness, crash or hang diagnostics, and historically abnormal durations. The final PR comment supersedes preliminary feedback; Bug issues are created only when recurrence and actionability thresholds are met. |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
-| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; posts a scorecard and apply-ready suggestions. |
-| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand. |
-| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits the changed MSTest tests for parallel-safety (process-global state, shared filesystem paths, `[ResourceLock]`/`[DoNotParallelize]` reconciliation, over-serialization) and posts a ranked, scope-aware readiness report. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
-| [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand. |
+| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; bundles the scorecard and apply-ready suggestions into one COMMENT review when findings exist, and stays silent when clean. |
+| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand and submits one COMMENT review. |
+| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits changed MSTest tests for parallel-safety and submits one ranked COMMENT review only when findings exist; clean automatic runs are silent. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
+| [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand and submits one COMMENT review. |
 
 #### Continuous quality improvers (scheduled)
 

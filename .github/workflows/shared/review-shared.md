@@ -25,9 +25,8 @@ tools:
   web-fetch:
 
 # Attribution is provided by the Copilot banner the expert-reviewer prepends to
-# every comment/review body (see .github/agents/expert-reviewer.agent.md). The
-# gh-aw auto-footer is therefore disabled on every comment handler below so the
-# attribution is not duplicated (a single header is enough).
+# the final review body (see .github/agents/expert-reviewer.agent.md). The gh-aw
+# auto-footer is therefore disabled so the attribution is not duplicated.
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821). Explain this workflow's
@@ -55,9 +54,6 @@ safe-outputs:
     max: 1
     allowed-events: [COMMENT, REQUEST_CHANGES]
     footer: "none"
-  add-comment:
-    max: 5
-    footer: false
   # NOTE: Consumers must also define this explicitly until workflow import/merge
   # preserves `report-as-issue: false` in compiled lock files.
   noop:
@@ -71,5 +67,5 @@ Review pull request #${{ github.event.pull_request.number || github.event.issue.
 ## Instructions
 
 1. Fetch the full diff for the pull request.
-2. Delegate the review to the `expert-reviewer` agent as a **background** task (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, `mode: "background"`). Include the PR number, repository owner/name, the full diff content, **and the workflow run URL** (`${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`) in the subagent prompt. The subagent needs that URL to fill in the Copilot attribution banner that goes at the top of every `add_comment` body and every `submit_pull_request_review` body (inline `create_pull_request_review_comment` bodies do **not** carry the banner — they inherit it from the bundled review). See the [Copilot Attribution Banner](../../agents/expert-reviewer.agent.md#copilot-attribution-banner) section of the agent definition. Also remind the subagent in its prompt that the `submit_pull_request_review` safe-output only accepts `event: "COMMENT"` or `event: "REQUEST_CHANGES"` — `APPROVE` is not allowed and will cause the entire review to be dropped.
-3. After the task starts, record the delegation with `noop` using the message `"Review delegated for PR #N."`. The expert reviewer owns the remaining safe-output calls (`create_pull_request_review_comment`, `add_comment`, `submit_pull_request_review`), so the dispatcher completes without collecting the background task result.
+2. Delegate the review to the `expert-reviewer` agent as a **background** task (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, `mode: "background"`). Include the PR number, repository owner/name, the full diff content, **and the workflow run URL** (`${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`) in the subagent prompt. The subagent needs that URL to fill in the Copilot attribution banner at the top of the single `submit_pull_request_review` body (inline `create_pull_request_review_comment` bodies do **not** carry the banner — they inherit it from the bundled review). See the [Copilot Attribution Banner](../../agents/expert-reviewer.agent.md#copilot-attribution-banner) section of the agent definition. Also remind the subagent that all PR-level findings, dependency assessments, and specialist summaries belong in that final review body: it must not post standalone PR comments. The `submit_pull_request_review` safe-output only accepts `event: "COMMENT"` or `event: "REQUEST_CHANGES"` — `APPROVE` is not allowed and will cause the entire review to be dropped.
+3. After the task starts, record the delegation with `noop` using the message `"Review delegated for PR #N."`. The expert reviewer owns the remaining safe-output calls (`create_pull_request_review_comment` and `submit_pull_request_review`), so the dispatcher completes without collecting the background task result.

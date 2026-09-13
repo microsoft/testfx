@@ -1,6 +1,6 @@
 ---
 name: "Expert Code Review (on PR ready)"
-description: "Automatically runs the expert-reviewer agent when a PR becomes ready for review — either opened as non-draft, or transitioned from draft to ready."
+description: "Automatically runs the expert-reviewer agent when a PR becomes ready and submits one consolidated review with bundled inline findings."
 
 # Non-draft PRs trigger this workflow.
 # The `roles` setting restricts execution to users with admin, maintainer, or
