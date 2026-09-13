@@ -191,16 +191,16 @@ internal static class HtmlReportMerger
     private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) ConcatenateTests(
         MergedTest[] orderedTests)
     {
-        string[] identities = new string[orderedTests.Length];
-        var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
+        var identities = new TestIdentity[orderedTests.Length];
+        var countByIdentity = new Dictionary<TestIdentity, int>();
         for (int i = 0; i < orderedTests.Length; i++)
         {
-            string identity = CreateTestIdentity(orderedTests[i]);
+            TestIdentity identity = CreateTestIdentity(orderedTests[i]);
             identities[i] = identity;
             countByIdentity[identity] = countByIdentity.TryGetValue(identity, out int existing) ? existing + 1 : 1;
         }
 
-        var emittedByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
+        var emittedByIdentity = new Dictionary<TestIdentity, int>();
         var mergedTests = new JsonArray();
         int passed = 0;
         int failed = 0;
@@ -211,7 +211,7 @@ internal static class HtmlReportMerger
         {
             MergedTest mergedTest = orderedTests[i];
             JsonObject test = mergedTest.Test;
-            string identity = identities[i];
+            TestIdentity identity = identities[i];
             string outcome = ReadRequiredString(test, "outcome");
             _ = ReadRequiredDouble(test, "durationMs");
 
@@ -252,13 +252,13 @@ internal static class HtmlReportMerger
     private static (JsonArray Tests, int Passed, int Failed, int Skipped, int TimedOut, int Errored, int? Flaky) CollapseRetryAttempts(
         MergedTest[] orderedTests)
     {
-        string[] baseIdentities = new string[orderedTests.Length];
+        var baseIdentities = new RetryIdentity[orderedTests.Length];
         for (int i = 0; i < orderedTests.Length; i++)
         {
             baseIdentities[i] = CreateRetryBaseIdentity(orderedTests[i]);
         }
 
-        HashSet<(int ReportIndex, string BaseIdentity)> ambiguousIdentities =
+        HashSet<(int ReportIndex, RetryIdentity BaseIdentity)> ambiguousIdentities =
         [
             .. orderedTests
                 .Select((test, index) => (
@@ -270,15 +270,15 @@ internal static class HtmlReportMerger
                 .Select(static group => (group.Key.OriginalReportIndex, group.Key.BaseIdentity)),
         ];
         var slots = new List<(MergedTest Final, List<JsonObject> Priors)>();
-        var slotByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
+        var slotByIdentity = new Dictionary<RetrySlotIdentity, int>();
 
         for (int testIndex = 0; testIndex < orderedTests.Length; testIndex++)
         {
             MergedTest mergedTest = orderedTests[testIndex];
-            string baseIdentity = baseIdentities[testIndex];
-            string identity = ambiguousIdentities.Contains((mergedTest.OriginalReportIndex, baseIdentity))
-                ? $"{baseIdentity}\0ambiguous\0{mergedTest.OriginalReportIndex.ToString(CultureInfo.InvariantCulture)}\0{mergedTest.OriginalTestIndex.ToString(CultureInfo.InvariantCulture)}"
-                : baseIdentity;
+            RetryIdentity baseIdentity = baseIdentities[testIndex];
+            RetrySlotIdentity identity = ambiguousIdentities.Contains((mergedTest.OriginalReportIndex, baseIdentity))
+                ? new(baseIdentity, mergedTest.OriginalReportIndex, mergedTest.OriginalTestIndex)
+                : new(baseIdentity, null, null);
             if (slotByIdentity.TryGetValue(identity, out int index))
             {
                 (MergedTest previousFinal, List<JsonObject> priors) = slots[index];
@@ -309,6 +309,7 @@ internal static class HtmlReportMerger
             test["rowKey"] = i;
             _ = test.Remove("attemptIndex");
             _ = test.Remove("attemptOf");
+            _ = test.Remove("flaky");
             AddOptionalString(test, "testApplication", final.ProducingTestModule);
             AddOptionalString(test, "targetFramework", final.TargetFramework);
             AddOptionalString(test, "architecture", final.Architecture);
@@ -478,17 +479,15 @@ internal static class HtmlReportMerger
             DateTimeStyles.RoundtripKind,
             out timestamp);
 
-    private static string CreateTestIdentity(MergedTest test)
-        => string.Join(
-            "\0",
+    private static TestIdentity CreateTestIdentity(MergedTest test)
+        => new(
             ReadRequiredString(test.Test, "uid"),
             test.ProducingTestModule ?? string.Empty,
             test.TargetFramework ?? string.Empty,
             test.Architecture ?? string.Empty);
 
-    private static string CreateRetryBaseIdentity(MergedTest test)
-        => string.Join(
-            "\0",
+    private static RetryIdentity CreateRetryBaseIdentity(MergedTest test)
+        => new(
             CreateTestIdentity(test),
             ReadRequiredString(test.Test, "displayName"));
 
@@ -619,4 +618,17 @@ internal static class HtmlReportMerger
         DateTimeOffset SourceReportStartTime,
         int OriginalReportIndex,
         int OriginalTestIndex);
+
+    private readonly record struct TestIdentity(
+        string Uid,
+        string ProducingTestModule,
+        string TargetFramework,
+        string Architecture);
+
+    private readonly record struct RetryIdentity(TestIdentity Test, string DisplayName);
+
+    private readonly record struct RetrySlotIdentity(
+        RetryIdentity BaseIdentity,
+        int? OriginalReportIndex,
+        int? OriginalTestIndex);
 }
