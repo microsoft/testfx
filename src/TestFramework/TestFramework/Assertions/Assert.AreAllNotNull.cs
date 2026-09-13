@@ -110,6 +110,19 @@ public sealed partial class Assert
     #region AreAllNotNull span/memory
 
     /// <summary>
+    /// Tests whether all items in the specified array are non-null.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="collection">The array in which to search for null elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllNotNull<T>([NotNull] T[]? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllNotNull((IEnumerable<T>?)collection, message, collectionExpression);
+
+    /// <summary>
     /// Tests whether all items in the specified span are non-null.
     /// </summary>
     /// <typeparam name="T">The type of the span items.</typeparam>

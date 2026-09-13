@@ -95,6 +95,16 @@ internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
 {
     /// <summary>
+    /// Gets the terminal state of the test result.
+    /// </summary>
+    /// <remarks>
+    /// Azure DevOps does not infer this from <see cref="Outcome"/>. Omitting it leaves the result in
+    /// <c>Pending</c> even after the containing run is completed.
+    /// </remarks>
+    [JsonPropertyName("state")]
+    public string State { get; } = AzureDevOpsLivePublishingConstants.CompletedTestRunState;
+
+    /// <summary>
     /// Gets the id Azure DevOps assigned to this result, set only when updating an already published result.
     /// </summary>
     /// <remarks>
