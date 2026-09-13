@@ -17,19 +17,24 @@ public class TelemetryCollectorBenchmarks : IDisposable
     private const int ConcurrentThreadCount = 4;
     private const int CallsPerThread = 1_000;
     private const int ConcurrentOperationsPerInvoke = ConcurrentThreadCount * CallsPerThread;
+    private const string TelemetryOptOutEnvironmentVariable = "TESTINGPLATFORM_TELEMETRY_OPTOUT";
 
     private readonly Barrier _startBarrier = new(ConcurrentThreadCount + 1);
     private readonly Barrier _completedBarrier = new(ConcurrentThreadCount + 1);
     private Thread[] _workerThreads = null!;
     private bool _isDisposed;
+    private bool _restoreTelemetryOptOut;
+    private string? _telemetryOptOut;
     private bool _workersStarted;
     private volatile bool _stopWorkers;
 
-    [GlobalSetup]
-    public void Setup()
+    [GlobalSetup(Target = nameof(TrackAssertionCall_SingleThreaded))]
+    public static void SetupSingleThreaded() => ResetAndPrimeCounter();
+
+    [GlobalSetup(Target = nameof(TrackAssertionCall_Concurrent))]
+    public void SetupConcurrent()
     {
-        TelemetryCollector.DrainAssertionCallCounts();
-        TelemetryCollector.TrackAssertionCall(AssertionName, isEnabled: true);
+        ResetAndPrimeCounter();
 
         _workerThreads = new Thread[ConcurrentThreadCount];
         for (int i = 0; i < _workerThreads.Length; i++)
@@ -37,11 +42,21 @@ public class TelemetryCollectorBenchmarks : IDisposable
             _workerThreads[i] = new Thread(TrackAssertionCalls)
             {
                 IsBackground = true,
+                Name = "TelemetryCollectorBenchmarkWorker",
             };
             _workerThreads[i].Start();
         }
 
         _workersStarted = true;
+    }
+
+    [GlobalSetup(Target = nameof(TrackAssertionCall_Disabled))]
+    public void SetupDisabled()
+    {
+        TelemetryCollector.DrainAssertionCallCounts();
+        _telemetryOptOut = Environment.GetEnvironmentVariable(TelemetryOptOutEnvironmentVariable);
+        _restoreTelemetryOptOut = true;
+        Environment.SetEnvironmentVariable(TelemetryOptOutEnvironmentVariable, "1");
     }
 
     [GlobalCleanup]
@@ -69,6 +84,11 @@ public class TelemetryCollectorBenchmarks : IDisposable
         _startBarrier.Dispose();
         _completedBarrier.Dispose();
         TelemetryCollector.DrainAssertionCallCounts();
+        if (_restoreTelemetryOptOut)
+        {
+            Environment.SetEnvironmentVariable(TelemetryOptOutEnvironmentVariable, _telemetryOptOut);
+        }
+
         GC.SuppressFinalize(this);
     }
 
@@ -85,7 +105,7 @@ public class TelemetryCollectorBenchmarks : IDisposable
 
     [Benchmark]
     public void TrackAssertionCall_Disabled()
-        => TelemetryCollector.TrackAssertionCall(AssertionName, isEnabled: false);
+        => TelemetryCollector.TrackAssertionCall(AssertionName);
 
     private void TrackAssertionCalls()
     {
@@ -104,5 +124,11 @@ public class TelemetryCollectorBenchmarks : IDisposable
 
             _completedBarrier.SignalAndWait();
         }
+    }
+
+    private static void ResetAndPrimeCounter()
+    {
+        TelemetryCollector.DrainAssertionCallCounts();
+        TelemetryCollector.TrackAssertionCall(AssertionName, isEnabled: true);
     }
 }
