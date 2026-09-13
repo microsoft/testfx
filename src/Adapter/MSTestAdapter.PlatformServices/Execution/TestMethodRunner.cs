@@ -347,7 +347,7 @@ internal sealed partial class TestMethodRunner
 
 #if !WINDOWS_UWP && !WIN_UI
     private void FinalizeAssertionFailureDiagnosticsExecution(TestResult[] results)
-        => (_testContext as TestContextImplementation)?.FinalizeAssertionFailureDiagnosticsExecution(results);
+        => (_testContext as TestContextImplementation)?.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
 #else
     private void FinalizeAssertionFailureDiagnosticsExecution(TestResult[] results)
         => GC.KeepAlive(this);

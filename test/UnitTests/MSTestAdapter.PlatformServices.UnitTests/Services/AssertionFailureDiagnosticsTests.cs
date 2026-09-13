@@ -130,6 +130,43 @@ public sealed class AssertionFailureDiagnosticsTests : TestContainer
         combinedJson.Should().NotContain("fourth failure");
     }
 
+    public void CaptureLimitShouldApplyAcrossUnscopedAndScopedCaptures()
+    {
+        EnableCapture();
+        using TempDirectoryScope resultsDirectory = new();
+        using TestContextImplementation context = CreateContext("Tests.SampleTests", "CustomAttribute", null, resultsDirectory.Path);
+        using IDisposable currentContext = TestContextImplementation.SetCurrentTestContext(context);
+
+        TestContextImplementation.CaptureAssertionFailureDiagnostics("unscoped first failure", expected: null, actual: null);
+        TestContextImplementation.CaptureAssertionFailureDiagnostics("unscoped second failure", expected: null, actual: null);
+
+        using (context.StartAssertionFailureDiagnosticsScope())
+        {
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("scoped third failure", expected: null, actual: null);
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("scoped fourth failure", expected: null, actual: null);
+            context.FinalizeAssertionFailureDiagnostics(UnitTestOutcome.Failed);
+        }
+
+        TestResult[] results =
+        [
+            new()
+            {
+                Outcome = UnitTestOutcome.Failed,
+                ResultFiles = context.GetResultFiles(),
+            },
+        ];
+
+        context.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+
+        IList<string>? artifactPaths = results[0].ResultFiles;
+        artifactPaths.Should().HaveCount(3);
+        string combinedJson = string.Join(Environment.NewLine, artifactPaths!.Select(File.ReadAllText));
+        combinedJson.Should().Contain("unscoped first failure");
+        combinedJson.Should().Contain("unscoped second failure");
+        combinedJson.Should().Contain("scoped third failure");
+        combinedJson.Should().NotContain("scoped fourth failure");
+    }
+
     public void CaptureShouldUseDistinctArtifactsForRepeatedInvocations()
     {
         EnableCapture();
@@ -200,10 +237,38 @@ public sealed class AssertionFailureDiagnosticsTests : TestContainer
             },
         ];
 
-        outerContext.FinalizeAssertionFailureDiagnosticsExecution(results);
+        outerContext.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
 
         string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
         File.ReadAllText(artifactPath).Should().Contain("row returned no result");
+    }
+
+    public void ExecutionFinalizationShouldCopyFixedSizeResultFilesBeforeAddingDiagnostics()
+    {
+        EnableCapture();
+        using TempDirectoryScope resultsDirectory = new();
+        using TestContextImplementation context = CreateContext("Tests.SampleTests", "CustomAttribute", null, resultsDirectory.Path);
+        using (TestContextImplementation.SetCurrentTestContext(context))
+        {
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("custom attribute failure", expected: null, actual: null);
+        }
+
+        string existingPath = Path.Combine(resultsDirectory.Path, "existing.txt");
+        TestResult[] results =
+        [
+            new()
+            {
+                Outcome = UnitTestOutcome.Failed,
+                ResultFiles = new[] { existingPath },
+            },
+        ];
+
+        context.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+
+        results[0].ResultFiles.Should().HaveCount(2);
+        results[0].ResultFiles.Should().Contain(existingPath);
+        results[0].ResultFiles.Should().ContainSingle(path => path != existingPath)
+            .Which.Should().Match(path => File.ReadAllText(path).Contains("custom attribute failure", StringComparison.Ordinal));
     }
 
     public void CaptureShouldBoundUserControlledStringsAndPreserveSurrogatePairs()

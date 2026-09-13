@@ -128,7 +128,7 @@ internal sealed partial class TestMethodRunner
         }
         else
         {
-            iterationContext.FinalizeAssertionFailureDiagnosticsExecution(results);
+            iterationContext.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: false);
         }
 #endif
     }

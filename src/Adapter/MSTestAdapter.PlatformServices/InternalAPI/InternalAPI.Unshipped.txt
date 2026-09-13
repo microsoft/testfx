@@ -2,7 +2,7 @@
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.CaptureAssertionFailureDiagnostics.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder.PrepareResults(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! testElement, Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FinalizeAssertionFailureDiagnostics(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome outcome) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FinalizeAssertionFailureDiagnosticsExecution(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FinalizeAssertionFailureDiagnosticsExecution(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results, bool resetCaptureBudget) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StartAssertionFailureDiagnosticsScope() -> System.IDisposable?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TransferAssertionFailureDiagnosticsTo(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation! destination) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.CaptureAssertionFailureDiagnostics(string! message, string? expected, string? actual) -> void

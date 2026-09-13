@@ -33,8 +33,8 @@ internal sealed partial class TestContextImplementation
 
     private static long s_nextActiveTestId;
 
+    private AssertionFailureCaptureBudget _assertionFailureCaptureBudget = new();
     private ConcurrentQueue<string>? _completedAssertionFailureDiagnosticsPaths;
-    private int _unscopedAssertionFailureCaptureCount;
     private int _retainAssertionFailureDiagnosticsDirectory;
 #endif
 
@@ -167,58 +167,73 @@ internal sealed partial class TestContextImplementation
     }
 
 #if !WINDOWS_UWP && !WIN_UI
-    internal void FinalizeAssertionFailureDiagnosticsExecution(TestResult[] results)
+    internal void FinalizeAssertionFailureDiagnosticsExecution(TestResult[] results, bool resetCaptureBudget)
     {
-        ConcurrentQueue<string>? completedPaths = Interlocked.Exchange(ref _completedAssertionFailureDiagnosticsPaths, null);
-        Interlocked.Exchange(ref _unscopedAssertionFailureCaptureCount, 0);
-        if (completedPaths is null)
+        try
         {
-            return;
-        }
-
-        StringComparer pathComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
-        string[] paths = completedPaths.Distinct(pathComparer)
-            .ToArray();
-        TestResult? targetResult = results.FirstOrDefault(static result => result.Outcome != UnitTestOutcome.Passed);
-        if (targetResult is null)
-        {
-            foreach (TestResult result in results)
+            ConcurrentQueue<string>? completedPaths = Interlocked.Exchange(ref _completedAssertionFailureDiagnosticsPaths, null);
+            if (completedPaths is null)
             {
-                if (result.ResultFiles is { Count: > 0 } resultFiles)
+                return;
+            }
+
+            StringComparer pathComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+            string[] paths = completedPaths.Distinct(pathComparer)
+                .ToArray();
+            TestResult? targetResult = results.FirstOrDefault(static result => result.Outcome != UnitTestOutcome.Passed);
+            if (targetResult is null)
+            {
+                foreach (TestResult result in results)
                 {
-                    var retainedFiles = resultFiles.Where(path => !paths.Contains(path, pathComparer)).ToList();
-                    result.ResultFiles = retainedFiles.Count == 0 ? null : retainedFiles;
+                    if (result.ResultFiles is { Count: > 0 } resultFiles)
+                    {
+                        var retainedFiles = resultFiles.Where(path => !paths.Contains(path, pathComparer)).ToList();
+                        result.ResultFiles = retainedFiles.Count == 0 ? null : retainedFiles;
+                    }
+                }
+
+                foreach (string path in paths)
+                {
+                    TryDeleteArtifact(path, "completed diagnostics for a passing test");
+                }
+
+                return;
+            }
+
+            var existingPaths = new HashSet<string>(
+                results.SelectMany(static result => result.ResultFiles ?? []),
+                pathComparer);
+            List<string>? mutableTargetFiles = null;
+            foreach (string path in paths)
+            {
+                if (existingPaths.Add(path))
+                {
+                    mutableTargetFiles ??= targetResult.ResultFiles is null ? [] : [.. targetResult.ResultFiles];
+                    mutableTargetFiles.Add(path);
                 }
             }
 
-            foreach (string path in paths)
+            if (mutableTargetFiles is not null)
             {
-                TryDeleteArtifact(path, "completed diagnostics for a passing test");
+                targetResult.ResultFiles = mutableTargetFiles;
             }
 
-            return;
+            Volatile.Write(ref _retainAssertionFailureDiagnosticsDirectory, 1);
         }
-
-        var existingPaths = new HashSet<string>(
-            results.SelectMany(static result => result.ResultFiles ?? []),
-            pathComparer);
-        foreach (string path in paths)
+        finally
         {
-            if (existingPaths.Add(path))
+            if (resetCaptureBudget)
             {
-                (targetResult.ResultFiles ??= []).Add(path);
+                _assertionFailureCaptureBudget.Reset();
             }
         }
-
-        Volatile.Write(ref _retainAssertionFailureDiagnosticsDirectory, 1);
     }
 
     internal void TransferAssertionFailureDiagnosticsTo(TestContextImplementation destination)
     {
         ConcurrentQueue<string>? completedPaths = Interlocked.Exchange(ref _completedAssertionFailureDiagnosticsPaths, null);
-        Interlocked.Exchange(ref _unscopedAssertionFailureCaptureCount, 0);
         if (completedPaths is null)
         {
             return;
@@ -244,12 +259,6 @@ internal sealed partial class TestContextImplementation
 
     private void CaptureUnscopedAssertionFailureDiagnostics(string message, string? expected, string? actual)
     {
-        int captureIndex = Interlocked.Increment(ref _unscopedAssertionFailureCaptureCount);
-        if (captureIndex > MaximumCapturesPerAttempt)
-        {
-            return;
-        }
-
         ActiveTest? activeTest = null;
         try
         {
@@ -626,7 +635,6 @@ internal sealed partial class TestContextImplementation
         private readonly object _captureLock = new();
 #endif
         private readonly Queue<string> _pendingPaths = new();
-        private int _captureCount;
         private bool _closed;
 
         public ActiveTest(
@@ -670,12 +678,11 @@ internal sealed partial class TestContextImplementation
         {
             lock (_captureLock)
             {
-                if (_closed || _captureCount >= MaximumCapturesPerAttempt)
+                if (_closed || !Context._assertionFailureCaptureBudget.TryReserve(out int captureIndex))
                 {
                     return;
                 }
 
-                int captureIndex = ++_captureCount;
                 _pendingPaths.Enqueue(WriteAssertionFailureDiagnostics(this, captureIndex, message, expected, actual));
             }
         }
@@ -695,6 +702,20 @@ internal sealed partial class TestContextImplementation
                 return paths;
             }
         }
+    }
+
+    private sealed class AssertionFailureCaptureBudget
+    {
+        private int _captureCount;
+
+        public bool TryReserve(out int captureIndex)
+        {
+            captureIndex = Interlocked.Increment(ref _captureCount);
+            return captureIndex <= MaximumCapturesPerAttempt;
+        }
+
+        public void Reset()
+            => Interlocked.Exchange(ref _captureCount, 0);
     }
 
     private readonly record struct ResourceBaseline(
