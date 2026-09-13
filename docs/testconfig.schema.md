@@ -94,9 +94,9 @@ integration point for a future out-of-process debugger provider that can add bou
 object expansion. Capture is currently skipped on UWP, WinUI, browser/WASI, and when runtime code
 generation is unavailable, such as NativeAOT.
 
-Assertions raised from work queued without flowing `ExecutionContext` can only be attributed when
-test parallelization is disabled; otherwise capture is skipped rather than attaching another
-concurrently running test's state.
+Assertions raised from work queued without flowing `ExecutionContext` are not captured because
+neither the active diagnostic scope nor `TestContext.Current` can be attributed safely on that
+worker.
 
 ## How versioning works
 
