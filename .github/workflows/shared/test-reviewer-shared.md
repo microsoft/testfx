@@ -405,13 +405,14 @@ inline suggestion in Step 4 needs:
   preserved. It must compile as written: real assertion APIs, real symbol
   names, no TODOs, no `...` elisions, no pseudo-code, and no abbreviated setup.
   Use the contiguous changed span that makes the suggested change complete and
-  directly applicable. A full test-method replacement is valid when the anchor
-  covers that method's exact first and last lines. For a smaller insertion,
-  replace a nearby changed anchor line with that original line plus the inserted
-  lines. The replacement size does not determine whether GitHub can apply it;
-  the anchor range and replacement content must describe the same edit. Exhaust
-  these options before recording `Replacement: none`; use `none` only when no
-  complete mechanical edit can be anchored to the diff.
+  directly applicable. A full test-method replacement is valid when the entire
+  method is present in one diff hunk and the anchor covers that method's exact
+  first and last lines. For a smaller insertion, replace a nearby changed anchor
+  line with that original line plus the inserted lines. The replacement size
+  does not determine whether GitHub can apply it; the anchor range and
+  replacement content must describe the same edit. Exhaust these options before
+  recording `Replacement: none`; use `none` only when no complete mechanical
+  edit can be anchored to the diff.
 
 ### Step 4 — Post inline improvement suggestions
 
