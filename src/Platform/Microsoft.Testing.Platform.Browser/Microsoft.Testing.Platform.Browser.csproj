@@ -5,7 +5,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <UseAppHost>false</UseAppHost>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <VersionPrefix>$(MicrosoftTestingPlatformBrowserVersionPrefix)</VersionPrefix>
     <PreReleaseVersionLabel>$(MicrosoftTestingPlatformBrowserPreReleaseVersionLabel)</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
@@ -16,6 +15,10 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +37,13 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="$(TargetDir)$(AssemblyName).dll" Pack="true" PackagePath="tools\net8.0\any" />
     <None Include="$(TargetDir)$(AssemblyName).deps.json" Pack="true" PackagePath="tools\net8.0\any" />
     <None Include="$(TargetDir)$(AssemblyName).runtimeconfig.json" Pack="true" PackagePath="tools\net8.0\any" />
+    <None Include="$(TargetDir)*.dll"
+          Exclude="$(TargetDir)$(AssemblyName).dll"
+          Pack="true"
+          PackagePath="tools\net8.0\any" />
+    <None Include="$(TargetDir).playwright\**"
+          Pack="true"
+          PackagePath="tools\net8.0\any\.playwright\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

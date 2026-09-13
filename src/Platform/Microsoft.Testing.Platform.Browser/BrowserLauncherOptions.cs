@@ -88,6 +88,8 @@ internal sealed record BrowserLauncherOptions(
 
         string[] expandedArguments = ResponseFileArgumentExpander.Expand(args[(separatorIndex + 1)..]);
         var bootstrap = DotnetTestHttpBootstrap.Parse(expandedArguments);
+        string[] parsedBrowserArguments = CommandLineTokenizer.Split(browserArguments);
+        ValidateBrowserArguments(parsedBrowserArguments);
 
         return new BrowserLauncherOptions(
             hostCommand,
@@ -95,11 +97,41 @@ internal sealed record BrowserLauncherOptions(
             Path.GetFullPath(hostWorkingDirectory),
             NormalizeUrlPath(urlPath),
             browserExecutable,
-            CommandLineTokenizer.Split(browserArguments),
+            parsedBrowserArguments,
             startupTimeout,
             completionTimeout,
             expandedArguments,
             bootstrap);
+    }
+
+    private static void ValidateBrowserArguments(IReadOnlyList<string> arguments)
+    {
+        string[] forbiddenPrefixes =
+        [
+            "--remote-debugging-address",
+            "--remote-debugging-pipe",
+            "--remote-debugging-port",
+            "--remote-allow-origins",
+            "--profile-directory",
+            "--user-data-dir",
+        ];
+
+        foreach (string argument in arguments)
+        {
+            string switchName = argument.TrimStart('-', '/');
+            int valueSeparator = switchName.IndexOf('=');
+            if (valueSeparator >= 0)
+            {
+                switchName = switchName[..valueSeparator];
+            }
+
+            if (forbiddenPrefixes.Any(prefix =>
+                switchName.Equals(prefix[2..], StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new BrowserLauncherException(
+                    $"Browser argument '{argument}' is controlled by Microsoft.Testing.Platform.Browser and cannot be overridden.");
+            }
+        }
     }
 
     private static string DecodeRequired(Dictionary<string, string> options, string name)

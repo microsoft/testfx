@@ -9,10 +9,10 @@ Microsoft.Testing.Platform. It contains:
 - build-transitive assets that provide a browser boot page and JavaScript supervisor;
 - an MSBuild `ComputeRunArguments` hook that selects the browser launcher only for
   `browser-*` runtime identifiers;
-- a dependency-free .NET launcher that starts a configured WebAssembly host, launches an
-  installed Chromium-family browser in an isolated profile, injects the Microsoft Testing
-  Platform arguments before the runtime starts, captures bounded diagnostics, and cleans up
-  the browser and host process trees.
+- an independently versioned .NET launcher that starts a configured WebAssembly host, uses
+  Playwright's private browser transport to launch an installed Chromium-family browser in
+  an isolated context, injects the Microsoft Testing Platform arguments before the runtime
+  starts, captures bounded diagnostics, and cleans up the browser and host process trees.
 
 Test discovery and results are not parsed or relayed by this package. The browser test
 application connects directly to the authenticated HTTP gateway created by the .NET SDK.
@@ -69,8 +69,15 @@ Useful properties:
 | `TestingPlatformBrowserAdditionalArguments` | Additional Chromium command-line arguments. |
 
 The SDK bearer token is read from its owner-only response file, retained in memory, injected
-into the browser runtime through the DevTools protocol, and redacted from launcher, host, and
-browser diagnostics. It is never added to the browser URL.
+into the browser runtime through Playwright's launcher-private transport, and redacted from
+launcher, host, and browser diagnostics. It is never added to the browser URL or exposed
+through an unauthenticated DevTools TCP listener. User browser arguments cannot override
+Playwright's debugging transport or isolated profile.
+
+The optional package carries Playwright and its Node-based driver so that browser cadence
+can be serviced independently of core Microsoft.Testing.Platform and the .NET SDK. This
+introduces package-size, platform, offline/source-build, and Node security servicing
+considerations that must be resolved before productization.
 
 The current proof of concept intentionally leaves physical browser virtual-file-system
 artifact export to a future artifact sink and leaves host implementation to the shared

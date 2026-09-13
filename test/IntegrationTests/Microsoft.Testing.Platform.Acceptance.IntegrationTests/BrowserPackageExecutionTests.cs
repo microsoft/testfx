@@ -166,6 +166,10 @@ public sealed class BrowserPackageDesktopTests
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["DEBUG"] = "*",
+            },
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
@@ -175,6 +179,8 @@ public sealed class BrowserPackageDesktopTests
         Assert.AreEqual(0, run.ExitCode, run.ToString());
         Assert.Contains($"({TargetFramework}|wasm) passed [+1/x0/?0]", runOutput);
         Assert.Contains("succeeded: 1", runOutput);
+        Assert.DoesNotContain("--dotnet-test-http-token", runOutput);
+        Assert.DoesNotContain("pw:channel", runOutput);
 
         DotnetMuxerResult list = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --list-tests",

@@ -179,6 +179,48 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    [DataRow("--remote-debugging-port=9222")]
+    [DataRow("-remote-debugging-port=9222")]
+    [DataRow("/remote-debugging-port=9222")]
+    [DataRow("--remote-debugging-address=0.0.0.0")]
+    [DataRow("-remote-debugging-address=0.0.0.0")]
+    [DataRow("--remote-debugging-pipe")]
+    [DataRow("--remote-allow-origins=*")]
+    [DataRow("--profile-directory=Default")]
+    [DataRow("--user-data-dir=shared")]
+    public void Parse_RejectsBrowserArgumentsThatOverrideLauncherSecurity(string browserArgument)
+    {
+        string responseFile = CreateResponseFile(
+            """
+            --server dotnettestcli
+            --dotnet-test-transport http
+            --dotnet-test-http-endpoint http://127.0.0.1:1234/dotnettest/run/
+            --dotnet-test-http-token abcdef0123456789
+            """);
+
+        try
+        {
+            Assert.ThrowsExactly<BrowserLauncherException>(() => BrowserLauncherOptions.Parse(
+            [
+                "--host-command-base64", Encode("dotnet"),
+                "--host-arguments-base64", Encode("host.dll"),
+                "--host-working-directory-base64", Encode(Path.GetTempPath()),
+                "--url-path-base64", Encode("/"),
+                "--browser-executable-base64", Encode(string.Empty),
+                "--browser-arguments-base64", Encode(browserArgument),
+                "--startup-timeout-seconds", "30",
+                "--completion-timeout-seconds", "120",
+                "--",
+                "@" + responseFile,
+            ]));
+        }
+        finally
+        {
+            File.Delete(responseFile);
+        }
+    }
+
+    [TestMethod]
     public void DiagnosticBuffer_DoesNotTreatShortUrlSegmentsAsSecrets()
     {
         var diagnostics = new DiagnosticBuffer("/");
