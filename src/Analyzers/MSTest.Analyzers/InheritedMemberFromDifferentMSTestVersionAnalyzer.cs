@@ -73,13 +73,36 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
             INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
             bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
+
+            var globallyVisibleAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+            bool hasGloballyVisibleFramework = false;
+            foreach (MetadataReference reference in context.Compilation.References)
+            {
+                if (context.Compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assembly
+                    || (!reference.Properties.Aliases.IsDefaultOrEmpty
+                        && !reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)))
+                {
+                    continue;
+                }
+
+                globallyVisibleAssemblies.Add(assembly);
+                hasGloballyVisibleFramework |= IsKnownFrameworkAssembly(assembly)
+                    && assembly.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute) is not null;
+            }
+
             context.RegisterSymbolAction(
-                context => AnalyzeSymbol(context, taskSymbol, valueTaskSymbol, canDiscoverInternals),
+                context => AnalyzeSymbol(context, taskSymbol, valueTaskSymbol, canDiscoverInternals, globallyVisibleAssemblies, hasGloballyVisibleFramework),
                 SymbolKind.NamedType);
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
+    private static void AnalyzeSymbol(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol? taskSymbol,
+        INamedTypeSymbol? valueTaskSymbol,
+        bool canDiscoverInternals,
+        HashSet<IAssemblySymbol> globallyVisibleAssemblies,
+        bool hasGloballyVisibleFramework)
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
@@ -98,7 +121,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             return;
         }
 
-        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(context.Compilation, classSymbol);
+        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(classSymbol, globallyVisibleAssemblies, hasGloballyVisibleFramework);
         if (referenceAssembly is null || !classSymbol.HasCorrectTestContextSignature())
         {
             return;
@@ -197,7 +220,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         return false;
     }
 
-    private static IAssemblySymbol? GetFrameworkAssembly(Compilation compilation, INamedTypeSymbol classSymbol)
+    private static IAssemblySymbol? GetFrameworkAssembly(
+        INamedTypeSymbol classSymbol,
+        HashSet<IAssemblySymbol> globallyVisibleAssemblies,
+        bool hasGloballyVisibleFramework)
     {
         IAssemblySymbol? fallback = null;
         foreach (IAssemblySymbol assembly in classSymbol.GetAttributes()
@@ -206,7 +232,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             .Where(canonicalAttribute => string.Equals(canonicalAttribute.Name, TestClassAttributeName, StringComparison.Ordinal))
             .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly))
         {
-            if (IsGloballyVisibleReference(compilation, assembly))
+            if (globallyVisibleAssemblies.Contains(assembly))
             {
                 return assembly;
             }
@@ -214,22 +240,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             fallback ??= assembly;
         }
 
-        return fallback is null || HasGloballyVisibleFramework(compilation) ? null : fallback;
+        return fallback is null || hasGloballyVisibleFramework ? null : fallback;
     }
-
-    private static bool IsGloballyVisibleReference(Compilation compilation, IAssemblySymbol assembly)
-        => compilation.References.Any(reference =>
-            SymbolEqualityComparer.Default.Equals(compilation.GetAssemblyOrModuleSymbol(reference), assembly)
-            && (reference.Properties.Aliases.IsDefaultOrEmpty
-                || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
-
-    private static bool HasGloballyVisibleFramework(Compilation compilation)
-        => compilation.References.Any(reference =>
-            compilation.GetAssemblyOrModuleSymbol(reference) is IAssemblySymbol assembly
-            && IsKnownFrameworkAssembly(assembly)
-            && assembly.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute) is not null
-            && (reference.Properties.Aliases.IsDefaultOrEmpty
-                || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
 
     // Walks the applied attribute's base chain and returns the first ancestor that is a well-known MSTest attribute
     // (TestClass or one of the inheritance-sensitive lifecycle/test attributes).
