@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.4.1" />[4.4.1] - UNRELEASED
+
+See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4.4.0...v4.4.1)
+
+### Changed
+
+* Narrow the members rooted by the MSTest source generator for trimming and Native AOT while preserving the constructors and accessible inherited members required at runtime, by @Evangelink in [#10998](https://github.com/microsoft/testfx/pull/10998)
+
+### Fixed
+
+* Fix the MSTest.Sdk Native AOT validation warning for the Retry extension incorrectly referring to Hot Reload, by @Evangelink in [#10981](https://github.com/microsoft/testfx/pull/10981)
+* Respect `SatelliteResourceLanguages` when copying MSTest adapter satellite assemblies into Microsoft.Testing.Platform test outputs, by @Evangelink in [#10987](https://github.com/microsoft/testfx/pull/10987)
+* Emit compilable, type-preserving source-generated literals for narrow integral values, enums, control characters, `NaN` and infinities, by @Evangelink in [#10996](https://github.com/microsoft/testfx/pull/10996)
+* Restore C# 12 source compatibility for array and dual-convertible collection calls across the affected `Assert` overload families, by @Evangelink in [#11038](https://github.com/microsoft/testfx/pull/11038)
+* Make whitespace-only differences visible in bounded `Assert.AreEqual` string comparison previews, by @Evangelink in [#11109](https://github.com/microsoft/testfx/pull/11109)
+
 ## <a name="4.4.0" />[4.4.0] - 2026-09-02
 
 See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...main)
