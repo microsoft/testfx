@@ -8,13 +8,15 @@ using Microsoft.Testing.Extensions.HtmlReport;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
-public class HtmlReportMergerTests
+public sealed class HtmlReportMergerTests
 {
     [TestMethod]
     public void Merge_CollapseRetryAttempts_FoldsEarlierAttemptsInOrderAndCleansAnnotations()
     {
         JsonObject first = Test("failed", durationMs: 10);
-        JsonObject second = Test("failed", durationMs: 20);
+        first["errorMessage"] = "first failure";
+        JsonObject second = Test("timedOut", durationMs: 20);
+        second["errorMessage"] = "second failure";
         JsonObject final = Test("passed", durationMs: 30);
         final["attemptIndex"] = 3;
         final["attemptOf"] = 3;
@@ -34,16 +36,29 @@ public class HtmlReportMergerTests
         var retryAttempts = (JsonArray)test["retryAttempts"]!;
         Assert.HasCount(2, retryAttempts);
         Assert.AreEqual(1, (int)retryAttempts[0]!["attempt"]!);
+        Assert.AreEqual("failed", (string?)retryAttempts[0]!["outcome"]);
         Assert.AreEqual(10d, (double)retryAttempts[0]!["durationMs"]!);
+        Assert.AreEqual("first failure", (string?)retryAttempts[0]!["errorMessage"]);
         Assert.AreEqual(2, (int)retryAttempts[1]!["attempt"]!);
+        Assert.AreEqual("timedOut", (string?)retryAttempts[1]!["outcome"]);
         Assert.AreEqual(20d, (double)retryAttempts[1]!["durationMs"]!);
-        Assert.AreEqual(1, (int)report["summary"]!["flaky"]!);
+        Assert.AreEqual("second failure", (string?)retryAttempts[1]!["errorMessage"]);
+
+        JsonNode summary = report["summary"]!;
+        Assert.AreEqual(1, (int)summary["total"]!);
+        Assert.AreEqual(1, (int)summary["passed"]!);
+        Assert.AreEqual(0, (int)summary["failed"]!);
+        Assert.AreEqual(0, (int)summary["timedOut"]!);
+        Assert.AreEqual(1, (int)summary["flaky"]!);
     }
 
     [TestMethod]
     public void Merge_CollapseRetryAttempts_DoesNotMarkAllPassingAttemptsFlaky()
     {
-        JsonObject report = Merge([Report(Test("passed")), Report(Test("passed"))]);
+        JsonObject final = Test("passed");
+        final["flaky"] = true;
+
+        JsonObject report = Merge([Report(Test("passed")), Report(final)]);
 
         var tests = (JsonArray)report["tests"]!;
         Assert.HasCount(1, tests);
@@ -53,9 +68,26 @@ public class HtmlReportMergerTests
     }
 
     [TestMethod]
+    public void Merge_CollapseRetryAttempts_RemovesStaleFlakyFlagWithoutRetries()
+    {
+        JsonObject test = Test("passed");
+        test["flaky"] = true;
+
+        JsonObject report = Merge([Report(test)]);
+
+        var tests = (JsonArray)report["tests"]!;
+        Assert.HasCount(1, tests);
+        Assert.IsNull(tests[0]!["flaky"]);
+        Assert.AreEqual(0, (int)report["summary"]!["flaky"]!);
+    }
+
+    [TestMethod]
     public void Merge_CollapseRetryAttempts_DoesNotMarkFinalFailureFlaky()
     {
-        JsonObject report = Merge([Report(Test("failed")), Report(Test("failed"))]);
+        JsonObject final = Test("failed");
+        final["flaky"] = true;
+
+        JsonObject report = Merge([Report(Test("failed")), Report(final)]);
 
         var tests = (JsonArray)report["tests"]!;
         Assert.HasCount(1, tests);
@@ -118,6 +150,8 @@ public class HtmlReportMergerTests
                 "isSupersededRetryAttempt",
             },
             projected.Select(property => property.Key).ToArray());
+        Assert.AreEqual("failed", (string?)projected["outcome"]);
+        Assert.AreEqual(10d, (double)projected["durationMs"]!);
         Assert.AreEqual("message", (string?)projected["errorMessage"]);
         Assert.AreEqual("Exception", (string?)projected["exceptionType"]);
         Assert.AreEqual("trace", (string?)projected["stackTrace"]);
@@ -125,11 +159,50 @@ public class HtmlReportMergerTests
         Assert.AreEqual("stderr", (string?)projected["standardError"]);
         Assert.AreEqual(1, (int)projected["retryAttemptNumber"]!);
         Assert.IsTrue((bool)projected["isSupersededRetryAttempt"]!);
+        Assert.IsNull(projected["unexpected"]);
 
         JsonObject sparseProjection = retryAttempts[1]!.AsObject();
         Assert.AreSequenceEqual(
             new[] { "attempt", "outcome", "durationMs", "errorMessage" },
             sparseProjection.Select(property => property.Key).ToArray());
+        Assert.IsNull(sparseProjection["exceptionType"]);
+        Assert.IsNull(sparseProjection["standardOutput"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotFuseTestsWhoseIdentityPartsContainTheSeparator()
+    {
+        JsonObject first = Test("failed", uid: "uid", displayName: "B\0C");
+        first["architecture"] = "A";
+        JsonObject second = Test("passed", uid: "uid", displayName: "C");
+        second["architecture"] = "A\0B";
+
+        JsonObject report = Merge([Report(first), Report(second)]);
+
+        var tests = (JsonArray)report["tests"]!;
+        Assert.HasCount(2, tests, "Two distinct tests must not collapse because identity fields contain the separator.");
+        Assert.AreEqual("B\0C", (string?)tests[0]!["displayName"]);
+        Assert.AreEqual("C", (string?)tests[1]!["displayName"]);
+        Assert.IsNull(tests[0]!["retryAttempts"]);
+        Assert.IsNull(tests[1]!["retryAttempts"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotFuseSameNamedRowsWithDifferentUids()
+    {
+        JsonObject parameterized = Test("failed", uid: "parameter-value-1", displayName: "same name");
+        parameterized["parameters"] = new JsonObject { ["value"] = 1 };
+        JsonObject differentFile = Test("passed", uid: "file-b", displayName: "same name");
+        differentFile["filePath"] = "b.cs";
+
+        JsonObject report = Merge([Report(parameterized), Report(differentFile)]);
+
+        var tests = (JsonArray)report["tests"]!;
+        Assert.HasCount(2, tests, "HTML rows use uid to distinguish parameterized cases and same-named tests from different files.");
+        Assert.AreEqual("parameter-value-1", (string?)tests[0]!["uid"]);
+        Assert.AreEqual(1, (int)tests[0]!["parameters"]!["value"]!);
+        Assert.AreEqual("file-b", (string?)tests[1]!["uid"]);
+        Assert.AreEqual("b.cs", (string?)tests[1]!["filePath"]);
     }
 
     private static JsonObject Merge(IReadOnlyList<string> reports)
@@ -158,11 +231,11 @@ public class HtmlReportMergerTests
         return HtmlReportEngine.RenderReport(report.ToJsonString());
     }
 
-    private static JsonObject Test(string outcome, double durationMs = 1)
+    private static JsonObject Test(string outcome, double durationMs = 1, string uid = "uid", string displayName = "test")
         => new()
         {
-            ["uid"] = "uid",
-            ["displayName"] = "test",
+            ["uid"] = uid,
+            ["displayName"] = displayName,
             ["outcome"] = outcome,
             ["durationMs"] = durationMs,
         };
