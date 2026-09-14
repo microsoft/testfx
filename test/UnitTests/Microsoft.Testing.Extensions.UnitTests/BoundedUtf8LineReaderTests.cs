@@ -27,9 +27,11 @@ public sealed class BoundedUtf8LineReaderTests
         ReaderType.GetMethod("ReadLine", BindingFlags.Public | BindingFlags.Instance)
         ?? throw new InvalidOperationException("Could not resolve BoundedUtf8LineReader.ReadLine.");
 
-    private static readonly string LineResultName = Enum.GetName(ResultType, 0)!;
-    private static readonly string EndResultName = Enum.GetName(ResultType, 1)!;
-    private static readonly string LimitExceededResultName = Enum.GetName(ResultType, 2)!;
+    // Resolved by name (not ordinal) so the tests fail clearly if a member is ever renamed or removed,
+    // instead of silently binding to the wrong enum value if the member order changes.
+    private static readonly string LineResultName = ResolveEnumMemberName("Line");
+    private static readonly string EndResultName = ResolveEnumMemberName("End");
+    private static readonly string LimitExceededResultName = ResolveEnumMemberName("LimitExceeded");
 
     [TestMethod]
     public void ReadLine_EmptyStream_ReturnsEnd()
@@ -175,6 +177,10 @@ public sealed class BoundedUtf8LineReaderTests
         Assert.AreEqual(EndResultName, finalResult);
         Assert.IsNull(finalLine);
     }
+
+    private static string ResolveEnumMemberName(string name)
+        => Enum.GetNames(ResultType).SingleOrDefault(candidate => candidate == name)
+        ?? throw new InvalidOperationException($"Could not resolve BoundedLineReadResult.{name}.");
 
     private static object CreateReaderFromText(string text, long maxBytes, int maxLineBytes, int maxLineChars)
         => CreateReader(new MemoryStream(Encoding.UTF8.GetBytes(text)), maxBytes, maxLineBytes, maxLineChars);
