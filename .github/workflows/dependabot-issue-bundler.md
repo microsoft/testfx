@@ -9,6 +9,11 @@ permissions:
   pull-requests: read
   copilot-requests: write
 
+engine:
+  # Copilot CLI 1.0.80 does not expose configured MCP tools in this workflow (#11272).
+  id: copilot
+  version: "1.0.79"
+
 tools:
   # The scheduled scan must see Dependabot PRs regardless of author association.
   # Strict mode requires an explicit shell-access decision with min-integrity: none.
