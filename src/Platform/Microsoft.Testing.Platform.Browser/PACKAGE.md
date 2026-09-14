@@ -89,7 +89,8 @@ matches the loopback host origin:
 globalThis.testingPlatformBrowser = {
     contractVersion: 1,
     getArguments(): string[],
-    complete(exitCode: number): void
+    complete(exitCode: number): void,
+    reportFatalError(error: string): void
 };
 ```
 
@@ -103,6 +104,10 @@ globalThis.testingPlatformBrowser = {
   to `console.error` before completion so the launcher captures their diagnostics. Test discovery and test
   results do not flow through this method; MTP sends them directly to the SDK HTTP
   gateway.
+- `reportFatalError(error)` terminates the launcher immediately when the page cannot
+  negotiate the contract or cannot report normal completion. It is also one-shot. This
+  is only for fatal page/framework integration failures; ordinary test or application
+  exceptions must still be represented by the managed exit code passed to `complete`.
 
 The package-owned JavaScript supervisor implements this API contract automatically. A UI
 framework that owns its browser page can set

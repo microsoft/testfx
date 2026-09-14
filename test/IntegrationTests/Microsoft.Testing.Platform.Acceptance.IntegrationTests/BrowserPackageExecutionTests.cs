@@ -183,29 +183,7 @@ public sealed class BrowserFrameworkPageTests
 </html>
 
 #file main.js
-import { dotnet } from './_framework/dotnet.js';
-
-const api = globalThis.testingPlatformBrowser;
-if (api?.contractVersion !== 1) {
-    throw new Error('Expected testingPlatformBrowser contract version 1.');
-}
-
-let exitCode;
-let failure;
-try {
-    const { runMain } = await dotnet.withApplicationArguments(...api.getArguments()).create();
-    exitCode = await runMain();
-}
-catch (error) {
-    failure = error;
-    exitCode = 1;
-    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
-}
-
-api.complete(exitCode);
-if (failure !== undefined) {
-    throw failure;
-}
+$FrameworkPageMain$
 
 #file server.mjs
 import { createReadStream, existsSync, renameSync, statSync, writeFileSync } from 'node:fs';
@@ -249,6 +227,41 @@ server.listen(0, '127.0.0.1', () => {
     writeFileSync(temporaryPath, JSON.stringify({ version: 1, url: `http://127.0.0.1:${address.port}/` }), { mode: 0o600 });
     renameSync(temporaryPath, launchInfoPath);
 });
+""";
+
+    private const string FrameworkPageMainSource = """
+import { dotnet } from './_framework/dotnet.js';
+
+const api = globalThis.testingPlatformBrowser;
+if (api?.contractVersion !== 1) {
+    throw new Error('Expected testingPlatformBrowser contract version 1.');
+}
+
+let exitCode;
+let failure;
+try {
+    const { runMain } = await dotnet.withApplicationArguments(...api.getArguments()).create();
+    exitCode = await runMain();
+}
+catch (error) {
+    failure = error;
+    exitCode = 1;
+    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+}
+
+api.complete(exitCode);
+if (failure !== undefined) {
+    throw failure;
+}
+""";
+
+    private const string FatalFrameworkPageMainSource = """
+const api = globalThis.testingPlatformBrowser;
+if (api?.contractVersion !== 1 || typeof api.reportFatalError !== 'function') {
+    throw new Error('Expected testingPlatformBrowser fatal-error API version 1.');
+}
+
+api.reportFatalError('framework-owned page fatal marker');
 """;
 
     private const string DesktopSourceCode = """
@@ -373,6 +386,7 @@ public sealed class BrowserPackageDesktopTests
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             "BrowserFrameworkPageTestProject",
             FrameworkOwnedPageSourceCode
+                .PatchCodeWithReplace("$FrameworkPageMain$", FrameworkPageMainSource)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
@@ -413,6 +427,7 @@ public sealed class BrowserPackageDesktopTests
                 "    <TestingPlatformBrowserGenerateHostAssets>false</TestingPlatformBrowserGenerateHostAssets>" + Environment.NewLine,
                 string.Empty,
                 StringComparison.Ordinal)
+            .PatchCodeWithReplace("$FrameworkPageMain$", FrameworkPageMainSource)
             .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
@@ -440,6 +455,53 @@ public sealed class BrowserPackageDesktopTests
         Assert.IsTrue(File.Exists(Path.Combine(appBundle, "index.html")));
         Assert.IsTrue(File.Exists(Path.Combine(appBundle, "main.js")));
         Assert.IsFalse(File.Exists(Path.Combine(appBundle, "Microsoft.Testing.Platform.Browser.main.js")));
+    }
+
+    [TestMethod]
+    public async Task BrowserPackage_FrameworkFatalErrorTerminatesWithoutCompletionTimeout()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        string? browser = LocateBrowser();
+        if (browser is null)
+        {
+            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
+            return;
+        }
+
+        string browserPackageVersion = GetBrowserPackageVersion();
+        string source = FrameworkOwnedPageSourceCode
+            .Replace(
+                "    <TestingPlatformBrowserCompletionTimeoutSeconds>120</TestingPlatformBrowserCompletionTimeoutSeconds>",
+                "    <TestingPlatformBrowserCompletionTimeoutSeconds>5</TestingPlatformBrowserCompletionTimeoutSeconds>",
+                StringComparison.Ordinal)
+            .PatchCodeWithReplace("$FrameworkPageMain$", FatalFrameworkPageMainSource)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
+            .PatchCodeWithReplace("$Node$", EscapeMsBuildValue(node))
+            .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser));
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "BrowserFatalFrameworkPageProject",
+            source);
+
+        DotnetMuxerResult run = await DotnetCli.RunAsync(
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = run.StandardOutput + run.StandardError;
+        Assert.AreNotEqual(0, run.ExitCode, run.ToString());
+        Assert.Contains("framework-owned page fatal marker", output);
+        Assert.Contains("fatal integration error", output);
+        Assert.DoesNotContain("did not complete within 5 seconds", output);
     }
 
     [TestMethod]

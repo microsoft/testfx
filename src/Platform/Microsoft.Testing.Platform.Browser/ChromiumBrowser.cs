@@ -16,6 +16,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
     private readonly IBrowserContext _context;
     private readonly IPage _page;
     private readonly IAsyncDisposable _completionBinding;
+    private readonly IAsyncDisposable _fatalErrorBinding;
     private readonly TaskCompletionSource<int> _completion;
     private readonly DiagnosticBuffer _diagnostics;
     private readonly TaskCompletionSource _disconnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -26,6 +27,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         IBrowserContext context,
         IPage page,
         IAsyncDisposable completionBinding,
+        IAsyncDisposable fatalErrorBinding,
         TaskCompletionSource<int> completion,
         DiagnosticBuffer diagnostics)
     {
@@ -34,6 +36,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         _context = context;
         _page = page;
         _completionBinding = completionBinding;
+        _fatalErrorBinding = fatalErrorBinding;
         _completion = completion;
         _diagnostics = diagnostics;
         _browser.Disconnected += (_, _) => _disconnected.TrySetResult();
@@ -60,6 +63,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         IBrowser? browser = null;
         IBrowserContext? context = null;
         IAsyncDisposable? completionBinding = null;
+        IAsyncDisposable? fatalErrorBinding = null;
         Task<IBrowser>? browserLaunchTask = null;
 
         try
@@ -94,12 +98,23 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 "__mtpBrowserCompleteV1",
                 (source, message) => CompleteBrowserRun(source, page, expectedOrigin, message, completion))
                 .WaitAsync(startupCancellationToken).ConfigureAwait(false);
+            fatalErrorBinding = await page.ExposeBindingAsync<JsonElement>(
+                "__mtpBrowserFatalErrorV1",
+                (source, message) => ReportBrowserFatalError(
+                    source,
+                    page,
+                    expectedOrigin,
+                    message,
+                    completion,
+                    diagnostics))
+                .WaitAsync(startupCancellationToken).ConfigureAwait(false);
             var result = new ChromiumBrowser(
                 playwright,
                 browser,
                 context,
                 page,
                 completionBinding,
+                fatalErrorBinding,
                 completion,
                 diagnostics);
             await result.InitializePageAsync(
@@ -115,7 +130,13 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 browser = await TryObserveBrowserLaunchAsync(browserLaunchTask, diagnostics).ConfigureAwait(false);
             }
 
-            await DisposeBrowserAsync(completionBinding, context, browser, playwright, diagnostics).ConfigureAwait(false);
+            await DisposeBrowserAsync(
+                completionBinding,
+                fatalErrorBinding,
+                context,
+                browser,
+                playwright,
+                diagnostics).ConfigureAwait(false);
             if (startupTimeoutCancellationTokenSource.IsCancellationRequested
                 && !cancellationToken.IsCancellationRequested)
             {
@@ -157,6 +178,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
     public async ValueTask DisposeAsync()
         => await DisposeBrowserAsync(
             _completionBinding,
+            _fatalErrorBinding,
             _context,
             _browser,
             _playwright,
@@ -175,6 +197,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             if (globalThis.self === globalThis.top && globalThis.location.origin === {{serializedExpectedOrigin}}) {
                 const argumentsFromLauncher = Object.freeze({{serializedArguments}});
                 const completeTransport = globalThis.__mtpBrowserCompleteV1;
+                const fatalErrorTransport = globalThis.__mtpBrowserFatalErrorV1;
                 let completed = false;
                 const api = Object.freeze({
                     contractVersion: 1,
@@ -193,6 +216,20 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                         void completeTransport({
                             contractVersion: 1,
                             exitCode,
+                        });
+                    },
+                    reportFatalError(error) {
+                        if (completed) {
+                            throw new Error('testingPlatformBrowser has already completed.');
+                        }
+                        if (typeof error !== 'string' || error.length === 0) {
+                            throw new TypeError('testingPlatformBrowser.reportFatalError requires a non-empty error string.');
+                        }
+
+                        completed = true;
+                        void fatalErrorTransport({
+                            contractVersion: 1,
+                            error,
                         });
                     },
                 });
@@ -234,11 +271,24 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
 
     private static async Task DisposeBrowserAsync(
         IAsyncDisposable? completionBinding,
+        IAsyncDisposable? fatalErrorBinding,
         IBrowserContext? context,
         IBrowser? browser,
         IPlaywright? playwright,
         DiagnosticBuffer diagnostics)
     {
+        if (fatalErrorBinding is not null)
+        {
+            try
+            {
+                await fatalErrorBinding.DisposeAsync().AsTask().WaitAsync(CleanupTimeout).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add("launcher cleanup", $"Unable to remove the browser fatal-error binding: {ex.Message}");
+            }
+        }
+
         if (completionBinding is not null)
         {
             try
@@ -307,16 +357,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         JsonElement message,
         TaskCompletionSource<int> completion)
     {
-        _ = ReferenceEquals(source.Page, expectedPage)
-            && source.Frame.ParentFrame is null
-            && Uri.TryCreate(source.Frame.Url, UriKind.Absolute, out Uri? sourceUri)
-            && string.Equals(
-                sourceUri.GetLeftPart(UriPartial.Authority),
-                expectedOrigin,
-                StringComparison.Ordinal)
-                ? true
-                : throw new BrowserLauncherException(
-                    "The browser completion API was called outside the expected top-level loopback origin.");
+        ValidateBrowserApiSource(source, expectedPage, expectedOrigin);
 
         return message.ValueKind == JsonValueKind.Object
             && message.TryGetProperty("contractVersion", out JsonElement contractVersion)
@@ -329,4 +370,46 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 : throw new BrowserLauncherException(
                     "The browser completion API received an invalid version 1 payload.");
     }
+
+    private static bool ReportBrowserFatalError(
+        BindingSource source,
+        IPage expectedPage,
+        string expectedOrigin,
+        JsonElement message,
+        TaskCompletionSource<int> completion,
+        DiagnosticBuffer diagnostics)
+    {
+        ValidateBrowserApiSource(source, expectedPage, expectedOrigin);
+
+        if (message.ValueKind != JsonValueKind.Object
+            || !message.TryGetProperty("contractVersion", out JsonElement contractVersion)
+            || contractVersion.ValueKind != JsonValueKind.Number
+            || contractVersion.GetInt32() != 1
+            || !message.TryGetProperty("error", out JsonElement error)
+            || error.ValueKind != JsonValueKind.String
+            || string.IsNullOrWhiteSpace(error.GetString()))
+        {
+            throw new BrowserLauncherException(
+                "The browser fatal-error API received an invalid version 1 payload.");
+        }
+
+        diagnostics.Add("browser fatal", error.GetString()!);
+        return completion.TrySetException(
+            new BrowserLauncherException("The browser page reported a fatal integration error."));
+    }
+
+    private static void ValidateBrowserApiSource(
+        BindingSource source,
+        IPage expectedPage,
+        string expectedOrigin)
+        => _ = ReferenceEquals(source.Page, expectedPage)
+            && source.Frame.ParentFrame is null
+            && Uri.TryCreate(source.Frame.Url, UriKind.Absolute, out Uri? sourceUri)
+            && string.Equals(
+                sourceUri.GetLeftPart(UriPartial.Authority),
+                expectedOrigin,
+                StringComparison.Ordinal)
+                ? true
+                : throw new BrowserLauncherException(
+                    "The browser page API was called outside the expected top-level loopback origin.");
 }
