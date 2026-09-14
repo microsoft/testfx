@@ -1285,4 +1285,14 @@ The type declaring these methods should also respect the following rules:
     <value>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</value>
     <comment>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</comment>
   </data>
+  <data name="RedundantTestMethodAttributeTitle" xml:space="preserve">
+    <value>Remove redundant test method attribute</value>
+  </data>
+  <data name="RedundantTestMethodAttributeMessageFormat" xml:space="preserve">
+    <value>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</value>
+    <comment>{0} is the attribute name and {1} is the test method name.</comment>
+  </data>
+  <data name="RedundantTestMethodAttributeDescription" xml:space="preserve">
+    <value>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</value>
+  </data>
 </root>

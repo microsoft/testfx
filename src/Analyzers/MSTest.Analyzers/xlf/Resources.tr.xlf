@@ -855,6 +855,21 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">'DataTestMethod' yerine 'TestMethod' yöntemini tercih edin</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeDescription">
+        <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
+        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeMessageFormat">
+        <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
+        <target state="new">{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</target>
+        <note>{0} is the attribute name and {1} is the test method name.</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeTitle">
+        <source>Remove redundant test method attribute</source>
+        <target state="new">Remove redundant test method attribute</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
         <target state="translated">Bir test yönteminde 'DisplayName' değerini yöntem adıyla aynı olacak şekilde ayarlamak gereksizdir çünkü yöntem adı zaten varsayılan olarak görünen ad olarak kullanılır. Gereksiz 'DisplayName', testin nasıl raporlandığını değiştirmeden kaldırılabilir.</target>
