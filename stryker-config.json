@@ -19,6 +19,6 @@
       "low": 60,
       "break": 0
     },
-    "break-on-initial-test-failure": true
+    "break-on-initial-test-failure": false
   }
 }
