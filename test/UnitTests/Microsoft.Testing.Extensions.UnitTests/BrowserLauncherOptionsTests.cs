@@ -244,6 +244,25 @@ public sealed class BrowserLauncherOptionsTests
         }
     }
 
+    [TestMethod]
+    [DataRow("linux", Architecture.X64, "linux-x64")]
+    [DataRow("linux", Architecture.Arm64, "linux-arm64")]
+    [DataRow("osx", Architecture.X64, "darwin-x64")]
+    [DataRow("osx", Architecture.Arm64, "darwin-arm64")]
+    public void GetPlaywrightNodeExecutablePath_MapsSupportedPlatforms(
+        string operatingSystem,
+        Architecture architecture,
+        string platformDirectory)
+    {
+        OSPlatform osPlatform = operatingSystem == "linux" ? OSPlatform.Linux : OSPlatform.OSX;
+
+        string path = ChromiumBrowser.GetPlaywrightNodeExecutablePath("root", osPlatform, architecture);
+
+        Assert.AreEqual(
+            Path.Combine("root", ".playwright", "node", platformDirectory, "node"),
+            path);
+    }
+
     private static string CreateResponseFile(string content)
     {
         string path = Path.Combine(Path.GetTempPath(), $"dotnet-test-http-{Guid.NewGuid():N}.rsp");

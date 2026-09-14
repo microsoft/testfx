@@ -5,6 +5,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <UseAppHost>false</UseAppHost>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <RollForward>Major</RollForward>
+    <PlaywrightPlatform>linux-x64;linux-arm64;osx-x64;osx-arm64;win</PlaywrightPlatform>
+    <!-- Playwright's private driver payload contains nested PowerShell helper scripts. They are
+         runtime data for the launcher, not NuGet install scripts. -->
+    <NoWarn>$(NoWarn);NU5111</NoWarn>
     <VersionPrefix>$(MicrosoftTestingPlatformBrowserVersionPrefix)</VersionPrefix>
     <PreReleaseVersionLabel>$(MicrosoftTestingPlatformBrowserPreReleaseVersionLabel)</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
@@ -18,8 +24,12 @@ $(CommonProductDescription)]]></PackageDescription>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="Microsoft.Playwright" PrivateAssets="all" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBrowserLauncherPackageFiles</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
 
   <ItemGroup>
     <Content Include="buildMultiTargeting/**">
@@ -34,16 +44,22 @@ $(CommonProductDescription)]]></PackageDescription>
       <Pack>true</Pack>
       <PackagePath>buildTransitive</PackagePath>
     </Content>
-    <None Include="$(TargetDir)$(AssemblyName).dll" Pack="true" PackagePath="tools\net8.0\any" />
-    <None Include="$(TargetDir)$(AssemblyName).deps.json" Pack="true" PackagePath="tools\net8.0\any" />
-    <None Include="$(TargetDir)$(AssemblyName).runtimeconfig.json" Pack="true" PackagePath="tools\net8.0\any" />
-    <None Include="$(TargetDir)*.dll"
-          Exclude="$(TargetDir)$(AssemblyName).dll"
-          Pack="true"
-          PackagePath="tools\net8.0\any" />
-    <None Include="$(TargetDir).playwright\**"
-          Pack="true"
-          PackagePath="tools\net8.0\any\.playwright\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <Target Name="_AddBrowserLauncherPackageFiles" DependsOnTargets="Build">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).dll"
+                              PackagePath="tools\net8.0\any" />
+      <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).deps.json"
+                              PackagePath="tools\net8.0\any" />
+      <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).runtimeconfig.json"
+                              PackagePath="tools\net8.0\any" />
+      <TfmSpecificPackageFile Include="$(TargetDir)*.dll"
+                              Exclude="$(TargetDir)$(AssemblyName).dll"
+                              PackagePath="tools\net8.0\any" />
+      <TfmSpecificPackageFile Include="$(TargetDir).playwright\**\*"
+                              PackagePath="tools\net8.0\any\.playwright\%(RecursiveDir)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

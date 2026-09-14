@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -214,21 +216,69 @@ public sealed class BrowserPackageDesktopTests
 
         string output = run.StandardOutput + run.StandardError;
         Assert.AreEqual(0, run.ExitCode, run.ToString());
-        Assert.Contains($"({TargetFramework}|x64) passed [+1/x0/?0]", output);
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        Assert.Contains($"({TargetFramework}|{architecture}) passed [+1/x0/?0]", output);
+    }
+
+    [TestMethod]
+    public void BrowserPackage_ContainsPrivateCrossPlatformPlaywrightRuntime()
+    {
+        string package = GetBrowserPackagePath();
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        string[] entries = [.. archive.Entries.Select(static entry => entry.FullName)];
+
+        Assert.Contains("tools/net8.0/any/Microsoft.Playwright.dll", entries);
+        Assert.Contains("tools/net8.0/any/Microsoft.Bcl.AsyncInterfaces.dll", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/node/win32_x64/node.exe", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/node/linux-x64/node", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/node/linux-arm64/node", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/node/darwin-x64/node", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/node/darwin-arm64/node", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/package/cli.js", entries);
+
+        ZipArchiveEntry runtimeConfigEntry = archive.GetEntry(
+            "tools/net8.0/any/Microsoft.Testing.Platform.Browser.runtimeconfig.json")
+            ?? throw new AssertFailedException("The browser launcher runtimeconfig was not packaged.");
+        using Stream runtimeConfigStream = runtimeConfigEntry.Open();
+        using var runtimeConfig = System.Text.Json.JsonDocument.Parse(runtimeConfigStream);
+        Assert.AreEqual(
+            "Major",
+            runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("rollForward").GetString());
+
+        ZipArchiveEntry nuspecEntry = archive.Entries.Single(
+            static entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
+        using Stream nuspecStream = nuspecEntry.Open();
+        var nuspec = XDocument.Load(nuspecStream);
+
+        string[] packageDependencies =
+        [
+            .. nuspec.Descendants()
+                .Where(static element => element.Name.LocalName == "dependency")
+                .Select(static element => element.Attribute("id")?.Value)
+                .OfType<string>(),
+        ];
+        Assert.DoesNotContain(
+            "Microsoft.Playwright",
+            packageDependencies,
+            "Microsoft.Playwright must remain a private build-time dependency; its runtime is bundled under tools.");
     }
 
     private static string GetBrowserPackageVersion()
     {
+        string fileName = Path.GetFileName(GetBrowserPackagePath());
         const string packagePrefix = "Microsoft.Testing.Platform.Browser.";
-        string package = Directory
+        return fileName[packagePrefix.Length..^".nupkg".Length];
+    }
+
+    private static string GetBrowserPackagePath()
+    {
+        const string packagePrefix = "Microsoft.Testing.Platform.Browser.";
+        return Directory
             .EnumerateFiles(Constants.ArtifactsPackagesShipping, $"{packagePrefix}*.nupkg")
             .OrderByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault()
             ?? throw new AssertFailedException(
                 $"Microsoft.Testing.Platform.Browser was not packed under '{Constants.ArtifactsPackagesShipping}'.");
-
-        string fileName = Path.GetFileName(package);
-        return fileName[packagePrefix.Length..^".nupkg".Length];
     }
 
     private static string? LocateBrowser()

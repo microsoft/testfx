@@ -9,6 +9,8 @@ namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed class ChromiumBrowser : IAsyncDisposable
 {
+    private static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(5);
+
     private readonly IPlaywright _playwright;
     private readonly IBrowser _browser;
     private readonly IBrowserContext _context;
@@ -51,6 +53,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         IPlaywright? playwright = null;
         IBrowser? browser = null;
         IBrowserContext? context = null;
+        Task<IBrowser>? browserLaunchTask = null;
 
         try
         {
@@ -59,22 +62,25 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             // process, and its browser host child has already started, so keep DEBUG disabled for
             // the remainder of the launcher lifetime.
             Environment.SetEnvironmentVariable("DEBUG", null);
+            EnsurePlaywrightNodeExecutable();
             playwright = await Microsoft.Playwright.Playwright.CreateAsync().ConfigureAwait(false);
 
-            browser = await playwright.Chromium.LaunchAsync(
+            browserLaunchTask = playwright.Chromium.LaunchAsync(
                 new BrowserTypeLaunchOptions
                 {
                     ExecutablePath = executable,
                     Headless = true,
                     Args = [.. options.BrowserArguments],
                     Timeout = (float)options.StartupTimeout.TotalMilliseconds,
-                }).ConfigureAwait(false);
+                });
+            browser = await browserLaunchTask.WaitAsync(startupCancellationToken).ConfigureAwait(false);
             context = await browser.NewContextAsync(
                 new BrowserNewContextOptions
                 {
                     Locale = "en-US",
-                }).ConfigureAwait(false);
-            IPage page = await context.NewPageAsync().ConfigureAwait(false);
+                }).WaitAsync(startupCancellationToken).ConfigureAwait(false);
+            IPage page = await context.NewPageAsync()
+                .WaitAsync(startupCancellationToken).ConfigureAwait(false);
             var result = new ChromiumBrowser(playwright, browser, context, page, diagnostics);
             await result.InitializePageAsync(
                 options.TestApplicationArguments,
@@ -82,19 +88,27 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 startupCancellationToken).ConfigureAwait(false);
             return result;
         }
-        catch (Exception ex) when (ex is PlaywrightException or TimeoutException)
+        catch (Exception ex)
         {
-            if (context is not null)
+            if (browser is null && browserLaunchTask is not null)
             {
-                await context.CloseAsync().ConfigureAwait(false);
+                browser = await TryObserveBrowserLaunchAsync(browserLaunchTask, diagnostics).ConfigureAwait(false);
             }
 
-            if (browser is not null)
+            await DisposeBrowserAsync(context, browser, playwright, diagnostics).ConfigureAwait(false);
+            if (startupTimeoutCancellationTokenSource.IsCancellationRequested
+                && !cancellationToken.IsCancellationRequested)
             {
-                await browser.CloseAsync().ConfigureAwait(false);
+                throw new BrowserLauncherException(
+                    $"The Chromium browser did not become ready within {options.StartupTimeout.TotalSeconds} seconds.",
+                    ex);
             }
 
-            playwright?.Dispose();
+            if (ex is OperationCanceledException or BrowserLauncherException)
+            {
+                throw;
+            }
+
             throw new BrowserLauncherException(
                 $"Unable to launch the Chromium browser '{executable}'.",
                 ex);
@@ -119,7 +133,8 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 }
 
                 string? json = await _page.EvaluateAsync<string?>(
-                    "() => JSON.stringify(globalThis.__mtpBrowserResult ?? null)").ConfigureAwait(false);
+                    "() => JSON.stringify(globalThis.__mtpBrowserResult ?? null)")
+                    .WaitAsync(linkedCancellationTokenSource.Token).ConfigureAwait(false);
                 if (json is not null and not "null")
                 {
                     using var result = JsonDocument.Parse(json);
@@ -155,25 +170,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
     }
 
     public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            await _context.CloseAsync().ConfigureAwait(false);
-        }
-        catch (PlaywrightException)
-        {
-        }
-
-        try
-        {
-            await _browser.CloseAsync().ConfigureAwait(false);
-        }
-        catch (PlaywrightException)
-        {
-        }
-
-        _playwright.Dispose();
-    }
+        => await DisposeBrowserAsync(_context, _browser, _playwright, _diagnostics).ConfigureAwait(false);
 
     private async Task InitializePageAsync(
         IReadOnlyList<string> testApplicationArguments,
@@ -220,5 +217,106 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 $"{request.Method} {request.Url}: {request.Failure}");
         _page.Crash += (_, _)
             => _diagnostics.Add("browser", "The browser page crashed.");
+    }
+
+    private static async Task DisposeBrowserAsync(
+        IBrowserContext? context,
+        IBrowser? browser,
+        IPlaywright? playwright,
+        DiagnosticBuffer diagnostics)
+    {
+        if (context is not null)
+        {
+            try
+            {
+                await context.CloseAsync().WaitAsync(CleanupTimeout).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add("launcher cleanup", $"Unable to close the browser context: {ex.Message}");
+            }
+        }
+
+        if (browser is not null)
+        {
+            try
+            {
+                await browser.CloseAsync().WaitAsync(CleanupTimeout).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add("launcher cleanup", $"Unable to close the browser: {ex.Message}");
+            }
+        }
+
+        try
+        {
+            playwright?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            diagnostics.Add("launcher cleanup", $"Unable to dispose Playwright: {ex.Message}");
+        }
+    }
+
+    private static async Task<IBrowser?> TryObserveBrowserLaunchAsync(
+        Task<IBrowser> browserLaunchTask,
+        DiagnosticBuffer diagnostics)
+    {
+        try
+        {
+            return await browserLaunchTask.WaitAsync(CleanupTimeout).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            diagnostics.Add("launcher cleanup", $"Unable to observe the interrupted browser launch: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static void EnsurePlaywrightNodeExecutable()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string nodePath = GetPlaywrightNodeExecutablePath(
+            AppContext.BaseDirectory,
+            OperatingSystem.IsLinux() ? OSPlatform.Linux : OSPlatform.OSX,
+            RuntimeInformation.ProcessArchitecture);
+        if (!File.Exists(nodePath))
+        {
+            throw new BrowserLauncherException(
+                $"The Playwright Node.js driver was not found at '{nodePath}'.");
+        }
+
+        UnixFileMode mode = File.GetUnixFileMode(nodePath);
+        const UnixFileMode executeMode =
+            UnixFileMode.UserExecute
+            | UnixFileMode.GroupExecute
+            | UnixFileMode.OtherExecute;
+        if ((mode & executeMode) != executeMode)
+        {
+            File.SetUnixFileMode(nodePath, mode | executeMode);
+        }
+    }
+
+    internal static string GetPlaywrightNodeExecutablePath(
+        string baseDirectory,
+        OSPlatform operatingSystem,
+        Architecture architecture)
+    {
+        string platformDirectory = (operatingSystem, architecture) switch
+        {
+            ({ } os, Architecture.X64) when os == OSPlatform.Linux => "linux-x64",
+            ({ } os, Architecture.Arm64) when os == OSPlatform.Linux => "linux-arm64",
+            ({ } os, Architecture.X64) when os == OSPlatform.OSX => "darwin-x64",
+            ({ } os, Architecture.Arm64) when os == OSPlatform.OSX => "darwin-arm64",
+            _ => throw new BrowserLauncherException(
+                $"Microsoft.Testing.Platform.Browser does not support Playwright on {operatingSystem}/{architecture}."),
+        };
+
+        return Path.Combine(baseDirectory, ".playwright", "node", platformDirectory, "node");
     }
 }
