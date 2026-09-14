@@ -455,6 +455,10 @@ internal sealed partial class TestContextImplementation
 
         try
         {
+            string? outputVolumePath;
+            long outputVolumeAvailableFreeBytes;
+            long outputVolumeTotalBytes;
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (!NativeMethods.GetDiskFreeSpaceEx(
@@ -467,19 +471,23 @@ internal sealed partial class TestContextImplementation
                 }
 
                 var volumePath = new StringBuilder(capacity: 32_768);
-                processArtifact.OutputVolumePath = NativeMethods.GetVolumePathName(outputDirectory, volumePath, volumePath.Capacity)
+                outputVolumePath = NativeMethods.GetVolumePathName(outputDirectory, volumePath, volumePath.Capacity)
                     ? Truncate(volumePath.ToString(), MaximumIdentityLength)
                     : Truncate(outputDirectory, MaximumIdentityLength);
-                processArtifact.OutputVolumeAvailableFreeBytes = checked((long)availableFreeBytes);
-                processArtifact.OutputVolumeTotalBytes = checked((long)totalBytes);
+                outputVolumeAvailableFreeBytes = checked((long)availableFreeBytes);
+                outputVolumeTotalBytes = checked((long)totalBytes);
             }
             else
             {
                 var drive = new DriveInfo(outputDirectory);
-                processArtifact.OutputVolumePath = Truncate(drive.Name, MaximumIdentityLength);
-                processArtifact.OutputVolumeAvailableFreeBytes = drive.AvailableFreeSpace;
-                processArtifact.OutputVolumeTotalBytes = drive.TotalSize;
+                outputVolumePath = Truncate(drive.Name, MaximumIdentityLength);
+                outputVolumeAvailableFreeBytes = drive.AvailableFreeSpace;
+                outputVolumeTotalBytes = drive.TotalSize;
             }
+
+            processArtifact.OutputVolumePath = outputVolumePath;
+            processArtifact.OutputVolumeAvailableFreeBytes = outputVolumeAvailableFreeBytes;
+            processArtifact.OutputVolumeTotalBytes = outputVolumeTotalBytes;
         }
         catch (Exception ex) when (ex is ArgumentException
             or IOException

@@ -93,6 +93,15 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().NotBeNull();
     }
+
+    public void ConstructorShouldClearAssertionFailureDiagnosticsCallbackWhenDisabled()
+    {
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure = static (_, _, _) => { };
+
+        _ = CreateUnitTestRunner([]);
+
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().BeNull();
+    }
 #endif
 
     #endregion
