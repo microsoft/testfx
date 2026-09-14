@@ -1,7 +1,7 @@
 ---
 description: |
-  Reacts to the daily "Mutation testing" (Stryker.NET) workflow finishing.
-  Downloads its report, tracks the mutation score trend, and maintains a
+  Reacts to the weekly "Mutation testing" (Stryker.NET) workflow finishing.
+  Downloads its per-project reports, tracks the aggregate mutation score trend, and maintains a
   rolling "[mutation-test-improver] Monthly Report" issue summarizing the
   score, the highest-value survived mutants, and suggested actions for
   maintainers. When a survived mutant reveals a genuine behavioral test gap
@@ -112,7 +112,7 @@ Always be:
 
 ## Scope
 
-Mutation testing covers the production projects exercised by the unit-test projects in `MutationTesting.slnx`, driven by the root `stryker-config.json` and run daily by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). **Do not** widen the solution, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
+Mutation testing covers the production projects exercised by the unit-test projects in `MutationTesting.slnx`, driven by the root `stryker-config.json` and run weekly by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). The workflow runs one bounded matrix job per production project and uploads artifacts named `mutation-testing-<project>`. **Do not** widen the solution, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
 
 ## Persistent state
 
@@ -146,11 +146,11 @@ If the conclusion is not `success`:
 
 ### Step 3: Download and parse the report
 
-1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
-2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
+1. Download every artifact whose name starts with `mutation-testing-` from the upstream Mutation testing run into `./stryker-reports` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
+2. Recursively find and parse every `mutation-report.json` beneath `./stryker-reports`. Record projects with a console log but no JSON report as incomplete rather than discarding the successful project reports. For each file and project, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts, then sum those counts for the aggregate mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Compute a stable fingerprint for every candidate before comparing it to memory. Include at least the normalized repository-relative source path, mutator name, replacement text, start/end line and column, and original source snippet at that location. Revalidate any memory match against the current report and current source snippet before suppressing it; Stryker mutant IDs and line locations alone are not stable enough.
-5. Filter out mutants already recorded in the monthly report as equivalent or already attempted while their revalidated outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later daily runs.
+5. Filter out mutants already recorded in the monthly report as equivalent or already attempted while their revalidated outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later weekly runs.
 
 ### Step 4: Attempt to fix the top survived mutants (bounded)
 
@@ -163,7 +163,7 @@ For **at most 2** of the remaining highest-value `Survived` or `NoCoverage` muta
 5. If the mutant looks behaviorally equivalent (the mutated code cannot be distinguished from the original by any observable behavior), record it in the monthly report as a known equivalent mutant with your reasoning, and skip it.
 6. Otherwise, find (or create) the corresponding test file under the unit-test project associated with the mutated production project and add a focused test asserting the exact behavior the mutant would violate. Match that project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
 7. Build and run the unit test project with `$GITHUB_WORKSPACE/.dotnet/dotnet` to confirm the new test compiles and passes against the original (unmutated) code.
-8. **Verify the fix**: restore Stryker with `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config`, identify the mutated production project's `.csproj` file name and the mutated source path relative to that project, then from `$GITHUB_WORKSPACE/.config/stryker` run `MutationTesting=true $GITHUB_WORKSPACE/.dotnet/dotnet stryker --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --project "<ProductionProject.csproj>" --mutate "<project-relative-source-path>" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing-verify" --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
+8. **Verify the fix**: restore Stryker with `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config`, identify the mutated production project's name and the mutated source path relative to that project, then from `$GITHUB_WORKSPACE` run `pwsh .config/stryker/run.ps1 -Project "<ProductionProject>" -Mutate "<project-relative-source-path>" -Output "$GITHUB_WORKSPACE/artifacts/mutation-testing-verify"`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
    - Count each Stryker invocation against the workflow's total verification budget. If the budget is exhausted, stop attempting fixes and continue to Step 5.
    - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in the monthly report, restore the test worktree to remove the abandoned edits, and move to the next candidate.
 9. For each mutant you successfully kill, emit a safe-output request for a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:

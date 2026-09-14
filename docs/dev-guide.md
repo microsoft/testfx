@@ -166,26 +166,23 @@ Note that `-test` allows to run the unit tests and `-integrationTest` allows to 
 
 The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the production projects covered by the unit-test projects in `MutationTesting.slnx`. Restore the pinned local tool and run it from the repository root:
 
-On Windows PowerShell:
+On Windows PowerShell, run a production project by project name:
 
 ```powershell
-dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
-$env:MutationTesting = "true"
-Push-Location .config/stryker
-dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing
-Pop-Location
+.\.dotnet\dotnet.exe tool restore --tool-manifest .config\stryker\dotnet-tools.json --configfile .config\stryker\NuGet.config
+pwsh .config\stryker\run.ps1 -Project Microsoft.Testing.Extensions.TrxReport -Output artifacts\mutation-testing\Microsoft.Testing.Extensions.TrxReport
 ```
 
 On Linux and macOS:
 
 ```shell
-dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
-(cd .config/stryker && MutationTesting=true dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing)
+./.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
+pwsh .config/stryker/run.ps1 -Project Microsoft.Testing.Extensions.TrxReport -Output artifacts/mutation-testing/Microsoft.Testing.Extensions.TrxReport
 ```
 
 The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.
 
-The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs daily (so the mutation-test-improver workflow always has fresh data) and can be started manually; it publishes the mutation score and a killed/survived/timeout breakdown to the run's job summary, and uploads the full HTML/JSON report as the `mutation-testing-report` artifact.
+The HTML and JSON reports are written beneath `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It discovers every production project in `MutationTesting.slnx`, processes projects in an independently bounded matrix, publishes each project's status breakdown, and uploads a separate report artifact per project.
 
 ## Working with Visual Studio
 
