@@ -134,28 +134,19 @@ configuration:
               label: "state/approved"
           - addLabel:
               label: "needs/author-feedback"
-      - description: >-
-          When a pull request is approved
-          * Remove labels requesting review or author feedback
-          * Label the pull request as approved and ready to merge
+      - description: Re-evaluate pull request state when a review changes
         if:
           - payloadType: Pull_Request_Review
-          - isAction:
-              action: Submitted
-          - isReviewState:
-              reviewState: Approved
-          - not:
-              hasLabel:
-                label: "needs/merge-conflict-resolution"
+          - or:
+              - isAction:
+                  action: Submitted
+              - isAction:
+                  action: Dismissed
         then:
-          - removeLabel:
-              label: "needs/attention"
-          - removeLabel:
-              label: "needs/author-feedback"
           - removeLabel:
               label: "state/needs-review"
           - addLabel:
-              label: "state/approved"
+              label: "state/needs-review"
       - description: Sync labels from issues on all pull request events
         if:
           - payloadType: Pull_Request

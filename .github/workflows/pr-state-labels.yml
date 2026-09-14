@@ -2,7 +2,7 @@ name: Pull request state labels
 
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed]
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, labeled, closed]
 
 permissions:
   contents: read
@@ -16,7 +16,15 @@ concurrency:
 jobs:
   update:
     name: Update pull request state
-    if: github.repository == 'microsoft/testfx'
+    if: >-
+      github.repository == 'microsoft/testfx'
+      && (
+        github.event.action != 'labeled'
+        || (
+          github.event.label.name == 'state/needs-review'
+          && github.actor == 'microsoft-github-policy-service[bot]'
+        )
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -62,26 +70,20 @@ jobs:
               >/dev/null
           }
 
-          gh label create "$conflict_label" \
-            --repo "$REPOSITORY" \
-            --color 'D93F0B' \
-            --description 'PR has merge conflicts that must be resolved.' \
-            --force \
-            >/dev/null
-
-          mapfile -t current_labels < <(
-            gh api \
-              "repos/${REPOSITORY}/issues/${PR_NUMBER}" \
-              --jq '.labels[].name'
-          )
-
-          for label in "${managed_labels[@]}"; do
-            if printf '%s\n' "${current_labels[@]}" | grep --fixed-strings --line-regexp --quiet "$label"; then
-              remove_label "$label"
-            fi
-          done
-
           if [[ "$PR_ACTION" == 'closed' ]]; then
+            current_labels_output="$(
+              gh api \
+                "repos/${REPOSITORY}/issues/${PR_NUMBER}" \
+                --jq '.labels[].name'
+            )"
+            mapfile -t current_labels <<<"$current_labels_output"
+
+            for label in "${managed_labels[@]}"; do
+              if printf '%s\n' "${current_labels[@]}" | grep --fixed-strings --line-regexp --quiet "$label"; then
+                remove_label "$label"
+              fi
+            done
+
             exit 0
           fi
 
@@ -118,6 +120,32 @@ jobs:
           readonly mergeable="$(jq -r '.data.repository.pullRequest.mergeable' <<<"$query_result")"
           readonly review_decision="$(jq -r '.data.repository.pullRequest.reviewDecision // ""' <<<"$query_result")"
 
+          if [[ "$mergeable" == 'UNKNOWN' ]]; then
+            echo "::error::GitHub did not calculate pull request mergeability after five attempts."
+            exit 1
+          fi
+
+          if ! gh api "repos/${REPOSITORY}/labels/$(encode_label "$conflict_label")" >/dev/null 2>&1; then
+            gh label create "$conflict_label" \
+              --repo "$REPOSITORY" \
+              --color 'D93F0B' \
+              --description 'PR has merge conflicts that must be resolved.' \
+              >/dev/null
+          fi
+
+          current_labels_output="$(
+            gh api \
+              "repos/${REPOSITORY}/issues/${PR_NUMBER}" \
+              --jq '.labels[].name'
+          )"
+          mapfile -t current_labels <<<"$current_labels_output"
+
+          for label in "${managed_labels[@]}"; do
+            if printf '%s\n' "${current_labels[@]}" | grep --fixed-strings --line-regexp --quiet "$label"; then
+              remove_label "$label"
+            fi
+          done
+
           if [[ "$is_draft" == 'true' ]]; then
             exit 0
           fi
@@ -126,6 +154,8 @@ jobs:
             add_label "$conflict_label"
           elif [[ "$review_decision" == 'APPROVED' ]]; then
             add_label "$approved_label"
-          elif [[ "$review_decision" != 'CHANGES_REQUESTED' ]]; then
+          elif [[ "$review_decision" == 'CHANGES_REQUESTED' ]]; then
+            add_label 'needs/author-feedback'
+          else
             add_label "$review_label"
           fi
