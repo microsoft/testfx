@@ -55,6 +55,10 @@ safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821).
   threat-detection:
+    # gh-aw v0.88.7 otherwise runs the conclude step after an intentional no-op,
+    # where the skipped installer makes the missing threat-detect binary look like
+    # an agent_failure (#11263). Keep detection enabled for every real output/patch.
+    enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
     prompt: >
       The literal "[gh-aw framework system prompt block removed before analysis]"
       is trusted redaction metadata added by gh-aw. A safe-output JSON envelope,
