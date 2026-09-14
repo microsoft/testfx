@@ -4,5 +4,7 @@
     <TestingPlatformBrowserCompletionTimeoutSeconds Condition=" '$(TestingPlatformBrowserCompletionTimeoutSeconds)' == '' ">600</TestingPlatformBrowserCompletionTimeoutSeconds>
     <TestingPlatformBrowserUrlPath Condition=" '$(TestingPlatformBrowserUrlPath)' == '' ">/</TestingPlatformBrowserUrlPath>
     <TestingPlatformBrowserGenerateHostAssets Condition=" '$(TestingPlatformBrowserGenerateHostAssets)' == '' ">true</TestingPlatformBrowserGenerateHostAssets>
+    <_TestingPlatformBrowserPreviousCustomAfterDirectoryBuildTargets>$(CustomAfterDirectoryBuildTargets)</_TestingPlatformBrowserPreviousCustomAfterDirectoryBuildTargets>
+    <CustomAfterDirectoryBuildTargets>$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.Browser.After.targets</CustomAfterDirectoryBuildTargets>
   </PropertyGroup>
 </Project>

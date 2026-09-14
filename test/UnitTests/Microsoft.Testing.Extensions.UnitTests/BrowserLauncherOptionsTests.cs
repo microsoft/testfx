@@ -140,12 +140,12 @@ public sealed class BrowserLauncherOptionsTests
             File.WriteAllLines(
                 configurationFile,
                 [
-                    "host-command=node",
-                    "host-arguments=server.mjs \"path with spaces\"",
-                    $"host-working-directory={Path.GetTempPath()}",
-                    "url-path=/tests",
-                    "browser-executable=",
-                    "browser-arguments=--disable-gpu",
+                    $"host-command-uri={Uri.EscapeDataString("node")}",
+                    $"host-arguments-uri={Uri.EscapeDataString("server.mjs \"path with spaces\"")}",
+                    $"host-working-directory-uri={Uri.EscapeDataString(Path.GetTempPath())}",
+                    $"url-path-uri={Uri.EscapeDataString("/tests")}",
+                    "browser-executable-uri=",
+                    $"browser-arguments-uri={Uri.EscapeDataString("--disable-gpu")}",
                     "startup-timeout-seconds=30",
                     "completion-timeout-seconds=120",
                 ]);
@@ -174,6 +174,51 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    public void Parse_ReadsEncodedMultilineMsBuildLauncherConfiguration()
+    {
+        const string hostArguments = "server.mjs \"line1\r\nline2\" \"\" --special \"%25;#'\"";
+        const string browserArguments = "--note \"line1\r\nline2;%#'\"";
+        string configurationFile = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(
+                configurationFile,
+                [
+                    $"host-command-uri={Uri.EscapeDataString("node")}",
+                    $"host-arguments-uri={Uri.EscapeDataString(hostArguments)}",
+                    $"host-working-directory-uri={Uri.EscapeDataString(Path.GetTempPath())}",
+                    $"url-path-uri={Uri.EscapeDataString("/tests?value=%25;#'")}",
+                    "browser-executable-uri=",
+                    $"browser-arguments-uri={Uri.EscapeDataString(browserArguments)}",
+                    "startup-timeout-seconds=30",
+                    "completion-timeout-seconds=120",
+                ]);
+
+            var options = BrowserLauncherOptions.Parse(
+            [
+                "--config", configurationFile,
+                "--",
+                "--server", "dotnettestcli",
+                "--dotnet-test-transport", "http",
+                "--dotnet-test-http-endpoint", "http://127.0.0.1:1234/dotnettest/run/",
+                "--dotnet-test-http-token", "secret",
+            ]);
+
+            Assert.AreSequenceEqual(
+                new[] { "server.mjs", "line1\r\nline2", string.Empty, "--special", "%25;#'" },
+                options.HostArguments);
+            Assert.AreSequenceEqual(
+                new[] { "--note", "line1\r\nline2;%#'" },
+                options.BrowserArguments);
+            Assert.AreEqual("/tests?value=%25;#'", options.UrlPath);
+        }
+        finally
+        {
+            File.Delete(configurationFile);
+        }
+    }
+
+    [TestMethod]
     public void CommandLineTokenizer_RoundTripsQuotedHostArguments()
     {
         string[] arguments = CommandLineTokenizer.Split(
@@ -193,6 +238,14 @@ public sealed class BrowserLauncherOptionsTests
         Assert.AreSequenceEqual(
             new[] { "host.dll", string.Empty, "--name", "quoted value", string.Empty, "tail" },
             arguments);
+    }
+
+    [TestMethod]
+    public void CommandLineTokenizer_PreservesDoubledQuotesInsideQuotedArgument()
+    {
+        string[] arguments = CommandLineTokenizer.Split("\"a\"\"b\" \"\"\"quoted\"\"\"");
+
+        Assert.AreSequenceEqual(new[] { "a\"b", "\"quoted\"" }, arguments);
     }
 
     [TestMethod]

@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// End-to-end coverage for the optional Microsoft.Testing.Platform.Browser package.
 /// </summary>
 [TestClass]
+[DoNotParallelize]
 public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
     private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
@@ -30,7 +31,7 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
 
     <TestingPlatformBrowserExecutable>$Browser$</TestingPlatformBrowserExecutable>
-    <TestingPlatformBrowserAdditionalArguments>--mtp-test-value=a;b</TestingPlatformBrowserAdditionalArguments>
+    <TestingPlatformBrowserAdditionalArguments>--mtp-test-value=&quot;line1&#xD;&#xA;line2;%#'&quot;</TestingPlatformBrowserAdditionalArguments>
     <TestingPlatformBrowserStartupTimeoutSeconds>60</TestingPlatformBrowserStartupTimeoutSeconds>
     <TestingPlatformBrowserCompletionTimeoutSeconds>120</TestingPlatformBrowserCompletionTimeoutSeconds>
   </PropertyGroup>
@@ -40,10 +41,19 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
   </ItemGroup>
 
-  <Target Name="_ProvideFrameworkBrowserHost" BeforeTargets="_CaptureTestingPlatformBrowserHost">
+</Project>
+
+#file Directory.Build.targets
+<Project>
+  <PropertyGroup>
+    <_ParentDirectoryBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)..'))</_ParentDirectoryBuildTargets>
+  </PropertyGroup>
+  <Import Project="$(_ParentDirectoryBuildTargets)" Condition=" '$(_ParentDirectoryBuildTargets)' != '' " />
+
+  <Target Name="_ProvideFrameworkBrowserHost" AfterTargets="ComputeRunArguments">
     <PropertyGroup>
       <RunCommand>$Node$</RunCommand>
-      <RunArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot; &quot;&quot; --framework-marker &quot;quoted value&quot; --launch-info-path-file &quot;$(MSBuildProjectDirectory)\launch-info-path.txt&quot;</RunArguments>
+      <RunArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot; &quot;&quot; --framework-marker &quot;quoted value&quot; --multiline &quot;line1&#xD;&#xA;line2;%#'&quot; --launch-info-path-file &quot;$(MSBuildProjectDirectory)\launch-info-path.txt&quot;</RunArguments>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
     </PropertyGroup>
   </Target>
@@ -56,7 +66,6 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
                       Lines="$(DOTNET_HOST_PATH)"
                       Overwrite="false" />
   </Target>
-
 </Project>
 
 #file BrowserPackageTests.cs
@@ -81,8 +90,10 @@ const root = resolve(process.argv[2]);
 if (process.argv[3] !== ''
     || process.argv[4] !== '--framework-marker'
     || process.argv[5] !== 'quoted value'
-    || process.argv[6] !== '--launch-info-path-file'
-    || !process.argv[7]) {
+    || process.argv[6] !== '--multiline'
+    || process.argv[7] !== 'line1\r\nline2;%#\''
+    || process.argv[8] !== '--launch-info-path-file'
+    || !process.argv[9]) {
     throw new Error(`The computed host arguments did not round-trip: ${JSON.stringify(process.argv.slice(2))}`);
 }
 
@@ -90,7 +101,7 @@ const launchInfoPath = process.env.TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE;
 if (!launchInfoPath) {
     throw new Error('TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE is required.');
 }
-writeFileSync(process.argv[7], launchInfoPath);
+writeFileSync(process.argv[9], launchInfoPath);
 
 const contentTypes = new Map([
     ['.css', 'text/css'],
@@ -424,7 +435,7 @@ public sealed class BrowserPackageDesktopTests
         string browserPackageVersion = GetBrowserPackageVersion();
         string source = FrameworkOwnedPageSourceCode
             .Replace(
-                "    <TestingPlatformBrowserGenerateHostAssets>false</TestingPlatformBrowserGenerateHostAssets>" + Environment.NewLine,
+                "    <TestingPlatformBrowserGenerateHostAssets>false</TestingPlatformBrowserGenerateHostAssets>",
                 string.Empty,
                 StringComparison.Ordinal)
             .PatchCodeWithReplace("$FrameworkPageMain$", FrameworkPageMainSource)
@@ -436,6 +447,9 @@ public sealed class BrowserPackageDesktopTests
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             "BrowserCustomMainJsProject",
             source);
+        Assert.DoesNotContain(
+            "TestingPlatformBrowserGenerateHostAssets",
+            File.ReadAllText(Path.Combine(generator.TargetAssetPath, "BrowserFrameworkPageTestProject.csproj")));
 
         DotnetMuxerResult build = await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
@@ -455,6 +469,32 @@ public sealed class BrowserPackageDesktopTests
         Assert.IsTrue(File.Exists(Path.Combine(appBundle, "index.html")));
         Assert.IsTrue(File.Exists(Path.Combine(appBundle, "main.js")));
         Assert.IsFalse(File.Exists(Path.Combine(appBundle, "Microsoft.Testing.Platform.Browser.main.js")));
+
+        DotnetMuxerResult computeRunArguments = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, computeRunArguments.ExitCode, computeRunArguments.ToString());
+
+        string launchConfiguration = Path.Combine(
+            generator.TargetAssetPath,
+            "obj",
+            "Release",
+            TargetFramework,
+            WasmRuntime.BrowserRid,
+            "Microsoft.Testing.Platform.Browser.launch");
+        Assert.IsTrue(File.Exists(launchConfiguration));
+
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        Assert.IsFalse(File.Exists(launchConfiguration));
     }
 
     [TestMethod]
@@ -542,6 +582,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-x64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-arm64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/package/cli.js", entries);
+        Assert.Contains("buildMultiTargeting/Microsoft.Testing.Platform.Browser.After.targets", entries);
 
         ZipArchiveEntry browserMainEntry = archive.GetEntry(
             "buildMultiTargeting/assets/Microsoft.Testing.Platform.Browser.main.js")
@@ -578,6 +619,30 @@ public sealed class BrowserPackageDesktopTests
             "Microsoft.Playwright",
             packageDependencies,
             "Microsoft.Playwright must remain a private build-time dependency; its runtime is bundled under tools.");
+    }
+
+    [TestMethod]
+    public async Task BrowserPackage_PackNoBuildPreservesRuntimePayload()
+    {
+        string packageOutput = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? Path.GetTempPath(),
+            $"browser-pack-no-build-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(packageOutput);
+
+        DotnetMuxerResult pack = await DotnetCli.RunAsync(
+            $"pack {Path.Combine(RootFinder.Find(), "src", "Platform", "Microsoft.Testing.Platform.Browser", "Microsoft.Testing.Platform.Browser.csproj")} --configuration Debug --no-build --no-restore -property:PackageOutputPath={packageOutput}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, pack.ExitCode, pack.ToString());
+        string package = Directory.EnumerateFiles(
+            packageOutput,
+            "Microsoft.Testing.Platform.Browser.*.nupkg").Single();
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/Microsoft.Playwright.dll"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/cli.js"));
     }
 
     private static string GetBrowserPackageVersion()

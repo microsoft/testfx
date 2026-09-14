@@ -46,7 +46,7 @@ $(CommonProductDescription)]]></PackageDescription>
     </Content>
   </ItemGroup>
 
-  <Target Name="_AddBrowserLauncherPackageFiles" DependsOnTargets="Build">
+  <Target Name="_AddBrowserLauncherPackageFiles">
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).dll"
                               PackagePath="tools\net8.0\any" />

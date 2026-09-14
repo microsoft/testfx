@@ -49,12 +49,12 @@ internal sealed record BrowserLauncherOptions(
                 throw new BrowserLauncherException("The browser launcher configuration file is invalid.");
             }
 
-            hostCommand = ReadConfigurationValue(configuration, 0, "host-command");
-            hostArguments = ReadConfigurationValue(configuration, 1, "host-arguments");
-            hostWorkingDirectory = ReadConfigurationValue(configuration, 2, "host-working-directory");
-            urlPath = ReadConfigurationValue(configuration, 3, "url-path");
-            browserExecutable = ReadConfigurationValue(configuration, 4, "browser-executable");
-            browserArguments = ReadConfigurationValue(configuration, 5, "browser-arguments");
+            hostCommand = ReadEncodedConfigurationValue(configuration, 0, "host-command-uri");
+            hostArguments = ReadEncodedConfigurationValue(configuration, 1, "host-arguments-uri");
+            hostWorkingDirectory = ReadEncodedConfigurationValue(configuration, 2, "host-working-directory-uri");
+            urlPath = ReadEncodedConfigurationValue(configuration, 3, "url-path-uri");
+            browserExecutable = ReadEncodedConfigurationValue(configuration, 4, "browser-executable-uri");
+            browserArguments = ReadEncodedConfigurationValue(configuration, 5, "browser-arguments-uri");
             startupTimeout = ParseTimeout(
                 ReadConfigurationValue(configuration, 6, "startup-timeout-seconds"),
                 "startup timeout");
@@ -189,6 +189,9 @@ internal sealed record BrowserLauncherOptions(
             ? configuration[index][prefix.Length..]
             : throw new BrowserLauncherException("The browser launcher configuration file is invalid.");
     }
+
+    private static string ReadEncodedConfigurationValue(string[] configuration, int index, string name)
+        => Uri.UnescapeDataString(ReadConfigurationValue(configuration, index, name));
 }
 
 internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
@@ -366,6 +369,16 @@ internal static class CommandLineTokenizer
             {
                 tokenStarted = true;
                 current.Append('\\', backslashCount / 2);
+                if (inQuotes && backslashCount % 2 == 0
+                    && i + 1 < commandLine.Length
+                    && commandLine[i + 1] == '"')
+                {
+                    current.Append('"');
+                    backslashCount = 0;
+                    i++;
+                    continue;
+                }
+
                 if (backslashCount % 2 == 0)
                 {
                     inQuotes = !inQuotes;
