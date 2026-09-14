@@ -23,16 +23,21 @@ application connects directly to the authenticated HTTP gateway created by the .
   `browser-wasm`.
 - Microsoft Edge, Google Chrome, Chromium, or a compatible executable selected with
   `TestingPlatformBrowserExecutable`.
-- A browser-WASM host. The proof of concept defaults to `dotnet run --no-build` and
-  recognizes the current `Now listening on: <URL>` output. A shared host can instead write
-  the versioned launch-info file named by the
+- A browser-WASM host. The package wraps the command, arguments, and working directory
+  produced by the project's original `ComputeRunArguments` target. It recognizes the
+  current `Now listening on: <URL>` output. A shared host can instead write the versioned
+  launch-info file named by the
   `TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE` environment variable:
 
   ```json
   { "version": 1, "url": "http://127.0.0.1:12345/" }
   ```
 
-  The host must create the file atomically and with owner-only permissions. The launcher
+  The launcher creates a fresh private directory for each run and passes a file path inside
+  it. On Unix the directory is mode `0700`; on Windows it has a protected current-user-only
+  DACL. The host must create the file atomically at that exact path with owner-only
+  permissions and must not replace the containing directory. The launcher rejects
+  symbolic links/reparse points, validates Unix permissions on the opened file handle, and
   prefers this contract over console parsing.
 
 ## Usage

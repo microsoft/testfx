@@ -69,7 +69,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             // process, and its browser host child has already started, so keep DEBUG disabled for
             // the remainder of the launcher lifetime.
             Environment.SetEnvironmentVariable("DEBUG", null);
-            EnsurePlaywrightNodeExecutable();
+            PlaywrightNodeExecutable.EnsureExecutable();
             playwright = await Microsoft.Playwright.Playwright.CreateAsync().ConfigureAwait(false);
 
             browserLaunchTask = playwright.Chromium.LaunchAsync(
@@ -328,51 +328,5 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 ? completion.TrySetResult(exitCodeValue)
                 : throw new BrowserLauncherException(
                     "The browser completion API received an invalid version 1 payload.");
-    }
-
-    private static void EnsurePlaywrightNodeExecutable()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
-        string nodePath = GetPlaywrightNodeExecutablePath(
-            AppContext.BaseDirectory,
-            OperatingSystem.IsLinux() ? OSPlatform.Linux : OSPlatform.OSX,
-            RuntimeInformation.ProcessArchitecture);
-        if (!File.Exists(nodePath))
-        {
-            throw new BrowserLauncherException(
-                $"The Playwright Node.js driver was not found at '{nodePath}'.");
-        }
-
-        UnixFileMode mode = File.GetUnixFileMode(nodePath);
-        const UnixFileMode executeMode =
-            UnixFileMode.UserExecute
-            | UnixFileMode.GroupExecute
-            | UnixFileMode.OtherExecute;
-        if ((mode & executeMode) != executeMode)
-        {
-            File.SetUnixFileMode(nodePath, mode | executeMode);
-        }
-    }
-
-    internal static string GetPlaywrightNodeExecutablePath(
-        string baseDirectory,
-        OSPlatform operatingSystem,
-        Architecture architecture)
-    {
-        string platformDirectory = (operatingSystem, architecture) switch
-        {
-            ({ } os, Architecture.X64) when os == OSPlatform.Linux => "linux-x64",
-            ({ } os, Architecture.Arm64) when os == OSPlatform.Linux => "linux-arm64",
-            ({ } os, Architecture.X64) when os == OSPlatform.OSX => "darwin-x64",
-            ({ } os, Architecture.Arm64) when os == OSPlatform.OSX => "darwin-arm64",
-            _ => throw new BrowserLauncherException(
-                $"Microsoft.Testing.Platform.Browser does not support Playwright on {operatingSystem}/{architecture}."),
-        };
-
-        return Path.Combine(baseDirectory, ".playwright", "node", platformDirectory, "node");
     }
 }

@@ -31,7 +31,7 @@ internal static class Program
                 Uri hostUri = await host.WaitUntilReadyAsync(
                     options.StartupTimeout,
                     runCancellationTokenSource.Token).ConfigureAwait(false);
-                var browserUri = new Uri(hostUri, options.UrlPath);
+                Uri browserUri = BrowserLauncherOptions.ResolveBrowserUri(hostUri, options.UrlPath);
                 ChromiumBrowser browser = await ChromiumBrowser.LaunchAsync(
                     options,
                     browserUri,

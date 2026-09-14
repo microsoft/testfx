@@ -2,10 +2,11 @@
   <PropertyGroup>
     <TestingPlatformBrowserEnabled Condition=" '$(TestingPlatformBrowserEnabled)' == '' AND $(RuntimeIdentifier.StartsWith('browser-')) ">true</TestingPlatformBrowserEnabled>
     <_TestingPlatformBrowserAssetsDirectory>$(MSBuildThisFileDirectory)assets\</_TestingPlatformBrowserAssetsDirectory>
-    <WasmMainJSPath Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(TestingPlatformBrowserGenerateHostAssets)' == 'true' AND '$(WasmMainJSPath)' == '' ">$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js</WasmMainJSPath>
+    <_TestingPlatformBrowserOwnsHostAssets Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(TestingPlatformBrowserGenerateHostAssets)' == 'true' AND '$(WasmMainJSPath)' == '' ">true</_TestingPlatformBrowserOwnsHostAssets>
+    <WasmMainJSPath Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' ">$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js</WasmMainJSPath>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(TestingPlatformBrowserGenerateHostAssets)' == 'true' ">
+  <ItemGroup Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' ">
     <WasmExtraFilesToDeploy Include="$(_TestingPlatformBrowserAssetsDirectory)index.html">
       <TargetPath>index.html</TargetPath>
     </WasmExtraFilesToDeploy>
@@ -35,8 +36,8 @@
       <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(_TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(_TestingPlatformBrowserComputedHostWorkingDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
       <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(_TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(MSBuildProjectDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
 
-      <RunCommand Condition=" '$(DotNetHostPath)' != '' ">$(DotNetHostPath)</RunCommand>
-      <RunCommand Condition=" '$(DotNetHostPath)' == '' ">dotnet</RunCommand>
+      <RunCommand Condition=" '$(DOTNET_HOST_PATH)' != '' ">$(DOTNET_HOST_PATH)</RunCommand>
+      <RunCommand Condition=" '$(DOTNET_HOST_PATH)' == '' ">dotnet</RunCommand>
       <RunArguments>exec &quot;$(_TestingPlatformBrowserLauncher)&quot; --config &quot;$(_TestingPlatformBrowserLauncherConfiguration)&quot; --</RunArguments>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
     </PropertyGroup>

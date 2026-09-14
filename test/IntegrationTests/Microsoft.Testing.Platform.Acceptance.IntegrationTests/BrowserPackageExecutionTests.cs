@@ -43,9 +43,18 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
   <Target Name="_ProvideFrameworkBrowserHost" BeforeTargets="_CaptureTestingPlatformBrowserHost">
     <PropertyGroup>
       <RunCommand>$Node$</RunCommand>
-      <RunArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot; &quot;&quot; --framework-marker &quot;quoted value&quot;</RunArguments>
+      <RunArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot; &quot;&quot; --framework-marker &quot;quoted value&quot; --launch-info-path-file &quot;$(MSBuildProjectDirectory)\launch-info-path.txt&quot;</RunArguments>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="_RecordBrowserLauncherRunCommand" AfterTargets="_ConfigureTestingPlatformBrowserRun">
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-launcher-command.txt"
+                      Lines="$(RunCommand)"
+                      Overwrite="true" />
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-launcher-command.txt"
+                      Lines="$(DOTNET_HOST_PATH)"
+                      Overwrite="false" />
   </Target>
 
 </Project>
@@ -69,7 +78,11 @@ import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 
 const root = resolve(process.argv[2]);
-if (process.argv[3] !== '' || process.argv[4] !== '--framework-marker' || process.argv[5] !== 'quoted value') {
+if (process.argv[3] !== ''
+    || process.argv[4] !== '--framework-marker'
+    || process.argv[5] !== 'quoted value'
+    || process.argv[6] !== '--launch-info-path-file'
+    || !process.argv[7]) {
     throw new Error(`The computed host arguments did not round-trip: ${JSON.stringify(process.argv.slice(2))}`);
 }
 
@@ -77,6 +90,7 @@ const launchInfoPath = process.env.TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE;
 if (!launchInfoPath) {
     throw new Error('TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE is required.');
 }
+writeFileSync(process.argv[7], launchInfoPath);
 
 const contentTypes = new Map([
     ['.css', 'text/css'],
@@ -316,6 +330,13 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("succeeded: 1", runOutput);
         Assert.DoesNotContain("--dotnet-test-http-token", runOutput);
         Assert.DoesNotContain("pw:channel", runOutput);
+        AssertLaunchInfoDirectoryCleaned(generator.TargetAssetPath);
+
+        string[] launcherCommand = File.ReadAllLines(
+            Path.Combine(generator.TargetAssetPath, "browser-launcher-command.txt"));
+        Assert.HasCount(2, launcherCommand);
+        Assert.IsNotEmpty(launcherCommand[1], "DOTNET_HOST_PATH must be available to the browser launcher target.");
+        Assert.AreEqual(launcherCommand[1], launcherCommand[0]);
 
         DotnetMuxerResult list = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --list-tests",
@@ -328,6 +349,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.AreEqual(0, list.ExitCode, list.ToString());
         Assert.Contains("RunsInsideBrowser", listOutput);
         Assert.Contains("Discovered 1 tests", listOutput);
+        AssertLaunchInfoDirectoryCleaned(generator.TargetAssetPath);
     }
 
     [TestMethod]
@@ -380,6 +402,44 @@ public sealed class BrowserPackageDesktopTests
         Assert.IsFalse(
             File.Exists(Path.Combine(appBundle, "Microsoft.Testing.Platform.Browser.main.js")),
             "TestingPlatformBrowserGenerateHostAssets=false must not deploy the package-owned supervisor.");
+    }
+
+    [TestMethod]
+    public async Task BrowserPackage_CustomWasmMainJsPathDoesNotDeployPackagePage()
+    {
+        string browserPackageVersion = GetBrowserPackageVersion();
+        string source = FrameworkOwnedPageSourceCode
+            .Replace(
+                "    <TestingPlatformBrowserGenerateHostAssets>false</TestingPlatformBrowserGenerateHostAssets>" + Environment.NewLine,
+                string.Empty,
+                StringComparison.Ordinal)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
+            .PatchCodeWithReplace("$Node$", "node")
+            .PatchCodeWithReplace("$Browser$", string.Empty);
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "BrowserCustomMainJsProject",
+            source);
+
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, build.ExitCode, build.ToString());
+        string appBundle = Path.Combine(
+            generator.TargetAssetPath,
+            "bin",
+            "Release",
+            TargetFramework,
+            WasmRuntime.BrowserRid,
+            "AppBundle");
+        Assert.IsTrue(File.Exists(Path.Combine(appBundle, "index.html")));
+        Assert.IsTrue(File.Exists(Path.Combine(appBundle, "main.js")));
+        Assert.IsFalse(File.Exists(Path.Combine(appBundle, "Microsoft.Testing.Platform.Browser.main.js")));
     }
 
     [TestMethod]
@@ -519,4 +579,14 @@ public sealed class BrowserPackageDesktopTests
         => value.Replace("&", "&amp;", StringComparison.Ordinal)
             .Replace("<", "&lt;", StringComparison.Ordinal)
             .Replace(">", "&gt;", StringComparison.Ordinal);
+
+    private static void AssertLaunchInfoDirectoryCleaned(string targetAssetPath)
+    {
+        string pathFile = Path.Combine(targetAssetPath, "launch-info-path.txt");
+        Assert.IsTrue(File.Exists(pathFile), "The browser host did not record its launch-info path.");
+        string launchInfoPath = File.ReadAllText(pathFile);
+        Assert.IsFalse(
+            Directory.Exists(Path.GetDirectoryName(launchInfoPath)),
+            $"The launcher left its private launch-info directory behind: '{launchInfoPath}'.");
+    }
 }

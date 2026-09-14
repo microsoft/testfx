@@ -3,6 +3,9 @@
 
 #if !NETFRAMEWORK
 
+using System.Security.AccessControl;
+using System.Security.Principal;
+
 using Microsoft.Testing.Platform.Browser;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -105,6 +108,27 @@ public sealed class BrowserLauncherOptionsTests
         var options = BrowserLauncherOptions.Parse(arguments);
 
         Assert.AreEqual("https://[::1]:1234/dotnettest/run/", options.Bootstrap.Endpoint.AbsoluteUri);
+    }
+
+    [TestMethod]
+    public void ResolveBrowserUri_RejectsProtocolRelativePath()
+    {
+        BrowserLauncherException exception = Assert.ThrowsExactly<BrowserLauncherException>(
+            () => BrowserLauncherOptions.ResolveBrowserUri(
+                new Uri("http://127.0.0.1:1234/"),
+                "//example.com/tests"));
+
+        Assert.Contains("outside the browser host origin", exception.Message);
+    }
+
+    [TestMethod]
+    public void ResolveBrowserUri_PreservesLoopbackOrigin()
+    {
+        Uri uri = BrowserLauncherOptions.ResolveBrowserUri(
+            new Uri("http://127.0.0.1:1234/root/"),
+            "/tests/index.html");
+
+        Assert.AreEqual("http://127.0.0.1:1234/tests/index.html", uri.AbsoluteUri);
     }
 
     [TestMethod]
@@ -256,6 +280,156 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    public void BrowserUnitTests_DoNotReferencePlaywrightRuntime()
+    {
+        string dependencyContextPath = Path.ChangeExtension(
+            typeof(BrowserLauncherOptionsTests).Assembly.Location,
+            ".deps.json");
+        using FileStream stream = File.OpenRead(dependencyContextPath);
+        using var dependencyContext = System.Text.Json.JsonDocument.Parse(stream);
+
+        string[] dependencies =
+        [
+            .. dependencyContext.RootElement.GetProperty("libraries").EnumerateObject()
+                .Select(static library => library.Name),
+        ];
+        Assert.IsNull(
+            dependencies.FirstOrDefault(
+                static dependency => dependency.StartsWith("Microsoft.Playwright/", StringComparison.Ordinal)),
+            "Browser helper tests must source-link the BCL-only files instead of copying the cross-platform Playwright payload.");
+    }
+
+    [TestMethod]
+    public void TryParseListeningUri_ParsesLoopbackAndIgnoresOtherOutput()
+    {
+        Assert.IsNull(HostProcess.TryParseListeningUri("Application started."));
+        Assert.AreEqual(
+            "http://127.0.0.1:4321/",
+            HostProcess.TryParseListeningUri("Now listening on: http://127.0.0.1:4321/")?.AbsoluteUri);
+    }
+
+    [TestMethod]
+    public void TryParseListeningUri_RejectsNonLoopbackHost()
+        => Assert.ThrowsExactly<BrowserLauncherException>(
+            () => HostProcess.TryParseListeningUri("Now listening on: http://example.com/"));
+
+    [TestMethod]
+    public void TryReadLaunchInfo_PreservesValidationAndAbsenceBehavior()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"mtp-browser-launch-info-test-{Guid.NewGuid():N}");
+        string path = Path.Combine(directory, "launch-info.json");
+        try
+        {
+            Assert.IsNull(HostProcess.TryReadLaunchInfo(path));
+
+            Directory.CreateDirectory(directory);
+            WriteLaunchInfo(path, """{"version":1,"url":"https://[::1]:1234/"}""");
+            Assert.AreEqual("https://[::1]:1234/", HostProcess.TryReadLaunchInfo(path)?.AbsoluteUri);
+
+            WriteLaunchInfo(path, """{"version":2,"url":"http://127.0.0.1:1234/"}""");
+            Assert.ThrowsExactly<BrowserLauncherException>(() => HostProcess.TryReadLaunchInfo(path));
+
+            WriteLaunchInfo(path, """{"version":1,"url":"http://example.com/"}""");
+            Assert.ThrowsExactly<BrowserLauncherException>(() => HostProcess.TryReadLaunchInfo(path));
+
+            WriteLaunchInfo(path, "{");
+            Assert.ThrowsExactly<BrowserLauncherException>(() => HostProcess.TryReadLaunchInfo(path));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates the Windows launch-info directory DACL.")]
+    [SupportedOSPlatform("windows")]
+    public void CreateLaunchInfoDirectory_IsPrivateOnWindows()
+    {
+        string directory = HostProcess.CreateLaunchInfoDirectory();
+        try
+        {
+            DirectorySecurity security = new DirectoryInfo(directory).GetAccessControl();
+            SecurityIdentifier currentUser = WindowsIdentity.GetCurrent().User
+                ?? throw new AssertFailedException("The current Windows SID is unavailable.");
+            Assert.IsTrue(security.AreAccessRulesProtected);
+            Assert.AreEqual(
+                currentUser,
+                security.GetOwner(typeof(SecurityIdentifier)));
+
+            AuthorizationRuleCollection rules = security.GetAccessRules(
+                includeExplicit: true,
+                includeInherited: true,
+                typeof(SecurityIdentifier));
+            Assert.IsTrue(
+                rules.Cast<FileSystemAccessRule>().All(rule =>
+                    rule.IdentityReference.Equals(currentUser)
+                    && rule.AccessControlType == AccessControlType.Allow));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Validates Unix launch-info directory permissions.")]
+    [UnsupportedOSPlatform("windows")]
+    public void CreateLaunchInfoDirectory_IsPrivateOnUnix()
+    {
+        string directory = HostProcess.CreateLaunchInfoDirectory();
+        try
+        {
+            Assert.AreEqual(
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute,
+                File.GetUnixFileMode(directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Validates Unix file modes and symbolic-link rejection.")]
+    [UnsupportedOSPlatform("windows")]
+    public void TryReadLaunchInfo_RejectsSymlinkAndPermissiveUnixFile()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"mtp-browser-launch-info-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string target = Path.Combine(directory, "target.json");
+        string link = Path.Combine(directory, "link.json");
+        try
+        {
+            WriteLaunchInfo(target, """{"version":1,"url":"http://127.0.0.1:1234/"}""");
+            File.SetUnixFileMode(
+                target,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead);
+            Assert.ThrowsExactly<BrowserLauncherException>(() => HostProcess.TryReadLaunchInfo(target));
+
+            File.SetUnixFileMode(target, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            try
+            {
+                File.CreateSymbolicLink(link, target);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive($"Symbolic links are unavailable: {ex.Message}");
+                return;
+            }
+
+            Assert.ThrowsExactly<BrowserLauncherException>(() => HostProcess.TryReadLaunchInfo(link));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     [DataRow("linux", Architecture.X64, "linux-x64")]
     [DataRow("linux", Architecture.Arm64, "linux-arm64")]
     [DataRow("osx", Architecture.X64, "darwin-x64")]
@@ -267,7 +441,7 @@ public sealed class BrowserLauncherOptionsTests
     {
         OSPlatform osPlatform = operatingSystem == "linux" ? OSPlatform.Linux : OSPlatform.OSX;
 
-        string path = ChromiumBrowser.GetPlaywrightNodeExecutablePath("root", osPlatform, architecture);
+        string path = PlaywrightNodeExecutable.GetPath("root", osPlatform, architecture);
 
         Assert.AreEqual(
             Path.Combine("root", ".playwright", "node", platformDirectory, "node"),
@@ -288,6 +462,15 @@ public sealed class BrowserLauncherOptionsTests
 
     private static string Encode(string value)
         => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+
+    private static void WriteLaunchInfo(string path, string content)
+    {
+        File.WriteAllText(path, content);
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+    }
 }
 
 #endif

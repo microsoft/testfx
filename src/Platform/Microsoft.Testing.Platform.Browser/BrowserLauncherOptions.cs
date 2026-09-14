@@ -170,6 +170,18 @@ internal sealed record BrowserLauncherOptions(
     private static string NormalizeUrlPath(string path)
         => path.StartsWith("/", StringComparison.Ordinal) ? path : "/" + path;
 
+    internal static Uri ResolveBrowserUri(Uri hostUri, string urlPath)
+    {
+        var browserUri = new Uri(hostUri, NormalizeUrlPath(urlPath));
+        return string.Equals(
+            browserUri.GetLeftPart(UriPartial.Authority),
+            hostUri.GetLeftPart(UriPartial.Authority),
+            StringComparison.Ordinal)
+                ? browserUri
+                : throw new BrowserLauncherException(
+                    "The configured browser URL path resolves outside the browser host origin.");
+    }
+
     private static string ReadConfigurationValue(string[] configuration, int index, string name)
     {
         string prefix = name + "=";

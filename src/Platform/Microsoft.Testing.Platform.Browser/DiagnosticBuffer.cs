@@ -9,7 +9,11 @@ internal sealed class DiagnosticBuffer
     private const int MaximumEntryLength = 4 * 1024;
 
     private readonly Queue<string> _entries = new();
+#if NET9_0_OR_GREATER
+    private readonly Lock _sync = new();
+#else
     private readonly object _sync = new();
+#endif
     private readonly string[] _secrets;
 
     public DiagnosticBuffer(params string?[] secrets)
