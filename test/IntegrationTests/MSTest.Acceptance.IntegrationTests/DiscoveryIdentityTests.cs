@@ -15,14 +15,8 @@ using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
-// Every test method below goes through CLITestBase.DiscoverTests/RunTestsAsync, which mutate the process-wide
-// MSTestSettings.CurrentSettings and Environment.CurrentDirectory under CLITestBase's own ExecutionLock. A
-// class-level [ResourceLock] (instead of [DoNotParallelize]) still serializes this class against itself and
-// against every other class in the assembly that declares the same key, which is required because the adapter
-// state that ExecutionLock protects is process-wide; but it allows this class to run in parallel with tests
-// that never touch the in-process adapter (e.g. the out-of-process TestHost-based tests in this assembly).
 [TestClass]
-[ResourceLock(CLITestBase.InProcessAdapterExecutionResource)]
+[DoNotParallelize]
 public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentityTests.TestAssetFixture>
 {
     private const string AssetName = "DiscoveryIdentityAsset";
