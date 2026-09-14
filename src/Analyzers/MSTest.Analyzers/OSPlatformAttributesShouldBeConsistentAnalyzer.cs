@@ -85,10 +85,15 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             return;
         }
 
-        var platformAttributes = attributes
-            .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
-                || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
-            .ToImmutableArray();
+        ImmutableArray<AttributeData> platformAttributes = HasPlatformAttributes(
+            attributes,
+            supportedOSPlatformAttributeSymbol,
+            unsupportedOSPlatformAttributeSymbol)
+            ? attributes
+                .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
+                    || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
+                .ToImmutableArray()
+            : ImmutableArray<AttributeData>.Empty;
 
         AttributeData? localOSConditionAttribute = attributes.FirstOrDefault(
             attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
