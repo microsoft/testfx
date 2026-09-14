@@ -1,0 +1,161 @@
+name: Pull request state labels
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, labeled, closed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: pr-state-labels-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: Update pull request state
+    if: >-
+      github.repository == 'microsoft/testfx'
+      && (
+        github.event.action != 'labeled'
+        || (
+          github.event.label.name == 'state/needs-review'
+          && github.actor == 'microsoft-github-policy-service[bot]'
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Apply state label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_ACTION: ${{ github.event.action }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          readonly conflict_label='needs/merge-conflict-resolution'
+          readonly review_label='state/needs-review'
+          readonly approved_label='state/approved'
+          declare -ar managed_labels=(
+            "$conflict_label"
+            "$review_label"
+            "$approved_label"
+            'needs/triage'
+            'needs/attention'
+            'needs/author-feedback'
+          )
+
+          encode_label() {
+            jq --null-input --raw-output --arg label "$1" '$label | @uri'
+          }
+
+          remove_label() {
+            local encoded_label
+            encoded_label="$(encode_label "$1")"
+            gh api \
+              --method DELETE \
+              "repos/${REPOSITORY}/issues/${PR_NUMBER}/labels/${encoded_label}" \
+              >/dev/null
+          }
+
+          add_label() {
+            gh api \
+              --method POST \
+              "repos/${REPOSITORY}/issues/${PR_NUMBER}/labels" \
+              -f "labels[]=$1" \
+              >/dev/null
+          }
+
+          if [[ "$PR_ACTION" == 'closed' ]]; then
+            current_labels_output="$(
+              gh api \
+                "repos/${REPOSITORY}/issues/${PR_NUMBER}" \
+                --jq '.labels[].name'
+            )"
+            mapfile -t current_labels <<<"$current_labels_output"
+
+            for label in "${managed_labels[@]}"; do
+              if printf '%s\n' "${current_labels[@]}" | grep --fixed-strings --line-regexp --quiet "$label"; then
+                remove_label "$label"
+              fi
+            done
+
+            exit 0
+          fi
+
+          readonly owner="${REPOSITORY%%/*}"
+          readonly repository_name="${REPOSITORY#*/}"
+          query_result=''
+
+          for attempt in {1..5}; do
+            query_result="$(gh api graphql \
+              -f query='
+                query($owner: String!, $repository: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repository) {
+                    pullRequest(number: $number) {
+                      isDraft
+                      mergeable
+                      reviewDecision
+                    }
+                  }
+                }' \
+              -f owner="$owner" \
+              -f repository="$repository_name" \
+              -F number="$PR_NUMBER")"
+
+            if [[ "$(jq -r '.data.repository.pullRequest.mergeable' <<<"$query_result")" != 'UNKNOWN' ]]; then
+              break
+            fi
+
+            sleep 2
+          done
+
+          jq --exit-status '.data.repository.pullRequest != null' <<<"$query_result" >/dev/null
+
+          readonly is_draft="$(jq -r '.data.repository.pullRequest.isDraft' <<<"$query_result")"
+          readonly mergeable="$(jq -r '.data.repository.pullRequest.mergeable' <<<"$query_result")"
+          readonly review_decision="$(jq -r '.data.repository.pullRequest.reviewDecision // ""' <<<"$query_result")"
+
+          if [[ "$mergeable" == 'UNKNOWN' ]]; then
+            echo "::error::GitHub did not calculate pull request mergeability after five attempts."
+            exit 1
+          fi
+
+          if ! gh api "repos/${REPOSITORY}/labels/$(encode_label "$conflict_label")" >/dev/null 2>&1; then
+            gh label create "$conflict_label" \
+              --repo "$REPOSITORY" \
+              --color 'D93F0B' \
+              --description 'PR has merge conflicts that must be resolved.' \
+              >/dev/null
+          fi
+
+          current_labels_output="$(
+            gh api \
+              "repos/${REPOSITORY}/issues/${PR_NUMBER}" \
+              --jq '.labels[].name'
+          )"
+          mapfile -t current_labels <<<"$current_labels_output"
+
+          for label in "${managed_labels[@]}"; do
+            if printf '%s\n' "${current_labels[@]}" | grep --fixed-strings --line-regexp --quiet "$label"; then
+              remove_label "$label"
+            fi
+          done
+
+          if [[ "$is_draft" == 'true' ]]; then
+            exit 0
+          fi
+
+          if [[ "$mergeable" == 'CONFLICTING' ]]; then
+            add_label "$conflict_label"
+          elif [[ "$review_decision" == 'APPROVED' ]]; then
+            add_label "$approved_label"
+          elif [[ "$review_decision" == 'CHANGES_REQUESTED' ]]; then
+            add_label 'needs/author-feedback'
+          else
+            add_label "$review_label"
+          fi
