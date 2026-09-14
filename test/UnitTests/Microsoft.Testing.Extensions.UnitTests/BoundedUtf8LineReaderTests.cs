@@ -108,7 +108,12 @@ public sealed class BoundedUtf8LineReaderTests
     {
         // "café" (accented 'é' is 2 UTF-8 bytes) followed by a surrogate-pair emoji (4 UTF-8 bytes).
         string expected = "café\U0001F600";
-        object reader = CreateReaderFromText(expected + "\n", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 1024);
+        int encodedByteCount = Encoding.UTF8.GetByteCount(expected);
+        object reader = CreateReaderFromText(
+            expected + "\n",
+            maxBytes: encodedByteCount + 1,
+            maxLineBytes: encodedByteCount,
+            maxLineChars: expected.Length);
 
         (string result, string? line) = ReadLine(reader);
 
