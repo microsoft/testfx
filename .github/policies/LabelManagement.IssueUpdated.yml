@@ -32,16 +32,16 @@ configuration:
           - payloadType: Issue_Comment
         then:
           - cleanEmailReply
-      - description: Remove "help wanted" label when an issue goes into PR
+      - description: Remove triage labels when an issue goes into PR
         if:
           - payloadType: Issues
           - labelAdded:
               label: state/in-pr
-          - hasLabel:
-              label: "help wanted"
         then:
           - removeLabel:
               label: "help wanted"
+          - removeLabel:
+              label: "needs/triage"
       - description: >-
           If an author responds to an issue which needs author feedback
           * Remove the "needs/author-feedback" Label
@@ -128,8 +128,34 @@ configuration:
           - disableAutoMerge
           - assignTo:
               author: True
+          - removeLabel:
+              label: "state/needs-review"
+          - removeLabel:
+              label: "state/approved"
           - addLabel:
               label: "needs/author-feedback"
+      - description: >-
+          When a pull request is approved
+          * Remove labels requesting review or author feedback
+          * Label the pull request as approved and ready to merge
+        if:
+          - payloadType: Pull_Request_Review
+          - isAction:
+              action: Submitted
+          - isReviewState:
+              reviewState: Approved
+          - not:
+              hasLabel:
+                label: "needs/merge-conflict-resolution"
+        then:
+          - removeLabel:
+              label: "needs/attention"
+          - removeLabel:
+              label: "needs/author-feedback"
+          - removeLabel:
+              label: "state/needs-review"
+          - addLabel:
+              label: "state/approved"
       - description: Sync labels from issues on all pull request events
         if:
           - payloadType: Pull_Request
