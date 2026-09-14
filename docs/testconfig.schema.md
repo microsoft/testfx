@@ -59,10 +59,12 @@ make sure the sample `testconfig.json` files in the repo continue to validate.
 Set `mstest:execution:captureAssertionFailureDiagnostics` to `true` to attach a bounded JSON
 diagnostic artifact to a failed test for each of its first three assertion failures. Each artifact
 records the assertion message and comparison values, managed stack frames, other tests running
-concurrently in the same test host, test-host CPU and memory measurements, process I/O where the
-operating system exposes it, and free/total space for the result volume. On Windows, process I/O
-includes file, pipe, console, network, and device transfers; on Linux it uses `/proc/self/io`
-`rchar`/`wchar`, so these values are intentionally labeled as process I/O rather than disk-only I/O.
+concurrently in the same test host, runtime and operating-system details, current cultures, test-host
+CPU and memory measurements, process I/O where the operating system exposes it, and free/total space
+for the result volume. On Windows, process I/O includes file, pipe, console, network, and device
+transfers; on Linux it uses `/proc/self/io` `rchar`/`wchar`, so these values are intentionally labeled
+as process I/O rather than disk-only I/O. The report contract and SchemaStore registration entry are
+documented in [`mstest-assertion-failure-state.schema.md`](./mstest-assertion-failure-state.schema.md).
 
 ```json
 {

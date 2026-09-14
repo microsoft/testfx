@@ -433,6 +433,8 @@ internal sealed partial class TestContextImplementation
             OperatingSystemDescription = Truncate(Environment.OSVersion.VersionString, MaximumIdentityLength)!,
             ProcessArchitecture = IntPtr.Size == 8 ? "X64" : "X86",
 #endif
+            CurrentCulture = Truncate(CultureInfo.CurrentCulture.Name, MaximumIdentityLength)!,
+            CurrentUICulture = Truncate(CultureInfo.CurrentUICulture.Name, MaximumIdentityLength)!,
             ProcessorCount = Environment.ProcessorCount,
             CpuPercentDuringTest = normalizedCpuPercent,
             TotalProcessorTimeMilliseconds = current.TotalProcessorTime.TotalMilliseconds,
@@ -999,55 +1001,61 @@ internal sealed partial class TestContextImplementation
         [DataMember(Name = "processArchitecture", Order = 4)]
         public string ProcessArchitecture { get; set; } = null!;
 
-        [DataMember(Name = "processorCount", Order = 5)]
+        [DataMember(Name = "currentCulture", Order = 5)]
+        public string CurrentCulture { get; set; } = null!;
+
+        [DataMember(Name = "currentUICulture", Order = 6)]
+        public string CurrentUICulture { get; set; } = null!;
+
+        [DataMember(Name = "processorCount", Order = 7)]
         public int ProcessorCount { get; set; }
 
-        [DataMember(Name = "cpuPercentDuringTest", Order = 6, EmitDefaultValue = false)]
+        [DataMember(Name = "cpuPercentDuringTest", Order = 8, EmitDefaultValue = false)]
         public double? CpuPercentDuringTest { get; set; }
 
-        [DataMember(Name = "totalProcessorTimeMilliseconds", Order = 7)]
+        [DataMember(Name = "totalProcessorTimeMilliseconds", Order = 9)]
         public double TotalProcessorTimeMilliseconds { get; set; }
 
-        [DataMember(Name = "workingSetBytes", Order = 8)]
+        [DataMember(Name = "workingSetBytes", Order = 10)]
         public long WorkingSetBytes { get; set; }
 
-        [DataMember(Name = "privateMemoryBytes", Order = 9)]
+        [DataMember(Name = "privateMemoryBytes", Order = 11)]
         public long PrivateMemoryBytes { get; set; }
 
-        [DataMember(Name = "managedHeapBytes", Order = 10)]
+        [DataMember(Name = "managedHeapBytes", Order = 12)]
         public long ManagedHeapBytes { get; set; }
 
-        [DataMember(Name = "gcMemoryLoadBytes", Order = 11, EmitDefaultValue = false)]
+        [DataMember(Name = "gcMemoryLoadBytes", Order = 13, EmitDefaultValue = false)]
         public long? GcMemoryLoadBytes { get; set; }
 
-        [DataMember(Name = "gcTotalAvailableMemoryBytes", Order = 12, EmitDefaultValue = false)]
+        [DataMember(Name = "gcTotalAvailableMemoryBytes", Order = 14, EmitDefaultValue = false)]
         public long? GcTotalAvailableMemoryBytes { get; set; }
 
-        [DataMember(Name = "processIoAvailable", Order = 13)]
+        [DataMember(Name = "processIoAvailable", Order = 15)]
         public bool ProcessIoAvailable { get; set; }
 
-        [DataMember(Name = "processIoReadBytesDuringTest", Order = 14, EmitDefaultValue = false)]
+        [DataMember(Name = "processIoReadBytesDuringTest", Order = 16, EmitDefaultValue = false)]
         public long? ProcessIoReadBytesDuringTest { get; set; }
 
-        [DataMember(Name = "processIoWriteBytesDuringTest", Order = 15, EmitDefaultValue = false)]
+        [DataMember(Name = "processIoWriteBytesDuringTest", Order = 17, EmitDefaultValue = false)]
         public long? ProcessIoWriteBytesDuringTest { get; set; }
 
-        [DataMember(Name = "processIoReadBytesPerSecond", Order = 16, EmitDefaultValue = false)]
+        [DataMember(Name = "processIoReadBytesPerSecond", Order = 18, EmitDefaultValue = false)]
         public double? ProcessIoReadBytesPerSecond { get; set; }
 
-        [DataMember(Name = "processIoWriteBytesPerSecond", Order = 17, EmitDefaultValue = false)]
+        [DataMember(Name = "processIoWriteBytesPerSecond", Order = 19, EmitDefaultValue = false)]
         public double? ProcessIoWriteBytesPerSecond { get; set; }
 
-        [DataMember(Name = "outputVolumePath", Order = 18, EmitDefaultValue = false)]
+        [DataMember(Name = "outputVolumePath", Order = 20, EmitDefaultValue = false)]
         public string? OutputVolumePath { get; set; }
 
-        [DataMember(Name = "outputVolumeAvailableFreeBytes", Order = 19, EmitDefaultValue = false)]
+        [DataMember(Name = "outputVolumeAvailableFreeBytes", Order = 21, EmitDefaultValue = false)]
         public long? OutputVolumeAvailableFreeBytes { get; set; }
 
-        [DataMember(Name = "outputVolumeTotalBytes", Order = 20, EmitDefaultValue = false)]
+        [DataMember(Name = "outputVolumeTotalBytes", Order = 22, EmitDefaultValue = false)]
         public long? OutputVolumeTotalBytes { get; set; }
 
-        [DataMember(Name = "outputVolumeError", Order = 21, EmitDefaultValue = false)]
+        [DataMember(Name = "outputVolumeError", Order = 23, EmitDefaultValue = false)]
         public string? OutputVolumeError { get; set; }
     }
 

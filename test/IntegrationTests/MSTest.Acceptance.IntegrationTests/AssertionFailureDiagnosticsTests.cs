@@ -54,7 +54,29 @@ public sealed class AssertionFailureDiagnosticsTests : AcceptanceTestBase<Assert
           \],
           "activeTestsTruncated": false,
           "process": \{
-            [\s\S]+?
+            "processId": [1-9]\d*,
+            "processName": "(?:\\.|[^"\\])*",
+            "frameworkDescription": "(?:\\.|[^"\\])+",
+            "operatingSystemDescription": "(?:\\.|[^"\\])+",
+            "processArchitecture": "(?:\\.|[^"\\])+",
+            "currentCulture": "(?:\\.|[^"\\])*",
+            "currentUICulture": "(?:\\.|[^"\\])*",
+            "processorCount": [1-9]\d*,
+            "cpuPercentDuringTest": (?:0|[1-9]\d*)(?:\.\d+)?(?:[Ee][+-]?\d+)?,
+            "totalProcessorTimeMilliseconds": (?:0|[1-9]\d*)(?:\.\d+)?(?:[Ee][+-]?\d+)?,
+            "workingSetBytes": [1-9]\d*,
+            "privateMemoryBytes": (?:0|[1-9]\d*),
+            "managedHeapBytes": (?:0|[1-9]\d*),
+            "gcMemoryLoadBytes": (?:0|[1-9]\d*),
+            "gcTotalAvailableMemoryBytes": (?:0|[1-9]\d*),
+            "processIoAvailable": (?:true|false)(?:,
+            "processIoReadBytesDuringTest": (?:0|[1-9]\d*),
+            "processIoWriteBytesDuringTest": (?:0|[1-9]\d*),
+            "processIoReadBytesPerSecond": (?:0|[1-9]\d*)(?:\.\d+)?(?:[Ee][+-]?\d+)?,
+            "processIoWriteBytesPerSecond": (?:0|[1-9]\d*)(?:\.\d+)?(?:[Ee][+-]?\d+)?)?,
+            "outputVolumePath": "(?:\\.|[^"\\])*",
+            "outputVolumeAvailableFreeBytes": (?:0|[1-9]\d*),
+            "outputVolumeTotalBytes": (?:0|[1-9]\d*)
           \},
           "stackFrames": \[
             [\s\S]+?
@@ -106,6 +128,12 @@ public sealed class AssertionFailureDiagnosticsTests : AcceptanceTestBase<Assert
             formattedArtifact,
             $"Unexpected assertion failure artifact shape:{Environment.NewLine}{formattedArtifact}");
 
+        string schemaPath = Path.Combine(RootFinder.Find(), "docs", "mstest-assertion-failure-state.schema.json");
+        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        JsonElement schemaRoot = schema.RootElement;
+        Assert.AreEqual(root.GetProperty("schemaVersion").GetInt32(), schemaRoot.GetProperty("properties").GetProperty("schemaVersion").GetProperty("const").GetInt32());
+        AssertObjectPropertySetConformsToSchema(root, schemaRoot, "$");
+
         const string FullyQualifiedTestName = "AssertionFailureDiagnosticsAsset.AssertionFailureTests.FailingAssertion";
         JsonElement[] activeTests = [.. root.GetProperty("activeTests").EnumerateArray()];
         Assert.IsTrue(
@@ -121,12 +149,35 @@ public sealed class AssertionFailureDiagnosticsTests : AcceptanceTestBase<Assert
             "Expected the assertion diagnostics stack to include the failing test method.");
 
         JsonElement process = root.GetProperty("process");
+        AssertObjectPropertySetConformsToSchema(process, schemaRoot.GetProperty("definitions").GetProperty("process"), "$.process");
         Assert.IsTrue(process.GetProperty("processId").GetInt32() > 0);
         Assert.IsTrue(process.GetProperty("processorCount").GetInt32() > 0);
+        Assert.IsNotNull(process.GetProperty("operatingSystemDescription").GetString());
+        Assert.IsNotNull(process.GetProperty("currentCulture").GetString());
+        Assert.IsNotNull(process.GetProperty("currentUICulture").GetString());
         Assert.IsTrue(process.GetProperty("totalProcessorTimeMilliseconds").GetDouble() >= 0);
         Assert.IsTrue(process.GetProperty("workingSetBytes").GetInt64() > 0);
         Assert.IsTrue(process.GetProperty("managedHeapBytes").GetInt64() >= 0);
         Assert.IsTrue(process.GetProperty("processIoAvailable").ValueKind is JsonValueKind.True or JsonValueKind.False);
+    }
+
+    private static void AssertObjectPropertySetConformsToSchema(JsonElement value, JsonElement schema, string path)
+    {
+        var allowedProperties = schema.GetProperty("properties")
+            .EnumerateObject()
+            .Select(static property => property.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (JsonProperty property in value.EnumerateObject())
+        {
+            Assert.IsTrue(allowedProperties.Contains(property.Name), $"Property '{path}.{property.Name}' is missing from the JSON schema.");
+        }
+
+        foreach (JsonElement requiredProperty in schema.GetProperty("required").EnumerateArray())
+        {
+            string propertyName = requiredProperty.GetString()!;
+            Assert.IsTrue(value.TryGetProperty(propertyName, out _), $"Required schema property '{path}.{propertyName}' is missing from the artifact.");
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
