@@ -98,9 +98,8 @@
   </ItemGroup>
 
   <!-- Consumer build customization packed at build/ (applies to the direct consumer that compiles the
-       injected source): defines the compilation constants and C# language floor. -->
+       injected source): defines the compilation constants. -->
   <ItemGroup>
-    <None Include="build\Microsoft.Testing.Platform.ServerMode.Client.Sources.props" Pack="true" PackagePath="build\" />
     <None Include="build\Microsoft.Testing.Platform.ServerMode.Client.Sources.targets" Pack="true" PackagePath="build\" />
   </ItemGroup>
 
