@@ -23,8 +23,15 @@ namespace MSTest.Acceptance.IntegrationTests;
 // - MSTest.VstestConsoleWrapper.IntegrationTests.SuiteLifeCycleTests.ValidateInheritanceBehavior:
 //   its three inheritance paths are preserved by MultiLevelBeforeEachDerivedClass_HasExactPerTestMessages;
 //   assembly boundary ordering is already equivalent to LifecycleTests.LifecycleTest.
+// Three of the four test methods go through CLITestBase.DiscoverTests/RunTestsAsync, which mutate the
+// process-wide MSTestSettings.CurrentSettings and Environment.CurrentDirectory under CLITestBase's own
+// execution lock (LifecycleInheritanceModes_RunInTargetFrameworkHost is the exception: it drives a real
+// out-of-process TestHost and never touches CLITestBase). A class-level [ResourceLock] (instead of
+// [DoNotParallelize]) still serializes this class against every other class in the assembly that declares
+// the same key, which is required because that state is process-wide; but it allows this class - including
+// its out-of-process test - to run in parallel with tests that never touch the in-process adapter.
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(CLITestBase.InProcessAdapterExecutionResource)]
 public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyLifecycleObjectModelTests.TestAssetFixture>
 {
     private static readonly Lock AssemblyLoadLock = new();

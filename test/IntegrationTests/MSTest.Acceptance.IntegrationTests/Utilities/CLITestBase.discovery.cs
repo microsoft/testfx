@@ -22,6 +22,16 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 
 public abstract partial class CLITestBase
 {
+    // Every caller of DiscoverTests/RunTestsAsync below mutates the process-wide
+    // MSTestSettings.CurrentSettings (via UnitTestDiscoverer/TestExecutionManager -> MSTestSettings.PopulateSettings)
+    // and temporarily swaps Environment.CurrentDirectory. ExecutionLock already serializes concurrent callers
+    // within this process, but test classes that call these methods must still declare this key so the adapter
+    // does not schedule them to run at the same time as another test class doing the same in-process mutation -
+    // the semaphore only prevents corruption, it does not make the mutation invisible to a sibling test that
+    // reads CurrentSettings/CurrentDirectory mid-call. See DiscoveryIdentityTests, TestCaseFilteringTests, and
+    // LegacyLifecycleObjectModelTests for the current declaring classes.
+    internal const string InProcessAdapterExecutionResource = "Microsoft.MSTestV2.CLIAutomation.CLITestBase.InProcessAdapterExecution";
+
     private static readonly SemaphoreSlim ExecutionLock = new(1, 1);
 
     internal static ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string? testCaseFilter = null)

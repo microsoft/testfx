@@ -18,8 +18,17 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// <see cref="TestCase"/> before matching. These tests preserve the object-model assertions around the
 /// <c>TestCase</c> to <c>UnitTestElement</c> round trip for the two identity properties most sensitive to it.
 /// </summary>
+/// <remarks>
+/// Every test method goes through <see cref="CLITestBase.DiscoverTests(string, string?)"/> /
+/// <see cref="CLITestBase.RunTestsAsync(System.Collections.Generic.IEnumerable{TestCase}, string?)"/>, which
+/// mutate the process-wide <c>MSTestSettings.CurrentSettings</c> and <see cref="Environment.CurrentDirectory"/>
+/// under <c>CLITestBase</c>'s own execution lock. A class-level <see cref="ResourceLockAttribute"/> (instead of
+/// <see cref="DoNotParallelizeAttribute"/>) still serializes this class against every other class in the
+/// assembly that declares the same key, which is required because that state is process-wide; but it allows
+/// this class to run in parallel with tests that never touch the in-process adapter.
+/// </remarks>
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(CLITestBase.InProcessAdapterExecutionResource)]
 public sealed class TestCaseFilteringTests : AcceptanceTestBase<TestCaseFilteringTests.TestAssetFixture>
 {
     private const string AssetName = "DiscoverInternalsFiltering";
