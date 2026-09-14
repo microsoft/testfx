@@ -119,9 +119,9 @@ Because the source is compiled into your assembly, your project must provide the
 shared source expects (the three first-party consumers — vstest, VSUnitTesting, C# Dev Kit — already
 do):
 
-- **C# language version**: the package's build targets set `LangVersion=12.0` for you when your
-  project hasn't pinned one, so normally you need to do nothing. If you *do* pin `LangVersion`
-  explicitly, it must be **C# 12** or newer.
+- **C# language version**: **C# 12** or newer. The package does not change your project's
+  `LangVersion`; projects whose target framework defaults to an older language version must opt in
+  explicitly.
 - On `net462` / `netstandard2.0`: the package **ships the internal polyfills it needs itself**
   (nullable attributes, `IsExternalInit`, required-member/compiler-feature attributes, and a small set
   of runtime helpers), each `internal` and self-guarded. If your project already defines one, add the

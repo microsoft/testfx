@@ -30,6 +30,34 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
     private const string AssetName = "MtpServerClientSourceConsumer";
     private const string PackageId = "Microsoft.Testing.Platform.ServerMode.Client.Sources";
 
+    private const string DefaultLanguageVersionSources = """
+        #file DefaultLanguageVersionConsumer/Directory.Build.props
+        <Project />
+
+        #file DefaultLanguageVersionConsumer/Directory.Build.targets
+        <Project />
+
+        #file DefaultLanguageVersionConsumer/DefaultLanguageVersionConsumer.csproj
+        <Project Sdk="Microsoft.NET.Sdk">
+          <PropertyGroup>
+            <TargetFramework>$TargetFramework$</TargetFramework>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="$ServerClientSourceVersion$" />
+          </ItemGroup>
+        </Project>
+
+        #file DefaultLanguageVersionConsumer/Consumer.cs
+        namespace DefaultLanguageVersionConsumer;
+
+        internal static class Consumer
+        {
+            // The \e escape requires C# 13. This compiles under net10.0's default language version unless
+            // the package silently replaces that SDK default with C# 12.
+            internal static string Reset => "\e[0m";
+        }
+        """;
+
     private const string Sources = """
         #file HostileConsumer/HostileConsumer.csproj
         <Project Sdk="Microsoft.NET.Sdk">
@@ -163,6 +191,35 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
         """;
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task ConsumerWithoutExplicitLangVersion_KeepsTargetFrameworkDefault()
+    {
+        string patchedSources = DefaultLanguageVersionSources
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ServerClientSourceVersion$", ResolveServerClientSourceVersion());
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "MtpServerClientSourceDefaultLanguageVersionConsumer",
+            patchedSources);
+
+        string isolatedPackages = Path.Combine(testAsset.TargetAssetPath, ".nuget-packages");
+        var environmentVariables = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["NUGET_PACKAGES"] = isolatedPackages,
+        };
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}/DefaultLanguageVersionConsumer -c {Constants.BuildConfiguration}",
+            environmentVariables: environmentVariables,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(
+            0,
+            result.ExitCode,
+            $"The source package replaced the target framework's default language version. Build output:\n{result.StandardOutput}\n{result.StandardError}");
+    }
 
     [TestMethod]
     public async Task HostileConsumer_CompilesAgainstPackedSource()
