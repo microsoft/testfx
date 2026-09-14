@@ -11,7 +11,7 @@ public sealed class BoundedUtf8LineReaderTests
     // BoundedUtf8LineReader is linked into each report-engine assembly, so resolve the
     // CtrfReport copy through reflection to avoid an ambiguous type reference.
     // The type and member names below cannot be expressed with nameof(...) because the
-    // production types are internal to (and inaccessible from) this test project.
+    // same fully qualified internal type exists in multiple referenced assemblies.
     private static readonly Type ReaderType =
         typeof(CtrfReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.BoundedUtf8LineReader")
         ?? throw new InvalidOperationException("Could not find type BoundedUtf8LineReader in the Ctrf report engine assembly.");
@@ -104,6 +104,17 @@ public sealed class BoundedUtf8LineReaderTests
         Assert.AreEqual("first", firstLine);
         Assert.AreEqual(LineResultName, secondResult);
         Assert.AreEqual("second", secondLine);
+    }
+
+    [TestMethod]
+    public void ReadLine_CarriageReturnLineFeedAtExactCharBudget_ReturnsLine()
+    {
+        object reader = CreateReaderFromText("abcd\r\n", maxBytes: 6, maxLineBytes: 5, maxLineChars: 4);
+
+        (string result, string? line) = ReadLine(reader);
+
+        Assert.AreEqual(LineResultName, result);
+        Assert.AreEqual("abcd", line);
     }
 
     [TestMethod]
