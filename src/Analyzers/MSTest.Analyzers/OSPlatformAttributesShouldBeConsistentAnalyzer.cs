@@ -85,15 +85,10 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
             return;
         }
 
-        ImmutableArray<AttributeData> platformAttributes = HasPlatformAttributes(
+        ImmutableArray<AttributeData> platformAttributes = GetPlatformAttributes(
             attributes,
             supportedOSPlatformAttributeSymbol,
-            unsupportedOSPlatformAttributeSymbol)
-            ? attributes
-                .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
-                    || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
-                .ToImmutableArray()
-            : ImmutableArray<AttributeData>.Empty;
+            unsupportedOSPlatformAttributeSymbol);
 
         AttributeData? localOSConditionAttribute = attributes.FirstOrDefault(
             attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, osConditionAttributeSymbol));
@@ -170,6 +165,24 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         => attributes.Any(attribute =>
             SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
             || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol));
+
+    private static ImmutableArray<AttributeData> GetPlatformAttributes(
+        ImmutableArray<AttributeData> attributes,
+        INamedTypeSymbol supportedOSPlatformAttributeSymbol,
+        INamedTypeSymbol unsupportedOSPlatformAttributeSymbol)
+    {
+        ImmutableArray<AttributeData>.Builder? builder = null;
+        foreach (AttributeData attribute in attributes)
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, supportedOSPlatformAttributeSymbol)
+                || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol))
+            {
+                (builder ??= ImmutableArray.CreateBuilder<AttributeData>()).Add(attribute);
+            }
+        }
+
+        return builder?.ToImmutable() ?? ImmutableArray<AttributeData>.Empty;
+    }
 
     private static bool TryGetExpectedCondition(
         ImmutableArray<AttributeData> localPlatformAttributes,
