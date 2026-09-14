@@ -47,6 +47,20 @@ public sealed class BoundedUtf8LineReaderTests
     }
 
     [TestMethod]
+    public void ReadLine_EmptyLine_ReturnsLineThenEnd()
+    {
+        object reader = CreateReaderFromText("\n", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 1024);
+
+        (string firstResult, string? firstLine) = ReadLine(reader);
+        (string secondResult, string? secondLine) = ReadLine(reader);
+
+        Assert.AreEqual(LineResultName, firstResult);
+        Assert.AreEqual(string.Empty, firstLine);
+        Assert.AreEqual(EndResultName, secondResult);
+        Assert.IsNull(secondLine);
+    }
+
+    [TestMethod]
     public void ReadLine_SingleLineWithoutTrailingNewline_ReturnsLineAtEndOfStream()
     {
         object reader = CreateReaderFromText("hello world", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 1024);
@@ -133,6 +147,17 @@ public sealed class BoundedUtf8LineReaderTests
         Assert.AreEqual("first", firstLine);
         Assert.AreEqual(LimitExceededResultName, secondResult);
         Assert.IsNull(secondLine);
+    }
+
+    [TestMethod]
+    public void ReadLine_TotalBytesAtExactBudget_ReturnsLine()
+    {
+        object reader = CreateReaderFromText("first\n", maxBytes: 6, maxLineBytes: 1024, maxLineChars: 1024);
+
+        (string result, string? line) = ReadLine(reader);
+
+        Assert.AreEqual(LineResultName, result);
+        Assert.AreEqual("first", line);
     }
 
     [TestMethod]
