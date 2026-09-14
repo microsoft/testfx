@@ -275,9 +275,9 @@ was replaced with gh-aw's maintained `detection` model alias.
 ```yaml
 safe-outputs:
   threat-detection:
+    model: detection
     engine:
       id: copilot
-      model: detection
 ```
 
 Then recompile with `gh aw compile --strict` and confirm the generated detection step reports

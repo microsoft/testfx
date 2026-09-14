@@ -28,6 +28,7 @@ tools:
 # the final review body (see .github/agents/expert-reviewer.agent.md). The gh-aw
 # auto-footer is therefore disabled so the attribution is not duplicated.
 safe-outputs:
+  footer: false
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821). Explain this workflow's
   # trusted orchestration to avoid false positives (#10696).
@@ -44,12 +45,11 @@ safe-outputs:
       workflow or its security controls. End with exactly one single-line
       THREAT_DETECTION_RESULT containing valid JSON. JSON-escape all quotes and
       backslashes inside reason strings.
+    model: detection
     engine:
       id: copilot
-      model: detection
   create-pull-request-review-comment:
     max: 30
-    footer: "none"
   submit-pull-request-review:
     max: 1
     allowed-events: [COMMENT, REQUEST_CHANGES]
