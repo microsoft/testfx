@@ -174,6 +174,65 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenClassOSConditionHasEmptyMessageAndMethodHasMessage_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows, IgnoreMessage = "")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [OSCondition(OperatingSystems.Windows | OperatingSystems.Linux, IgnoreMessage = "Method reason")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenClassAndMethodOSConditionsHaveEmptyMessages_RemovesMethodCondition()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows, IgnoreMessage = "")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:OSCondition(OperatingSystems.Windows | OperatingSystems.Linux, IgnoreMessage = "")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows, IgnoreMessage = "")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("[OSCondition]", "TestMethod"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenMethodHasNoClassCondition_NoDiagnostic()
     {
         string code = """
@@ -268,6 +327,27 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("[ArchitectureCondition]", "TestMethod"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenClassArchitectureConditionHasEmptyMessageAndMethodHasMessage_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [ArchitectureCondition(TestArchitectures.X64, IgnoreMessage = "")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ArchitectureCondition(TestArchitectures.X64 | TestArchitectures.Arm64, IgnoreMessage = "Method reason")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 #endif
 
     [TestMethod]
@@ -306,6 +386,27 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("[CICondition]", "TestMethod"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassCIConditionHasEmptyMessageAndMethodHasMessage_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [CICondition(ConditionMode.Exclude, IgnoreMessage = "")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [CICondition(ConditionMode.Exclude, IgnoreMessage = "Method reason")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]

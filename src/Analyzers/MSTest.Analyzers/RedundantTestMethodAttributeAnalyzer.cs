@@ -191,7 +191,8 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
                 out int classAllowedValues,
                 out bool classAllowsUnknownValues)
             && (classAllowedValues & ~methodAllowedValues) == 0
-            && (!classAllowsUnknownValues || methodAllowsUnknownValues);
+            && (!classAllowsUnknownValues || methodAllowsUnknownValues)
+            && IsConditionIgnoreMessageRedundant(methodAttribute, classAttribute);
 
     private static bool TryGetAllowedValues(
         AttributeData? attribute,
@@ -232,7 +233,28 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
     private static bool IsCIConditionRedundant(AttributeData methodAttribute, AttributeData? classAttribute)
         => TryGetConditionMode(methodAttribute, out bool methodIncludesCI)
             && TryGetConditionMode(classAttribute, out bool classIncludesCI)
-            && methodIncludesCI == classIncludesCI;
+            && methodIncludesCI == classIncludesCI
+            && IsConditionIgnoreMessageRedundant(methodAttribute, classAttribute);
+
+    private static bool IsConditionIgnoreMessageRedundant(
+        AttributeData methodAttribute,
+        AttributeData? classAttribute)
+        => classAttribute is not null
+            && (HasNonEmptyConditionIgnoreMessage(classAttribute)
+                || !HasNonEmptyConditionIgnoreMessage(methodAttribute));
+
+    private static bool HasNonEmptyConditionIgnoreMessage(AttributeData attribute)
+    {
+        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
+        {
+            if (argument.Key == "IgnoreMessage")
+            {
+                return argument.Value.Value is string { Length: > 0 };
+            }
+        }
+
+        return true;
+    }
 
     private static bool TryGetConditionMode(AttributeData? attribute, out bool includeMode)
     {
