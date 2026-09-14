@@ -59,6 +59,7 @@ Useful properties:
 | Property | Purpose |
 | --- | --- |
 | `TestingPlatformBrowserEnabled` | Enables or disables the package. It defaults to `true` only for `browser-*` runtime identifiers and can be set to `false` in the project or on the command line. |
+| `TestingPlatformBrowserGenerateHostAssets` | Controls whether the package supplies its default `index.html` and JavaScript supervisor. Set to `false` when a UI framework owns the page and integrates the launcher bootstrap/completion contract itself. |
 | `TestingPlatformBrowserExecutable` | Overrides browser discovery with an explicit Chromium-family executable path. |
 | `TestingPlatformBrowserHostCommand` | Command that starts the external browser-WASM host. |
 | `TestingPlatformBrowserHostArguments` | Arguments for the host command. |

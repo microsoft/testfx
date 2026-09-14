@@ -2,10 +2,10 @@
   <PropertyGroup>
     <TestingPlatformBrowserEnabled Condition=" '$(TestingPlatformBrowserEnabled)' == '' AND $(RuntimeIdentifier.StartsWith('browser-')) ">true</TestingPlatformBrowserEnabled>
     <_TestingPlatformBrowserAssetsDirectory>$(MSBuildThisFileDirectory)assets\</_TestingPlatformBrowserAssetsDirectory>
-    <WasmMainJSPath Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(WasmMainJSPath)' == '' ">$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js</WasmMainJSPath>
+    <WasmMainJSPath Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(TestingPlatformBrowserGenerateHostAssets)' == 'true' AND '$(WasmMainJSPath)' == '' ">$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js</WasmMainJSPath>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' ">
+  <ItemGroup Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(TestingPlatformBrowserGenerateHostAssets)' == 'true' ">
     <WasmExtraFilesToDeploy Include="$(_TestingPlatformBrowserAssetsDirectory)index.html">
       <TargetPath>index.html</TargetPath>
     </WasmExtraFilesToDeploy>

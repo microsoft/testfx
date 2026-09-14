@@ -3,6 +3,7 @@
     <TestingPlatformBrowserStartupTimeoutSeconds Condition=" '$(TestingPlatformBrowserStartupTimeoutSeconds)' == '' ">60</TestingPlatformBrowserStartupTimeoutSeconds>
     <TestingPlatformBrowserCompletionTimeoutSeconds Condition=" '$(TestingPlatformBrowserCompletionTimeoutSeconds)' == '' ">600</TestingPlatformBrowserCompletionTimeoutSeconds>
     <TestingPlatformBrowserUrlPath Condition=" '$(TestingPlatformBrowserUrlPath)' == '' ">/</TestingPlatformBrowserUrlPath>
+    <TestingPlatformBrowserGenerateHostAssets Condition=" '$(TestingPlatformBrowserGenerateHostAssets)' == '' ">true</TestingPlatformBrowserGenerateHostAssets>
     <TestingPlatformBrowserHostCommand Condition=" '$(TestingPlatformBrowserHostCommand)' == '' AND '$(DotNetHostPath)' != '' ">$(DotNetHostPath)</TestingPlatformBrowserHostCommand>
     <TestingPlatformBrowserHostCommand Condition=" '$(TestingPlatformBrowserHostCommand)' == '' ">dotnet</TestingPlatformBrowserHostCommand>
     <TestingPlatformBrowserHostWorkingDirectory Condition=" '$(TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(MSBuildProjectDirectory)</TestingPlatformBrowserHostWorkingDirectory>
