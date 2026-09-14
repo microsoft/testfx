@@ -11,7 +11,7 @@ public sealed class BoundedUtf8LineReaderTests
     // BoundedUtf8LineReader is linked into each report-engine assembly, so resolve the
     // CtrfReport copy through reflection to avoid an ambiguous type reference.
     // The type and member names below cannot be expressed with nameof(...) because the
-    // production types are internal to (and inaccessible from) this test project.
+    // same fully qualified internal type exists in multiple referenced assemblies.
     private static readonly Type ReaderType =
         typeof(CtrfReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.BoundedUtf8LineReader")
         ?? throw new InvalidOperationException("Could not find type BoundedUtf8LineReader in the Ctrf report engine assembly.");
@@ -107,6 +107,17 @@ public sealed class BoundedUtf8LineReaderTests
     }
 
     [TestMethod]
+    public void ReadLine_CarriageReturnLineFeedAtExactCharBudget_ReturnsLine()
+    {
+        object reader = CreateReaderFromText("abcd\r\n", maxBytes: 6, maxLineBytes: 5, maxLineChars: 4);
+
+        (string result, string? line) = ReadLine(reader);
+
+        Assert.AreEqual(LineResultName, result);
+        Assert.AreEqual("abcd", line);
+    }
+
+    [TestMethod]
     public void ReadLine_LoneCarriageReturnNotFollowedByLineFeed_IsKeptAsPartOfLine()
     {
         object reader = CreateReaderFromText("abc\rdef", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 1024);
@@ -163,7 +174,7 @@ public sealed class BoundedUtf8LineReaderTests
     [TestMethod]
     public void ReadLine_PerLineBytesBudgetExceeded_ReturnsLimitExceeded()
     {
-        object reader = CreateReaderFromText("abcdefghij\n", maxBytes: 1024, maxLineBytes: 4, maxLineChars: 1024);
+        object reader = CreateReaderFromText("abcde\n", maxBytes: 1024, maxLineBytes: 4, maxLineChars: 1024);
 
         (string result, string? line) = ReadLine(reader);
 
@@ -174,7 +185,7 @@ public sealed class BoundedUtf8LineReaderTests
     [TestMethod]
     public void ReadLine_DecodedCharBudgetExceeded_ReturnsLimitExceeded()
     {
-        object reader = CreateReaderFromText("abcdefghij\n", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 4);
+        object reader = CreateReaderFromText("abcde\n", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 4);
 
         (string result, string? line) = ReadLine(reader);
 

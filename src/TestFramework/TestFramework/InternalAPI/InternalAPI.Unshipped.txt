@@ -1,1 +1,4 @@
 #nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnostics(string! message, string? expected, string? actual) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnosticsOnFailure.get -> System.Action<string!, string?, string?>?
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnosticsOnFailure.set -> void

@@ -232,6 +232,32 @@ executable.
 capture the detection job log and report it upstream to `github/gh-aw`. Do not disable threat
 detection or weaken the safe-output gate.
 
+### A no-op run is recorded as `agent_failure`
+
+**Symptom.** The agent job succeeds and calls `noop`, but the detection tracker records
+`warning | agent_failure`. The detection log says both
+`Detection skipped: no agent outputs or patches to analyze` and
+`threat-detect binary not found on PATH`.
+
+**Why.** In gh-aw v0.88.7, an intentional no-op sets `RUN_DETECTION=false`, so the
+`Install threat-detect binary` step is skipped. The unconditional conclude step still checks for
+that binary before honoring the skipped result and reports its expected absence as an agent
+failure. Superseded runs can produce the same warning when their agent job is cancelled before
+emitting an output.
+
+**What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
+on the presence of an actual safe output or patch:
+
+```yaml
+safe-outputs:
+  threat-detection:
+    enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
+```
+
+This preserves detection for every publishable output and patch while skipping the broken
+no-content conclude path. Remove the workaround after gh-aw fixes the external detector's skipped
+conclusion behavior.
+
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
 **Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the

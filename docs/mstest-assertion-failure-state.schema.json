@@ -1,0 +1,371 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/mstest-assertion-failure-state.schema.json",
+  "title": "MSTest assertion failure state",
+  "description": "Diagnostic state captured by MSTest immediately before an assertion exception is thrown.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "captureIndex",
+    "capturedAtUtc",
+    "assertion",
+    "test",
+    "thread",
+    "activeTests",
+    "activeTestsTruncated",
+    "process",
+    "stackFrames"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "description": "Version of this artifact schema. It is incremented for breaking changes."
+    },
+    "captureIndex": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "One-based index of this capture within the test execution attempt."
+    },
+    "capturedAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp at which the assertion state was captured."
+    },
+    "assertion": {
+      "$ref": "#/definitions/assertion"
+    },
+    "test": {
+      "$ref": "#/definitions/test"
+    },
+    "thread": {
+      "$ref": "#/definitions/thread"
+    },
+    "activeTests": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "description": "Snapshot of tests active in the same test-host process. The failing test is listed first.",
+      "items": {
+        "$ref": "#/definitions/activeTest"
+      }
+    },
+    "activeTestsTruncated": {
+      "type": "boolean",
+      "description": "Whether the activeTests snapshot exceeded its 128-entry limit."
+    },
+    "process": {
+      "$ref": "#/definitions/process"
+    },
+    "stackFrames": {
+      "type": "array",
+      "maxItems": 64,
+      "description": "Managed stack frames captured before the assertion exception unwinds the user stack.",
+      "items": {
+        "$ref": "#/definitions/stackFrame"
+      }
+    }
+  },
+  "definitions": {
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "maxLength": 32768,
+          "description": "Formatted assertion failure message."
+        },
+        "expected": {
+          "type": "string",
+          "maxLength": 16384,
+          "description": "Formatted expected value when the assertion supplies one."
+        },
+        "actual": {
+          "type": "string",
+          "maxLength": 16384,
+          "description": "Formatted actual value when the assertion supplies one."
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fullyQualifiedName",
+        "displayName",
+        "attempt",
+        "elapsedMilliseconds"
+      ],
+      "properties": {
+        "fullyQualifiedName": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elapsedMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "thread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "managedThreadId"
+      ],
+      "properties": {
+        "managedThreadId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      }
+    },
+    "activeTest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fullyQualifiedName",
+        "displayName",
+        "attempt",
+        "startedAtUtc",
+        "elapsedMilliseconds",
+        "isFailingTest"
+      ],
+      "properties": {
+        "fullyQualifiedName": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "startedAtUtc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "elapsedMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "isFailingTest": {
+          "type": "boolean"
+        }
+      }
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "processId",
+        "frameworkDescription",
+        "operatingSystemDescription",
+        "processArchitecture",
+        "currentCulture",
+        "currentUICulture",
+        "processorCount",
+        "totalProcessorTimeMilliseconds",
+        "workingSetBytes",
+        "privateMemoryBytes",
+        "managedHeapBytes",
+        "processIoAvailable"
+      ],
+      "properties": {
+        "processId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "processName": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "frameworkDescription": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "operatingSystemDescription": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "processArchitecture": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "currentCulture": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Name of CultureInfo.CurrentCulture on the thread that observed the assertion."
+        },
+        "currentUICulture": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Name of CultureInfo.CurrentUICulture on the thread that observed the assertion."
+        },
+        "processorCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cpuPercentDuringTest": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Process CPU usage since the test started, normalized across logical processors."
+        },
+        "totalProcessorTimeMilliseconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "workingSetBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "privateMemoryBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "managedHeapBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gcMemoryLoadBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gcTotalAvailableMemoryBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "processIoAvailable": {
+          "type": "boolean"
+        },
+        "processIoReadBytesDuringTest": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "processIoWriteBytesDuringTest": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "processIoReadBytesPerSecond": {
+          "type": "number",
+          "minimum": 0
+        },
+        "processIoWriteBytesPerSecond": {
+          "type": "number",
+          "minimum": 0
+        },
+        "outputVolumePath": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Root path of the volume containing the test output directory."
+        },
+        "outputVolumeAvailableFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputVolumeTotalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputVolumeError": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Best-effort error when output-volume capacity could not be read."
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "outputVolumePath",
+            "outputVolumeAvailableFreeBytes",
+            "outputVolumeTotalBytes"
+          ],
+          "not": {
+            "required": [
+              "outputVolumeError"
+            ]
+          }
+        },
+        {
+          "required": [
+            "outputVolumeError"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "outputVolumePath"
+                ]
+              },
+              {
+                "required": [
+                  "outputVolumeAvailableFreeBytes"
+                ]
+              },
+              {
+                "required": [
+                  "outputVolumeTotalBytes"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "stackFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "column",
+        "isFrameworkFrame"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "assembly": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "file": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "isFrameworkFrame": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

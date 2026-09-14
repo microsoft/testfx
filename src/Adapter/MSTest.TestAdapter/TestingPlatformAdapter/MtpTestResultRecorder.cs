@@ -37,6 +37,10 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         _settings = settings;
     }
 
+    void ITestResultRecorder.PrepareResults(UnitTestElement testElement, FrameworkTestResult[] results)
+    {
+    }
+
     public Task RecordStartAsync(UnitTestElement testElement)
     {
         TestNode testNode = MSTestTestNodeConverter.ToInProgressTestNode(testElement, _isTrxEnabled);
