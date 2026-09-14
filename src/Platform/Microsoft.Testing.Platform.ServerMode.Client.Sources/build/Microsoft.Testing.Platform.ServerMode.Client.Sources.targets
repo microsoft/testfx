@@ -6,8 +6,7 @@
     This source-only package injects (as internal source) the MTP server-mode JSON-RPC client. The
     injected files are the exact protocol + serialization source the platform (server) compiles, so
     they expect the same compilation context the platform gives them. This targets file supplies that
-    context to the consuming project. The companion .props establishes the default language version before
-    the consuming project body, so an explicit consumer value can override it.
+    context to the consuming project.
 
     Imported for the DIRECT consumer only (every consumer compiles the source into its own assembly).
     It is a .targets (imported after the consumer's own PropertyGroups) so the values below always
