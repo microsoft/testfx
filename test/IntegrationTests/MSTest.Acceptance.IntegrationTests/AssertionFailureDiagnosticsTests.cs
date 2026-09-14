@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -13,6 +15,54 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class AssertionFailureDiagnosticsTests : AcceptanceTestBase<AssertionFailureDiagnosticsTests.TestAssetFixture>
 {
+    private static readonly JsonSerializerOptions IndentedJsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = true,
+    };
+
+    private static readonly Regex ArtifactShapeRegex = new(
+        """
+        \A\{
+          "schemaVersion": 1,
+          "captureIndex": 1,
+          "capturedAtUtc": "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}\+00:00",
+          "assertion": \{
+            "message": "(?:\\.|[^"\\])*",
+            "expected": "42",
+            "actual": "41"
+          \},
+          "test": \{
+            "fullyQualifiedName": "AssertionFailureDiagnosticsAsset\.AssertionFailureTests\.FailingAssertion",
+            "displayName": "FailingAssertion",
+            "attempt": 1,
+            "elapsedMilliseconds": (?:0|[1-9]\d*)(?:\.\d+)?(?:[Ee][+-]?\d+)?
+          \},
+          "thread": \{
+            "managedThreadId": [1-9]\d*(?:,
+            "name": "(?:\\.|[^"\\])*")?
+          \},
+          "activeTests": \[
+            \{
+              "fullyQualifiedName": "AssertionFailureDiagnosticsAsset\.AssertionFailureTests\.FailingAssertion",
+              "displayName": "FailingAssertion",
+              "attempt": 1,
+              "startedAtUtc": "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}\+00:00",
+              "elapsedMilliseconds": (?:0|[1-9]\d*)(?:\.\d+)?(?:[Ee][+-]?\d+)?,
+              "isFailingTest": true
+            \}
+          \],
+          "activeTestsTruncated": false,
+          "process": \{
+            [\s\S]+?
+          \},
+          "stackFrames": \[
+            [\s\S]+?
+          \]
+        \}\z
+        """.ReplaceLineEndings("\n"),
+        RegexOptions.CultureInvariant);
+
     [TestMethod]
     public async Task AssertionFailureDiagnostics_WhenEnabled_AttachesPersistedArtifactToFailedTest()
     {
@@ -47,19 +97,16 @@ public sealed class AssertionFailureDiagnosticsTests : AcceptanceTestBase<Assert
         string persistedArtifactPath = Path.Combine(testResultsPath, runDeploymentRoot, "In", relativeResultsDirectory, normalizedResultFilePath);
         Assert.IsTrue(File.Exists(persistedArtifactPath), $"Expected persisted diagnostics artifact at '{persistedArtifactPath}'.");
 
-        using var artifact = JsonDocument.Parse(File.ReadAllText(persistedArtifactPath));
+        string artifactJson = File.ReadAllText(persistedArtifactPath);
+        using var artifact = JsonDocument.Parse(artifactJson);
         JsonElement root = artifact.RootElement;
-        Assert.AreEqual(1, root.GetProperty("schemaVersion").GetInt32());
-
-        JsonElement assertion = root.GetProperty("assertion");
-        Assert.AreEqual("42", assertion.GetProperty("expected").GetString());
-        Assert.AreEqual("41", assertion.GetProperty("actual").GetString());
+        string formattedArtifact = JsonSerializer.Serialize(root, IndentedJsonOptions).ReplaceLineEndings("\n");
+        Assert.MatchesRegex(
+            ArtifactShapeRegex,
+            formattedArtifact,
+            $"Unexpected assertion failure artifact shape:{Environment.NewLine}{formattedArtifact}");
 
         const string FullyQualifiedTestName = "AssertionFailureDiagnosticsAsset.AssertionFailureTests.FailingAssertion";
-        JsonElement test = root.GetProperty("test");
-        Assert.AreEqual(FullyQualifiedTestName, test.GetProperty("fullyQualifiedName").GetString());
-        Assert.AreEqual("FailingAssertion", test.GetProperty("displayName").GetString());
-
         JsonElement[] activeTests = [.. root.GetProperty("activeTests").EnumerateArray()];
         Assert.IsTrue(
             activeTests.Any(activeTest =>
