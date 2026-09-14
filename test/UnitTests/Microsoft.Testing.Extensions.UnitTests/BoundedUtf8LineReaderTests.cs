@@ -163,7 +163,7 @@ public sealed class BoundedUtf8LineReaderTests
     [TestMethod]
     public void ReadLine_PerLineBytesBudgetExceeded_ReturnsLimitExceeded()
     {
-        object reader = CreateReaderFromText("abcdefghij\n", maxBytes: 1024, maxLineBytes: 4, maxLineChars: 1024);
+        object reader = CreateReaderFromText("abcde\n", maxBytes: 1024, maxLineBytes: 4, maxLineChars: 1024);
 
         (string result, string? line) = ReadLine(reader);
 
@@ -174,7 +174,7 @@ public sealed class BoundedUtf8LineReaderTests
     [TestMethod]
     public void ReadLine_DecodedCharBudgetExceeded_ReturnsLimitExceeded()
     {
-        object reader = CreateReaderFromText("abcdefghij\n", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 4);
+        object reader = CreateReaderFromText("abcde\n", maxBytes: 1024, maxLineBytes: 1024, maxLineChars: 4);
 
         (string result, string? line) = ReadLine(reader);
 
