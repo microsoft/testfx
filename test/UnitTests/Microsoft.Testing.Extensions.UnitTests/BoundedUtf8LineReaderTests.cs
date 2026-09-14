@@ -18,6 +18,7 @@ public sealed class BoundedUtf8LineReaderTests
         typeof(CtrfReportEngine).Assembly.GetType("Microsoft.Testing.Extensions.BoundedLineReadResult")
         ?? throw new InvalidOperationException("Could not find type BoundedLineReadResult in the Ctrf report engine assembly.");
 
+    // Constructor signature: BoundedUtf8LineReader(Stream stream, long maxBytes, int maxLineBytes, int maxLineChars).
     private static readonly ConstructorInfo Constructor =
         ReaderType.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, [typeof(Stream), typeof(long), typeof(int), typeof(int)], null)
         ?? throw new InvalidOperationException("Could not resolve BoundedUtf8LineReader constructor.");
