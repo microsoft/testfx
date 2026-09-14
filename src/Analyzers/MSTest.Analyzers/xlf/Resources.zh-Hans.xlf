@@ -855,6 +855,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">首选 'TestMethod' 而不是 'DataTestMethod'</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeDescription">
+        <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
+        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeMessageFormat">
+        <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
+        <target state="new">{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</target>
+        <note>{0} is the attribute name and {1} is the test method name.</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeTitle">
+        <source>Remove redundant test method attribute</source>
+        <target state="new">Remove redundant test method attribute</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
         <target state="translated">将测试方法的 "DisplayName" 设置为与方法名称相同的值是多余的，因为默认情况下，方法名称会用作显示名称。可以删除多余的 "DisplayName"，这不会更改测试报告方式。</target>

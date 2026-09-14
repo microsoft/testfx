@@ -117,6 +117,11 @@
         <target state="translated">'DynamicDataSourceType' パラメーターを削除して、既定の 'AutoDetect' を使用します</target>
         <note>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</note>
       </trans-unit>
+      <trans-unit id="RemoveRedundantTestMethodAttributeFix">
+        <source>Remove redundant attribute</source>
+        <target state="new">Remove redundant attribute</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
         <source>Remove redundant 'DisplayName'</source>
         <target state="translated">冗長な 'DisplayName' の削除</target>
