@@ -21,6 +21,7 @@ internal partial class TestExecutionManager
             return;
         }
 
+        testResultRecorder.PrepareResults(test, unitTestResults);
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();

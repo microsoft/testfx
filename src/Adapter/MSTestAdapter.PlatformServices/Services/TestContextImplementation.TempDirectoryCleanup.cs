@@ -94,10 +94,10 @@ internal sealed partial class TestContextImplementation
         }
 
         // If the test registered a result file (via AddResultFile) that lives inside the temp
-        // directory, that file is referenced as a result attachment and is collected by the test
-        // host *after* this context is disposed. Deleting the directory now would leave the
-        // attachment pointing at a missing file, so retain it in that case.
-        if (_hasResultFileUnderTestTempDirectory)
+        // directory, or an earlier retry attached assertion diagnostics there, that file is
+        // collected by the test host *after* this context is disposed. Deleting the directory now
+        // would leave the attachment pointing at a missing file, so retain it in that case.
+        if (_hasResultFileUnderTestTempDirectory || Volatile.Read(ref _retainAssertionFailureDiagnosticsDirectory) != 0)
         {
             return true;
         }

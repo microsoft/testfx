@@ -54,6 +54,52 @@ entry to the `schemas` array in
 SchemaStore also runs the schema through its own test suite, so keep the file valid draft-07 and
 make sure the sample `testconfig.json` files in the repo continue to validate.
 
+### Assertion failure diagnostics
+
+Set `mstest:execution:captureAssertionFailureDiagnostics` to `true` to attach a bounded JSON
+diagnostic artifact to a failed test for each of its first three assertion failures. Each artifact
+records the assertion message and comparison values, managed stack frames, other tests running
+concurrently in the same test host, runtime and operating-system details, current cultures, test-host
+CPU and memory measurements, process I/O where the operating system exposes it, and free/total space
+for the result volume. On Windows, process I/O includes file, pipe, console, network, and device
+transfers; on Linux it uses `/proc/self/io` `rchar`/`wchar`, so these values are intentionally labeled
+as process I/O rather than disk-only I/O. The report contract and SchemaStore registration entry are
+documented in [`mstest-assertion-failure-state.schema.md`](./mstest-assertion-failure-state.schema.md).
+
+```json
+{
+  "mstest": {
+    "execution": {
+      "captureAssertionFailureDiagnostics": true
+    }
+  }
+}
+```
+
+The equivalent legacy `.runsettings` entry is:
+
+```xml
+<RunSettings>
+  <MSTest>
+    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+  </MSTest>
+</RunSettings>
+```
+
+Capture is disabled by default. A snapshot created for an assertion that the test catches is deleted
+when the test ultimately passes. The artifact can contain source paths, test names, assertion values,
+and process metadata, so CI systems should apply appropriate access and retention controls.
+
+This initial capture uses in-process stack inspection, so it records frame identities and source
+locations but not local-variable values. The assertion hook runs before stack unwinding and is the
+integration point for a future out-of-process debugger provider that can add bounded locals and
+object expansion. Capture is currently skipped on UWP, WinUI, browser/WASI, and when runtime code
+generation is unavailable, such as NativeAOT.
+
+Assertions raised from work queued without flowing `ExecutionContext` are not captured because
+neither the active diagnostic scope nor `TestContext.Current` can be attributed safely on that
+worker.
+
 ## How versioning works
 
 There are two layers of versioning to keep in mind:

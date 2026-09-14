@@ -226,6 +226,8 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         clone.Context.TestRunCount = Context.TestRunCount;
 
 #if !WINDOWS_UWP && !WIN_UI
+        clone._assertionFailureCaptureBudget = _assertionFailureCaptureBudget;
+
         // A folded data-driven iteration IS an executing test (it is passed testMethod: null only
         // because the identifying labels are already in the property bag), so it must support the
         // per-test temporary directory just like the unfolded path where each row gets its own

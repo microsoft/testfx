@@ -186,6 +186,37 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
     }
 
+    public void CaptureAssertionFailureDiagnosticsShouldBeFalseByDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.CaptureAssertionFailureDiagnostics.Should().BeFalse();
+    }
+
+    public void CaptureAssertionFailureDiagnosticsShouldBeConsumedFromRunSettingsWhenSpecified()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.CaptureAssertionFailureDiagnostics.Should().BeTrue();
+    }
+
     public void CaptureDebugTracesShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingsXml =
@@ -1335,6 +1366,7 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:orderTestsByNameInClass", "true" },
             { "mstest:execution:randomizeTestOrder", "true" },
             { "mstest:execution:randomTestOrderSeed", "-12345" },
+            { "mstest:execution:captureAssertionFailureDiagnostics", "true" },
             { "mstest:output:captureTrace", "true" },
         };
 
@@ -1351,6 +1383,7 @@ public class MSTestSettingsTests : TestContainer
         settings.OrderTestsByNameInClass.Should().BeTrue();
         settings.RandomizeTestOrder.Should().BeTrue();
         settings.RandomTestOrderSeed.Should().Be(-12345);
+        settings.CaptureAssertionFailureDiagnostics.Should().BeTrue();
         settings.CaptureDebugTraces.Should().BeTrue();
         settings.CooperativeCancellationTimeout.Should().BeTrue();
         settings.MapInconclusiveToFailed.Should().BeTrue();
