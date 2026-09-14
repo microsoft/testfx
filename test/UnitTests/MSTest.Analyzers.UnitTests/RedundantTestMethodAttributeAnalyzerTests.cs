@@ -23,7 +23,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             [SupportedOSPlatform("windows")]
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:OSCondition(OperatingSystems.Windows)|}]
@@ -40,7 +40,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             [SupportedOSPlatform("windows")]
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -63,7 +63,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:OSCondition(OperatingSystems.Windows | OperatingSystems.Linux)|}]
@@ -78,7 +78,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -101,7 +101,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:OSCondition(ConditionMode.Exclude, OperatingSystems.Linux)|}]
@@ -116,7 +116,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -129,6 +129,45 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("[OSCondition]", "TestMethod"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenNonInheritedClassAttributesCanBeBypassedByDerivedTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            [CICondition(ConditionMode.Exclude)]
+            [Ignore("Class reason")]
+            [Retry(3)]
+            [DependsOn(nameof(Setup))]
+            public class BaseTestClass
+            {
+                [TestMethod]
+                public void Setup()
+                {
+                }
+
+                [TestMethod]
+                [OSCondition(OperatingSystems.Windows)]
+                [CICondition(ConditionMode.Exclude)]
+                [Ignore("Class reason")]
+                [Retry(3)]
+                [DependsOn(nameof(Setup))]
+                public void TestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            public class DerivedTestClass : BaseTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -181,7 +220,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows, IgnoreMessage = "")]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [OSCondition(OperatingSystems.Windows | OperatingSystems.Linux, IgnoreMessage = "Method reason")]
@@ -202,7 +241,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows, IgnoreMessage = "")]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:OSCondition(OperatingSystems.Windows | OperatingSystems.Linux, IgnoreMessage = "")|}]
@@ -217,7 +256,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows, IgnoreMessage = "")]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -260,7 +299,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod, {|#0:OSCondition(OperatingSystems.Windows)|}]
                 public void TestMethod()
@@ -274,7 +313,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [OSCondition(OperatingSystems.Windows)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -298,7 +337,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [ArchitectureCondition(TestArchitectures.X64)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:ArchitectureCondition(TestArchitectures.X64 | TestArchitectures.Arm64)|}]
@@ -313,7 +352,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [ArchitectureCondition(TestArchitectures.X64)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -348,6 +387,32 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenArchitectureConditionCanBeBypassedByDerivedTestClass_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [ArchitectureCondition(TestArchitectures.X64)]
+            public class BaseTestClass
+            {
+                [TestMethod]
+                [ArchitectureCondition(TestArchitectures.X64)]
+                public void TestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            public class DerivedTestClass : BaseTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 #endif
 
     [TestMethod]
@@ -358,7 +423,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [CICondition(ConditionMode.Exclude)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:CICondition(ConditionMode.Exclude)|}]
@@ -373,7 +438,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [CICondition(ConditionMode.Exclude)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -455,7 +520,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [Retry(3, MillisecondsDelayBetweenRetries = 100, BackoffType = DelayBackoffType.Exponential)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:Retry(3, BackoffType = DelayBackoffType.Exponential, MillisecondsDelayBetweenRetries = 100)|}]
@@ -470,7 +535,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [Retry(3, MillisecondsDelayBetweenRetries = 100, BackoffType = DelayBackoffType.Exponential)]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -573,7 +638,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [Ignore("Class reason")]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 [{|#0:Ignore("Method reason")|}]
@@ -588,7 +653,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [Ignore("Class reason")]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void TestMethod()
@@ -767,7 +832,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [DependsOn(nameof(Setup))]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void Setup()
@@ -787,7 +852,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             [TestClass]
             [DependsOn(nameof(Setup))]
-            public class MyTestClass
+            public sealed class MyTestClass
             {
                 [TestMethod]
                 public void Setup()
@@ -909,7 +974,7 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
 
             <TestClass>
             <OSCondition(OperatingSystems.Windows)>
-            Public Class MyTestClass
+            Public NotInheritable Class MyTestClass
                 <TestMethod>
                 <{|#0:OSCondition(OperatingSystems.Windows)|}>
                 Public Sub TestMethod()

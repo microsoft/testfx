@@ -129,30 +129,36 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
         KnownAttributeSymbols symbols)
     {
         INamedTypeSymbol? attributeClass = methodAttribute.AttributeClass;
+        bool declaringClassIsSealed = methodSymbol.ContainingType.IsSealed;
         return attributeClass switch
         {
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.OSCondition)
-                => IsFlagConditionRedundant(
+                => declaringClassIsSealed
+                && IsFlagConditionRedundant(
                 methodAttribute,
                 FindAttribute(classAttributes, symbols.OSCondition),
                 AllOperatingSystems,
                 excludeAllowsUnknownValues: true),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.ArchitectureCondition)
-                => IsFlagConditionRedundant(
+                => declaringClassIsSealed
+                && IsFlagConditionRedundant(
                 methodAttribute,
                 FindAttribute(classAttributes, symbols.ArchitectureCondition),
                 AllArchitectures,
                 excludeAllowsUnknownValues: false),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.CICondition)
-                => IsCIConditionRedundant(methodAttribute, FindAttribute(classAttributes, symbols.CICondition)),
+                => declaringClassIsSealed
+                && IsCIConditionRedundant(methodAttribute, FindAttribute(classAttributes, symbols.CICondition)),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.DoNotParallelize)
                 => FindAttribute(inheritedClassAttributes, symbols.DoNotParallelize) is not null,
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.ResourceLock)
                 => IsResourceLockRedundant(methodAttribute, inheritedClassAttributes, symbols.ResourceLock),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.Retry)
-                => IsRetryRedundant(methodAttribute, FindAttribute(classAttributes, symbols.Retry)),
+                => declaringClassIsSealed
+                && IsRetryRedundant(methodAttribute, FindAttribute(classAttributes, symbols.Retry)),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.Ignore)
-                => IsIgnoreRedundant(methodAttribute, FindAttribute(classAttributes, symbols.Ignore)),
+                => declaringClassIsSealed
+                && IsIgnoreRedundant(methodAttribute, FindAttribute(classAttributes, symbols.Ignore)),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.TestCategory)
                 => HasEquivalentAttribute(methodAttribute, inheritedClassAttributes, symbols.TestCategory),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.TestProperty)
@@ -160,7 +166,8 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.DeploymentItem)
                 => IsDeploymentItemRedundant(methodAttribute, inheritedClassAttributes, symbols.DeploymentItem),
             _ when SymbolEqualityComparer.Default.Equals(attributeClass, symbols.DependsOn)
-                => IsDependsOnRedundant(methodAttribute, classAttributes, methodSymbol, symbols.DependsOn),
+                => declaringClassIsSealed
+                && IsDependsOnRedundant(methodAttribute, classAttributes, methodSymbol, symbols.DependsOn),
             _ => false,
         };
     }
