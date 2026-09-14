@@ -11,13 +11,29 @@
     </WasmExtraFilesToDeploy>
   </ItemGroup>
 
-  <Target Name="_ConfigureTestingPlatformBrowserRun"
+  <Target Name="_CaptureTestingPlatformBrowserHost"
           AfterTargets="ComputeRunArguments"
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND $(RuntimeIdentifier.StartsWith('browser-')) ">
+    <PropertyGroup>
+      <_TestingPlatformBrowserComputedHostCommand>$(RunCommand)</_TestingPlatformBrowserComputedHostCommand>
+      <_TestingPlatformBrowserComputedHostArguments>$(RunArguments)</_TestingPlatformBrowserComputedHostArguments>
+      <_TestingPlatformBrowserComputedHostWorkingDirectory>$(RunWorkingDirectory)</_TestingPlatformBrowserComputedHostWorkingDirectory>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_ConfigureTestingPlatformBrowserRun"
+          AfterTargets="_CaptureTestingPlatformBrowserHost"
           Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND $(RuntimeIdentifier.StartsWith('browser-')) ">
     <PropertyGroup>
       <_TestingPlatformBrowserLauncher>$(MSBuildThisFileDirectory)..\tools\net8.0\any\Microsoft.Testing.Platform.Browser.dll</_TestingPlatformBrowserLauncher>
       <_TestingPlatformBrowserLauncherConfiguration>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Microsoft.Testing.Platform.Browser.launch'))</_TestingPlatformBrowserLauncherConfiguration>
-      <TestingPlatformBrowserHostArguments Condition=" '$(TestingPlatformBrowserHostArguments)' == '' ">run --no-build --configuration &quot;$(Configuration)&quot; --framework &quot;$(TargetFramework)&quot; --runtime &quot;$(RuntimeIdentifier)&quot; --project &quot;$(MSBuildProjectFullPath)&quot; -p:TestingPlatformBrowserEnabled=false -- --urls http://127.0.0.1:0</TestingPlatformBrowserHostArguments>
+      <_TestingPlatformBrowserHostCommand Condition=" '$(TestingPlatformBrowserHostCommand)' != '' ">$(TestingPlatformBrowserHostCommand)</_TestingPlatformBrowserHostCommand>
+      <_TestingPlatformBrowserHostCommand Condition=" '$(_TestingPlatformBrowserHostCommand)' == '' ">$(_TestingPlatformBrowserComputedHostCommand)</_TestingPlatformBrowserHostCommand>
+      <_TestingPlatformBrowserHostArguments Condition=" '$(TestingPlatformBrowserHostArguments)' != '' ">$(TestingPlatformBrowserHostArguments)</_TestingPlatformBrowserHostArguments>
+      <_TestingPlatformBrowserHostArguments Condition=" '$(TestingPlatformBrowserHostArguments)' == '' ">$(_TestingPlatformBrowserComputedHostArguments)</_TestingPlatformBrowserHostArguments>
+      <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(TestingPlatformBrowserHostWorkingDirectory)' != '' ">$(TestingPlatformBrowserHostWorkingDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
+      <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(_TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(_TestingPlatformBrowserComputedHostWorkingDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
+      <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(_TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(MSBuildProjectDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
 
       <RunCommand Condition=" '$(DotNetHostPath)' != '' ">$(DotNetHostPath)</RunCommand>
       <RunCommand Condition=" '$(DotNetHostPath)' == '' ">dotnet</RunCommand>
@@ -27,17 +43,19 @@
 
     <Error Condition=" !Exists('$(_TestingPlatformBrowserLauncher)') "
            Text="Microsoft.Testing.Platform.Browser launcher was not found at '$(_TestingPlatformBrowserLauncher)'." />
+    <Error Condition=" '$(_TestingPlatformBrowserHostCommand)' == '' "
+           Text="Microsoft.Testing.Platform.Browser could not determine the browser-WASM host command from ComputeRunArguments. Set TestingPlatformBrowserHostCommand explicitly." />
 
     <WriteLinesToFile File="$(_TestingPlatformBrowserLauncherConfiguration)"
-                      Lines="$([MSBuild]::Escape('host-command=$(TestingPlatformBrowserHostCommand)'))"
+                      Lines="$([MSBuild]::Escape('host-command=$(_TestingPlatformBrowserHostCommand)'))"
                       Overwrite="true"
                       Encoding="UTF-8" />
     <WriteLinesToFile File="$(_TestingPlatformBrowserLauncherConfiguration)"
-                      Lines="$([MSBuild]::Escape('host-arguments=$(TestingPlatformBrowserHostArguments)'))"
+                      Lines="$([MSBuild]::Escape('host-arguments=$(_TestingPlatformBrowserHostArguments)'))"
                       Overwrite="false"
                       Encoding="UTF-8" />
     <WriteLinesToFile File="$(_TestingPlatformBrowserLauncherConfiguration)"
-                      Lines="$([MSBuild]::Escape('host-working-directory=$(TestingPlatformBrowserHostWorkingDirectory)'))"
+                      Lines="$([MSBuild]::Escape('host-working-directory=$(_TestingPlatformBrowserHostWorkingDirectory)'))"
                       Overwrite="false"
                       Encoding="UTF-8" />
     <WriteLinesToFile File="$(_TestingPlatformBrowserLauncherConfiguration)"

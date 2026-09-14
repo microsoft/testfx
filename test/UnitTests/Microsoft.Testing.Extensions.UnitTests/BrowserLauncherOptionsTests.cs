@@ -161,6 +161,17 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    public void CommandLineTokenizer_PreservesQuotedEmptyArguments()
+    {
+        string[] arguments = CommandLineTokenizer.Split(
+            "host.dll \"\" --name \"quoted value\" \"\" tail");
+
+        Assert.AreSequenceEqual(
+            new[] { "host.dll", string.Empty, "--name", "quoted value", string.Empty, "tail" },
+            arguments);
+    }
+
+    [TestMethod]
     public void DiagnosticBuffer_RedactsBootstrapSecretsAndBoundsEntries()
     {
         var diagnostics = new DiagnosticBuffer("secret-token", "/dotnettest/private/");

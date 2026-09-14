@@ -4,11 +4,15 @@
 import { dotnet } from './_framework/dotnet.js';
 
 const status = document.querySelector('[role=status]');
-const argumentsFromLauncher = globalThis.__mtpBrowserArguments;
+const browserApi = globalThis.testingPlatformBrowser;
 
-if (!Array.isArray(argumentsFromLauncher)) {
-    throw new Error('Microsoft.Testing.Platform.Browser did not inject the test application arguments.');
+if (browserApi?.contractVersion !== 1
+    || typeof browserApi.getArguments !== 'function'
+    || typeof browserApi.complete !== 'function') {
+    throw new Error('Microsoft.Testing.Platform.Browser did not provide browser API version 1.');
 }
+
+const argumentsFromLauncher = browserApi.getArguments();
 
 globalThis.addEventListener('error', event => {
     console.error(`Unhandled browser error: ${event.message}`);
@@ -18,21 +22,24 @@ globalThis.addEventListener('unhandledrejection', event => {
     console.error(`Unhandled browser rejection: ${String(event.reason)}`);
 });
 
+let exitCode;
+let failure;
 try {
     const { runMain } = await dotnet
         .withApplicationArguments(...argumentsFromLauncher)
         .create();
 
-    const exitCode = await runMain();
-    globalThis.__mtpBrowserResult = { completed: true, exitCode };
+    exitCode = await runMain();
     status.textContent = exitCode === 0 ? 'Passed' : `Failed (exit code ${exitCode})`;
 }
 catch (error) {
-    globalThis.__mtpBrowserResult = {
-        completed: true,
-        exitCode: 1,
-        error: error instanceof Error ? error.stack ?? error.message : String(error),
-    };
+    failure = error;
+    exitCode = 1;
+    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
     status.textContent = 'Failed (launcher error)';
-    throw error;
+}
+
+browserApi.complete(exitCode);
+if (failure !== undefined) {
+    throw failure;
 }

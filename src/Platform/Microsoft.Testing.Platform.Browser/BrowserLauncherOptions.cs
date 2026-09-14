@@ -328,6 +328,7 @@ internal static class CommandLineTokenizer
         var arguments = new List<string>();
         var current = new StringBuilder();
         bool inQuotes = false;
+        bool tokenStarted = false;
         int backslashCount = 0;
 
         void FlushBackslashes()
@@ -336,6 +337,7 @@ internal static class CommandLineTokenizer
             {
                 current.Append('\\', backslashCount);
                 backslashCount = 0;
+                tokenStarted = true;
             }
         }
 
@@ -350,6 +352,7 @@ internal static class CommandLineTokenizer
 
             if (character == '"')
             {
+                tokenStarted = true;
                 current.Append('\\', backslashCount / 2);
                 if (backslashCount % 2 == 0)
                 {
@@ -367,15 +370,17 @@ internal static class CommandLineTokenizer
             FlushBackslashes();
             if (char.IsWhiteSpace(character) && !inQuotes)
             {
-                if (current.Length > 0)
+                if (tokenStarted)
                 {
                     arguments.Add(current.ToString());
                     current.Clear();
+                    tokenStarted = false;
                 }
 
                 continue;
             }
 
+            tokenStarted = true;
             current.Append(character);
         }
 
@@ -385,7 +390,7 @@ internal static class CommandLineTokenizer
             throw new BrowserLauncherException("A launcher command line contains an unclosed quote.");
         }
 
-        if (current.Length > 0)
+        if (tokenStarted)
         {
             arguments.Add(current.ToString());
         }

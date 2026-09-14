@@ -61,9 +61,9 @@ Useful properties:
 | `TestingPlatformBrowserEnabled` | Enables or disables the package. It defaults to `true` only for `browser-*` runtime identifiers and can be set to `false` in the project or on the command line. |
 | `TestingPlatformBrowserGenerateHostAssets` | Controls whether the package supplies its default `index.html` and JavaScript supervisor. Set to `false` when a UI framework owns the page and integrates the launcher bootstrap/completion contract itself. |
 | `TestingPlatformBrowserExecutable` | Overrides browser discovery with an explicit Chromium-family executable path. |
-| `TestingPlatformBrowserHostCommand` | Command that starts the external browser-WASM host. |
-| `TestingPlatformBrowserHostArguments` | Arguments for the host command. |
-| `TestingPlatformBrowserHostWorkingDirectory` | Working directory for the host process. |
+| `TestingPlatformBrowserHostCommand` | Overrides the command that starts the external browser-WASM host. When unset, the package wraps the `RunCommand` produced by the project's original `ComputeRunArguments`. |
+| `TestingPlatformBrowserHostArguments` | Overrides the arguments for the host command. When unset, the original computed `RunArguments` are preserved, including empty and quoted arguments. |
+| `TestingPlatformBrowserHostWorkingDirectory` | Overrides the working directory for the host process. When unset, the original computed `RunWorkingDirectory` is used. |
 | `TestingPlatformBrowserUrlPath` | Path opened relative to the host URL. Defaults to `/`. |
 | `TestingPlatformBrowserStartupTimeoutSeconds` | Host/browser startup timeout. Defaults to 60 seconds. |
 | `TestingPlatformBrowserCompletionTimeoutSeconds` | Test completion timeout. Defaults to 600 seconds. |
@@ -74,6 +74,66 @@ into the browser runtime through Playwright's launcher-private transport, and re
 launcher, host, and browser diagnostics. It is never added to the browser URL or exposed
 through an unauthenticated DevTools TCP listener. User browser arguments cannot override
 Playwright's debugging transport or isolated profile.
+
+## Browser page API
+
+The launcher installs a versioned API on the top-level page only when its origin exactly
+matches the loopback host origin:
+
+```js
+globalThis.testingPlatformBrowser = {
+    contractVersion: 1,
+    getArguments(): string[],
+    complete(exitCode: number): void
+};
+```
+
+- `contractVersion` is `1`. A framework-owned page must reject versions it does not support.
+- `getArguments()` returns a new frozen array containing the Microsoft Testing Platform
+  arguments prepared by `dotnet test`, including the authenticated HTTP transport
+  bootstrap. The page must pass the array directly to the managed test application; it
+  must not log, persist, put into a URL, or relay those arguments.
+- `complete(exitCode)` reports the managed application's final exit code to the
+  launcher. It is one-shot and must be called exactly once. Failures should be written
+  to `console.error` before completion so the launcher captures their diagnostics. Test discovery and test
+  results do not flow through this method; MTP sends them directly to the SDK HTTP
+  gateway.
+
+The package-owned JavaScript supervisor implements this API contract automatically. A UI
+framework that owns its browser page can set
+`TestingPlatformBrowserGenerateHostAssets=false`, provide its own `WasmMainJSPath` and
+page, then integrate the API:
+
+```js
+import { dotnet } from './_framework/dotnet.js';
+
+const api = globalThis.testingPlatformBrowser;
+if (api?.contractVersion !== 1) {
+    throw new Error('testingPlatformBrowser contract version 1 is required.');
+}
+
+let exitCode;
+let failure;
+try {
+    const { runMain } = await dotnet
+        .withApplicationArguments(...api.getArguments())
+        .create();
+    exitCode = await runMain();
+}
+catch (error) {
+    failure = error;
+    exitCode = 1;
+    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+}
+
+api.complete(exitCode);
+if (failure !== undefined) {
+    throw failure;
+}
+```
+
+The Playwright binding used underneath `complete` is a private launcher transport detail
+and is not part of the browser page API.
 
 The optional package carries Playwright and its Node-based driver so that browser cadence
 can be serviced independently of core Microsoft.Testing.Platform and the .NET SDK. This

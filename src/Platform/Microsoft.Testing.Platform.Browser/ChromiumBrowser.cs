@@ -15,6 +15,8 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
     private readonly IBrowser _browser;
     private readonly IBrowserContext _context;
     private readonly IPage _page;
+    private readonly IAsyncDisposable _completionBinding;
+    private readonly TaskCompletionSource<int> _completion;
     private readonly DiagnosticBuffer _diagnostics;
     private readonly TaskCompletionSource _disconnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -23,12 +25,16 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         IBrowser browser,
         IBrowserContext context,
         IPage page,
+        IAsyncDisposable completionBinding,
+        TaskCompletionSource<int> completion,
         DiagnosticBuffer diagnostics)
     {
         _playwright = playwright;
         _browser = browser;
         _context = context;
         _page = page;
+        _completionBinding = completionBinding;
+        _completion = completion;
         _diagnostics = diagnostics;
         _browser.Disconnected += (_, _) => _disconnected.TrySetResult();
         SubscribeToDiagnostics();
@@ -53,6 +59,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         IPlaywright? playwright = null;
         IBrowser? browser = null;
         IBrowserContext? context = null;
+        IAsyncDisposable? completionBinding = null;
         Task<IBrowser>? browserLaunchTask = null;
 
         try
@@ -81,7 +88,20 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 }).WaitAsync(startupCancellationToken).ConfigureAwait(false);
             IPage page = await context.NewPageAsync()
                 .WaitAsync(startupCancellationToken).ConfigureAwait(false);
-            var result = new ChromiumBrowser(playwright, browser, context, page, diagnostics);
+            var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            string expectedOrigin = browserUri.GetLeftPart(UriPartial.Authority);
+            completionBinding = await page.ExposeBindingAsync<JsonElement>(
+                "__mtpBrowserCompleteV1",
+                (source, message) => CompleteBrowserRun(source, page, expectedOrigin, message, completion))
+                .WaitAsync(startupCancellationToken).ConfigureAwait(false);
+            var result = new ChromiumBrowser(
+                playwright,
+                browser,
+                context,
+                page,
+                completionBinding,
+                completion,
+                diagnostics);
             await result.InitializePageAsync(
                 options.TestApplicationArguments,
                 browserUri,
@@ -95,7 +115,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 browser = await TryObserveBrowserLaunchAsync(browserLaunchTask, diagnostics).ConfigureAwait(false);
             }
 
-            await DisposeBrowserAsync(context, browser, playwright, diagnostics).ConfigureAwait(false);
+            await DisposeBrowserAsync(completionBinding, context, browser, playwright, diagnostics).ConfigureAwait(false);
             if (startupTimeoutCancellationTokenSource.IsCancellationRequested
                 && !cancellationToken.IsCancellationRequested)
             {
@@ -124,66 +144,59 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
 
         try
         {
-            while (true)
-            {
-                if (!_browser.IsConnected)
-                {
-                    throw new BrowserLauncherException(
-                        "The browser disconnected before the test application completed.");
-                }
-
-                string? json = await _page.EvaluateAsync<string?>(
-                    "() => JSON.stringify(globalThis.__mtpBrowserResult ?? null)")
-                    .WaitAsync(linkedCancellationTokenSource.Token).ConfigureAwait(false);
-                if (json is not null and not "null")
-                {
-                    using var result = JsonDocument.Parse(json);
-                    JsonElement root = result.RootElement;
-                    if (root.TryGetProperty("completed", out JsonElement completed)
-                        && completed.GetBoolean())
-                    {
-                        if (root.TryGetProperty("error", out JsonElement error))
-                        {
-                            _diagnostics.Add("browser", error.GetString() ?? error.GetRawText());
-                        }
-
-                        return root.GetProperty("exitCode").GetInt32();
-                    }
-                }
-
-                await Task.Delay(
-                    TimeSpan.FromMilliseconds(100),
-                    linkedCancellationTokenSource.Token).ConfigureAwait(false);
-            }
+            return await _completion.Task
+                .WaitAsync(linkedCancellationTokenSource.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (timeoutCancellationTokenSource.IsCancellationRequested)
         {
             throw new BrowserLauncherException(
                 $"The browser test application did not complete within {timeout.TotalSeconds} seconds.");
         }
-        catch (PlaywrightException ex)
-        {
-            throw new BrowserLauncherException(
-                "Unable to read the browser test application result.",
-                ex);
-        }
     }
 
     public async ValueTask DisposeAsync()
-        => await DisposeBrowserAsync(_context, _browser, _playwright, _diagnostics).ConfigureAwait(false);
+        => await DisposeBrowserAsync(
+            _completionBinding,
+            _context,
+            _browser,
+            _playwright,
+            _diagnostics).ConfigureAwait(false);
 
     private async Task InitializePageAsync(
         IReadOnlyList<string> testApplicationArguments,
         Uri browserUri,
         CancellationToken cancellationToken)
     {
-        string serializedArguments = JsonSerializer.Serialize(testApplicationArguments);
         string expectedOrigin = browserUri.GetLeftPart(UriPartial.Authority);
+        string serializedArguments = JsonSerializer.Serialize(testApplicationArguments);
         string serializedExpectedOrigin = JsonSerializer.Serialize(expectedOrigin);
         await _page.AddInitScriptAsync(
             $$"""
             if (globalThis.self === globalThis.top && globalThis.location.origin === {{serializedExpectedOrigin}}) {
-                Object.defineProperty(globalThis, '__mtpBrowserArguments', { value: Object.freeze({{serializedArguments}}), configurable: false, enumerable: false, writable: false });
+                const argumentsFromLauncher = Object.freeze({{serializedArguments}});
+                const completeTransport = globalThis.__mtpBrowserCompleteV1;
+                let completed = false;
+                const api = Object.freeze({
+                    contractVersion: 1,
+                    getArguments() {
+                        return Object.freeze([...argumentsFromLauncher]);
+                    },
+                    complete(exitCode) {
+                        if (completed) {
+                            throw new Error('testingPlatformBrowser.complete can only be called once.');
+                        }
+                        if (!Number.isInteger(exitCode)) {
+                            throw new TypeError('testingPlatformBrowser.complete requires an integer exitCode.');
+                        }
+
+                        completed = true;
+                        void completeTransport({
+                            contractVersion: 1,
+                            exitCode,
+                        });
+                    },
+                });
+                Object.defineProperty(globalThis, 'testingPlatformBrowser', { value: api, configurable: false, enumerable: true, writable: false });
             }
             """)
             .WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -220,11 +233,24 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
     }
 
     private static async Task DisposeBrowserAsync(
+        IAsyncDisposable? completionBinding,
         IBrowserContext? context,
         IBrowser? browser,
         IPlaywright? playwright,
         DiagnosticBuffer diagnostics)
     {
+        if (completionBinding is not null)
+        {
+            try
+            {
+                await completionBinding.DisposeAsync().AsTask().WaitAsync(CleanupTimeout).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                diagnostics.Add("launcher cleanup", $"Unable to remove the browser completion binding: {ex.Message}");
+            }
+        }
+
         if (context is not null)
         {
             try
@@ -272,6 +298,36 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             diagnostics.Add("launcher cleanup", $"Unable to observe the interrupted browser launch: {ex.Message}");
             return null;
         }
+    }
+
+    private static bool CompleteBrowserRun(
+        BindingSource source,
+        IPage expectedPage,
+        string expectedOrigin,
+        JsonElement message,
+        TaskCompletionSource<int> completion)
+    {
+        _ = ReferenceEquals(source.Page, expectedPage)
+            && source.Frame.ParentFrame is null
+            && Uri.TryCreate(source.Frame.Url, UriKind.Absolute, out Uri? sourceUri)
+            && string.Equals(
+                sourceUri.GetLeftPart(UriPartial.Authority),
+                expectedOrigin,
+                StringComparison.Ordinal)
+                ? true
+                : throw new BrowserLauncherException(
+                    "The browser completion API was called outside the expected top-level loopback origin.");
+
+        return message.ValueKind == JsonValueKind.Object
+            && message.TryGetProperty("contractVersion", out JsonElement contractVersion)
+            && contractVersion.ValueKind == JsonValueKind.Number
+            && contractVersion.GetInt32() == 1
+            && message.TryGetProperty("exitCode", out JsonElement exitCode)
+            && exitCode.ValueKind == JsonValueKind.Number
+            && exitCode.TryGetInt32(out int exitCodeValue)
+                ? completion.TrySetResult(exitCodeValue)
+                : throw new BrowserLauncherException(
+                    "The browser completion API received an invalid version 1 payload.");
     }
 
     private static void EnsurePlaywrightNodeExecutable()

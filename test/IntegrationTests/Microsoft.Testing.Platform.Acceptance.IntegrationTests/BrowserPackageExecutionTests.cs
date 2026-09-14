@@ -29,8 +29,6 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <PublishTrimmed>false</PublishTrimmed>
     <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
 
-    <TestingPlatformBrowserHostCommand>$Node$</TestingPlatformBrowserHostCommand>
-    <TestingPlatformBrowserHostArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot;</TestingPlatformBrowserHostArguments>
     <TestingPlatformBrowserExecutable>$Browser$</TestingPlatformBrowserExecutable>
     <TestingPlatformBrowserAdditionalArguments>--mtp-test-value=a;b</TestingPlatformBrowserAdditionalArguments>
     <TestingPlatformBrowserStartupTimeoutSeconds>60</TestingPlatformBrowserStartupTimeoutSeconds>
@@ -41,6 +39,14 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
   </ItemGroup>
+
+  <Target Name="_ProvideFrameworkBrowserHost" BeforeTargets="_CaptureTestingPlatformBrowserHost">
+    <PropertyGroup>
+      <RunCommand>$Node$</RunCommand>
+      <RunArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot; &quot;&quot; --framework-marker &quot;quoted value&quot;</RunArguments>
+      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+  </Target>
 
 </Project>
 
@@ -63,6 +69,10 @@ import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 
 const root = resolve(process.argv[2]);
+if (process.argv[3] !== '' || process.argv[4] !== '--framework-marker' || process.argv[5] !== 'quoted value') {
+    throw new Error(`The computed host arguments did not round-trip: ${JSON.stringify(process.argv.slice(2))}`);
+}
+
 const launchInfoPath = process.env.TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE;
 if (!launchInfoPath) {
     throw new Error('TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE is required.');
@@ -92,6 +102,129 @@ const server = createServer((request, response) => {
         return;
     }
 
+    response.setHeader('Content-Type', contentTypes.get(extname(file)) ?? 'application/octet-stream');
+    createReadStream(file).pipe(response);
+});
+
+server.listen(0, '127.0.0.1', () => {
+    const address = server.address();
+    const temporaryPath = `${launchInfoPath}.${process.pid}.tmp`;
+    writeFileSync(temporaryPath, JSON.stringify({ version: 1, url: `http://127.0.0.1:${address.port}/` }), { mode: 0o600 });
+    renameSync(temporaryPath, launchInfoPath);
+});
+""";
+
+    private const string FrameworkOwnedPageSourceCode = """
+#file BrowserFrameworkPageTestProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+
+    <TestingPlatformBrowserGenerateHostAssets>false</TestingPlatformBrowserGenerateHostAssets>
+    <TestingPlatformBrowserHostCommand>$Node$</TestingPlatformBrowserHostCommand>
+    <TestingPlatformBrowserHostArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot;</TestingPlatformBrowserHostArguments>
+    <TestingPlatformBrowserHostWorkingDirectory>$(MSBuildProjectDirectory)</TestingPlatformBrowserHostWorkingDirectory>
+    <TestingPlatformBrowserExecutable>$Browser$</TestingPlatformBrowserExecutable>
+    <TestingPlatformBrowserStartupTimeoutSeconds>60</TestingPlatformBrowserStartupTimeoutSeconds>
+    <TestingPlatformBrowserCompletionTimeoutSeconds>120</TestingPlatformBrowserCompletionTimeoutSeconds>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
+    <WasmExtraFilesToDeploy Include="index.html" />
+  </ItemGroup>
+
+</Project>
+
+#file BrowserFrameworkPageTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class BrowserFrameworkPageTests
+{
+    [TestMethod]
+    public void UsesVersionedBrowserApi()
+    {
+        Assert.IsTrue(OperatingSystem.IsBrowser());
+    }
+}
+
+#file index.html
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Framework-owned MTP page</title></head>
+<body><script type="module" src="./main.js"></script></body>
+</html>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+
+const api = globalThis.testingPlatformBrowser;
+if (api?.contractVersion !== 1) {
+    throw new Error('Expected testingPlatformBrowser contract version 1.');
+}
+
+let exitCode;
+let failure;
+try {
+    const { runMain } = await dotnet.withApplicationArguments(...api.getArguments()).create();
+    exitCode = await runMain();
+}
+catch (error) {
+    failure = error;
+    exitCode = 1;
+    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+}
+
+api.complete(exitCode);
+if (failure !== undefined) {
+    throw failure;
+}
+
+#file server.mjs
+import { createReadStream, existsSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { extname, resolve, sep } from 'node:path';
+
+const root = resolve(process.argv[2]);
+const launchInfoPath = process.env.TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE;
+if (!launchInfoPath) {
+    throw new Error('TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE is required.');
+}
+
+const contentTypes = new Map([
+    ['.dat', 'application/octet-stream'],
+    ['.dll', 'application/octet-stream'],
+    ['.html', 'text/html; charset=utf-8'],
+    ['.js', 'text/javascript; charset=utf-8'],
+    ['.json', 'application/json; charset=utf-8'],
+    ['.wasm', 'application/wasm'],
+]);
+
+const server = createServer((request, response) => {
+    const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
+    const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
+    const file = resolve(root, relative);
+    if (file !== root && !file.startsWith(root + sep)) {
+        response.writeHead(403).end();
+        return;
+    }
+    if (!existsSync(file) || !statSync(file).isFile()) {
+        response.writeHead(404).end();
+        return;
+    }
     response.setHeader('Content-Type', contentTypes.get(extname(file)) ?? 'application/octet-stream');
     createReadStream(file).pipe(response);
 });
@@ -198,6 +331,58 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
+    public async Task BrowserPackage_FrameworkOwnedPageUsesVersionedApi()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        string? browser = LocateBrowser();
+        if (browser is null)
+        {
+            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
+            return;
+        }
+
+        string browserPackageVersion = GetBrowserPackageVersion();
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "BrowserFrameworkPageTestProject",
+            FrameworkOwnedPageSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
+                .PatchCodeWithReplace("$Node$", EscapeMsBuildValue(node))
+                .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
+
+        DotnetMuxerResult run = await DotnetCli.RunAsync(
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = run.StandardOutput + run.StandardError;
+        Assert.AreEqual(0, run.ExitCode, run.ToString());
+        Assert.Contains($"({TargetFramework}|wasm) passed [+1/x0/?0]", output);
+
+        string appBundle = Path.Combine(
+            generator.TargetAssetPath,
+            "bin",
+            "Release",
+            TargetFramework,
+            WasmRuntime.BrowserRid,
+            "AppBundle");
+        Assert.IsTrue(File.Exists(Path.Combine(appBundle, "index.html")));
+        Assert.IsTrue(File.Exists(Path.Combine(appBundle, "main.js")));
+        Assert.IsFalse(
+            File.Exists(Path.Combine(appBundle, "Microsoft.Testing.Platform.Browser.main.js")),
+            "TestingPlatformBrowserGenerateHostAssets=false must not deploy the package-owned supervisor.");
+    }
+
+    [TestMethod]
     public async Task BrowserPackage_DesktopTestApplicationIsUnaffected()
     {
         string browserPackageVersion = GetBrowserPackageVersion();
@@ -235,6 +420,16 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-x64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-arm64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/package/cli.js", entries);
+
+        ZipArchiveEntry browserMainEntry = archive.GetEntry(
+            "buildMultiTargeting/assets/Microsoft.Testing.Platform.Browser.main.js")
+            ?? throw new AssertFailedException("The package-owned browser supervisor was not packaged.");
+        using Stream browserMainStream = browserMainEntry.Open();
+        using var browserMainReader = new StreamReader(browserMainStream);
+        string browserMain = browserMainReader.ReadToEnd();
+        Assert.Contains("testingPlatformBrowser", browserMain);
+        Assert.DoesNotContain("__mtpBrowserArguments", browserMain);
+        Assert.DoesNotContain("__mtpBrowserResult", browserMain);
 
         ZipArchiveEntry runtimeConfigEntry = archive.GetEntry(
             "tools/net8.0/any/Microsoft.Testing.Platform.Browser.runtimeconfig.json")
