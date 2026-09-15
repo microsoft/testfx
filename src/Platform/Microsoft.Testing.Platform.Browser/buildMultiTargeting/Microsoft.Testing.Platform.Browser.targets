@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <TestingPlatformBrowserEnabled Condition=" '$(TestingPlatformBrowserEnabled)' == '' AND $(RuntimeIdentifier.StartsWith('browser-')) ">true</TestingPlatformBrowserEnabled>
+    <_TestingPlatformBrowserAssetsDirectory>$(MSBuildThisFileDirectory)assets\</_TestingPlatformBrowserAssetsDirectory>
+    <_TestingPlatformBrowserOwnsHostAssets Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(TestingPlatformBrowserGenerateHostAssets)' == 'true' AND '$(WasmMainJSPath)' == '' ">true</_TestingPlatformBrowserOwnsHostAssets>
+    <WasmMainJSPath Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' ">$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js</WasmMainJSPath>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' ">
+    <WasmExtraFilesToDeploy Include="$(_TestingPlatformBrowserAssetsDirectory)index.html">
+      <TargetPath>index.html</TargetPath>
+    </WasmExtraFilesToDeploy>
+  </ItemGroup>
+
+  <Target Name="_CleanTestingPlatformBrowserRunConfiguration" BeforeTargets="CoreClean">
+    <ItemGroup>
+      <_TestingPlatformBrowserRunConfiguration Include="$(IntermediateOutputPath)Microsoft.Testing.Platform.Browser.launch" />
+      <_TestingPlatformBrowserRunConfiguration Include="$(IntermediateOutputPath)Microsoft.Testing.Platform.Browser.*.launch" />
+    </ItemGroup>
+    <Delete Files="@(_TestingPlatformBrowserRunConfiguration)" />
+  </Target>
+</Project>

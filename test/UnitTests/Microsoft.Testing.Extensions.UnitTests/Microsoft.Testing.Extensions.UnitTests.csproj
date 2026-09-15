@@ -69,6 +69,15 @@
                       Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'">
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserExecutableLocator.cs" Link="Browser\BrowserExecutableLocator.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserLauncherOptions.cs" Link="Browser\BrowserLauncherOptions.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserRunMonitor.cs" Link="Browser\BrowserRunMonitor.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\DiagnosticBuffer.cs" Link="Browser\DiagnosticBuffer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\HostProcess.cs" Link="Browser\HostProcess.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\PlaywrightNodeExecutable.cs" Link="Browser\PlaywrightNodeExecutable.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Moq" />
   </ItemGroup>
