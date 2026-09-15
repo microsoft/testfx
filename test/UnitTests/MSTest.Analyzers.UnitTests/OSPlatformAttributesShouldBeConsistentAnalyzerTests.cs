@@ -945,6 +945,30 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenContainingTypeUnsupportedPlatformHasVersion_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [UnsupportedOSPlatform("windows10.0")]
+            public class OuterClass
+            {
+                [TestClass]
+                public class MyTestClass
+                {
+                    [TestMethod]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenPlatformIsNotSupportedByOSCondition_DiagnosticWithoutFix()
     {
         string code = """
