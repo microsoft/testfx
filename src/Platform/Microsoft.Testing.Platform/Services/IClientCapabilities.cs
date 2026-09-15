@@ -40,13 +40,16 @@ public interface IClientCapabilities
 public static class ClientCapabilitiesExtensions
 {
     /// <summary>
-    /// Gets a value indicating whether the client is stateful, or <see langword="null"/> when the client
-    /// did not declare the capability.
+    /// Gets a value indicating whether the client is stateful. For the platform-provided capability service,
+    /// returns <see langword="null"/> when the client did not declare the capability. Custom implementations
+    /// fall back to <see cref="IClientCapabilities.IsStateful"/>.
     /// </summary>
     /// <param name="capabilities">The client capabilities.</param>
     /// <returns>
     /// <see langword="true"/> for a stateful client, <see langword="false"/> for a client that explicitly declares
-    /// itself stateless, or <see langword="null"/> when the capability was not declared.
+    /// itself stateless, or <see langword="null"/> when the platform-provided capability service indicates that
+    /// the capability was not declared. Custom implementations return their <see cref="IClientCapabilities.IsStateful"/>
+    /// value.
     /// </returns>
     public static bool? GetIsStateful(this IClientCapabilities capabilities)
         => capabilities is ClientCapabilitiesService clientCapabilities
