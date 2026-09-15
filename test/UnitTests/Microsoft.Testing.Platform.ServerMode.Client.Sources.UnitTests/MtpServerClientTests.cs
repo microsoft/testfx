@@ -103,6 +103,169 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public void DeserializeRpcMessage_RequestWithStringId_PreservesRawParamsAndStringId()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["processId"] = 42,
+        };
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "17",
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+            [JsonRpcStrings.Params] = parameters,
+        };
+
+        RpcMessage message = SerializerUtilities.Deserialize<RpcMessage>(properties);
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(message);
+        Assert.AreEqual(17, request.Id);
+        Assert.AreEqual("17", request.StringId);
+        Assert.AreEqual(ClientAttachDebuggerMethod, request.Method);
+        Assert.AreSame(parameters, request.Params);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_NotificationWithoutId_PreservesRawParams()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["message"] = "hello",
+        };
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Method] = JsonRpcMethods.ClientLog,
+            [JsonRpcStrings.Params] = parameters,
+        };
+
+        RpcMessage message = SerializerUtilities.Deserialize<RpcMessage>(properties);
+
+        NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(message);
+        Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+        Assert.AreSame(parameters, notification.Params);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_NullRequestId_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = null,
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains(JsonRpcStrings.Id, exception.Message);
+        Assert.Contains("cannot be null", exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidRequestId_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "not-a-number",
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains("string or an int", exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidHeader_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "1.0",
+            [JsonRpcStrings.Method] = ClientAttachDebuggerMethod,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains(JsonRpcStrings.JsonRpc, exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_ResponseWithStringId_PreservesResultAndStringId()
+    {
+        var result = new Dictionary<string, object?>
+        {
+            ["success"] = true,
+        };
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "23",
+            [JsonRpcStrings.Result] = result,
+        };
+
+        RpcMessage message = SerializerUtilities.Deserialize<RpcMessage>(properties);
+
+        ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(message);
+        Assert.AreEqual(23, response.Id);
+        Assert.AreEqual("23", response.StringId);
+        Assert.AreSame(result, response.Result);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_ResponseWithInvalidId_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+            [JsonRpcStrings.Id] = "not-a-number",
+            [JsonRpcStrings.Result] = null,
+        };
+
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+
+        Assert.Contains("string or an int", exception.Message);
+    }
+
+    [TestMethod]
+    public void DeserializeRpcMessage_UnknownShape_Throws()
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.JsonRpc] = "2.0",
+        };
+
+        Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<RpcMessage>(properties));
+    }
+
+    [TestMethod]
+    public void DeserializeArtifact_MissingOptionalProperties_UsesDefaults()
+    {
+        Artifact artifact = SerializerUtilities.Deserialize<Artifact>(new Dictionary<string, object?>());
+
+        Assert.AreEqual(string.Empty, artifact.Uri);
+        Assert.AreEqual(string.Empty, artifact.Producer);
+        Assert.AreEqual(string.Empty, artifact.Type);
+        Assert.AreEqual(string.Empty, artifact.DisplayName);
+        Assert.IsNull(artifact.Description);
+    }
+
+    [TestMethod]
+    public void DeserializeRunResponse_MissingAttachments_ReturnsEmptyCollection()
+    {
+        RunResponseArgs response = SerializerUtilities.Deserialize<RunResponseArgs>(new Dictionary<string, object?>());
+
+        Assert.IsEmpty(response.Artifacts);
+    }
+
+    [TestMethod]
     public async Task InitializeAsync_LegacyServerWithoutProtocolVersion_Succeeds()
     {
         using FakeMtpServer server = new();
@@ -566,6 +729,39 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task RunTestsAsync_ServerError_ThrowsServerErrorWithCodeAndMessage()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        RequestMessage request = await server.WaitForRequestAsync(
+            JsonRpcMethods.TestingRunTests,
+            DefaultTimeout).ConfigureAwait(false);
+        await server.SendErrorResponseAsync(request, ErrorCodes.InvalidRequest, "The run request is invalid.").ConfigureAwait(false);
+
+        MtpServerErrorException exception = await AssertThrowsAsync<MtpServerErrorException>(
+            () => runTask).ConfigureAwait(false);
+
+        Assert.AreEqual(ErrorCodes.InvalidRequest, exception.ErrorCode);
+        Assert.AreEqual("The run request is invalid.", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task RunTestsAsync_DisposedWhilePending_ThrowsObjectDisposedException()
+    {
+        using FakeMtpServer server = new() { WithholdRunResponse = true };
+        MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpRunResult> runTask = client.RunTestsAsync(TestContext.CancellationToken);
+        _ = await server.WaitForRequestAsync(JsonRpcMethods.TestingRunTests, DefaultTimeout).ConfigureAwait(false);
+
+        client.Dispose();
+
+        await AssertThrowsAsync<ObjectDisposedException>(() => runTask).ConfigureAwait(false);
+    }
+
+    [TestMethod]
     public async Task RunTestsAsync_NumericStringResponseId_DoesNotCompleteNumericRequest()
     {
         using FakeMtpServer server = new() { WithholdRunResponse = true };
@@ -657,6 +853,26 @@ public sealed class MtpServerClientTests
         await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
 
         Assert.AreEqual(ClientAttachDebuggerMethod, observedMethod);
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_HandlerThrows_RespondsWithNullAndLogsWarning()
+    {
+        var log = new StringBuilder();
+        using FakeMtpServer server = new();
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
+        {
+            Logger = new DelegateMtpClientLogger((_, message) => log.AppendLine(message)),
+        });
+        _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        client.ServerRequestHandler = (_, _, _) => throw new InvalidOperationException("Debugger launch failed.");
+
+        ResponseMessage response = await WithTimeoutAsync(
+            server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsNull(response.Result);
+        Assert.Contains(ClientAttachDebuggerMethod, log.ToString());
+        Assert.Contains("Debugger launch failed.", log.ToString());
     }
 
     [TestMethod]
