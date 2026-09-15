@@ -17,8 +17,10 @@ See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4
 * Fix the MSTest.Sdk Native AOT validation warning for the Retry extension incorrectly referring to Hot Reload, by @Evangelink in [#10981](https://github.com/microsoft/testfx/pull/10981)
 * Respect `SatelliteResourceLanguages` when copying MSTest adapter satellite assemblies into Microsoft.Testing.Platform test outputs, by @Evangelink in [#10987](https://github.com/microsoft/testfx/pull/10987)
 * Emit compilable, type-preserving source-generated literals for narrow integral values, enums, control characters, `NaN` and infinities, by @Evangelink in [#10996](https://github.com/microsoft/testfx/pull/10996)
+* Exclude inaccessible and hidden inherited test members when source-generating metadata for a derived test class whose base type is declared in another assembly, by @Evangelink in [#11014](https://github.com/microsoft/testfx/pull/11014)
 * Restore C# 12 source compatibility for array and dual-convertible collection calls across the affected `Assert` overload families, by @Evangelink in [#11038](https://github.com/microsoft/testfx/pull/11038)
 * Make whitespace-only differences visible in bounded `Assert.AreEqual` string comparison previews, by @Evangelink in [#11109](https://github.com/microsoft/testfx/pull/11109)
+* Allow `MSTEST0032` assertions that intentionally compare an enum member converted to its underlying integral type with a numeric literal, by @Evangelink in [#11175](https://github.com/microsoft/testfx/pull/11175)
 
 ## <a name="4.4.0" />[4.4.0] - 2026-09-02
 

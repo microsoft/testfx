@@ -14,11 +14,14 @@ See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4
 * Preserve and safely regenerate response-file arguments when the Retry extension relaunches a test application, including nested response-file diagnostics and command-line redaction, by @Evangelink in [#10963](https://github.com/microsoft/testfx/pull/10963) and [#10997](https://github.com/microsoft/testfx/pull/10997)
 * Honor passive terminal-reporter defaults in directly launched test hosts while preserving explicit command-line overrides, by @Evangelink in [#11010](https://github.com/microsoft/testfx/pull/11010)
 * Report actionable Azure DevOps authentication diagnostics for redirects, unauthorized responses and browser transports instead of surfacing misleading JSON failures, by @Evangelink in [#10999](https://github.com/microsoft/testfx/pull/10999)
+* Preserve the distinction between an undeclared, explicitly stateless and stateful server-mode client capability while retaining compatibility with clients that predate the capability, by @Evangelink in [#11037](https://github.com/microsoft/testfx/pull/11037)
 * Preserve graceful cancellation through the test-host controller and force termination only after the bounded cleanup period expires, by @Evangelink in [#11054](https://github.com/microsoft/testfx/pull/11054)
 * Avoid a timing-sensitive self-wait when disposing an in-process server-mode client from a notification handler, by @Evangelink in [#11074](https://github.com/microsoft/testfx/pull/11074)
 * Avoid connection-reset failures when disposing a named-pipe server with a client connected but no request in flight, by @Evangelink in [#11113](https://github.com/microsoft/testfx/pull/11113)
 * Mark terminal Azure DevOps live-published test results as completed so finished runs report accurate passed, failed and incomplete counts, by @Evangelink in [#11142](https://github.com/microsoft/testfx/pull/11142)
 * Handle test-host controller pipe timeouts and early child-process exits as normal platform failures with actionable diagnostics instead of crashing the parent process, by @Evangelink in [#11152](https://github.com/microsoft/testfx/pull/11152)
+* Preserve nested and aggregate exception details in server-mode test results so IDE clients receive the same failure context as terminal and `dotnet test` output, by @Evangelink in [#11221](https://github.com/microsoft/testfx/pull/11221)
+* Stop `Microsoft.Testing.Platform.ServerMode.Client.Sources` from overriding the target-framework C# language default in consuming projects, by @Evangelink in [#11258](https://github.com/microsoft/testfx/pull/11258)
 
 ## <a name="2.4.0" />[2.4.0] - 2026-09-02
 
