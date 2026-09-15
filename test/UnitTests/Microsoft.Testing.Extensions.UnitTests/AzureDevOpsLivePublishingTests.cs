@@ -1339,6 +1339,123 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsTrue(coordinatedRun.IsOwner);
     }
 
+    [TestMethod]
+    public async Task RunIdCoordinator_RenewLeaseAsync_InheritedRun_DoesNotTouchTheFileSystem()
+    {
+        // An inherited run belongs to an ancestor process, so it has no coordination files of its own.
+        // Renewing a lease for it would write files nobody reads - and, worse, files a later peer could
+        // mistake for a live owner.
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", "results");
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Strict);
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem.Object, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+
+        AzureDevOpsCoordinatedRun inheritedRun = AzureDevOpsRunIdCoordinator.CreateInheritedRun(555, configuration);
+
+        await coordinator.RenewLeaseAsync(inheritedRun, CancellationToken.None);
+
+        Assert.AreEqual(555, inheritedRun.RunId);
+        Assert.IsTrue(inheritedRun.IsInherited);
+        Assert.IsFalse(inheritedRun.IsOwner);
+        Assert.AreEqual(string.Empty, inheritedRun.RunIdFilePath);
+        Assert.AreEqual(string.Empty, inheritedRun.OwnerFilePath);
+        Assert.AreEqual(string.Empty, inheritedRun.ParticipantFilePath);
+        fileSystem.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_InheritedRun_DoesNotCloseTheRunNorTouchTheFileSystem()
+    {
+        // The ancestor that created the run completes it once every participant has exited. Completing it
+        // here would close the run while later attempts are still to come.
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", "results");
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Strict);
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem.Object, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+
+        AzureDevOpsCoordinatedRun inheritedRun = AzureDevOpsRunIdCoordinator.CreateInheritedRun(556, configuration);
+
+        await coordinator.FinalizeRunAsync(
+            inheritedRun,
+            _ => throw new InvalidOperationException("The inherited run must not be completed by this process."),
+            CancellationToken.None);
+
+        fileSystem.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_RunIdFileFromAnotherCollectionOrProject_IsNotJoined()
+    {
+        // Concurrent builds can share a results directory, so a run-id file for the same build id may
+        // belong to a different collection/project. Joining it would publish results into someone else's
+        // run, so the mismatch has to be a hard failure rather than a silent join.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        CollectingLogger logger = new();
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 2, TimeSpan.FromMilliseconds(1));
+        Mock<IEnvironment> joinerEnvironment = CreateEnvironmentMock(processId: int.MaxValue);
+        AzureDevOpsRunIdCoordinator joinerCoordinator = new(new SystemFileSystem(), new FakeTask(), clock, joinerEnvironment.Object, logger, options);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+
+        // An active owner lease keeps this coordinator in the joiner path so it reads the run-id file.
+        string ownerFilePath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        string runIdFilePath = Path.Combine(directory.Path, "azdo-runid.123.json");
+        File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(GetAliveProcessId(), 123, clock.UtcNow.AddHours(1))));
+        File.WriteAllText(runIdFilePath, JsonSerializer.Serialize(new AzureDevOpsRunIdFile(31, 123, "https://dev.azure.com/other-org/", "other-project", clock.UtcNow.AddHours(1))));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => joinerCoordinator.AcquireRunAsync(configuration, _ => Task.FromResult(88), CancellationToken.None));
+
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsLivePublishingRunIdFileMismatch, exception.Message);
+        // The joiner owns neither file, so the real owner's coordination files must survive.
+        Assert.IsTrue(File.Exists(ownerFilePath));
+        Assert.IsTrue(File.Exists(runIdFilePath));
+        Assert.IsFalse(File.Exists(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue}.json")));
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_OwnerLeaseExpiringWhileWaiting_ElectsTheWaitingParticipant()
+    {
+        // The owner lease looks active when the joiner arrives, so the first acquisition attempt loses.
+        // If that owner then dies without ever publishing the run id, the waiting participant must take
+        // over on the second attempt and create the run itself rather than failing the build.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        CollectingLogger logger = new();
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMinutes(10));
+        int delayCalls = 0;
+        FakeTask task = new(_ =>
+        {
+            delayCalls++;
+            clock.UtcNow += TimeSpan.FromSeconds(10);
+        });
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, logger, options);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+
+        // A lease that is still active on arrival but belongs to a process that is not running. It expires
+        // one minute in, at which point the waiting participant may take over.
+        string ownerFilePath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(int.MaxValue, 123, clock.UtcNow.AddMinutes(1))));
+
+        int createRunCalls = 0;
+        AzureDevOpsCoordinatedRun coordinatedRun = await coordinator.AcquireRunAsync(
+            configuration,
+            _ =>
+            {
+                createRunCalls++;
+                return Task.FromResult(64);
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(64, coordinatedRun.RunId);
+        Assert.IsTrue(coordinatedRun.IsOwner);
+        Assert.AreEqual(1, createRunCalls);
+        Assert.IsGreaterThan(0, delayCalls, "The coordinator became owner immediately, so it never exercised the re-election path.");
+        Assert.IsTrue(File.Exists(Path.Combine(directory.Path, "azdo-runid.123.json")));
+    }
+
     private async Task<AzureDevOpsTestResultAttachment> UploadStdoutAttachmentAsync(string stdout)
     {
         using TestDirectory directory = CreateTestDirectory();
