@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics;
+using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions;
@@ -143,7 +144,7 @@ public sealed class EnvironmentVariableProviderTests
     {
         var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
         {
-            ["hangdump"] = [],
+            [HangDumpCommandLineProvider.HangDumpOptionName] = [],
         });
         var provider = new HangDumpEnvironmentVariableProvider(commandLineOptions, new NamedPipeServerEndpoint("pipe"));
 
@@ -164,8 +165,8 @@ public sealed class EnvironmentVariableProviderTests
         var provider = new HangDumpEnvironmentVariableProvider(new TestCommandLineOptions([]), new NamedPipeServerEndpoint("pipe"));
 
         Assert.AreEqual(nameof(HangDumpEnvironmentVariableProvider), provider.Uid);
-        Assert.IsFalse(string.IsNullOrEmpty(provider.DisplayName));
-        Assert.IsFalse(string.IsNullOrEmpty(provider.Description));
+        Assert.AreEqual(ExtensionResources.HangDumpExtensionDisplayName, provider.DisplayName);
+        Assert.AreEqual(ExtensionResources.HangDumpExtensionDescription, provider.Description);
     }
 
     [TestMethod]
@@ -174,8 +175,8 @@ public sealed class EnvironmentVariableProviderTests
         var provider = new TrxEnvironmentVariableProvider(new TestCommandLineOptions([]), new NamedPipeServerEndpoint("pipe"));
 
         Assert.AreEqual(nameof(TrxEnvironmentVariableProvider), provider.Uid);
-        Assert.IsFalse(string.IsNullOrEmpty(provider.DisplayName));
-        Assert.IsFalse(string.IsNullOrEmpty(provider.Description));
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxReportGeneratorDisplayName, provider.DisplayName);
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxReportGeneratorDescription, provider.Description);
     }
 
     private sealed class TestExtension : IExtension
