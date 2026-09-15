@@ -108,6 +108,19 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         }
 
         ImmutableArray<AttributeData> assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+        if (HasVersionedUnsupportedPlatformAttribute(
+                platformAttributes,
+                unsupportedOSPlatformAttributeSymbol)
+            || containingTypeAttributeScopes.Any(scope => HasVersionedUnsupportedPlatformAttribute(
+                scope,
+                unsupportedOSPlatformAttributeSymbol))
+            || HasVersionedUnsupportedPlatformAttribute(
+                assemblyAttributes,
+                unsupportedOSPlatformAttributeSymbol))
+        {
+            return;
+        }
+
         bool hasInheritedPlatformAttributes = containingTypeAttributeScopes.Any(scope => HasPlatformAttributes(
                 scope,
                 supportedOSPlatformAttributeSymbol,
@@ -182,6 +195,24 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         }
 
         return builder?.ToImmutable() ?? ImmutableArray<AttributeData>.Empty;
+    }
+
+    private static bool HasVersionedUnsupportedPlatformAttribute(
+        ImmutableArray<AttributeData> attributes,
+        INamedTypeSymbol unsupportedOSPlatformAttributeSymbol)
+    {
+        foreach (AttributeData attribute in attributes)
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, unsupportedOSPlatformAttributeSymbol)
+                && TryGetPlatformName(attribute, isSupportedAttribute: false, out string? platformName)
+                && TrySplitPlatformNameAndVersion(platformName, out _, out bool hasVersion)
+                && hasVersion)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool TryGetExpectedCondition(
@@ -281,7 +312,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
                 supportedOSPlatformAttributeSymbol);
             if (includeMode != isSupportedAttribute
                 || !TryGetPlatformName(attribute, isSupportedAttribute, out string? platformName)
-                || !TryMapPlatform(platformName, out int operatingSystem))
+                || !TryMapPlatform(platformName, allowVersion: isSupportedAttribute, out int operatingSystem))
             {
                 allowedOperatingSystems = 0;
                 allowsUnknownOperatingSystems = false;
@@ -313,8 +344,15 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
         return platformName is not null;
     }
 
-    private static bool TryMapPlatform(string platformName, out int operatingSystem)
+    private static bool TryMapPlatform(string platformName, bool allowVersion, out int operatingSystem)
     {
+        if (!TrySplitPlatformNameAndVersion(platformName, out platformName, out bool hasVersion)
+            || (hasVersion && !allowVersion))
+        {
+            operatingSystem = 0;
+            return false;
+        }
+
         platformName = string.Equals(platformName, "MACOS", StringComparison.OrdinalIgnoreCase)
             ? "OSX"
             : platformName;
@@ -329,6 +367,34 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzer : DiagnosticA
 
         operatingSystem = 0;
         return false;
+    }
+
+    private static bool TrySplitPlatformNameAndVersion(
+        string platformName,
+        out string platformNameWithoutVersion,
+        out bool hasVersion)
+    {
+        for (int i = 0; i < platformName.Length; i++)
+        {
+            if (char.IsDigit(platformName[i]))
+            {
+                if (i == 0
+                    || !Version.TryParse(platformName.Substring(i), out _))
+                {
+                    platformNameWithoutVersion = platformName;
+                    hasVersion = false;
+                    return false;
+                }
+
+                platformNameWithoutVersion = platformName.Substring(0, i);
+                hasVersion = true;
+                return true;
+            }
+        }
+
+        platformNameWithoutVersion = platformName;
+        hasVersion = false;
+        return true;
     }
 
     private static string CreateOperatingSystemsExpression(int operatingSystems)

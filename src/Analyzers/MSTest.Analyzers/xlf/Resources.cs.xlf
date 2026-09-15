@@ -761,13 +761,13 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
-        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="translated">Atributy 'SupportedOSPlatformAttribute' a 'UnsupportedOSPlatformAttribute' poskytují analýze kompatibility platformy informace, ale neřídí spouštění testů MSTest. Testovací metody a testovací třídy, které používají tyto atributy, by měly také deklarovat ekvivalentní atribut '[OSCondition]', aby se nepodporované testy za běhu přeskočily.</target>
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
+        <target state="needs-review-translation">Atributy 'SupportedOSPlatformAttribute' a 'UnsupportedOSPlatformAttribute' poskytují analýze kompatibility platformy informace, ale neřídí spouštění testů MSTest. Testovací metody a testovací třídy, které používají tyto atributy, by měly také deklarovat ekvivalentní atribut '[OSCondition]', aby se nepodporované testy za běhu přeskočily.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
-        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="translated">Atributy kompatibility platformy v testu {0} nejsou reprezentovány ekvivalentním atributem '[OSCondition]'</target>
+        <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
+        <target state="needs-review-translation">Atributy kompatibility platformy v testu {0} nejsou reprezentovány ekvivalentním atributem '[OSCondition]'</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
