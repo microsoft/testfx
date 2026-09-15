@@ -858,11 +858,11 @@ public sealed class MtpServerClientTests
     [TestMethod]
     public async Task ServerInitiatedRequest_HandlerThrows_RespondsWithNullAndLogsWarning()
     {
-        var log = new StringBuilder();
+        List<(MtpClientLogLevel Level, string Message)> log = [];
         using FakeMtpServer server = new();
         using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
         {
-            Logger = new DelegateMtpClientLogger((_, message) => log.AppendLine(message)),
+            Logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message))),
         });
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
         client.ServerRequestHandler = (_, _, _) => throw new InvalidOperationException("Debugger launch failed.");
@@ -871,8 +871,11 @@ public sealed class MtpServerClientTests
             server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
 
         Assert.IsNull(response.Result);
-        Assert.Contains(ClientAttachDebuggerMethod, log.ToString());
-        Assert.Contains("Debugger launch failed.", log.ToString());
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Warning
+                && entry.Message.Contains(ClientAttachDebuggerMethod, StringComparison.Ordinal)
+                && entry.Message.Contains("Debugger launch failed.", StringComparison.Ordinal),
+            log);
     }
 
     [TestMethod]
