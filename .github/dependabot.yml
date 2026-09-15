@@ -10,6 +10,8 @@ updates:
     ignore:
       # handled by Darc/Maestro flows
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
+      - dependency-name: "Microsoft.CodeCoverage.MSBuild"
+      - dependency-name: "Microsoft.Testing.Extensions.CodeCoverage"
       - dependency-name: "MSTest.TestAdapter"
       - dependency-name: "MSTest.TestFramework"
       - dependency-name: Moq
