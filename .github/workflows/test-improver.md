@@ -92,7 +92,6 @@ safe-outputs:
       Report the verdict only by invoking the pre-provisioned
       `threat_detection_result` command exactly once. Do not print, echo, or
       manually format a `THREAT_DETECTION_RESULT` line.
-      formatting.
     model: detection
     engine:
       id: copilot
