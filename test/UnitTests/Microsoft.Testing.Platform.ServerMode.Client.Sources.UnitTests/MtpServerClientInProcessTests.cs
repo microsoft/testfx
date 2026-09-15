@@ -390,7 +390,9 @@ public sealed class MtpServerClientInProcessTests
         // Teardown runs on the thread pool, so the read-loop AsyncLocal marker the connection uses to detect
         // re-entrant disposal has to survive that hop. If it did not, disposing from a handler would stall
         // for the connection's read-loop shutdown timeout while the read loop sits in this very handler.
-        using var server = new InProcessServerFixture();
+        // Keep the hosted callback's disconnect wait off the thread pool so the elapsed time measures only
+        // that self-wait, not net462 thread-pool continuation latency.
+        using var server = new InProcessServerFixture(waitForDisconnectSynchronously: true);
 
         MtpServerClient client = await LaunchAsync(server);
         _ = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken));
