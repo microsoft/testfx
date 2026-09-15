@@ -324,6 +324,15 @@ jobs:
 
           # --- 2. Scope check: only analyse PRs targeting main / rel/* ---
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          PR_STATE=$(printf '%s' "${PR_JSON}" | jq -r '.state // empty')
+          if [ "${PR_STATE}" != "open" ]; then
+            if [ -z "${PR_STATE}" ]; then
+              echo "::warning::Could not resolve the state of PR #${PR_NUMBER}; skipping rather than analyzing or writing to an uncertain target."
+            else
+              echo "::warning::PR #${PR_NUMBER} is '${PR_STATE}', not open; skipping the obsolete build failure."
+            fi
+            emit_none
+          fi
           BASE_REF=$(printf '%s' "${PR_JSON}" | jq -r '.base.ref // empty')
           case "${BASE_REF}" in
             main|rel/*) echo "PR #${PR_NUMBER} base '${BASE_REF}' is in scope." ;;
@@ -460,8 +469,13 @@ jobs:
           # available. A post-download re-read below independently catches a
           # head that moves while the artifacts are being fetched.
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          CURRENT_STATE=$(printf '%s' "${PR_JSON}" | jq -r '.state // empty')
           CURRENT_HEAD=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
           CURRENT_MERGE=$(printf '%s' "${PR_JSON}" | jq -r '.merge_commit_sha // empty')
+          if [ "${CURRENT_STATE}" != "open" ]; then
+            echo "::warning::PR #${PR_NUMBER} closed while its failed build was being resolved; skipping the obsolete analysis."
+            emit_none
+          fi
           # Fail CLOSED: if either the build's analyzed revision or the current
           # PR head can't be resolved, skip — we must not analyze a possibly
           # stale binlog against the current diff (inline comments have no
@@ -808,8 +822,13 @@ jobs:
           # the analyzed binlog stale relative to the current diff (inline
           # comments carry no commit_id and target the current diff).
           LATEST_PR=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          LATEST_STATE=$(printf '%s' "${LATEST_PR}" | jq -r '.state // empty')
           LATEST_HEAD=$(printf '%s' "${LATEST_PR}" | jq -r '.head.sha // empty')
           LATEST_MERGE=$(printf '%s' "${LATEST_PR}" | jq -r '.merge_commit_sha // empty')
+          if [ "${LATEST_STATE}" != "open" ]; then
+            echo "::warning::PR #${PR_NUMBER} closed during artifact download; skipping the obsolete analysis."
+            emit_none
+          fi
           if [ -z "${LATEST_HEAD}" ] || [ "${LATEST_HEAD}" != "${HEAD_SHA}" ]; then
             echo "::warning::PR #${PR_NUMBER} head changed during artifact download ('${HEAD_SHA}' -> '${LATEST_HEAD}') or could not be re-resolved; skipping to avoid posting stale-build suggestions against the new diff."
             emit_none
