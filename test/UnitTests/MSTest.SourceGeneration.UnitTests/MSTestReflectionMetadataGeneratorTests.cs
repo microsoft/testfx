@@ -1382,10 +1382,16 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             }
             """;
 
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
 
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
         registry.Should().NotContain("((global::DerivedTests)instance!).Hidden();");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
     }
 
     [TestMethod]
@@ -1450,10 +1456,16 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             }
             """;
 
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
 
         registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
         registry.Should().NotContain("PropertyType = typeof(int)");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
     }
 
     [TestMethod]
