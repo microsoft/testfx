@@ -351,6 +351,18 @@ not replacements for — the synced skill's rubric:
   and project-local `[MyTestMethod]`-style classes that derive from
   `TestMethodAttribute`). Treat all of them as test markers — Step 1
   already filtered to test methods using these.
+- **Analyzer tests:** do not treat the test name or its expected diagnostics as
+  the semantic oracle. Inspect the diagnostic descriptor text, code-fix
+  registration and diagnostic properties, source API or annotation semantics,
+  and the target framework or platform's runtime behavior. Classify
+  source-to-target mappings as exact, compatible/coarser, or unrepresentable,
+  and check meaningful polarities and supported target versions. Keep
+  compile-time analysis behavior separate from runtime enforcement.
+- For every `DiagnosticWithoutFix`-style analyzer test, answer: **what safe,
+  concrete manual edit clears this diagnostic while preserving the relevant
+  behavior?** If no such edit exists for the triggering program, flag the
+  expected diagnostic as potentially unactionable instead of accepting the
+  test expectation as proof that the diagnostic is correct.
 - Do **not** flag missing `init` accessors, license headers, or other
   repo-stylistic concerns — those are out of scope for this rubric.
 

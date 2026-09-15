@@ -220,9 +220,24 @@ Apply these additional repository resources when their paths are changed:
   attribution, and safe-output instructions in that file.
 - Agentic workflow Markdown: require strict compilation, regenerated lock files,
   unchanged trusted action pins, and the repository action-pin audit.
-- Analyzer changes: verify diagnostic IDs, severity, messages, code-fix
-  equivalence, generated-code behavior, false-positive risk, and analyzer
-  release tracking.
+- Analyzer changes:
+  - Verify diagnostic IDs, severity, generated-code behavior, false-positive
+    risk, analyzer release tracking, and code-fix registration and properties.
+  - For every mapping from a source API or annotation domain to a target API or
+    runtime domain, classify the mapping as **exact**, **compatible/coarser**, or
+    **unrepresentable**. Check all source-value polarities and supported target
+    versions; do not infer equivalence from one successful case.
+  - Separate compile-time annotation semantics from runtime enforcement. Verify
+    what the analyzer can prove from symbols and metadata independently from
+    what the target framework or platform actually enforces at execution time.
+  - Check descriptor wording against the classification. Use "equivalent" only
+    for exact mappings; describe lossy but behaviorally acceptable mappings as
+    compatible and make any semantic loss explicit.
+  - Every diagnostic without a code fix must have a safe, concrete manual edit
+    that clears the diagnostic while preserving the relevant behavior. If no
+    such edit exists for a valid triggering program, question whether the
+    diagnostic is actionable rather than treating the expected diagnostic as
+    proof of correctness.
 
 ## Finding quality
 
