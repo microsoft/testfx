@@ -39,28 +39,11 @@ internal static class Program
                     runCancellationTokenSource.Token).ConfigureAwait(false);
                 try
                 {
-                    using var completionCancellationTokenSource = new CancellationTokenSource();
-                    Task<int> browserCompletion = browser.WaitForCompletionAsync(
-                        options.CompletionTimeout,
-                        completionCancellationTokenSource.Token);
-                    Task hostExit = host.WaitForExitAsync(completionCancellationTokenSource.Token);
-                    Task browserExit = browser.WaitForExitAsync(completionCancellationTokenSource.Token);
-
-                    Task completed = await Task.WhenAny(browserCompletion, hostExit, browserExit).ConfigureAwait(false);
-                    if (completed == browserCompletion)
-                    {
-                        int exitCode = await browserCompletion.ConfigureAwait(false);
-                        await completionCancellationTokenSource.CancelAsync().ConfigureAwait(false);
-                        return exitCode;
-                    }
-
-                    await completionCancellationTokenSource.CancelAsync().ConfigureAwait(false);
-                    if (completed == hostExit)
-                    {
-                        throw new BrowserLauncherException("The browser host exited before the test application completed.");
-                    }
-
-                    throw new BrowserLauncherException("The browser exited before the test application completed.");
+                    return await BrowserRunMonitor.WaitAsync(
+                        token => browser.WaitForCompletionAsync(options.CompletionTimeout, token),
+                        host.WaitForExitAsync,
+                        browser.WaitForExitAsync,
+                        runCancellationTokenSource.Token).ConfigureAwait(false);
                 }
                 finally
                 {

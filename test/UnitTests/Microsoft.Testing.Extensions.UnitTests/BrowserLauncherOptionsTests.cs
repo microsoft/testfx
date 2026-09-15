@@ -249,6 +249,29 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    public async Task BrowserRunMonitor_CancellationStopsCompletionWaitPromptly()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        var stopwatch = Stopwatch.StartNew();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => BrowserRunMonitor.WaitAsync(
+            async token =>
+            {
+                await Task.Delay(TimeSpan.FromMinutes(10), token);
+                return 0;
+            },
+            token => Task.Delay(TimeSpan.FromMinutes(10), token),
+            token => Task.Delay(TimeSpan.FromMinutes(10), token),
+            cancellationTokenSource.Token));
+
+        stopwatch.Stop();
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(5),
+            stopwatch.Elapsed,
+            "Run cancellation should enter launcher cleanup instead of waiting for the configured completion timeout.");
+    }
+
+    [TestMethod]
     public void DiagnosticBuffer_RedactsBootstrapSecretsAndBoundsEntries()
     {
         var diagnostics = new DiagnosticBuffer("secret-token", "/dotnettest/private/");

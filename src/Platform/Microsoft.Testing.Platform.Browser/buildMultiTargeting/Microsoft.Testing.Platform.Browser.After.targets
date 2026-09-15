@@ -9,8 +9,13 @@
           Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
                       AND $(RuntimeIdentifier.StartsWith('browser-'))
                       AND '$(DotnetTestInvocation)' == 'true' ">
+    <PropertyGroup>
+      <_TestingPlatformBrowserInvocationIdIsValid>$([System.Text.RegularExpressions.Regex]::IsMatch('$(DotnetTestInvocationId)', '^[0-9A-Fa-f]{32}$'))</_TestingPlatformBrowserInvocationIdIsValid>
+    </PropertyGroup>
     <Error Condition=" '$(DotnetTestHttpBootstrapVersion)' != '1' "
            Text="Microsoft.Testing.Platform.Browser requires DotnetTestHttpBootstrapVersion=1 for a dotnet test invocation. The installed .NET SDK did not provide a supported browser HTTP bootstrap contract." />
+    <Error Condition=" '$(_TestingPlatformBrowserInvocationIdIsValid)' != 'True' "
+           Text="Microsoft.Testing.Platform.Browser requires DotnetTestInvocationId to be a 32-character hexadecimal GUID for a dotnet test invocation." />
   </Target>
 
   <Target Name="_CaptureTestingPlatformBrowserHost"
@@ -18,7 +23,8 @@
           Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
                       AND $(RuntimeIdentifier.StartsWith('browser-'))
                       AND '$(DotnetTestInvocation)' == 'true'
-                      AND '$(DotnetTestHttpBootstrapVersion)' == '1' ">
+                      AND '$(DotnetTestHttpBootstrapVersion)' == '1'
+                      AND '$(_TestingPlatformBrowserInvocationIdIsValid)' == 'True' ">
     <PropertyGroup>
       <_TestingPlatformBrowserComputedHostCommand>$(RunCommand)</_TestingPlatformBrowserComputedHostCommand>
       <_TestingPlatformBrowserComputedHostArguments>$(RunArguments)</_TestingPlatformBrowserComputedHostArguments>
@@ -31,10 +37,11 @@
           Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
                       AND $(RuntimeIdentifier.StartsWith('browser-'))
                       AND '$(DotnetTestInvocation)' == 'true'
-                      AND '$(DotnetTestHttpBootstrapVersion)' == '1' ">
+                      AND '$(DotnetTestHttpBootstrapVersion)' == '1'
+                      AND '$(_TestingPlatformBrowserInvocationIdIsValid)' == 'True' ">
     <PropertyGroup>
       <_TestingPlatformBrowserLauncher>$(MSBuildThisFileDirectory)..\tools\net8.0\any\Microsoft.Testing.Platform.Browser.dll</_TestingPlatformBrowserLauncher>
-      <_TestingPlatformBrowserLauncherConfiguration>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Microsoft.Testing.Platform.Browser.launch'))</_TestingPlatformBrowserLauncherConfiguration>
+      <_TestingPlatformBrowserLauncherConfiguration>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Microsoft.Testing.Platform.Browser.$(DotnetTestInvocationId).launch'))</_TestingPlatformBrowserLauncherConfiguration>
       <_TestingPlatformBrowserHostCommand Condition=" '$(TestingPlatformBrowserHostCommand)' != '' ">$(TestingPlatformBrowserHostCommand)</_TestingPlatformBrowserHostCommand>
       <_TestingPlatformBrowserHostCommand Condition=" '$(_TestingPlatformBrowserHostCommand)' == '' ">$(_TestingPlatformBrowserComputedHostCommand)</_TestingPlatformBrowserHostCommand>
       <_TestingPlatformBrowserHostArguments Condition=" '$(TestingPlatformBrowserHostArguments)' != '' ">$(TestingPlatformBrowserHostArguments)</_TestingPlatformBrowserHostArguments>

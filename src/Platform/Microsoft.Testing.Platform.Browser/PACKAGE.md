@@ -61,10 +61,12 @@ dotnet test -- --list-tests
 
 The launcher integration is a preview contract with the .NET SDK. The package wraps
 `ComputeRunArguments` only when the SDK marks that ProjectInstance with both
-`DotnetTestInvocation=true` and `DotnetTestHttpBootstrapVersion=1`. Ordinary `dotnet run`
-and standalone `ComputeRunArguments` queries retain the framework-provided host command.
-An SDK that supplies a missing or unsupported bootstrap version receives an actionable
-MSBuild error instead of silently launching an incompatible browser host.
+`DotnetTestInvocation=true` and `DotnetTestHttpBootstrapVersion=1`, and supplies a unique
+32-character hexadecimal `DotnetTestInvocationId`. The ID isolates launcher configuration
+files when the SDK evaluates the same project concurrently. Ordinary `dotnet run` and
+standalone `ComputeRunArguments` queries retain the framework-provided host command. An SDK
+that supplies a missing or unsupported bootstrap version or invocation ID receives an
+actionable MSBuild error instead of silently launching an incompatible browser host.
 
 Useful properties:
 
@@ -105,6 +107,10 @@ files because the browser virtual file system is not exported to the host yet:
 
 The launcher rejects these before starting the browser and names the unsupported option.
 They can be enabled after a browser artifact sink exports their inputs and outputs.
+
+Cancellation delivered after browser startup is linked to the completion wait. The launcher
+therefore exits that wait immediately and enters bounded browser/host cleanup rather than
+waiting for `TestingPlatformBrowserCompletionTimeoutSeconds`.
 
 ## Browser page API
 

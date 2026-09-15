@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <Target Name="_CleanTestingPlatformBrowserRunConfiguration" BeforeTargets="CoreClean">
-    <Delete Files="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Microsoft.Testing.Platform.Browser.launch'))" />
+    <ItemGroup>
+      <_TestingPlatformBrowserRunConfiguration Include="$(IntermediateOutputPath)Microsoft.Testing.Platform.Browser.launch" />
+      <_TestingPlatformBrowserRunConfiguration Include="$(IntermediateOutputPath)Microsoft.Testing.Platform.Browser.*.launch" />
+    </ItemGroup>
+    <Delete Files="@(_TestingPlatformBrowserRunConfiguration)" />
   </Target>
 </Project>
