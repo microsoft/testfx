@@ -306,19 +306,30 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
             ? value
             : 0;
 
-    private static bool TryGetNamedArgument(AttributeData attribute, string name, out TypedConstant constant)
+    private static bool TryGetNamedArgument(
+        AttributeData attribute,
+        string name,
+        out TypedConstant constant,
+        bool returnLastMatch = false)
     {
+        constant = default;
+        bool found = false;
+
         foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
         {
             if (argument.Key == name)
             {
                 constant = argument.Value;
-                return true;
+                found = true;
+
+                if (!returnLastMatch)
+                {
+                    return true;
+                }
             }
         }
 
-        constant = default;
-        return false;
+        return found;
     }
 
     private static bool IsIgnoreRedundant(AttributeData methodAttribute, AttributeData? classAttribute)
@@ -343,7 +354,7 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
             _ => null,
         };
 
-        if (TryGetNamedArgument(attribute, "IgnoreMessage", out TypedConstant constant))
+        if (TryGetNamedArgument(attribute, "IgnoreMessage", out TypedConstant constant, returnLastMatch: true))
         {
             message = constant.Value as string;
         }
