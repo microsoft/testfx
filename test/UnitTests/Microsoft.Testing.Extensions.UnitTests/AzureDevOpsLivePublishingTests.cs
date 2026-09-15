@@ -1437,13 +1437,15 @@ public sealed class AzureDevOpsLivePublishingTests
         // A lease that is still active on arrival but belongs to a process that is not running. It expires
         // one minute in, at which point the waiting participant may take over.
         string ownerFilePath = Path.Combine(directory.Path, "azdo-runid.123.owner");
-        File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(int.MaxValue, 123, clock.UtcNow.AddMinutes(1))));
+        DateTimeOffset ownerLeaseExpiresAt = clock.UtcNow.AddMinutes(1);
+        File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(int.MaxValue, 123, ownerLeaseExpiresAt)));
 
         int createRunCalls = 0;
         AzureDevOpsCoordinatedRun coordinatedRun = await coordinator.AcquireRunAsync(
             configuration,
             _ =>
             {
+                Assert.IsGreaterThanOrEqualTo(ownerLeaseExpiresAt, clock.UtcNow, "The coordinator created a replacement run before the original owner lease expired.");
                 createRunCalls++;
                 return Task.FromResult(64);
             },
