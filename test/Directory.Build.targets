@@ -101,13 +101,13 @@
         <CoverageAssemblyPattern>$([System.String]::Copy('%(_CodeCoverageProjectReference.CoverageAssemblyName)').Replace('.', '\.'))</CoverageAssemblyPattern>
       </_CodeCoverageProjectReference>
       <_CodeCoverageExcludedSource Include="Packages" Condition=" '$(NuGetPackageRoot)' != '' ">
-        <Pattern>^$(_CodeCoverageNuGetPackagesRootPattern).*</Pattern>
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageNuGetPackagesRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
       </_CodeCoverageExcludedSource>
       <_CodeCoverageExcludedSource Include="Artifacts">
-        <Pattern>^$(_CodeCoverageArtifactsRootPattern).*</Pattern>
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageArtifactsRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
       </_CodeCoverageExcludedSource>
       <_CodeCoverageExcludedSource Include="TestInfrastructure">
-        <Pattern>^$(_CodeCoverageTestInfrastructureRootPattern).*</Pattern>
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageTestInfrastructureRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
       </_CodeCoverageExcludedSource>
     </ItemGroup>
 
@@ -122,7 +122,7 @@
       <_CodeCoverageSettingsLine Include="    &lt;/ModulePaths&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;Sources&gt;" />
       <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource->'        &lt;Source&gt;%(Pattern)&lt;/Source&gt;')" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource->'        &lt;Source&gt;%(XmlPattern)&lt;/Source&gt;')" />
       <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;/Sources&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
