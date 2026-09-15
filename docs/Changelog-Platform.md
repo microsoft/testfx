@@ -19,6 +19,7 @@ See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4
 * Avoid connection-reset failures when disposing a named-pipe server with a client connected but no request in flight, by @Evangelink in [#11113](https://github.com/microsoft/testfx/pull/11113)
 * Mark terminal Azure DevOps live-published test results as completed so finished runs report accurate passed, failed and incomplete counts, by @Evangelink in [#11142](https://github.com/microsoft/testfx/pull/11142)
 * Handle test-host controller pipe timeouts and early child-process exits as normal platform failures with actionable diagnostics instead of crashing the parent process, by @Evangelink in [#11152](https://github.com/microsoft/testfx/pull/11152)
+* Stop `Microsoft.Testing.Platform.ServerMode.Client.Sources` from overriding the target-framework C# language default in consuming projects, by @Evangelink in [#11258](https://github.com/microsoft/testfx/pull/11258)
 
 ## <a name="2.4.0" />[2.4.0] - 2026-09-02
 
