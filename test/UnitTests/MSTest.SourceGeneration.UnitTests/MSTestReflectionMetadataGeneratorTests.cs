@@ -1496,6 +1496,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0004");
         result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+        GetRegistry(result).Should().Contain("AreGeneratedDescriptorsComplete = false");
     }
 
     [TestMethod]
