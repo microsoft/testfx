@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.RedundantTestMethodAttributeAnalyzer,
     MSTest.Analyzers.RedundantTestMethodAttributeFixer>;
@@ -666,6 +668,33 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("[Ignore]", "TestMethod"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassIgnoreHasDuplicateNamedMessages_UsesLastMessage()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Ignore(IgnoreMessage = "Class reason", IgnoreMessage = "")]
+            public sealed class MyTestClass
+            {
+                [TestMethod]
+                [Ignore("Method reason")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            CompilerDiagnostics = CompilerDiagnostics.None,
+        };
+
+        await test.RunAsync();
     }
 
     [TestMethod]
