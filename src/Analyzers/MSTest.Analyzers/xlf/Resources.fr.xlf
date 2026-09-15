@@ -1002,17 +1002,17 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription">
         <source>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</source>
-        <target state="new">MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</target>
+        <target state="translated">MSTest ignore les attributs « [TestClass] » appliqués aux classes abstraites. Les méthodes de test déclarées dans une classe abstraite sont découvertes via les classes de test dérivées concrètes, qui doivent déclarer leur propre attribut « [TestClass] ».</target>
         <note>{Locked="MSTest"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassMessageFormat">
         <source>'[TestClass]' has no effect on abstract class '{0}'</source>
-        <target state="new">'[TestClass]' has no effect on abstract class '{0}'</target>
+        <target state="translated">« [TestClass] » n’a aucun effet sur la classe abstraite « {0} »</target>
         <note>{0} is the class name. {Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassTitle">
         <source>'[TestClass]' should not be applied to abstract classes</source>
-        <target state="new">'[TestClass]' should not be applied to abstract classes</target>
+        <target state="translated">« [TestClass] » ne doit pas être appliqué aux classes abstraites</target>
         <note>{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">

@@ -1002,17 +1002,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription">
         <source>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</source>
-        <target state="new">MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</target>
+        <target state="translated">MSTest는 추상 클래스에 적용된 '[TestClass]' 특성을 무시합니다. 추상 클래스를 통해 선언된 테스트 메서드는 구체적인 파생 테스트 클래스를 통해 검색되며, 이러한 클래스는 자체 '[TestClass]' 특성을 선언해야 합니다.</target>
         <note>{Locked="MSTest"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassMessageFormat">
         <source>'[TestClass]' has no effect on abstract class '{0}'</source>
-        <target state="new">'[TestClass]' has no effect on abstract class '{0}'</target>
+        <target state="translated">'[TestClass]'는 추상 클래스 '{0}'에 아무런 영향을 미치지 않습니다.</target>
         <note>{0} is the class name. {Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassTitle">
         <source>'[TestClass]' should not be applied to abstract classes</source>
-        <target state="new">'[TestClass]' should not be applied to abstract classes</target>
+        <target state="translated">'[TestClass]'는 추상 클래스에는 적용하면 안 됩니다.</target>
         <note>{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
