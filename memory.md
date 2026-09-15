@@ -1,13 +1,25 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-09-14 UTC
+2026-09-15 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-09-14, run 34900124190): **4 (confirmed 0 open `[efficiency-improver]` PRs; verified prior run's `osplatform-analyzer-attribute-precheck` fix landed via maintainer PR #11255 "Short-circuit platform attribute materialization in MSTEST0084", merged 2026-09-14T11:40Z), 2 (exhaustive per-file re-scan of `src/Analyzers/MSTest.Analyzers.CodeFixes/` — all 52 files confirmed architecturally cold-path, CodeFixProviders only, no findings; exhaustive per-file re-scan of the remaining 88 files in `src/Analyzers/MSTest.Analyzers/` not previously exhaustively covered — 0 new findings, confirmed clean; reviewed 3 newly-added analyzer files from recent commits — `RedundantTestMethodAttributeAnalyzer.cs`, `RedundantTestMethodDisplayNameAnalyzer.cs`, `TestClassAttributeShouldNotBeAppliedToAbstractClassAnalyzer.cs` — all bounded per-symbol attribute-list operations, no findings), 5 (searched open efficiency/performance issues — only #8824/#3495 known-stale matched, unchanged since last check, not re-engaged), 7 (September monthly summary #11023 — updated, see Run History)**
-Last run before this: Task 4/2/3/5/7 (2026-09-13, run 34784504445 — fixed `OSPlatformAttributesShouldBeConsistentAnalyzer`, landed as maintainer PR #11255)
-Next run should prioritise: The `src/Analyzers/MSTest.Analyzers` + `.CodeFixes` areas are now both exhaustively confirmed clean (backlog empty for this whole tree) — pivot away from re-scanning analyzers unless new analyzer files land. Task 6 (measurement infrastructure) remains overdue; scope should stay narrow given sibling `[perf-improver]` agent (#10914) already owns benchmark/regression-detection infra — consider energy-specific proxy-metric tooling gaps only. Alternatively, re-scan `src/Adapter/MSTestAdapter.PlatformServices` or `src/TestFramework/Assertions` for drift (both several weeks stale) given the very high recent commit volume (~30+ commits since 2026-09-13, many touching test/adapter/analyzer code).
+Tasks run this session (2026-09-15, run 35026930682): **4 (0 open PRs prior), 2/3 (re-scanned `src/TestFramework/TestFramework/Assertions/`; fixed LINQ-Count/First gap in `Assert.HasCount<T>`/`IsEmpty<T>` generic overload + both InterpolatedStringHandler structs, missed by #10575's non-generic fix; PR `efficiency/assert-count-fastpath`), 5 (#8824/#3495 stale, not re-engaged), 7 (#11023 updated)**
+Last run before this: Task 4/2/5/7 (2026-09-14, run 34900124190 — exhaustive analyzer re-scans, 0 findings)
+Next run should prioritise: Watch CI/review on `efficiency/assert-count-fastpath` (Task 4). Follow-up candidate: `CollectionAssert.Equivalence.cs` `.Count()` calls (~lines 139-140/315-316) — confirmed generic `IEnumerable<T?>` params, same fast-path opportunity. Otherwise re-scan `src/Adapter/MSTestAdapter.PlatformServices` for drift (last full review 2026-08-30) or pivot to Task 6 (measurement infra, narrow scope given sibling `[perf-improver]` agent #10914).
+
+## 2026-09-15 Run Notes (run 35026930682)
+
+- Task 4: 0 open efficiency-improver PRs prior to this run.
+- Task 2/3: Re-scanned `src/TestFramework/TestFramework/Assertions/` (drift re-check). Found generic `Assert.HasCount<T>`/`IsEmpty<T>`, `AssertCountInterpolatedStringHandler<TItem>`, `AssertSingleInterpolatedStringHandler<TItem>` still used `Enumerable.Count()`/`.First()` instead of the `ICollection<T>` fast-path already applied to the non-generic `HasCount` overload (#10575) — missed for these generic paths.
+- **Fix**: shared `Assert.GetCount<T>` helper (`ICollection<T>` → `ICollection` → `Enumerable.Count()` fallback), applied at all 3 sites; `ContainsSingle` success path now uses `IList<T>` indexer over `.First()`.
+- **Measured**: 500K-call console benchmark, `List<int>`(10 items), net8.0 Release: old 8.51ms vs. new 2.39ms — **~3.6x faster** (proxy: CPU time; win is avoiding LINQ's type-probing dispatch, not allocation).
+- Verified: `./build.sh` 0 warn/err; `dotnet build TestFramework.csproj` all 4 TFMs 0 warn/err; `TestFramework.UnitTests` **1561/1561 passed** (ran built binary directly, see Build Commands note); `dotnet format --verify-no-changes` clean.
+- Created branch `efficiency/assert-count-fastpath`, opened draft PR.
+- Task 5: #8824/#3495 both still stale, not re-engaged.
+- Task 7: updated #11023 — new PR in Suggested Actions, one new backlog item added (below).
+- **Follow-up candidate (not fixed)**: `CollectionAssert.Equivalence.cs` `AreEquivalent`/`AreNotEquivalent` (~lines 139-140, 315-316) has the same `.Count()` shape on confirmed generic `IEnumerable<T?>` params.
 
 ## 2026-09-14 Run Notes (run 34900124190)
 
@@ -155,6 +167,7 @@ Notes:
 - Repo-local SDK at `.dotnet/dotnet` (Arcade-provisioned). Must run `./build.sh` first to install.
 - Required SDK version: `11.0.100-preview.7.26359.110` (not available in agent env)
 - Performance runner: `test/Performance/MSTest.Performance.Runner/`
+- **`dotnet test <project dir>` may fail in this sandbox** (`Win32Exception`, cannot launch built test host) — workaround: `dotnet build <project> -c Debug -f <tfm>` then run `artifacts/bin/<Project>/Debug/<tfm>/<AssemblyName>` directly. Confirmed 2026-09-15.
 
 ## Efficiency Notes
 
@@ -186,7 +199,7 @@ Notes:
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-- **Open (as of 2026-09-14)**: none. All prior efficiency-improver PRs resolved.
+- **Open (as of 2026-09-15)**: `efficiency/assert-count-fastpath` (this run — awaiting review).
 - **Landed via maintainer PR**: `efficiency/osplatform-analyzer-attribute-precheck`'s fix landed as maintainer PR #11255 ("Short-circuit platform attribute materialization in MSTEST0084"), merged 2026-09-14T11:40Z.
 - **Landed via maintainer PR**: `efficiency/inherited-member-analyzer-precompute-references`'s fix landed as maintainer PR #11233 ("Precompute MSTEST0082 framework references"), further refined by independent maintainer PR #11225.
 - Previous work:
@@ -214,12 +227,14 @@ Notes:
 | LOW | Code-Level | `TestContextImplementation.SanitizeName`: `Array.IndexOf` over invalid chars per character | Only called when TestTempDirectory is first accessed |
 | LOW | Infrastructure | CI output-byte-count health metric | Needs maintainer discussion |
 | LOW | Code-Level | `HtmlReportMerger.ConcatenateTests`: `CreateTestIdentity` computed once via `.Select()` (counting only) then again in main loop | Same shape as fixed `CollapseRetryAttempts` bug but only 1 `string.Join`/call (not 2) — good small follow-up once current PR lands |
+| LOW-MEDIUM | Code-Level | `CollectionAssert.Equivalence.cs` `AreEquivalent<T>`/`AreNotEquivalent<T>`: `expected.Count()`/`actual.Count()`/`notExpected.Count()` on `IEnumerable<T?>` params (lines ~139-140, ~315-316) | Same missing-`ICollection<T>`-fast-path shape as the just-fixed `Assert.HasCount`/`ContainsSingle` family; confirmed generic `IEnumerable<T?>` params (not array-constrained) — genuine follow-up candidate for next run |
 | LOW | Code-Level | `Extensions/TestCaseExtensions.cs` (`MSTest.TestAdapter`) `ToUnitTestElementWithUpdatedSource`: `Traits.Any()` + `.Select()` double-enumerates Traits | Trivial — Traits collections are 0-3 items; found 2026-09-11 |
 
 ## Completed Work
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-09-15 | PR created (draft, `efficiency/assert-count-fastpath`) | Added `Assert.GetCount<T>` `ICollection<T>` fast-path helper, applied in `Assert.HasCount<T>`/`IsEmpty<T>`, `AssertCountInterpolatedStringHandler<TItem>`, `AssertSingleInterpolatedStringHandler<TItem>` (also `IList<T>` indexer over `Enumerable.First()`); missed when #10575 landed non-generic fast-path; benchmark showed ~3.6x faster (8.51ms→2.39ms, 500K calls); 1561/1561 TestFramework.UnitTests passed |
 | 2026-09-13 | PR created (draft, `efficiency/osplatform-analyzer-attribute-precheck`) | Add `Any(...)` pre-check (reusing the analyzer's existing `HasPlatformAttributes` helper) before `Where().ToImmutableArray()` in `OSPlatformAttributesShouldBeConsistentAnalyzer.AnalyzeSymbol`, skipping the LINQ allocation entirely for the ~95% of symbols with no platform attributes; generic-LINQ micro-benchmark (2M synthetic symbols, 5% hit rate) showed ~92% allocation reduction (99.2MB→8MB); 1848/1848 MSTest.Analyzers.UnitTests passed |
 | 2026-09-12 | PR created (draft, `efficiency/inherited-member-analyzer-precompute-references`) — **landed as maintainer PR #11233** | Precompute globally-visible referenced assemblies + framework-presence flag once per compilation (`RegisterCompilationStartAction`) in `InheritedMemberFromDifferentMSTestVersionAnalyzer.GetFrameworkAssembly`, replacing two per-symbol `compilation.References.Any(...)` O(n) scans with an O(1) `HashSet` probe; standalone Roslyn-compilation benchmark (2,000 classes, ~300 references) showed ~20x speedup (13.43ms→0.68ms) and 304KB→0B allocated for the per-symbol lookup path; 1841/1841 MSTest.Analyzers.UnitTests passed |
 | 2026-09-04 | PR created (draft, `efficiency/htmlreport-merger-identity-caching`) | Cache `CreateRetryBaseIdentity` per test in `HtmlReportMerger.CollapseRetryAttempts` (was computed twice per row: LINQ ambiguity scan + slot-assignment loop); GC-allocation micro-benchmark showed ~10.4MB reduction (≈6.2%) on 20K-test/40K-row synthetic report; build succeeded, 58/60 HtmlReport-filtered unit tests passed (2 pre-existing skips) |
