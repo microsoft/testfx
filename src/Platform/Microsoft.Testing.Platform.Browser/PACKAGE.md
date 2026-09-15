@@ -59,6 +59,13 @@ dotnet test
 dotnet test -- --list-tests
 ```
 
+The launcher integration is a preview contract with the .NET SDK. The package wraps
+`ComputeRunArguments` only when the SDK marks that ProjectInstance with both
+`DotnetTestInvocation=true` and `DotnetTestHttpBootstrapVersion=1`. Ordinary `dotnet run`
+and standalone `ComputeRunArguments` queries retain the framework-provided host command.
+An SDK that supplies a missing or unsupported bootstrap version receives an actionable
+MSBuild error instead of silently launching an incompatible browser host.
+
 Useful properties:
 
 | Property | Purpose |
@@ -79,6 +86,25 @@ into the browser runtime through Playwright's launcher-private transport, and re
 launcher, host, and browser diagnostics. It is never added to the browser URL or exposed
 through an unauthenticated DevTools TCP listener. User browser arguments cannot override
 Playwright's debugging transport or isolated profile.
+
+### Preview option limitations
+
+The browser preview supports ordinary execution/discovery options such as `--help`,
+`--list-tests`, `--filter`, and `--filter-uid`. It rejects options that read or write host
+files because the browser virtual file system is not exported to the host yet:
+
+- configuration and host paths: `--config-file`, `--settings`,
+  `--diagnostic-output-directory`, `--diagnostic-file-prefix`, and
+  `--results-directory`;
+- file diagnostics: `--diagnostic`;
+- report artifacts: `--report-trx`, `--report-trx-filename`, `--report-html`,
+  `--report-html-filename`, `--report-junit`, `--report-junit-filename`,
+  `--report-ctrf`, and `--report-ctrf-filename`;
+- coverage artifacts: `--coverage`, `--coverage-output`, `--coverage-output-format`,
+  and `--coverage-settings`.
+
+The launcher rejects these before starting the browser and names the unsupported option.
+They can be enabled after a browser artifact sink exports their inputs and outputs.
 
 ## Browser page API
 

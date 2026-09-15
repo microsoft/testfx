@@ -87,6 +87,7 @@ internal sealed record BrowserLauncherOptions(
         }
 
         string[] expandedArguments = ResponseFileArgumentExpander.Expand(args[(separatorIndex + 1)..]);
+        ValidateTestApplicationArguments(expandedArguments);
         var bootstrap = DotnetTestHttpBootstrap.Parse(expandedArguments);
         string[] parsedBrowserArguments = CommandLineTokenizer.Split(browserArguments);
         ValidateBrowserArguments(parsedBrowserArguments);
@@ -130,6 +131,57 @@ internal sealed record BrowserLauncherOptions(
             {
                 throw new BrowserLauncherException(
                     $"Browser argument '{argument}' is controlled by Microsoft.Testing.Platform.Browser and cannot be overridden.");
+            }
+        }
+    }
+
+    private static void ValidateTestApplicationArguments(IReadOnlyList<string> arguments)
+    {
+        var unsupportedOptions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "config-file",
+            "diagnostic",
+            "diagnostic-file-prefix",
+            "diagnostic-output-directory",
+            "results-directory",
+            "settings",
+            "report-trx",
+            "report-trx-filename",
+            "report-html",
+            "report-html-filename",
+            "report-junit",
+            "report-junit-filename",
+            "report-ctrf",
+            "report-ctrf-filename",
+            "coverage",
+            "coverage-output",
+            "coverage-output-format",
+            "coverage-settings",
+        };
+
+        foreach (string argument in arguments)
+        {
+            int prefixLength = argument.StartsWith("--", StringComparison.Ordinal)
+                ? 2
+                : argument.StartsWith("-", StringComparison.Ordinal)
+                    ? 1
+                    : 0;
+            if (prefixLength == 0 || argument.Length == prefixLength)
+            {
+                continue;
+            }
+
+            string optionName = argument[prefixLength..];
+            int valueSeparator = optionName.IndexOfAny(['=', ':']);
+            if (valueSeparator >= 0)
+            {
+                optionName = optionName[..valueSeparator];
+            }
+
+            if (unsupportedOptions.Contains(optionName))
+            {
+                throw new BrowserLauncherException(
+                    $"Microsoft.Testing.Platform option '--{optionName}' is not supported by the browser launcher preview because its file input or output is not transferred between the browser virtual file system and the host.");
             }
         }
     }

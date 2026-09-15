@@ -309,6 +309,60 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    [DataRow("--config-file", null)]
+    [DataRow("--config-file=config.json", null)]
+    [DataRow("--config-file:config.json", null)]
+    [DataRow("--config-file", "config.json")]
+    [DataRow("-config-file", "config.json")]
+    [DataRow("--diagnostic", null)]
+    [DataRow("--diagnostic-output-directory", "diagnostics")]
+    [DataRow("--results-directory", "results")]
+    [DataRow("--settings", "settings.runsettings")]
+    [DataRow("--report-trx", null)]
+    [DataRow("--report-trx-filename", "results.trx")]
+    [DataRow("--report-html", null)]
+    [DataRow("--report-junit", null)]
+    [DataRow("--report-ctrf", null)]
+    [DataRow("--coverage", null)]
+    [DataRow("--coverage-output", "coverage.xml")]
+    [DataRow("-results-directory:results", null)]
+    public void Parse_RejectsBrowserInapplicableFileOptions(string option, string? value)
+    {
+        var testApplicationArguments = new List<string> { option };
+        if (value is not null)
+        {
+            testApplicationArguments.Add(value);
+        }
+
+        testApplicationArguments.AddRange(CreateBootstrapArguments());
+
+        BrowserLauncherException exception = Assert.ThrowsExactly<BrowserLauncherException>(
+            () => BrowserLauncherOptions.Parse(CreateLauncherArguments(testApplicationArguments)));
+
+        Assert.Contains("not supported by the browser launcher preview", exception.Message);
+    }
+
+    [TestMethod]
+    public void Parse_AllowsFiltersHelpAndListTests()
+    {
+        string[] testApplicationArguments =
+        [
+            "--help",
+            "--list-tests",
+            "--filter",
+            "FullyQualifiedName~MyTests",
+            .. CreateBootstrapArguments(),
+        ];
+
+        var options = BrowserLauncherOptions.Parse(
+            CreateLauncherArguments(testApplicationArguments));
+
+        Assert.Contains("--help", options.TestApplicationArguments);
+        Assert.Contains("--list-tests", options.TestApplicationArguments);
+        Assert.Contains("--filter", options.TestApplicationArguments);
+    }
+
+    [TestMethod]
     public void DiagnosticBuffer_DoesNotTreatShortUrlSegmentsAsSecrets()
     {
         var diagnostics = new DiagnosticBuffer("/");
@@ -515,6 +569,30 @@ public sealed class BrowserLauncherOptionsTests
 
     private static string Encode(string value)
         => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+
+    private static string[] CreateLauncherArguments(IReadOnlyList<string> testApplicationArguments)
+        =>
+        [
+            "--host-command-base64", Encode("dotnet"),
+            "--host-arguments-base64", Encode("host.dll"),
+            "--host-working-directory-base64", Encode(Path.GetTempPath()),
+            "--url-path-base64", Encode("/"),
+            "--browser-executable-base64", Encode(string.Empty),
+            "--browser-arguments-base64", Encode(string.Empty),
+            "--startup-timeout-seconds", "30",
+            "--completion-timeout-seconds", "120",
+            "--",
+            .. testApplicationArguments,
+        ];
+
+    private static string[] CreateBootstrapArguments()
+        =>
+        [
+            "--server", "dotnettestcli",
+            "--dotnet-test-transport", "http",
+            "--dotnet-test-http-endpoint", "http://127.0.0.1:1234/dotnettest/run/",
+            "--dotnet-test-http-token", "secret-token",
+        ];
 
     private static void WriteLaunchInfo(string path, string content)
     {

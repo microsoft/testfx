@@ -58,6 +58,18 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     </PropertyGroup>
   </Target>
 
+  <Target Name="_RecordFrameworkBrowserHost" AfterTargets="_ProvideFrameworkBrowserHost">
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-command.txt"
+                      Lines="$(RunCommand)"
+                      Overwrite="true" />
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-command.txt"
+                      Lines="$(RunArguments)"
+                      Overwrite="false" />
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-command.txt"
+                      Lines="$(RunWorkingDirectory)"
+                      Overwrite="false" />
+  </Target>
+
   <Target Name="_RecordBrowserLauncherRunCommand" AfterTargets="_ConfigureTestingPlatformBrowserRun">
     <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-launcher-command.txt"
                       Lines="$(RunCommand)"
@@ -79,6 +91,16 @@ public sealed class BrowserPackageTests
     {
         Assert.IsTrue(OperatingSystem.IsBrowser());
     }
+
+    [TestMethod]
+    [Ignore]
+    public void SkippedInsideBrowser()
+    {
+    }
+
+    [TestMethod]
+    public void FailsInsideBrowser()
+        => Assert.Fail("Intentional browser preview failure.");
 }
 
 #file server.mjs
@@ -98,10 +120,10 @@ if (process.argv[3] !== ''
 }
 
 const launchInfoPath = process.env.TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE;
+writeFileSync(process.argv[9], launchInfoPath ?? 'ordinary-run');
 if (!launchInfoPath) {
-    throw new Error('TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE is required.');
+    process.exit(0);
 }
-writeFileSync(process.argv[9], launchInfoPath);
 
 const contentTypes = new Map([
     ['.css', 'text/css'],
@@ -137,6 +159,56 @@ server.listen(0, '127.0.0.1', () => {
     writeFileSync(temporaryPath, JSON.stringify({ version: 1, url: `http://127.0.0.1:${address.port}/` }), { mode: 0o600 });
     renameSync(temporaryPath, launchInfoPath);
 });
+""";
+
+    private const string MultiTargetingSourceCode = """
+#file BrowserMultiTargetingProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;$TargetFramework$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <RuntimeIdentifier Condition=" '$(TargetFramework)' == '$TargetFramework$' ">browser-wasm</RuntimeIdentifier>
+    <TestingPlatformBrowserGenerateHostAssets>false</TestingPlatformBrowserGenerateHostAssets>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file Program.cs
+return 0;
+
+#file Directory.Build.targets
+<Project>
+  <PropertyGroup>
+    <_ParentDirectoryBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)..'))</_ParentDirectoryBuildTargets>
+  </PropertyGroup>
+  <Import Project="$(_ParentDirectoryBuildTargets)" Condition=" '$(_ParentDirectoryBuildTargets)' != '' " />
+
+  <Target Name="_ProvideMultiTargetingFrameworkHost" AfterTargets="ComputeRunArguments">
+    <PropertyGroup>
+      <RunCommand>framework-host-$(TargetFramework)</RunCommand>
+      <RunArguments>--framework $(TargetFramework)</RunArguments>
+      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-$(TargetFramework).txt"
+                      Lines="$(RunCommand)"
+                      Overwrite="true" />
+  </Target>
+
+  <Target Name="_RecordMultiTargetingBrowserLauncher"
+          AfterTargets="_ConfigureTestingPlatformBrowserRun"
+          Condition=" '$(RuntimeIdentifier)' == 'browser-wasm'
+                      AND '$(DotnetTestInvocation)' == 'true'
+                      AND '$(DotnetTestHttpBootstrapVersion)' == '1' ">
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-launcher-$(TargetFramework).txt"
+                      Lines="$(RunCommand)"
+                      Overwrite="true" />
+  </Target>
+</Project>
 """;
 
     private const string FrameworkOwnedPageSourceCode = """
@@ -337,8 +409,38 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$Node$", EscapeMsBuildValue(node))
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
 
+        DotnetMuxerResult ordinaryRun = await DotnetCli.RunAsync(
+            $"run --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, ordinaryRun.ExitCode, ordinaryRun.ToString());
+        Assert.AreEqual(
+            "ordinary-run",
+            File.ReadAllText(Path.Combine(generator.TargetAssetPath, "launch-info-path.txt")));
+        Assert.IsEmpty(
+            Directory.EnumerateFiles(
+                Path.Combine(generator.TargetAssetPath, "obj"),
+                "Microsoft.Testing.Platform.Browser.launch",
+                SearchOption.AllDirectories));
+
+        DotnetMuxerResult plainQuery = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, plainQuery.ExitCode, plainQuery.ToString());
+        string[] frameworkHost = File.ReadAllLines(
+            Path.Combine(generator.TargetAssetPath, "framework-host-command.txt"));
+        Assert.IsGreaterThanOrEqualTo(3, frameworkHost.Length);
+        Assert.AreEqual(node, frameworkHost[0]);
+        Assert.Contains("server.mjs", string.Join(Environment.NewLine, frameworkHost[1..^1]));
+        Assert.AreEqual(generator.TargetAssetPath, frameworkHost[^1]);
+
         DotnetMuxerResult run = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 --filter FullyQualifiedName~RunsInsideBrowser",
             environmentVariables: new Dictionary<string, string?>
             {
                 ["DEBUG"] = "*",
@@ -363,7 +465,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.AreEqual(launcherCommand[1], launcherCommand[0]);
 
         DotnetMuxerResult list = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --list-tests",
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 --list-tests",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
@@ -372,8 +474,33 @@ public sealed class BrowserPackageDesktopTests
         string listOutput = list.StandardOutput + list.StandardError;
         Assert.AreEqual(0, list.ExitCode, list.ToString());
         Assert.Contains("RunsInsideBrowser", listOutput);
-        Assert.Contains("Discovered 1 tests", listOutput);
+        Assert.Contains("SkippedInsideBrowser", listOutput);
+        Assert.Contains("FailsInsideBrowser", listOutput);
+        Assert.Contains("Discovered 3 tests", listOutput);
         AssertLaunchInfoDirectoryCleaned(generator.TargetAssetPath);
+
+        DotnetMuxerResult skipped = await DotnetCli.RunAsync(
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 --filter FullyQualifiedName~SkippedInsideBrowser",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        string skippedOutput = skipped.StandardOutput + skipped.StandardError;
+        Assert.AreEqual((int)ExitCode.ZeroTests, skipped.ExitCode, skipped.ToString());
+        Assert.Contains("skipped: 1", skippedOutput);
+        Assert.DoesNotContain("did not complete within", skippedOutput);
+
+        DotnetMuxerResult failed = await DotnetCli.RunAsync(
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 --filter FullyQualifiedName~FailsInsideBrowser",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        string failedOutput = failed.StandardOutput + failed.StandardError;
+        Assert.AreNotEqual(0, failed.ExitCode, failed.ToString());
+        Assert.Contains("failed: 1", failedOutput);
+        Assert.Contains("Intentional browser preview failure.", failedOutput);
+        Assert.DoesNotContain("did not complete within", failedOutput);
     }
 
     [TestMethod]
@@ -405,7 +532,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
@@ -470,14 +597,6 @@ public sealed class BrowserPackageDesktopTests
         Assert.IsTrue(File.Exists(Path.Combine(appBundle, "main.js")));
         Assert.IsFalse(File.Exists(Path.Combine(appBundle, "Microsoft.Testing.Platform.Browser.main.js")));
 
-        DotnetMuxerResult computeRunArguments = await DotnetCli.RunAsync(
-            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, computeRunArguments.ExitCode, computeRunArguments.ToString());
-
         string launchConfiguration = Path.Combine(
             generator.TargetAssetPath,
             "obj",
@@ -485,6 +604,41 @@ public sealed class BrowserPackageDesktopTests
             TargetFramework,
             WasmRuntime.BrowserRid,
             "Microsoft.Testing.Platform.Browser.launch");
+
+        DotnetMuxerResult plainComputeRunArguments = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, plainComputeRunArguments.ExitCode, plainComputeRunArguments.ToString());
+        Assert.IsFalse(File.Exists(launchConfiguration));
+
+        DotnetMuxerResult missingBootstrapVersion = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid} -property:DotnetTestInvocation=true",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, missingBootstrapVersion.ExitCode);
+        Assert.Contains("requires DotnetTestHttpBootstrapVersion=1", missingBootstrapVersion.StandardOutput + missingBootstrapVersion.StandardError);
+
+        DotnetMuxerResult unsupportedBootstrapVersion = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=2",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, unsupportedBootstrapVersion.ExitCode);
+        Assert.Contains("requires DotnetTestHttpBootstrapVersion=1", unsupportedBootstrapVersion.StandardOutput + unsupportedBootstrapVersion.StandardError);
+
+        DotnetMuxerResult supportedComputeRunArguments = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, supportedComputeRunArguments.ExitCode, supportedComputeRunArguments.ToString());
         Assert.IsTrue(File.Exists(launchConfiguration));
 
         DotnetMuxerResult clean = await DotnetCli.RunAsync(
@@ -531,7 +685,7 @@ public sealed class BrowserPackageDesktopTests
             source);
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
@@ -542,6 +696,60 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("framework-owned page fatal marker", output);
         Assert.Contains("fatal integration error", output);
         Assert.DoesNotContain("did not complete within 5 seconds", output);
+    }
+
+    [TestMethod]
+    public async Task BrowserPackage_MultiTargetingActivatesOnlyForBrowserDotnetTestInvocation()
+    {
+        string browserPackageVersion = GetBrowserPackageVersion();
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "BrowserMultiTargetingProject",
+            MultiTargetingSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion));
+
+        DotnetMuxerResult restore = await DotnetCli.RunAsync(
+            $"restore {generator.TargetAssetPath}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, restore.ExitCode, restore.ToString());
+
+        DotnetMuxerResult desktopQuery = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:TargetFramework=net9.0 -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, desktopQuery.ExitCode, desktopQuery.ToString());
+        Assert.AreEqual(
+            "framework-host-net9.0",
+            File.ReadAllText(Path.Combine(generator.TargetAssetPath, "framework-host-net9.0.txt")).Trim());
+        Assert.IsFalse(File.Exists(Path.Combine(generator.TargetAssetPath, "browser-launcher-net9.0.txt")));
+
+        DotnetMuxerResult plainBrowserQuery = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, plainBrowserQuery.ExitCode, plainBrowserQuery.ToString());
+        Assert.AreEqual(
+            $"framework-host-{TargetFramework}",
+            File.ReadAllText(Path.Combine(generator.TargetAssetPath, $"framework-host-{TargetFramework}.txt")).Trim());
+        Assert.IsFalse(File.Exists(Path.Combine(generator.TargetAssetPath, $"browser-launcher-{TargetFramework}.txt")));
+
+        DotnetMuxerResult dotnetTestBrowserQuery = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, dotnetTestBrowserQuery.ExitCode, dotnetTestBrowserQuery.ToString());
+        string browserLauncherCommand = File.ReadAllText(
+            Path.Combine(generator.TargetAssetPath, $"browser-launcher-{TargetFramework}.txt"));
+        Assert.IsNotEmpty(browserLauncherCommand);
+        Assert.DoesNotContain($"framework-host-{TargetFramework}", browserLauncherCommand);
     }
 
     [TestMethod]

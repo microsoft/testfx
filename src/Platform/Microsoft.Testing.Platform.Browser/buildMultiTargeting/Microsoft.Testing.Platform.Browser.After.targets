@@ -4,9 +4,21 @@
                       AND '$(_TestingPlatformBrowserPreviousCustomAfterDirectoryBuildTargets)' != '$(MSBuildThisFileFullPath)'
                       AND Exists('$(_TestingPlatformBrowserPreviousCustomAfterDirectoryBuildTargets)') " />
 
-  <Target Name="_CaptureTestingPlatformBrowserHost"
+  <Target Name="_ValidateTestingPlatformBrowserInvocation"
           AfterTargets="ComputeRunArguments"
-          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND $(RuntimeIdentifier.StartsWith('browser-')) ">
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
+                      AND $(RuntimeIdentifier.StartsWith('browser-'))
+                      AND '$(DotnetTestInvocation)' == 'true' ">
+    <Error Condition=" '$(DotnetTestHttpBootstrapVersion)' != '1' "
+           Text="Microsoft.Testing.Platform.Browser requires DotnetTestHttpBootstrapVersion=1 for a dotnet test invocation. The installed .NET SDK did not provide a supported browser HTTP bootstrap contract." />
+  </Target>
+
+  <Target Name="_CaptureTestingPlatformBrowserHost"
+          AfterTargets="_ValidateTestingPlatformBrowserInvocation"
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
+                      AND $(RuntimeIdentifier.StartsWith('browser-'))
+                      AND '$(DotnetTestInvocation)' == 'true'
+                      AND '$(DotnetTestHttpBootstrapVersion)' == '1' ">
     <PropertyGroup>
       <_TestingPlatformBrowserComputedHostCommand>$(RunCommand)</_TestingPlatformBrowserComputedHostCommand>
       <_TestingPlatformBrowserComputedHostArguments>$(RunArguments)</_TestingPlatformBrowserComputedHostArguments>
@@ -16,7 +28,10 @@
 
   <Target Name="_ConfigureTestingPlatformBrowserRun"
           AfterTargets="_CaptureTestingPlatformBrowserHost"
-          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND $(RuntimeIdentifier.StartsWith('browser-')) ">
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
+                      AND $(RuntimeIdentifier.StartsWith('browser-'))
+                      AND '$(DotnetTestInvocation)' == 'true'
+                      AND '$(DotnetTestHttpBootstrapVersion)' == '1' ">
     <PropertyGroup>
       <_TestingPlatformBrowserLauncher>$(MSBuildThisFileDirectory)..\tools\net8.0\any\Microsoft.Testing.Platform.Browser.dll</_TestingPlatformBrowserLauncher>
       <_TestingPlatformBrowserLauncherConfiguration>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Microsoft.Testing.Platform.Browser.launch'))</_TestingPlatformBrowserLauncherConfiguration>
