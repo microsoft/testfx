@@ -257,10 +257,11 @@ interface InitializeParams {
 
             // If true, the client is stateful: it persists an addressable set of test nodes for the
             // whole session and keeps each node in its last-known state until it is explicitly updated
-            // (for example, an IDE test explorer). If false or missing, the client is stateless: it
-            // consumes test updates as a stream and does not retain node state after the run
-            // (for example, `dotnet test`). This is independent of connection lifetime and
-            // experimental_multiRequestSupport. Defaults to false.
+            // (for example, an IDE test explorer). If false, the client explicitly declares that it is
+            // stateless and consumes test updates as a stream without retaining node state after the run
+            // (for example, `dotnet test`). If missing, the client does not support or did not declare
+            // the capability, allowing consumers to apply compatibility behavior for known legacy clients.
+            // This is independent of connection lifetime and experimental_multiRequestSupport.
             isStateful?: boolean,
         },
     }

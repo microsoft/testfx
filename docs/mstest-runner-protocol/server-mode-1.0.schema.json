@@ -129,8 +129,7 @@
               "type": "boolean"
             },
             "isStateful": {
-              "type": "boolean",
-              "default": false
+              "type": "boolean"
             }
           },
           "additionalProperties": true
