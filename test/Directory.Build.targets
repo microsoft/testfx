@@ -96,6 +96,15 @@
       <_CodeCoverageProjectReference Update="@(_CodeCoverageProjectReference)">
         <CoverageAssemblyPattern>$([System.String]::Copy('%(_CodeCoverageProjectReference.CoverageAssemblyName)').Replace('.', '\.'))</CoverageAssemblyPattern>
       </_CodeCoverageProjectReference>
+      <_CodeCoverageExcludedSource Include="Packages">
+        <Pattern>.*[\\/]\.packages[\\/].*</Pattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Include="Artifacts">
+        <Pattern>.*[\\/]artifacts[\\/].*</Pattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Include="TestInfrastructure">
+        <Pattern>.*[\\/]test[\\/]Utilities[\\/]Microsoft\.Testing\.TestInfrastructure[\\/].*</Pattern>
+      </_CodeCoverageExcludedSource>
     </ItemGroup>
 
     <ItemGroup>
@@ -107,6 +116,11 @@
       <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference->'        &lt;ModulePath&gt;.*%(CoverageAssemblyPattern)\.dll$&lt;/ModulePath&gt;')" />
       <_CodeCoverageSettingsLine Include="      &lt;/Include&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;/ModulePaths&gt;" />
+      <_CodeCoverageSettingsLine Include="    &lt;Sources&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource->'        &lt;Source&gt;%(Pattern)&lt;/Source&gt;')" />
+      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="    &lt;/Sources&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;EnableStaticNativeInstrumentation&gt;False&lt;/EnableStaticNativeInstrumentation&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;EnableDynamicNativeInstrumentation&gt;False&lt;/EnableDynamicNativeInstrumentation&gt;" />
