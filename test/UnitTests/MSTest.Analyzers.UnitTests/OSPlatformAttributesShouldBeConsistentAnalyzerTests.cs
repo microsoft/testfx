@@ -825,7 +825,7 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenPlatformHasVersion_DiagnosticWithoutFix()
+    public async Task WhenSupportedPlatformHasVersion_AddsConditionForOperatingSystemFamily()
     {
         string code = """
             using System.Runtime.Versioning;
@@ -835,7 +835,23 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                [{|#0:SupportedOSPlatform("windows10.0")|}]
+                [{|#0:SupportedOSPlatform("windows5.1.2600")|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [SupportedOSPlatform("windows5.1.2600")]
+                [OSCondition(OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
@@ -845,7 +861,87 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod"),
-            code);
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenSupportedPlatformHasVersionAndCompatibleCondition_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [SupportedOSPlatform("windows5.1.2600")]
+                [OSCondition(OperatingSystems.Windows)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblySupportedPlatformHasVersionAndCompatibleCondition_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: SupportedOSPlatform("windows5.1.2600")]
+
+            [TestClass]
+            [OSCondition(OperatingSystems.Windows)]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenUnsupportedPlatformHasVersion_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [UnsupportedOSPlatform("windows10.0")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyUnsupportedPlatformHasVersion_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.Versioning;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: UnsupportedOSPlatform("windows10.0")]
+
+            [TestClass]
+            public class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]

@@ -1278,11 +1278,11 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="[OSCondition]"}</comment>
   </data>
   <data name="OSPlatformAttributesShouldBeConsistentMessageFormat" xml:space="preserve">
-    <value>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</value>
+    <value>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</value>
     <comment>{0} is the test method or test class name. {Locked="[OSCondition]"}</comment>
   </data>
   <data name="OSPlatformAttributesShouldBeConsistentDescription" xml:space="preserve">
-    <value>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</value>
+    <value>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</value>
     <comment>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</comment>
   </data>
   <data name="RedundantTestMethodAttributeTitle" xml:space="preserve">

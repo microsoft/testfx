@@ -761,13 +761,13 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
-        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="translated">'SupportedOSPlatformAttribute' ve 'UnsupportedOSPlatformAttribute', platform uyumluluk analizini bilgilendirir ancak MSTest yürütmesini denetlemez. Bu öznitelikleri kullanan test yöntemleri ve test sınıfları, desteklenmeyen testlerin çalışma zamanında atlanması için eşdeğer bir '[OSCondition]' da bildirmelidir.</target>
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
+        <target state="needs-review-translation">'SupportedOSPlatformAttribute' ve 'UnsupportedOSPlatformAttribute', platform uyumluluk analizini bilgilendirir ancak MSTest yürütmesini denetlemez. Bu öznitelikleri kullanan test yöntemleri ve test sınıfları, desteklenmeyen testlerin çalışma zamanında atlanması için eşdeğer bir '[OSCondition]' da bildirmelidir.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
-        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="translated">'{0}' testindeki platform uyumluluk öznitelikleri eşdeğer bir '[OSCondition]' özniteliğiyle temsil edilmiyor</target>
+        <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
+        <target state="needs-review-translation">'{0}' testindeki platform uyumluluk öznitelikleri eşdeğer bir '[OSCondition]' özniteliğiyle temsil edilmiyor</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
