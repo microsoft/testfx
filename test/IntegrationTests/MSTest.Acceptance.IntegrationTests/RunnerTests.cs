@@ -118,12 +118,61 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                 .PatchCodeWithReplace("$OutputType$", string.Empty)
-                .PatchCodeWithReplace("$Extra$", string.Empty));
+                .PatchCodeWithReplace("$Extra$", string.Empty)
+                .PatchCodeWithReplace("</Project>", """
+<ItemGroup>
+  <ProjectCapability Include="TestContainer" />
+</ItemGroup>
+<Target Name="PrintProjectCapabilities" BeforeTargets="CoreCompile">
+  <ItemGroup>
+    <_TestingPlatformOwnedTestContainerCapability
+      Include="@(ProjectCapability->WithMetadataValue('TestingPlatformCapabilityOwner', 'Microsoft.Testing.Platform')->WithMetadataValue('Identity', 'TestContainer'))" />
+  </ItemGroup>
+  <Message Text="ProjectCapabilitiesEvaluated" Importance="high" />
+  <Message Text="TestingPlatformOwnedTestContainerCapabilityCount=@(_TestingPlatformOwnedTestContainerCapability->Count())" Importance="high" />
+  <Message Text="ProjectCapability=[%(ProjectCapability.Identity)]" Importance="high" />
+</Target>
+</Project>
+"""));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = BinlogReader.Read(result.BinlogPath!);
-        Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());
+        result.AssertOutputContains("ProjectCapabilitiesEvaluated");
+        result.AssertOutputContains("TestingPlatformOwnedTestContainerCapabilityCount=0");
+        result.AssertOutputContains("ProjectCapability=[TestContainer]");
+        result.AssertOutputDoesNotContain("ProjectCapability=[TestingPlatformServer]");
+    }
+
+    [TestMethod]
+    public async SystemTask TestingPlatformCapabilities_Can_Be_Removed_From_Project()
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            CurrentMSTestSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+                .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+                .PatchCodeWithReplace("$Extra$", string.Empty)
+                .PatchCodeWithReplace("</Project>", """
+<ItemGroup>
+  <ProjectCapability Remove="TestingPlatformServer;TestContainer" />
+</ItemGroup>
+<Target Name="PrintProjectCapabilities" BeforeTargets="CoreCompile">
+  <Message Text="ProjectCapabilitiesEvaluated" Importance="high" />
+  <Message Text="ProjectCapability=[%(ProjectCapability.Identity)]" Importance="high" />
+</Target>
+</Project>
+"""));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c Debug -r {RID}",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertOutputContains("ProjectCapabilitiesEvaluated");
+        result.AssertOutputDoesNotContain("ProjectCapability=[TestingPlatformServer]");
+        result.AssertOutputDoesNotContain("ProjectCapability=[TestContainer]");
     }
 
     public TestContext TestContext { get; set; }
