@@ -222,7 +222,7 @@ a security control.
 
 **Symptom.** A long-running workflow reaches threat detection, then the detection job fails before
 the model starts with `awf: command not found`. The tracker records `parse_error` because no
-`THREAT_DETECTION_RESULT` was produced.
+detector verdict was recorded.
 
 **Why.** This is a runner/runtime failure, not a malformed detector response and not evidence that
 the agent output contained a threat. Repository prompt changes cannot repair a missing `awf`
@@ -261,33 +261,20 @@ conclusion behavior.
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
 **Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the
-`[aw] Detection Runs` tracker still records the run as `warning | parse_error`. The job log shows
-that the marker was found and then failed to parse:
+`[aw] Detection Runs` tracker still records the run as `failure | parse_error`. The job log shows
+that the model completed without recording a verdict:
 
 ```text
-📄 Lines containing THREAT_DETECTION_RESULT (1 of 194):
-   [155] **THREAT_DETECTION_RESULT:{"prompt_injection":false,"secret_leak":false,…**
-🔎 Parsing THREAT_DETECTION_RESULT from detection log...
-##[error]❌ Failed to parse detection result: Unexpected token 'T', "T:{"prompt"... is not valid JSON
+[threat-detect] attempt 1 outcome=no_verdict err=open /tmp/threat-detect-result-….json: no such file or directory
+Error running detection: detection model did not record a usable verdict via the threat_detection_result tool
+THREAT_DETECTION_STATUS: reason=invalid_report_exhausted exit=2
 ```
 
-**Telling the two `parse_error` causes apart.** Read the line immediately above the parse error:
-
-- `Lines containing THREAT_DETECTION_RESULT (1 of N)` means the marker is present, so the detection
-  model ran and answered. That is the formatting cause described here.
-- `No THREAT_DETECTION_RESULT found` means no result was ever written. That can be the
-  [Copilot CLI installer failure](#detection-job-fails-at-install-github-copilot-cli), or another
-  job-level failure that stopped the model before it answered.
-
-**Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the
-line starts with `**THREAT_…` instead of `THREAT_…`. Another run appended the marker directly after
-prose instead of starting it on a new line. gh-aw's fallback parser requires the marker at the start
-of the line, so either format is rejected even when the JSON itself is valid.
-
-Another observed cause is invalid JSON inside an otherwise correctly positioned marker, such as a
-reason string containing an unescaped quoted gh-aw redaction marker. The affected workflow should
-constrain the detector prompt to emit exactly one single-line result and JSON-escape quotes and
-backslashes inside reason strings.
+**Why.** The external detector bundled with gh-aw v0.88.7 no longer scrapes a textual
+`THREAT_DETECTION_RESULT` marker from the model transcript. It provisions a
+`threat_detection_result` command and accepts only the out-of-band result written by that command.
+A custom prompt that still asks the model to print or format the legacy marker can make the model
+finish successfully without invoking the command, which produces `invalid_report_exhausted`.
 
 **Status.** The original mitigation pinned every detector to `gpt-5-mini` in
 [#10729](https://github.com/microsoft/testfx/pull/10729). Detection runs tracked by
@@ -296,11 +283,17 @@ still emitted a misplaced marker and repeatedly classified trusted workflow orch
 injection even when its own reasons said no malicious injection was present. The concrete override
 was replaced with gh-aw's maintained `detection` model alias.
 
-**What to do.** Use the `detection` alias instead of pinning a concrete detector model:
+**What to do.** Keep workflow-specific trust-boundary guidance, but instruct the model to use the
+detector's result command instead of describing a custom output format:
 
 ```yaml
 safe-outputs:
   threat-detection:
+    prompt: >-
+      [Workflow-specific trust-boundary guidance.]
+      Report the verdict only by invoking the pre-provisioned
+      `threat_detection_result` command exactly once. Do not print, echo, or
+      manually format a `THREAT_DETECTION_RESULT` line.
     model: detection
     engine:
       id: copilot
@@ -308,8 +301,8 @@ safe-outputs:
 
 Then recompile with `gh aw compile --strict` and confirm the generated detection step reports
 `COPILOT_MODEL: detection`. Never hand-edit a `.lock.yml` or disable threat detection to avoid a
-parser or model failure; both approaches remove or bypass a security control instead of fixing the
-cause.
+result-reporting failure; both approaches remove or bypass a security control instead of fixing
+the cause.
 
 ## Catalog
 
