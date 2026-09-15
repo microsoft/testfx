@@ -34,7 +34,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertSingleInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            _actualCount = collection.Count();
+            _actualCount = GetCount(collection);
             shouldAppend = _actualCount != 1;
             if (shouldAppend)
             {
@@ -42,7 +42,9 @@ public sealed partial class Assert
             }
             else
             {
-                _item = collection.First();
+                // _actualCount == 1 here, so an indexer read on an IList<T> avoids allocating
+                // an enumerator just to fetch the single element.
+                _item = collection is IList<TItem> list ? list[0] : collection.First();
             }
         }
 
