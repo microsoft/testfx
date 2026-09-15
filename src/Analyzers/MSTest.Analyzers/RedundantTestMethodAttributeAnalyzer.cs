@@ -251,17 +251,8 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
                 || !HasNonEmptyConditionIgnoreMessage(methodAttribute));
 
     private static bool HasNonEmptyConditionIgnoreMessage(AttributeData attribute)
-    {
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
-        {
-            if (argument.Key == "IgnoreMessage")
-            {
-                return argument.Value.Value is string { Length: > 0 };
-            }
-        }
-
-        return true;
-    }
+        => !TryGetNamedArgument(attribute, "IgnoreMessage", out TypedConstant constant)
+            || constant.Value is string { Length: > 0 };
 
     private static bool TryGetConditionMode(AttributeData? attribute, out bool includeMode)
     {
@@ -311,16 +302,23 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
     }
 
     private static int GetNamedIntArgument(AttributeData attribute, string name)
+        => TryGetNamedArgument(attribute, name, out TypedConstant constant) && constant.Value is int value
+            ? value
+            : 0;
+
+    private static bool TryGetNamedArgument(AttributeData attribute, string name, out TypedConstant constant)
     {
         foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
         {
-            if (argument.Key == name && argument.Value.Value is int value)
+            if (argument.Key == name)
             {
-                return value;
+                constant = argument.Value;
+                return true;
             }
         }
 
-        return 0;
+        constant = default;
+        return false;
     }
 
     private static bool IsIgnoreRedundant(AttributeData methodAttribute, AttributeData? classAttribute)
@@ -345,12 +343,9 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
             _ => null,
         };
 
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
+        if (TryGetNamedArgument(attribute, "IgnoreMessage", out TypedConstant constant))
         {
-            if (argument.Key == "IgnoreMessage")
-            {
-                message = argument.Value.Value as string;
-            }
+            message = constant.Value as string;
         }
 
         return true;
