@@ -49,10 +49,11 @@ public sealed class TestHostControllerCancellationTests
     }
 
     [TestMethod]
-    public void RequestCancellation_BeforeChildConnects_CancelsChildAfterConnection()
+    public async Task RequestCancellation_BeforeChildConnects_CancelsChildAfterConnection()
     {
         Mock<ILoggerFactory> loggerFactory = CreateLoggerFactory();
         SystemEnvironment environment = new();
+        UnexpectedListenerFailureLogger listenerLogger = new();
         using var server = new TestHostControllerCancellationServer(
             authorizedSecurityIdentities: null,
             environment,
@@ -65,11 +66,15 @@ public sealed class TestHostControllerCancellationTests
             server.PipeName,
             applicationCancellationTokenSource,
             environment,
-            new NopLogger());
+            listenerLogger);
 
-        Assert.IsTrue(
-            applicationCancellationTokenSource.CancellationToken.WaitHandle.WaitOne(TimeoutHelper.DefaultHangTimeSpanTimeout),
-            "The cancellation queued before connection was not propagated after the child connected.");
+        await WaitForOperationOrListenerFailureAsync(server.WaitForRequestAsync(), listenerLogger);
+
+        TaskCompletionSource<bool> cancellationObserved = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration =
+            applicationCancellationTokenSource.CancellationToken.Register(() => cancellationObserved.TrySetResult(true));
+        await WaitForOperationOrListenerFailureAsync(cancellationObserved.Task, listenerLogger);
+
         Assert.IsTrue(listener.WasCancellationRequestedByController);
     }
 
@@ -203,5 +208,36 @@ public sealed class TestHostControllerCancellationTests
         Mock<ILoggerFactory> loggerFactory = new();
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
         return loggerFactory;
+    }
+
+    private async Task WaitForOperationOrListenerFailureAsync(Task operation, UnexpectedListenerFailureLogger listenerLogger)
+    {
+        Task<Task> completionTask = Task.WhenAny(operation, listenerLogger.Failure);
+        await completionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, TestContext.CancellationToken);
+
+        if (await completionTask == listenerLogger.Failure)
+        {
+            Assert.Fail(await listenerLogger.Failure);
+        }
+
+        await operation;
+    }
+
+    private sealed class UnexpectedListenerFailureLogger : ILogger
+    {
+        private readonly TaskCompletionSource<string> _failure = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task<string> Failure => _failure.Task;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => _failure.TrySetResult(formatter(state, exception));
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            _failure.TrySetResult(formatter(state, exception));
+            return Task.CompletedTask;
+        }
     }
 }

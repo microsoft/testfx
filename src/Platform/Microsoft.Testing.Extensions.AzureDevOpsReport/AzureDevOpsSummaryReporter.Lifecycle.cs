@@ -25,7 +25,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
             _emitAzureDevOpsCommands = false;
             lock (_stateLock)
             {
-                _records.Clear();
+                _rows.Clear();
+                _finalRowCountsByUid.Clear();
+                _flakyRowIndicesByUid.Clear();
+                _inProcessFailedTests.Clear();
+                _notRecoveredTests.Clear();
             }
 
             if (!_isEnabled)
@@ -77,22 +81,18 @@ internal sealed partial class AzureDevOpsSummaryReporter
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
 
-            // Single-pass collection of TimingProperty and the FQN SerializableKeyValuePairStringProperty:
-            // replaces 1 × SingleOrDefault<TimingProperty>() + 1 × OfType<>().FirstOrDefault() with one
-            // GetStructEnumerator() walk, saving 1 linked-list traversal and 1 LINQ allocation per terminal result.
-            // Singleton-typed properties use the local GetSingleOrDefaultValue helper to preserve the
-            // throw-on-duplicate invariant that SingleOrDefault<T>() provided; the FQN key keeps the
-            // prior FirstOrDefault semantics (first match wins) so we don't silently overwrite earlier values.
+            // Collect timing and dependency metadata in one pass. TestNodeIdentity resolves the canonical
+            // test name separately because it must prefer TestMethodIdentifierProperty over the VSTest fallback.
             TimingProperty? timing = null;
-            string? fqnValue = null;
+            List<string>? encodedDependencies = null;
             PropertyBag.PropertyBagEnumerator enumerator = update.TestNode.Properties.GetStructEnumerator();
             while (enumerator.MoveNext())
             {
                 switch (enumerator.Current)
                 {
                     case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
-                    case SerializableKeyValuePairStringProperty kv when kv.Key == FullyQualifiedNamePropertyKey && fqnValue is null:
-                        fqnValue = kv.Value;
+                    case SerializableKeyValuePairStringProperty kv when kv.Key == MSTestDependencyPropertyKey:
+                        (encodedDependencies ??= []).Add(kv.Value);
                         break;
                 }
             }
@@ -103,12 +103,64 @@ internal sealed partial class AzureDevOpsSummaryReporter
                     ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
                     : property;
 
-            string fullyQualifiedName = fqnValue ?? displayName;
+            string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
+            RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
+            TestFailureDetails? failure = kind == TerminalKind.Failed ? CaptureFailureDetails(state) : null;
+            CiRunSummaryDependency[] dependencies = CreateDependencies(fullyQualifiedName, encodedDependencies);
 
             lock (_stateLock)
             {
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
+                if (retryAttempt is { IsSuperseded: true })
+                {
+                    if (kind == TerminalKind.Failed)
+                    {
+                        _inProcessFailedTests.Add(uid);
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                if (kind is TerminalKind.Failed or TerminalKind.Skipped)
+                {
+                    _notRecoveredTests.Add(uid);
+                    ClearFlakyRows(uid);
+                }
+
+                bool isFlaky = kind == TerminalKind.Passed
+                    && !_notRecoveredTests.Contains(uid)
+                    && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
+                int finalRowCount = _finalRowCountsByUid.TryGetValue(uid, out int existingFinalRowCount)
+                    ? existingFinalRowCount + 1
+                    : 1;
+                _finalRowCountsByUid[uid] = finalRowCount;
+                CiRunSummaryHistoryTest? historyTest = CreateHistoryTest(
+                    uid,
+                    displayName,
+                    fullyQualifiedName,
+                    kind,
+                    duration,
+                    isFlaky);
+                _rows.Add(new SummaryRow(
+                    uid,
+                    new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky, failure),
+                    historyTest,
+                    dependencies));
+                if (isFlaky)
+                {
+                    if (!_flakyRowIndicesByUid.TryGetValue(uid, out List<int>? indices))
+                    {
+                        indices = [];
+                        _flakyRowIndicesByUid.Add(uid, indices);
+                    }
+
+                    indices.Add(_rows.Count - 1);
+                }
+
+                if (finalRowCount > 1)
+                {
+                    ClearFlakyRows(uid);
+                }
             }
         }
         catch (OperationCanceledException)
@@ -135,18 +187,48 @@ internal sealed partial class AzureDevOpsSummaryReporter
             }
 
             List<TestRecord> snapshot;
+            CiRunSummaryHistoryTest[] historyTests;
+            CiRunSummaryDependency[] dependencies;
             lock (_stateLock)
             {
-                snapshot = [.. _records.Values];
+                SummaryRow[] rows =
+                [
+                    .. _rows
+                        .OrderBy(static row => row.Record.FullyQualifiedName, StringComparer.Ordinal)
+                        .ThenBy(static row => row.Record.DisplayName, StringComparer.Ordinal)
+                        .ThenBy(static row => row.Uid, StringComparer.Ordinal),
+                ];
+                snapshot = [.. rows.Select(static row => row.Record)];
+                historyTests =
+                [
+                    .. rows
+                        .Select(static row => row.HistoryTest)
+                        .Where(static historyTest => historyTest is not null)
+                        .Select(static historyTest => historyTest!),
+                ];
+                dependencies =
+                [
+                    .. rows
+                        .SelectMany(static row => row.Dependencies)
+                        .OrderBy(static dependency => dependency.DependentFullyQualifiedName, StringComparer.Ordinal)
+                        .ThenBy(static dependency => dependency.Prerequisite, StringComparer.Ordinal)
+                        .ThenBy(static dependency => dependency.ProceedOnFailure)
+                        .GroupBy(static dependency => (
+                            dependency.DependentFullyQualifiedName,
+                            dependency.Prerequisite,
+                            dependency.ProceedOnFailure))
+                        .Select(static group => group.First())
+                        .Take(MaxCapturedDependencies),
+                ];
             }
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown";
             CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
+            CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage, historyTests, dependencies);
             if (_shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
                 string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                     resultsDirectory,
                     AzureDevOpsSummaryArtifactPostProcessor.Provider,
@@ -163,12 +245,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
                 return;
             }
 
-            string markdown = BuildMarkdown(
-                snapshot,
-                assemblyName,
-                _targetFrameworkMoniker.Value,
-                _testApplicationProcessExitCode.GetProcessExitCode(),
-                coverage);
+            string markdown = BuildMarkdown(module);
             string? path = ResolveSummaryPath();
             if (path is null)
             {
@@ -223,8 +300,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
         IReadOnlyList<TestRecord> records,
         string assemblyName,
         ITestSessionContext testSessionContext,
-        CiCoverageSummaryData coverage)
-        => CiRunSummaryAggregation.CreateModule(
+        CiCoverageSummaryData coverage,
+        CiRunSummaryHistoryTest[] historyTests,
+        CiRunSummaryDependency[] dependencies)
+    {
+        CiRunSummaryModule module = CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
             _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
@@ -236,6 +316,154 @@ internal sealed partial class AzureDevOpsSummaryReporter
             _testApplicationProcessExitCode.GetProcessExitCode(),
             ResolveExplicitSummaryPath(_commandLineOptions),
             coverage);
+        module.HistoryTests = historyTests;
+        module.Dependencies = dependencies;
+        return module;
+    }
+
+    private CiRunSummaryHistoryTest? CreateHistoryTest(
+        string uid,
+        string displayName,
+        string fullyQualifiedName,
+        TerminalKind kind,
+        TimeSpan duration,
+        bool isFlaky)
+    {
+        FlakyStats flakyStats = default;
+        DurationHistoryStats durationStats = default;
+        bool hasFlakyStats = _historyService is not null
+            && _historyService.TryGetStats(fullyQualifiedName, out flakyStats)
+            && flakyStats.TotalCount > 0;
+        bool hasDurationStats = _historyService is not null
+            && _historyService.TryGetDurationStats(fullyQualifiedName, out durationStats)
+            && durationStats.SampleCount > 0;
+        return !hasFlakyStats && !hasDurationStats
+            ? null
+            : new CiRunSummaryHistoryTest
+            {
+                TestId = uid,
+                DisplayName = displayName,
+                FullyQualifiedName = fullyQualifiedName,
+                Outcome = kind switch
+                {
+                    TerminalKind.Passed => "passed",
+                    TerminalKind.Failed => "failed",
+                    TerminalKind.Skipped => "skipped",
+                    _ => throw new InvalidOperationException($"Unexpected terminal kind '{kind}'."),
+                },
+                DurationTicks = duration.Ticks,
+                IsFlaky = isFlaky,
+                HistoricalPassCount = hasFlakyStats ? flakyStats.PassCount : 0,
+                HistoricalFailCount = hasFlakyStats ? flakyStats.FailCount : 0,
+                HistoryWindowInDays = _historyService?.HistoryWindowInDays ?? 0,
+                DurationSampleCount = hasDurationStats ? durationStats.SampleCount : 0,
+                P95DurationMilliseconds = hasDurationStats ? durationStats.P95Milliseconds : 0,
+                P99DurationMilliseconds = hasDurationStats ? durationStats.P99Milliseconds : 0,
+            };
+    }
+
+    private void ClearFlakyRows(string uid)
+    {
+        if (!_flakyRowIndicesByUid.TryGetValue(uid, out List<int>? indices))
+        {
+            return;
+        }
+
+        _flakyRowIndicesByUid.Remove(uid);
+        foreach (int index in indices)
+        {
+            SummaryRow row = _rows[index];
+            TestRecord record = row.Record;
+            row.Record = new TestRecord(
+                record.DisplayName,
+                record.FullyQualifiedName,
+                record.Kind,
+                record.Duration,
+                isFlaky: false,
+                record.Failure);
+            row.HistoryTest?.IsFlaky = false;
+        }
+    }
+
+    private static TestFailureDetails? CaptureFailureDetails(TestNodeStateProperty? state)
+    {
+        Exception? exception = state switch
+        {
+            FailedTestNodeStateProperty failed => failed.Exception,
+            ErrorTestNodeStateProperty error => error.Exception,
+            TimeoutTestNodeStateProperty timeout => timeout.Exception,
+#pragma warning disable CS0618, MTP0001
+            CancelledTestNodeStateProperty cancelled => cancelled.Exception,
+#pragma warning restore CS0618, MTP0001
+            _ => null,
+        };
+        string? explanation = state?.Explanation;
+        string? message = Truncate(
+            RoslynString.IsNullOrWhiteSpace(explanation) ? exception?.Message : explanation,
+            MaxFailureMessageLength);
+        string? exceptionType = exception?.GetType().FullName;
+        return RoslynString.IsNullOrWhiteSpace(message)
+            && RoslynString.IsNullOrWhiteSpace(exceptionType)
+                ? null
+                : new TestFailureDetails(message, exceptionType, stackTrace: null, filePath: null, lineNumber: 0);
+    }
+
+    private static CiRunSummaryDependency[] CreateDependencies(string dependentFullyQualifiedName, List<string>? encodedDependencies)
+    {
+        if (encodedDependencies is null)
+        {
+            return [];
+        }
+
+        var dependencies = new List<CiRunSummaryDependency>(Math.Min(encodedDependencies.Count, MaxDependenciesPerTest));
+        var identities = new HashSet<string>(StringComparer.Ordinal);
+        foreach (string encodedDependency in encodedDependencies.Take(MaxDependencyCandidatesPerTest))
+        {
+            if (encodedDependency.Length <= MaxDependencyLength
+                && TryDecodeDependency(encodedDependency, out string? prerequisite, out bool proceedOnFailure)
+                && identities.Add($"{prerequisite}\0{proceedOnFailure}"))
+            {
+                dependencies.Add(new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = dependentFullyQualifiedName,
+                    Prerequisite = prerequisite,
+                    ProceedOnFailure = proceedOnFailure,
+                });
+                if (dependencies.Count == MaxDependenciesPerTest)
+                {
+                    break;
+                }
+            }
+        }
+
+        return [.. dependencies];
+    }
+
+    private static bool TryDecodeDependency(string encoded, [NotNullWhen(true)] out string? prerequisite, out bool proceedOnFailure)
+    {
+        prerequisite = null;
+        proceedOnFailure = false;
+        if (RoslynString.IsNullOrEmpty(encoded))
+        {
+            return false;
+        }
+
+        bool hasFlag = encoded[0] is 'P' or 'S';
+        proceedOnFailure = encoded[0] == 'P';
+        string payload = hasFlag ? encoded.Substring(1) : encoded;
+        int separator = payload.IndexOf('\n');
+        string className = separator < 0 ? string.Empty : payload.Substring(0, separator);
+        string methodName = separator < 0 ? payload : payload.Substring(separator + 1);
+        prerequisite = RoslynString.IsNullOrEmpty(className)
+            ? methodName
+            : $"{className}.{(RoslynString.IsNullOrEmpty(methodName) ? "*" : methodName)}";
+        return !RoslynString.IsNullOrWhiteSpace(prerequisite);
+    }
+
+    private static string? Truncate(string? value, int maxLength)
+        => value is null || value.Length <= maxLength
+            ? value
+            : value.Substring(0, maxLength) + $"\n…[truncated, original length: {value.Length.ToString(CultureInfo.InvariantCulture)}]";
 
     private int GetAttemptNumber()
         => int.TryParse(

@@ -251,17 +251,8 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
                 || !HasNonEmptyConditionIgnoreMessage(methodAttribute));
 
     private static bool HasNonEmptyConditionIgnoreMessage(AttributeData attribute)
-    {
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
-        {
-            if (argument.Key == "IgnoreMessage")
-            {
-                return argument.Value.Value is string { Length: > 0 };
-            }
-        }
-
-        return true;
-    }
+        => !TryGetNamedArgument(attribute, "IgnoreMessage", out TypedConstant constant)
+            || constant.Value is string { Length: > 0 };
 
     private static bool TryGetConditionMode(AttributeData? attribute, out bool includeMode)
     {
@@ -311,16 +302,40 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
     }
 
     private static int GetNamedIntArgument(AttributeData attribute, string name)
+        => TryGetNamedArgument(
+                attribute,
+                name,
+                out TypedConstant constant,
+                valuePredicate: static constant => constant.Value is int)
+            && constant.Value is int value
+                ? value
+                : 0;
+
+    private static bool TryGetNamedArgument(
+        AttributeData attribute,
+        string name,
+        out TypedConstant constant,
+        bool returnLastMatch = false,
+        Func<TypedConstant, bool>? valuePredicate = null)
     {
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
+        constant = default;
+        bool found = false;
+
+        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments.Where(argument => argument.Key == name))
         {
-            if (argument.Key == name && argument.Value.Value is int value)
+            if (valuePredicate is null || valuePredicate(argument.Value))
             {
-                return value;
+                constant = argument.Value;
+                found = true;
+
+                if (!returnLastMatch)
+                {
+                    return true;
+                }
             }
         }
 
-        return 0;
+        return found;
     }
 
     private static bool IsIgnoreRedundant(AttributeData methodAttribute, AttributeData? classAttribute)
@@ -345,12 +360,9 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
             _ => null,
         };
 
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
+        if (TryGetNamedArgument(attribute, "IgnoreMessage", out TypedConstant constant, returnLastMatch: true))
         {
-            if (argument.Key == "IgnoreMessage")
-            {
-                message = argument.Value.Value as string;
-            }
+            message = constant.Value as string;
         }
 
         return true;

@@ -274,7 +274,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
         <source>The test host process exited unexpectedly.</source>
-        <target state="translated">Test ana bilgisayarı işleminden beklenmedik bir şekilde çıkıldı.</target>
+        <target state="translated">Test ana işleminden beklenmedik bir şekilde çıkıldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeTestSessionAbortedDescription">

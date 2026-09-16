@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.RedundantTestMethodAttributeAnalyzer,
     MSTest.Analyzers.RedundantTestMethodAttributeFixer>;
@@ -551,6 +553,50 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenClassRetryHasMalformedDuplicateDelay_UsesFirstIntegerValue()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Retry(3, MillisecondsDelayBetweenRetries = "bad", MillisecondsDelayBetweenRetries = 100)]
+            public sealed class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Retry(3, MillisecondsDelayBetweenRetries = 100)|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Retry(3, MillisecondsDelayBetweenRetries = "bad", MillisecondsDelayBetweenRetries = 100)]
+            public sealed class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            CompilerDiagnostics = CompilerDiagnostics.None,
+        };
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("[Retry]", "TestMethod"));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenRetrySettingsDifferFromClassSettings_NoDiagnostic()
     {
         string code = """
@@ -666,6 +712,33 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("[Ignore]", "TestMethod"),
             fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassIgnoreHasDuplicateNamedMessages_UsesLastMessage()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Ignore(IgnoreMessage = "Class reason", IgnoreMessage = "")]
+            public sealed class MyTestClass
+            {
+                [TestMethod]
+                [Ignore("Method reason")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            CompilerDiagnostics = CompilerDiagnostics.None,
+        };
+
+        await test.RunAsync();
     }
 
     [TestMethod]

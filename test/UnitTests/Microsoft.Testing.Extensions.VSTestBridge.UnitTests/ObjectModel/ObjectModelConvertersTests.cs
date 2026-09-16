@@ -113,6 +113,81 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
+    public void ToTestNode_WhenTestCaseHasMSTestDependencies_CopiesThemAsSerializableProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+#pragma warning disable CS0618 // Type or member is obsolete
+        var dependenciesProperty = TestProperty.Register(
+            "MSTestDiscoverer.Dependencies",
+            "Dependencies",
+            typeof(string[]),
+            TestPropertyAttributes.Hidden,
+            typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
+        testCase.SetPropertyValue<string[]>(dependenciesProperty, ["SMy.Namespace.Setup\nInitialize", "P\nWarmup"]);
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            null,
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        SerializableKeyValuePairStringProperty[] dependencies =
+        [
+            .. testNode.Properties
+                .OfType<SerializableKeyValuePairStringProperty>()
+                .Where(static property => property.Key == "mstest.TestCase.Dependency"),
+        ];
+        Assert.HasCount(2, dependencies);
+        string[] dependencyValues =
+        [
+            .. dependencies
+                .Select(static property => property.Value)
+                .OrderBy(static value => value, StringComparer.Ordinal),
+        ];
+        Assert.AreSequenceEqual(["P\nWarmup", "SMy.Namespace.Setup\nInitialize"], dependencyValues);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenMSTestDependenciesExceedBounds_CapsTransportedMetadata()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+#pragma warning disable CS0618 // Type or member is obsolete
+        var dependenciesProperty = TestProperty.Register(
+            "MSTestDiscoverer.Dependencies",
+            "Dependencies",
+            typeof(string[]),
+            TestPropertyAttributes.Hidden,
+            typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
+        string oversizedDependency = "S" + new string('x', 1024);
+        testCase.SetPropertyValue<string[]>(
+            dependenciesProperty,
+            [oversizedDependency, .. Enumerable.Range(0, 40).Select(static index => $"SNamespace.Type\nMethod{index}")]);
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            null,
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        string[] dependencyValues =
+        [
+            .. testNode.Properties
+                .OfType<SerializableKeyValuePairStringProperty>()
+                .Where(static property => property.Key == "mstest.TestCase.Dependency")
+                .Select(static property => property.Value),
+        ];
+        Assert.HasCount(32, dependencyValues);
+        Assert.DoesNotContain(oversizedDependency, dependencyValues);
+        Assert.Contains("SNamespace.Type\nMethod31", dependencyValues);
+    }
+
+    [TestMethod]
     public void ToTestNode_WhenTestCaseHasOriginalExecutorUriProperty_TestNodePropertiesContainItInSerializableKeyValuePairStringProperty()
     {
         var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
