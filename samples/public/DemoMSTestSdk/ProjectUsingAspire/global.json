@@ -3,6 +3,6 @@
     "runner": "Microsoft.Testing.Platform"
   },
   "msbuild-sdks": {
-    "MSTest.Sdk": "4.4.0"
+    "MSTest.Sdk": "4.4.1"
   }
 }
