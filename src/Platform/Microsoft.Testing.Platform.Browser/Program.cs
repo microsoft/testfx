@@ -31,10 +31,9 @@ internal static class Program
                 Uri hostUri = await host.WaitUntilReadyAsync(
                     options.StartupTimeout,
                     runCancellationTokenSource.Token).ConfigureAwait(false);
-                Uri browserUri = BrowserLauncherOptions.ResolveBrowserUri(hostUri, options.UrlPath);
                 ChromiumBrowser browser = await ChromiumBrowser.LaunchAsync(
                     options,
-                    browserUri,
+                    hostUri,
                     diagnostics,
                     runCancellationTokenSource.Token).ConfigureAwait(false);
                 try

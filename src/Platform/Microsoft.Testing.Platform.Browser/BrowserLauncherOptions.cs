@@ -5,11 +5,9 @@ namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed record BrowserLauncherOptions(
     string HostCommand,
-    IReadOnlyList<string> HostArguments,
+    string HostArguments,
     string HostWorkingDirectory,
-    string UrlPath,
-    string? BrowserExecutable,
-    IReadOnlyList<string> BrowserArguments,
+    string BrowserExecutable,
     TimeSpan StartupTimeout,
     TimeSpan CompletionTimeout,
     IReadOnlyList<string> TestApplicationArguments,
@@ -20,230 +18,82 @@ internal sealed record BrowserLauncherOptions(
         int separatorIndex = Array.IndexOf(args, "--");
         if (separatorIndex < 0)
         {
-            throw new BrowserLauncherException("The launcher command line must contain '--' before the Microsoft Testing Platform arguments.");
+            throw new BrowserLauncherException(
+                "The launcher command line must contain '--' before the Microsoft Testing Platform arguments.");
         }
 
-        string hostCommand;
-        string hostArguments;
-        string hostWorkingDirectory;
-        string urlPath;
-        string? browserExecutable;
-        string browserArguments;
-        TimeSpan startupTimeout;
-        TimeSpan completionTimeout;
-
-        if (separatorIndex == 2 && args[0] == "--config")
+        var options = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (int i = 0; i < separatorIndex; i += 2)
         {
-            string[] configuration;
-            try
+            if (i + 1 >= separatorIndex || !args[i].StartsWith("--", StringComparison.Ordinal))
             {
-                configuration = File.ReadAllLines(args[1]);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                throw new BrowserLauncherException("Unable to read the browser launcher configuration file.", ex);
+                throw new BrowserLauncherException($"Invalid launcher option at position {i + 1}.");
             }
 
-            if (configuration.Length != 8)
+            if (!options.TryAdd(args[i], args[i + 1]))
             {
-                throw new BrowserLauncherException("The browser launcher configuration file is invalid.");
+                throw new BrowserLauncherException($"Launcher option '{args[i]}' was provided more than once.");
             }
-
-            hostCommand = ReadEncodedConfigurationValue(configuration, 0, "host-command-uri");
-            hostArguments = ReadEncodedConfigurationValue(configuration, 1, "host-arguments-uri");
-            hostWorkingDirectory = ReadEncodedConfigurationValue(configuration, 2, "host-working-directory-uri");
-            urlPath = ReadEncodedConfigurationValue(configuration, 3, "url-path-uri");
-            browserExecutable = ReadEncodedConfigurationValue(configuration, 4, "browser-executable-uri");
-            browserArguments = ReadEncodedConfigurationValue(configuration, 5, "browser-arguments-uri");
-            startupTimeout = ParseTimeout(
-                ReadConfigurationValue(configuration, 6, "startup-timeout-seconds"),
-                "startup timeout");
-            completionTimeout = ParseTimeout(
-                ReadConfigurationValue(configuration, 7, "completion-timeout-seconds"),
-                "completion timeout");
         }
-        else
+
+        string hostCommand = ReadEncodedOption(options, "--host-command-uri", required: true);
+        string hostArguments = ReadEncodedOption(options, "--host-arguments-uri", required: false);
+        string hostWorkingDirectory = ReadEncodedOption(options, "--host-working-directory-uri", required: true);
+        string browserExecutable = Path.GetFullPath(
+            ReadEncodedOption(options, "--browser-executable-uri", required: true));
+        if (!File.Exists(browserExecutable))
         {
-            var options = new Dictionary<string, string>(StringComparer.Ordinal);
-            for (int i = 0; i < separatorIndex; i += 2)
-            {
-                if (i + 1 >= separatorIndex || !args[i].StartsWith("--", StringComparison.Ordinal))
-                {
-                    throw new BrowserLauncherException($"Invalid launcher option at position {i + 1}.");
-                }
-
-                options.Add(args[i], args[i + 1]);
-            }
-
-            hostCommand = DecodeRequired(options, "--host-command-base64");
-            hostArguments = DecodeRequired(options, "--host-arguments-base64");
-            hostWorkingDirectory = DecodeRequired(options, "--host-working-directory-base64");
-            urlPath = DecodeRequired(options, "--url-path-base64");
-            browserExecutable = DecodeOptional(options, "--browser-executable-base64");
-            browserArguments = DecodeOptional(options, "--browser-arguments-base64") ?? string.Empty;
-
-            startupTimeout = ParseTimeout(options, "--startup-timeout-seconds");
-            completionTimeout = ParseTimeout(options, "--completion-timeout-seconds");
+            throw new BrowserLauncherException(
+                $"The configured browser executable does not exist: '{browserExecutable}'.");
         }
 
-        string[] expandedArguments = ResponseFileArgumentExpander.Expand(args[(separatorIndex + 1)..]);
-        ValidateTestApplicationArguments(expandedArguments);
+        TimeSpan startupTimeout = ParseTimeout(options, "--startup-timeout-seconds");
+        TimeSpan completionTimeout = ParseTimeout(options, "--completion-timeout-seconds");
+        if (options.Count != 0)
+        {
+            throw new BrowserLauncherException(
+                $"Unknown launcher option '{options.Keys.First()}'.");
+        }
+
+        string[] expandedArguments = SdkResponseFileExpander.Expand(args[(separatorIndex + 1)..]);
         var bootstrap = DotnetTestHttpBootstrap.Parse(expandedArguments);
-        string[] parsedBrowserArguments = CommandLineTokenizer.Split(browserArguments);
-        ValidateBrowserArguments(parsedBrowserArguments);
 
         return new BrowserLauncherOptions(
             hostCommand,
-            CommandLineTokenizer.Split(hostArguments),
+            hostArguments,
             Path.GetFullPath(hostWorkingDirectory),
-            NormalizeUrlPath(urlPath),
             browserExecutable,
-            parsedBrowserArguments,
             startupTimeout,
             completionTimeout,
             expandedArguments,
             bootstrap);
     }
 
-    private static void ValidateBrowserArguments(IReadOnlyList<string> arguments)
-    {
-        string[] forbiddenPrefixes =
-        [
-            "--remote-debugging-address",
-            "--remote-debugging-pipe",
-            "--remote-debugging-port",
-            "--remote-allow-origins",
-            "--profile-directory",
-            "--user-data-dir",
-        ];
-
-        foreach (string argument in arguments)
-        {
-            string switchName = argument.TrimStart('-', '/');
-            int valueSeparator = switchName.IndexOf('=');
-            if (valueSeparator >= 0)
-            {
-                switchName = switchName[..valueSeparator];
-            }
-
-            if (forbiddenPrefixes.Any(prefix =>
-                switchName.Equals(prefix[2..], StringComparison.OrdinalIgnoreCase)))
-            {
-                throw new BrowserLauncherException(
-                    $"Browser argument '{argument}' is controlled by Microsoft.Testing.Platform.Browser and cannot be overridden.");
-            }
-        }
-    }
-
-    private static void ValidateTestApplicationArguments(IReadOnlyList<string> arguments)
-    {
-        var unsupportedOptions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "config-file",
-            "diagnostic",
-            "diagnostic-file-prefix",
-            "diagnostic-output-directory",
-            "results-directory",
-            "settings",
-            "report-trx",
-            "report-trx-filename",
-            "report-html",
-            "report-html-filename",
-            "report-junit",
-            "report-junit-filename",
-            "report-ctrf",
-            "report-ctrf-filename",
-            "coverage",
-            "coverage-output",
-            "coverage-output-format",
-            "coverage-settings",
-        };
-
-        foreach (string argument in arguments)
-        {
-            int prefixLength = argument.StartsWith("--", StringComparison.Ordinal)
-                ? 2
-                : argument.StartsWith("-", StringComparison.Ordinal)
-                    ? 1
-                    : 0;
-            if (prefixLength == 0 || argument.Length == prefixLength)
-            {
-                continue;
-            }
-
-            string optionName = argument[prefixLength..];
-            int valueSeparator = optionName.IndexOfAny(['=', ':']);
-            if (valueSeparator >= 0)
-            {
-                optionName = optionName[..valueSeparator];
-            }
-
-            if (unsupportedOptions.Contains(optionName))
-            {
-                throw new BrowserLauncherException(
-                    $"Microsoft.Testing.Platform option '--{optionName}' is not supported by the browser launcher preview because its file input or output is not transferred between the browser virtual file system and the host.");
-            }
-        }
-    }
-
-    private static string DecodeRequired(Dictionary<string, string> options, string name)
-        => DecodeOptional(options, name) is { Length: > 0 } value
-            ? value
-            : throw new BrowserLauncherException($"Required launcher option '{name}' is missing or empty.");
-
-    private static string? DecodeOptional(Dictionary<string, string> options, string name)
+    private static string ReadEncodedOption(
+        Dictionary<string, string> options,
+        string name,
+        bool required)
     {
         if (!options.Remove(name, out string? encodedValue))
         {
-            return null;
+            return required
+                ? throw new BrowserLauncherException($"Required launcher option '{name}' is missing.")
+                : string.Empty;
         }
 
-        try
-        {
-            return Encoding.UTF8.GetString(Convert.FromBase64String(encodedValue));
-        }
-        catch (FormatException ex)
-        {
-            throw new BrowserLauncherException($"Launcher option '{name}' is not valid Base64.", ex);
-        }
+        string value = Uri.UnescapeDataString(encodedValue);
+        return required && string.IsNullOrWhiteSpace(value)
+            ? throw new BrowserLauncherException($"Required launcher option '{name}' is empty.")
+            : value;
     }
 
     private static TimeSpan ParseTimeout(Dictionary<string, string> options, string name)
         => options.Remove(name, out string? value)
-            ? ParseTimeout(value, name)
-            : throw new BrowserLauncherException($"Launcher option '{name}' must be a positive integer.");
-
-    private static TimeSpan ParseTimeout(string value, string name)
-        => int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int seconds)
+            && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int seconds)
             && seconds > 0
                 ? TimeSpan.FromSeconds(seconds)
-                : throw new BrowserLauncherException($"Launcher option '{name}' must be a positive integer.");
-
-    private static string NormalizeUrlPath(string path)
-        => path.StartsWith("/", StringComparison.Ordinal) ? path : "/" + path;
-
-    internal static Uri ResolveBrowserUri(Uri hostUri, string urlPath)
-    {
-        var browserUri = new Uri(hostUri, NormalizeUrlPath(urlPath));
-        return string.Equals(
-            browserUri.GetLeftPart(UriPartial.Authority),
-            hostUri.GetLeftPart(UriPartial.Authority),
-            StringComparison.Ordinal)
-                ? browserUri
                 : throw new BrowserLauncherException(
-                    "The configured browser URL path resolves outside the browser host origin.");
-    }
-
-    private static string ReadConfigurationValue(string[] configuration, int index, string name)
-    {
-        string prefix = name + "=";
-        return configuration[index].StartsWith(prefix, StringComparison.Ordinal)
-            ? configuration[index][prefix.Length..]
-            : throw new BrowserLauncherException("The browser launcher configuration file is invalid.");
-    }
-
-    private static string ReadEncodedConfigurationValue(string[] configuration, int index, string name)
-        => Uri.UnescapeDataString(ReadConfigurationValue(configuration, index, name));
+                    $"Launcher option '{name}' must be a positive integer.");
 }
 
 internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
@@ -262,7 +112,8 @@ internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
             {
                 if (++i >= arguments.Count)
                 {
-                    throw new BrowserLauncherException($"Microsoft Testing Platform option '{argument}' has no value.");
+                    throw new BrowserLauncherException(
+                        $"Microsoft Testing Platform option '{argument}' has no value.");
                 }
 
                 string value = arguments[i];
@@ -284,85 +135,86 @@ internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
             }
         }
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri))
-        {
-            throw new BrowserLauncherException(
-                "The SDK did not provide a valid loopback authenticated HTTP dotnettestcli bootstrap.");
-        }
+        Uri endpointUri = Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? parsedEndpoint)
+            ? parsedEndpoint
+            : throw InvalidBootstrap();
 
-        bool isValid = string.Equals(server, "dotnettestcli", StringComparison.OrdinalIgnoreCase)
+        return string.Equals(server, "dotnettestcli", StringComparison.OrdinalIgnoreCase)
             && string.Equals(transport, "http", StringComparison.OrdinalIgnoreCase)
             && endpointUri.Scheme is "http" or "https"
             && endpointUri.IsLoopback
             && !string.IsNullOrWhiteSpace(token)
             && !token.Any(char.IsWhiteSpace)
-            && !token.Any(char.IsControl);
+            && !token.Any(char.IsControl)
+                ? new DotnetTestHttpBootstrap(endpointUri, token)
+                : throw InvalidBootstrap();
 
-        return isValid
-            ? new DotnetTestHttpBootstrap(endpointUri, token!)
-            : throw new BrowserLauncherException(
+        static BrowserLauncherException InvalidBootstrap()
+            => new(
                 "The SDK did not provide a valid loopback authenticated HTTP dotnettestcli bootstrap.");
     }
 }
 
-internal static class ResponseFileArgumentExpander
+internal static class SdkResponseFileExpander
 {
     public static string[] Expand(IReadOnlyList<string> arguments)
     {
         var expanded = new List<string>();
-        var activeFiles = new HashSet<string>(
-            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-
         foreach (string argument in arguments)
         {
-            ExpandArgument(argument, expanded, activeFiles);
+            if (!argument.StartsWith('@'))
+            {
+                expanded.Add(argument);
+                continue;
+            }
+
+            string path = Path.GetFullPath(argument[1..]);
+            try
+            {
+                ValidateResponseFilePermissions(path);
+                using var stream = new FileStream(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.None);
+                using var reader = new StreamReader(
+                    stream,
+                    new UTF8Encoding(
+                        encoderShouldEmitUTF8Identifier: false,
+                        throwOnInvalidBytes: true));
+
+                while (reader.ReadLine() is { } line)
+                {
+                    string trimmed = line.Trim();
+                    if (trimmed.Length == 0 || trimmed[0] == '#')
+                    {
+                        continue;
+                    }
+
+                    int separator = trimmed.IndexOfAny([' ', '\t']);
+                    if (separator < 0)
+                    {
+                        expanded.Add(trimmed);
+                        continue;
+                    }
+
+                    expanded.Add(trimmed[..separator]);
+                    string value = trimmed[(separator + 1)..].TrimStart();
+                    if (value.Length != 0)
+                    {
+                        expanded.Add(value);
+                    }
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DecoderFallbackException)
+            {
+                throw new BrowserLauncherException(
+                    "Unable to read the SDK response file.",
+                    ex);
+            }
         }
 
         return [.. expanded];
-    }
-
-    private static void ExpandArgument(string argument, List<string> expanded, HashSet<string> activeFiles)
-    {
-        if (!argument.StartsWith('@'))
-        {
-            expanded.Add(argument);
-            return;
-        }
-
-        string path = Path.GetFullPath(argument[1..]);
-        if (!activeFiles.Add(path))
-        {
-            throw new BrowserLauncherException("Recursive response files are not supported.");
-        }
-
-        try
-        {
-            ValidateResponseFilePermissions(path);
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
-            using var reader = new StreamReader(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true));
-
-            while (reader.ReadLine() is { } line)
-            {
-                string trimmed = line.Trim();
-                if (trimmed.Length == 0 || trimmed[0] == '#')
-                {
-                    continue;
-                }
-
-                foreach (string nestedArgument in CommandLineTokenizer.Split(trimmed))
-                {
-                    ExpandArgument(nestedArgument, expanded, activeFiles);
-                }
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DecoderFallbackException)
-        {
-            throw new BrowserLauncherException($"Unable to read the SDK response file '{Path.GetFileName(path)}'.", ex);
-        }
-        finally
-        {
-            activeFiles.Remove(path);
-        }
     }
 
     private static void ValidateResponseFilePermissions(string path)
@@ -383,96 +235,8 @@ internal static class ResponseFileArgumentExpander
         if ((mode & disallowed) != 0)
         {
             throw new BrowserLauncherException(
-                $"The SDK response file '{Path.GetFileName(path)}' is accessible by users other than its owner.");
+                "The SDK response file is accessible by users other than its owner.");
         }
-    }
-}
-
-internal static class CommandLineTokenizer
-{
-    public static string[] Split(string commandLine)
-    {
-        var arguments = new List<string>();
-        var current = new StringBuilder();
-        bool inQuotes = false;
-        bool tokenStarted = false;
-        int backslashCount = 0;
-
-        void FlushBackslashes()
-        {
-            if (backslashCount > 0)
-            {
-                current.Append('\\', backslashCount);
-                backslashCount = 0;
-                tokenStarted = true;
-            }
-        }
-
-        for (int i = 0; i < commandLine.Length; i++)
-        {
-            char character = commandLine[i];
-            if (character == '\\')
-            {
-                backslashCount++;
-                continue;
-            }
-
-            if (character == '"')
-            {
-                tokenStarted = true;
-                current.Append('\\', backslashCount / 2);
-                if (inQuotes && backslashCount % 2 == 0
-                    && i + 1 < commandLine.Length
-                    && commandLine[i + 1] == '"')
-                {
-                    current.Append('"');
-                    backslashCount = 0;
-                    i++;
-                    continue;
-                }
-
-                if (backslashCount % 2 == 0)
-                {
-                    inQuotes = !inQuotes;
-                }
-                else
-                {
-                    current.Append('"');
-                }
-
-                backslashCount = 0;
-                continue;
-            }
-
-            FlushBackslashes();
-            if (char.IsWhiteSpace(character) && !inQuotes)
-            {
-                if (tokenStarted)
-                {
-                    arguments.Add(current.ToString());
-                    current.Clear();
-                    tokenStarted = false;
-                }
-
-                continue;
-            }
-
-            tokenStarted = true;
-            current.Append(character);
-        }
-
-        FlushBackslashes();
-        if (inQuotes)
-        {
-            throw new BrowserLauncherException("A launcher command line contains an unclosed quote.");
-        }
-
-        if (tokenStarted)
-        {
-            arguments.Add(current.ToString());
-        }
-
-        return [.. arguments];
     }
 }
 
