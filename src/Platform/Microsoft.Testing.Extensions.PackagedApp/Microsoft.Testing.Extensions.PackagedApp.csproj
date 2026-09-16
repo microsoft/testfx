@@ -38,6 +38,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
     <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
     <!-- Internal API surface that only exists in the Windows build (register-and-activate path). -->
+    <AdditionalFiles Include="InternalAPI/Windows/InternalAPI.Shipped.txt" Condition="$(TargetFramework.Contains('-windows'))" />
     <AdditionalFiles Include="InternalAPI/Windows/InternalAPI.Unshipped.txt" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
 
