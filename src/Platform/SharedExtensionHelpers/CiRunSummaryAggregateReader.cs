@@ -156,10 +156,13 @@ internal static partial class CiRunSummaryAggregation
                 || test.DurationSampleCount < 0
                 || double.IsNaN(test.P95DurationMilliseconds)
                 || double.IsNaN(test.P99DurationMilliseconds)
+                || double.IsInfinity(test.P95DurationMilliseconds)
+                || double.IsInfinity(test.P99DurationMilliseconds)
                 || test.P95DurationMilliseconds < 0
                 || test.P99DurationMilliseconds < test.P95DurationMilliseconds)
             || module.Dependencies.Any(static dependency =>
-                RoslynString.IsNullOrWhiteSpace(dependency.DependentFullyQualifiedName)
+                dependency is null
+                || RoslynString.IsNullOrWhiteSpace(dependency.DependentFullyQualifiedName)
                 || RoslynString.IsNullOrWhiteSpace(dependency.Prerequisite))
             || module.TopFailingClasses.Any(item => RoslynString.IsNullOrWhiteSpace(item.ClassName) || item.FailureCount <= 0)
             || module.Coverage.Metrics.Any(metric =>

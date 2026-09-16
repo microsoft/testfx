@@ -453,6 +453,98 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_SafelyFormatsOutOfRangeHistoryDurations()
+    {
+        double hugeButFinite = TimeSpan.MaxValue.TotalMilliseconds * 2;
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            HistoryTests =
+            [
+                new CiRunSummaryHistoryTest
+                {
+                    TestId = "huge",
+                    DisplayName = "Huge",
+                    FullyQualifiedName = "Tests.Huge",
+                    Outcome = "passed",
+                    DurationSampleCount = 10,
+                    P95DurationMilliseconds = hugeButFinite,
+                    P99DurationMilliseconds = hugeButFinite,
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains(hugeButFinite.ToString("G3", CultureInfo.InvariantCulture) + "ms", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ReplacesBackticksInsideInlineCode()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            TotalTests = 2,
+            FailedTests = 2,
+            Failures =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Detailed",
+                    FullyQualifiedName = "Tests.Detailed",
+                    ErrorType = "Tests.GenericException`1",
+                },
+                new CiRunSummaryTest
+                {
+                    DisplayName = "NameOnly",
+                    FullyQualifiedName = "Tests.Generic`1.Method",
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 0,
+            failedTests: 2,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("`Tests.GenericException'1`", markdown);
+        Assert.Contains("`Tests.Generic'1.Method`", markdown);
+        Assert.DoesNotContain("\\`1", markdown);
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_WritesSummaryFileAndEmitsUploadSummaryCommandAsync()
     {
         AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
@@ -485,7 +577,8 @@ public sealed class AzureDevOpsSummaryReporterTests
     [TestMethod]
     public async Task SessionFinishing_RendersHistoryDependenciesAndFailureDetailsAsync()
     {
-        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions(), new StubHistoryService());
+        const string CanonicalTestName = "Native.Namespace.NativeType.NativeMethod";
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions(), new StubHistoryService(CanonicalTestName));
         _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
 
         using var memoryStream = new MemoryStream();
@@ -497,7 +590,8 @@ public sealed class AzureDevOpsSummaryReporterTests
         var properties = new PropertyBag(
             new FailedTestNodeStateProperty(new InvalidOperationException("boom"), "Expected <safe>, got |unsafe|"),
             new TimingProperty(new TimingInfo(now, now.AddSeconds(1), TimeSpan.FromSeconds(1))),
-            new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "MyCo.Suite.Dependent"),
+            new TestMethodIdentifierProperty("tests.dll", "Native.Namespace", "NativeType", "NativeMethod", 0, [], "System.Void"),
+            new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "VSTest.Fallback"),
             new SerializableKeyValuePairStringProperty("mstest.TestCase.Dependency", "SMyCo.Suite.Setup\nInitialize"));
         var update = new TestNodeUpdateMessage(
             new SessionUid("session"),
@@ -518,6 +612,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.Contains("Duration history", written);
         Assert.Contains("2.00×", written);
         Assert.Contains("Test dependencies", written);
+        Assert.Contains(CanonicalTestName, written);
         Assert.Contains("MyCo.Suite.Setup.Initialize", written);
         Assert.Contains("Failure details", written);
         Assert.Contains("Expected &lt;safe&gt;, got \\|unsafe\\|", written);
@@ -627,14 +722,14 @@ public sealed class AzureDevOpsSummaryReporterTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }
 
-    private sealed class StubHistoryService : IAzureDevOpsHistoryService
+    private sealed class StubHistoryService(string expectedTestName) : IAzureDevOpsHistoryService
     {
         public int HistoryWindowInDays => 14;
 
         public bool TryGetStats(string testName, out FlakyStats stats)
         {
             stats = new FlakyStats(passCount: 8, failCount: 2);
-            return true;
+            return testName == expectedTestName;
         }
 
         public bool IsLikelyFlaky(string testName, double threshold) => true;
@@ -642,7 +737,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         public bool TryGetDurationStats(string testName, out DurationHistoryStats stats)
         {
             stats = new DurationHistoryStats(p95Milliseconds: 500, p99Milliseconds: 750, sampleCount: 10);
-            return true;
+            return testName == expectedTestName;
         }
     }
 

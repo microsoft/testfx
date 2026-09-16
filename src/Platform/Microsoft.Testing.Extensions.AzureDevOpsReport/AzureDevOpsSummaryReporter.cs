@@ -20,7 +20,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataProducer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
     private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}-{1}-{2}.md";
-    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const string MSTestDependencyPropertyKey = "mstest.TestCase.Dependency";
     private const int MaxFailureMessageLength = 4 * 1024;
     private const int MaxDependenciesPerTest = 32;

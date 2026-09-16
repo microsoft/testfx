@@ -138,6 +138,34 @@ public sealed class CiRunSummaryAggregationTests
     }
 
     [TestMethod]
+    public async Task ReadAndAggregate_NullDependencyEntry_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace("\"dependencies\": []", "\"dependencies\": [null]");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ReadAndAggregate_DuplicateFragmentIdentity_ThrowsFormatExceptionAsync()
     {
         string directory = CreateDirectory();

@@ -80,14 +80,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
 
-            // Single-pass collection of TimingProperty and the FQN SerializableKeyValuePairStringProperty:
-            // replaces 1 × SingleOrDefault<TimingProperty>() + 1 × OfType<>().FirstOrDefault() with one
-            // GetStructEnumerator() walk, saving 1 linked-list traversal and 1 LINQ allocation per terminal result.
-            // Singleton-typed properties use the local GetSingleOrDefaultValue helper to preserve the
-            // throw-on-duplicate invariant that SingleOrDefault<T>() provided; the FQN key keeps the
-            // prior FirstOrDefault semantics (first match wins) so we don't silently overwrite earlier values.
+            // Collect timing and dependency metadata in one pass. TestNodeIdentity resolves the canonical
+            // test name separately because it must prefer TestMethodIdentifierProperty over the VSTest fallback.
             TimingProperty? timing = null;
-            string? fqnValue = null;
             List<string>? encodedDependencies = null;
             PropertyBag.PropertyBagEnumerator enumerator = update.TestNode.Properties.GetStructEnumerator();
             while (enumerator.MoveNext())
@@ -95,9 +90,6 @@ internal sealed partial class AzureDevOpsSummaryReporter
                 switch (enumerator.Current)
                 {
                     case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
-                    case SerializableKeyValuePairStringProperty kv when kv.Key == FullyQualifiedNamePropertyKey && fqnValue is null:
-                        fqnValue = kv.Value;
-                        break;
                     case SerializableKeyValuePairStringProperty kv when kv.Key == MSTestDependencyPropertyKey:
                         (encodedDependencies ??= []).Add(kv.Value);
                         break;
@@ -110,7 +102,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
                     ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
                     : property;
 
-            string fullyQualifiedName = fqnValue ?? displayName;
+            string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
             RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
             TestFailureDetails? failure = kind == TerminalKind.Failed ? CaptureFailureDetails(state) : null;

@@ -311,8 +311,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
             {
                 builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules.Count, module, test.FullyQualifiedName)))
                     .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks)))
-                    .Append(" | ").Append(FormatDuration(TimeSpan.FromMilliseconds(test.P95DurationMilliseconds)))
-                    .Append(" | ").Append(FormatDuration(TimeSpan.FromMilliseconds(test.P99DurationMilliseconds)))
+                    .Append(" | ").Append(FormatHistoricalDuration(test.P95DurationMilliseconds))
+                    .Append(" | ").Append(FormatHistoricalDuration(test.P99DurationMilliseconds))
                     .Append(" | ").Append(test.DurationSampleCount.ToString(CultureInfo.InvariantCulture))
                     .Append(" | ").Append(GetDurationRatio(test).ToString("F2", CultureInfo.InvariantCulture)).Append("× |\n");
             }
@@ -364,6 +364,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
     private static string FormatDuration(TimeSpan duration)
         => SummaryReporterHelpers.FormatDuration(duration, "{0:D2}:{1:D2}", "{0}:{1:D2}:{2:D2}");
 
+    private static string FormatHistoricalDuration(double milliseconds)
+        => milliseconds <= TimeSpan.MaxValue.TotalMilliseconds
+            ? FormatDuration(TimeSpan.FromMilliseconds(milliseconds))
+            : milliseconds.ToString("G3", CultureInfo.InvariantCulture) + "ms";
+
     private static string FormatRate(long value, long total)
         => total > 0
             ? ((double)value / total * 100d).ToString("F1", CultureInfo.InvariantCulture) + "%"
@@ -395,7 +400,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
     }
 
     private static string EscapeInlineCode(string value)
-        => value.Replace("`", "\\`").Replace("\r", string.Empty).Replace("\n", " ");
+        => value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
 
     private static string EscapeCell(string value)
         => RoslynString.IsNullOrEmpty(value)
