@@ -463,6 +463,26 @@ Applies only to changes in `src/Analyzers/`.
 3. Analyzer diagnostics need unique `MSTest` or `MSTEST` prefixed IDs.
 4. Analyzers should be tested with `CSharpAnalyzerTest` / `CSharpCodeFixTest`.
 5. Diagnostic severity must be appropriate — don't use `Error` for style suggestions.
+6. For each source-to-target semantic mapping, classify it as **exact**,
+   **compatible/coarser**, or **unrepresentable**. Build a polarity/version
+   matrix covering every meaningful source value, omitted/default state, and
+   supported target version; a single positive example does not establish
+   equivalence.
+7. Separate compile-time annotation semantics from runtime enforcement. Trace
+   what the analyzer reads from source symbols and metadata independently from
+   what the target framework or platform honors during discovery and
+   execution.
+8. Descriptor titles, messages, descriptions, and documentation must match the
+   mapping classification. Reserve "equivalent" for exact mappings; use
+   "compatible" for coarser mappings and state the semantic loss or changed
+   enforcement boundary.
+9. Inspect code-fix registration, equivalence keys, diagnostic properties, and
+   fix-all behavior. A tested diagnostic with no registered fix is not
+   automatically actionable.
+10. Every diagnostic without a code fix must identify a safe, concrete manual
+    edit that clears the diagnostic while preserving the relevant behavior. If
+    no such edit exists for a valid triggering program, challenge whether the
+    diagnostic should be reported.
 
 **CHECK — Flag if:**
 - [ ] Analyzer can throw on unusual but valid syntax
@@ -470,6 +490,12 @@ Applies only to changes in `src/Analyzers/`.
 - [ ] Missing or duplicate diagnostic ID
 - [ ] Diagnostic severity too high or too low
 - [ ] Missing analyzer test coverage
+- [ ] Source-to-target mapping is unclassified or loses semantics while claiming equivalence
+- [ ] Compile-time annotation behavior is conflated with runtime enforcement
+- [ ] Polarity/version matrix has an uncovered or contradictory case
+- [ ] Descriptor wording says "equivalent" for only compatible/coarser behavior
+- [ ] Diagnostic properties, registration, or fix-all behavior disagree with the intended fix contract
+- [ ] Diagnostic without a code fix has no safe manual resolution that preserves behavior
 
 ---
 
@@ -673,7 +699,15 @@ Before analyzing the diff, load the repository history knowledge base produced b
 
 1. Map changed files to the [Folder Hotspot Mapping](#folder-hotspot-mapping). Cross-reference with `high_churn_files` and `directory_risk_scores` from the historian data to prioritize review effort.
 
-> **Historical context** (for bug fix and follow-up PRs): Read the linked issue and the original feature PR discussions. Identify design intent, constraints, and reviewer-established principles. Feed this context to every dimension agent so they can evaluate whether the fix aligns with the original design.
+> **Historical context** (for bug fix and follow-up PRs): Read the linked issue
+> and the original feature PR discussions. Treat their behavior, equivalence,
+> compatibility, and root-cause claims as hypotheses, not as the semantic
+> oracle. Validate each claim against the source API contract, analyzer
+> implementation, code-fix registration and properties, descriptor wording,
+> target runtime behavior, and supported polarity/version matrix. Identify the
+> design intent, constraints, and reviewer-established principles that survive
+> that validation, then feed the verified context and any contradictions to
+> every dimension agent.
 
 2. Launch **one sub-agent per dimension** (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`). Each agent evaluates exactly one dimension against the full PR diff. Run in **parallel batches of up to 6** (4 batches for 22 dimensions, last batch has 4).
 

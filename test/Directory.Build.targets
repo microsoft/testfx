@@ -73,6 +73,10 @@
   </PropertyGroup>
   <PropertyGroup>
     <_CodeCoverageSourceRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)src'))</_CodeCoverageSourceRoot>
+    <_CodeCoverageNuGetPackagesRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(NuGetPackageRoot)'))</_CodeCoverageNuGetPackagesRootPattern>
+    <_CodeCoverageArtifactsRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(ArtifactsDir)'))</_CodeCoverageArtifactsRootPattern>
+    <_CodeCoverageTestInfrastructureRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure'))</_CodeCoverageTestInfrastructureRoot>
+    <_CodeCoverageTestInfrastructureRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_CodeCoverageTestInfrastructureRoot)'))</_CodeCoverageTestInfrastructureRootPattern>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableCodeCoverage)' == 'True' ">
@@ -96,6 +100,15 @@
       <_CodeCoverageProjectReference Update="@(_CodeCoverageProjectReference)">
         <CoverageAssemblyPattern>$([System.String]::Copy('%(_CodeCoverageProjectReference.CoverageAssemblyName)').Replace('.', '\.'))</CoverageAssemblyPattern>
       </_CodeCoverageProjectReference>
+      <_CodeCoverageExcludedSource Include="Packages" Condition=" '$(NuGetPackageRoot)' != '' ">
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageNuGetPackagesRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Include="Artifacts">
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageArtifactsRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Include="TestInfrastructure">
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageTestInfrastructureRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageExcludedSource>
     </ItemGroup>
 
     <ItemGroup>
@@ -107,6 +120,11 @@
       <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference->'        &lt;ModulePath&gt;.*%(CoverageAssemblyPattern)\.dll$&lt;/ModulePath&gt;')" />
       <_CodeCoverageSettingsLine Include="      &lt;/Include&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;/ModulePaths&gt;" />
+      <_CodeCoverageSettingsLine Include="    &lt;Sources&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource->'        &lt;Source&gt;%(XmlPattern)&lt;/Source&gt;')" />
+      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="    &lt;/Sources&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;EnableStaticNativeInstrumentation&gt;False&lt;/EnableStaticNativeInstrumentation&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;EnableDynamicNativeInstrumentation&gt;False&lt;/EnableDynamicNativeInstrumentation&gt;" />

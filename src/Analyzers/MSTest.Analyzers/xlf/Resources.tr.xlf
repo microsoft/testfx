@@ -761,13 +761,13 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
-        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="translated">'SupportedOSPlatformAttribute' ve 'UnsupportedOSPlatformAttribute', platform uyumluluk analizini bilgilendirir ancak MSTest yürütmesini denetlemez. Bu öznitelikleri kullanan test yöntemleri ve test sınıfları, desteklenmeyen testlerin çalışma zamanında atlanması için eşdeğer bir '[OSCondition]' da bildirmelidir.</target>
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
+        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
-        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="translated">'{0}' testindeki platform uyumluluk öznitelikleri eşdeğer bir '[OSCondition]' özniteliğiyle temsil edilmiyor</target>
+        <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
+        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -857,17 +857,17 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
         <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
-        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <target state="translated">İçerdiği test sınıfı zaten eşdeğer ya da daha kısıtlayıcı bir davranış belirlemişse yöntem düzeyindeki öznitelik kaldırılmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeMessageFormat">
         <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
-        <target state="new">{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</target>
+        <target state="translated">'{1}' test yöntemi üzerindeki {0} gereksizdir çünkü içerdiği test sınıfının belirlediği davranışı değiştirmez</target>
         <note>{0} is the attribute name and {1} is the test method name.</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeTitle">
         <source>Remove redundant test method attribute</source>
-        <target state="new">Remove redundant test method attribute</target>
+        <target state="translated">Gereksiz test yöntemi özniteliğini kaldırın</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
