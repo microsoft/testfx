@@ -321,10 +321,9 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
         constant = default;
         bool found = false;
 
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
+        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments.Where(argument => argument.Key == name))
         {
-            if (argument.Key == name
-                && (valuePredicate is null || valuePredicate(argument.Value)))
+            if (valuePredicate is null || valuePredicate(argument.Value))
             {
                 constant = argument.Value;
                 found = true;
