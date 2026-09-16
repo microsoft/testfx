@@ -1,13 +1,25 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-09-15 UTC
+2026-09-16 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-09-15, run 35026930682): **4 (0 open PRs prior), 2/3 (re-scanned `src/TestFramework/TestFramework/Assertions/`; fixed LINQ-Count/First gap in `Assert.HasCount<T>`/`IsEmpty<T>` generic overload + both InterpolatedStringHandler structs, missed by #10575's non-generic fix; PR `efficiency/assert-count-fastpath`), 5 (#8824/#3495 stale, not re-engaged), 7 (#11023 updated)**
-Last run before this: Task 4/2/5/7 (2026-09-14, run 34900124190 — exhaustive analyzer re-scans, 0 findings)
-Next run should prioritise: Watch CI/review on `efficiency/assert-count-fastpath` (Task 4). Follow-up candidate: `CollectionAssert.Equivalence.cs` `.Count()` calls (~lines 139-140/315-316) — confirmed generic `IEnumerable<T?>` params, same fast-path opportunity. Otherwise re-scan `src/Adapter/MSTestAdapter.PlatformServices` for drift (last full review 2026-08-30) or pivot to Task 6 (measurement infra, narrow scope given sibling `[perf-improver]` agent #10914).
+Tasks run this session (2026-09-16, run 35153712363): **4 (0 open PRs prior), 2/3 (fixed follow-up candidate: `CollectionAssert.Equivalence.cs` `AreEquivalent`/`AreNotEquivalent` `.Count()` → `ICollection<T>` fast-path via new `GetCount<T>` helper; PR `efficiency/collectionassert-equivalence-fastpath`), 5 (#8824/#3495 stale, not re-engaged), 7 (#11023 — fixed accidental body duplication with full clean rewrite, updated)**
+Last run before this: Task 4/2/3/5/7 (2026-09-15, run 35026930682 — fixed `Assert.HasCount`/`IsEmpty` generic overload LINQ gap, PR `efficiency/assert-count-fastpath`)
+Next run should prioritise: Watch CI/review on both open PRs (`efficiency/assert-count-fastpath` from 2026-09-15, `efficiency/collectionassert-equivalence-fastpath` from 2026-09-16) via Task 4. The `Assert.HasCount`/`IsEmpty`/`ContainsSingle`/`CollectionAssert.AreEquivalent`/`AreNotEquivalent` LINQ-`Count()`-fast-path family is now fully complete — no more known gaps of this shape in `src/TestFramework/TestFramework/Assertions/`. If both PRs clear, re-scan `src/Adapter/MSTestAdapter.PlatformServices` for drift (last full review 2026-08-30) or pivot to Task 6 (measurement infra, narrow scope given sibling `[perf-improver]` agent #10914).
+
+## 2026-09-16 Run Notes (run 35153712363)
+
+- Task 4: `search_pull_requests` (`is:pr is:open efficiency-improver in:title`) — 0 results, nothing to maintain prior to this run.
+- Task 2/3: Followed up on the follow-up candidate flagged 2026-09-15 — `CollectionAssert.Equivalence.cs`'s `AreEquivalent<T>`/`AreNotEquivalent<T>` used `Enumerable.Count()` on generic `IEnumerable<T?>` params instead of the `ICollection<T>` fast-path family (matches `Assert.HasCount`/`IsEmpty`/`ContainsSingle`). Confirmed unchanged in `main`. Added a local `GetCount<T>` helper (mirroring `Assert.HasCount.cs`'s existing private helper — kept separate/duplicated intentionally since it's `private` to a different partial class, not worth a larger refactor to share) and applied at all 4 call sites (`expected.Count()`, `actual.Count()` in `AreEquivalent`; `notExpected.Count()`, `actual.Count()` in `AreNotEquivalent`).
+- **Measured**: standalone (not committed) console benchmark, 500,000 iterations, `List<int>`(10 items), net8.0 Release, `Stopwatch`+`GC.GetAllocatedBytesForCurrentThread()`: old `.Count()` ~8.1-8.4ms vs. new `GetCount` fast-path ~5.1-5.2ms — **~1.6x faster** (repeatable across 3 runs). Allocation was 0 B/call on both before/after — `List<T>` already hits LINQ's own internal `ICollection<T>` fast path, so the measured win here is purely CPU-cycle/dispatch-layer reduction, smaller than the ~3.6x seen for the `Assert.HasCount` family (that family had additional overhead beyond plain `Count()`).
+- Verified: `./build.sh` (full repo, first bootstrap of `.dotnet/` this session, ~5m54s) — 0 warnings/errors. `dotnet build TestFramework.csproj -c Debug` all 4 TFMs (netstandard2.0/net462/net8.0/net9.0) 0 warn/err. `TestFramework.UnitTests` net8.0 binary run directly: **1566/1566 passed**. `dotnet format whitespace --verify-no-changes`: only the known pre-existing repo-wide CHARSET/BOM lint gap flagged (confirmed present before this change too — not a regression).
+- Created branch `efficiency/collectionassert-equivalence-fastpath`, opened draft PR "Add ICollection<T> fast-path for CollectionAssert equivalence count checks" (label `area/performance`).
+- Task 5: re-checked #8824/#3495 — no new human comments since last review; not re-engaged (anti-spam holds).
+- Task 7: found #11023's body had been accidentally duplicated (two full "Activity for September 2026" sections concatenated) — did a full clean `operation: replace` rewrite this run, consolidating Run History (kept ~4 detailed recent entries + condensed pointer, full history remains in this memory file), added the new PR to Suggested Actions, added a "Known Process Issue" section directly in the issue body as a standing reminder for future runs to always sanity-check for duplicated `## Activity for` headers before editing.
+- **Follow-up state**: with this fix landed, the entire `Assert.HasCount`/`IsEmpty`/`ContainsSingle`/`CollectionAssert.AreEquivalent`/`AreNotEquivalent` LINQ-`Count()`-fast-path family across `src/TestFramework/TestFramework/Assertions/` is now complete — no more known gaps of this shape remain in that directory.
+- Next run should prioritise: watch CI/review on both open PRs (`efficiency/assert-count-fastpath` from 2026-09-15, `efficiency/collectionassert-equivalence-fastpath` from this run) via Task 4. If both clear, re-scan `src/Adapter/MSTestAdapter.PlatformServices` (last full review 2026-08-30) for drift, or pivot to Task 6 (measurement infra) given the Assertions family is now exhausted.
 
 ## 2026-09-15 Run Notes (run 35026930682)
 
@@ -199,7 +211,7 @@ Notes:
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-- **Open (as of 2026-09-15)**: `efficiency/assert-count-fastpath` (this run — awaiting review).
+- **Open (as of 2026-09-16)**: `efficiency/assert-count-fastpath` (2026-09-15 — awaiting review), `efficiency/collectionassert-equivalence-fastpath` (this run — awaiting review).
 - **Landed via maintainer PR**: `efficiency/osplatform-analyzer-attribute-precheck`'s fix landed as maintainer PR #11255 ("Short-circuit platform attribute materialization in MSTEST0084"), merged 2026-09-14T11:40Z.
 - **Landed via maintainer PR**: `efficiency/inherited-member-analyzer-precompute-references`'s fix landed as maintainer PR #11233 ("Precompute MSTEST0082 framework references"), further refined by independent maintainer PR #11225.
 - Previous work:
@@ -227,13 +239,13 @@ Notes:
 | LOW | Code-Level | `TestContextImplementation.SanitizeName`: `Array.IndexOf` over invalid chars per character | Only called when TestTempDirectory is first accessed |
 | LOW | Infrastructure | CI output-byte-count health metric | Needs maintainer discussion |
 | LOW | Code-Level | `HtmlReportMerger.ConcatenateTests`: `CreateTestIdentity` computed once via `.Select()` (counting only) then again in main loop | Same shape as fixed `CollapseRetryAttempts` bug but only 1 `string.Join`/call (not 2) — good small follow-up once current PR lands |
-| LOW-MEDIUM | Code-Level | `CollectionAssert.Equivalence.cs` `AreEquivalent<T>`/`AreNotEquivalent<T>`: `expected.Count()`/`actual.Count()`/`notExpected.Count()` on `IEnumerable<T?>` params (lines ~139-140, ~315-316) | Same missing-`ICollection<T>`-fast-path shape as the just-fixed `Assert.HasCount`/`ContainsSingle` family; confirmed generic `IEnumerable<T?>` params (not array-constrained) — genuine follow-up candidate for next run |
 | LOW | Code-Level | `Extensions/TestCaseExtensions.cs` (`MSTest.TestAdapter`) `ToUnitTestElementWithUpdatedSource`: `Traits.Any()` + `.Select()` double-enumerates Traits | Trivial — Traits collections are 0-3 items; found 2026-09-11 |
 
 ## Completed Work
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-09-16 | PR created (draft, `efficiency/collectionassert-equivalence-fastpath`) | Added local `GetCount<T>` `ICollection<T>` fast-path helper to `CollectionAssert.Equivalence.cs`, applied at all 4 `.Count()` call sites in `AreEquivalent<T>`/`AreNotEquivalent<T>` (missed by the earlier `Assert.HasCount`-family fix passes); benchmark showed ~1.6x faster (8.1-8.4ms→5.1-5.2ms, 500K calls, `List<int>`); 1566/1566 TestFramework.UnitTests passed. Completes the LINQ-`Count()`-fast-path family across `TestFramework/Assertions`. |
 | 2026-09-15 | PR created (draft, `efficiency/assert-count-fastpath`) | Added `Assert.GetCount<T>` `ICollection<T>` fast-path helper, applied in `Assert.HasCount<T>`/`IsEmpty<T>`, `AssertCountInterpolatedStringHandler<TItem>`, `AssertSingleInterpolatedStringHandler<TItem>` (also `IList<T>` indexer over `Enumerable.First()`); missed when #10575 landed non-generic fast-path; benchmark showed ~3.6x faster (8.51ms→2.39ms, 500K calls); 1561/1561 TestFramework.UnitTests passed |
 | 2026-09-13 | PR created (draft, `efficiency/osplatform-analyzer-attribute-precheck`) | Add `Any(...)` pre-check (reusing the analyzer's existing `HasPlatformAttributes` helper) before `Where().ToImmutableArray()` in `OSPlatformAttributesShouldBeConsistentAnalyzer.AnalyzeSymbol`, skipping the LINQ allocation entirely for the ~95% of symbols with no platform attributes; generic-LINQ micro-benchmark (2M synthetic symbols, 5% hit rate) showed ~92% allocation reduction (99.2MB→8MB); 1848/1848 MSTest.Analyzers.UnitTests passed |
 | 2026-09-12 | PR created (draft, `efficiency/inherited-member-analyzer-precompute-references`) — **landed as maintainer PR #11233** | Precompute globally-visible referenced assemblies + framework-presence flag once per compilation (`RegisterCompilationStartAction`) in `InheritedMemberFromDifferentMSTestVersionAnalyzer.GetFrameworkAssembly`, replacing two per-symbol `compilation.References.Any(...)` O(n) scans with an O(1) `HashSet` probe; standalone Roslyn-compilation benchmark (2,000 classes, ~300 references) showed ~20x speedup (13.43ms→0.68ms) and 304KB→0B allocated for the per-symbol lookup path; 1841/1841 MSTest.Analyzers.UnitTests passed |
