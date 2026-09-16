@@ -433,9 +433,14 @@ public sealed class BrowserLauncherOptionsTests
     public void TryParseListeningUri_ParsesLoopbackAndIgnoresOtherOutput()
     {
         Assert.IsNull(HostProcess.TryParseListeningUri("Application started."));
+        Assert.IsNull(HostProcess.TryParseListeningUri("Debug at url: http://127.0.0.1:9876/"));
+        Assert.IsNull(HostProcess.TryParseListeningUri("App url: https://127.0.0.1:4322/"));
         Assert.AreEqual(
             "http://127.0.0.1:4321/",
             HostProcess.TryParseListeningUri("Now listening on: http://127.0.0.1:4321/")?.AbsoluteUri);
+        Assert.AreEqual(
+            "http://127.0.0.1:4322/",
+            HostProcess.TryParseListeningUri("App url: http://127.0.0.1:4322/")?.AbsoluteUri);
     }
 
     [TestMethod]

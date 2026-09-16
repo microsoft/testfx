@@ -43,13 +43,18 @@ application connects directly to the authenticated HTTP gateway created by the .
 ## Usage
 
 ```xml
-<PropertyGroup>
-  <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
-</PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+  </PropertyGroup>
 
-<ItemGroup>
-  <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="0.1.0-alpha" />
-</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="VERSION" />
+    <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="0.1.0-alpha" />
+  </ItemGroup>
+</Project>
 ```
 
 Then run:
@@ -58,6 +63,20 @@ Then run:
 dotnet test
 dotnet test -- --list-tests
 ```
+
+This is the canonical model: the test application and Microsoft Testing Platform transport
+are fully managed. MTP generates `Main(string[] args)`, and the package injects the arguments
+prepared by `dotnet test` before that generated entry point runs. Managed `HttpClient` sends
+discovery, progress, and results directly from MTP to the SDK's authenticated HTTP gateway.
+User and test code need neither Blazor `IJSRuntime` nor `[JSImport]` for launch or result
+transport, and the application does not need to author an HTML page or JavaScript boot file.
+
+Browser WebAssembly still requires JavaScript host infrastructure. The package therefore
+supplies an `index.html` and a small boot supervisor. That package-owned script only imports
+`_framework/dotnet.js`, configures the managed application arguments, invokes `runMain`,
+reports fatal bootstrap failures, and returns the final managed exit code to the launcher.
+It does not discover tests, execute test logic, parse results, or relay the MTP HTTP
+protocol.
 
 The launcher integration is a preview contract with the .NET SDK. The package wraps
 `ComputeRunArguments` only when the SDK marks that ProjectInstance with both
@@ -112,7 +131,7 @@ Cancellation delivered after browser startup is linked to the completion wait. T
 therefore exits that wait immediately and enters bounded browser/host cleanup rather than
 waiting for `TestingPlatformBrowserCompletionTimeoutSeconds`.
 
-## Browser page API
+## Advanced UI-framework page integration
 
 The launcher installs a versioned API on the top-level page only when its origin exactly
 matches the loopback host origin:
@@ -141,8 +160,9 @@ globalThis.testingPlatformBrowser = {
   is only for fatal page/framework integration failures; ordinary test or application
   exceptions must still be represented by the managed exit code passed to `complete`.
 
-The package-owned JavaScript supervisor implements this API contract automatically. A UI
-framework that owns its browser page can set
+The package-owned JavaScript supervisor implements this API contract automatically, so the
+canonical pure-managed application does not consume it directly. An advanced UI framework
+that already owns its browser page can set
 `TestingPlatformBrowserGenerateHostAssets=false`, provide its own `WasmMainJSPath` and
 page, then integrate the API:
 

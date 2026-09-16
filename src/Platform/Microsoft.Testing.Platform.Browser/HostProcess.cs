@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Platform.Browser;
 internal sealed class HostProcess : IAsyncDisposable
 {
     private static readonly Regex ListeningUrlRegex = new(
-        @"Now listening on:\s+(?<url>https?://\S+)",
+        @"^\s*(?<kind>Now listening on:|App url:)\s+(?<url>https?://\S+)\s*$",
         RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
     private readonly Process _process;
@@ -281,7 +281,10 @@ internal sealed class HostProcess : IAsyncDisposable
             ? null
             : Uri.TryCreate(match.Groups["url"].Value, UriKind.Absolute, out Uri? uri)
                 && IsLoopbackHttpUri(uri)
-                    ? uri
+                    ? match.Groups["kind"].Value.Equals("App url:", StringComparison.OrdinalIgnoreCase)
+                        && uri.Scheme == Uri.UriSchemeHttps
+                            ? null
+                            : uri
                     : throw new BrowserLauncherException("The browser host reported a non-loopback URL.");
 
     private static bool IsLoopbackHttpUri(Uri uri)

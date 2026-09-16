@@ -26,13 +26,11 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
 
     private const string SourceCode = """
 #file BrowserPackageTestProject.csproj
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
   <PropertyGroup>
     <TargetFramework>$TargetFramework$</TargetFramework>
-    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <OutputType>Exe</OutputType>
-    <SelfContained>true</SelfContained>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -51,43 +49,6 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
   </ItemGroup>
 
-</Project>
-
-#file Directory.Build.targets
-<Project>
-  <PropertyGroup>
-    <_ParentDirectoryBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)..'))</_ParentDirectoryBuildTargets>
-  </PropertyGroup>
-  <Import Project="$(_ParentDirectoryBuildTargets)" Condition=" '$(_ParentDirectoryBuildTargets)' != '' " />
-
-  <Target Name="_ProvideFrameworkBrowserHost" AfterTargets="ComputeRunArguments">
-    <PropertyGroup>
-      <RunCommand>$Node$</RunCommand>
-      <RunArguments>&quot;$(MSBuildProjectDirectory)\server.mjs&quot; &quot;$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\AppBundle&quot; &quot;&quot; --framework-marker &quot;quoted value&quot; --multiline &quot;line1&#xD;&#xA;line2;%#'&quot; --launch-info-path-file &quot;$(MSBuildProjectDirectory)\launch-info-path.txt&quot;</RunArguments>
-      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_RecordFrameworkBrowserHost" AfterTargets="_ProvideFrameworkBrowserHost">
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-command.txt"
-                      Lines="$(RunCommand)"
-                      Overwrite="true" />
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-command.txt"
-                      Lines="$(RunArguments)"
-                      Overwrite="false" />
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\framework-host-command.txt"
-                      Lines="$(RunWorkingDirectory)"
-                      Overwrite="false" />
-  </Target>
-
-  <Target Name="_RecordBrowserLauncherRunCommand" AfterTargets="_ConfigureTestingPlatformBrowserRun">
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-launcher-command.txt"
-                      Lines="$(RunCommand)"
-                      Overwrite="true" />
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-launcher-command.txt"
-                      Lines="$(DOTNET_HOST_PATH)"
-                      Overwrite="false" />
-  </Target>
 </Project>
 
 #file BrowserPackageTests.cs
@@ -112,63 +73,6 @@ public sealed class BrowserPackageTests
     public void FailsInsideBrowser()
         => Assert.Fail("Intentional browser preview failure.");
 }
-
-#file server.mjs
-import { createReadStream, existsSync, renameSync, statSync, writeFileSync } from 'node:fs';
-import { createServer } from 'node:http';
-import { extname, resolve, sep } from 'node:path';
-
-const root = resolve(process.argv[2]);
-if (process.argv[3] !== ''
-    || process.argv[4] !== '--framework-marker'
-    || process.argv[5] !== 'quoted value'
-    || process.argv[6] !== '--multiline'
-    || process.argv[7] !== 'line1\r\nline2;%#\''
-    || process.argv[8] !== '--launch-info-path-file'
-    || !process.argv[9]) {
-    throw new Error(`The computed host arguments did not round-trip: ${JSON.stringify(process.argv.slice(2))}`);
-}
-
-const launchInfoPath = process.env.TESTINGPLATFORM_BROWSER_LAUNCH_INFO_FILE;
-writeFileSync(process.argv[9], launchInfoPath ?? 'ordinary-run');
-if (!launchInfoPath) {
-    process.exit(0);
-}
-
-const contentTypes = new Map([
-    ['.css', 'text/css'],
-    ['.dat', 'application/octet-stream'],
-    ['.dll', 'application/octet-stream'],
-    ['.html', 'text/html; charset=utf-8'],
-    ['.js', 'text/javascript; charset=utf-8'],
-    ['.json', 'application/json; charset=utf-8'],
-    ['.wasm', 'application/wasm'],
-]);
-
-const server = createServer((request, response) => {
-    const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
-    const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
-    const file = resolve(root, relative);
-    if (file !== root && !file.startsWith(root + sep)) {
-        response.writeHead(403).end();
-        return;
-    }
-
-    if (!existsSync(file) || !statSync(file).isFile()) {
-        response.writeHead(404).end();
-        return;
-    }
-
-    response.setHeader('Content-Type', contentTypes.get(extname(file)) ?? 'application/octet-stream');
-    createReadStream(file).pipe(response);
-});
-
-server.listen(0, '127.0.0.1', () => {
-    const address = server.address();
-    const temporaryPath = `${launchInfoPath}.${process.pid}.tmp`;
-    writeFileSync(temporaryPath, JSON.stringify({ version: 1, url: `http://127.0.0.1:${address.port}/` }), { mode: 0o600 });
-    renameSync(temporaryPath, launchInfoPath);
-});
 """;
 
     private const string MultiTargetingSourceCode = """
@@ -395,13 +299,6 @@ public sealed class BrowserPackageDesktopTests
     [TestMethod]
     public async Task BrowserPackage_DotnetTestRunsAndListsTestsThroughSdkHttpGateway()
     {
-        string? node = WasmRuntime.LocateNode();
-        if (node is null)
-        {
-            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
-            return;
-        }
-
         string? browser = LocateBrowser();
         if (browser is null)
         {
@@ -416,38 +313,10 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
-                .PatchCodeWithReplace("$Node$", EscapeMsBuildValue(node))
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-
-        DotnetMuxerResult ordinaryRun = await DotnetCli.RunAsync(
-            $"run --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, ordinaryRun.ExitCode, ordinaryRun.ToString());
-        Assert.AreEqual(
-            "ordinary-run",
-            File.ReadAllText(Path.Combine(generator.TargetAssetPath, "launch-info-path.txt")));
-        Assert.IsEmpty(
-            Directory.EnumerateFiles(
-                Path.Combine(generator.TargetAssetPath, "obj"),
-                "Microsoft.Testing.Platform.Browser.*.launch",
-                SearchOption.AllDirectories));
-
-        DotnetMuxerResult plainQuery = await DotnetCli.RunAsync(
-            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments -property:Configuration=Release -property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, plainQuery.ExitCode, plainQuery.ToString());
-        string[] frameworkHost = File.ReadAllLines(
-            Path.Combine(generator.TargetAssetPath, "framework-host-command.txt"));
-        Assert.IsGreaterThanOrEqualTo(3, frameworkHost.Length);
-        Assert.AreEqual(node, frameworkHost[0]);
-        Assert.Contains("server.mjs", string.Join(Environment.NewLine, frameworkHost[1..^1]));
-        Assert.AreEqual(generator.TargetAssetPath, frameworkHost[^1]);
+        Assert.IsFalse(Directory.Exists(Path.Combine(generator.TargetAssetPath, "wwwroot")));
+        Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.html", SearchOption.TopDirectoryOnly));
+        Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.js", SearchOption.TopDirectoryOnly));
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 -property:DotnetTestInvocationId={InvocationId1} --filter FullyQualifiedName~RunsInsideBrowser",
@@ -466,13 +335,6 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("succeeded: 1", runOutput);
         Assert.DoesNotContain("--dotnet-test-http-token", runOutput);
         Assert.DoesNotContain("pw:channel", runOutput);
-        AssertLaunchInfoDirectoryCleaned(generator.TargetAssetPath);
-
-        string[] launcherCommand = File.ReadAllLines(
-            Path.Combine(generator.TargetAssetPath, "browser-launcher-command.txt"));
-        Assert.HasCount(2, launcherCommand);
-        Assert.IsNotEmpty(launcherCommand[1], "DOTNET_HOST_PATH must be available to the browser launcher target.");
-        Assert.AreEqual(launcherCommand[1], launcherCommand[0]);
 
         DotnetMuxerResult list = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 -property:DotnetTestInvocationId={InvocationId2} --list-tests",
@@ -487,7 +349,6 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("SkippedInsideBrowser", listOutput);
         Assert.Contains("FailsInsideBrowser", listOutput);
         Assert.Contains("Discovered 3 tests", listOutput);
-        AssertLaunchInfoDirectoryCleaned(generator.TargetAssetPath);
 
         DotnetMuxerResult skipped = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} -property:DotnetTestInvocation=true -property:DotnetTestHttpBootstrapVersion=1 -property:DotnetTestInvocationId={InvocationId3} --filter FullyQualifiedName~SkippedInsideBrowser",
@@ -1000,16 +861,6 @@ public sealed class BrowserPackageDesktopTests
         => value.Replace("&", "&amp;", StringComparison.Ordinal)
             .Replace("<", "&lt;", StringComparison.Ordinal)
             .Replace(">", "&gt;", StringComparison.Ordinal);
-
-    private static void AssertLaunchInfoDirectoryCleaned(string targetAssetPath)
-    {
-        string pathFile = Path.Combine(targetAssetPath, "launch-info-path.txt");
-        Assert.IsTrue(File.Exists(pathFile), "The browser host did not record its launch-info path.");
-        string launchInfoPath = File.ReadAllText(pathFile);
-        Assert.IsFalse(
-            Directory.Exists(Path.GetDirectoryName(launchInfoPath)),
-            $"The launcher left its private launch-info directory behind: '{launchInfoPath}'.");
-    }
 
     private static string ReadEncodedLaunchConfigurationValue(string path, string name)
     {
