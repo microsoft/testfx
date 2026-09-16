@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AspireTestingVersion>13.4.6</AspireTestingVersion>
     <CodeCoverageVersion>18.9.0</CodeCoverageVersion>
-    <MSTestVersion>4.3.2</MSTestVersion>
+    <MSTestVersion>4.4.1</MSTestVersion>
     <!--
       MSTestAOTVersion pins the compatible experimental MSTest.Engine and MSTest.SourceGeneration
       pair used by the non-SDK Native AOT runner sample (mstest-runner/NativeAotRunner).
@@ -16,7 +16,7 @@
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
     <MSTestSdkAOTVersion>2.0.0-alpha.26358.12</MSTestSdkAOTVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
-    <TestingPlatformVersion>2.3.2</TestingPlatformVersion>
+    <TestingPlatformVersion>2.4.1</TestingPlatformVersion>
     <!--
       Microsoft.Testing.Extensions.PackagedApp deploys and launches a packaged Windows (UWP/WinUI)
       test host. The latest published package predates its alignment with the testing platform version,
