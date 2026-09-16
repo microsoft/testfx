@@ -16,6 +16,7 @@ internal static partial class CiRunSummaryAggregation
     // extension versions can still aggregate each other's fragments in mixed-version test runs.
     private const int SchemaVersion = 1;
     private const int MaxHistoryTests = 10_000;
+    private const int MaxDependencies = 1_000;
 
     public static CiRunSummaryAggregate ReadAndAggregate(
         IReadOnlyList<InputArtifact> inputs,
@@ -25,6 +26,7 @@ internal static partial class CiRunSummaryAggregation
         var modules = new List<CiRunSummaryModule>(inputs.Count);
         var identities = new HashSet<string>(StringComparer.Ordinal);
         int remainingHistoryTests = MaxHistoryTests;
+        int remainingDependencies = MaxDependencies;
         foreach (InputArtifact input in inputs)
         {
             CiRunSummaryFragment? fragment;
@@ -51,6 +53,15 @@ internal static partial class CiRunSummaryAggregation
             }
 
             remainingHistoryTests -= fragment.Module.HistoryTests.Length;
+            if (fragment.Module.Dependencies.Length > remainingDependencies)
+            {
+                fragment.Module.Dependencies =
+                [
+                    .. fragment.Module.Dependencies.Take(remainingDependencies),
+                ];
+            }
+
+            remainingDependencies -= fragment.Module.Dependencies.Length;
             string identity = GetModuleIdentity(fragment.Module);
             if (!identities.Add(identity))
             {
@@ -124,6 +135,8 @@ internal static partial class CiRunSummaryAggregation
             || module.SlowestTests is null
             || module.HistoryTests is null
             || module.HistoryTests.Length > MaxHistoryTests
+            || module.Dependencies is null
+            || module.Dependencies.Length > MaxDependencies
             || module.TopFailingClasses is null
             || module.Coverage is null
             || module.Coverage.Metrics is null
@@ -136,7 +149,18 @@ internal static partial class CiRunSummaryAggregation
                 || RoslynString.IsNullOrWhiteSpace(test.DisplayName)
                 || RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
                 || test.Outcome is not ("passed" or "failed" or "skipped")
-                || test.DurationTicks < 0)
+                || test.DurationTicks < 0
+                || test.HistoricalPassCount < 0
+                || test.HistoricalFailCount < 0
+                || test.HistoryWindowInDays is < 0 or > 90
+                || test.DurationSampleCount < 0
+                || double.IsNaN(test.P95DurationMilliseconds)
+                || double.IsNaN(test.P99DurationMilliseconds)
+                || test.P95DurationMilliseconds < 0
+                || test.P99DurationMilliseconds < test.P95DurationMilliseconds)
+            || module.Dependencies.Any(static dependency =>
+                RoslynString.IsNullOrWhiteSpace(dependency.DependentFullyQualifiedName)
+                || RoslynString.IsNullOrWhiteSpace(dependency.Prerequisite))
             || module.TopFailingClasses.Any(item => RoslynString.IsNullOrWhiteSpace(item.ClassName) || item.FailureCount <= 0)
             || module.Coverage.Metrics.Any(metric =>
                 RoslynString.IsNullOrWhiteSpace(metric.ProducerId)

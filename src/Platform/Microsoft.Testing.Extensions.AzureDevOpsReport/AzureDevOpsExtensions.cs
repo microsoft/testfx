@@ -51,7 +51,8 @@ public static class AzureDevOpsExtensions
                     () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
                     {
                         IsRequiredArtifactPostProcessingSupported: true,
-                    }));
+                    },
+                    historyService ??= CreateHistoryService(serviceProvider)));
 
         var compositeSlowTestReporter =
             new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
