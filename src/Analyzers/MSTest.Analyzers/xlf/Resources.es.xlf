@@ -762,12 +762,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="needs-review-translation">"SupportedOSPlatformAttribute" y "UnsupportedOSPlatformAttribute" informan del análisis de compatibilidad de la plataforma, pero no controlan la ejecución de MSTest. Los métodos de prueba y las clases de prueba que usan estos atributos también deben declarar un "[OSCondition]" equivalente, por lo que las pruebas no admitidas se omiten en tiempo de ejecución.</target>
+        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="needs-review-translation">Los atributos de compatibilidad de la plataforma de la prueba "{0}" no tienen un atributo equivalente "[OSCondition]"</target>
+        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -857,17 +857,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
         <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
-        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <target state="translated">Se debe quitar un atributo de nivel de método cuando la clase de prueba que lo contiene ya establece un comportamiento equivalente o más restrictivo.</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeMessageFormat">
         <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
-        <target state="new">{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</target>
+        <target state="translated">{0} en el método de prueba '{1}' es redundante porque no cambia el comportamiento establecido por la clase de prueba que la contiene</target>
         <note>{0} is the attribute name and {1} is the test method name.</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeTitle">
         <source>Remove redundant test method attribute</source>
-        <target state="new">Remove redundant test method attribute</target>
+        <target state="translated">Quitar el atributo redundante del método de prueba</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
