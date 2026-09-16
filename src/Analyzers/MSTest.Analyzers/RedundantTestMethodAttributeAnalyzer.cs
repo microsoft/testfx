@@ -302,30 +302,29 @@ public sealed class RedundantTestMethodAttributeAnalyzer : DiagnosticAnalyzer
     }
 
     private static int GetNamedIntArgument(AttributeData attribute, string name)
-    {
-        foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
-        {
-            if (argument.Key == name && argument.Value.Value is int value)
-            {
-                return value;
-            }
-        }
-
-        return 0;
-    }
+        => TryGetNamedArgument(
+                attribute,
+                name,
+                out TypedConstant constant,
+                valuePredicate: static constant => constant.Value is int)
+            && constant.Value is int value
+                ? value
+                : 0;
 
     private static bool TryGetNamedArgument(
         AttributeData attribute,
         string name,
         out TypedConstant constant,
-        bool returnLastMatch = false)
+        bool returnLastMatch = false,
+        Func<TypedConstant, bool>? valuePredicate = null)
     {
         constant = default;
         bool found = false;
 
         foreach (KeyValuePair<string, TypedConstant> argument in attribute.NamedArguments)
         {
-            if (argument.Key == name)
+            if (argument.Key == name
+                && (valuePredicate is null || valuePredicate(argument.Value)))
             {
                 constant = argument.Value;
                 found = true;
