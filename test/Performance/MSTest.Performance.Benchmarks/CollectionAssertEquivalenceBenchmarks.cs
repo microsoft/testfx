@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using BenchmarkDotNet.Attributes;
@@ -35,8 +35,10 @@ public class CollectionAssertEquivalenceBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    public void AreEquivalent_SmallCollection() => CollectionAssert.AreEquivalent(_smallExpected, _smallActual);
+    public void AreEquivalent_SmallCollection()
+        => CollectionAssert.AreEquivalent(_smallExpected, _smallActual, EqualityComparer<int>.Default, string.Empty);
 
     [Benchmark]
-    public void AreEquivalent_LargeCollection() => CollectionAssert.AreEquivalent(_largeExpected, _largeActual);
+    public void AreEquivalent_LargeCollection()
+        => CollectionAssert.AreEquivalent(_largeExpected, _largeActual, EqualityComparer<int>.Default, string.Empty);
 }
