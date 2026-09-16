@@ -9,8 +9,8 @@ shared-state bugs. Each file then demonstrates one rung of the reliability ladde
 
 | File | Technique | Why it matters |
 | --- | --- | --- |
-| `OrderExportTests.cs` | **Eliminate** — per-test unique temp directory | No shared resource ⇒ no lock needed ⇒ full parallelism. The cheapest concurrency bug is the one that cannot exist. (`TestContext.TestTempDirectory` can manage this for you.) |
-| `EnvironmentPricingTests.cs` | **Coordinate** — `[ResourceLock(WellKnownResources.EnvironmentVariables)]` | Genuinely process-global state must be serialized. `[ResourceLock]` serializes *only* the tests that share the named resource, not the whole suite. |
+| `OrderExportTests.cs` | **Eliminate** — per-test unique temp directory | No shared resource ⇒ no lock needed ⇒ full parallelism. The cheapest concurrency bug is the one that cannot exist. (With MSTest 4.4.1, `TestContext.TestTempDirectory` can manage this for you.) |
+| `EnvironmentPricingTests.cs` | **Coordinate** — `[DoNotParallelize]`, with `[ResourceLock(WellKnownResources.EnvironmentVariables)]` as the precise alternative | Genuinely process-global state must be serialized. `[ResourceLock]` serializes *only* the tests that share the named resource, not the whole suite. |
 | `PlatformSpecificTests.cs` | **Gate** — `[OSCondition]`, `[CICondition]`, `[ExecutableCondition]` | A test that silently early-returns on the wrong OS reports a false pass. Conditions report *not run* for the right reason. |
 | `CancellableWorkTests.cs` | **Bound time** — `[Timeout(CooperativeCancellation = true)]` + `TestContext.CancellationToken` | A test that can hang has no place in a reliable suite; cooperative cancellation stops the work cleanly. No `Thread.Sleep`. |
 | `FlakyDependencyTests.cs` | **Contain** — `[Retry]` | Retry makes a nondeterministic test pass more often; it does **not** make it deterministic. Last resort for residual, external flakiness only. |
@@ -27,8 +27,9 @@ resource locks, and only then contain whatever residual nondeterminism you could
 ## `[ResourceLock]` note
 
 `[ResourceLock]` and `WellKnownResources` ship in the **MSTest 4.4 framework packages**. This sample
-uses them in `EnvironmentPricingTests.cs` to coordinate access to process-wide environment
-variables without serializing the class against tests that do not use the same resource.
+uses `MSTest.Sdk` and framework packages **4.4.1**. `EnvironmentPricingTests.cs` deliberately keeps
+`[DoNotParallelize]` to demonstrate blanket serialization and shows `[ResourceLock]` as the precise
+alternative in its comments. Switching between them is a one-for-one attribute replacement.
 
 `[ResourceLock]` limitations worth stating up front:
 
