@@ -762,12 +762,12 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="needs-review-translation">'SupportedOSPlatformAttribute' und 'UnsupportedOSPlatformAttribute' informieren über die Plattformkompatibilitätsanalyse, steuern aber nicht die MSTest-Ausführung. Testmethoden und Testklassen, die diese Attribute verwenden, sollten auch eine entsprechende '[OSCondition]' deklarieren, damit nicht unterstützte Tests zur Laufzeit übersprungen werden.</target>
+        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="needs-review-translation">Plattformkompatibilitätsattribute im Test „{0}“ werden nicht durch ein entsprechendes '[OSCondition]'-Attribut dargestellt</target>
+        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -857,17 +857,17 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
         <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
-        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <target state="translated">Ein Attribut auf Methodenebene sollte entfernt werden, wenn die enthaltende Testklasse bereits ein gleichwertiges oder restriktives Verhalten festlegt.</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeMessageFormat">
         <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
-        <target state="new">{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</target>
+        <target state="translated">Das Attribut {0} in der Testmethode „{1}“ ist redundant, da es das von der zugehörigen Testklasse festgelegte Verhalten nicht ändert</target>
         <note>{0} is the attribute name and {1} is the test method name.</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeTitle">
         <source>Remove redundant test method attribute</source>
-        <target state="new">Remove redundant test method attribute</target>
+        <target state="translated">Redundantes Testmethodenattribut entfernen</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">

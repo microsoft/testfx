@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodAttributeFix">
         <source>Remove redundant attribute</source>
-        <target state="new">Remove redundant attribute</target>
+        <target state="translated">移除多餘的屬性</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">

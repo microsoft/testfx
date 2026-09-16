@@ -37,8 +37,8 @@
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>18.9.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftTestPlatformFilterSourceVersion>18.10.1</MicrosoftTestPlatformFilterSourceVersion>
+    <MicrosoftNETTestSdkVersion>18.10.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftTestPlatformFilterSourceVersion>$(MicrosoftNETTestSdkVersion)</MicrosoftTestPlatformFilterSourceVersion>
     <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
