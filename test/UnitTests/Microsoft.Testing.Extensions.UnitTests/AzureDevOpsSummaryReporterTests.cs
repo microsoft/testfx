@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -87,15 +87,14 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("MyAssembly", md);
-        Assert.Contains("net8.0", md);
-        Assert.Contains("Total", md);
-        Assert.Contains("Passed", md);
-        Assert.Contains("Failed", md);
-        Assert.Contains("Skipped", md);
+        Assert.Contains("## ❌ MyAssembly (net8.0)", md);
+        Assert.Contains("**5 tests** · ✅ **2 passed** · ❌ **2 failed** · ⏭ **1 skipped** · ⏱ **12.35s**", md);
+        Assert.Contains("### ❌ Top failing classes", md);
+        Assert.Contains("### ❌ Failed tests", md);
+        Assert.Contains("### ⏱ Slowest tests", md);
         Assert.Contains("MyCo.Suite.ClassA", md);
-        Assert.Contains("Slowpoke", md);
-        Assert.Contains("MyCo.Suite.ClassA.Test2", md);
+        Assert.Contains("`Slowpoke`", md);
+        Assert.Contains("`MyCo.Suite.ClassA.Test2`", md);
     }
 
     [TestMethod]
@@ -110,8 +109,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("| Total duration | 25:07:08 |", md);
-        Assert.DoesNotContain("| Total duration | 01:07:08 |", md);
+        Assert.Contains("⏱ **25:07:08**", md);
+        Assert.DoesNotContain("⏱ **01:07:08**", md);
     }
 
     [TestMethod]
@@ -124,11 +123,11 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("| Total duration | 05:30 |", md);
+        Assert.Contains("⏱ **05:30**", md);
     }
 
     [TestMethod]
-    public void BuildMarkdown_EscapesPipesAndNewlinesInCells()
+    public void BuildMarkdown_UsesCodeSpansAndFlattensNewlinesInTestNames()
     {
         var records = new List<TestRecord>
         {
@@ -138,9 +137,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("Has\\|Pipe", md);
-        Assert.Contains("Has<br>Newline", md);
-        Assert.DoesNotContain("Has|Pipe", md);
+        Assert.Contains("`Has|Pipe`", md);
+        Assert.Contains("`Has Newline`", md);
         Assert.DoesNotContain("Has\nNewline", md);
     }
 
@@ -200,8 +198,9 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
-        Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
-        Assert.DoesNotContain("<summary><h1>", markdown);
+        Assert.Contains("| ✅ | &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64) |", markdown);
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.DoesNotContain("<summary>", markdown);
         Assert.Contains("| Overall | Line | 82 | 100 | 82.0% |", markdown);
         Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 85.0% | ❌ Failed |", markdown);
     }
@@ -243,8 +242,50 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
-        Assert.Contains("attempt 1, session session-1", markdown);
-        Assert.Contains("attempt 2, session session-2", markdown);
+        Assert.Contains("Tests (net9.0, x64) — attempt 1, session session-1", markdown);
+        Assert.Contains("Tests (net9.0, x64) — attempt 2, session session-2", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ListsFailedModulesBeforeSuccessfulModules()
+    {
+        var passedModule = new CiRunSummaryModule
+        {
+            AssemblyName = "A.Passed",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = 0,
+            TotalTests = 1,
+            PassedTests = 1,
+        };
+        var failedModule = new CiRunSummaryModule
+        {
+            AssemblyName = "Z.Failed",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = 2,
+            TotalTests = 1,
+            FailedTests = 1,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [passedModule, failedModule],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        int failedModuleIndex = markdown.IndexOf("Z.Failed", StringComparison.Ordinal);
+        int passedModuleIndex = markdown.IndexOf("A.Passed", StringComparison.Ordinal);
+        Assert.IsLessThan(passedModuleIndex, failedModuleIndex);
+        Assert.DoesNotContain("| Exit code |", markdown);
+        Assert.Contains("exit code **2**", markdown);
     }
 
     [TestMethod]
@@ -269,7 +310,7 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
-        Assert.StartsWith("##vso[task.uploadsummary]", lines[0]);
+        Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Test results - MyAssembly (", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
         // The assembly name must be part of the default file name so concurrent test assemblies
         // sharing the same TFM and TestResults directory don't race to write the same file.

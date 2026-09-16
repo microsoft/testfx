@@ -11,12 +11,13 @@ internal sealed partial class AzureDevOpsSummaryReporter
         IReadOnlyList<TestRecord> records,
         string assemblyName,
         string targetFrameworkMoniker)
-        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, new CiCoverageSummaryData());
+        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, exitCode: null, coverage: new CiCoverageSummaryData());
 
     private static string BuildMarkdown(
         IReadOnlyList<TestRecord> records,
         string assemblyName,
         string targetFrameworkMoniker,
+        int? exitCode,
         CiCoverageSummaryData coverage)
     {
         int total = records.Count;
@@ -25,7 +26,6 @@ internal sealed partial class AzureDevOpsSummaryReporter
         int skipped = 0;
         TimeSpan totalDuration = TimeSpan.Zero;
         var failingByClass = new Dictionary<string, int>(StringComparer.Ordinal);
-        var failingFqns = new List<string>();
 
         foreach (TestRecord record in records)
         {
@@ -37,11 +37,6 @@ internal sealed partial class AzureDevOpsSummaryReporter
                     break;
                 case TerminalKind.Failed:
                     failed++;
-                    if (failingFqns.Count < MaxFirstFailingFqns)
-                    {
-                        failingFqns.Add(record.FullyQualifiedName);
-                    }
-
                     string className = GetClassName(record.FullyQualifiedName);
                     failingByClass[className] = failingByClass.TryGetValue(className, out int count) ? count + 1 : 1;
                     break;
@@ -51,21 +46,16 @@ internal sealed partial class AzureDevOpsSummaryReporter
             }
         }
 
+        bool runFailed = failed > 0 || (exitCode is int processExitCode && processExitCode != 0);
         var builder = new StringBuilder();
-        builder.Append("# Test summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
-        builder.Append("| Metric | Value |\n");
-        builder.Append("| --- | ---: |\n");
-        builder.Append("| Total | ").Append(total.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Passed | ").Append(passed.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Failed | ").Append(failed.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Skipped | ").Append(skipped.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Total duration | ").Append(FormatDuration(totalDuration)).Append(" |\n");
-        builder.Append('\n');
-        CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 2);
+        builder.Append("## ").Append(runFailed ? "❌" : "✅").Append(' ')
+            .Append(EscapeCell(assemblyName)).Append(" (").Append(EscapeCell(targetFrameworkMoniker)).Append(")\n\n");
+        AppendStatusStrip(builder, total, passed, failed, skipped, totalDuration, exitCode);
+        CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 3);
 
         if (failingByClass.Count > 0)
         {
-            builder.Append("## Top failing classes\n\n");
+            builder.Append("### ❌ Top failing classes\n\n");
             builder.Append("| Class | Failures |\n");
             builder.Append("| --- | ---: |\n");
             foreach (KeyValuePair<string, int> pair in failingByClass.OrderByDescending(static p => p.Value).ThenBy(static p => p.Key, StringComparer.Ordinal).Take(MaxTopFailingClasses))
@@ -76,12 +66,27 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append('\n');
         }
 
-        if (failingFqns.Count > 0)
+        string[] failingFqns =
+        [
+            .. records
+                .Where(static record => record.Kind == TerminalKind.Failed)
+                .Select(static record => record.FullyQualifiedName)
+                .OrderBy(static fullyQualifiedName => fullyQualifiedName, StringComparer.Ordinal)
+                .Take(MaxFirstFailingFqns),
+        ];
+        if (failingFqns.Length > 0)
         {
-            builder.Append("## First failing tests\n\n");
+            builder.Append("### ❌ Failed tests\n\n");
             foreach (string fqn in failingFqns)
             {
-                builder.Append("- ").Append(EscapeCell(fqn)).Append('\n');
+                builder.Append("- ").Append(FormatTestName(fqn)).Append('\n');
+            }
+
+            if (failed > failingFqns.Length)
+            {
+                builder.Append("- … and ")
+                    .Append((failed - failingFqns.Length).ToString(CultureInfo.InvariantCulture))
+                    .Append(" more\n");
             }
 
             builder.Append('\n');
@@ -90,6 +95,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         IEnumerable<TestRecord> slowest = records
             .Where(static r => r.Duration > TimeSpan.Zero)
             .OrderByDescending(static r => r.Duration)
+            .ThenBy(static r => r.FullyQualifiedName, StringComparer.Ordinal)
             .Take(MaxSlowestTests);
 
         bool slowestEmitted = false;
@@ -97,13 +103,12 @@ internal sealed partial class AzureDevOpsSummaryReporter
         {
             if (!slowestEmitted)
             {
-                builder.Append("## Slowest tests\n\n");
-                builder.Append("| Test | Duration |\n");
-                builder.Append("| --- | ---: |\n");
+                builder.Append("### ⏱ Slowest tests\n\n");
                 slowestEmitted = true;
             }
 
-            builder.Append("| ").Append(EscapeCell(record.DisplayName)).Append(" | ").Append(FormatDuration(record.Duration)).Append(" |\n");
+            builder.Append("- **").Append(FormatDuration(record.Duration)).Append("** — ")
+                .Append(FormatTestName(record.DisplayName)).Append('\n');
         }
 
         if (slowestEmitted)
@@ -116,24 +121,19 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
     internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
     {
+        bool runFailed = aggregate.ExitCode is int exitCode
+            ? exitCode != 0
+            : aggregate.Modules.Any(static module => module.FailedTests > 0 || module.ExitCode != 0);
         var builder = new StringBuilder();
-        builder.Append("# Overall test summary\n\n");
-        builder.Append("| Metric | Value |\n");
-        builder.Append("| --- | ---: |\n");
-        builder.Append("| Total | ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Passed | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Failed | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Skipped | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Duration | ")
-            .Append(aggregate.Duration is { } duration ? FormatDuration(duration) : "Unavailable")
-            .Append(" |\n");
-        if (aggregate.ExitCode is int exitCode)
-        {
-            builder.Append("| Exit code | ").Append(exitCode.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        }
-
-        builder.Append('\n');
-        CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 2);
+        builder.Append("## ").Append(runFailed ? "❌" : "✅").Append(" Overall test results\n\n");
+        AppendStatusStrip(
+            builder,
+            aggregate.TotalTests,
+            aggregate.PassedTests,
+            aggregate.FailedTests,
+            aggregate.SkippedTests,
+            aggregate.Duration,
+            aggregate.ExitCode);
         if (aggregate.IsPartial)
         {
             builder.Append("> **Partial summary:** the test run was truncated.\n\n");
@@ -143,43 +143,98 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append("> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
         }
 
-        foreach (CiRunSummaryModule module in aggregate.Modules)
+        CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
+
+        builder.Append("### Test modules\n\n");
+        builder.Append("| Result | Test module | Total | Passed | Failed | Skipped | Duration |\n");
+        builder.Append("| :---: | --- | ---: | ---: | ---: | ---: | ---: |\n");
+        foreach (CiRunSummaryModule module in aggregate.Modules
+            .OrderByDescending(static module => module.FailedTests > 0 || module.ExitCode != 0)
+            .ThenBy(static module => module.AssemblyName, StringComparer.Ordinal)
+            .ThenBy(static module => module.TargetFramework, StringComparer.Ordinal)
+            .ThenBy(static module => module.Architecture, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(static module => module.AttemptNumber))
         {
             bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
-            builder.Append("<details>\n<summary>")
-                .Append(HtmlEncode(module.AssemblyName))
-                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
-                .Append(HtmlEncode(module.Architecture));
+            bool moduleFailed = module.FailedTests > 0 || module.ExitCode != 0;
+            builder.Append("| ").Append(moduleFailed ? "❌" : "✅")
+                .Append(" | ").Append(EscapeCell(module.AssemblyName))
+                .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(", ")
+                .Append(EscapeCell(module.Architecture)).Append(')');
             if (needsDiscriminator)
             {
-                builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
-                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
+                builder.Append(" — attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
+                    .Append(", session ").Append(EscapeCell(module.SessionUid));
             }
 
-            builder.Append(")</summary>\n\n");
-            AppendModuleMarkdown(builder, module);
-            builder.Append("</details>\n\n");
+            builder.Append(" | ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks)))
+                .Append(" |\n");
+        }
+
+        builder.Append('\n');
+
+        CiRunSummaryModule[] failedModules =
+        [
+            .. aggregate.Modules
+                .Where(static module =>
+                    module.FailedTests > 0
+                    || module.ExitCode != 0)
+                .OrderByDescending(static module => module.FailedTests)
+                .ThenBy(static module => module.AssemblyName, StringComparer.Ordinal)
+                .ThenBy(static module => module.TargetFramework, StringComparer.Ordinal)
+                .ThenBy(static module => module.Architecture, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(static module => module.AttemptNumber),
+        ];
+        if (failedModules.Length > 0)
+        {
+            builder.Append("### ❌ Failures\n\n");
+            foreach (CiRunSummaryModule module in failedModules)
+            {
+                AppendModuleFailuresMarkdown(builder, module);
+            }
+        }
+
+        (CiRunSummaryModule Module, CiRunSummaryTest Test)[] slowest = aggregate.Modules
+            .SelectMany(static module => module.SlowestTests.Select(test => (Module: module, Test: test)))
+            .OrderByDescending(static item => item.Test.DurationTicks)
+            .ThenBy(static item => item.Test.FullyQualifiedName, StringComparer.Ordinal)
+            .ThenBy(static item => item.Module.AssemblyName, StringComparer.Ordinal)
+            .ThenBy(static item => item.Module.TargetFramework, StringComparer.Ordinal)
+            .Take(MaxSlowestTests)
+            .ToArray();
+        if (slowest.Length > 0)
+        {
+            builder.Append("### ⏱ Slowest tests\n\n");
+            foreach ((CiRunSummaryModule Module, CiRunSummaryTest Test) item in slowest)
+            {
+                builder.Append("- **").Append(FormatDuration(TimeSpan.FromTicks(item.Test.DurationTicks))).Append("** — ")
+                    .Append(FormatTestName(item.Test.DisplayName))
+                    .Append(" — ").Append(EscapeCell(item.Module.AssemblyName)).Append(" (")
+                    .Append(EscapeCell(item.Module.TargetFramework)).Append(")\n");
+            }
+
+            builder.Append('\n');
         }
 
         return builder.ToString();
     }
 
-    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module)
+    private static void AppendModuleFailuresMarkdown(StringBuilder builder, CiRunSummaryModule module)
     {
-        builder.Append("## ").Append(EscapeCell(module.AssemblyName)).Append("\n\n");
-        builder.Append("| Metric | Value |\n");
-        builder.Append("| --- | ---: |\n");
-        builder.Append("| Total | ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Passed | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Failed | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Skipped | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
-        builder.Append("| Test duration | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n");
-        builder.Append("| Module exit code | ").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append(" |\n\n");
-        CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel: 3);
+        builder.Append("#### ").Append(EscapeCell(module.AssemblyName))
+            .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(")\n\n");
+        if (module.ExitCode != 0)
+        {
+            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("`\n\n");
+        }
 
         if (module.TopFailingClasses.Length > 0)
         {
-            builder.Append("### Top failing classes\n\n");
+            builder.Append("**Top failing classes**\n\n");
             builder.Append("| Class | Failures |\n");
             builder.Append("| --- | ---: |\n");
             foreach (CiRunSummaryFailingClass item in module.TopFailingClasses)
@@ -193,24 +248,17 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
         if (module.Failures.Length > 0)
         {
-            builder.Append("### First failing tests\n\n");
+            builder.Append("**Failed tests**\n\n");
             foreach (CiRunSummaryTest failure in module.Failures.Take(MaxFirstFailingFqns))
             {
-                builder.Append("- ").Append(EscapeCell(failure.FullyQualifiedName)).Append('\n');
+                builder.Append("- ").Append(FormatTestName(failure.FullyQualifiedName)).Append('\n');
             }
 
-            builder.Append('\n');
-        }
-
-        if (module.SlowestTests.Length > 0)
-        {
-            builder.Append("### Slowest tests\n\n");
-            builder.Append("| Test | Duration |\n");
-            builder.Append("| --- | ---: |\n");
-            foreach (CiRunSummaryTest test in module.SlowestTests)
+            if (module.FailedTests > MaxFirstFailingFqns)
             {
-                builder.Append("| ").Append(EscapeCell(test.DisplayName)).Append(" | ")
-                    .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append(" |\n");
+                builder.Append("- … and ")
+                    .Append((module.FailedTests - MaxFirstFailingFqns).ToString(CultureInfo.InvariantCulture))
+                    .Append(" more\n");
             }
 
             builder.Append('\n');
@@ -231,6 +279,39 @@ internal sealed partial class AzureDevOpsSummaryReporter
     private static string FormatDuration(TimeSpan duration)
         => SummaryReporterHelpers.FormatDuration(duration, "{0:D2}:{1:D2}", "{0}:{1:D2}:{2:D2}");
 
+    private static void AppendStatusStrip(
+        StringBuilder builder,
+        long total,
+        long passed,
+        long failed,
+        long skipped,
+        TimeSpan? duration,
+        int? exitCode)
+    {
+        builder.Append("**").Append(total.ToString(CultureInfo.InvariantCulture))
+            .Append(total == 1 ? " test**" : " tests**")
+            .Append(" · ✅ **").Append(passed.ToString(CultureInfo.InvariantCulture)).Append(" passed**")
+            .Append(" · ❌ **").Append(failed.ToString(CultureInfo.InvariantCulture)).Append(" failed**")
+            .Append(" · ⏭ **").Append(skipped.ToString(CultureInfo.InvariantCulture)).Append(" skipped**")
+            .Append(" · ⏱ **").Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
+        if (exitCode is int processExitCode && processExitCode != 0)
+        {
+            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("**");
+        }
+
+        builder.Append("\n\n");
+    }
+
+    private static string FormatTestName(string value)
+    {
+        string encodedValue = System.Net.WebUtility.HtmlEncode(value)
+            .Replace("\r", " ")
+            .Replace("\n", " ");
+        return encodedValue.IndexOf('`') >= 0
+            ? encodedValue.Replace("`", "\\`")
+            : $"`{encodedValue}`";
+    }
+
     private static string EscapeCell(string value)
     {
         if (RoslynString.IsNullOrEmpty(value))
@@ -238,8 +319,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             return value;
         }
 
-        var sb = new StringBuilder(value.Length);
-        foreach (char c in value)
+        string encodedValue = System.Net.WebUtility.HtmlEncode(value);
+        var sb = new StringBuilder(encodedValue.Length);
+        foreach (char c in encodedValue)
         {
             switch (c)
             {
@@ -262,9 +344,6 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
         return sb.ToString();
     }
-
-    private static string HtmlEncode(string value)
-        => System.Net.WebUtility.HtmlEncode(value);
 
     private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
         => modules.Count(candidate =>
