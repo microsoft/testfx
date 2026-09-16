@@ -237,7 +237,7 @@ public sealed partial class Assert
         // string instead of allocating "Assert." + assertionName on every call.
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
-        int actualCount = collection.Count();
+        int actualCount = GetCount(collection);
         if (actualCount == expected)
         {
             return;
@@ -245,6 +245,13 @@ public sealed partial class Assert
 
         ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
     }
+
+    private static int GetCount<T>(IEnumerable<T> collection)
+        => collection is ICollection<T> genericCollection
+            ? genericCollection.Count
+            : collection is ICollection nonGenericCollection
+                ? nonGenericCollection.Count
+                : collection.Count();
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
     {
