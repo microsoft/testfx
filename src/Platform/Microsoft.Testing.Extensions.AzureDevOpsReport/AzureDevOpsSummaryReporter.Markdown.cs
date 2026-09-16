@@ -284,8 +284,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append("| --- | --- | ---: | ---: | ---: | ---: |\n");
             foreach ((CiRunSummaryModule module, CiRunSummaryHistoryTest test) in flakyHistory)
             {
-                int total = test.HistoricalPassCount + test.HistoricalFailCount;
-                builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules.Count, module, test.FullyQualifiedName)))
+                long total = (long)test.HistoricalPassCount + test.HistoricalFailCount;
+                builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules, module, test.FullyQualifiedName)))
                     .Append(" | ").Append(EscapeCell(test.Outcome))
                     .Append(" | ").Append(total.ToString(CultureInfo.InvariantCulture))
                     .Append(" | ").Append(test.HistoricalPassCount.ToString(CultureInfo.InvariantCulture))
@@ -309,7 +309,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append("| --- | ---: | ---: | ---: | ---: | ---: |\n");
             foreach ((CiRunSummaryModule module, CiRunSummaryHistoryTest test) in durationHistory)
             {
-                builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules.Count, module, test.FullyQualifiedName)))
+                builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules, module, test.FullyQualifiedName)))
                     .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks)))
                     .Append(" | ").Append(FormatHistoricalDuration(test.P95DurationMilliseconds))
                     .Append(" | ").Append(FormatHistoricalDuration(test.P99DurationMilliseconds))
@@ -344,7 +344,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append("| --- | --- | --- |\n");
         foreach ((CiRunSummaryModule module, CiRunSummaryDependency dependency) in dependencies)
         {
-            builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules.Count, module, dependency.DependentFullyQualifiedName)))
+            builder.Append("| ").Append(EscapeCell(GetQualifiedTestLabel(modules, module, dependency.DependentFullyQualifiedName)))
                 .Append(" | ").Append(EscapeCell(dependency.Prerequisite))
                 .Append(" | ").Append(dependency.ProceedOnFailure ? "Continue" : "Skip")
                 .Append(" |\n");
@@ -376,7 +376,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
     private static double GetHistoricalFailureRate(CiRunSummaryHistoryTest test)
     {
-        int total = test.HistoricalPassCount + test.HistoricalFailCount;
+        long total = (long)test.HistoricalPassCount + test.HistoricalFailCount;
         return total > 0 ? (double)test.HistoricalFailCount / total : 0;
     }
 
@@ -385,8 +385,24 @@ internal sealed partial class AzureDevOpsSummaryReporter
             ? TimeSpan.FromTicks(test.DurationTicks).TotalMilliseconds / test.P95DurationMilliseconds
             : 0;
 
-    private static string GetQualifiedTestLabel(int moduleCount, CiRunSummaryModule module, string testName)
-        => moduleCount > 1 ? $"{module.AssemblyName}: {testName}" : testName;
+    private static string GetQualifiedTestLabel(
+        IReadOnlyList<CiRunSummaryModule> modules,
+        CiRunSummaryModule module,
+        string testName)
+    {
+        if (modules.Count == 1)
+        {
+            return testName;
+        }
+
+        string discriminator = $"{module.AssemblyName} ({module.TargetFramework}, {module.Architecture}";
+        if (HasDuplicateModuleIdentity(modules, module))
+        {
+            discriminator += $", attempt {module.AttemptNumber.ToString(CultureInfo.InvariantCulture)}, session {module.SessionUid}";
+        }
+
+        return $"{discriminator}): {testName}";
+    }
 
     private static void AppendBlockQuote(StringBuilder builder, string value)
     {

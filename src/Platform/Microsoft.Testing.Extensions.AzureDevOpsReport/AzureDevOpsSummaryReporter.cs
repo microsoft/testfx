@@ -47,11 +47,12 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
 #else
     private readonly object _stateLock = new();
 #endif
+    private readonly List<SummaryRow> _rows = [];
 #pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
-    private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
-    private readonly Dictionary<string, CiRunSummaryHistoryTest> _historyTests = new Dictionary<string, CiRunSummaryHistoryTest>(StringComparer.Ordinal);
-    private readonly Dictionary<string, CiRunSummaryDependency[]> _dependencies = new Dictionary<string, CiRunSummaryDependency[]>(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _finalRowCountsByUid = new Dictionary<string, int>(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<int>> _flakyRowIndicesByUid = new Dictionary<string, List<int>>(StringComparer.Ordinal);
     private readonly HashSet<string> _inProcessFailedTests = new HashSet<string>(StringComparer.Ordinal);
+    private readonly HashSet<string> _notRecoveredTests = new HashSet<string>(StringComparer.Ordinal);
 #pragma warning restore IDE0028
     private readonly bool _isEnabled;
 
@@ -128,4 +129,19 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
     public string Description => AzureDevOpsResources.Description;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+
+    private sealed class SummaryRow(
+        string uid,
+        TestRecord record,
+        CiRunSummaryHistoryTest? historyTest,
+        CiRunSummaryDependency[] dependencies)
+    {
+        public string Uid { get; } = uid;
+
+        public TestRecord Record { get; set; } = record;
+
+        public CiRunSummaryHistoryTest? HistoryTest { get; } = historyTest;
+
+        public CiRunSummaryDependency[] Dependencies { get; } = dependencies;
+    }
 }

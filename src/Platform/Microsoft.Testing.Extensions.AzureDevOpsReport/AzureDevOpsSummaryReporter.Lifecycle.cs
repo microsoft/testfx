@@ -25,10 +25,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
             _emitAzureDevOpsCommands = false;
             lock (_stateLock)
             {
-                _records.Clear();
-                _historyTests.Clear();
-                _dependencies.Clear();
+                _rows.Clear();
+                _finalRowCountsByUid.Clear();
+                _flakyRowIndicesByUid.Clear();
                 _inProcessFailedTests.Clear();
+                _notRecoveredTests.Clear();
             }
 
             if (!_isEnabled)
@@ -120,30 +121,45 @@ internal sealed partial class AzureDevOpsSummaryReporter
                     return Task.CompletedTask;
                 }
 
+                if (kind is TerminalKind.Failed or TerminalKind.Skipped)
+                {
+                    _notRecoveredTests.Add(uid);
+                    ClearFlakyRows(uid);
+                }
+
                 bool isFlaky = kind == TerminalKind.Passed
-                    && (_inProcessFailedTests.Remove(uid) || GetAttemptNumber() > 1);
-                if (kind != TerminalKind.Passed)
+                    && !_notRecoveredTests.Contains(uid)
+                    && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
+                int finalRowCount = _finalRowCountsByUid.TryGetValue(uid, out int existingFinalRowCount)
+                    ? existingFinalRowCount + 1
+                    : 1;
+                _finalRowCountsByUid[uid] = finalRowCount;
+                CiRunSummaryHistoryTest? historyTest = CreateHistoryTest(
+                    uid,
+                    displayName,
+                    fullyQualifiedName,
+                    kind,
+                    duration,
+                    isFlaky);
+                _rows.Add(new SummaryRow(
+                    uid,
+                    new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky, failure),
+                    historyTest,
+                    dependencies));
+                if (isFlaky)
                 {
-                    _inProcessFailedTests.Remove(uid);
+                    if (!_flakyRowIndicesByUid.TryGetValue(uid, out List<int>? indices))
+                    {
+                        indices = [];
+                        _flakyRowIndicesByUid.Add(uid, indices);
+                    }
+
+                    indices.Add(_rows.Count - 1);
                 }
 
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky, failure);
-                if (dependencies.Length > 0)
+                if (finalRowCount > 1)
                 {
-                    _dependencies[uid] = dependencies;
-                }
-                else
-                {
-                    _dependencies.Remove(uid);
-                }
-
-                if (CreateHistoryTest(uid, displayName, fullyQualifiedName, kind, duration, isFlaky) is { } historyTest)
-                {
-                    _historyTests[uid] = historyTest;
-                }
-                else
-                {
-                    _historyTests.Remove(uid);
+                    ClearFlakyRows(uid);
                 }
             }
         }
@@ -175,12 +191,33 @@ internal sealed partial class AzureDevOpsSummaryReporter
             CiRunSummaryDependency[] dependencies;
             lock (_stateLock)
             {
-                snapshot = [.. _records.Values];
-                historyTests = [.. _historyTests.Values];
+                SummaryRow[] rows =
+                [
+                    .. _rows
+                        .OrderBy(static row => row.Record.FullyQualifiedName, StringComparer.Ordinal)
+                        .ThenBy(static row => row.Record.DisplayName, StringComparer.Ordinal)
+                        .ThenBy(static row => row.Uid, StringComparer.Ordinal),
+                ];
+                snapshot = [.. rows.Select(static row => row.Record)];
+                historyTests =
+                [
+                    .. rows
+                        .Select(static row => row.HistoryTest)
+                        .Where(static historyTest => historyTest is not null)
+                        .Select(static historyTest => historyTest!),
+                ];
                 dependencies =
                 [
-                    .. _dependencies.Values
-                        .SelectMany(static values => values)
+                    .. rows
+                        .SelectMany(static row => row.Dependencies)
+                        .OrderBy(static dependency => dependency.DependentFullyQualifiedName, StringComparer.Ordinal)
+                        .ThenBy(static dependency => dependency.Prerequisite, StringComparer.Ordinal)
+                        .ThenBy(static dependency => dependency.ProceedOnFailure)
+                        .GroupBy(static dependency => (
+                            dependency.DependentFullyQualifiedName,
+                            dependency.Prerequisite,
+                            dependency.ProceedOnFailure))
+                        .Select(static group => group.First())
                         .Take(MaxCapturedDependencies),
                 ];
             }
@@ -323,6 +360,29 @@ internal sealed partial class AzureDevOpsSummaryReporter
             };
     }
 
+    private void ClearFlakyRows(string uid)
+    {
+        if (!_flakyRowIndicesByUid.TryGetValue(uid, out List<int>? indices))
+        {
+            return;
+        }
+
+        _flakyRowIndicesByUid.Remove(uid);
+        foreach (int index in indices)
+        {
+            SummaryRow row = _rows[index];
+            TestRecord record = row.Record;
+            row.Record = new TestRecord(
+                record.DisplayName,
+                record.FullyQualifiedName,
+                record.Kind,
+                record.Duration,
+                isFlaky: false,
+                record.Failure);
+            row.HistoryTest?.IsFlaky = false;
+        }
+    }
+
     private static TestFailureDetails? CaptureFailureDetails(TestNodeStateProperty? state)
     {
         Exception? exception = state switch
@@ -335,7 +395,10 @@ internal sealed partial class AzureDevOpsSummaryReporter
 #pragma warning restore CS0618, MTP0001
             _ => null,
         };
-        string? message = Truncate(state?.Explanation ?? exception?.Message, MaxFailureMessageLength);
+        string? explanation = state?.Explanation;
+        string? message = Truncate(
+            RoslynString.IsNullOrWhiteSpace(explanation) ? exception?.Message : explanation,
+            MaxFailureMessageLength);
         string? exceptionType = exception?.GetType().FullName;
         return RoslynString.IsNullOrWhiteSpace(message)
             && RoslynString.IsNullOrWhiteSpace(exceptionType)

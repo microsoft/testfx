@@ -218,6 +218,14 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session-1",
             AttemptNumber = 1,
+            Dependencies =
+            [
+                new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = "Tests.Dependent",
+                    Prerequisite = "Tests.First",
+                },
+            ],
         };
         var second = new CiRunSummaryModule
         {
@@ -228,6 +236,14 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session-2",
             AttemptNumber = 2,
+            Dependencies =
+            [
+                new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = "Tests.Dependent",
+                    Prerequisite = "Tests.Second",
+                },
+            ],
         };
         var aggregate = new CiRunSummaryAggregate(
             [first, second],
@@ -245,6 +261,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         Assert.Contains("attempt 1, session session-1", markdown);
         Assert.Contains("attempt 2, session session-2", markdown);
+        Assert.Contains("Tests (net9.0, x64, attempt 1, session session-1): Tests.Dependent", markdown);
+        Assert.Contains("Tests (net9.0, x64, attempt 2, session session-2): Tests.Dependent", markdown);
     }
 
     [TestMethod]
@@ -497,6 +515,49 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_HistoricalResultTotalDoesNotOverflow()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            HistoryTests =
+            [
+                new CiRunSummaryHistoryTest
+                {
+                    TestId = "history",
+                    DisplayName = "History",
+                    FullyQualifiedName = "Tests.History",
+                    Outcome = "passed",
+                    HistoricalPassCount = int.MaxValue,
+                    HistoricalFailCount = int.MaxValue,
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("4294967294", markdown);
+        Assert.Contains("50.0%", markdown);
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_ReplacesBackticksInsideInlineCode()
     {
         var module = new CiRunSummaryModule
@@ -646,6 +707,66 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.Contains("MyCo.Suite.Retry", written);
     }
 
+    [TestMethod]
+    public async Task SessionFinishing_PreservesFoldedRowsAndDoesNotReportMixedOutcomesAsFlakyAsync()
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        using var memoryStream = new MemoryStream();
+        IFileStream fakeStream = new FakeFileStream(memoryStream);
+        _ = _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _ = _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read)).Returns(fakeStream);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate("shared", "Row A", new FailedTestNodeStateProperty("retry"), new RetryAttemptProperty(1, isSuperseded: true)),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate("shared", "Row A", PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false)),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate("shared", "Row B", SkippedTestNodeStateProperty.CachedInstance, retryAttempt: null),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+        Assert.Contains("| Total | 2 |", written);
+        Assert.Contains("| Passed | 1 |", written);
+        Assert.Contains("| Skipped | 1 |", written);
+        Assert.Contains("| Flaky | 0 |", written);
+        Assert.DoesNotContain("Flaky tests", written);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_UsesExceptionMessageWhenExplanationIsBlankAsync()
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        using var memoryStream = new MemoryStream();
+        IFileStream fakeStream = new FakeFileStream(memoryStream);
+        _ = _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _ = _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read)).Returns(fakeStream);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate(
+                "failed",
+                "Failed",
+                new FailedTestNodeStateProperty(new InvalidOperationException("exception fallback"), "   "),
+                retryAttempt: null),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+        Assert.Contains("exception fallback", written);
+    }
+
     private static Dictionary<string, string[]> EnabledOptions()
         => new() { [AzureDevOpsCommandLineOptions.AzureDevOpsSummary] = [] };
 
@@ -697,6 +818,30 @@ public sealed class AzureDevOpsSummaryReporterTests
                     new RetryAttemptProperty(attemptNumber, isSuperseded),
                     new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "MyCo.Suite.Retry")),
             });
+
+    private static TestNodeUpdateMessage CreateUpdate(
+        string uid,
+        string displayName,
+        TestNodeStateProperty state,
+        RetryAttemptProperty? retryAttempt)
+    {
+        var properties = new PropertyBag(
+            state,
+            new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "MyCo.Suite.Folded"));
+        if (retryAttempt is not null)
+        {
+            properties.Add(retryAttempt);
+        }
+
+        return new TestNodeUpdateMessage(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = uid,
+                DisplayName = displayName,
+                Properties = properties,
+            });
+    }
 
     private static IDataProducer CreateProducer() => new TestProducer();
 
