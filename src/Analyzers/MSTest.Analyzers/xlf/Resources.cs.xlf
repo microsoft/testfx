@@ -857,7 +857,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
         <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
-        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <target state="translated">Atribut na úrovni metody by měl být odebrán, pokud již obsahující testovací třída vytváří ekvivalentní nebo více restriktivní chování.</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeMessageFormat">
@@ -867,7 +867,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeTitle">
         <source>Remove redundant test method attribute</source>
-        <target state="new">Remove redundant test method attribute</target>
+        <target state="translated">Odebrat redundantní atribut testovací metody</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
