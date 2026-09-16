@@ -32,6 +32,15 @@ public sealed class ReportEngineBaseTests
         ReportEngineBaseType.GetMethod("GetProvidedFileName", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve ReportEngineBase.GetProvidedFileName.");
 
+    private static readonly MethodInfo ResolveOutputPathMethod =
+        ReportEngineBaseType.GetMethod(
+            "ResolveOutputPath",
+            BindingFlags.NonPublic | BindingFlags.Instance,
+            binder: null,
+            [typeof(string), typeof(Func<string>)],
+            modifiers: null)
+        ?? throw new InvalidOperationException("Could not resolve ReportEngineBase.ResolveOutputPath.");
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -68,36 +77,22 @@ public sealed class ReportEngineBaseTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_FileNameOptionExplicitlySet_UsesExplicitFileNameEvenWhenSameAsDefault()
+    public void ResolveOutputPath_FileNameOptionExplicitlySet_ReturnsExplicitPathAndFlag()
     {
-        // IsOptionSet (not the value returned by TryGetOptionArgumentListOrDefault) is what determines
-        // whether the file name was explicitly provided by the user, per ResolveOutputPath's own
-        // documented contract (a passive testconfig.json default doesn't count as "explicit"). Assert
-        // this indirectly: when the option is set, an explicit file name is honored (bypassing the
-        // default <asm>_<tfm>_<arch> shape) even though no test asserts the WasExplicit flag directly
-        // (it isn't surfaced to any current caller).
         string[]? explicitFileName = ["explicit-name.ctrf.json"];
         _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet(CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName)).Returns(true);
         _ = _commandLineOptionsMock.Setup(x => x.TryGetOptionArgumentList(CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName, out explicitFileName)).Returns(true);
 
-        string? pathSeen = null;
-        using var memoryStream = new MemoryFileStream();
-        _ = _fileSystemMock.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
-        _ = _fileSystemMock.Setup(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>()))
-            .Returns<string, FileMode>((path, _) =>
-            {
-                pathSeen = path;
-                return memoryStream;
-            });
-
         CtrfReportEngine engine = CreateEngine(CancellationToken.None);
         _ = _configurationMock.SetupGet(x => x[It.IsAny<string>()]).Returns("out");
 
-        (string finalPath, _) = await engine.GenerateReportAsync([]);
+        (string finalPath, bool wasExplicit) = ((string, bool))ResolveOutputPathMethod.Invoke(
+            engine,
+            [CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName, (Func<string>)(() => "default.ctrf.json")])!;
 
         string expectedPath = Path.Combine("out", "explicit-name.ctrf.json");
         Assert.AreEqual(expectedPath, finalPath);
-        Assert.AreEqual(expectedPath, pathSeen);
+        Assert.IsTrue(wasExplicit);
     }
 
     [TestMethod]
@@ -105,7 +100,7 @@ public sealed class ReportEngineBaseTests
     {
         // ResolveOutputPath calls _cancellationToken.ThrowIfCancellationRequested() as its very first
         // statement, before consulting the file-name option or touching the file system at all — assert
-        // that a pre-canceled token short-circuits the whole report generation with no file write.
+        // that a pre-canceled token short-circuits the whole report generation with no file-system access.
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
@@ -114,6 +109,8 @@ public sealed class ReportEngineBaseTests
 
         _ = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => engine.GenerateReportAsync([]));
 
+        _fileSystemMock.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Never);
+        _fileSystemMock.Verify(x => x.ExistFile(It.IsAny<string>()), Times.Never);
         _fileSystemMock.Verify(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>()), Times.Never);
     }
 
@@ -140,22 +137,5 @@ public sealed class ReportEngineBaseTests
             DateTimeOffset.UtcNow,
             0,
             cancellationToken));
-    }
-
-    private sealed class MemoryFileStream : IFileStream
-    {
-        public MemoryFileStream() => Stream = new MemoryStream();
-
-        public MemoryStream Stream { get; }
-
-        Stream IFileStream.Stream => Stream;
-
-        string IFileStream.Name => string.Empty;
-
-        void IDisposable.Dispose() => Stream.Dispose();
-
-#if NETCOREAPP
-        ValueTask IAsyncDisposable.DisposeAsync() => Stream.DisposeAsync();
-#endif
     }
 }
