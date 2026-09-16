@@ -138,6 +138,147 @@ public sealed class CiRunSummaryAggregationTests
     }
 
     [TestMethod]
+    public async Task ReadAndAggregate_NullDependencyEntry_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace("\"dependencies\": []", "\"dependencies\": [null]");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("historyTests")]
+    [DataRow("dependencies")]
+    public async Task ReadAndAggregate_NullBoundedCollection_ThrowsFormatExceptionAsync(string propertyName)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace($"\"{propertyName}\": []", $"\"{propertyName}\": null");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_NullHistoryEntry_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace("\"historyTests\": []", "\"historyTests\": [null]");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_AppliesDependencyBoundAfterDeterministicModuleSortAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule moduleA = CreateModule("A", passed: 1, failed: 0);
+            moduleA.Dependencies =
+            [
+                .. Enumerable.Range(0, 600).Select(static index => new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = $"A.Test{index}",
+                    Prerequisite = "A.Setup",
+                }),
+            ];
+            CiRunSummaryModule moduleB = CreateModule("B", passed: 1, failed: 0);
+            moduleB.Dependencies =
+            [
+                .. Enumerable.Range(0, 600).Select(static index => new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = $"B.Test{index}",
+                    Prerequisite = "B.Setup",
+                }),
+            ];
+            string pathA = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                moduleA);
+            string pathB = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                moduleB);
+
+            CiRunSummaryAggregate reverseInput = CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(pathB, moduleB), CreateInput(pathA, moduleA)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            CiRunSummaryAggregate sortedInput = CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(pathA, moduleA), CreateInput(pathB, moduleB)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+            Assert.HasCount(600, reverseInput.Modules[0].Dependencies);
+            Assert.HasCount(400, reverseInput.Modules[1].Dependencies);
+            Assert.HasCount(600, sortedInput.Modules[0].Dependencies);
+            Assert.HasCount(400, sortedInput.Modules[1].Dependencies);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ReadAndAggregate_DuplicateFragmentIdentity_ThrowsFormatExceptionAsync()
     {
         string directory = CreateDirectory();
