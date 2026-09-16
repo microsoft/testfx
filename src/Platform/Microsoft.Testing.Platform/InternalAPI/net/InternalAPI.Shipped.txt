@@ -8,6 +8,8 @@ Microsoft.Testing.Platform.Helpers.SystemFileStream.DisposeAsync() -> System.Thr
 Microsoft.Testing.Platform.Helpers.SystemMainModule.FileName.get -> string?
 Microsoft.Testing.Platform.Helpers.SystemMainModule.SystemMainModule(System.Diagnostics.ProcessModule? processModule) -> void
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Logging.FileLogger.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Logging.FileLoggerProvider.DisposeAsync() -> System.Threading.Tasks.ValueTask
