@@ -553,6 +553,50 @@ public sealed class RedundantTestMethodAttributeAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenClassRetryHasMalformedDuplicateDelay_UsesFirstIntegerValue()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Retry(3, MillisecondsDelayBetweenRetries = "bad", MillisecondsDelayBetweenRetries = 100)]
+            public sealed class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Retry(3, MillisecondsDelayBetweenRetries = 100)|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Retry(3, MillisecondsDelayBetweenRetries = "bad", MillisecondsDelayBetweenRetries = 100)]
+            public sealed class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            CompilerDiagnostics = CompilerDiagnostics.None,
+        };
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("[Retry]", "TestMethod"));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenRetrySettingsDifferFromClassSettings_NoDiagnostic()
     {
         string code = """
