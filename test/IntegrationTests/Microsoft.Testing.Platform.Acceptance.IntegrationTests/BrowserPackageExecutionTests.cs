@@ -23,7 +23,6 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <TargetFramework>$TargetFramework$</TargetFramework>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <ImplicitUsings>enable</ImplicitUsings>
     <WasmBuildNative>false</WasmBuildNative>
     <PublishTrimmed>false</PublishTrimmed>
@@ -90,7 +89,6 @@ public sealed class BrowserPackageTests
     <TargetFramework>$TargetFramework$</TargetFramework>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
@@ -152,6 +150,9 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("succeeded: 1", runOutput);
         Assert.DoesNotContain("--dotnet-test-http-token", runOutput);
         Assert.DoesNotContain("pw:channel", runOutput);
+        await AssertIsTestingPlatformApplicationAsync(
+            generator,
+            $"-property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}");
 
         DotnetMuxerResult list = await RunBrowserTestAsync(generator, "--list-tests");
         string listOutput = list.StandardOutput + list.StandardError;
@@ -309,6 +310,9 @@ public sealed class BrowserPackageDesktopTests
         Assert.AreEqual(0, run.ExitCode, run.ToString());
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         Assert.Contains($"({TargetFramework}|{architecture}) passed [+1/x0/?0]", output);
+        await AssertIsTestingPlatformApplicationAsync(
+            generator,
+            $"-property:TargetFramework={TargetFramework}");
     }
 
     [TestMethod]
@@ -413,6 +417,21 @@ public sealed class BrowserPackageDesktopTests
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
+
+    private async Task AssertIsTestingPlatformApplicationAsync(
+        TestAsset generator,
+        string properties)
+    {
+        DotnetMuxerResult evaluation = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -getProperty:IsTestingPlatformApplication {properties}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
+        Assert.AreEqual("true", evaluation.StandardOutput.Trim());
+    }
 
     private static string GetBrowserPackageVersion()
     {
