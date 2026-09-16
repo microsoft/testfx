@@ -1,1 +1,2 @@
 #nullable enable
+static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.WaitForTestHostControllerConnectionAsync(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! waitConnectionAsync, double timeoutSeconds, System.Threading.CancellationToken applicationCancellationToken, System.Func<System.Threading.Tasks.Task!>! onTimeoutAsync) -> System.Threading.Tasks.Task<bool>!
