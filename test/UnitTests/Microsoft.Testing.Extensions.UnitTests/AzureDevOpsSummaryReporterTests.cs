@@ -612,8 +612,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.Contains("Duration history", written);
         Assert.Contains("2.00×", written);
         Assert.Contains("Test dependencies", written);
-        Assert.Contains(CanonicalTestName, written);
-        Assert.Contains("MyCo.Suite.Setup.Initialize", written);
+        Assert.Contains($"| {CanonicalTestName} | MyCo.Suite.Setup.Initialize | Skip |", written);
         Assert.Contains("Failure details", written);
         Assert.Contains("Expected &lt;safe&gt;, got \\|unsafe\\|", written);
         Assert.Contains("System.InvalidOperationException", written);
