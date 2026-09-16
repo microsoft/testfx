@@ -762,12 +762,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="needs-review-translation">'SupportedOSPlatformAttribute' 和 'UnsupportedOSPlatformAttribute' 會提供平台相容性分析，但不會控制 MSTest 執行。使用這些屬性的測試方法和測試類別也應宣告對應的 '[OSCondition]'，這樣在執行階段就會略過不支援的測試。</target>
+        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="needs-review-translation">測試 '{0}' 中的平台相容性屬性沒有對應的 '[OSCondition]' 屬性</target>
+        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -857,17 +857,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeDescription">
         <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
-        <target state="new">A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</target>
+        <target state="translated">當所屬測試類別已建立等效或更嚴格的行為時，應移除方法層級屬性。</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeMessageFormat">
         <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
-        <target state="new">{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</target>
+        <target state="translated">{0} 在測試方法 '{1}' 上是多餘的，因為它不會變更其所屬測試類別已建立的行為</target>
         <note>{0} is the attribute name and {1} is the test method name.</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodAttributeTitle">
         <source>Remove redundant test method attribute</source>
-        <target state="new">Remove redundant test method attribute</target>
+        <target state="translated">移除多餘的測試方法屬性</target>
         <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
