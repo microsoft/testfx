@@ -155,18 +155,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             .ThenBy(static module => module.Architecture, StringComparer.OrdinalIgnoreCase)
             .ThenBy(static module => module.AttemptNumber))
         {
-            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
             bool moduleFailed = module.FailedTests > 0 || module.ExitCode != 0;
-            builder.Append("| ").Append(moduleFailed ? "❌" : "✅")
-                .Append(" | ").Append(EscapeCell(module.AssemblyName))
-                .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(", ")
-                .Append(EscapeCell(module.Architecture)).Append(')');
-            if (needsDiscriminator)
-            {
-                builder.Append(" — attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
-                    .Append(", session ").Append(EscapeCell(module.SessionUid));
-            }
-
+            builder.Append("| ").Append(moduleFailed ? "❌" : "✅").Append(" | ");
+            AppendModuleIdentity(builder, aggregate.Modules, module);
             builder.Append(" | ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
@@ -194,7 +185,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append("### ❌ Failures\n\n");
             foreach (CiRunSummaryModule module in failedModules)
             {
-                AppendModuleFailuresMarkdown(builder, module);
+                AppendModuleFailuresMarkdown(builder, aggregate.Modules, module);
             }
         }
 
@@ -213,8 +204,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             {
                 builder.Append("- **").Append(FormatDuration(TimeSpan.FromTicks(item.Test.DurationTicks))).Append("** — ")
                     .Append(FormatTestName(item.Test.DisplayName))
-                    .Append(" — ").Append(EscapeCell(item.Module.AssemblyName)).Append(" (")
-                    .Append(EscapeCell(item.Module.TargetFramework)).Append(")\n");
+                    .Append(" — ");
+                AppendModuleIdentity(builder, aggregate.Modules, item.Module);
+                builder.Append('\n');
             }
 
             builder.Append('\n');
@@ -223,10 +215,14 @@ internal sealed partial class AzureDevOpsSummaryReporter
         return builder.ToString();
     }
 
-    private static void AppendModuleFailuresMarkdown(StringBuilder builder, CiRunSummaryModule module)
+    private static void AppendModuleFailuresMarkdown(
+        StringBuilder builder,
+        IReadOnlyList<CiRunSummaryModule> modules,
+        CiRunSummaryModule module)
     {
-        builder.Append("#### ").Append(EscapeCell(module.AssemblyName))
-            .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(")\n\n");
+        builder.Append("#### ");
+        AppendModuleIdentity(builder, modules, module);
+        builder.Append("\n\n");
         if (module.ExitCode != 0)
         {
             builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("`\n\n");
@@ -304,12 +300,52 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
     private static string FormatTestName(string value)
     {
-        string encodedValue = System.Net.WebUtility.HtmlEncode(value)
+        string flattenedValue = value
             .Replace("\r", " ")
             .Replace("\n", " ");
-        return encodedValue.IndexOf('`') >= 0
-            ? encodedValue.Replace("`", "\\`")
-            : $"`{encodedValue}`";
+        if (flattenedValue.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        int maxBacktickRun = 0;
+        int currentBacktickRun = 0;
+        foreach (char character in flattenedValue)
+        {
+            if (character == '`')
+            {
+                currentBacktickRun++;
+                maxBacktickRun = Math.Max(maxBacktickRun, currentBacktickRun);
+            }
+            else
+            {
+                currentBacktickRun = 0;
+            }
+        }
+
+        string delimiter = new('`', maxBacktickRun + 1);
+        bool requiresPadding = flattenedValue.StartsWith("`", StringComparison.Ordinal)
+            || flattenedValue.EndsWith("`", StringComparison.Ordinal)
+            || flattenedValue.StartsWith(" ", StringComparison.Ordinal)
+            || flattenedValue.EndsWith(" ", StringComparison.Ordinal);
+        return requiresPadding
+            ? $"{delimiter} {flattenedValue} {delimiter}"
+            : $"{delimiter}{flattenedValue}{delimiter}";
+    }
+
+    private static void AppendModuleIdentity(
+        StringBuilder builder,
+        IReadOnlyList<CiRunSummaryModule> modules,
+        CiRunSummaryModule module)
+    {
+        builder.Append(EscapeCell(module.AssemblyName))
+            .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(", ")
+            .Append(EscapeCell(module.Architecture)).Append(')');
+        if (HasDuplicateModuleIdentity(modules, module))
+        {
+            builder.Append(" — attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
+                .Append(", session ").Append(EscapeCell(module.SessionUid));
+        }
     }
 
     private static string EscapeCell(string value)

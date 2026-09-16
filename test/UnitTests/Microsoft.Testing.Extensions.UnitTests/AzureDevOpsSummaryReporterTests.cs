@@ -133,12 +133,22 @@ public sealed class AzureDevOpsSummaryReporterTests
         {
             new("Has|Pipe", "MyCo.X.HasPipe", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
             new("Has\nNewline", "MyCo.X.HasNewline", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+            new("A&B <T>", "MyCo.X.SpecialCharacters", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new("Has`Tick", "MyCo.X.Backtick", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new("`Edge`", "MyCo.X.EdgeBackticks", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new(" spaced ", "MyCo.X.Spaced", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
         Assert.Contains("`Has|Pipe`", md);
         Assert.Contains("`Has Newline`", md);
+        Assert.Contains("`A&B <T>`", md);
+        Assert.Contains("``Has`Tick``", md);
+        Assert.Contains("`` `Edge` ``", md);
+        Assert.Contains("`  spaced  `", md);
+        Assert.DoesNotContain("A&amp;B", md);
+        Assert.DoesNotContain("&lt;T&gt;", md);
         Assert.DoesNotContain("Has\nNewline", md);
     }
 
@@ -217,6 +227,27 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session-1",
             AttemptNumber = 1,
+            ExitCode = 2,
+            TotalTests = 1,
+            FailedTests = 1,
+            Failures =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow1",
+                    FullyQualifiedName = "Tests.Slow1",
+                    DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                },
+            ],
+            SlowestTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow1",
+                    FullyQualifiedName = "Tests.Slow1",
+                    DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                },
+            ],
         };
         var second = new CiRunSummaryModule
         {
@@ -227,23 +258,37 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session-2",
             AttemptNumber = 2,
+            TotalTests = 1,
+            PassedTests = 1,
+            SlowestTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow2",
+                    FullyQualifiedName = "Tests.Slow2",
+                    DurationTicks = TimeSpan.FromSeconds(1).Ticks,
+                },
+            ],
         };
         var aggregate = new CiRunSummaryAggregate(
             [first, second],
             new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
-            totalTests: 0,
-            passedTests: 0,
-            failedTests: 0,
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
             skippedTests: 0,
-            duration: null,
-            exitCode: null,
-            hasAuthoritativeRunSummary: false,
+            duration: TimeSpan.FromSeconds(3),
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
             isPartial: false);
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
         Assert.Contains("Tests (net9.0, x64) — attempt 1, session session-1", markdown);
         Assert.Contains("Tests (net9.0, x64) — attempt 2, session session-2", markdown);
+        Assert.Contains("#### Tests (net9.0, x64) — attempt 1, session session-1", markdown);
+        Assert.Contains("- **2.00s** — `Slow1` — Tests (net9.0, x64) — attempt 1, session session-1", markdown);
+        Assert.Contains("- **1.00s** — `Slow2` — Tests (net9.0, x64) — attempt 2, session session-2", markdown);
     }
 
     [TestMethod]
