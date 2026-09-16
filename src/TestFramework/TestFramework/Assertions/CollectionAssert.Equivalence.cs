@@ -136,8 +136,8 @@ public sealed partial class CollectionAssert
 
         DebugEx.Assert(actual is not null, "actual is not null here");
 
-        int expectedCollectionCount = expected.Count();
-        int actualCollectionCount = actual.Count();
+        int expectedCollectionCount = GetCount(expected);
+        int actualCollectionCount = GetCount(actual);
 
         // Check whether the element counts are different.
         if (expectedCollectionCount != actualCollectionCount)
@@ -174,6 +174,13 @@ public sealed partial class CollectionAssert
 
         // All the elements and counts matched.
     }
+
+    private static int GetCount<T>(IEnumerable<T> collection)
+        => collection is ICollection<T> genericCollection
+            ? genericCollection.Count
+            : collection is ICollection nonGenericCollection
+                ? nonGenericCollection.Count
+                : collection.Count();
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -312,8 +319,8 @@ public sealed partial class CollectionAssert
         DebugEx.Assert(notExpected is not null, "expected is not null here");
 
         // Check whether the element counts are different.
-        int notExpectedCount = notExpected.Count();
-        int actualCount = actual.Count();
+        int notExpectedCount = GetCount(notExpected);
+        int actualCount = GetCount(actual);
         if (notExpectedCount != actualCount)
         {
             return;
