@@ -34,7 +34,7 @@
     </ItemGroup>
 
     <DefineStaticWebAssets CandidateAssets="@(_TestingPlatformBrowserHostStaticWebAsset)"
-                           SourceId="Microsoft.Testing.Platform.Browser"
+                           SourceId="$(PackageId)"
                            SourceType="Computed"
                            ContentRoot="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)"
                            BasePath="$(StaticWebAssetBasePath)"

@@ -66,6 +66,14 @@ package supplies its page only when the project has not already selected a
 Ordinary desktop targets and unmarked `ComputeRunArguments` calls remain
 unchanged.
 
+This minimum proof of concept supports only the canonical
+`Microsoft.NET.Sdk.WebAssembly` and WasmAppHost combination. The package keeps a
+simple `AfterTargets="ComputeRunArguments"` hook; a project target that also
+runs after `ComputeRunArguments` can subsequently replace the browser wrapper
+and is unsupported by this experiment. A product preview must move launcher
+selection into the .NET SDK rather than adding more package-level ordering
+machinery.
+
 ## Current limitations
 
 - Browser virtual-file-system artifacts are not exported. TRX, coverage,
