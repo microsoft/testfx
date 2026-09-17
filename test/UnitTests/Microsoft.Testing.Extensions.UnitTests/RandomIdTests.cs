@@ -29,7 +29,7 @@ public sealed class RandomIdTests
     }
 
     [TestMethod]
-    public void Next_CalledTwoHundredTimes_ReturnsDistinctEnoughIds()
+    public void Next_CalledManyTimes_ReturnsDistinctEnoughIds()
     {
         var ids = new HashSet<string>(StringComparer.Ordinal);
 
