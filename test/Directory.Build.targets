@@ -18,6 +18,10 @@
     <TestingPlatformCommandLineArguments Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <!-- Live publishing uses a unique per-job run name so the pipeline can verify that the extension completed
+         the expected runs with results. Fork builds and any publication failures retain the traditional TRX
+         push as a fallback. -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TESTFX_AZDO_LIVE_PUBLISHING)' == 'true' ">$(TestingPlatformCommandLineArguments) --publish-azdo-test-results --publish-azdo-run-name $(AZDO_LIVE_PUBLISHING_RUN_NAME)</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
     <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
          output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
