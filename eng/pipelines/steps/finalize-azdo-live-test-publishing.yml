@@ -1,0 +1,106 @@
+parameters:
+- name: expectedMinimumRuns
+  type: number
+  default: 1
+
+steps:
+- pwsh: |
+    $published = $false
+    $matchingRuns = @()
+    $totalTests = 0
+    $handler = $null
+    $client = $null
+    $request = $null
+    $response = $null
+
+    try {
+      if ($env:TESTFX_AZDO_LIVE_PUBLISHING -ne 'true') {
+        return
+      }
+
+      $accessToken = $env:SYSTEM_ACCESSTOKEN
+      $project = [Uri]::EscapeDataString($env:SYSTEM_TEAMPROJECT)
+      $buildUri = [Uri]::EscapeDataString("vstfs:///Build/Build/$($env:BUILD_BUILDID)")
+      $requestUri = [Uri]::new(
+        [Uri]$env:SYSTEM_COLLECTIONURI,
+        "$project/_apis/test/runs?buildUri=$buildUri&includeRunDetails=true&automated=true&`$top=100&api-version=7.1")
+      $startedAt = [DateTimeOffset]::Parse($env:AZDO_LIVE_PUBLISHING_STARTED_AT, [CultureInfo]::InvariantCulture)
+      $jobAttempt = 0
+      [void][int]::TryParse($env:SYSTEM_JOBATTEMPT, [ref]$jobAttempt)
+
+      $handler = [System.Net.Http.HttpClientHandler]::new()
+      $handler.AllowAutoRedirect = $false
+      $client = [System.Net.Http.HttpClient]::new($handler)
+      $client.Timeout = [TimeSpan]::FromSeconds(15)
+      $basicToken = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(":$accessToken"))
+
+      for ($attempt = 1; $attempt -le 3; $attempt++) {
+        if ($null -ne $request) {
+          $request.Dispose()
+        }
+
+        if ($null -ne $response) {
+          $response.Dispose()
+        }
+
+        $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, $requestUri)
+        $request.Headers.Authorization = [System.Net.Http.Headers.AuthenticationHeaderValue]::new('Basic', $basicToken)
+        $request.Headers.Accept.ParseAdd('application/json; api-version=7.1')
+        $response = $client.SendAsync($request).GetAwaiter().GetResult()
+        if ($response.IsSuccessStatusCode) {
+          $result = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
+          $matchingRuns = @($result.value | Where-Object {
+              $_.pipelineReference.jobReference.jobName -eq $env:SYSTEM_JOBNAME `
+                -and ($jobAttempt -le 0 -or [int]$_.pipelineReference.jobReference.attempt -eq $jobAttempt) `
+                -and [DateTimeOffset]$_.createdDate -ge $startedAt
+            })
+          $incompleteRuns = @($matchingRuns | Where-Object { $_.state -ne 'Completed' -or [int]$_.totalTests -le 0 })
+          if ($matchingRuns.Count -ge ${{ parameters.expectedMinimumRuns }} -and $incompleteRuns.Count -eq 0) {
+            $totalTests = ($matchingRuns | Measure-Object -Property totalTests -Sum).Sum
+            $published = $true
+            break
+          }
+        }
+
+        if ($attempt -lt 3) {
+          Start-Sleep -Seconds 2
+        }
+      }
+    }
+    catch {
+      Write-Host "##vso[task.logissue type=warning]Failed to verify Azure DevOps live test publishing: $($_.Exception.Message)"
+    }
+    finally {
+      if ($null -ne $response) {
+        $response.Dispose()
+      }
+
+      if ($null -ne $request) {
+        $request.Dispose()
+      }
+
+      if ($null -ne $client) {
+        $client.Dispose()
+      }
+
+      if ($null -ne $handler) {
+        $handler.Dispose()
+      }
+
+      if ($published) {
+        Write-Host "Verified $totalTests test results across $($matchingRuns.Count) completed Azure DevOps live test run(s)."
+        Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]true'
+      }
+      elseif ($env:TESTFX_AZDO_LIVE_PUBLISHING -eq 'true') {
+        Write-Host "Azure DevOps live publishing did not produce the expected completed test run(s) with results. The PublishTestResults fallback will be used."
+        Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
+      }
+      else {
+        Write-Host 'Azure DevOps live test publishing was not configured. The PublishTestResults fallback will be used.'
+        Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
+      }
+    }
+  displayName: Verify Azure DevOps live test publishing
+  condition: always()
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)

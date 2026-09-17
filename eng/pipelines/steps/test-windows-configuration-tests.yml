@@ -126,6 +126,8 @@ steps:
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+- template: /eng/pipelines/steps/finalize-azdo-live-test-publishing.yml
+
 - task: PublishTestResults@2
   displayName: Publish TRX Test Results (fallback)
   inputs:
@@ -134,7 +136,7 @@ steps:
     searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
     testRunTitle: '$(System.JobName)-trx'
   continueOnError: true
-  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
+  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
 # Publish a portable, compact report separately from the large TestResults artifact so external consumers can
 # retrieve it without downloading every test result and binary .coverage file.

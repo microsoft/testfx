@@ -166,6 +166,8 @@ extends:
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+              - template: /eng/pipelines/steps/finalize-azdo-live-test-publishing.yml@self
+
               - task: PublishTestResults@2
                 displayName: Publish TRX Test Results (fallback)
                 inputs:
@@ -174,7 +176,7 @@ extends:
                   searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   testRunTitle: '$(System.JobName)-trx'
                 continueOnError: true
-                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
+                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
               # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and
               # CopyFiles@2 hard-fails when SourceFolder does not exist. A Test failure early enough to skip
@@ -313,6 +315,8 @@ extends:
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+              - template: /eng/pipelines/steps/finalize-azdo-live-test-publishing.yml@self
+
               - task: PublishTestResults@2
                 displayName: Publish TRX Test Results (fallback)
                 inputs:
@@ -321,7 +325,7 @@ extends:
                   searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   testRunTitle: '$(System.JobName)-trx'
                 continueOnError: true
-                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
+                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
               # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
               # 1ES.PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies

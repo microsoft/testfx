@@ -1,84 +1,20 @@
 steps:
 - pwsh: |
-    $enabled = $false
-    $reason = 'the OAuth token is unavailable'
-    $handler = $null
-    $client = $null
-    $request = $null
-    $response = $null
-
-    try {
-      $accessToken = $env:SYSTEM_ACCESSTOKEN
-      if ([string]::IsNullOrWhiteSpace($accessToken) -or $accessToken -eq '$(System.AccessToken)') {
-        return
-      }
-
-      $requestUri = [Uri]::new(
-        [Uri]$env:SYSTEM_COLLECTIONURI,
-        '_apis/connectionData?api-version=7.1-preview.1')
-
-      $handler = [System.Net.Http.HttpClientHandler]::new()
-      $handler.AllowAutoRedirect = $false
-      $client = [System.Net.Http.HttpClient]::new($handler)
-      $client.Timeout = [TimeSpan]::FromSeconds(15)
-      $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, $requestUri)
-      $basicToken = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(":$accessToken"))
-      $request.Headers.Authorization = [System.Net.Http.Headers.AuthenticationHeaderValue]::new('Basic', $basicToken)
-      $request.Headers.Accept.ParseAdd('application/json; api-version=7.1')
-
-      $response = $client.SendAsync($request).GetAwaiter().GetResult()
-      if ($response.IsSuccessStatusCode) {
-        $payload = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-        $connectionData = $payload | ConvertFrom-Json
-        $authenticatedUser = $connectionData.authenticatedUser
-        # Public projects return HTTP 200 to anonymous callers, so the status code alone cannot prove that
-        # the job token is usable. Fork builds resolve to this well-known public-access identity instead.
-        $isAnonymous = $null -eq $authenticatedUser `
-          -or $authenticatedUser.id -eq 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' `
-          -or $authenticatedUser.providerDisplayName -eq 'Anonymous' `
-          -or $authenticatedUser.descriptor -like 'System:PublicAccess;*'
-        if ($isAnonymous) {
-          $reason = 'the Azure DevOps authentication probe resolved to the anonymous identity'
-        }
-        else {
-          $enabled = $true
-          $reason = $null
-        }
-      }
-      else {
-        $reason = "the Azure DevOps authentication probe returned HTTP $([int]$response.StatusCode)"
-      }
+    $accessToken = $env:SYSTEM_ACCESSTOKEN
+    $enabled = -not [string]::IsNullOrWhiteSpace($accessToken) -and $accessToken -ne '$(System.AccessToken)'
+    if ($enabled) {
+      Write-Host 'A pipeline OAuth token is available; enabling Azure DevOps live test-result publishing.'
+      Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]true'
+      Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
+      Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]--publish-azdo-test-results'
+      Write-Host "##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_STARTED_AT]$([DateTimeOffset]::UtcNow.ToString('o'))"
     }
-    catch {
-      $reason = "the Azure DevOps authentication probe failed: $($_.Exception.Message)"
-    }
-    finally {
-      if ($null -ne $response) {
-        $response.Dispose()
-      }
-
-      if ($null -ne $request) {
-        $request.Dispose()
-      }
-
-      if ($null -ne $client) {
-        $client.Dispose()
-      }
-
-      if ($null -ne $handler) {
-        $handler.Dispose()
-      }
-
-      if ($enabled) {
-        Write-Host 'Azure DevOps authentication succeeded; enabling live test-result publishing.'
-        Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]true'
-        Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]--publish-azdo-test-results'
-      }
-      else {
-        Write-Host "Azure DevOps live test-result publishing is disabled because $reason. The PublishTestResults fallback will be used."
-        Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]false'
-        Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]'
-      }
+    else {
+      Write-Host 'Azure DevOps live test-result publishing is disabled because the OAuth token is unavailable. The PublishTestResults fallback will be used.'
+      Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]false'
+      Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
+      Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]'
+      Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_STARTED_AT]'
     }
   displayName: Configure Azure DevOps test-result publishing
   env:
