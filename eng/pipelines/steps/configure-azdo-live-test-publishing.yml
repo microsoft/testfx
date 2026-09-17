@@ -3,10 +3,12 @@ steps:
     $accessToken = $env:SYSTEM_ACCESSTOKEN
     $enabled = -not [string]::IsNullOrWhiteSpace($accessToken)
     if ($enabled) {
+      $runName = "testfx-live-$($env:SYSTEM_JOBID)-attempt-$($env:SYSTEM_JOBATTEMPT)"
       Write-Host 'A pipeline OAuth token is available; enabling Azure DevOps live test-result publishing.'
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]true'
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
-      Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]--publish-azdo-test-results'
+      Write-Host "##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]--publish-azdo-test-results --publish-azdo-run-name $runName"
+      Write-Host "##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_RUN_NAME]$runName"
       Write-Host "##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_STARTED_AT]$([DateTimeOffset]::UtcNow.ToString('o'))"
     }
     else {
@@ -14,6 +16,7 @@ steps:
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]false'
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
       Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]'
+      Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_RUN_NAME]'
       Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_STARTED_AT]'
     }
   displayName: Configure Azure DevOps test-result publishing

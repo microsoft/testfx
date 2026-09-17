@@ -87,8 +87,8 @@ variables:
   # The report-azdo history options (slow-test-history, flaky-history) authenticate via the SYSTEM_ACCESSTOKEN
   # secret. It is mapped onto the public Test/TestDebug steps below; fork PR builds don't receive the
   # secret so the history service silently no-ops there, while trusted-branch builds exercise it end-to-end.
-  # Live publishing is enabled when the job receives an OAuth token. After testing, the extension-created runs
-  # are verified; creation or publication failures retain PublishTestResults as a TRX fallback.
+  # Live publishing is enabled when the job receives an OAuth token. A unique per-job/attempt run name lets the
+  # post-test step verify the extension-created runs; creation or publication failures retain the TRX fallback.
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _DebugUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'

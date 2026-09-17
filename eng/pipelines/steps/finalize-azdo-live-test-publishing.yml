@@ -25,8 +25,7 @@ steps:
         [Uri]$env:SYSTEM_COLLECTIONURI,
         "$project/_apis/test/runs?buildUri=$buildUri&includeRunDetails=true&automated=true&`$top=100&api-version=7.1")
       $startedAt = [DateTimeOffset]::Parse($env:AZDO_LIVE_PUBLISHING_STARTED_AT, [CultureInfo]::InvariantCulture)
-      $jobAttempt = 0
-      [void][int]::TryParse($env:SYSTEM_JOBATTEMPT, [ref]$jobAttempt)
+      $runName = $env:AZDO_LIVE_PUBLISHING_RUN_NAME
 
       $handler = [System.Net.Http.HttpClientHandler]::new()
       $handler.AllowAutoRedirect = $false
@@ -50,8 +49,7 @@ steps:
         if ($response.IsSuccessStatusCode) {
           $result = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
           $matchingRuns = @($result.value | Where-Object {
-              $_.pipelineReference.jobReference.jobName -eq $env:SYSTEM_JOBNAME `
-                -and ($jobAttempt -le 0 -or [int]$_.pipelineReference.jobReference.attempt -eq $jobAttempt) `
+              $_.name -eq $runName `
                 -and [DateTimeOffset]$_.createdDate -ge $startedAt
             })
           $incompleteRuns = @($matchingRuns | Where-Object { $_.state -ne 'Completed' -or [int]$_.totalTests -le 0 })
