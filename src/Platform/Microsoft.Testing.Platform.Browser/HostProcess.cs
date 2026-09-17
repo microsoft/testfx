@@ -191,6 +191,8 @@ internal sealed class HostProcess : IAsyncDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            // Cancellation is expected while shutting down the host.
+            return;
         }
     }
 }

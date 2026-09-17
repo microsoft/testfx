@@ -92,6 +92,41 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    public void Parse_PreservesEmptyHostArguments()
+    {
+        string responseFile = CreateResponseFile(
+            """
+            --server dotnettestcli
+            --dotnet-test-transport http
+            --dotnet-test-http-endpoint http://127.0.0.1:1234/
+            --dotnet-test-http-token secret-token
+            """);
+        string browserExecutable = CreateEmptyFile();
+
+        try
+        {
+            var options = BrowserLauncherOptions.Parse(
+            [
+                "--host-command-uri", Encode("host"),
+                "--host-arguments-uri", string.Empty,
+                "--host-working-directory-uri", Encode(Environment.CurrentDirectory),
+                "--browser-executable-uri", Encode(browserExecutable),
+                "--startup-timeout-seconds", "1",
+                "--completion-timeout-seconds", "2",
+                "--",
+                $"@{responseFile}",
+            ]);
+
+            Assert.AreEqual(string.Empty, options.HostArguments);
+        }
+        finally
+        {
+            File.Delete(responseFile);
+            File.Delete(browserExecutable);
+        }
+    }
+
+    [TestMethod]
     [DataRow("--server vstest", "--dotnet-test-transport http", "--dotnet-test-http-endpoint http://127.0.0.1:1234/", "--dotnet-test-http-token secret")]
     [DataRow("--server dotnettestcli", "--dotnet-test-transport pipe", "--dotnet-test-http-endpoint http://127.0.0.1:1234/", "--dotnet-test-http-token secret")]
     [DataRow("--server dotnettestcli", "--dotnet-test-transport http", "--dotnet-test-http-endpoint http://example.com/", "--dotnet-test-http-token secret")]
@@ -142,17 +177,33 @@ public sealed class BrowserLauncherOptionsTests
     {
         var diagnostics = new DiagnosticBuffer(
             BootstrapToken,
+            "abc",
             "http://127.0.0.1:1234/");
 
         diagnostics.Add("one", $"token={BootstrapToken}");
         diagnostics.Add("two", "http://127.0.0.1:1234/");
-        diagnostics.Add("three", new string('x', 5_000));
+        diagnostics.Add("three", "short=abc");
+        diagnostics.Add("four", new string('x', 5_000));
         string output = diagnostics.Format();
 
         Assert.DoesNotContain(BootstrapToken, output);
+        Assert.DoesNotContain("abc", output);
         Assert.DoesNotContain("http://127.0.0.1:1234/", output);
         Assert.Contains("[redacted]", output);
         Assert.IsLessThan(4_500, output.Length);
+    }
+
+    [TestMethod]
+    public void BrowserTerminalResult_FatalErrorIsReportedThroughDiagnostics()
+    {
+        var diagnostics = new DiagnosticBuffer("abc");
+        var result = new BrowserTerminalResult(1, "bootstrap abc failed");
+
+        BrowserLauncherException exception = Assert.ThrowsExactly<BrowserLauncherException>(
+            () => result.GetExitCode(diagnostics));
+
+        Assert.AreEqual("The browser supervisor reported a fatal error.", exception.Message);
+        Assert.Contains("bootstrap [redacted] failed", diagnostics.Format());
     }
 
     [TestMethod]

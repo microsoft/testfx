@@ -55,6 +55,16 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
                       Overwrite="true" />
   </Target>
 
+  <Target Name="_ProvideEmptyBrowserHostArguments"
+          BeforeTargets="_ConfigureTestingPlatformBrowserRun"
+          Condition=" '$(TestingPlatformBrowserEmptyHostArguments)' == 'true' ">
+    <PropertyGroup>
+      <RunCommand>browser-host-placeholder</RunCommand>
+      <RunArguments></RunArguments>
+      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+  </Target>
+
 </Project>
 
 #file BrowserPackageTests.cs
@@ -225,6 +235,26 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("--host-command-uri", marked.StandardOutput);
         Assert.Contains("--host-arguments-uri", marked.StandardOutput);
         Assert.DoesNotContain(".launch", marked.StandardOutput);
+
+        DotnetMuxerResult emptyHostArguments = await DotnetCli.RunAsync(
+            commonArguments
+            + " -property:DotnetTestInvocation=true"
+            + " -property:TestingPlatformBrowserEmptyHostArguments=true",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, emptyHostArguments.ExitCode, emptyHostArguments.ToString());
+        using var emptyHostArgumentsOutput = JsonDocument.Parse(
+            emptyHostArguments.StandardOutput);
+        string emptyHostRunArguments = emptyHostArgumentsOutput.RootElement
+            .GetProperty("Properties")
+            .GetProperty("RunArguments")
+            .GetString()
+            ?? throw new AssertFailedException("ComputeRunArguments returned a null RunArguments value.");
+        Assert.Contains(
+            "--host-arguments-uri \"\"",
+            emptyHostRunArguments);
     }
 
     [TestMethod]
@@ -390,7 +420,7 @@ public sealed class BrowserPackageDesktopTests
         Directory.CreateDirectory(packageOutput);
 
         DotnetMuxerResult pack = await DotnetCli.RunAsync(
-            $"pack {Path.Combine(RootFinder.Find(), "src", "Platform", "Microsoft.Testing.Platform.Browser", "Microsoft.Testing.Platform.Browser.csproj")} --configuration Debug --no-build --no-restore -property:PackageOutputPath={packageOutput}",
+            $"pack {Path.Combine(RootFinder.Find(), "src", "Platform", "Microsoft.Testing.Platform.Browser", "Microsoft.Testing.Platform.Browser.csproj")} --configuration {Constants.BuildConfiguration} --no-build --no-restore -property:PackageOutputPath={packageOutput}",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,

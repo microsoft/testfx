@@ -171,12 +171,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         {
             BrowserTerminalResult result = await _completion.Task
                 .WaitAsync(linkedCancellationTokenSource.Token).ConfigureAwait(false);
-            if (result.Error is not null)
-            {
-                _diagnostics.Add("browser", result.Error);
-            }
-
-            return result.ExitCode;
+            return result.GetExitCode(_diagnostics);
         }
         catch (OperationCanceledException) when (timeoutCancellationTokenSource.IsCancellationRequested)
         {
@@ -226,16 +221,19 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         BindingSource source,
         IPage expectedPage,
         string expectedOrigin)
-        => _ = ReferenceEquals(source.Page, expectedPage)
-            && source.Frame.ParentFrame is null
-            && Uri.TryCreate(source.Frame.Url, UriKind.Absolute, out Uri? sourceUri)
-            && string.Equals(
+    {
+        if (!ReferenceEquals(source.Page, expectedPage)
+            || source.Frame.ParentFrame is not null
+            || !Uri.TryCreate(source.Frame.Url, UriKind.Absolute, out Uri? sourceUri)
+            || !string.Equals(
                 sourceUri.GetLeftPart(UriPartial.Authority),
                 expectedOrigin,
-                StringComparison.Ordinal)
-                ? true
-                : throw new BrowserLauncherException(
-                    "The browser supervisor binding was called outside the expected top-level loopback origin.");
+                StringComparison.Ordinal))
+        {
+            throw new BrowserLauncherException(
+                "The browser supervisor binding was called outside the expected top-level loopback origin.");
+        }
+    }
 
     private async Task NavigateAsync(Uri browserUri, CancellationToken cancellationToken)
     {
@@ -366,6 +364,4 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             return null;
         }
     }
-
-    private sealed record BrowserTerminalResult(int ExitCode, string? Error);
 }

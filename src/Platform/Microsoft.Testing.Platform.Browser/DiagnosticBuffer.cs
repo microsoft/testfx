@@ -20,7 +20,7 @@ internal sealed class DiagnosticBuffer
         => _secrets =
         [
             .. secrets
-                .Where(static value => value is { Length: >= 8 })
+                .Where(static value => !string.IsNullOrEmpty(value))
                 .Cast<string>(),
         ];
 

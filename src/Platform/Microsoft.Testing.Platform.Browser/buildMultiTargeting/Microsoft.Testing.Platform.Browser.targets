@@ -62,7 +62,7 @@
 
       <RunCommand Condition=" '$(DOTNET_HOST_PATH)' != '' ">$(DOTNET_HOST_PATH)</RunCommand>
       <RunCommand Condition=" '$(DOTNET_HOST_PATH)' == '' ">dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_TestingPlatformBrowserLauncher)&quot; --host-command-uri $([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostCommand)`)) --host-arguments-uri $([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostArguments)`)) --host-working-directory-uri $([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostWorkingDirectory)`)) --browser-executable-uri $([System.Uri]::EscapeDataString(`$(TestingPlatformBrowserExecutable)`)) --startup-timeout-seconds $(TestingPlatformBrowserStartupTimeoutSeconds) --completion-timeout-seconds $(TestingPlatformBrowserCompletionTimeoutSeconds) --</RunArguments>
+      <RunArguments>exec &quot;$(_TestingPlatformBrowserLauncher)&quot; --host-command-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostCommand)`))&quot; --host-arguments-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostArguments)`))&quot; --host-working-directory-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostWorkingDirectory)`))&quot; --browser-executable-uri &quot;$([System.Uri]::EscapeDataString(`$(TestingPlatformBrowserExecutable)`))&quot; --startup-timeout-seconds $(TestingPlatformBrowserStartupTimeoutSeconds) --completion-timeout-seconds $(TestingPlatformBrowserCompletionTimeoutSeconds) --</RunArguments>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
     </PropertyGroup>
 
