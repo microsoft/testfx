@@ -399,6 +399,8 @@ stages:
 
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
+        - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
+
         - template: /eng/pipelines/steps/test-windows-app-model.yml
 
       - job: Linux

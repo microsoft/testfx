@@ -25,10 +25,13 @@ steps:
 
 - script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "FullyQualifiedName~WindowsApplicationModelPackageTests" -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)\WindowsApplicationModelPackageContracts --show-test-results failed
   displayName: 'Test packed Windows application-model contracts'
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true --show-test-results failed
   displayName: 'Test real Modern and classic UWP applications'
   env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
 
 - pwsh: |
@@ -63,10 +66,21 @@ steps:
 - script: dotnet test test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true --show-test-results failed
   displayName: 'Test packaged WinUI and WinApp CLI interoperability'
   env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
     TESTFX_RUN_WINAPP_CLI_INTEROP_TESTS: 1
     TESTFX_WINAPP_CLI_PATH: $(TESTFX_WINAPP_CLI_PATH)
     WINAPP_CLI_TELEMETRY_OPTOUT: 1
+
+- task: PublishTestResults@2
+  displayName: Publish TRX Test Results (fallback)
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '*.trx'
+    searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+    testRunTitle: '$(System.JobName)-trx'
+  continueOnError: true
+  condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
 
 # This check intentionally runs after a test failure. A successful cleanup check cannot change the
 # existing failed job result, while a leaked registration adds an actionable cleanup failure.
