@@ -87,15 +87,14 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("MyAssembly", md);
-        Assert.Contains("net8.0", md);
-        Assert.Contains("Total", md);
-        Assert.Contains("Passed", md);
-        Assert.Contains("Failed", md);
-        Assert.Contains("Skipped", md);
+        Assert.Contains("## ❌ MyAssembly (net8.0)", md);
+        Assert.Contains("**5 tests** · ✅ **2 passed** · ❌ **2 failed** · ⏭ **1 skipped** · ⏱ **12.35s**", md);
+        Assert.Contains("### Top failing classes", md);
+        Assert.Contains("### Additional failing tests", md);
+        Assert.Contains("### ⏱ Slowest tests", md);
         Assert.Contains("MyCo.Suite.ClassA", md);
-        Assert.Contains("Slowpoke", md);
-        Assert.Contains("MyCo.Suite.ClassA.Test2", md);
+        Assert.Contains("`Slowpoke`", md);
+        Assert.Contains("`MyCo.Suite.ClassA.Test2`", md);
     }
 
     [TestMethod]
@@ -110,8 +109,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("| Total duration | 25:07:08 |", md);
-        Assert.DoesNotContain("| Total duration | 01:07:08 |", md);
+        Assert.Contains("⏱ **25:07:08**", md);
+        Assert.DoesNotContain("⏱ **01:07:08**", md);
     }
 
     [TestMethod]
@@ -124,23 +123,32 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("| Total duration | 05:30 |", md);
+        Assert.Contains("⏱ **05:30**", md);
     }
 
     [TestMethod]
-    public void BuildMarkdown_EscapesPipesAndNewlinesInCells()
+    public void BuildMarkdown_UsesCodeSpansAndFlattensNewlinesInTestNames()
     {
         var records = new List<TestRecord>
         {
             new("Has|Pipe", "MyCo.X.HasPipe", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
             new("Has\nNewline", "MyCo.X.HasNewline", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+            new("A&B <T>", "MyCo.X.SpecialCharacters", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new("Has`Tick", "MyCo.X.Backtick", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new("`Edge`", "MyCo.X.EdgeBackticks", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new(" spaced ", "MyCo.X.Spaced", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("Has\\|Pipe", md);
-        Assert.Contains("Has<br>Newline", md);
-        Assert.DoesNotContain("Has|Pipe", md);
+        Assert.Contains("`Has|Pipe`", md);
+        Assert.Contains("`Has Newline`", md);
+        Assert.Contains("`A&B <T>`", md);
+        Assert.Contains("``Has`Tick``", md);
+        Assert.Contains("`` `Edge` ``", md);
+        Assert.Contains("`  spaced  `", md);
+        Assert.DoesNotContain("A&amp;B", md);
+        Assert.DoesNotContain("&lt;T&gt;", md);
         Assert.DoesNotContain("Has\nNewline", md);
     }
 
@@ -200,8 +208,9 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
-        Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
-        Assert.DoesNotContain("<summary><h1>", markdown);
+        Assert.Contains("| ✅ | &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64) |", markdown);
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.DoesNotContain("<summary>", markdown);
         Assert.Contains("| Overall | Line | 82 | 100 | 82.0% |", markdown);
         Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 85.0% | ❌ Failed |", markdown);
     }
@@ -226,6 +235,15 @@ public sealed class AzureDevOpsSummaryReporterTests
                     Prerequisite = "Tests.First",
                 },
             ],
+            SlowestTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow1",
+                    FullyQualifiedName = "Tests.Slow1",
+                    DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                },
+            ],
         };
         var second = new CiRunSummaryModule
         {
@@ -242,6 +260,15 @@ public sealed class AzureDevOpsSummaryReporterTests
                 {
                     DependentFullyQualifiedName = "Tests.Dependent",
                     Prerequisite = "Tests.Second",
+                },
+            ],
+            SlowestTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow2",
+                    FullyQualifiedName = "Tests.Slow2",
+                    DurationTicks = TimeSpan.FromSeconds(1).Ticks,
                 },
             ],
         };
@@ -263,6 +290,116 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.Contains("attempt 2, session session-2", markdown);
         Assert.Contains("Tests (net9.0, x64, attempt 1, session session-1): Tests.Dependent", markdown);
         Assert.Contains("Tests (net9.0, x64, attempt 2, session session-2): Tests.Dependent", markdown);
+        Assert.Contains("- **2.00s** — `Slow1` — Tests (net9.0, x64) — attempt 1, session session-1", markdown);
+        Assert.Contains("- **1.00s** — `Slow2` — Tests (net9.0, x64) — attempt 2, session session-2", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ListsFailedModulesBeforeSuccessfulModules()
+    {
+        var passedModule = new CiRunSummaryModule
+        {
+            AssemblyName = "A.Passed",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = 0,
+            TotalTests = 1,
+            PassedTests = 1,
+        };
+        var failedModule = new CiRunSummaryModule
+        {
+            AssemblyName = "Z.Failed",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = 2,
+            TotalTests = 1,
+            FailedTests = 1,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [passedModule, failedModule],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        int failedModuleIndex = markdown.IndexOf("Z.Failed", StringComparison.Ordinal);
+        int passedModuleIndex = markdown.IndexOf("A.Passed", StringComparison.Ordinal);
+        Assert.AreNotEqual(-1, failedModuleIndex);
+        Assert.AreNotEqual(-1, passedModuleIndex);
+        Assert.IsLessThan(passedModuleIndex, failedModuleIndex);
+        Assert.DoesNotContain("| Exit code |", markdown);
+        Assert.Contains("exit code **2**", markdown);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    public void BuildAggregateMarkdown_UsesWarningStatus_WhenSuccessIsNotAuthoritative(
+        bool isPartial,
+        bool hasAuthoritativeRunSummary)
+    {
+        var aggregate = new CiRunSummaryAggregate(
+            [
+                new CiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    ExitCode = 0,
+                    TotalTests = 1,
+                    PassedTests = 1,
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary,
+            isPartial);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ⚠️ Overall test results", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_UsesFailureStatus_WhenFailedTestsHaveSuccessfulExitCode()
+    {
+        var aggregate = new CiRunSummaryAggregate(
+            [
+                new CiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    ExitCode = 0,
+                    TotalTests = 1,
+                    FailedTests = 1,
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 0,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ❌ Overall test results", markdown);
     }
 
     [TestMethod]
@@ -342,16 +479,15 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
-        Assert.Contains("| Flaky | 1 |", markdown);
-        Assert.Contains("| Pass rate | 66.7% |", markdown);
-        Assert.Contains("## Flakiness history", markdown);
+        Assert.Contains("⚠ **1 flaky**", markdown);
+        Assert.Contains("### Flakiness history", markdown);
         Assert.Contains("30.0% (14d)", markdown);
-        Assert.Contains("## Duration history", markdown);
+        Assert.Contains("### Duration history", markdown);
         Assert.Contains("2.00×", markdown);
-        Assert.Contains("## Test dependencies", markdown);
+        Assert.Contains("### Test dependencies", markdown);
         Assert.Contains("Tests.Suite.Setup", markdown);
         Assert.Contains("| Continue |", markdown);
-        Assert.Contains("### Failure details", markdown);
+        Assert.Contains("#### Failure details", markdown);
         Assert.Contains("System.InvalidOperationException", markdown);
         Assert.Contains("Expected &lt;safe&gt;, got \\|unsafe\\|", markdown);
         Assert.DoesNotContain("at Tests.Suite.Fails()", markdown);
@@ -600,9 +736,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
-        Assert.Contains("`Tests.GenericException'1`", markdown);
-        Assert.Contains("`Tests.Generic'1.Method`", markdown);
-        Assert.DoesNotContain("\\`1", markdown);
+        Assert.Contains("``Tests.GenericException`1``", markdown);
+        Assert.Contains("``Tests.Generic`1.Method``", markdown);
     }
 
     [TestMethod]
@@ -627,7 +762,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
-        Assert.StartsWith("##vso[task.uploadsummary]", lines[0]);
+        Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Test results - MyAssembly (", lines[0]);
+        Assert.Contains("attempt 1, session session", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
         // The assembly name must be part of the default file name so concurrent test assemblies
         // sharing the same TFM and TestResults directory don't race to write the same file.
@@ -702,7 +838,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
-        Assert.Contains("| Flaky | 1 |", written);
+        Assert.Contains("⚠ **1 flaky**", written);
         Assert.Contains("Flaky tests", written);
         Assert.Contains("MyCo.Suite.Retry", written);
     }
@@ -734,10 +870,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
-        Assert.Contains("| Total | 2 |", written);
-        Assert.Contains("| Passed | 1 |", written);
-        Assert.Contains("| Skipped | 1 |", written);
-        Assert.Contains("| Flaky | 0 |", written);
+        Assert.Contains("**2 tests** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **1 skipped**", written);
         Assert.DoesNotContain("Flaky tests", written);
     }
 
