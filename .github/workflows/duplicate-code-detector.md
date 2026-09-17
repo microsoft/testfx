@@ -13,6 +13,11 @@ permissions:
   pull-requests: read
   copilot-requests: write
 
+engine:
+  # Copilot CLI 1.0.80 can stall after the model emits a valid tool call (#11345).
+  id: copilot
+  version: "1.0.85"
+
 checkout:
   fetch-depth: 0
 
