@@ -58,17 +58,9 @@
           "test/**/Directory.Build.*"
         ]
       },
-      "instrumentation": {
-        "include": [
-          "src/**"
-        ],
-        "exclude": [
-          "artifacts/**",
-          "samples/**",
-          "test/**",
-          "**/bin/**",
-          "**/obj/**"
-        ]
+      "storage": {
+        "type": "local",
+        "path": ".cts/mappings"
       }
     }
   },
