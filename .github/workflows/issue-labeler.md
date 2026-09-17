@@ -69,6 +69,8 @@ safe-outputs:
           uses: actions/checkout@v7.0.1
           with:
             persist-credentials: false
+            sparse-checkout: .github/scripts/issue-labeler.mjs
+            sparse-checkout-cone-mode: false
         - name: Apply labels and reconcile owner
           uses: actions/github-script@v9.0.0
           env:
