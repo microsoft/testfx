@@ -58,7 +58,7 @@ tools:
     - "sort"
     - "cat"
 
-timeout-minutes: 20
+timeout-minutes: 30
 ---
 
 # Daily File Diet Agent 🏋️
@@ -110,11 +110,15 @@ If the largest non-test source file is **under 500 lines**, do NOT create an iss
 No refactoring needed today.
 ```
 
+Submit this message with the `safeoutputs` MCP server's `noop` tool.
+
 If the largest non-test source file is **500 or more lines**, proceed to step 3.
 
 ### 3. Analyze the Large File's Structure
 
-Read the file and understand its structure:
+Keep this analysis bounded: inspect at most five candidates from the size ranking, and
+do not read an entire candidate file. For the selected file, use only the following
+two commands (at most 150 lines total) to understand its structure:
 
 ```bash
 head -n 100 <LARGE_FILE>
@@ -193,6 +197,10 @@ Based on the file's structure, split it into the following modules:
 **Effort**: [Small/Medium/Large based on complexity]
 **Expected Impact**: Improved code navigability, easier testing, reduced merge conflicts
 ```
+
+Submit the completed title and body directly with the `safeoutputs` MCP server's
+`create_issue` tool. Do not create temporary files or invoke `safeoutputs`, `jq`,
+Python, or Node through the shell.
 
 ## Important Guidelines
 
