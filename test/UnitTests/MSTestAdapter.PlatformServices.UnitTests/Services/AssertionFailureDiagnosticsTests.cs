@@ -44,11 +44,15 @@ public sealed class AssertionFailureDiagnosticsTests : TestContainer
         json.Should().Contain("\"expected\":\"42\"");
         json.Should().Contain("\"actual\":\"41\"");
         json.Should().Contain("\"activeTests\"");
-        json.Should().Contain("\"cpuPercentDuringTest\"");
         json.Should().Contain("\"workingSetBytes\"");
         json.Should().Contain("\"processIoAvailable\"");
         json.Should().Contain("\"outputVolumeAvailableFreeBytes\"");
         json.Should().Contain("\"stackFrames\"");
+
+        using var artifact = JsonDocument.Parse(json);
+        double elapsedMilliseconds = artifact.RootElement.GetProperty("test").GetProperty("elapsedMilliseconds").GetDouble();
+        bool hasCpuPercentDuringTest = artifact.RootElement.GetProperty("process").TryGetProperty("cpuPercentDuringTest", out _);
+        hasCpuPercentDuringTest.Should().Be(elapsedMilliseconds > 0);
     }
 
     public void CaptureShouldListTestsRunningInParallel()
