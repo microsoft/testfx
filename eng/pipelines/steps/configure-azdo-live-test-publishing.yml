@@ -1,7 +1,7 @@
 steps:
 - pwsh: |
     $accessToken = $env:SYSTEM_ACCESSTOKEN
-    $enabled = -not [string]::IsNullOrWhiteSpace($accessToken) -and $accessToken -ne '$(System.AccessToken)'
+    $enabled = -not [string]::IsNullOrWhiteSpace($accessToken)
     if ($enabled) {
       Write-Host 'A pipeline OAuth token is available; enabling Azure DevOps live test-result publishing.'
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]true'
