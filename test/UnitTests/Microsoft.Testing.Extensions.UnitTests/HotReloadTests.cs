@@ -13,11 +13,12 @@ using Moq;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(HotReloadStateResource)]
 public sealed class HotReloadTests
 {
     private const string DotnetWatchEnvironmentVariable = "DOTNET_WATCH";
     private const string HotReloadEnabledEnvironmentVariable = "TESTINGPLATFORM_HOTRELOAD_ENABLED";
+    private const string HotReloadStateResource = nameof(HotReloadStateResource);
 
     private static readonly FieldInfo ShutdownProcessField = typeof(HotReloadHandler)
         .GetField("s_shutdownProcess", BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -90,12 +91,13 @@ public sealed class HotReloadTests
 
 #if NET6_0_OR_GREATER
     [TestMethod]
-    public async Task ShouldRunAsync_CompletedExecution_DisplaysCompletionClearsConsoleAndDisplaysStart()
+    public async Task ShouldRunAsync_IncompleteExecution_WaitsThenDisplaysCompletionClearsConsoleAndDisplaysStart()
     {
         var console = new Mock<IConsole>();
         console.SetupGet(instance => instance.IsOutputRedirected).Returns(false);
         var outputDevice = new Mock<IOutputDevice>();
         IOutputDeviceDataProducer producer = Mock.Of<IOutputDeviceDataProducer>();
+        var executionCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         List<string> events = [];
         outputDevice
             .Setup(device => device.DisplayAsync(
@@ -108,7 +110,12 @@ public sealed class HotReloadTests
         console.Setup(instance => instance.Clear()).Callback(() => events.Add("clear"));
         var handler = new HotReloadHandler(console.Object, outputDevice.Object, producer);
 
-        bool shouldRun = await handler.ShouldRunAsync(Task.CompletedTask, CancellationToken.None);
+        Task<bool> shouldRunTask = handler.ShouldRunAsync(executionCompletion.Task, CancellationToken.None);
+        Assert.IsFalse(shouldRunTask.IsCompleted);
+        Assert.IsEmpty(events);
+
+        executionCompletion.SetResult();
+        bool shouldRun = await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
 
         Assert.IsTrue(shouldRun);
         Assert.AreSequenceEqual(
@@ -209,8 +216,9 @@ public sealed class HotReloadTests
     }
 
     [TestMethod]
-    public async Task ShouldRunAsync_CancellationRequested_StopsNextRun()
+    public async Task ShouldRunAsync_WaiterIsBlockedAndCancellationIsRequested_StopsNextRun()
     {
+        DrainInitialSignal();
         var console = new Mock<IConsole>();
         console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
         var outputDevice = new Mock<IOutputDevice>();
@@ -222,13 +230,13 @@ public sealed class HotReloadTests
             .Returns(Task.CompletedTask);
         var handler = new HotReloadHandler(console.Object, outputDevice.Object, Mock.Of<IOutputDeviceDataProducer>());
         using var cancellationTokenSource = new CancellationTokenSource();
-#pragma warning disable VSTHRD103 // CancelAsync is unavailable on .NET Framework.
-        cancellationTokenSource.Cancel();
-#pragma warning restore VSTHRD103
 
-        bool shouldRun = await handler.ShouldRunAsync(waitExecutionCompletion: null, cancellationTokenSource.Token);
+        Task<bool> shouldRunTask = handler.ShouldRunAsync(waitExecutionCompletion: null, cancellationTokenSource.Token);
+        Assert.IsFalse(shouldRunTask.IsCompleted);
 
-        Assert.IsFalse(shouldRun);
+        await cancellationTokenSource.CancelAsync();
+
+        Assert.IsFalse(await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
     }
 #else
     [TestMethod]
@@ -290,6 +298,7 @@ public sealed class HotReloadTests
         ShutdownProcessField.SetValue(null, false);
         while (HotReloadSemaphore.Wait(0))
         {
+            // Drain any signal left by an interrupted test before restoring the initial state.
         }
 
         HotReloadSemaphore.Release();
