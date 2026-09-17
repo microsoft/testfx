@@ -87,9 +87,10 @@ variables:
   # The report-azdo history options (slow-test-history, flaky-history) authenticate via the SYSTEM_ACCESSTOKEN
   # secret. It is mapped onto the public Test/TestDebug steps below; fork PR builds don't receive the
   # secret so the history service silently no-ops there, while trusted-branch builds exercise it end-to-end.
-  # Live publishing is enabled on Linux and macOS when the job receives an OAuth token. A unique per-job/attempt
-  # run name lets the post-test step verify the extension-created runs; creation or publication failures retain
-  # the TRX fallback. Windows stays on the fallback after repeated live-enabled runs left test hosts hanging.
+  # Live publishing is dogfooded only on the non-blocking macOS leg when the job receives an OAuth token. A
+  # unique per-job/attempt run name lets the post-test step verify the extension-created runs; creation or
+  # publication failures retain the TRX fallback. Long parallel solution runs on both Windows and Linux left
+  # the shared-run owner test host waiting for peers until its hang timeout, so those blocking jobs stay on TRX.
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _DebugUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
@@ -424,7 +425,7 @@ stages:
         steps:
         - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
           parameters:
-            enabled: true
+            enabled: false
 
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)

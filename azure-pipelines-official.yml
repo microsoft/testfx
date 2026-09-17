@@ -290,7 +290,7 @@ extends:
             steps:
             - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
               parameters:
-                enabled: true
+                enabled: false
 
             - script: eng/common/build.sh
                 -configuration $(_BuildConfig)
