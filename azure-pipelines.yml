@@ -286,8 +286,7 @@ stages:
 
           - template: /eng/pipelines/steps/test-windows-configuration-tests.yml
             parameters:
-              # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
-              enableAffectedTests: false
+              enableAffectedTests: true
               ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
                 affectedTestsMode: collect
               ${{ else }}:

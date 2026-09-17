@@ -36,9 +36,19 @@ steps:
       # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-# These branches are intentionally disabled at their call sites. They can be enabled only after the affected-test
-# extension package and its local-filesystem storage schema have flowed into this repository. The SDK owns
+# These branches implement affected-test collection and selection. The SDK owns
 # DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
+- ${{ if and(eq(parameters.enableAffectedTests, true), ne(parameters.affectedTestsMode, 'disabled')) }}:
+  # The affected-tests extension targets .NET 8 and later. Keep the .NET Framework coverage by running those
+  # test modules normally, then let the collect/run/fallback steps below handle only .NETCoreApp modules.
+  - script: |
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestNonCore.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:AffectedTestsNonCoreOnly=true --show-test-results failed
+    name: TestNonCore
+    displayName: Test .NET Framework modules
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
   - task: Cache@2
     displayName: Restore and publish affected-test map
@@ -46,13 +56,13 @@ steps:
       key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
       restoreKeys: |
         "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
-      path: '$(Pipeline.Workspace)\affected-test-map'
+      path: '$(Build.SourcesDirectory)\.cts\mappings'
       cacheHitVar: AffectedTestsMapCacheRestored
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
 
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed --collect-test-map
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:AffectedTestsCoreOnly=true --show-test-results failed --collect-test-map
     name: Test
     displayName: Test and collect affected-test map
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
@@ -67,12 +77,12 @@ steps:
       key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
       restoreKeys: |
         "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
-      path: '$(Pipeline.Workspace)\affected-test-map'
+      path: '$(Build.SourcesDirectory)\.cts\mappings'
       cacheHitVar: AffectedTestsMapCacheRestored
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
 
   - pwsh: |
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed --affected-tests
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestAffected.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:AffectedTestsCoreOnly=true --show-test-results failed --affected-tests
       $exitCode = $LASTEXITCODE
       if ($exitCode -eq 0) {
         Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
@@ -104,7 +114,7 @@ steps:
           Remove-Item -Force
       }
 
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestFallback.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:AffectedTestsCoreOnly=true --show-test-results failed
       exit $LASTEXITCODE
     name: Test
     displayName: Test (affected-test fallback)

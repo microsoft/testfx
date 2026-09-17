@@ -15,9 +15,7 @@ if ($null -eq $affectedTests) {
 
 foreach ($path in @(
     "changes.ignore",
-    "changes.forceAllTests",
-    "instrumentation.include",
-    "instrumentation.exclude"
+    "changes.forceAllTests"
 )) {
     $value = $affectedTests
     foreach ($segment in $path.Split(".")) {
@@ -69,17 +67,55 @@ if ($affectedTestsEnabled -and $null -eq $affectedTests.storage) {
     throw "Affected-test pipeline execution requires test.affectedTests.storage."
 }
 
+if ($affectedTestsEnabled -and
+    ($affectedTests.storage.type -ne "local" -or $affectedTests.storage.path -ne ".cts/mappings")) {
+    throw "Affected-test pipeline execution must use local .cts/mappings storage."
+}
+
+$directoryPackagesPath = Join-Path $repoRoot "Directory.Packages.props"
+$directoryPackages = Get-Content -LiteralPath $directoryPackagesPath -Raw
+if (-not $directoryPackages.Contains(
+    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
+    throw "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
+}
+
+$directoryBuildTargetsPath = Join-Path $repoRoot "Directory.Build.targets"
+$directoryBuildTargets = Get-Content -LiteralPath $directoryBuildTargetsPath -Raw
+if (-not $directoryBuildTargets.Contains(
+    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"')) {
+    throw "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests."
+}
+
+$manualEntryPoints = @(
+    Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/CtrfPlayground/Mtp/Program.cs")
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/FSharpPlayground/Program.fs")
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/NUnitPlayground/Program.cs")
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/Playground/Program.cs")
+)
+foreach ($entryPoint in $manualEntryPoints) {
+    $entryPointText = Get-Content -LiteralPath $entryPoint.FullName -Raw
+    if ($entryPointText.Contains("TestApplication.CreateBuilderAsync(args)") -and
+        -not $entryPointText.Contains(
+            "Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions")) {
+        throw "MTP entry point '$($entryPoint.FullName)' must register Microsoft.Testing.Extensions.AffectedTests."
+    }
+}
+
 $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
 foreach ($requiredText in @(
     "Cache@2",
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1",
     "--collect-test-map",
     "--affected-tests",
-    '$(Pipeline.Workspace)\affected-test-map',
+    '$(Build.SourcesDirectory)\.cts\mappings',
     "AffectedTestsMapCacheRestored",
     "enableAffectedTests",
     "affectedTestsMode",
-    "affectedTestsCacheVersion"
+    "affectedTestsCacheVersion",
+    "AffectedTestsCoreOnly",
+    "AffectedTestsNonCoreOnly",
+    "Test .NET Framework modules"
 )) {
     if (-not $testTemplate.Contains($requiredText)) {
         throw "The affected-test template is missing '$requiredText'."
