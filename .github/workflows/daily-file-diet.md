@@ -116,9 +116,9 @@ If the largest non-test source file is **500 or more lines**, proceed to step 3.
 
 ### 3. Analyze the Large File's Structure
 
-Keep this analysis bounded: inspect at most five candidates from the size ranking, and
-do not read an entire candidate file. For the selected file, use only the following
-two commands (at most 150 lines total) to understand its structure:
+Keep this analysis bounded: for the single largest file identified in step 1, do not
+read the entire file. Use only the following two commands (at most 150 lines total)
+to understand its structure:
 
 ```bash
 head -n 100 <LARGE_FILE>
