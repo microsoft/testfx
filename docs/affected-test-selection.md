@@ -1,6 +1,6 @@
 # Affected-test selection rollout
 
-This repository uses the experimental affected-test workflow from
+This repository is wired for the experimental affected-test workflow from
 [dotnet/sdk#55574](https://github.com/dotnet/sdk/pull/55574). The workflow is Microsoft.Testing.Platform-only and
 builds on the composable filter-provider support from
 [testfx#10235](https://github.com/microsoft/testfx/pull/10235).
@@ -8,13 +8,19 @@ builds on the composable filter-provider support from
 The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `test-tools` feed at the same version as
 `Microsoft.Testing.Extensions.CodeCoverage`. The extension's local storage keeps mapping shards under
 `.cts/mappings`, and Azure Pipelines `Cache@2` transfers that directory between trusted main builds and PR builds.
-Ordinary test commands remain unchanged outside the affected-test CI path.
+Its builder hook is registered by the repository's hand-authored MTP entry points.
+
+Selection remains disabled at the shared pipeline call site. Package
+`18.12.0-preview.26466.2` starts collection, but its internal `--list-tests` discovery child exits successfully before
+connecting to the extension's discovery pipe, so the parent reports
+`Test discovery child exited with code 0 before connecting.` and fails the run. Ordinary full-test CI remains active
+until a package containing a working discovery handshake is available.
 
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and local storage.
-- The trusted main-branch Windows Release test runs `--collect-test-map`.
-- The Windows Release PR test runs `--affected-tests`.
+- Once enabled, the trusted main-branch Windows Release test runs `--collect-test-map`.
+- Once enabled, the Windows Release PR test runs `--affected-tests`.
 - The package targets .NET 8 and later, so .NET Framework test modules continue to run in full before the affected-test
   step. Collection, selection, and fallback commands are scoped to .NETCoreApp modules.
 - The shared Windows test call site selects the mode from the source branch, restores the map through Azure Pipelines
