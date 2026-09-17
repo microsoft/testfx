@@ -80,7 +80,7 @@ internal sealed class AzureDevOpsSummaryArtifactPostProcessor(
         string uploadMarkerPath = outputPath + ".uploaded";
         if (!File.Exists(uploadMarkerPath))
         {
-            string line = $"##vso[task.addattachment type=Distributedtask.Core.Summary;name=Overall test results;]{AzDoEscaper.Escape(uploadPath)}";
+            string line = $"##vso[task.addattachment type=Distributedtask.Core.Summary;name=Overall test results - {aggregationId};]{AzDoEscaper.Escape(uploadPath)}";
             await outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
             await CiRunSummaryAggregation.WriteOutputAsync(uploadMarkerPath, aggregationId).ConfigureAwait(false);
         }

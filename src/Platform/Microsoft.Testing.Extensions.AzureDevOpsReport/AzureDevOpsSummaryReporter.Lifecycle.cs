@@ -282,7 +282,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
             }
 
             string attachmentName = SanitizeAttachmentName(
-                $"Test results - {assemblyName} ({_targetFrameworkMoniker.Value}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()})");
+                $"Test results - {assemblyName} ({_targetFrameworkMoniker.Value}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}, attempt {module.AttemptNumber.ToString(CultureInfo.InvariantCulture)}, session {module.SessionUid})");
             string line = $"##vso[task.addattachment type=Distributedtask.Core.Summary;name={AzDoEscaper.Escape(attachmentName)};]{AzDoEscaper.Escape(path)}";
             await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
         }

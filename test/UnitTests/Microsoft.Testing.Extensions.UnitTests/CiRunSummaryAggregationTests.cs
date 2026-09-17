@@ -618,7 +618,8 @@ public sealed class CiRunSummaryAggregationTests
                     .Select(item => item.Text),
             ];
             Assert.HasCount(1, commands);
-            Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Overall test results;]", commands[0]);
+            string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
+            Assert.StartsWith($"##vso[task.addattachment type=Distributedtask.Core.Summary;name=Overall test results - {aggregationId};]", commands[0]);
             Assert.Contains(module.RequestedOutputPath, commands[0]);
         }
         finally

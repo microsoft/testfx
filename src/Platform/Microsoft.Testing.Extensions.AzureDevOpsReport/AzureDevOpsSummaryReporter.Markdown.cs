@@ -61,17 +61,21 @@ internal sealed partial class AzureDevOpsSummaryReporter
             module,
             headingLevel: 3,
             includeInsights: true,
+            includeExitCode: false,
             failureDetailLimit: MaxFirstFailingFqns);
         return builder.ToString();
     }
 
     internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
     {
-        bool runFailed = aggregate.ExitCode is int exitCode
-            ? exitCode != 0
-            : aggregate.Modules.Any(static module => module.FailedTests > 0 || module.ExitCode != 0);
+        bool runFailed = aggregate.FailedTests > 0
+            || aggregate.Modules.Any(static module => module.FailedTests > 0 || module.ExitCode != 0)
+            || (aggregate.ExitCode is int exitCode && exitCode != 0);
+        string statusIcon = runFailed
+            ? "❌"
+            : (aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary ? "⚠️" : "✅");
         var builder = new StringBuilder();
-        builder.Append("## ").Append(runFailed ? "❌" : "✅").Append(" Overall test results\n\n");
+        builder.Append("## ").Append(statusIcon).Append(" Overall test results\n\n");
         AppendStatusStrip(
             builder,
             aggregate.TotalTests,
@@ -140,6 +144,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
                     module,
                     headingLevel: 4,
                     includeInsights: false,
+                    includeExitCode: true,
                     failureDetailLimit: remainingFailureDetails);
             }
         }
@@ -177,10 +182,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
         CiRunSummaryModule module,
         int headingLevel,
         bool includeInsights,
+        bool includeExitCode,
         int failureDetailLimit)
     {
         string heading = new('#', headingLevel);
-        if (module.ExitCode != 0)
+        if (includeExitCode && module.ExitCode != 0)
         {
             builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("`\n\n");
         }

@@ -331,9 +331,75 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         int failedModuleIndex = markdown.IndexOf("Z.Failed", StringComparison.Ordinal);
         int passedModuleIndex = markdown.IndexOf("A.Passed", StringComparison.Ordinal);
+        Assert.AreNotEqual(-1, failedModuleIndex);
+        Assert.AreNotEqual(-1, passedModuleIndex);
         Assert.IsLessThan(passedModuleIndex, failedModuleIndex);
         Assert.DoesNotContain("| Exit code |", markdown);
         Assert.Contains("exit code **2**", markdown);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    public void BuildAggregateMarkdown_UsesWarningStatus_WhenSuccessIsNotAuthoritative(
+        bool isPartial,
+        bool hasAuthoritativeRunSummary)
+    {
+        var aggregate = new CiRunSummaryAggregate(
+            [
+                new CiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    ExitCode = 0,
+                    TotalTests = 1,
+                    PassedTests = 1,
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary,
+            isPartial);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ⚠️ Overall test results", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_UsesFailureStatus_WhenFailedTestsHaveSuccessfulExitCode()
+    {
+        var aggregate = new CiRunSummaryAggregate(
+            [
+                new CiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    ExitCode = 0,
+                    TotalTests = 1,
+                    FailedTests = 1,
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 0,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ❌ Overall test results", markdown);
     }
 
     [TestMethod]
@@ -697,6 +763,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
         Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Test results - MyAssembly (", lines[0]);
+        Assert.Contains("attempt 1, session session", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
         // The assembly name must be part of the default file name so concurrent test assemblies
         // sharing the same TFM and TestResults directory don't race to write the same file.
