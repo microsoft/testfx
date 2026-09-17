@@ -1188,7 +1188,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">測試 class '{0}' 至少應有一個測試方法或是 'static'，而其方法是以 '[AssemblyInitialize]' 和/或 '[AssemblyCleanup]'標示。</target>
+        <target state="translated">測試 class '{0}' 至少應有一個測試方法或是 'static'，而其方法是以 '[AssemblyInitialize]' 和/或 '[AssemblyCleanup]'標示</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
