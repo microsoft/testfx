@@ -73,7 +73,7 @@ variables:
   #   --report-ctrf / --report-ctrf-filename "{asm}_{tfm}.ctrf.json" — CTRF JSON per (assembly x TFM).
   #   --report-junit / --report-junit-filename "{asm}_{tfm}.xml" — JUnit XML per (assembly x TFM).
   #   --report-azdo — surfaces failed tests in the AzDO UI.
-  #   --report-azdo-summary — Markdown job summary uploaded to the build's Summary tab.
+  #   --report-azdo-summary — Markdown job summary uploaded to the build's Extensions tab.
   #   --report-azdo-slow-test-history 30 — query the pipeline's own test history (last 30 days) and lower the
   #     per-test 'still running' threshold for historically fast tests.
   #   --report-azdo-slow-test-history-min-sample 10 / --report-azdo-slow-test-history-multiplier 3.0 — exercise

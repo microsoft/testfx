@@ -610,7 +610,7 @@ public sealed class CiRunSummaryAggregationTests
             Assert.AreEqual(AzureDevOpsSummaryArtifactPostProcessor.SummaryArtifactKind, first.Kind);
             Assert.IsTrue(File.Exists(first.Path));
             Assert.IsTrue(File.Exists(module.RequestedOutputPath));
-            Assert.Contains("# Overall test summary", File.ReadAllText(first.Path));
+            Assert.Contains("## ❌ Overall test results", File.ReadAllText(first.Path));
             string[] commands =
             [
                 .. output
@@ -618,7 +618,8 @@ public sealed class CiRunSummaryAggregationTests
                     .Select(item => item.Text),
             ];
             Assert.HasCount(1, commands);
-            Assert.StartsWith("##vso[task.uploadsummary]", commands[0]);
+            string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
+            Assert.StartsWith($"##vso[task.addattachment type=Distributedtask.Core.Summary;name=Overall test results - {aggregationId};]", commands[0]);
             Assert.Contains(module.RequestedOutputPath, commands[0]);
         }
         finally

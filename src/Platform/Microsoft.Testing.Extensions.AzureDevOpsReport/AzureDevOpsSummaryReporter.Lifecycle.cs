@@ -281,7 +281,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
                 return;
             }
 
-            string line = $"##vso[task.uploadsummary]{AzDoEscaper.Escape(path)}";
+            string attachmentName = SanitizeAttachmentName(
+                $"Test results - {assemblyName} ({_targetFrameworkMoniker.Value}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}, attempt {module.AttemptNumber.ToString(CultureInfo.InvariantCulture)}, session {module.SessionUid})");
+            string line = $"##vso[task.addattachment type=Distributedtask.Core.Summary;name={AzDoEscaper.Escape(attachmentName)};]{AzDoEscaper.Escape(path)}";
             await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -514,4 +516,20 @@ internal sealed partial class AzureDevOpsSummaryReporter
             && !RoslynString.IsNullOrWhiteSpace(explicitPath)
                 ? Path.GetFullPath(explicitPath)
                 : null;
+
+    private static string SanitizeAttachmentName(string value)
+    {
+        char[] invalidFileNameCharacters = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(value.Length);
+        foreach (char character in value)
+        {
+            bool isInvalid = character is '%' or ';' or ']' or '\r' or '\n'
+                || Array.IndexOf(invalidFileNameCharacters, character) >= 0;
+            builder.Append(isInvalid
+                ? character is '\r' or '\n' ? ' ' : '_'
+                : character);
+        }
+
+        return builder.ToString();
+    }
 }
