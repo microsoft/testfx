@@ -2,33 +2,31 @@
   <PropertyGroup>
     <TestingPlatformBrowserEnabled Condition=" '$(TestingPlatformBrowserEnabled)' == '' AND $(RuntimeIdentifier.StartsWith('browser-')) ">true</TestingPlatformBrowserEnabled>
     <_TestingPlatformBrowserAssetsDirectory>$(MSBuildThisFileDirectory)assets\</_TestingPlatformBrowserAssetsDirectory>
-    <_TestingPlatformBrowserOwnsHostAssets Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' AND '$(WasmMainJSPath)' == '' ">true</_TestingPlatformBrowserOwnsHostAssets>
-    <WasmMainJSPath Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' ">$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js</WasmMainJSPath>
-    <WasmMainHTMLPath Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' AND '$(WasmMainHTMLPath)' == '' ">$(_TestingPlatformBrowserAssetsDirectory)index.html</WasmMainHTMLPath>
   </PropertyGroup>
 
   <Target Name="_TestingPlatformBrowserDefineHostStaticWebAssets"
           BeforeTargets="ResolveProjectStaticWebAssets"
           AfterTargets="ResolveStaticWebAssetsConfiguration"
-          Condition=" '$(_TestingPlatformBrowserOwnsHostAssets)' == 'true' ">
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' ">
     <PropertyGroup>
-      <_TestingPlatformBrowserHostStaticWebAssetsDirectory>$(IntermediateOutputPath)testing-platform-browser\wwwroot\</_TestingPlatformBrowserHostStaticWebAssetsDirectory>
+      <_TestingPlatformBrowserHostStaticWebAssetsRoot>$(IntermediateOutputPath)testing-platform-browser\wwwroot\</_TestingPlatformBrowserHostStaticWebAssetsRoot>
+      <_TestingPlatformBrowserHostStaticWebAssetsDirectory>$(_TestingPlatformBrowserHostStaticWebAssetsRoot)_mtp\</_TestingPlatformBrowserHostStaticWebAssetsDirectory>
     </PropertyGroup>
 
     <MakeDir Directories="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)" />
     <Copy SourceFiles="$(_TestingPlatformBrowserAssetsDirectory)index.html"
-          DestinationFiles="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)index.html"
+          DestinationFiles="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)browser-host.html"
           SkipUnchangedFiles="true" />
     <Copy SourceFiles="$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js"
           DestinationFiles="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js"
           SkipUnchangedFiles="true" />
 
     <ItemGroup>
-      <_TestingPlatformBrowserHostStaticWebAsset Include="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)index.html">
-        <RelativePath>index.html</RelativePath>
+      <_TestingPlatformBrowserHostStaticWebAsset Include="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)browser-host.html">
+        <RelativePath>_mtp/browser-host.html</RelativePath>
       </_TestingPlatformBrowserHostStaticWebAsset>
       <_TestingPlatformBrowserHostStaticWebAsset Include="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js">
-        <RelativePath>Microsoft.Testing.Platform.Browser.main.js</RelativePath>
+        <RelativePath>_mtp/Microsoft.Testing.Platform.Browser.main.js</RelativePath>
       </_TestingPlatformBrowserHostStaticWebAsset>
       <FileWrites Include="@(_TestingPlatformBrowserHostStaticWebAsset)" />
     </ItemGroup>
@@ -36,7 +34,7 @@
     <DefineStaticWebAssets CandidateAssets="@(_TestingPlatformBrowserHostStaticWebAsset)"
                            SourceId="$(PackageId)"
                            SourceType="Computed"
-                           ContentRoot="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)"
+                           ContentRoot="$(_TestingPlatformBrowserHostStaticWebAssetsRoot)"
                            BasePath="$(StaticWebAssetBasePath)"
                            AssetKind="Build">
       <Output TaskParameter="Assets" ItemName="StaticWebAsset" />

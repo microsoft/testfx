@@ -21,7 +21,9 @@ internal sealed class DiagnosticBuffer
         [
             .. secrets
                 .Where(static value => !string.IsNullOrEmpty(value))
-                .Cast<string>(),
+                .Cast<string>()
+                .Distinct(StringComparer.Ordinal)
+                .OrderByDescending(static value => value.Length),
         ];
 
     public void Add(string source, string message)

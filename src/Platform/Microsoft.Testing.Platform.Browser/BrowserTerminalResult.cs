@@ -17,3 +17,35 @@ internal sealed record BrowserTerminalResult(int ExitCode, string? Error)
             "The browser supervisor reported a fatal error.");
     }
 }
+
+internal static class BrowserBindingCallback
+{
+    public static T Invoke<T>(
+        TaskCompletionSource<BrowserTerminalResult> completion,
+        Func<T> callback)
+    {
+        try
+        {
+            return callback();
+        }
+        catch (Exception ex)
+        {
+            completion.TrySetException(
+                new BrowserLauncherException(
+                    "The browser supervisor binding request was rejected.",
+                    ex));
+            throw;
+        }
+    }
+
+    public static void Invoke(
+        TaskCompletionSource<BrowserTerminalResult> completion,
+        Action callback)
+        => Invoke(
+            completion,
+            () =>
+            {
+                callback();
+                return true;
+            });
+}

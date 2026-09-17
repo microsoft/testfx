@@ -17,7 +17,7 @@ try {
     const argumentsFromLauncher = launcherAvailable
         ? await globalThis.__mtpBrowserGetArguments()
         : [];
-    const { dotnet } = await import('./_framework/dotnet.js');
+    const { dotnet } = await import('../_framework/dotnet.js');
     const { runMain } = await dotnet
         .withApplicationArguments(...argumentsFromLauncher)
         .create();

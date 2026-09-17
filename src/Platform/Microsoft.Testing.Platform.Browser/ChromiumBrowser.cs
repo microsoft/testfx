@@ -66,6 +66,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         IBrowserContext? context = null;
         IAsyncDisposable? getArgumentsBinding = null;
         IAsyncDisposable? terminalResultBinding = null;
+        Task<IPlaywright>? playwrightCreationTask = null;
         Task<IBrowser>? browserLaunchTask = null;
 
         try
@@ -73,7 +74,9 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             // Playwright's DEBUG channel logs can contain binding payloads with the SDK bearer token.
             Environment.SetEnvironmentVariable("DEBUG", null);
             PlaywrightNodeExecutable.EnsureExecutable();
-            playwright = await Microsoft.Playwright.Playwright.CreateAsync().ConfigureAwait(false);
+            playwrightCreationTask = Microsoft.Playwright.Playwright.CreateAsync();
+            playwright = await playwrightCreationTask
+                .WaitAsync(startupCancellationToken).ConfigureAwait(false);
 
             browserLaunchTask = playwright.Chromium.LaunchAsync(
                 new BrowserTypeLaunchOptions
@@ -96,18 +99,22 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 TaskCreationOptions.RunContinuationsAsynchronously);
             getArgumentsBinding = await page.ExposeBindingAsync<string[]>(
                 "__mtpBrowserGetArguments",
-                source =>
-                {
-                    ValidateBindingSource(source, page, expectedOrigin);
-                    return [.. options.TestApplicationArguments];
-                }).WaitAsync(startupCancellationToken).ConfigureAwait(false);
+                source => BrowserBindingCallback.Invoke(
+                    completion,
+                    () =>
+                    {
+                        ValidateBindingSource(source, page, expectedOrigin);
+                        return options.TestApplicationArguments.ToArray();
+                    })).WaitAsync(startupCancellationToken).ConfigureAwait(false);
             terminalResultBinding = await page.ExposeBindingAsync<JsonElement>(
                 "__mtpBrowserComplete",
-                (source, result) =>
-                {
-                    ValidateBindingSource(source, page, expectedOrigin);
-                    Complete(result, completion);
-                }).WaitAsync(startupCancellationToken).ConfigureAwait(false);
+                (source, result) => BrowserBindingCallback.Invoke(
+                    completion,
+                    () =>
+                    {
+                        ValidateBindingSource(source, page, expectedOrigin);
+                        Complete(result, completion);
+                    })).WaitAsync(startupCancellationToken).ConfigureAwait(false);
 
             var chromiumBrowser = new ChromiumBrowser(
                 playwright,
@@ -124,6 +131,16 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         }
         catch (Exception ex)
         {
+            if (playwright is null && playwrightCreationTask is not null)
+            {
+                playwright = await BoundedResourceCleanup.ObserveCreationAsync(
+                    playwrightCreationTask,
+                    CleanupTimeout,
+                    static instance => instance.Dispose(),
+                    message => diagnostics.Add("launcher cleanup", $"Playwright: {message}"))
+                    .ConfigureAwait(false);
+            }
+
             if (browser is null && browserLaunchTask is not null)
             {
                 browser = await TryObserveBrowserLaunchAsync(browserLaunchTask, diagnostics)
@@ -314,15 +331,13 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             }
         }
 
-        try
+        if (playwright is not null)
         {
-            playwright?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            diagnostics.Add(
-                "launcher cleanup",
-                $"Unable to dispose Playwright: {ex.Message}");
+            await BoundedResourceCleanup.DisposeAsync(
+                playwright.Dispose,
+                CleanupTimeout,
+                message => diagnostics.Add("launcher cleanup", $"Playwright: {message}"))
+                .ConfigureAwait(false);
         }
     }
 

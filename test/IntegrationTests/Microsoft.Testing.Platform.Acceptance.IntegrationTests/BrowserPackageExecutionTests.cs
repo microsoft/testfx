@@ -27,7 +27,6 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <WasmBuildNative>false</WasmBuildNative>
     <PublishTrimmed>false</PublishTrimmed>
     <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
-    <PackageId>BrowserPackageConsumer</PackageId>
 
     <TestingPlatformBrowserExecutable>$Browser$</TestingPlatformBrowserExecutable>
     <TestingPlatformBrowserStartupTimeoutSeconds>60</TestingPlatformBrowserStartupTimeoutSeconds>
@@ -38,32 +37,6 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
   </ItemGroup>
-
-  <Target Name="_RecordBrowserBuildManifest"
-          AfterTargets="GenerateStaticWebAssetsManifest"
-          Condition=" '$(TestingPlatformBrowserRecordStaticWebAssets)' == 'true' ">
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-build-manifest-path.txt"
-                      Lines="$(StaticWebAssetBuildManifestPath)"
-                      Overwrite="true" />
-  </Target>
-
-  <Target Name="_RecordBrowserPublishManifest"
-          AfterTargets="GenerateStaticWebAssetsPublishManifest"
-          Condition=" '$(TestingPlatformBrowserRecordStaticWebAssets)' == 'true' ">
-    <WriteLinesToFile File="$(MSBuildProjectDirectory)\browser-publish-manifest-path.txt"
-                      Lines="$(StaticWebAssetPublishManifestPath)"
-                      Overwrite="true" />
-  </Target>
-
-  <Target Name="_ProvideEmptyBrowserHostArguments"
-          BeforeTargets="_ConfigureTestingPlatformBrowserRun"
-          Condition=" '$(TestingPlatformBrowserEmptyHostArguments)' == 'true' ">
-    <PropertyGroup>
-      <RunCommand>browser-host-placeholder</RunCommand>
-      <RunArguments></RunArguments>
-      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
-    </PropertyGroup>
-  </Target>
 
 </Project>
 
@@ -89,6 +62,16 @@ public sealed class BrowserPackageTests
     public void FailsInsideBrowser()
         => Assert.Fail("Intentional browser experiment failure.");
 }
+""";
+
+    private const string ConsumerPageSourceCode = """
+
+#file wwwroot/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Consumer page</title></head>
+<body>consumer-page-marker</body>
+</html>
 """;
 
     private const string DesktopSourceCode = """
@@ -235,88 +218,81 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("--host-command-uri", marked.StandardOutput);
         Assert.Contains("--host-arguments-uri", marked.StandardOutput);
         Assert.DoesNotContain(".launch", marked.StandardOutput);
-
-        DotnetMuxerResult emptyHostArguments = await DotnetCli.RunAsync(
-            commonArguments
-            + " -property:DotnetTestInvocation=true"
-            + " -property:TestingPlatformBrowserEmptyHostArguments=true",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, emptyHostArguments.ExitCode, emptyHostArguments.ToString());
-        using var emptyHostArgumentsOutput = JsonDocument.Parse(
-            emptyHostArguments.StandardOutput);
-        string emptyHostRunArguments = emptyHostArgumentsOutput.RootElement
-            .GetProperty("Properties")
-            .GetProperty("RunArguments")
-            .GetString()
-            ?? throw new AssertFailedException("ComputeRunArguments returned a null RunArguments value.");
-        Assert.Contains(
-            "--host-arguments-uri \"\"",
-            emptyHostRunArguments);
     }
 
     [TestMethod]
     public async Task BrowserPackage_HostAssetsAreBuildOnlyConsumerAssets()
     {
+        string? browser = LocateBrowser();
+        if (browser is null)
+        {
+            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
+            return;
+        }
+
         string browserPackageVersion = GetBrowserPackageVersion();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             "BrowserPackageStaticWebAssetsProject",
-            SourceCode
+            (SourceCode + ConsumerPageSourceCode)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
-                .PatchCodeWithReplace("$Browser$", "browser-placeholder"));
+                .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
 
         DotnetMuxerResult build = await DotnetCli.RunAsync(
-            $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid} -property:TestingPlatformBrowserRecordStaticWebAssets=true",
+            $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, build.ExitCode, build.ToString());
 
-        using var buildManifest = JsonDocument.Parse(
-            File.ReadAllText(ReadRecordedPath(
-                generator.TargetAssetPath,
-                "browser-build-manifest-path.txt")));
-        Assert.IsTrue(ContainsBrowserHostAsset(buildManifest, "index.html", "Build"));
+        using var buildManifest = JsonDocument.Parse(File.ReadAllText(
+            await GetEvaluatedPathAsync(
+                generator,
+                "StaticWebAssetBuildManifestPath")));
         Assert.IsTrue(ContainsBrowserHostAsset(
             buildManifest,
-            "Microsoft.Testing.Platform.Browser.main.js",
+            "_mtp/browser-host.html",
             "Build"));
+        Assert.IsTrue(ContainsBrowserHostAsset(
+            buildManifest,
+            "_mtp/Microsoft.Testing.Platform.Browser.main.js",
+            "Build"));
+
+        DotnetMuxerResult run = await RunBrowserTestAsync(
+            generator,
+            "--filter FullyQualifiedName~RunsInsideBrowser");
+        Assert.AreEqual(0, run.ExitCode, run.ToString());
 
         string publishDirectory = Path.Combine(generator.TargetAssetPath, "publish");
         DotnetMuxerResult publish = await DotnetCli.RunAsync(
-            $"publish {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid} --output {publishDirectory} -property:TestingPlatformBrowserRecordStaticWebAssets=true",
+            $"publish {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid} --output {publishDirectory}",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, publish.ExitCode, publish.ToString());
 
-        using var publishManifest = JsonDocument.Parse(
-            File.ReadAllText(ReadRecordedPath(
-                generator.TargetAssetPath,
-                "browser-publish-manifest-path.txt")));
-        Assert.IsFalse(ContainsBrowserHostAsset(publishManifest, "index.html"));
+        using var publishManifest = JsonDocument.Parse(File.ReadAllText(
+            await GetEvaluatedPathAsync(
+                generator,
+                "StaticWebAssetPublishManifestPath")));
         Assert.IsFalse(ContainsBrowserHostAsset(
             publishManifest,
-            "Microsoft.Testing.Platform.Browser.main.js"));
+            "_mtp/browser-host.html"));
+        Assert.IsFalse(ContainsBrowserHostAsset(
+            publishManifest,
+            "_mtp/Microsoft.Testing.Platform.Browser.main.js"));
         Assert.IsEmpty(Directory.EnumerateFiles(
             publishDirectory,
             "Microsoft.Testing.Platform.Browser.main.js",
             SearchOption.AllDirectories));
-        foreach (string index in Directory.EnumerateFiles(
+        string consumerIndex = Directory.EnumerateFiles(
             publishDirectory,
             "index.html",
-            SearchOption.AllDirectories))
-        {
-            Assert.DoesNotContain(
-                "Microsoft.Testing.Platform.Browser.main.js",
-                File.ReadAllText(index));
-        }
+            SearchOption.AllDirectories).Single();
+        Assert.Contains("consumer-page-marker", File.ReadAllText(consumerIndex));
     }
 
     [TestMethod]
@@ -379,7 +355,7 @@ public sealed class BrowserPackageDesktopTests
         using Stream browserMainStream = browserMainEntry.Open();
         using var browserMainReader = new StreamReader(browserMainStream);
         string browserMain = browserMainReader.ReadToEnd();
-        Assert.Contains("await import('./_framework/dotnet.js')", browserMain);
+        Assert.Contains("await import('../_framework/dotnet.js')", browserMain);
         Assert.Contains("__mtpBrowserGetArguments", browserMain);
         Assert.Contains("__mtpBrowserComplete", browserMain);
         Assert.Contains("launcherAvailable", browserMain);
@@ -435,6 +411,31 @@ public sealed class BrowserPackageDesktopTests
         Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/cli.js"));
     }
 
+    [TestMethod]
+    public void BrowserPackage_InvalidExplicitBrowserPathFails()
+    {
+        string? previousValue = Environment.GetEnvironmentVariable(
+            "TESTINGPLATFORM_BROWSER_EXECUTABLE");
+        string invalidPath = Path.Combine(
+            Path.GetTempPath(),
+            $"missing-browser-{Guid.NewGuid():N}");
+
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                "TESTINGPLATFORM_BROWSER_EXECUTABLE",
+                invalidPath);
+
+            Assert.ThrowsExactly<AssertFailedException>(() => LocateBrowser());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                "TESTINGPLATFORM_BROWSER_EXECUTABLE",
+                previousValue);
+        }
+    }
+
     private async Task<DotnetMuxerResult> RunBrowserTestAsync(
         TestAsset generator,
         string testArguments,
@@ -483,6 +484,16 @@ public sealed class BrowserPackageDesktopTests
 
     private static string? LocateBrowser()
     {
+        string? requestedBrowser = Environment.GetEnvironmentVariable(
+            "TESTINGPLATFORM_BROWSER_EXECUTABLE");
+        if (requestedBrowser is not null)
+        {
+            return File.Exists(requestedBrowser)
+                ? Path.GetFullPath(requestedBrowser)
+                : throw new AssertFailedException(
+                    $"TESTINGPLATFORM_BROWSER_EXECUTABLE does not exist: '{requestedBrowser}'.");
+        }
+
         IEnumerable<string> candidates = OperatingSystem.IsWindows()
             ? new[]
             {
@@ -530,16 +541,30 @@ public sealed class BrowserPackageDesktopTests
         string relativePath,
         string? assetKind = null)
         => manifest.RootElement.GetProperty("Assets").EnumerateArray().Any(
-            asset => asset.GetProperty("SourceId").GetString() == "BrowserPackageConsumer"
+            asset => asset.GetProperty("SourceId").GetString() == "BrowserPackageTestProject"
                 && asset.GetProperty("RelativePath").GetString() == relativePath
                 && (assetKind is null
                     || asset.GetProperty("AssetKind").GetString() == assetKind));
 
-    private static string ReadRecordedPath(string projectDirectory, string recordFile)
+    private async Task<string> GetEvaluatedPathAsync(
+        TestAsset generator,
+        string propertyName)
     {
-        string path = File.ReadAllText(Path.Combine(projectDirectory, recordFile)).Trim();
+        DotnetMuxerResult evaluation = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ResolveStaticWebAssetsConfiguration"
+            + $" -getProperty:{propertyName}"
+            + $" -property:Configuration=Release"
+            + $" -property:TargetFramework={TargetFramework}"
+            + $" -property:RuntimeIdentifier={WasmRuntime.BrowserRid}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
+
+        string path = evaluation.StandardOutput.Trim();
         return Path.IsPathRooted(path)
             ? path
-            : Path.GetFullPath(path, projectDirectory);
+            : Path.GetFullPath(path, generator.TargetAssetPath);
     }
 }

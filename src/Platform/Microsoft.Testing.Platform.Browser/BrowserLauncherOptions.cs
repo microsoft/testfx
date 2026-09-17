@@ -159,59 +159,68 @@ internal static class SdkResponseFileExpander
 {
     public static string[] Expand(IReadOnlyList<string> arguments)
     {
-        var expanded = new List<string>();
-        foreach (string argument in arguments)
+        if (arguments.Count == 0
+            || !arguments[^1].StartsWith('@')
+            || arguments[^1].Length == 1)
         {
-            if (!argument.StartsWith('@'))
-            {
-                expanded.Add(argument);
-                continue;
-            }
+            throw new BrowserLauncherException(
+                "The browser experiment requires the SDK HTTP bootstrap response file as the final test application argument.");
+        }
 
-            string path = Path.GetFullPath(argument[1..]);
-            try
-            {
-                ValidateResponseFilePermissions(path);
-                using var stream = new FileStream(
-                    path,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.None);
-                using var reader = new StreamReader(
-                    stream,
-                    new UTF8Encoding(
-                        encoderShouldEmitUTF8Identifier: false,
-                        throwOnInvalidBytes: true));
-
-                while (reader.ReadLine() is { } line)
-                {
-                    string trimmed = line.Trim();
-                    if (trimmed.Length == 0 || trimmed[0] == '#')
-                    {
-                        continue;
-                    }
-
-                    int separator = trimmed.IndexOfAny([' ', '\t']);
-                    if (separator < 0)
-                    {
-                        expanded.Add(trimmed);
-                        continue;
-                    }
-
-                    expanded.Add(trimmed[..separator]);
-                    string value = trimmed[(separator + 1)..].TrimStart();
-                    if (value.Length != 0)
-                    {
-                        expanded.Add(value);
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DecoderFallbackException)
+        for (int i = 0; i < arguments.Count - 1; i++)
+        {
+            if (arguments[i].StartsWith('@'))
             {
                 throw new BrowserLauncherException(
-                    "Unable to read the SDK response file.",
-                    ex);
+                    "User response files are not supported by the browser experiment. Pass those arguments directly.");
             }
+        }
+
+        var expanded = new List<string>(arguments.Count + 8);
+        expanded.AddRange(arguments.Take(arguments.Count - 1));
+        string path = Path.GetFullPath(arguments[^1][1..]);
+        try
+        {
+            ValidateResponseFilePermissions(path);
+            using var stream = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.None);
+            using var reader = new StreamReader(
+                stream,
+                new UTF8Encoding(
+                    encoderShouldEmitUTF8Identifier: false,
+                    throwOnInvalidBytes: true));
+
+            while (reader.ReadLine() is { } line)
+            {
+                string trimmed = line.Trim();
+                if (trimmed.Length == 0 || trimmed[0] == '#')
+                {
+                    continue;
+                }
+
+                int separator = trimmed.IndexOfAny([' ', '\t']);
+                if (separator < 0)
+                {
+                    expanded.Add(trimmed);
+                    continue;
+                }
+
+                expanded.Add(trimmed[..separator]);
+                string value = trimmed[(separator + 1)..].TrimStart();
+                if (value.Length != 0)
+                {
+                    expanded.Add(value);
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DecoderFallbackException)
+        {
+            throw new BrowserLauncherException(
+                "Unable to read the SDK response file.",
+                ex);
         }
 
         return [.. expanded];

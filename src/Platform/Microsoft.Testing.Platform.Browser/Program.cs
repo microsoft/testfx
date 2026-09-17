@@ -5,6 +5,8 @@ namespace Microsoft.Testing.Platform.Browser;
 
 internal static class Program
 {
+    private const string BrowserHostPath = "/_mtp/browser-host.html";
+
     public static async Task<int> Main(string[] args)
     {
         BrowserLauncherOptions? options = null;
@@ -31,9 +33,10 @@ internal static class Program
                 Uri hostUri = await host.WaitUntilReadyAsync(
                     options.StartupTimeout,
                     runCancellationTokenSource.Token).ConfigureAwait(false);
+                var browserUri = new Uri(hostUri, BrowserHostPath);
                 ChromiumBrowser browser = await ChromiumBrowser.LaunchAsync(
                     options,
-                    hostUri,
+                    browserUri,
                     diagnostics,
                     runCancellationTokenSource.Token).ConfigureAwait(false);
                 try
