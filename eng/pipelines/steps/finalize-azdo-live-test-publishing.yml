@@ -18,6 +18,24 @@ steps:
         return
       }
 
+      $expectedTotalTests = 0
+      $trxFiles = @(Get-ChildItem -LiteralPath $env:TEST_RESULTS_DIRECTORY -Filter '*.trx' -File -Recurse -ErrorAction SilentlyContinue |
+          Where-Object { $_.FullName -notmatch '[\\/]merged[\\/]' })
+      foreach ($trxFile in $trxFiles) {
+        $trxTotal = 0
+        [xml]$trx = Get-Content -LiteralPath $trxFile.FullName -Raw
+        $counters = $trx.SelectSingleNode("/*[local-name()='TestRun']/*[local-name()='ResultSummary']/*[local-name()='Counters']")
+        if ($null -eq $counters -or -not [int]::TryParse($counters.total, [ref]$trxTotal)) {
+          throw "Could not read the total test count from '$($trxFile.FullName)'."
+        }
+
+        $expectedTotalTests += $trxTotal
+      }
+
+      if ($expectedTotalTests -le 0) {
+        throw "No test results were found in '$($env:TEST_RESULTS_DIRECTORY)'."
+      }
+
       $accessToken = $env:SYSTEM_ACCESSTOKEN
       $project = [Uri]::EscapeDataString($env:SYSTEM_TEAMPROJECT)
       $buildUri = [Uri]::EscapeDataString("vstfs:///Build/Build/$($env:BUILD_BUILDID)")
@@ -53,8 +71,10 @@ steps:
           $incompleteRuns = @($matchingRuns | Where-Object { $_.state -ne 'Completed' -or [int]$_.totalTests -le 0 })
           if ($matchingRuns.Count -ge ${{ parameters.expectedMinimumRuns }} -and $incompleteRuns.Count -eq 0) {
             $totalTests = ($matchingRuns | Measure-Object -Property totalTests -Sum).Sum
-            $published = $true
-            break
+            if ($totalTests -eq $expectedTotalTests) {
+              $published = $true
+              break
+            }
           }
         }
 
@@ -84,11 +104,11 @@ steps:
       }
 
       if ($published) {
-        Write-Host "Verified $totalTests test results across $($matchingRuns.Count) completed Azure DevOps live test run(s)."
+        Write-Host "Verified all $totalTests TRX test results across $($matchingRuns.Count) completed Azure DevOps live test run(s)."
         Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]true'
       }
       elseif ($env:TESTFX_AZDO_LIVE_PUBLISHING -eq 'true') {
-        Write-Host "Azure DevOps live publishing did not produce the expected completed test run(s) with results. The PublishTestResults fallback will be used."
+        Write-Host "Azure DevOps live publishing did not match the $expectedTotalTests generated TRX test results in the expected completed run(s). The PublishTestResults fallback will be used."
         Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
       }
       else {
@@ -100,3 +120,4 @@ steps:
   condition: always()
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    TEST_RESULTS_DIRECTORY: $(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)
