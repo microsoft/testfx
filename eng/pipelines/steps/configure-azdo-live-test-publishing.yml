@@ -1,7 +1,12 @@
+parameters:
+- name: enabled
+  type: boolean
+  default: false
+
 steps:
 - pwsh: |
     $accessToken = $env:SYSTEM_ACCESSTOKEN
-    $enabled = -not [string]::IsNullOrWhiteSpace($accessToken)
+    $enabled = [bool]::Parse('${{ parameters.enabled }}') -and -not [string]::IsNullOrWhiteSpace($accessToken)
     if ($enabled) {
       $runName = "testfx-live-$($env:SYSTEM_JOBID)-attempt-$($env:SYSTEM_JOBATTEMPT)"
       Write-Host 'A pipeline OAuth token is available; enabling Azure DevOps live test-result publishing.'
@@ -11,7 +16,7 @@ steps:
       Write-Host "##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_RUN_NAME]$runName"
     }
     else {
-      Write-Host 'Azure DevOps live test-result publishing is disabled because the OAuth token is unavailable. The PublishTestResults fallback will be used.'
+      Write-Host 'Azure DevOps live test-result publishing is disabled for this job or its OAuth token is unavailable. The PublishTestResults fallback will be used.'
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING]false'
       Write-Host '##vso[task.setvariable variable=TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED]false'
       Write-Host '##vso[task.setvariable variable=AZDO_LIVE_PUBLISHING_ARGS]'

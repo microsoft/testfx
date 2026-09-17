@@ -133,6 +133,8 @@ extends:
             - template: /eng/pipelines/steps/install-windows-prereqs.yml@self
 
             - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
+              parameters:
+                enabled: false
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
@@ -287,6 +289,8 @@ extends:
               os: linux
             steps:
             - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
+              parameters:
+                enabled: true
 
             - script: eng/common/build.sh
                 -configuration $(_BuildConfig)
