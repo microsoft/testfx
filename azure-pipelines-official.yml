@@ -114,8 +114,7 @@ extends:
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
-          enablePublishTestResults: true
-          testResultsFormat: 'vstest'
+          enablePublishTestResults: false
           publishingVersion: 4
           artifacts:
             publish:
@@ -132,6 +131,8 @@ extends:
               os: windows
             steps:
             - template: /eng/pipelines/steps/install-windows-prereqs.yml@self
+
+            - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
@@ -164,6 +165,16 @@ extends:
                   # test-result history. Secret variables are not auto-exposed to scripts, so the explicit
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+              - task: PublishTestResults@2
+                displayName: Publish TRX Test Results (fallback)
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: '*.trx'
+                  searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  testRunTitle: '$(System.JobName)-trx'
+                continueOnError: true
+                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
 
               # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and
               # CopyFiles@2 hard-fails when SourceFolder does not exist. A Test failure early enough to skip
@@ -273,6 +284,8 @@ extends:
               image: 1es-ubuntu-2204
               os: linux
             steps:
+            - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
+
             - script: eng/common/build.sh
                 -configuration $(_BuildConfig)
                 -prepareMachine
@@ -299,6 +312,16 @@ extends:
                   # test-result history. Secret variables are not auto-exposed to scripts, so the explicit
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+              - task: PublishTestResults@2
+                displayName: Publish TRX Test Results (fallback)
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: '*.trx'
+                  searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  testRunTitle: '$(System.JobName)-trx'
+                continueOnError: true
+                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
 
               # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
               # 1ES.PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies

@@ -87,6 +87,8 @@ variables:
   # The report-azdo history options (slow-test-history, flaky-history) authenticate via the SYSTEM_ACCESSTOKEN
   # secret. It is mapped onto the public Test/TestDebug steps below; fork PR builds don't receive the
   # secret so the history service silently no-ops there, while trusted-branch builds exercise it end-to-end.
+  # Live publishing is added separately after an authenticated REST probe. When that probe fails (including
+  # fork validation), the test templates retain the traditional PublishTestResults task as a TRX fallback.
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _DebugUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
@@ -273,6 +275,8 @@ stages:
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
+        - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
+
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -412,6 +416,8 @@ stages:
             Release:
               _BuildConfig: Release
         steps:
+        - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
+
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -449,6 +455,8 @@ stages:
             Release:
               _BuildConfig: Release
         steps:
+        - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
+
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
             -prepareMachine

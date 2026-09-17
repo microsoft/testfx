@@ -42,6 +42,16 @@ steps:
     # receive the secret, so the history service simply no-ops there; trusted branch builds run it end-to-end.
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+- task: PublishTestResults@2
+  displayName: Publish TRX Test Results (fallback)
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '*.trx'
+    searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+    testRunTitle: '$(System.JobName)-trx'
+  continueOnError: true
+  condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
+
 # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
 # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the tests run
 # therefore reported one real problem as two failed steps, the way the official build did in

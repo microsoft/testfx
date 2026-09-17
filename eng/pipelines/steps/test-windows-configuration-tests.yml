@@ -119,12 +119,22 @@ steps:
 # The Debug leg exists to exercise DEBUG-conditional product code and tests. The Release integration suite
 # already creates child test assets in both configurations, so repeating that suite in Debug is redundant.
 # --test-modules bypasses MSBuild evaluation, so explicitly provide the reporting and diagnostics arguments.
-- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace --show-test-results failed
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) $(AZDO_LIVE_PUBLISHING_ARGS) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace --show-test-results failed
   name: TestDebug
   displayName: Test (unit tests only)
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- task: PublishTestResults@2
+  displayName: Publish TRX Test Results (fallback)
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '*.trx'
+    searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+    testRunTitle: '$(System.JobName)-trx'
+  continueOnError: true
+  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING, 'true'))
 
 # Publish a portable, compact report separately from the large TestResults artifact so external consumers can
 # retrieve it without downloading every test result and binary .coverage file.
