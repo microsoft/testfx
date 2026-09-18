@@ -59,8 +59,10 @@
         ]
       },
       "storage": {
-        "type": "local",
-        "path": ".cts/mappings"
+        "type": "azureDevOpsArtifact",
+        "project": "public",
+        "buildDefinitionId": 209,
+        "artifactName": "TestFx_AffectedTestsMaps"
       }
     }
   },
