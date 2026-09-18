@@ -272,9 +272,10 @@ stages:
             targetType: 'inline'
             script: |
               New-Item -Path $(Build.SourcesDirectory)\artifacts\CrashDumps -ItemType Directory -Force
-              Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
-              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
-              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
+              $localDumpsKey = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+              New-Item -Path $localDumpsKey -Force
+              New-ItemProperty -Path $localDumpsKey -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
+              New-ItemProperty -Path $localDumpsKey -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
         - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
           parameters:
