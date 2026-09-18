@@ -84,12 +84,6 @@ internal static class PackageDeployer
                 {
                     throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode);
                 }
-
-                // Removal can report IsRegistered=true even after the registration is gone.
-                // Confirm the current user's actual state before attempting replacement.
-                return !packageManager
-                    .FindPackagesForUserWithPackageTypes(string.Empty, packageFamilyName, PackageTypes.Main)
-                    .Any();
             },
             cancellationToken);
     }
@@ -104,7 +98,7 @@ internal static class PackageDeployer
         string manifestPath,
         Func<CancellationToken, Task> registerPackage,
         Func<IReadOnlyList<RegisteredPackageInfo>> findRegisteredPackages,
-        Func<string, CancellationToken, Task<bool>> removeDevelopmentPackage,
+        Func<string, CancellationToken, Task> removeDevelopmentPackage,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -138,8 +132,12 @@ internal static class PackageDeployer
             // A successful same-version registration can retain the old layout. Only development
             // registrations support removal with PreserveApplicationData; never uninstall a retail app.
             cancellationToken.ThrowIfCancellationRequested();
-            bool removed = await RemovePackageAsync(manifestPath, previousPackage.FullName, removeDevelopmentPackage, cancellationToken).ConfigureAwait(false);
-            if (!removed)
+            await RemovePackageAsync(manifestPath, previousPackage.FullName, removeDevelopmentPackage, cancellationToken).ConfigureAwait(false);
+
+            // Removal can report IsRegistered=true even after the registration is gone.
+            // Query separately so lookup failures are not relabeled as deployment failures.
+            packages = findRegisteredPackages();
+            if (packages.Count != 0)
             {
                 throw new InvalidOperationException(
                     string.Format(
@@ -180,15 +178,15 @@ internal static class PackageDeployer
         }
     }
 
-    private static async Task<bool> RemovePackageAsync(
+    private static async Task RemovePackageAsync(
         string manifestPath,
         string packageFullName,
-        Func<string, CancellationToken, Task<bool>> removeDevelopmentPackage,
+        Func<string, CancellationToken, Task> removeDevelopmentPackage,
         CancellationToken cancellationToken)
     {
         try
         {
-            return await removeDevelopmentPackage(packageFullName, cancellationToken).ConfigureAwait(false);
+            await removeDevelopmentPackage(packageFullName, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
