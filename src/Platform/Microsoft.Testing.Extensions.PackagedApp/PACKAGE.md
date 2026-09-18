@@ -7,6 +7,12 @@ It is the consumer of the platform's `ITestHostLauncher` extension point for Win
 - **Packaged AUMID activation** (Windows build): a packaged (MSIX) layout is registered in place with the `PackageManager` and the app is activated by AUMID via `IApplicationActivationManager`. `packagedClassicApp`/`win32App` hosts receive the platform-prepared command line through `argv`, including when their trust level is `appContainer`. `windowsApp`/UWP hosts receive one opaque launch string and restore the exact logical argument array through `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` in `Application.OnLaunched` (see [#10485](https://github.com/microsoft/testfx/issues/10485)). Registering an unsigned build-output layout requires Developer Mode (or sideloading). The plain `net8.0`/`net9.0` build rejects a packaged layout with an actionable error pointing at the Windows TFM.
 - **Deploy + launch loose layout** (opt-in): a non-packaged app — one without an `AppxManifest.xml` — is deployed to a deployment directory and the produced executable is launched from there.
 
+## Switching packaged build layouts
+
+Before activation, the launcher verifies that the current user's main package registration points to the directory containing the requested `AppxManifest.xml`. Windows can report registration success while retaining a different layout with the same package identity and version. In that case, the launcher removes only the stale **development registration**, using `PreserveApplicationData`, and registers the requested layout again. Repeated runs from the same layout do not remove its registration.
+
+If the conflicting package is not a development registration, or the requested location still cannot be registered, the launcher reports an error instead of activating another build. A failed replacement can leave the package unregistered, but its application data is retained; resolve the reported deployment error and retry. Callers do not need to uninstall their app or change its version for each build.
+
 ## When the launcher takes over
 
 Registering an *enabled* test host launcher switches the run to the test host controller (process restart) model, because a launcher only has an effect when an out-of-process test host is started. To avoid charging that cost to apps that do not need it, the launcher enables itself only when it has real work to do:
