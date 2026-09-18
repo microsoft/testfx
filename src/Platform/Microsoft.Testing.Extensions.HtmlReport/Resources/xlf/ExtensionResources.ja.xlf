@@ -93,8 +93,8 @@ Example: 'MyReport_{tfm}.html'.</source>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report.</source>
-        <target state="translated">HTML レポートの生成を有効にします。</target>
-        <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
+        <target state="needs-review-translation">HTML レポートの生成を有効にします。</target>
+        <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">
         <source>At least one HTML report is required to merge.</source>

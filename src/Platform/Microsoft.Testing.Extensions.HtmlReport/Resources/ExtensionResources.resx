@@ -134,7 +134,7 @@ Example: 'MyReport_{tfm}.html'.</value>
   </data>
   <data name="HtmlReportOptionDescription" xml:space="preserve">
     <value>Enable generating an HTML report.</value>
-    <comment>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</comment>
+    <comment>Do not localize format name {Locked="HTML"}.</comment>
   </data>
   <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
     <value>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>

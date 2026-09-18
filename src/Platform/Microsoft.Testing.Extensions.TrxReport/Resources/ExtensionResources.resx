@@ -131,7 +131,7 @@
   </data>
   <data name="TrxComparerToolBaselineFileOptionDescription" xml:space="preserve">
     <value>The baseline TRX file.</value>
-    <comment>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</comment>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolBothFilesMustBeSpecified" xml:space="preserve">
     <value>'--{0}' and '--{1}' must both be specified</value>
@@ -147,11 +147,11 @@
   </data>
   <data name="TrxComparerToolOptionExpectsSingleArgument" xml:space="preserve">
     <value>'--{0}' expects a single trx file path as argument</value>
-    <comment>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</comment>
+    <comment>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</comment>
   </data>
   <data name="TrxComparerToolOtherFileOptionDescription" xml:space="preserve">
     <value>The TRX file to compare with the baseline.</value>
-    <comment>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</comment>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxAttachmentCopyFailed" xml:space="preserve">
     <value>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</value>
@@ -159,7 +159,7 @@
   </data>
   <data name="TrxFileExistsAndWillBeOverwritten" xml:space="preserve">
     <value>Warning: Trx file '{0}' already exists and will be overwritten.</value>
-    <comment>{0} is the {Locked="TRX"} report file path.</comment>
+    <comment>{0} is the {Locked="Trx"} report file path.</comment>
   </data>
   <data name="TrxMergeToolDescription" xml:space="preserve">
     <value>Merges multiple TRX files into one from the command line.</value>
@@ -171,7 +171,7 @@
   </data>
   <data name="TrxMergeToolInputOptionDescription" xml:space="preserve">
     <value>Two or more input TRX file paths.</value>
-    <comment>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</comment>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxMergeToolInvalidInputs" xml:space="preserve">
     <value>'--input' expects two or more existing TRX file paths</value>
@@ -183,7 +183,7 @@
   </data>
   <data name="TrxMergeToolOutputOptionDescription" xml:space="preserve">
     <value>The output TRX file path.</value>
-    <comment>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</comment>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxMergedArtifactDescription" xml:space="preserve">
     <value>{0} TRX files merged</value>
@@ -256,7 +256,7 @@ Example: 'MyReport_{tfm}.trx'.</value>
   </data>
   <data name="TrxReportOptionDescription" xml:space="preserve">
     <value>Enable generating TRX report.</value>
-    <comment>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</comment>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="UnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Requests of type '{0}' is not supported</value>

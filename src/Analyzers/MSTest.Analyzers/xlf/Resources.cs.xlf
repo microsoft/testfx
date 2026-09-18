@@ -347,8 +347,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="translated">{0} změní globální adresář procesu, který nemá ekvivalent pro jednotlivá vlákna a je pozorovaný každým souběžně spuštěným testem. Vyhněte se příslušné mutaci v paralelizované sadě testů (deklarujte [ResourceLock(WellKnownResources.CurrentDirectory)] na alespoň souřadnici nebo [DoNotParallelize])</target>
-        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <target state="needs-review-translation">{0} změní globální adresář procesu, který nemá ekvivalent pro jednotlivá vlákna a je pozorovaný každým souběžně spuštěným testem. Vyhněte se příslušné mutaci v paralelizované sadě testů (deklarujte [ResourceLock(WellKnownResources.CurrentDirectory)] na alespoň souřadnici nebo [DoNotParallelize])</target>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
@@ -1107,8 +1107,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="translated">„{0}“ mutuje globální stav procesu a není bezpečný, když testy běží paralelně; v testu deklarujte „[ResourceLock(WellKnownResources.{1})]“ (nebo „[DoNotParallelize]“)</target>
-        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <target state="needs-review-translation">„{0}“ mutuje globální stav procesu a není bezpečný, když testy běží paralelně; v testu deklarujte „[ResourceLock(WellKnownResources.{1})]“ (nebo „[DoNotParallelize]“)</target>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>

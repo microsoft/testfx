@@ -14,8 +14,8 @@
       </trans-unit>
       <trans-unit id="AddResourceLockFix">
         <source>Add '[ResourceLock(WellKnownResources.{0})]'</source>
-        <target state="translated">„[ResourceLock(WellKnownResources.{0})]“ hinzufügen</target>
-        <note>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</note>
+        <target state="needs-review-translation">„[ResourceLock(WellKnownResources.{0})]“ hinzufügen</target>
+        <note>{0} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}</note>
       </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
