@@ -147,6 +147,9 @@
     <value>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</value>
     <comment>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</comment>
   </data>
+  <data name="PackagedAppRegistrationLockDirectoryUnavailable" xml:space="preserve">
+    <value>Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</value>
+  </data>
   <data name="PackagedAppRegistrationNotDevelopment" xml:space="preserve">
     <value>Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</value>
     <comment>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</comment>

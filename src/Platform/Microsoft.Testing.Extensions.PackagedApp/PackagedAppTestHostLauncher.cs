@@ -314,6 +314,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                     manifestInfo.PackageFamilyName,
                     manifestPath));
 
+        // AUMID activation uses shared per-user registration state. Keep other controllers from
+        // switching this package's layout between registration verification and activation.
+        using FileStream registrationLock = await PackageRegistrationLock
+            .AcquireAsync(manifestInfo.PackageFamilyName, cancellationToken).ConfigureAwait(false);
+
         // Registration provisions the package-owned LocalState directory and its AppContainer ACL.
         // Handoffs must be written only after this completes; creating the directory from the unpackaged
         // controller first would give it the controller's ACL and make it unreadable by the activated app.

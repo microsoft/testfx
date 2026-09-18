@@ -16,6 +16,8 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// using only public, redistributable Windows APIs — the <c>PackageManager</c> WinRT class for
 /// registration and <c>ApplicationActivationManager</c> for activation. This is the equivalent
 /// of the Visual-Studio-internal deployment components VSTest relies on, implemented without them.
+/// Callers that activate the app must hold a <see cref="PackageRegistrationLock"/> lease across
+/// registration and activation.
 /// </summary>
 internal static class PackageDeployer
 {
