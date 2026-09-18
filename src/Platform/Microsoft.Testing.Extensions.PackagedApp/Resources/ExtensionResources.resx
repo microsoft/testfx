@@ -143,6 +143,21 @@
   <data name="PackagedAppRegistrationFailed" xml:space="preserve">
     <value>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</value>
   </data>
+  <data name="PackagedAppRegistrationLocationMismatch" xml:space="preserve">
+    <value>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</value>
+    <comment>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</comment>
+  </data>
+  <data name="PackagedAppRegistrationLockDirectoryUnavailable" xml:space="preserve">
+    <value>Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</value>
+  </data>
+  <data name="PackagedAppRegistrationNotDevelopment" xml:space="preserve">
+    <value>Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</value>
+    <comment>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</comment>
+  </data>
+  <data name="PackagedAppRegistrationRemovalIncomplete" xml:space="preserve">
+    <value>Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</value>
+    <comment>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</comment>
+  </data>
   <data name="ActivationArgumentsInvalidArgumentCount" xml:space="preserve">
     <value>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</value>
     <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
