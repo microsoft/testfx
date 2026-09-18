@@ -201,10 +201,32 @@ internal sealed partial class AzureDevOpsResultIdStore
     }
 
     public static DateTimeOffset? GetEarliestStartedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
-        => attempts.Where(attempt => attempt.StartedDate is not null).Min(attempt => attempt.StartedDate);
+    {
+        DateTimeOffset? earliest = null;
+        foreach (AzureDevOpsTestCaseResult attempt in attempts)
+        {
+            if (attempt.StartedDate is { } startedDate && (earliest is null || startedDate < earliest))
+            {
+                earliest = startedDate;
+            }
+        }
+
+        return earliest;
+    }
 
     public static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
-        => attempts.Where(attempt => attempt.CompletedDate is not null).Max(attempt => attempt.CompletedDate);
+    {
+        DateTimeOffset? latest = null;
+        foreach (AzureDevOpsTestCaseResult attempt in attempts)
+        {
+            if (attempt.CompletedDate is { } completedDate && (latest is null || completedDate > latest))
+            {
+                latest = completedDate;
+            }
+        }
+
+        return latest;
+    }
 
     /// <summary>
     /// Records an attempt history that Azure DevOps has accepted.

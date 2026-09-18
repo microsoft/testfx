@@ -59,10 +59,32 @@ internal sealed partial class AzureDevOpsResultIdStore
                 : right.Value > long.MaxValue - left.Value ? long.MaxValue : left.Value + right.Value;
 
     private static DateTimeOffset? GetEarliestStartedDate(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
-        => attempts.Where(attempt => attempt.StartedDate is not null).Min(attempt => attempt.StartedDate);
+    {
+        DateTimeOffset? earliest = null;
+        foreach (AzureDevOpsTestSubResult attempt in attempts)
+        {
+            if (attempt.StartedDate is { } startedDate && (earliest is null || startedDate < earliest))
+            {
+                earliest = startedDate;
+            }
+        }
+
+        return earliest;
+    }
 
     private static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
-        => attempts.Where(attempt => attempt.CompletedDate is not null).Max(attempt => attempt.CompletedDate);
+    {
+        DateTimeOffset? latest = null;
+        foreach (AzureDevOpsTestSubResult attempt in attempts)
+        {
+            if (attempt.CompletedDate is { } completedDate && (latest is null || completedDate > latest))
+            {
+                latest = completedDate;
+            }
+        }
+
+        return latest;
+    }
 
     private static void TrimAttempts(List<AzureDevOpsTestSubResult> attempts)
     {
