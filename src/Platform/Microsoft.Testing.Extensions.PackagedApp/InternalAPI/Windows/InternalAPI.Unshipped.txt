@@ -12,5 +12,9 @@ Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.WaitForExitA
 Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager
 static Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager.ActivateApplication(string! appUserModelId, string? arguments) -> uint
 static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.Activate(string! appUserModelId, string? activationArguments) -> uint
+<<<<<<< HEAD
 static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAsync(string! manifestPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 >>>>>>> Fix packaged app registration when switching layouts
+=======
+static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAsync(string! manifestPath, Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo! manifestInfo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+>>>>>>> Keep packaged app manifest and registration state consistent

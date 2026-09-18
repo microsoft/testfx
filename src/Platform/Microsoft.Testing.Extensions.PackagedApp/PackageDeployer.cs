@@ -27,16 +27,18 @@ internal static class PackageDeployer
     /// verifies its registered location before any activation handoffs are written.
     /// </summary>
     /// <param name="manifestPath">The full path to the layout's <c>AppxManifest.xml</c>.</param>
+    /// <param name="manifestInfo">The identity read from the manifest held open by the caller.</param>
     /// <param name="cancellationToken">A token to observe while registering.</param>
     [SupportedOSPlatform("windows10.0.19041.0")]
     public static Task RegisterAsync(
         string manifestPath,
+        AppxManifestInfo manifestInfo,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var packageManager = new PackageManager();
-        string packageFamilyName = AppxManifestInfo.ReadFromManifest(manifestPath).PackageFamilyName;
+        string packageFamilyName = manifestInfo.PackageFamilyName;
 
         // DeveloperMode registers the unsigned build-output layout in place. It requires Developer Mode
         // (or sideloading) to be enabled on the machine, exactly like 'Add-AppxPackage -Register'.
@@ -78,9 +80,16 @@ internal static class PackageDeployer
                     .AsTask()
                     .ConfigureAwait(false);
 
-                return result.ExtendedErrorCode is { HResult: < 0 }
-                    ? throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode)
-                    : !result.IsRegistered;
+                if (result.ExtendedErrorCode is { HResult: < 0 })
+                {
+                    throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode);
+                }
+
+                // Removal can report IsRegistered=true even after the registration is gone.
+                // Confirm the current user's actual state before attempting replacement.
+                return !packageManager
+                    .FindPackagesForUserWithPackageTypes(string.Empty, packageFamilyName, PackageTypes.Main)
+                    .Any();
             },
             cancellationToken);
     }
@@ -100,77 +109,97 @@ internal static class PackageDeployer
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
+        string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
+
+        await RegisterPackageAsync(manifestPath, registerPackage, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<RegisteredPackageInfo> packages = findRegisteredPackages();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!IsRegisteredFromLayout(packages, layoutDirectory))
         {
-            string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
+            if (packages.Count != 1)
+            {
+                throw CreateLocationMismatchException(layoutDirectory, packages);
+            }
 
-            await registerPackage(cancellationToken).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            IReadOnlyList<RegisteredPackageInfo> packages = findRegisteredPackages();
-            cancellationToken.ThrowIfCancellationRequested();
+            RegisteredPackageInfo previousPackage = packages[0];
+            if (!previousPackage.IsDevelopmentMode)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.PackagedAppRegistrationNotDevelopment,
+                        previousPackage.FullName,
+                        previousPackage.InstalledPath,
+                        layoutDirectory));
+            }
 
+            // A successful same-version registration can retain the old layout. Only development
+            // registrations support removal with PreserveApplicationData; never uninstall a retail app.
+            cancellationToken.ThrowIfCancellationRequested();
+            bool removed = await RemovePackageAsync(manifestPath, previousPackage.FullName, removeDevelopmentPackage, cancellationToken).ConfigureAwait(false);
+            if (!removed)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.PackagedAppRegistrationRemovalIncomplete,
+                        previousPackage.FullName,
+                        previousPackage.InstalledPath,
+                        layoutDirectory));
+            }
+
+            // Once the previous registration is gone, finish restoring a usable package identity
+            // even if the caller cancels. Cancellation is observed after the replacement is verified.
+            await RegisterPackageAsync(manifestPath, registerPackage, CancellationToken.None).ConfigureAwait(false);
+            packages = findRegisteredPackages();
             if (!IsRegisteredFromLayout(packages, layoutDirectory))
             {
-                if (packages.Count != 1)
-                {
-                    throw CreateLocationMismatchException(layoutDirectory, packages);
-                }
-
-                RegisteredPackageInfo previousPackage = packages[0];
-                if (!previousPackage.IsDevelopmentMode)
-                {
-                    throw new InvalidOperationException(
-                        string.Format(
-                            CultureInfo.CurrentCulture,
-                            ExtensionResources.PackagedAppRegistrationNotDevelopment,
-                            previousPackage.FullName,
-                            previousPackage.InstalledPath,
-                            layoutDirectory));
-                }
-
-                // A successful same-version registration can retain the old layout. Only development
-                // registrations support removal with PreserveApplicationData; never uninstall a retail app.
-                cancellationToken.ThrowIfCancellationRequested();
-                bool removed = await removeDevelopmentPackage(previousPackage.FullName, cancellationToken).ConfigureAwait(false);
-                if (!removed)
-                {
-                    throw new InvalidOperationException(
-                        string.Format(
-                            CultureInfo.CurrentCulture,
-                            ExtensionResources.PackagedAppRegistrationRemovalIncomplete,
-                            previousPackage.FullName,
-                            previousPackage.InstalledPath,
-                            layoutDirectory));
-                }
-
-                // Once the previous registration is gone, finish restoring a usable package identity
-                // even if the caller cancels. Cancellation is observed after the replacement is verified.
-                await registerPackage(CancellationToken.None).ConfigureAwait(false);
-                packages = findRegisteredPackages();
-                if (!IsRegisteredFromLayout(packages, layoutDirectory))
-                {
-                    throw CreateLocationMismatchException(layoutDirectory, packages);
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
+                throw CreateLocationMismatchException(layoutDirectory, packages);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
         }
-        catch (OperationCanceledException)
+
+        cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private static async Task RegisterPackageAsync(
+        string manifestPath,
+        Func<CancellationToken, Task> registerPackage,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            // Cancellation is expected; let it propagate unwrapped.
-            throw;
+            await registerPackage(cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Include the requested manifest even when a Windows operation faults instead of returning
-            // a DeploymentResult, or Windows reports success without registering the requested location.
-            throw new InvalidOperationException(
-                string.Format(CultureInfo.CurrentCulture, ExtensionResources.PackagedAppRegistrationFailed, manifestPath, ex.Message),
-                ex);
+            throw CreateDeploymentFailureException(manifestPath, ex);
         }
     }
+
+    private static async Task<bool> RemovePackageAsync(
+        string manifestPath,
+        string packageFullName,
+        Func<string, CancellationToken, Task<bool>> removeDevelopmentPackage,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await removeDevelopmentPackage(packageFullName, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            throw CreateDeploymentFailureException(manifestPath, ex);
+        }
+    }
+
+    private static InvalidOperationException CreateDeploymentFailureException(string manifestPath, Exception exception)
+        => new(
+            string.Format(CultureInfo.CurrentCulture, ExtensionResources.PackagedAppRegistrationFailed, manifestPath, exception.Message),
+            exception);
 
     private static bool IsRegisteredFromLayout(IReadOnlyList<RegisteredPackageInfo> packages, string layoutDirectory)
         => packages.Count == 1

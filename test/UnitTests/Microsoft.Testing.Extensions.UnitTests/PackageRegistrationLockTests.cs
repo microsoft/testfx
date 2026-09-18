@@ -14,6 +14,117 @@ public sealed class PackageRegistrationLockTests
 {
     private const string PackageFamilyName = "Contoso.TestApp_abcdefghijklm";
 
+    private const string ManifestXml = """
+        <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+          <Identity Name="Contoso.ManifestApp" Publisher="CN=ManifestPublisher" Version="1.0.0.0" />
+          <Applications>
+            <Application Id="App" Executable="App.exe" />
+          </Applications>
+        </Package>
+        """;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task WithManifestAsync_KeepsIdentityStableThroughActivation(bool changePublisher)
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            string manifestPath = CreateManifestFile(directory);
+            string replacementXml = changePublisher
+                ? ManifestXml.Replace("CN=ManifestPublisher", "CN=ReplacementPublisher", StringComparison.Ordinal)
+                : ManifestXml.Replace("Contoso.ManifestApp", "Contoso.ReplacementApp", StringComparison.Ordinal);
+            string replacementPath = Path.Combine(directory, "replacement.xml");
+            File.WriteAllText(replacementPath, replacementXml);
+            string? lockedFamily = null;
+
+            AppxManifestInfo snapshot = await PackageRegistrationLock.WithManifestAsync(
+                manifestPath,
+                (family, token) =>
+                {
+                    lockedFamily = family;
+                    Assert.ThrowsExactly<IOException>(() => File.WriteAllText(manifestPath, replacementXml));
+                    return PackageRegistrationLock.AcquireAsync(family, Path.Combine(directory, "locks"), token);
+                },
+                async manifestInfo =>
+                {
+                    Assert.AreEqual(lockedFamily, manifestInfo.PackageFamilyName);
+                    var deploymentRead = AppxManifestInfo.ReadFromManifest(manifestPath);
+                    Assert.AreEqual(manifestInfo.PackageFamilyName, deploymentRead.PackageFamilyName);
+                    await Task.Yield();
+                    Exception exception = Assert.Throws<Exception>(() => File.Move(replacementPath, manifestPath, overwrite: true));
+                    Assert.IsTrue(exception is IOException or UnauthorizedAccessException);
+                    return manifestInfo;
+                },
+                cancellationToken);
+
+            File.Move(replacementPath, manifestPath, overwrite: true);
+            var replacement = AppxManifestInfo.ReadFromManifest(manifestPath);
+            Assert.AreNotEqual(snapshot.PackageFamilyName, replacement.PackageFamilyName);
+        });
+
+    [TestMethod]
+    public Task WithManifestAsync_WhenCanceledWhileWaiting_ReleasesManifest()
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            string manifestPath = CreateManifestFile(directory);
+            var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
+            string lockDirectory = Path.Combine(directory, "locks");
+            using FileStream first = await PackageRegistrationLock.AcquireAsync(manifestInfo.PackageFamilyName, lockDirectory, cancellationToken);
+            using var canceled = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            Task<int> waiting = PackageRegistrationLock.WithManifestAsync(
+                manifestPath,
+                (family, token) => PackageRegistrationLock.AcquireAsync(family, lockDirectory, token),
+                _ => Task.FromException<int>(new InvalidOperationException("The canceled action must not run.")),
+                canceled.Token);
+
+            Assert.ThrowsExactly<IOException>(() => File.WriteAllText(manifestPath, ManifestXml));
+            canceled.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(() => waiting);
+
+            File.WriteAllText(manifestPath, ManifestXml);
+            Assert.AreEqual(manifestInfo.PackageFamilyName, AppxManifestInfo.ReadFromManifest(manifestPath).PackageFamilyName);
+        });
+
+    [TestMethod]
+    public Task WithManifestAsync_WhenActionFails_ReleasesManifestAndRegistrationLock()
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            string manifestPath = CreateManifestFile(directory);
+            var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
+            string lockDirectory = Path.Combine(directory, "locks");
+            var failure = new InvalidOperationException("Activation failed.");
+
+            InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => PackageRegistrationLock.WithManifestAsync(
+                    manifestPath,
+                    (family, token) => PackageRegistrationLock.AcquireAsync(family, lockDirectory, token),
+                    _ => Task.FromException<int>(failure),
+                    cancellationToken));
+
+            Assert.AreSame(failure, exception);
+            File.WriteAllText(manifestPath, ManifestXml);
+            using FileStream next = await PackageRegistrationLock.AcquireAsync(manifestInfo.PackageFamilyName, lockDirectory, cancellationToken);
+            Assert.IsTrue(File.Exists(next.Name));
+        });
+
+    [TestMethod]
+    public Task WithManifestAsync_WhenManifestIsInvalid_ReleasesReadHandleWithoutTakingRegistrationLock()
+        => RunInTemporaryDirectoryAsync(async (directory, cancellationToken) =>
+        {
+            string manifestPath = CreateManifestFile(directory);
+            File.WriteAllText(manifestPath, "<invalid");
+
+            await Assert.ThrowsExactlyAsync<XmlException>(
+                () => PackageRegistrationLock.WithManifestAsync(
+                    manifestPath,
+                    (_, _) => throw new InvalidOperationException("An invalid manifest must not acquire a family lock."),
+                    _ => Task.FromResult(0),
+                    cancellationToken));
+
+            File.Delete(manifestPath);
+            Assert.IsFalse(File.Exists(manifestPath));
+        });
+
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
@@ -165,6 +276,14 @@ public sealed class PackageRegistrationLockTests
 
             Assert.AreEqual(0, await TryOpenInAnotherProcessAsync(lockPath, cancellationToken));
         });
+
+    private static string CreateManifestFile(string directory)
+    {
+        Directory.CreateDirectory(directory);
+        string manifestPath = Path.Combine(directory, AppxManifestInfo.AppxManifestFileName);
+        File.WriteAllText(manifestPath, ManifestXml);
+        return manifestPath;
+    }
 
     private static async Task<int> TryOpenInAnotherProcessAsync(string lockPath, CancellationToken cancellationToken)
     {

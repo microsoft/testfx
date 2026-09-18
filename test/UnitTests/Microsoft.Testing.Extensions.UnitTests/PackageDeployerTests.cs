@@ -161,6 +161,7 @@ public sealed class PackageDeployerTests
         Assert.Contains(PackageFullName, exception.Message);
         Assert.Contains(previousLayout, exception.Message);
         Assert.Contains(requestedLayout, exception.Message);
+        Assert.IsNull(exception.InnerException);
         Assert.AreSame(previousPackage, packageManager.Packages[0]);
         string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
@@ -205,6 +206,7 @@ public sealed class PackageDeployerTests
 
         Assert.Contains(previousLayout, exception.Message);
         Assert.Contains(requestedLayout, exception.Message);
+        Assert.IsNull(exception.InnerException);
         string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
@@ -223,6 +225,7 @@ public sealed class PackageDeployerTests
         Assert.Contains(PackageFullName, exception.Message);
         Assert.Contains(previousLayout, exception.Message);
         Assert.Contains(requestedLayout, exception.Message);
+        Assert.IsNull(exception.InnerException);
         Assert.AreSame(previousPackage, packageManager.Packages[0]);
         string[] expectedOperations = ["register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
@@ -238,6 +241,7 @@ public sealed class PackageDeployerTests
             () => packageManager.RegisterAsync(layout, TestContext.CancellationToken));
 
         Assert.Contains(layout, exception.Message);
+        Assert.IsNull(exception.InnerException);
         Assert.IsEmpty(packageManager.Packages);
         string[] expectedOperations = ["register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
@@ -262,6 +266,7 @@ public sealed class PackageDeployerTests
 
         Assert.Contains(previousLayout, exception.Message);
         Assert.Contains(requestedLayout, exception.Message);
+        Assert.IsNull(exception.InnerException);
         Assert.HasCount(2, packageManager.Packages);
         string[] expectedOperations = ["register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
@@ -422,9 +427,34 @@ public sealed class PackageDeployerTests
             () => packageManager.RegisterAsync(requestedLayout, cancellation.Token));
 
         Assert.Contains(requestedLayout, exception.Message);
-        Assert.IsInstanceOfType<InvalidOperationException>(exception.InnerException);
+        Assert.IsNull(exception.InnerException);
         Assert.IsEmpty(packageManager.Packages);
         string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RegisterAsync_WhenQueryFails_DoesNotRelabelItAsDeploymentFailure(bool afterRemoval)
+    {
+        var failure = new InvalidOperationException("Could not query registered packages.");
+        int findCalls = 0;
+        var packageManager = new TestPackageManager
+        {
+            Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
+        };
+        packageManager.FindOverride = () => ++findCalls == (afterRemoval ? 2 : 1)
+            ? throw failure
+            : packageManager.Packages;
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => packageManager.RegisterAsync(GetLayoutDirectory("layout-b"), TestContext.CancellationToken));
+
+        Assert.AreSame(failure, exception);
+        string[] expectedOperations = afterRemoval
+            ? ["register", "find", $"remove:{PackageFullName}", "register", "find"]
+            : ["register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
