@@ -13,7 +13,9 @@ Before activation, the launcher verifies that the current user's main package re
 
 Launchers serialize the entire registration-and-activation sequence per user and package family, including across processes. Another launcher cannot switch the layout between verification and AUMID activation. Waiting for another launch respects cancellation.
 
-If the conflicting package is not a development registration, or the requested location still cannot be registered, the launcher reports an error instead of activating another build. A failed replacement can leave the package unregistered, but its application data is retained; resolve the reported deployment error and retry. Callers do not need to uninstall their app or change its version for each build.
+If cancellation is observed before stale-registration removal starts, no destructive change is made. Once removal completes, the launcher finishes registering and verifying the replacement before it surfaces cancellation, so an interrupted run does not intentionally leave the package unregistered.
+
+If the conflicting package is not a development registration, removal does not actually unregister it, or the requested location still cannot be registered, the launcher reports an error instead of activating another build. A failed replacement can leave the package unregistered, but its application data is retained; resolve the reported deployment error and retry. Callers do not need to uninstall their app or change its version for each build.
 
 ## When the launcher takes over
 
