@@ -201,6 +201,146 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.IsNotEmpty(values);
             }
 
+            internal static void NonNullableReferenceCollectionCalls(
+                List<string> list,
+                HashSet<string> set,
+                string[] array,
+                IEnumerable<string> enumerable,
+                IEqualityComparer<string> comparer)
+            {
+                Assert.Contains("Name", list);
+                Assert.DoesNotContain("Missing", list);
+                Assert.Contains("Name", list, comparer);
+                Assert.DoesNotContain("Missing", list, comparer);
+                Assert.Contains("Name", set, comparer);
+                Assert.DoesNotContain("Missing", set, comparer);
+                Assert.Contains("Name", array, comparer);
+                Assert.DoesNotContain("Missing", array, comparer);
+                Assert.Contains("Name", enumerable, comparer);
+                Assert.DoesNotContain("Missing", enumerable, comparer);
+            }
+
+            internal static void NullableReferenceCollectionCalls(
+                List<string?> list,
+                HashSet<string?> set,
+                string?[] array,
+                IEnumerable<string?> enumerable,
+                ICollection<string?> collection,
+                IReadOnlyCollection<string?> readOnlyCollection,
+                ArraySegment<string?> segment,
+                ImmutableArray<string?> immutableArray,
+                DualConvertibleEnumerable<string?> dualConvertible,
+                IEqualityComparer<string?> comparer)
+            {
+                string? nullValue = null;
+                Func<string?, bool> predicate = value => value is null;
+
+                Assert.Contains("Name", list);
+                Assert.DoesNotContain("Missing", list);
+                Assert.Contains(nullValue, list);
+                Assert.DoesNotContain(nullValue, list);
+                Assert.Contains("Name", list, comparer);
+                Assert.DoesNotContain("Missing", list, comparer);
+                Assert.Contains("NAME", list, StringComparer.OrdinalIgnoreCase);
+                Assert.DoesNotContain("Missing", list, StringComparer.OrdinalIgnoreCase);
+                Assert.Contains(predicate, list);
+                Assert.DoesNotContain(predicate, list);
+
+                Assert.Contains("Name", set);
+                Assert.DoesNotContain("Missing", set);
+                Assert.Contains(nullValue, set);
+                Assert.DoesNotContain(nullValue, set);
+                Assert.Contains("Name", set, comparer);
+                Assert.DoesNotContain("Missing", set, comparer);
+                Assert.Contains(predicate, set);
+                Assert.DoesNotContain(predicate, set);
+
+                Assert.Contains("Name", array);
+                Assert.DoesNotContain("Missing", array);
+                Assert.Contains(nullValue, array);
+                Assert.DoesNotContain(nullValue, array);
+                Assert.Contains("Name", array, comparer);
+                Assert.DoesNotContain("Missing", array, comparer);
+                Assert.Contains(predicate, array);
+                Assert.DoesNotContain(predicate, array);
+
+                Assert.Contains("Name", enumerable);
+                Assert.DoesNotContain("Missing", enumerable);
+                Assert.Contains(nullValue, enumerable);
+                Assert.DoesNotContain(nullValue, enumerable);
+                Assert.Contains("Name", enumerable, comparer);
+                Assert.DoesNotContain("Missing", enumerable, comparer);
+                Assert.Contains(predicate, enumerable);
+                Assert.DoesNotContain(predicate, enumerable);
+
+                Assert.Contains("Name", collection);
+                Assert.DoesNotContain("Missing", collection);
+                Assert.Contains(nullValue, collection);
+                Assert.DoesNotContain(nullValue, collection);
+                Assert.Contains("Name", readOnlyCollection);
+                Assert.DoesNotContain("Missing", readOnlyCollection);
+                Assert.Contains(nullValue, readOnlyCollection);
+                Assert.DoesNotContain(nullValue, readOnlyCollection);
+
+                Assert.Contains("Name", segment);
+                Assert.DoesNotContain("Missing", segment);
+                Assert.Contains(nullValue, segment);
+                Assert.DoesNotContain(nullValue, segment);
+                Assert.Contains("Name", immutableArray);
+                Assert.DoesNotContain("Missing", immutableArray);
+                Assert.Contains(nullValue, immutableArray);
+                Assert.DoesNotContain(nullValue, immutableArray);
+
+                Assert.Contains("Name", dualConvertible);
+                Assert.DoesNotContain("Missing", dualConvertible);
+                Assert.Contains(nullValue, dualConvertible);
+                Assert.DoesNotContain(nullValue, dualConvertible);
+                Assert.Contains("Name", dualConvertible, comparer);
+                Assert.DoesNotContain("Missing", dualConvertible, comparer);
+                Assert.Contains(predicate, dualConvertible);
+                Assert.DoesNotContain(predicate, dualConvertible);
+
+                Assert.AreAllDistinct(list, comparer);
+                Assert.AreSequenceEqual(list, set, comparer);
+                Assert.AreSequenceEqual(list, array, comparer, SequenceOrder.InAnyOrder);
+                Assert.AreNotSequenceEqual(list, set, comparer);
+                Assert.AreNotSequenceEqual(list, array, comparer, SequenceOrder.InAnyOrder);
+                Assert.ContainsAll(list, set);
+                Assert.ContainsAll(list, set, comparer);
+                Assert.DoesNotContainAll(list, set);
+                Assert.DoesNotContainAll(list, set, comparer);
+                _ = Assert.ContainsSingle(predicate, list);
+                Assert.HasCount(1, list);
+                Assert.IsEmpty(list);
+                Assert.IsNotEmpty(list);
+            }
+
+            internal static void NullableValueCollectionCalls(
+                List<int?> list,
+                HashSet<int?> set,
+                int?[] array,
+                IEnumerable<int?> enumerable)
+            {
+                int? nullValue = null;
+
+                Assert.Contains(1, list);
+                Assert.DoesNotContain(0, list);
+                Assert.Contains(nullValue, list);
+                Assert.DoesNotContain(nullValue, list);
+                Assert.Contains(1, set);
+                Assert.DoesNotContain(0, set);
+                Assert.Contains(nullValue, set);
+                Assert.DoesNotContain(nullValue, set);
+                Assert.Contains(1, array);
+                Assert.DoesNotContain(0, array);
+                Assert.Contains(nullValue, array);
+                Assert.DoesNotContain(nullValue, array);
+                Assert.Contains(1, enumerable);
+                Assert.DoesNotContain(0, enumerable);
+                Assert.Contains(nullValue, enumerable);
+                Assert.DoesNotContain(nullValue, enumerable);
+            }
+
             internal static void StringCharacterCollectionCalls(
                 string values,
                 string other,
