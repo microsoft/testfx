@@ -2708,13 +2708,18 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    [DataRow("new Hidden[0]")]
-    [DataRow("new[] { Hidden.First }")]
-    [DataRow("new object[] { new Hidden[0] }")]
-    [DataRow("Value = new Hidden[0]")]
-    [DataRow("Value = new[] { Hidden.First }")]
-    [DataRow("Value = new object[] { new Hidden[0] }")]
-    public void Generator_OmitsArrayArgumentsWithInaccessibleElementTypes(string arguments)
+    [DataRow("new Hidden[0]", null)]
+    [DataRow("new[] { Hidden.First }", null)]
+    [DataRow("new object[] { new Hidden[0] }", null)]
+    [DataRow("Value = new Hidden[0]", null)]
+    [DataRow("Value = new[] { Hidden.First }", null)]
+    [DataRow("Value = new object[] { new Hidden[0] }", null)]
+    // Roslyn types boxed null arrays as object, so they do not require an inaccessible Hidden[] cast.
+    [DataRow("(Hidden[])null", "((object)null!)")]
+    [DataRow("new object[] { (Hidden[])null }", "(new object[] { (object)null! })")]
+    [DataRow("Value = (Hidden[])null", "() { Value = (object)null! }")]
+    [DataRow("Value = new object[] { (Hidden[])null }", "() { Value = new object[] { (object)null! } }")]
+    public void Generator_HandlesArrayArgumentsWithInaccessibleElementTypes(string arguments, string? expectedArguments)
     {
         string userCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2749,8 +2754,18 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = outputCompilation.SyntaxTrees
             .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
             .ToString();
-        registry.Should().NotContain("ArrayMarkerAttribute");
-        registry.Should().Contain("AreAttributesComplete = false");
+        if (expectedArguments is null)
+        {
+            registry.Should().NotContain("ArrayMarkerAttribute");
+            registry.Should().Contain("AreAttributesComplete = false");
+        }
+        else
+        {
+            registry.Should().Contain($"new global::Sample.ArrayMarkerAttribute{expectedArguments}");
+            registry.Should().NotContain("AreAttributesComplete = false");
+        }
+
+        registry.Should().NotContain("global::Sample.Tests.Hidden");
         registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"retained\")");
     }
 
