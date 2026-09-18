@@ -198,9 +198,20 @@ Based on the file's structure, split it into the following modules:
 **Expected Impact**: Improved code navigability, easier testing, reduced merge conflicts
 ```
 
-Submit the completed title and body directly with the `safeoutputs` MCP server's
-`create_issue` tool. Do not create temporary files or invoke `safeoutputs`, `jq`,
-Python, or Node through the shell.
+Submit the issue only after the final title and body are complete:
+
+1. Use the file-editing tool to write the final body to
+   `/tmp/gh-aw/agent/issue-body.md`.
+2. Invoke the safe-output CLI exactly once:
+
+   ```bash
+   safeoutputs create_issue --title "<FINAL_TITLE>" --body "$(cat /tmp/gh-aw/agent/issue-body.md)"
+   ```
+
+Do not call `create_issue` as a direct tool; it is not registered by the current
+Copilot harness. Do not probe the CLI, submit placeholder content, pipe JSON, or
+use `jq`, Python, Node, or a shell heredoc. The first valid invocation consumes
+the workflow's one-per-run `create_issue` quota and creates a real issue.
 
 ## Important Guidelines
 
