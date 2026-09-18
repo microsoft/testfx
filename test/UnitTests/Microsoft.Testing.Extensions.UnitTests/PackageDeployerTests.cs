@@ -397,6 +397,37 @@ public sealed class PackageDeployerTests
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
+    [TestMethod]
+    public async Task RegisterAsync_WhenCanceledWhileFindingMissingReplacement_ReportsLocationMismatch()
+    {
+        using var cancellation = new CancellationTokenSource();
+        string requestedLayout = GetLayoutDirectory("layout-b");
+        int findCalls = 0;
+        var packageManager = new TestPackageManager
+        {
+            Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
+        };
+        packageManager.FindOverride = () =>
+        {
+            if (++findCalls == 2)
+            {
+                packageManager.Packages = [];
+                cancellation.Cancel();
+            }
+
+            return packageManager.Packages;
+        };
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => packageManager.RegisterAsync(requestedLayout, cancellation.Token));
+
+        Assert.Contains(requestedLayout, exception.Message);
+        Assert.IsInstanceOfType<InvalidOperationException>(exception.InnerException);
+        Assert.IsEmpty(packageManager.Packages);
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
+    }
+
     private static string GetLayoutDirectory(string name)
         => Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), name);
 
