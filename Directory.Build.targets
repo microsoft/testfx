@@ -75,6 +75,7 @@
   <ItemGroup Condition=" '$(IsTestingPlatformApplication)' == 'true'
     and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp' ">
     <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests" />
+    <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(AffectedTestsCoreOnly)' == 'true'

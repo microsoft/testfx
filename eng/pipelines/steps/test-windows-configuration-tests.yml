@@ -14,9 +14,6 @@ parameters:
   - disabled
   - collect
   - run
-- name: affectedTestsCacheVersion
-  type: string
-  default: v1
 
 steps:
 # Because the build step is using -ci, restore is done in a local .packages directory.
@@ -50,16 +47,6 @@ steps:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
-  - task: Cache@2
-    displayName: Restore and publish affected-test map
-    inputs:
-      key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
-      restoreKeys: |
-        "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
-      path: '$(Build.SourcesDirectory)\.cts\mappings'
-      cacheHitVar: AffectedTestsMapCacheRestored
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
-
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
       dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:AffectedTestsCoreOnly=true --show-test-results failed --collect-test-map
@@ -68,19 +55,14 @@ steps:
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      CTS_ACCESSTOKEN: $(System.AccessToken)
+      CTS_COLLECTIONURI: $(System.CollectionUri)
+      CTS_TEMPDIRECTORY: $(Agent.TempDirectory)
+      CTS_BUILDID: $(Build.BuildId)
+      BUILD_CONTAINERID: $(Build.ContainerId)
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
-  - task: Cache@2
-    displayName: Restore affected-test map
-    inputs:
-      key: '"affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)" | "$(Build.BuildId)"'
-      restoreKeys: |
-        "affected-tests" | "${{ parameters.affectedTestsCacheVersion }}" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(_BuildConfig)"
-      path: '$(Build.SourcesDirectory)\.cts\mappings'
-      cacheHitVar: AffectedTestsMapCacheRestored
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
-
   - pwsh: |
       dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestAffected.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:AffectedTestsCoreOnly=true --show-test-results failed --affected-tests
       $exitCode = $LASTEXITCODE
@@ -98,9 +80,14 @@ steps:
       exit 0
     name: TestAffected
     displayName: Test affected changes
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsMapCacheRestored'], 'false'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      CTS_ACCESSTOKEN: $(System.AccessToken)
+      CTS_COLLECTIONURI: $(System.CollectionUri)
+      CTS_TEMPDIRECTORY: $(Agent.TempDirectory)
+      CTS_BUILDID: $(Build.BuildId)
+      BUILD_CONTAINERID: $(Build.ContainerId)
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   # Scheduled and manual runs keep their full-validation contract. PRs also fall back when the cache is absent or the
@@ -118,7 +105,7 @@ steps:
       exit $LASTEXITCODE
     name: Test
     displayName: Test (affected-test fallback)
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['AffectedTestsMapCacheRestored'], 'false'), ne(variables['AffectedTestsSucceeded'], 'true')))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsSucceeded'], 'true')))
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
