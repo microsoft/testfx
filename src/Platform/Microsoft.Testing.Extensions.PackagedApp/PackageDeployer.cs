@@ -49,10 +49,14 @@ internal static class PackageDeployer
             manifestPath,
             async token =>
             {
+                token.ThrowIfCancellationRequested();
+                // Windows deployment requests are not safely interruptible once started. Await the
+                // underlying operation so the registration lock covers every shared-state mutation.
                 DeploymentResult result = await packageManager
                     .RegisterPackageByUriAsync(new Uri(manifestPath), options)
-                    .AsTask(token)
+                    .AsTask()
                     .ConfigureAwait(false);
+                token.ThrowIfCancellationRequested();
 
                 // IsRegistered is authoritative for registration; ExtendedErrorCode can be informational.
                 if (!result.IsRegistered)
@@ -66,15 +70,17 @@ internal static class PackageDeployer
                 .ToArray(),
             async (packageFullName, token) =>
             {
+                token.ThrowIfCancellationRequested();
+                // Keep the lease until removal actually finishes; cancellation is handled by the
+                // transaction below, which restores a usable registration before surfacing it.
                 DeploymentResult result = await packageManager
                     .RemovePackageAsync(packageFullName, RemovalOptions.PreserveApplicationData)
-                    .AsTask(token)
+                    .AsTask()
                     .ConfigureAwait(false);
 
-                if (result.ExtendedErrorCode is { HResult: < 0 })
-                {
-                    throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode);
-                }
+                return result.ExtendedErrorCode is { HResult: < 0 }
+                    ? throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode)
+                    : !result.IsRegistered;
             },
             cancellationToken);
     }
@@ -89,7 +95,7 @@ internal static class PackageDeployer
         string manifestPath,
         Func<CancellationToken, Task> registerPackage,
         Func<IReadOnlyList<RegisteredPackageInfo>> findRegisteredPackages,
-        Func<string, CancellationToken, Task> removeDevelopmentPackage,
+        Func<string, CancellationToken, Task<bool>> removeDevelopmentPackage,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -101,6 +107,7 @@ internal static class PackageDeployer
             await registerPackage(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             IReadOnlyList<RegisteredPackageInfo> packages = findRegisteredPackages();
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (!IsRegisteredFromLayout(packages, layoutDirectory))
             {
@@ -124,12 +131,23 @@ internal static class PackageDeployer
                 // A successful same-version registration can retain the old layout. Only development
                 // registrations support removal with PreserveApplicationData; never uninstall a retail app.
                 cancellationToken.ThrowIfCancellationRequested();
-                await removeDevelopmentPackage(previousPackage.FullName, cancellationToken).ConfigureAwait(false);
-                cancellationToken.ThrowIfCancellationRequested();
-                await registerPackage(cancellationToken).ConfigureAwait(false);
-                cancellationToken.ThrowIfCancellationRequested();
+                bool removed = await removeDevelopmentPackage(previousPackage.FullName, cancellationToken).ConfigureAwait(false);
+                if (!removed)
+                {
+                    throw new InvalidOperationException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            ExtensionResources.PackagedAppRegistrationRemovalIncomplete,
+                            previousPackage.FullName,
+                            previousPackage.InstalledPath,
+                            layoutDirectory));
+                }
 
+                // Once the previous registration is gone, finish restoring a usable package identity
+                // even if the caller cancels. Cancellation is observed after the replacement is verified.
+                await registerPackage(CancellationToken.None).ConfigureAwait(false);
                 packages = findRegisteredPackages();
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!IsRegisteredFromLayout(packages, layoutDirectory))
                 {
                     throw CreateLocationMismatchException(layoutDirectory, packages);

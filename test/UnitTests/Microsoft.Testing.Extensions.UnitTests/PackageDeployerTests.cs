@@ -131,13 +131,36 @@ public sealed class PackageDeployerTests
         var packageManager = new TestPackageManager
         {
             Packages = [previousPackage],
-            RemoveOverride = (_, _) => Task.FromException(failure),
+            RemoveOverride = (_, _) => Task.FromException<bool>(failure),
         };
 
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => packageManager.RegisterAsync(GetLayoutDirectory("layout-b"), TestContext.CancellationToken));
 
         Assert.AreSame(failure, exception.InnerException);
+        Assert.AreSame(previousPackage, packageManager.Packages[0]);
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}"];
+        Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
+    }
+
+    [TestMethod]
+    public async Task RegisterAsync_WhenRemovalCompletesButPackageRemains_DoesNotRetryRegistration()
+    {
+        string previousLayout = GetLayoutDirectory("layout-a");
+        string requestedLayout = GetLayoutDirectory("layout-b");
+        var previousPackage = new RegisteredPackageInfo(PackageFullName, previousLayout, isDevelopmentMode: true);
+        var packageManager = new TestPackageManager
+        {
+            Packages = [previousPackage],
+            RemoveOverride = (_, _) => Task.FromResult(false),
+        };
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => packageManager.RegisterAsync(requestedLayout, TestContext.CancellationToken));
+
+        Assert.Contains(PackageFullName, exception.Message);
+        Assert.Contains(previousLayout, exception.Message);
+        Assert.Contains(requestedLayout, exception.Message);
         Assert.AreSame(previousPackage, packageManager.Packages[0]);
         string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
@@ -282,25 +305,95 @@ public sealed class PackageDeployerTests
     }
 
     [TestMethod]
-    public async Task RegisterAsync_WhenCanceledAfterRemoval_DoesNotRetryRegistration()
+    public async Task RegisterAsync_WhenCanceledWhileFindingRegistration_DoesNotRemoveRegistration()
     {
         using var cancellation = new CancellationTokenSource();
         var packageManager = new TestPackageManager
         {
             Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
-            RemoveOverride = (_, token) =>
-            {
-                Assert.AreEqual(cancellation.Token, token);
-                cancellation.Cancel();
-                return Task.CompletedTask;
-            },
+        };
+        packageManager.FindOverride = () =>
+        {
+            cancellation.Cancel();
+            return packageManager.Packages;
         };
 
         OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
             () => packageManager.RegisterAsync(GetLayoutDirectory("layout-b"), cancellation.Token));
 
         Assert.AreEqual(cancellation.Token, exception.CancellationToken);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}"];
+        string[] expectedOperations = ["register", "find"];
+        Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
+    }
+
+    [TestMethod]
+    public async Task RegisterAsync_WhenCanceledAfterRemoval_CompletesReplacementBeforePropagatingCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        string requestedLayout = GetLayoutDirectory("layout-b");
+        int registrationCalls = 0;
+        var packageManager = new TestPackageManager
+        {
+            Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
+        };
+        packageManager.RegisterOverride = token =>
+        {
+            registrationCalls++;
+            if (registrationCalls == 1)
+            {
+                Assert.AreEqual(cancellation.Token, token);
+            }
+            else
+            {
+                Assert.AreEqual(CancellationToken.None, token);
+                packageManager.Packages = [new(PackageFullName, requestedLayout, isDevelopmentMode: true)];
+            }
+
+            return Task.CompletedTask;
+        };
+        packageManager.RemoveOverride = (_, token) =>
+        {
+            Assert.AreEqual(cancellation.Token, token);
+            packageManager.Packages = [];
+            cancellation.Cancel();
+            return Task.FromResult(true);
+        };
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => packageManager.RegisterAsync(requestedLayout, cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+        Assert.AreEqual(requestedLayout, packageManager.Packages[0].InstalledPath);
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
+    }
+
+    [TestMethod]
+    public async Task RegisterAsync_WhenCanceledWhileFindingReplacement_PropagatesCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        string requestedLayout = GetLayoutDirectory("layout-b");
+        int findCalls = 0;
+        var packageManager = new TestPackageManager
+        {
+            Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
+        };
+        packageManager.FindOverride = () =>
+        {
+            if (++findCalls == 2)
+            {
+                cancellation.Cancel();
+            }
+
+            return packageManager.Packages;
+        };
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => packageManager.RegisterAsync(requestedLayout, cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+        Assert.AreEqual(requestedLayout, packageManager.Packages[0].InstalledPath);
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -315,7 +408,9 @@ public sealed class PackageDeployerTests
 
         public Func<CancellationToken, Task>? RegisterOverride { get; set; }
 
-        public Func<string, CancellationToken, Task>? RemoveOverride { get; set; }
+        public Func<IReadOnlyList<RegisteredPackageInfo>>? FindOverride { get; set; }
+
+        public Func<string, CancellationToken, Task<bool>>? RemoveOverride { get; set; }
 
         public Task RegisterAsync(string layout, CancellationToken cancellationToken)
             => PackageDeployer.RegisterAsync(
@@ -339,7 +434,7 @@ public sealed class PackageDeployerTests
                 () =>
                 {
                     Operations.Add("find");
-                    return Packages;
+                    return FindOverride?.Invoke() ?? Packages;
                 },
                 (packageFullName, token) =>
                 {
@@ -350,7 +445,7 @@ public sealed class PackageDeployerTests
                     }
 
                     Packages = Packages.Where(package => package.FullName != packageFullName).ToArray();
-                    return Task.CompletedTask;
+                    return Task.FromResult(true);
                 },
                 cancellationToken);
     }

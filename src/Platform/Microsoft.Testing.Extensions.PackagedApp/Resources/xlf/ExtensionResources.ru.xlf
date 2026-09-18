@@ -112,6 +112,11 @@
         <target state="new">Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
+      <trans-unit id="PackagedAppRegistrationRemovalIncomplete">
+        <source>Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</source>
+        <target state="new">Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</target>
+        <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
