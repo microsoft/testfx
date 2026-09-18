@@ -189,9 +189,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+    /// <remarks>The collection may contain null elements even when <paramref name="expected"/> is not null.</remarks>
     public static void Contains<T, TCollection>(T expected, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        where TCollection : IEnumerable<T>
-        => Contains(expected, (IEnumerable<T>)collection, message, expectedExpression, collectionExpression);
+        where TCollection : IEnumerable<T?>
+        => Contains(expected, (IEnumerable<T?>)collection, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -210,8 +211,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+    /// <remarks>The collection may contain null elements even when <paramref name="expected"/> is not null.</remarks>
     public static void Contains<T, TCollection>(T expected, TCollection collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        where TCollection : IEnumerable<T>
+        where TCollection : IEnumerable<T?>
+        // Equality comparers accept null operands. Preserve T for compatibility with non-nullable comparers.
         => Contains(expected, (IEnumerable<T>)collection, comparer, message, expectedExpression, collectionExpression);
 
     /// <summary>
