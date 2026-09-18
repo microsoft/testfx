@@ -43,7 +43,7 @@ public sealed class PackageDeployerTests
         Assert.HasCount(1, packageManager.Packages);
         Assert.AreEqual(layout, packageManager.Packages[0].InstalledPath);
         Assert.AreEqual(PackageFullName, packageManager.Packages[0].FullName);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -131,7 +131,7 @@ public sealed class PackageDeployerTests
         var packageManager = new TestPackageManager
         {
             Packages = [previousPackage],
-            RemoveOverride = (_, _) => Task.FromException<bool>(failure),
+            RemoveOverride = (_, _) => Task.FromException(failure),
         };
 
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
@@ -152,7 +152,7 @@ public sealed class PackageDeployerTests
         var packageManager = new TestPackageManager
         {
             Packages = [previousPackage],
-            RemoveOverride = (_, _) => Task.FromResult(false),
+            RemoveOverride = (_, _) => Task.CompletedTask,
         };
 
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
@@ -163,7 +163,7 @@ public sealed class PackageDeployerTests
         Assert.Contains(requestedLayout, exception.Message);
         Assert.IsNull(exception.InnerException);
         Assert.AreSame(previousPackage, packageManager.Packages[0]);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -185,7 +185,7 @@ public sealed class PackageDeployerTests
         Assert.AreSame(failure, exception.InnerException);
         Assert.Contains(layout, exception.Message);
         Assert.IsEmpty(packageManager.Packages);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find", "register"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -207,7 +207,7 @@ public sealed class PackageDeployerTests
         Assert.Contains(previousLayout, exception.Message);
         Assert.Contains(requestedLayout, exception.Message);
         Assert.IsNull(exception.InnerException);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -361,7 +361,7 @@ public sealed class PackageDeployerTests
             Assert.AreEqual(cancellation.Token, token);
             packageManager.Packages = [];
             cancellation.Cancel();
-            return Task.FromResult(true);
+            return Task.CompletedTask;
         };
 
         OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
@@ -369,12 +369,14 @@ public sealed class PackageDeployerTests
 
         Assert.AreEqual(cancellation.Token, exception.CancellationToken);
         Assert.AreEqual(requestedLayout, packageManager.Packages[0].InstalledPath);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
     [TestMethod]
-    public async Task RegisterAsync_WhenCanceledWhileFindingReplacement_PropagatesCancellation()
+    [DataRow(2)]
+    [DataRow(3)]
+    public async Task RegisterAsync_WhenCanceledDuringRecoveryQuery_CompletesReplacementBeforePropagatingCancellation(int canceledQuery)
     {
         using var cancellation = new CancellationTokenSource();
         string requestedLayout = GetLayoutDirectory("layout-b");
@@ -385,7 +387,7 @@ public sealed class PackageDeployerTests
         };
         packageManager.FindOverride = () =>
         {
-            if (++findCalls == 2)
+            if (++findCalls == canceledQuery)
             {
                 cancellation.Cancel();
             }
@@ -398,7 +400,7 @@ public sealed class PackageDeployerTests
 
         Assert.AreEqual(cancellation.Token, exception.CancellationToken);
         Assert.AreEqual(requestedLayout, packageManager.Packages[0].InstalledPath);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -414,7 +416,7 @@ public sealed class PackageDeployerTests
         };
         packageManager.FindOverride = () =>
         {
-            if (++findCalls == 2)
+            if (++findCalls == 3)
             {
                 packageManager.Packages = [];
                 cancellation.Cancel();
@@ -429,14 +431,14 @@ public sealed class PackageDeployerTests
         Assert.Contains(requestedLayout, exception.Message);
         Assert.IsNull(exception.InnerException);
         Assert.IsEmpty(packageManager.Packages);
-        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "register", "find"];
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find", "register", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task RegisterAsync_WhenQueryFails_DoesNotRelabelItAsDeploymentFailure(bool afterRemoval)
+    public async Task RegisterAsync_WhenQueryFails_DoesNotRelabelItAsDeploymentFailure(bool afterReplacement)
     {
         var failure = new InvalidOperationException("Could not query registered packages.");
         int findCalls = 0;
@@ -444,7 +446,7 @@ public sealed class PackageDeployerTests
         {
             Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
         };
-        packageManager.FindOverride = () => ++findCalls == (afterRemoval ? 2 : 1)
+        packageManager.FindOverride = () => ++findCalls == (afterReplacement ? 3 : 1)
             ? throw failure
             : packageManager.Packages;
 
@@ -452,9 +454,45 @@ public sealed class PackageDeployerTests
             () => packageManager.RegisterAsync(GetLayoutDirectory("layout-b"), TestContext.CancellationToken));
 
         Assert.AreSame(failure, exception);
-        string[] expectedOperations = afterRemoval
-            ? ["register", "find", $"remove:{PackageFullName}", "register", "find"]
+        string[] expectedOperations = afterReplacement
+            ? ["register", "find", $"remove:{PackageFullName}", "find", "register", "find"]
             : ["register", "find"];
+        Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RegisterAsync_WhenPostRemovalQueryFails_DoesNotWrapFailureOrRetryRegistration(bool cancelDuringQuery)
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        var failure = new IOException("Could not query packages after removal.");
+        int findCalls = 0;
+        var packageManager = new TestPackageManager
+        {
+            Packages = [new(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true)],
+        };
+        packageManager.FindOverride = () =>
+        {
+            if (++findCalls == 2)
+            {
+                if (cancelDuringQuery)
+                {
+                    cancellation.Cancel();
+                }
+
+                throw failure;
+            }
+
+            return packageManager.Packages;
+        };
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(
+            () => packageManager.RegisterAsync(GetLayoutDirectory("layout-b"), cancellation.Token));
+
+        Assert.AreSame(failure, exception);
+        Assert.IsEmpty(packageManager.Packages, "Removal succeeded even though its subsequent verification failed.");
+        string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}", "find"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
     }
 
@@ -471,7 +509,7 @@ public sealed class PackageDeployerTests
 
         public Func<IReadOnlyList<RegisteredPackageInfo>>? FindOverride { get; set; }
 
-        public Func<string, CancellationToken, Task<bool>>? RemoveOverride { get; set; }
+        public Func<string, CancellationToken, Task>? RemoveOverride { get; set; }
 
         public Task RegisterAsync(string layout, CancellationToken cancellationToken)
             => PackageDeployer.RegisterAsync(
@@ -506,7 +544,7 @@ public sealed class PackageDeployerTests
                     }
 
                     Packages = Packages.Where(package => package.FullName != packageFullName).ToArray();
-                    return Task.FromResult(true);
+                    return Task.CompletedTask;
                 },
                 cancellationToken);
     }
