@@ -3,6 +3,8 @@
 
 using System.ComponentModel;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -41,7 +43,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            _actualCount = GetCount(collection);
+            _actualCount = CollectionCountHelper.GetCount(collection);
             _expectedCount = count;
             shouldAppend = _actualCount != _expectedCount;
             if (shouldAppend)
@@ -59,7 +61,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            _actualCount = GetCount(collection);
+            _actualCount = CollectionCountHelper.GetCount(collection);
             _expectedCount = 0;
             shouldAppend = _actualCount != _expectedCount;
             if (shouldAppend)
