@@ -11,6 +11,8 @@ It is the consumer of the platform's `ITestHostLauncher` extension point for Win
 
 Before activation, the launcher verifies that the current user's main package registration points to the directory containing the requested `AppxManifest.xml`. Windows can report registration success while retaining a different layout with the same package identity and version. In that case, the launcher removes only the stale **development registration**, using `PreserveApplicationData`, and registers the requested layout again. Repeated runs from the same layout do not remove its registration.
 
+Launchers serialize the entire registration-and-activation sequence per user and package family, including across processes. Another launcher cannot switch the layout between verification and AUMID activation. Waiting for another launch respects cancellation.
+
 If the conflicting package is not a development registration, or the requested location still cannot be registered, the launcher reports an error instead of activating another build. A failed replacement can leave the package unregistered, but its application data is retained; resolve the reported deployment error and retry. Callers do not need to uninstall their app or change its version for each build.
 
 ## When the launcher takes over
