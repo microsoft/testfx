@@ -762,12 +762,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
+        <target state="translated">Atributy SupportedOSPlatformAttribute a UnsupportedOSPlatformAttribute poskytují analýze kompatibility platformy informace, ale neřídí spouštění testů MSTest. Testovací metody a testovací třídy, které tyto atributy používají, by měly také deklarovat kompatibilní atribut [OSCondition], aby se testy v nepodporovaných řadách operačního systému za běhu přeskočily. [OSCondition] nevynucuje omezení verze platformy.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
+        <target state="translated">Atributy kompatibility platformy v testu {0} nejsou reprezentovány kompatibilním atributem [OSCondition].</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -812,7 +812,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="translated">Klíč prostředku atributu [ResourceLock] {0} je zadaný přímo jako řetězcový literál. Odkazujte na sdílenou konstantu (například člen WellKnownResources nebo vlastní konstantu 'const'), aby překlepy bez upozornění nevytvářely jiný nesdílený klíč</target>
+        <target state="translated">Klíč prostředku atributu '[ResourceLock]' '{0}' je zadaný přímo jako řetězcový literál. Odkazujte na sdílenou konstantu (například člen 'WellKnownResources' nebo vlastní konstantu 'const'), aby překlepy bez upozornění nevytvářely jiný nesdílený klíč</target>
         <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
@@ -987,7 +987,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Metody 'StringAssert' mají odpovídající protějšky ve třídě 'Assert'. Používání jediného rozhraní 'API' pro kontrolní výrazy zlepšuje konzistenci a usnadňuje vyhledávání.</target>
+        <target state="translated">Metody 'StringAssert' mají odpovídající protějšky ve třídě 'Assert'. Používání jediného rozhraní API pro kontrolní výrazy zlepšuje konzistenci a vyhledávání.</target>
         <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -1017,7 +1017,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">Testovací class {0} by měla být platná.</target>
+        <target state="translated">Testovací class '{0}' by měla být platná.</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -1072,7 +1072,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="translated">Odvozená class TestMethodAttribute {0} by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
+        <target state="translated">Odvozená class TestMethodAttribute '{0}' by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
@@ -1183,12 +1183,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
+        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být 'static' s metodami s označením '[AssemblyInitialize]' a/nebo '[AssemblyCleanup]'.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">Testovací class {0} by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
+        <target state="translated">Testovací class '{0}' by měla mít aspoň jednu testovací metodu nebo by měla být 'static' s metodami s označením '[AssemblyInitialize]' a/nebo '[AssemblyCleanup]'.</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
@@ -1409,7 +1409,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="translated">'MSTest' ignoruje '[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
+        <target state="translated">MSTest ignoruje '[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
         <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -1594,7 +1594,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="translated">Testovací class {0} nemá platný konstruktor. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
+        <target state="translated">Testovací class '{0}' nemá platný konstruktor. Platné konstruktory jsou 'public' a buď bez parametrů, nebo s jedním parametrem typu 'TestContext'.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">

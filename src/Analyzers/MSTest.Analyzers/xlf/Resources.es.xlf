@@ -762,12 +762,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
+        <target state="translated">"SupportedOSPlatformAttribute" y "UnsupportedOSPlatformAttribute" informan del análisis de compatibilidad de la plataforma, pero no controlan la ejecución de MSTest. Los métodos de prueba y las clases de prueba que usan estos atributos también deben declarar un "[OSCondition]" compatible para que las pruebas se omitan en familias de sistema operativo no compatibles en tiempo de ejecución. "[OSCondition]" no aplica restricciones de versión de plataforma.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
+        <target state="translated">Los atributos de compatibilidad de plataforma en la prueba "{0}" no están representados por un atributo "[OSCondition]" compatible</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
