@@ -63,13 +63,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
             public class DataRowAttribute : System.Attribute
             {
-                public DataRowAttribute(object? data1) { Data = new object?[] { data1 }; }
-                public DataRowAttribute(object? data1, params object?[] moreData)
-                {
-                    Data = new object?[moreData.Length + 1];
-                    Data[0] = data1;
-                    System.Array.Copy(moreData, 0, Data, 1, moreData.Length);
-                }
+                public DataRowAttribute() : this(System.Array.Empty<object?>()) { }
+                public DataRowAttribute(object? data) { Data = new object?[] { data }; }
+                public DataRowAttribute(string?[]? stringArrayData) : this(new object?[] { stringArrayData }) { }
+                public DataRowAttribute(params object?[]? data) { Data = data ?? new object?[] { null }; }
 
                 public object?[] Data { get; }
             }
@@ -2332,7 +2329,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(1, new object[] { \"x\" })");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, \"x\" })");
         registry.Should().NotContain("DataRows");
     }
 
@@ -2361,9 +2358,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
 
-        int idx1 = registry.IndexOf("DataRowAttribute(1, new object[] { \"a\" })", StringComparison.Ordinal);
-        int idx2 = registry.IndexOf("DataRowAttribute(2, new object[] { \"b\" })", StringComparison.Ordinal);
-        int idx3 = registry.IndexOf("DataRowAttribute(3, new object[] { \"c\" })", StringComparison.Ordinal);
+        int idx1 = registry.IndexOf("DataRowAttribute(new object[] { 1, \"a\" })", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("DataRowAttribute(new object[] { 2, \"b\" })", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("DataRowAttribute(new object[] { 3, \"c\" })", StringComparison.Ordinal);
 
         idx1.Should().BeGreaterThan(-1);
         idx2.Should().BeGreaterThan(idx1);
@@ -2392,7 +2389,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(1, new object[] { 2, 3, 4 })");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, 2, 3, 4 })");
         registry.Should().NotContain("DataRows");
     }
 
@@ -2430,7 +2427,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .ToString();
 
         registry.Should().Contain(
-            "DataRowAttribute(false, new object[] { (byte)77, (sbyte)(-1), (short)(-2), (ushort)3, 4294967295U, 18446744073709551615UL, '\\n' })");
+            "DataRowAttribute(new object[] { false, (byte)77, (sbyte)(-1), (short)(-2), (ushort)3, 4294967295U, 18446744073709551615UL, '\\n' })");
         registry.Should().Contain("(global::Sample.ByteEnum)(255)");
         registry.Should().Contain("(global::Sample.SByteEnum)(-128)");
         registry.Should().Contain("(global::Sample.ShortEnum)(-32768)");
@@ -2599,7 +2596,45 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_HandlesNullValueInDataRow()
+    [DataRow("null", "string[]")]
+    [DataRow("(object)null", "object")]
+    [DataRow("(object[])null", "object[]")]
+    [DataRow("(string[])null", "string[]")]
+    [DataRow("(int[])null", "object")]
+    public void Generator_HandlesNullValueInDataRow(string argument, string emittedType)
+    {
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow({{argument}})]
+                    public void Test(string? value) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain($"new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(({emittedType})null!)");
+        registry.Should().NotContain("DataRows");
+        GetMaterializedDataRows(outputCompilation).Should().ContainSingle()
+            .Which.Should().ContainSingle()
+            .Which.Should().BeNull();
+    }
+
+    [TestMethod]
+    public void Generator_HandlesNestedNullArraysInDataRow()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2610,21 +2645,113 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public class Tests
                 {
                     [TestMethod]
-                    [DataRow(null)]
-                    public void Test(string? value) { }
+                    [DataRow(new object[] { (int[])null, new object[] { (string[])null } })]
+                    public void Test(int[]? value, object[] nested) { }
                 }
             }
             """;
 
-        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
 
-        result.Diagnostics.Should().BeEmpty();
-        string registry = GetRegistry(result);
-        // The single-arg DataRowAttribute(object? data1) overload binds null to object,
-        // which surfaces as `(object)null!` from BuildConstantExpression (C# keyword form
-        // produced by FullyQualifiedFormat for System.Object).
-        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute((object)null!)");
-        registry.Should().NotContain("DataRows");
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        object[] row = GetMaterializedDataRows(outputCompilation).Should().ContainSingle().Which;
+        row.Should().HaveCount(2);
+        row[0].Should().BeNull();
+        row[1].Should().BeOfType<object[]>().Which.Should().ContainSingle().Which.Should().BeNull();
+    }
+
+    [TestMethod]
+    [DataRow("null", "((global::Sample.Value[])null!)")]
+    [DataRow("Property = null", "() { Property = (global::Sample.Value[])null! }")]
+    [DataRow("Field = null", "() { Field = (global::Sample.Value[])null! }")]
+    [DataRow("new Value[0]", "(Array.Empty<global::Sample.Value>())")]
+    [DataRow("new[] { Value.First }", "(new global::Sample.Value[] { (global::Sample.Value)(0) })")]
+    public void Generator_MaterializesArrayAttributeArguments(string arguments, string expectedArguments)
+    {
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                internal enum Value { First }
+
+                internal sealed class ArrayMarkerAttribute : System.Attribute
+                {
+                    public ArrayMarkerAttribute() { }
+                    public ArrayMarkerAttribute(Value[]? values) { }
+                    public Value[]? Property { get; set; }
+                    public Value[]? Field;
+                }
+
+                [TestClass]
+                [ArrayMarker({{arguments}})]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain($"new global::Sample.ArrayMarkerAttribute{expectedArguments}");
+        registry.Should().NotContain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
+    [DataRow("new Hidden[0]")]
+    [DataRow("new[] { Hidden.First }")]
+    [DataRow("new object[] { new Hidden[0] }")]
+    [DataRow("Value = new Hidden[0]")]
+    [DataRow("Value = new[] { Hidden.First }")]
+    [DataRow("Value = new object[] { new Hidden[0] }")]
+    public void Generator_OmitsArrayArgumentsWithInaccessibleElementTypes(string arguments)
+    {
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public sealed class ArrayMarkerAttribute : System.Attribute
+                {
+                    public ArrayMarkerAttribute() { }
+                    public ArrayMarkerAttribute(object? value) { }
+                    public object? Value { get; set; }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    private enum Hidden { First }
+
+                    [TestMethod]
+                    [ArrayMarker({{arguments}})]
+                    [TestCategory("retained")]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("ArrayMarkerAttribute");
+        registry.Should().Contain("AreAttributesComplete = false");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"retained\")");
     }
 
     [TestMethod]
@@ -4171,7 +4298,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         asyncVoidCompleteIndex.Should().BeGreaterThan(asyncVoidIndex);
         registry.Should().Contain("IsAsync = true");
         registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"Async\")");
-        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(1, new object[] { \"small\", true })");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, \"small\", true })");
         string registration = result.GeneratedSources
             .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
             .SourceText.ToString();
