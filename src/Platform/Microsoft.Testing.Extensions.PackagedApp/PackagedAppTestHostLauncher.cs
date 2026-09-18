@@ -299,10 +299,18 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 
 #if PACKAGEDAPP_WINRT
-    private static async Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
-    {
-        var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
+    private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
+        => PackageRegistrationLock.WithManifestAsync(
+            manifestPath,
+            manifestInfo => LaunchRegisteredPackagedAsync(context, manifestPath, manifestInfo, cancellationToken),
+            cancellationToken);
 
+    private static async Task<ITestHostHandle> LaunchRegisteredPackagedAsync(
+        TestHostLaunchContext context,
+        string manifestPath,
+        AppxManifestInfo manifestInfo,
+        CancellationToken cancellationToken)
+    {
         // Resolve the application matching the executable the platform asked to launch so activation
         // targets the AUMID of the right app (a package can declare several applications). A package
         // that declares no application has no AUMID to activate.
@@ -314,15 +322,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                     manifestInfo.PackageFamilyName,
                     manifestPath));
 
-        // AUMID activation uses shared per-user registration state. Keep other controllers from
-        // switching this package's layout between registration verification and activation.
-        using FileStream registrationLock = await PackageRegistrationLock
-            .AcquireAsync(manifestInfo.PackageFamilyName, cancellationToken).ConfigureAwait(false);
-
         // Registration provisions the package-owned LocalState directory and its AppContainer ACL.
         // Handoffs must be written only after this completes; creating the directory from the unpackaged
         // controller first would give it the controller's ACL and make it unreadable by the activated app.
-        await PackageDeployer.RegisterAsync(manifestPath, cancellationToken).ConfigureAwait(false);
+        await PackageDeployer.RegisterAsync(manifestPath, manifestInfo, cancellationToken).ConfigureAwait(false);
 
         // Hand off the explicit safe environment allowlist through package LocalState. Controller-host runs
         // key the file by controller PID; retry runs key it by a hash of their unique pipe name. An

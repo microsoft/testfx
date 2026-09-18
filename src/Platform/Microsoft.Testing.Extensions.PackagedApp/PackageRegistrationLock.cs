@@ -12,6 +12,29 @@ internal static class PackageRegistrationLock
 {
     private const int SharingViolationHResult = unchecked((int)0x80070020);
 
+    public static Task<T> WithManifestAsync<T>(
+        string manifestPath,
+        Func<AppxManifestInfo, Task<T>> action,
+        CancellationToken cancellationToken)
+        => WithManifestAsync(manifestPath, AcquireAsync, action, cancellationToken);
+
+    internal static async Task<T> WithManifestAsync<T>(
+        string manifestPath,
+        Func<string, CancellationToken, Task<FileStream>> acquireRegistrationLock,
+        Func<AppxManifestInfo, Task<T>> action,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Windows must read the same manifest that selected the family lock and activation AUMID.
+        // Read sharing permits deployment to read it, but prevents a rebuild from changing or replacing it.
+        using FileStream manifest = File.OpenRead(manifestPath);
+        var manifestInfo = AppxManifestInfo.ReadFromManifest(manifest);
+        using FileStream registrationLock = await acquireRegistrationLock(manifestInfo.PackageFamilyName, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await action(manifestInfo).ConfigureAwait(false);
+    }
+
     public static Task<FileStream> AcquireAsync(string packageFamilyName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
