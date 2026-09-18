@@ -147,11 +147,12 @@ internal static class PackageDeployer
                 // even if the caller cancels. Cancellation is observed after the replacement is verified.
                 await registerPackage(CancellationToken.None).ConfigureAwait(false);
                 packages = findRegisteredPackages();
-                cancellationToken.ThrowIfCancellationRequested();
                 if (!IsRegisteredFromLayout(packages, layoutDirectory))
                 {
                     throw CreateLocationMismatchException(layoutDirectory, packages);
                 }
+
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             cancellationToken.ThrowIfCancellationRequested();
