@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <TestingPlatformBrowserStartupTimeoutSeconds Condition=" '$(TestingPlatformBrowserStartupTimeoutSeconds)' == '' ">60</TestingPlatformBrowserStartupTimeoutSeconds>
+    <TestingPlatformBrowserCompletionTimeoutSeconds Condition=" '$(TestingPlatformBrowserCompletionTimeoutSeconds)' == '' ">600</TestingPlatformBrowserCompletionTimeoutSeconds>
+  </PropertyGroup>
+</Project>
