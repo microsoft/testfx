@@ -184,7 +184,7 @@
   </data>
   <data name="AreEquivalentMismatchAt" xml:space="preserve">
     <value>Mismatch at '{0}': {1}</value>
-    <comment>{0} is a member path (e.g., {Locked="Order.Items[2].Price"}). {1} is a localized reason describing the kind of mismatch.</comment>
+    <comment>{0} is a member path (e.g., Order.Items[2].Price). {1} is a localized reason describing the kind of mismatch.</comment>
   </data>
   <data name="AreEquivalentMismatchExpectedDictionaryThrew" xml:space="preserve">
     <value>reading the expected dictionary threw {0}: {1}.</value>

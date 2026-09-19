@@ -122,7 +122,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</value>
   </data>
   <data name="CtrfReportOptionDescription" xml:space="preserve">
     <value>Enable generating a CTRF (Common Test Report Format) JSON report.</value>
-    <comment>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</comment>
+    <comment>Do not localize format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</comment>
   </data>
   <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
     <value>Invalid test application builder type. Expected 'TestApplicationBuilder'.</value>
