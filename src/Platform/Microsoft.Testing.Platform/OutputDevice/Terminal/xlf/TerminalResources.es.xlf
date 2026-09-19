@@ -486,7 +486,7 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
         <target state="translated">Controlar si el progreso se notifica a la pantalla.
-Los valores válidos son "auto" (valor predeterminado), "on" (también acepta "true", "enable", "1") o "off" (también acepta "false", "disable", "0").
+Los valores válidos son "auto" (valor predeterminado), "on" (también acepta "true", "enable", "1") u "off" (también acepta "false", "disable", "0").
 "auto" muestra el progreso a menos que el terminal no pueda actualizarse en contexto (por ejemplo, con --no-ansi o en CI).
 Esta opción tiene prioridad sobre la marca --no-progress en desuso.</target>
         <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
