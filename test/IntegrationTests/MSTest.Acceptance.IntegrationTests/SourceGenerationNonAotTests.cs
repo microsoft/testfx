@@ -99,6 +99,13 @@ public class UnitTest1
     {
         Assert.AreEqual(42, value);
     }
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullDataRow(string? value)
+    {
+        Assert.IsNull(value);
+    }
 }
 """;
 
@@ -203,8 +210,14 @@ public class UnitTest1
         // catch silent discovery regressions where tests are not picked up.)
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 7, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 8, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
+
+        TestHostResult nullRowResult = await testHost.ExecuteAsync(
+            "--filter FullyQualifiedName~NullDataRow",
+            cancellationToken: TestContext.CancellationToken);
+        nullRowResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        nullRowResult.AssertExitCodeIs(0);
     }
 
     [TestMethod]
