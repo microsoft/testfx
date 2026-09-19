@@ -58,17 +58,11 @@
           "test/**/Directory.Build.*"
         ]
       },
-      "instrumentation": {
-        "include": [
-          "src/**"
-        ],
-        "exclude": [
-          "artifacts/**",
-          "samples/**",
-          "test/**",
-          "**/bin/**",
-          "**/obj/**"
-        ]
+      "storage": {
+        "type": "azureDevOpsArtifact",
+        "project": "public",
+        "buildDefinitionId": 209,
+        "artifactName": "TestFx_AffectedTestsMaps"
       }
     }
   },

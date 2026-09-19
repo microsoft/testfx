@@ -293,7 +293,7 @@ stages:
 
           - template: /eng/pipelines/steps/test-windows-configuration-tests.yml
             parameters:
-              # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
+              # The package is wired, but collection remains disabled until its discovery child connects reliably.
               enableAffectedTests: false
               ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
                 affectedTestsMode: collect

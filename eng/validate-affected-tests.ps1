@@ -15,9 +15,7 @@ if ($null -eq $affectedTests) {
 
 foreach ($path in @(
     "changes.ignore",
-    "changes.forceAllTests",
-    "instrumentation.include",
-    "instrumentation.exclude"
+    "changes.forceAllTests"
 )) {
     $value = $affectedTests
     foreach ($segment in $path.Split(".")) {
@@ -65,21 +63,70 @@ if ($affectedTestsEnabled -and $bootstrappedSdk -le $lastUnsupportedAffectedTest
     throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55595."
 }
 
-if ($affectedTestsEnabled -and $null -eq $affectedTests.storage) {
+if ($null -eq $affectedTests.storage) {
     throw "Affected-test pipeline execution requires test.affectedTests.storage."
+}
+
+if ($affectedTests.storage.type -ne "azureDevOpsArtifact" -or
+    $affectedTests.storage.project -ne "public" -or
+    $affectedTests.storage.buildDefinitionId -ne 209 -or
+    $affectedTests.storage.artifactName -ne "TestFx_AffectedTestsMaps") {
+    throw "Affected-test pipeline execution must use the testfx Azure DevOps artifact provider configuration."
+}
+
+$directoryPackagesPath = Join-Path $repoRoot "Directory.Packages.props"
+$directoryPackages = Get-Content -LiteralPath $directoryPackagesPath -Raw
+if (-not $directoryPackages.Contains(
+    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
+    throw "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
+}
+if (-not $directoryPackages.Contains(
+    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
+    throw "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency."
+}
+
+$directoryBuildTargetsPath = Join-Path $repoRoot "Directory.Build.targets"
+$directoryBuildTargets = Get-Content -LiteralPath $directoryBuildTargetsPath -Raw
+if (-not $directoryBuildTargets.Contains(
+    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"')) {
+    throw "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests."
+}
+if (-not $directoryBuildTargets.Contains(
+    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"')) {
+    throw "MTP test applications must reference the Azure DevOps affected-tests storage provider."
+}
+
+$manualEntryPoints = @(
+    Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/CtrfPlayground/Mtp/Program.cs")
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/FSharpPlayground/Program.fs")
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/NUnitPlayground/Program.cs")
+    Get-Item -LiteralPath (Join-Path $repoRoot "samples/Playground/Program.cs")
+)
+foreach ($entryPoint in $manualEntryPoints) {
+    $entryPointText = Get-Content -LiteralPath $entryPoint.FullName -Raw
+    if ($entryPointText.Contains("TestApplication.CreateBuilderAsync(args)") -and
+        -not $entryPointText.Contains(
+            "Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions")) {
+        throw "MTP entry point '$($entryPoint.FullName)' must register Microsoft.Testing.Extensions.AffectedTests."
+    }
 }
 
 $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
 foreach ($requiredText in @(
-    "Cache@2",
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1",
+    'CTS_ACCESSTOKEN: $(System.AccessToken)',
+    'CTS_COLLECTIONURI: $(System.CollectionUri)',
+    'CTS_TEMPDIRECTORY: $(Agent.TempDirectory)',
+    'CTS_BUILDID: $(Build.BuildId)',
+    'BUILD_CONTAINERID: $(Build.ContainerId)',
     "--collect-test-map",
     "--affected-tests",
-    '$(Pipeline.Workspace)\affected-test-map',
-    "AffectedTestsMapCacheRestored",
     "enableAffectedTests",
     "affectedTestsMode",
-    "affectedTestsCacheVersion"
+    "AffectedTestsCoreOnly",
+    "AffectedTestsNonCoreOnly",
+    "Test .NET Framework modules"
 )) {
     if (-not $testTemplate.Contains($requiredText)) {
         throw "The affected-test template is missing '$requiredText'."
@@ -122,9 +169,9 @@ if ($affectedTestsGateCount -ne 2) {
     throw "DOTNET_CLI_ENABLE_AFFECTED_TESTS must appear exactly once in each enabled affected-test branch."
 }
 
-$cacheTaskCount = [regex]::Matches($templateWithoutComments, 'task:\s*Cache@2').Count
-if ($cacheTaskCount -ne 2) {
-    throw "The collect and run branches must each define one Cache@2 map task."
+if ($templateWithoutComments.Contains("Cache@2") -or
+    $templateWithoutComments.Contains("AffectedTestsMapCacheRestored")) {
+    throw "Azure DevOps artifact storage must not be combined with Pipeline Cache map transport."
 }
 
 $collectBranch = [regex]::Match(
@@ -147,7 +194,7 @@ if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
 
 $runFallback = [regex]::Match(
     $templateWithoutComments,
-    "(?s)displayName:\s*Test \(affected-test fallback\).*?condition:.*?Build\.Reason.*?AffectedTestsMapCacheRestored.*?AffectedTestsSucceeded")
+    "(?s)displayName:\s*Test \(affected-test fallback\).*?condition:.*?Build\.Reason.*?AffectedTestsSucceeded")
 if (-not $runFallback.Success) {
     throw "The run branch must retain a full-test fallback for non-PR runs and affected-test failures."
 }

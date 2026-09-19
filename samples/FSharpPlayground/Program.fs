@@ -16,6 +16,7 @@ module Program =
 
         task {
             let! testApplicationBuilder = TestApplication.CreateBuilderAsync(args)
+            Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args)
 
             // Test MSTest
             let entryAssembly =

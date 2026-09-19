@@ -9,6 +9,7 @@ using NUnit.VisualStudio.TestAdapter.TestingPlatformAdapter;
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args);
 testApplicationBuilder.AddNUnit(() => [Assembly.GetEntryAssembly()]);
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();

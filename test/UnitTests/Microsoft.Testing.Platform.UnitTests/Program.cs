@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
@@ -15,6 +15,10 @@ Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+
+#if NET8_0_OR_GREATER
+Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
+#endif
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
