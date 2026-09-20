@@ -438,7 +438,7 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
         <target state="translated">Controlar si se emiten caracteres de escape ANSI.
-Los valores válidos son 'auto' (valor predeterminado), 'on' (también acepta 'true', 'enable', '1') o 'off' (también acepta 'false', 'disable', '0').
+Los valores válidos son "auto" (valor predeterminado), 'on' (también acepta "true", "enable", "1") u "off" (también acepta "false", "disable", "0").
 'on' fuerza los códigos de escape ANSI (incluido el movimiento del cursor) incluso cuando se redirige stdout; empareje con --progress off si solo quiere colores.
 Cuando se proporcionan --ansi y --no-ansi, --ansi gana.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
