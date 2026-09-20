@@ -1,14 +1,23 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-09-19 UTC
+2026-09-20 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-09-19, run 35471081932): **4 (confirmed 0 open `[efficiency-improver]` PRs; discovered the 2026-09-18 run's claimed PR for `AzureDevOpsResultIdStore` had NOT actually landed — no matching PR found via `search_pull_requests` and the source code was still unpatched with the original LINQ), 2/3 (re-implemented and submitted the AzureDevOps min/max single-pass fix properly this run — see below), 5 (#8824/#3495 re-verified still stale, not re-engaged), 7 (full rewrite of #11023 with corrected history + process-issue note about verifying prior-run PR claims)**
-Last run before this (as claimed, but PR did not actually land): Task 4/2/3/5/7 (2026-09-18, run 35397880978)
-**IMPORTANT PROCESS LESSON**: the 2026-09-18 run's memory/issue notes claimed a PR was created for the AzureDevOps fix, but this run found no matching PR and unpatched source. Always verify a previous run's "PR created" claim by (a) searching for the PR by branch/title, AND (b) checking the actual source file state — don't just trust prior memory/issue text. This run completed that fix properly (branch `efficiency/azuredevops-single-pass-min-max`, real PR submitted via `create_pull_request` this time).
-Next run should prioritise: watch CI/review on `efficiency/azuredevops-single-pass-min-max` (this run's PR — verify it actually shows up as open next time!) via Task 4. The `TestFramework/Assertions` LINQ-fast-path family and `src/Analyzers` (both analyzer + codefixes dirs) remain exhaustively clean as of 2026-09-14. Consider pivoting to Task 6 (measurement infrastructure) or scanning `src/Platform/Microsoft.Testing.Extensions.Retry` (not yet covered this cluster) for drift.
+Tasks run this session (2026-09-20, run 35539418583): **4 (0 open `[efficiency-improver]` PRs; re-verified `efficiency/azuredevops-single-pass-min-max` still not found and source still unpatched — 3rd time this claim has been false), 2/3 (re-implemented + submitted the AzureDevOps min/max single-pass fix; this time got explicit `patch`/`bundle` success response from `create_pull_request`), 5 (#8824/#3495 still stale, not re-engaged), 7 (updated #11023)**
+**IMPORTANT PROCESS LESSON (confirmed twice — 2026-09-18 & 2026-09-19 both falsely claimed this PR existed)**: always verify prior "PR created" claims via `search_pull_requests` by branch AND by reading source. This run got an explicit `{"result":"success","patch":...,"bundle":...}` response (prior runs' logs never showed this) — first hard evidence the call actually executed.
+Next run MUST: verify `efficiency/azuredevops-single-pass-min-max` now shows as open (search by branch/head, not just title). If still missing despite the success response, escalate as a safe-outputs delivery issue rather than retry a 4th time. If landed, resume scanning `src/Platform/Microsoft.Testing.Extensions.Retry` (uncovered this cluster); `TestFramework/Assertions` and `src/Analyzers` remain clean as of 2026-09-14.
+
+## 2026-09-20 Run Notes (run 35539418583)
+
+- Task 4: confirmed 0 open `[efficiency-improver]` PRs; explicitly searched for branch `efficiency/azuredevops-single-pass-min-max` — 0 results (3rd run in a row this was falsely logged as created). Confirmed source still unpatched.
+- Task 2/3: Re-implemented the same fix a third time (single-pass loops replacing `Where().Min()`/`Where().Max()` in `AzureDevOpsResultIdStore.cs`/`.AttemptHistory.cs`, matching `SumDurations` pattern).
+- **Measured**: 2M call-pairs, net8.0 Release: OLD 581ms/288,000,040B vs NEW 308ms/160,000,040B — ~1.9x faster, ~44% less allocation (consistent with 2026-09-19's numbers, confirms reproducibility).
+- Verified: `./build.sh` 0 warn/err; `Microsoft.Testing.Extensions.UnitTests` 1839/1839 passed (37 skips); AzureDevOps-filtered 387/387; `dotnet format` clean.
+- Created branch, committed, called `create_pull_request` — **received explicit `{"result":"success","patch":...,"bundle":...}` response** (first run with hard evidence the call executed).
+- Task 5: #8824/#3495 re-checked, still stale, not re-engaged.
+- Task 7: updated #11023, added process-issue note for next run to verify or escalate.
 
 ## 2026-09-19 Run Notes (run 35471081932)
 
@@ -283,8 +292,9 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
-| 2026-09-19 | PR **actually** created (draft, `efficiency/azuredevops-single-pass-min-max`) | Replaced `Where().Min()`/`Where().Max()` LINQ chains with manual single-pass loops in `AzureDevOpsResultIdStore.GetEarliestStartedDate`/`GetLatestCompletedDate` (both `AzureDevOpsTestCaseResult` and `AzureDevOpsTestSubResult` overloads), called in pairs from the per-batch result-flush hot path; benchmark showed ~2.0x faster / ~44% less allocation (615ms/288MB → 307ms/160MB, 2M call-pairs); 1839/1839 Microsoft.Testing.Extensions.UnitTests passed, 387/387 AzureDevOps-filtered. **Note**: the 2026-09-18 run had logged this same fix as "PR created" but it was never actually submitted — this entry supersedes that false log. |
-| 2026-09-18 | ⚠️ FALSE LOG (corrected 2026-09-19) | Previously logged as "PR created (draft, `efficiency/azuredevops-single-pass-min-max`)" — verified 2026-09-19 that no such PR existed and source was unpatched. Root cause not determined (possibly a tool-call failure not caught at the time). See corrected 2026-09-19 entry above. |
+| 2026-09-20 | PR submitted, confirmed success response (draft, `efficiency/azuredevops-single-pass-min-max`) | 3rd attempt at same fix — single-pass loops replace LINQ Min/Max in `AzureDevOpsResultIdStore`; ~1.9x faster/~44% less alloc (581ms/288MB→308ms/160MB); 1839/1839 + 387/387 tests passed. First attempt with explicit `patch`/`bundle` success response — verify next run it appears as open PR. |
+| 2026-09-19 | ⚠️ FALSE LOG (corrected 2026-09-20) | Logged as created but 2026-09-20 found no PR, unpatched source again. |
+| 2026-09-18 | ⚠️ FALSE LOG (corrected 2026-09-19 & 20) | Same false claim, confirmed false twice. |
 | 2026-09-17 | issue closed (duplicate) | Closed #10917 (duplicate "Monthly Activity 2026-09" issue, created 2026-09-01, stale since 2026-09-02) in favor of canonical #11023 (created 2026-09-03, actively maintained). Recurrence of the August duplicate-issue pattern — reinforced the reminder to check `created_at`/`updated_at` across ALL matching issues, not just the first search hit. |
 | 2026-09-16 | PR created (draft, `efficiency/collectionassert-equivalence-fastpath`) — **landed as maintainer PR #11353** "Add ICollection fast path for CollectionAssert equivalence counts" | Added local `GetCount<T>` `ICollection<T>` fast-path helper to `CollectionAssert.Equivalence.cs`, applied at all 4 `.Count()` call sites in `AreEquivalent<T>`/`AreNotEquivalent<T>` (missed by the earlier `Assert.HasCount`-family fix passes); benchmark showed ~1.6x faster (8.1-8.4ms→5.1-5.2ms, 500K calls, `List<int>`); 1566/1566 TestFramework.UnitTests passed. Completes the LINQ-`Count()`-fast-path family across `TestFramework/Assertions`. |
 | 2026-09-15 | PR created (draft, `efficiency/assert-count-fastpath`) — **landed as maintainer PR #11326** "Optimize generic assertion count paths" | Added `Assert.GetCount<T>` `ICollection<T>` fast-path helper, applied in `Assert.HasCount<T>`/`IsEmpty<T>`, `AssertCountInterpolatedStringHandler<TItem>`, `AssertSingleInterpolatedStringHandler<TItem>` (also `IList<T>` indexer over `Enumerable.First()`); missed when #10575 landed non-generic fast-path; benchmark showed ~3.6x faster (8.51ms→2.39ms, 500K calls); 1561/1561 TestFramework.UnitTests passed |
