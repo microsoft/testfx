@@ -115,8 +115,8 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchAt">
         <source>Mismatch at '{0}': {1}</source>
-        <target state="translated">'{0}' konumunda uyuşmazlık: {1}</target>
-        <note>{0} is a member path (e.g., {Locked="Order.Items[2].Price"}). {1} is a localized reason describing the kind of mismatch.</note>
+        <target state="needs-review-translation">'{0}' konumunda uyuşmazlık: {1}</target>
+        <note>{0} is a member path (e.g., Order.Items[2].Price). {1} is a localized reason describing the kind of mismatch.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
         <source>reading the expected dictionary threw {0}: {1}.</source>

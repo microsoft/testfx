@@ -94,8 +94,8 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="translated">'--publish-azdo-test-results' ayarlandı ancak şu ortam değişkenleri eksik veya geçersiz olduğundan Azure DevOps canlı yayımlama devre dışı bırakıldı: {0}.</target>
-        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
+        <target state="needs-review-translation">'--publish-azdo-test-results' ayarlandı ancak şu ortam değişkenleri eksik veya geçersiz olduğundan Azure DevOps canlı yayımlama devre dışı bırakıldı: {0}.</target>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -234,8 +234,8 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="translated">Azure DevOps güvenilir olmayan geçmişi yüklenemiyor. Geçmiş ek açıklamaları olmadan devam ediliyor. {0}</target>
-        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
+        <target state="needs-review-translation">Azure DevOps güvenilir olmayan geçmişi yüklenemiyor. Geçmiş ek açıklamaları olmadan devam ediliyor. {0}</target>
+        <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
@@ -244,8 +244,8 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="translated">Azure DevOps güvenilir olmayan geçmişi istendi ancak gerekli Azure DevOps ortam değişkenleri eksik. Geçmiş ek açıklamaları olmadan devam ediliyor.</target>
-        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+        <target state="needs-review-translation">Azure DevOps güvenilir olmayan geçmişi istendi ancak gerekli Azure DevOps ortam değişkenleri eksik. Geçmiş ek açıklamaları olmadan devam ediliyor.</target>
+        <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -349,8 +349,8 @@
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="translated">Azure DevOps karantina dosyası '{0}' yüklenemiyor. Karantina tanıma olmadan devam ediliyor. {1}</target>
-        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
+        <target state="needs-review-translation">Azure DevOps karantina dosyası '{0}' yüklenemiyor. Karantina tanıma olmadan devam ediliyor. {1}</target>
+        <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
@@ -424,7 +424,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="new">Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</target>
+        <target state="translated">Test çalıştırmasının sonunda Markdown bir iş özeti yazın ve Azure DevOps Uzantılar sekmesine yükleyin. İsteğe bağlı bir dosya yolu bağımsız değişkeni varsayılan konumu ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md') geçersiz kılar. '--report-azdo' gerektirir.</target>
         <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">

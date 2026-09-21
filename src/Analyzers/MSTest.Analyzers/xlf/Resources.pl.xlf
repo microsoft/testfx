@@ -312,7 +312,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Metody 'CollectionAssert' mają równoważne odpowiedniki 'Assert'. Używanie jednego interfejsu API do asercji poprawia spójność i odnajdywanie.</target>
+        <target state="new">'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
         <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
@@ -347,8 +347,8 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="translated">„{0}” zmienia globalny dla procesu katalog bieżący, który nie ma odpowiednika na poziomie wątku i jest monitorowany przez każdy test uruchomiony równolegle; należy unikać modyfikowania go w zestawie testów równoległych (zadeklaruj „[ResourceLock(WellKnownResources.CurrentDirectory)]”, aby przynajmniej skoordynować działanie, lub „[DoNotParallelize]”)</target>
-        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <target state="needs-review-translation">„{0}” zmienia globalny dla procesu katalog bieżący, który nie ma odpowiednika na poziomie wątku i jest monitorowany przez każdy test uruchomiony równolegle; należy unikać modyfikowania go w zestawie testów równoległych (zadeklaruj „[ResourceLock(WellKnownResources.CurrentDirectory)]”, aby przynajmniej skoordynować działanie, lub „[DoNotParallelize]”)</target>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
@@ -827,7 +827,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="translated">'Dispose' i 'DisposeAsync' są zgodne ze standardowymi wzorcami cyklu życia w .NET, dzięki czemu czyszczenie testów jest spójne z kodem produkcyjnym. Ta reguła stylu zgody na uczestnictwo wyklucza się wzajemnie z MSTEST0022.</target>
+        <target state="new">'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</target>
         <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
@@ -987,7 +987,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Metody 'StringAssert' mają równoważne odpowiedniki 'Assert'. Używanie jednego interfejsu API do asercji poprawia spójność i odnajdywanie.</target>
+        <target state="new">'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
         <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -1107,8 +1107,8 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="translated">Element „{0}” zmienia stan globalny procesu i jest niebezpieczne w przypadku równoległego wykonywania testów; należy zadeklarować w teście „[ResourceLock(WellKnownResources. {1})]” (lub „[DoNotParallelize]”)</target>
-        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <target state="needs-review-translation">Element „{0}” zmienia stan globalny procesu i jest niebezpieczne w przypadku równoległego wykonywania testów; należy zadeklarować w teście „[ResourceLock(WellKnownResources. {1})]” (lub „[DoNotParallelize]”)</target>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>
