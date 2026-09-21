@@ -49,8 +49,8 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="needs-review-translation">Fügen Sie eine Verzögerung zwischen den Wiederholungen hinzu. Die Verzögerung wird als Zeitwert ausgedrückt, z. B. 200, 500ms, 1s, 2.5m, 1h, 1d. Die Standardeinheit ist Millisekunden (ms).</target>
-        <note>Do not localize time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
+        <target state="translated">Fügen Sie eine Verzögerung zwischen den Wiederholungen hinzu. Die Verzögerung wird als Zeitwert ausgedrückt, z. B. 200, 500ms, 1s, 2.5m, 1h, 1d. Die Standardeinheit ist Millisekunden (ms).</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
@@ -69,8 +69,8 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
-        <target state="needs-review-translation">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>
-        <note />
+        <target state="translated">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
@@ -79,8 +79,8 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
-        <target state="needs-review-translation">Wiederholungsmechanismus deaktivieren, wenn die Anzahl fehlerhafter Tests größer als der angegebene Wert ist</target>
-        <note />
+        <target state="translated">Wiederholungsmechanismus deaktivieren, wenn die Anzahl fehlerhafter Tests größer als der angegebene Wert ist</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
         <source>Retry failed tests feature is not supported in hot reload mode</source>
@@ -94,8 +94,8 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times.</source>
-        <target state="needs-review-translation">Fehlgeschlagene Tests erneut ausführen (siehe Angabe zur Anzahl der Wiederholungsversuche)</target>
-        <note />
+        <target state="translated">Fehlgeschlagene Tests erneut ausführen (siehe Angabe zur Anzahl der Wiederholungsversuche)</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>

@@ -14,8 +14,8 @@
       </trans-unit>
       <trans-unit id="MSBuildNodeOptionDescription">
         <source>Used to pass the MSBuild node handle.</source>
-        <target state="needs-review-translation">Используется для передачи дескриптора узла MSBuild.</target>
-        <note>Do not localize {Locked="MSBuild"}.</note>
+        <target state="translated">Используется для передачи дескриптора узла MSBuild.</target>
+        <note>Do not localize option name {Locked="--internal-msbuild-node"} or {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>
   </file>
