@@ -63,7 +63,7 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
 Example: 'MyReport_{tfm}.xml'.</source>
         <target state="translated">Název vygenerované sestavy JUnit XML. Může obsahovat relativní nebo absolutní cestu. Relativní cesty se překládají na adresář výsledků testů a vytvoří se chybějící adresáře.
 Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko).
-Příklad: MyReport_{tfm}.xml.</target>
+Příklad: 'MyReport_{tfm}.xml'.</target>
         <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">

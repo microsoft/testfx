@@ -762,12 +762,12 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
+        <target state="translated">'SupportedOSPlatformAttribute' e 'UnsupportedOSPlatformAttribute' informar a análise de compatibilidade de plataforma, mas não controlar MSTest execução. Os métodos de teste e as classes de teste que usam esses atributos também devem declarar um '[OSCondition]' compatível para que os testes sejam ignorados em famílias de sistemas operacionais sem suporte em tempo de execução. '[OSCondition]' não impõe restrições de versão de plataforma.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
+        <target state="translated">Atributos de compatibilidade de plataforma em '{0}' de teste não são representados por um atributo '[OSCondition]' compatível</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -1188,7 +1188,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">A classe de teste '{0}' deve ter pelo menos um método de teste ou ser 'static' com métodos marcados por '[AssemblyInitialize]' e/ou '[AssemblyCleanup]'.</target>
+        <target state="translated">A classe de teste '{0}' deve ter pelo menos um método de teste ou ser 'static' com métodos marcados por '[AssemblyInitialize]' e/ou '[AssemblyCleanup]'</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">

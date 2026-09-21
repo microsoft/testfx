@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CollectionCountHelper
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnostics(string! message, string? expected, string? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnosticsOnFailure.get -> System.Action<string!, string?, string?>?
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnosticsOnFailure.set -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CollectionCountHelper.GetCount<T>(System.Collections.Generic.IEnumerable<T>! collection) -> int

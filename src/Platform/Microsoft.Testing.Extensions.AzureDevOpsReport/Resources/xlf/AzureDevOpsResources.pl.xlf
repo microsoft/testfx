@@ -424,7 +424,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">Zapisz podsumowanie zadania w formacie Markdown na końcu przebiegu testu i prześlij je za pomocą „##vso[task.uploadsummary]”. Opcjonalny argument ścieżki pliku zastępuje lokalizację domyślną ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Wymaga polecenia „--report-azdo”.</target>
+        <target state="translated">Napisz podsumowanie zadania języka Markdown na końcu przebiegu testu i przekaż do karty Rozszerzenia usługi Azure DevOps. Opcjonalny argument ścieżki pliku zastępuje lokalizację domyślną („{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md”). Wymaga polecenia „--report-azdo”.</target>
         <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">

@@ -269,7 +269,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
-        <target state="translated">启用或禁用每个程序集的 Azure DevOps 日志组("on" 或 "off")。默认为 "off"。需要 "--report-azdo"。</target>
+        <target state="translated">启用或禁用按程序集分组的 Azure DevOps 日志组(“on”或“off”)。默认为“off”。需要“--report-azdo”。</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -424,7 +424,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">在测试运行结束时编写 Markdown 作业摘要，并通过 "##vso[task.uploadsummary]" 上传它。可选文件路径参数会替代默认位置("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md")。需要 "--report-azdo"。</target>
+        <target state="translated">在测试运行结束时编写 Markdown 作业摘要，并将其上传到 Azure DevOps 扩展选项卡。可选文件路径参数会替代默认位置("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md")。需要 "--report-azdo"。</target>
         <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
@@ -454,7 +454,7 @@
       </trans-unit>
       <trans-unit id="UploadArtifactsOptionDescription">
         <source>Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</source>
-        <target state="translated">上传测试结果 files 和/或向 Azure DevOps 添加生成标记。选项包括: off (默认)、 tags-only、files 和 all。</target>
+        <target state="new">Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</target>
         <note>{Locked="off"}{Locked="tags-only"}{Locked="files"}{Locked="all"}</note>
       </trans-unit>
     </body>

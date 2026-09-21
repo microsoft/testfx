@@ -169,7 +169,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="translated">Desde MSTest 3.8, 'DynamicDataSourceType.AutoDetect' es el valor predeterminado e identifica automáticamente propiedades, métodos y campos, lo que reduce el nivel de detalle y el acoplamiento al tipo de miembro.</target>
+        <target state="translated">Desde MSTest 3.8, "DynamicDataSourceType.AutoDetect" es el valor predeterminado e identifica automáticamente propiedades, métodos y campos, lo que reduce el nivel de detalle y el acoplamiento al tipo de miembro.</target>
         <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
@@ -312,7 +312,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Los métodos 'CollectionAssert' tienen equivalentes 'Assert'. El uso de una API de aserción mejora la coherencia y la detectabilidad.</target>
+        <target state="translated">Los métodos "CollectionAssert" tienen equivalentes 'Assert'. El uso de una API de aserción mejora la coherencia y la detectabilidad.</target>
         <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
@@ -417,7 +417,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="translated">El elemento TestContext pasado a la inicialización de ensamblados o clases es específico de ese contexto y no se actualiza para cada ejecución de prueba. Si se reutiliza en un miembro 'static', se puede exponer un contexto obsoleto.</target>
+        <target state="translated">El elemento TestContext pasado a la inicialización de ensamblados o clases es específico de ese contexto y no se actualiza para cada ejecución de prueba. Si se reutiliza en un miembro "static", se puede exponer un contexto obsoleto.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
@@ -762,12 +762,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
-        <target state="new">'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</target>
+        <target state="translated">"SupportedOSPlatformAttribute" y "UnsupportedOSPlatformAttribute" informan del análisis de compatibilidad de la plataforma, pero no controlan la ejecución de MSTest. Los métodos de prueba y las clases de prueba que usan estos atributos también deben declarar un "[OSCondition]" compatible para que las pruebas se omitan en familias de sistema operativo no compatibles en tiempo de ejecución. "[OSCondition]" no aplica restricciones de versión de plataforma.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
         <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
-        <target state="new">Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</target>
+        <target state="translated">Los atributos de compatibilidad de plataforma en la prueba "{0}" no están representados por un atributo "[OSCondition]" compatible</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -777,7 +777,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="translated">'Assert.Fail' hace explícito un error intencionado y permite que el mensaje de error documente por qué la prueba no puede continuar.</target>
+        <target state="translated">"Assert.Fail" hace explícito un error intencionado y permite que el mensaje de error documente por qué la prueba no puede continuar.</target>
         <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -822,17 +822,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="translated">Los constructores permiten la inicialización a través de campos 'readonly' y proporcionan comentarios más seguros del compilador, especialmente con tipos de referencia que admiten un valor NULL. Esta regla de estilo de participación se excluye mutuamente con MSTEST0019.</target>
+        <target state="translated">Los constructores permiten la inicialización a través de campos "readonly" y proporcionan comentarios más seguros del compilador, especialmente con tipos de referencia que admiten un valor NULL. Esta regla de estilo de participación se excluye mutuamente con MSTEST0019.</target>
         <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="translated">'Dispose' y 'DisposeAsync' siguen patrones de duración estándar de .NET, lo que hace que la limpieza de pruebas sea coherente con el código de producción. Esta regla de estilo de participación se excluye mutuamente con MSTEST0022.</target>
+        <target state="translated">'Dispose' y "DisposeAsync" siguen patrones de duración estándar de .NET, lo que hace que la limpieza de pruebas sea coherente con el código de producción. Esta regla de estilo de participación se excluye mutuamente con MSTEST0022.</target>
         <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="translated">'[TestCleanup]' admite la limpieza asincrónica en marcos de destino donde 'IAsyncDisposable' no está disponible. Esta regla de estilo de participación se excluye mutuamente con MSTEST0021.</target>
+        <target state="translated">"[TestCleanup]" admite la limpieza asincrónica en marcos de destino donde "IAsyncDisposable" no está disponible. Esta regla de estilo de participación se excluye mutuamente con MSTEST0021.</target>
         <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
@@ -987,7 +987,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Los métodos 'StringAssert' tienen equivalentes 'Assert'. El uso de una API de aserción mejora la coherencia y la detectabilidad.</target>
+        <target state="translated">Los métodos "StringAssert" tienen equivalentes 'Assert'. El uso de una API de aserción mejora la coherencia y la detectabilidad.</target>
         <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -1017,7 +1017,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">La class de prueba '{0}' debe ser válida</target>
+        <target state="translated">La class de prueba "{0}" debe ser válida</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -1409,7 +1409,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="translated">MSTest omite '[DeploymentItem]' cuando se aplica fuera de una clase de prueba o un método de prueba.</target>
+        <target state="translated">MSTest omite "[DeploymentItem]" cuando se aplica fuera de una clase de prueba o un método de prueba.</target>
         <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -1524,7 +1524,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
-        <target state="translated">El uso de aserciones en bloques catch es problemático porque la prueba se superará incluso aunque no se produzca ninguna excepción y el bloque catch nunca se ejecuta. Use "Assert.Throws", "Assert.ThrowsExactly", "Assert.ThrowsAsync" o "Assert.ThrowsExactlyAsync" para comprobar que se produce una excepción y, a continuación, realice aserciones adicionales en la excepción detectada sin usar el bloque try-catch. La regla también marca "throw new AssertFailedException(...)" y "throw new AssertInconclusiveException(...)". (las formas desenredadas de "Assert.Fail" y "Assert.Inconclusive"). 'Assert.Inconclusive' (y 'throw new AssertInconclusiveException(...)') está exento cuando se usa dentro de un catch filtrado ('catch (...) when (...)'), porque degradar un error detectado a un resultado no concluyente es el único caso de uso que no se puede expresar sin un bloque catch. Para otras omisiones intencionadas (por ejemplo, adjuntar a un mensaje generado en tiempo de ejecución al error), suprime el diagnóstico con "#pragma warning disable MSTEST0058".</target>
+        <target state="translated">El uso de aserciones en bloques catch es problemático porque la prueba se superará incluso aunque no se produzca ninguna excepción y el bloque catch nunca se ejecuta. Use "Assert.Throws", "Assert.ThrowsExactly", "Assert.ThrowsAsync" o "Assert.ThrowsExactlyAsync" para comprobar que se produce una excepción y, a continuación, realice aserciones adicionales en la excepción detectada sin usar el bloque try-catch. La regla también marca "throw new AssertFailedException(...)" y "throw new AssertInconclusiveException(...)". (las formas desenredadas de "Assert.Fail" y "Assert.Inconclusive"). "Assert.Inconclusive" (y "throw new AssertInconclusiveException(...)") está exento cuando se usa dentro de un catch filtrado ("catch (...) when (...)"), porque degradar un error detectado a un resultado no concluyente es el único caso de uso que no se puede expresar sin un bloque catch. Para otras omisiones intencionadas (por ejemplo, adjuntar a un mensaje generado en tiempo de ejecución al error), suprime el diagnóstico con "#pragma warning disable MSTEST0058".</target>
         <note>{Locked="#pragma warning disable MSTEST0058"}{Locked="AssertInconclusiveException"}{Locked="Assert.ThrowsExactlyAsync"}{Locked="AssertFailedException"}{Locked="Assert.ThrowsExactly"}{Locked="Assert.Inconclusive"}{Locked="Assert.ThrowsAsync"}{Locked="Assert.Throws"}{Locked="Assert.Fail"}{Locked="throw new AssertFailedException(...)"}{Locked="throw new AssertInconclusiveException(...)"}{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">

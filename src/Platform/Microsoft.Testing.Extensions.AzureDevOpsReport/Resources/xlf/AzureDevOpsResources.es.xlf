@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">Habilite o deshabilite Azure DevOps anotaciones de error ("on" o "off"). El valor predeterminado es "on". Requiere "--report-azdo".</target>
+        <target state="translated">Habilite o deshabilite Azure DevOps anotaciones de error ("on" u "off"). El valor predeterminado es "on". Requiere "--report-azdo".</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
@@ -269,7 +269,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
-        <target state="translated">Habilite o deshabilite los grupos de registros de Azure DevOps por ensamblado ("on" o "off"). El valor predeterminado es "off". Requiere "--report-azdo".</target>
+        <target state="translated">Habilite o deshabilite los grupos de registros de Azure DevOps por ensamblado ("on" u "off"). El valor predeterminado es "off". Requiere "--report-azdo".</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -424,7 +424,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">Escriba un resumen del trabajo de Markdown al final de la serie de pruebas y cárguelo a través de "##vso[task.uploadsummary]". Un argumento de ruta de acceso de archivo opcional invalida la ubicación predeterminada ("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"). Requiere "--report-azdo".</target>
+        <target state="translated">Escriba un resumen del trabajo de Markdown al final de la serie de pruebas y cárguelo en la pestaña extensiones de Azure DevOps. Un argumento de ruta de acceso de archivo opcional invalida la ubicación predeterminada ("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"). Requiere "--report-azdo".</target>
         <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
