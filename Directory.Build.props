@@ -92,6 +92,14 @@
     This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsVideoRecorderVersionPrefix>1.0.0</MicrosoftTestingExtensionsVideoRecorderVersionPrefix>
+
+    <MicrosoftTestingPlatformBrowserPreReleaseVersionLabel>alpha</MicrosoftTestingPlatformBrowserPreReleaseVersionLabel>
+
+    <!--
+    The browser launcher is independently versioned so its browser-host integration can service
+    Chromium cadence without coupling that cadence to Microsoft.Testing.Platform.
+    -->
+    <MicrosoftTestingPlatformBrowserVersionPrefix>0.1.0</MicrosoftTestingPlatformBrowserVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->

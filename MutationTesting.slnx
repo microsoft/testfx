@@ -19,6 +19,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VideoRecorder/Microsoft.Testing.Extensions.VideoRecorder.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.Browser/Microsoft.Testing.Platform.Browser.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources/Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" />
     <!-- Microsoft.Testing.Platform stays Microsoft-signed because generated test applications bind to that identity. -->

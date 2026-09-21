@@ -1,0 +1,74 @@
+<Project>
+  <PropertyGroup>
+    <TestingPlatformBrowserEnabled Condition=" '$(TestingPlatformBrowserEnabled)' == '' AND $(RuntimeIdentifier.StartsWith('browser-')) ">true</TestingPlatformBrowserEnabled>
+    <_TestingPlatformBrowserAssetsDirectory>$(MSBuildThisFileDirectory)assets\</_TestingPlatformBrowserAssetsDirectory>
+  </PropertyGroup>
+
+  <Target Name="_TestingPlatformBrowserDefineHostStaticWebAssets"
+          BeforeTargets="ResolveProjectStaticWebAssets"
+          AfterTargets="ResolveStaticWebAssetsConfiguration"
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true' ">
+    <PropertyGroup>
+      <_TestingPlatformBrowserHostStaticWebAssetsRoot>$(IntermediateOutputPath)testing-platform-browser\wwwroot\</_TestingPlatformBrowserHostStaticWebAssetsRoot>
+      <_TestingPlatformBrowserHostStaticWebAssetsDirectory>$(_TestingPlatformBrowserHostStaticWebAssetsRoot)_mtp\</_TestingPlatformBrowserHostStaticWebAssetsDirectory>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)" />
+    <Copy SourceFiles="$(_TestingPlatformBrowserAssetsDirectory)index.html"
+          DestinationFiles="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)browser-host.html"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(_TestingPlatformBrowserAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js"
+          DestinationFiles="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js"
+          SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <_TestingPlatformBrowserHostStaticWebAsset Include="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)browser-host.html">
+        <RelativePath>_mtp/browser-host.html</RelativePath>
+      </_TestingPlatformBrowserHostStaticWebAsset>
+      <_TestingPlatformBrowserHostStaticWebAsset Include="$(_TestingPlatformBrowserHostStaticWebAssetsDirectory)Microsoft.Testing.Platform.Browser.main.js">
+        <RelativePath>_mtp/Microsoft.Testing.Platform.Browser.main.js</RelativePath>
+      </_TestingPlatformBrowserHostStaticWebAsset>
+      <FileWrites Include="@(_TestingPlatformBrowserHostStaticWebAsset)" />
+    </ItemGroup>
+
+    <DefineStaticWebAssets CandidateAssets="@(_TestingPlatformBrowserHostStaticWebAsset)"
+                           SourceId="$(PackageId)"
+                           SourceType="Computed"
+                           ContentRoot="$(_TestingPlatformBrowserHostStaticWebAssetsRoot)"
+                           BasePath="$(StaticWebAssetBasePath)"
+                           AssetKind="Build">
+      <Output TaskParameter="Assets" ItemName="StaticWebAsset" />
+      <Output TaskParameter="Assets" ItemName="_TestingPlatformBrowserDefinedHostStaticWebAsset" />
+    </DefineStaticWebAssets>
+    <DefineStaticWebAssetEndpoints CandidateAssets="@(_TestingPlatformBrowserDefinedHostStaticWebAsset)"
+                                   ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="StaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+  </Target>
+
+  <Target Name="_ConfigureTestingPlatformBrowserRun"
+          AfterTargets="ComputeRunArguments"
+          Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
+                      AND $(RuntimeIdentifier.StartsWith('browser-'))
+                      AND '$(DotnetTestInvocation)' == 'true' ">
+    <PropertyGroup>
+      <_TestingPlatformBrowserLauncher>$(MSBuildThisFileDirectory)..\tools\net8.0\any\Microsoft.Testing.Platform.Browser.dll</_TestingPlatformBrowserLauncher>
+      <_TestingPlatformBrowserHostCommand>$(RunCommand)</_TestingPlatformBrowserHostCommand>
+      <_TestingPlatformBrowserHostArguments>$(RunArguments)</_TestingPlatformBrowserHostArguments>
+      <_TestingPlatformBrowserHostWorkingDirectory>$(RunWorkingDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
+      <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(_TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(MSBuildProjectDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
+
+      <RunCommand Condition=" '$(DOTNET_HOST_PATH)' != '' ">$(DOTNET_HOST_PATH)</RunCommand>
+      <RunCommand Condition=" '$(DOTNET_HOST_PATH)' == '' ">dotnet</RunCommand>
+      <RunArguments>exec &quot;$(_TestingPlatformBrowserLauncher)&quot; --host-command-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostCommand)`))&quot; --host-arguments-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostArguments)`))&quot; --host-working-directory-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostWorkingDirectory)`))&quot; --browser-executable-uri &quot;$([System.Uri]::EscapeDataString(`$(TestingPlatformBrowserExecutable)`))&quot; --startup-timeout-seconds $(TestingPlatformBrowserStartupTimeoutSeconds) --completion-timeout-seconds $(TestingPlatformBrowserCompletionTimeoutSeconds) --</RunArguments>
+      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+
+    <Error Condition=" !Exists('$(_TestingPlatformBrowserLauncher)') "
+           Text="Microsoft.Testing.Platform.Browser launcher was not found at '$(_TestingPlatformBrowserLauncher)'." />
+    <Error Condition=" '$(_TestingPlatformBrowserHostCommand)' == '' "
+           Text="Microsoft.Testing.Platform.Browser could not determine the browser-WASM host command from ComputeRunArguments." />
+    <Error Condition=" '$(TestingPlatformBrowserExecutable)' == '' "
+           Text="Microsoft.Testing.Platform.Browser requires TestingPlatformBrowserExecutable to name an installed Chromium-family browser." />
+  </Target>
+</Project>
