@@ -51,6 +51,11 @@ permissions:
   statuses: read
   vulnerability-alerts: read
 
+# Disable nonessential .NET, MTP, and MSTest telemetry instead of allowing
+# Application Insights egress from the agent sandbox.
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
     - defaults
