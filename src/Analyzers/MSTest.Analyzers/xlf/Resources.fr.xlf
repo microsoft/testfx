@@ -420,6 +420,11 @@ Le type doit être une classe
         <target state="translated">Le TestContext transmis à l’initialisation de l’assembly ou de la classe est spécifique à ce contexte et n’est pas mis à jour pour chaque exécution de test. Sa réutilisation dans un membre « static » peut exposer un contexte obsolète.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="new">Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
         <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
         <target state="new">Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</target>

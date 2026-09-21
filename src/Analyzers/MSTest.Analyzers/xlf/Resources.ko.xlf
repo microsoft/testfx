@@ -420,6 +420,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">어셈블리 또는 클래스 초기화에 전달된 TestContext는 해당 컨텍스트에 한정되며 각 테스트가 실행될 때마다 업데이트되지 않습니다. 'static' 멤버에서 다시 사용하면 오래된 컨텍스트가 노출될 수 있습니다.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="new">Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
         <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
         <target state="new">Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</target>

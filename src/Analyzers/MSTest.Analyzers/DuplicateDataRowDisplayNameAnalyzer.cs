@@ -22,7 +22,7 @@ public sealed class DuplicateDataRowDisplayNameAnalyzer : DiagnosticAnalyzer
         DiagnosticIds.DuplicateDataRowDisplayNameRuleId,
         new LocalizableResourceString(nameof(Resources.DuplicateDataRowDisplayNameTitle), Resources.ResourceManager, typeof(Resources)),
         new LocalizableResourceString(nameof(Resources.DuplicateDataRowDisplayNameMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        null,
+        new LocalizableResourceString(nameof(Resources.DuplicateDataRowDisplayNameDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -38,18 +38,31 @@ public sealed class DuplicateDataRowDisplayNameAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute, out INamedTypeSymbol? dataRowAttribute))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(
+                    WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute,
+                    out INamedTypeSymbol? testMethodAttribute)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(
+                    WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute,
+                    out INamedTypeSymbol? dataRowAttribute))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, dataRowAttribute),
+                    context => AnalyzeSymbol(context, testMethodAttribute, dataRowAttribute),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol dataRowAttribute)
+    private static void AnalyzeSymbol(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol testMethodAttribute,
+        INamedTypeSymbol dataRowAttribute)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        if (!methodSymbol.IsTestMethod(testMethodAttribute))
+        {
+            return;
+        }
+
         var displayNames = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (AttributeData attribute in methodSymbol.GetAttributes())

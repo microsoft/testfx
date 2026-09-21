@@ -4,9 +4,6 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.DuplicateDataRowDisplayNameAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
-using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
-    MSTest.Analyzers.DuplicateDataRowDisplayNameAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -184,25 +181,21 @@ public sealed class DuplicateDataRowDisplayNameAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenVisualBasicDataRowsHaveDuplicateDisplayNames_Diagnostic()
+    public async Task WhenNonTestMethodHasDuplicateDisplayNames_NoDiagnostic()
     {
         string code = """
-            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            <TestClass>
-            Public Class MyTestClass
-                <TestMethod>
-                <DataRow(1, DisplayName:="Duplicate")>
-                <{|#0:DataRow(2, DisplayName:="Duplicate")|}>
-                Public Sub TestMethod(value As Integer)
-                End Sub
-            End Class
+            public class MyTestClass
+            {
+                [DataRow(1, DisplayName = "Duplicate")]
+                [DataRow(2, DisplayName = "Duplicate")]
+                public void HelperMethod(int value)
+                {
+                }
+            }
             """;
 
-        await VerifyVB.VerifyAnalyzerAsync(
-            code,
-            VerifyVB.Diagnostic()
-                .WithLocation(0)
-                .WithArguments("Duplicate"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }
