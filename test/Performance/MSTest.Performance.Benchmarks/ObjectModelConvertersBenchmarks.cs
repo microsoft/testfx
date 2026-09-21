@@ -9,8 +9,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 namespace MSTest.Performance.Benchmarks;
 
 /// <summary>
-/// Measures <c>ObjectModelConverters.FixUpTestCase</c>, which VSTestBridge calls once per discovered or
-/// reported <see cref="TestCase"/> lifecycle event to replace the framework's executor URI with the platform's own.
+/// Measures <c>ObjectModelConverters.FixUpTestCase</c>, which VSTestBridge calls for each discovered
+/// <see cref="TestCase"/> and each execution lifecycle event to replace the framework's executor URI with the platform's own.
 /// </summary>
 [MemoryDiagnoser]
 [InvocationCount(1)]
