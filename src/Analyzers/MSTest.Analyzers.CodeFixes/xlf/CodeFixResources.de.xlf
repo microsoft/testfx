@@ -79,7 +79,7 @@
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
-        <target state="translated">Reihenfolge der actual/expected Argumente korrigieren</target>
+        <target state="translated">Reihenfolge der actual/expected-Argumente korrigieren</target>
         <note>{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
-        <target state="translated">asynchrone Assertion verwenden</target>
+        <target state="translated">async-Assertion verwenden</target>
         <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
