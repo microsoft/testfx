@@ -225,13 +225,13 @@ public class DataRowAttributeTests : TestContainer
             "DataRowTestMethod (\"quote\\\"\\\\\\0\\a\\b\\f\\n\\r\\t\\v\\u001F\\u2028\\u2029\",'\\'','\\\\','\\n','\\u001F','\\uD800')");
     }
 
-    public void GetDisplayNamePreservesValidSurrogatePairs()
+    public void GetDisplayNameEscapesUnpairedSurrogatesAndPreservesValidSurrogatePairs()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
 
-        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["😀"]);
+        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["\uD800", "\uDC00", "\uDC00\uD800", "😀"]);
 
-        displayName.Should().Be("DataRowTestMethod (\"😀\")");
+        displayName.Should().Be("DataRowTestMethod (\"\\uD800\",\"\\uDC00\",\"\\uDC00\\uD800\",\"😀\")");
     }
 
     public void GetDisplayNameDistinguishesControlCharactersFromLiteralEscapeSequences()
