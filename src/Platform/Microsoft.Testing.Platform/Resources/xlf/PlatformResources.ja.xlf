@@ -671,7 +671,7 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
-        <target state="needs-review-translation">In testconfig.json under 'commandLineOptions': {0}</target>
+        <target state="translated">In testconfig.json under 'commandLineOptions': {0}</target>
         <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -681,12 +681,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="needs-review-translation">最上位の JSON 要素はオブジェクトである必要があります。代わりに、'{0}' が見つかりました</target>
+        <target state="translated">最上位の JSON 要素はオブジェクトである必要があります。代わりに、'{0}' が見つかりました</target>
         <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="needs-review-translation">サポートされていない JSON トークン '{0}' が見つかりました</target>
+        <target state="translated">サポートされていない JSON トークン '{0}' が見つかりました</target>
         <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">

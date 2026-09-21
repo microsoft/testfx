@@ -485,10 +485,10 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-This option takes precedence over the deprecated --no-progress flag.</target>
+        <target state="translated">画面に進行状況を表示するかどうかを制御します。
+有効な値は、'auto' (既定値)、'on' ('true'、'enable'、'1' も指定可能)、または 'off' ('false'、'disable'、'0' も指定可能) です。
+'auto' は、ターミナルがその場で更新できない場合を除き、進行状況を表示します (たとえば --no-ansi や CI)。
+このオプションは、非推奨の --no-progress フラグよりも優先されます。</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
@@ -505,9 +505,9 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
-Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-Passing the option without a value turns it on.</target>
+        <target state="translated">少なくとも 1 回失敗したものの、再試行で最終的に成功したテストを、実行結果のサマリーに一覧表示するかどうかを制御します。
+有効な値は 'on' (既定値。'true'、'enable'、'1' も使用可能) または 'off' ('false'、'disable'、'0' も使用可能) です。
+値を指定せずにこのオプションを指定すると、on になります。</target>
         <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">

@@ -671,7 +671,7 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
-        <target state="needs-review-translation">在 'commandLineOptions' 之下的 testconfig.json 中: {0}</target>
+        <target state="translated">在 'commandLineOptions' 之下的 testconfig.json 中: {0}</target>
         <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -681,12 +681,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="needs-review-translation">頂層 JSON 元素必須是物件。反而找到 '{0}'</target>
+        <target state="translated">頂層 JSON 元素必須是物件。反而找到 '{0}'</target>
         <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="needs-review-translation">找到不支援的 JSON Token '{0}'</target>
+        <target state="translated">找到不支援的 JSON Token '{0}'</target>
         <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">

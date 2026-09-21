@@ -485,10 +485,10 @@ Les valeurs valides sont 'Minimal', 'Normal', 'Detailed'. La valeur par défaut 
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="needs-review-translation">Contrôlez si la progression est indiquée à l’écran.
-Les valeurs valides sont « auto » (par défaut), « on » (accepte également « true », « enable », « 1 ») ou « off » (accepte également « false », « disable », « 0 »).
-« auto » affiche la progression, sauf si le terminal ne peut pas être mis à jour sur place (par exemple avec --no-ansi ou dans CI).
-Cette option prévaut sur l’indicateur --no-progress déconseillé.</target>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+This option takes precedence over the deprecated --no-progress flag.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
@@ -505,9 +505,9 @@ Cette option prévaut sur l’indicateur --no-progress déconseillé.</target>
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="needs-review-translation">Contrôlez si les tests qui ont échoué au moins une fois, mais qui ont finalement réussi après une nouvelle tentative, sont répertoriés dans le résumé d’exécution.
-Les valeurs valides sont « on » (par défaut, accepte également « true », « enable », « 1 ») ou « off » (accepte également « false », « disable », «0 »).
-Si vous passez l’option sans valeur, elle est activée.</target>
+        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</target>
         <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">

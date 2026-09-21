@@ -485,7 +485,7 @@ I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinit
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="needs-review-translation">Controllare se l'avanzamento viene visualizzato sullo schermo.
+        <target state="translated">Controllare se l'avanzamento viene visualizzato sullo schermo.
 I valori validi sono ''auto'' (impostazione predefinita), ''on'' (accetta anche ''true'', ''enable'', ''1'') o ''off'' (accetta anche ''false'', ''disable'', '0').
 ''auto'' mostra l'avanzamento, a meno che il terminale non possa eseguire l'aggiornamento sul posto, ad esempio con --no-ansi o in CI.
 Questa opzione ha la precedenza sul flag --no-progress deprecato.</target>
@@ -505,7 +505,7 @@ Questa opzione ha la precedenza sul flag --no-progress deprecato.</target>
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="needs-review-translation">Controllare se i test non riusciti almeno una volta ma poi superati dopo un nuovo tentativo sono elencati nel riepilogo dell'esecuzione.
+        <target state="translated">Controllare se i test non riusciti almeno una volta ma poi superati dopo un nuovo tentativo sono elencati nel riepilogo dell'esecuzione.
 I valori validi sono 'on' (l'impostazione predefinita; accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0').
 Passando l'opzione senza un valore, la si attiva.</target>
         <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
