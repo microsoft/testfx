@@ -119,7 +119,7 @@
   </resheader>
   <data name="AnnotationsOptionDescription" xml:space="preserve">
     <value>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</value>
-    <comment>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</comment>
+    <comment>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="ArtifactUploadOptionsRequireUploadArtifacts" xml:space="preserve">
     <value>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</value>

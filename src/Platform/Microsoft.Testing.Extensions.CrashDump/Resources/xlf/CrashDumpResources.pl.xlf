@@ -66,8 +66,8 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa pliku wykonywalnego 
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="translated">Proces hosta testowego o identyfikatorze PID „{0}{0}” uległ awarii, wygenerowano plik zrzutu</target>
-        <note>{0} is the crashed test host process ID.</note>
+        <target state="needs-review-translation">Proces hosta testowego o identyfikatorze PID „{0}{0}” uległ awarii, wygenerowano plik zrzutu</target>
+        <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>

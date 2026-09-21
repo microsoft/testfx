@@ -66,8 +66,8 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="translated">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했습니다. 덤프 파일이 생성되었습니다.</target>
-        <note>{0} is the crashed test host process ID.</note>
+        <target state="needs-review-translation">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했습니다. 덤프 파일이 생성되었습니다.</target>
+        <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
