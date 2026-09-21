@@ -347,8 +347,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">'{0}' altera o diretório atual global do processo, que não tem equivalente por thread e é observado por todos os testes executados simultaneamente; evite alterá-lo em um conjunto de testes paralelizado (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' para ao menos coordenar ou '[DoNotParallelize]')</target>
-        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <target state="translated">'{0}' altera o diretório atual global do processo, que não tem equivalente por thread e é observado por todos os testes executados simultaneamente; evite alterá-lo em um conjunto de testes paralelizado (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' para ao menos coordenar ou '[DoNotParallelize]')</target>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
@@ -1107,8 +1107,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">'{0}' altera o estado global do processo e não é seguro quando testes são executados em paralelo; declare '[ResourceLock(WellKnownResources.{1})]' no teste (ou '[DoNotParallelize]')</target>
-        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <target state="translated">'{0}' altera o estado global do processo e não é seguro quando testes são executados em paralelo; declare '[ResourceLock(WellKnownResources.{1})]' no teste (ou '[DoNotParallelize]')</target>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>

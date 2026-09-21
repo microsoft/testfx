@@ -34,8 +34,8 @@
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">
         <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
-        <target state="needs-review-translation">Se produjo una excepción al expandir las filas de IDataSource del atributo en "{0}.{1}": {2}</target>
-        <note>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}</note>
+        <target state="translated">Se produjo una excepción al expandir las filas de IDataSource del atributo en "{0}.{1}": {2}</target>
+        <note>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}{Locked="CannotExpandIDataSourceAttribute_DuplicateDisplayName"}{Locked="CannotExpandIDataSourceAttribute_CannotSerialize"}</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_CannotSerialize">
         <source>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</source>
