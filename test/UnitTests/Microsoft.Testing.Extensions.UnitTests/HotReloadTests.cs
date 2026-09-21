@@ -237,6 +237,8 @@ public sealed class HotReloadTests
         await cancellationTokenSource.CancelAsync();
 
         Assert.IsFalse(await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.IsTrue(IsShutdownRequested());
+        Assert.IsFalse(await handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None));
     }
 #else
     [TestMethod]
