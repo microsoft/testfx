@@ -190,9 +190,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+    /// <remarks>The collection may contain null elements even when <paramref name="notExpected"/> is not null.</remarks>
     public static void DoesNotContain<T, TCollection>(T notExpected, TCollection collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        where TCollection : IEnumerable<T>
-        => DoesNotContain(notExpected, (IEnumerable<T>)collection, message, notExpectedExpression, collectionExpression);
+        where TCollection : IEnumerable<T?>
+        => DoesNotContain(notExpected, (IEnumerable<T?>)collection, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -211,8 +212,10 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+    /// <remarks>The collection may contain null elements even when <paramref name="notExpected"/> is not null.</remarks>
     public static void DoesNotContain<T, TCollection>(T notExpected, TCollection collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        where TCollection : IEnumerable<T>
+        where TCollection : IEnumerable<T?>
+        // Equality comparers accept null operands. Preserve T for compatibility with non-nullable comparers.
         => DoesNotContain(notExpected, (IEnumerable<T>)collection, comparer, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
