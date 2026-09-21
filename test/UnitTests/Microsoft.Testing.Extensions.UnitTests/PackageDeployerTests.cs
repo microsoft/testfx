@@ -127,6 +127,7 @@ public sealed class PackageDeployerTests
     public async Task RegisterAsync_WhenRemovalFails_DoesNotRetryRegistration()
     {
         var failure = new InvalidOperationException("Package is in use.");
+        string requestedLayout = GetLayoutDirectory("layout-b");
         var previousPackage = new RegisteredPackageInfo(PackageFullName, GetLayoutDirectory("layout-a"), isDevelopmentMode: true);
         var packageManager = new TestPackageManager
         {
@@ -135,9 +136,13 @@ public sealed class PackageDeployerTests
         };
 
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
-            () => packageManager.RegisterAsync(GetLayoutDirectory("layout-b"), TestContext.CancellationToken));
+            () => packageManager.RegisterAsync(requestedLayout, TestContext.CancellationToken));
 
         Assert.AreSame(failure, exception.InnerException);
+        Assert.Contains(PackageFullName, exception.Message);
+        Assert.Contains(Path.Combine(requestedLayout, AppxManifestInfo.AppxManifestFileName), exception.Message);
+        Assert.Contains(failure.Message, exception.Message);
+        Assert.DoesNotContain("Developer Mode", exception.Message);
         Assert.AreSame(previousPackage, packageManager.Packages[0]);
         string[] expectedOperations = ["register", "find", $"remove:{PackageFullName}"];
         Assert.AreSequenceEqual(expectedOperations, packageManager.Operations);
