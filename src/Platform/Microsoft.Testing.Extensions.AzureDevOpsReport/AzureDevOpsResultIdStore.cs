@@ -109,6 +109,7 @@ internal sealed partial class AzureDevOpsResultIdStore
             return;
         }
 
+        (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(attempts);
         _results[key] = new AzureDevOpsPublishedResult(
             result.AutomatedTestStorage,
             result.AutomatedTestName,
@@ -117,8 +118,8 @@ internal sealed partial class AzureDevOpsResultIdStore
             CreateAttempts(attempts, firstSequenceId: 1))
         {
             TotalDurationInMs = SumResultDurations(attempts),
-            StartedDate = GetEarliestStartedDate(attempts),
-            CompletedDate = GetLatestCompletedDate(attempts),
+            StartedDate = startedDate,
+            CompletedDate = completedDate,
         };
         _hasUnsavedChanges = true;
     }
@@ -201,31 +202,31 @@ internal sealed partial class AzureDevOpsResultIdStore
     }
 
     public static DateTimeOffset? GetEarliestStartedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
+        => GetDateRange(attempts).StartedDate;
+
+    public static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
+        => GetDateRange(attempts).CompletedDate;
+
+    private static (DateTimeOffset? StartedDate, DateTimeOffset? CompletedDate) GetDateRange(
+        IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
     {
         DateTimeOffset? earliest = null;
-        foreach (AzureDevOpsTestCaseResult attempt in attempts)
+        DateTimeOffset? latest = null;
+        for (int i = 0; i < attempts.Count; i++)
         {
+            AzureDevOpsTestCaseResult attempt = attempts[i];
             if (attempt.StartedDate is { } startedDate && (earliest is null || startedDate < earliest))
             {
                 earliest = startedDate;
             }
-        }
 
-        return earliest;
-    }
-
-    public static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
-    {
-        DateTimeOffset? latest = null;
-        foreach (AzureDevOpsTestCaseResult attempt in attempts)
-        {
             if (attempt.CompletedDate is { } completedDate && (latest is null || completedDate > latest))
             {
                 latest = completedDate;
             }
         }
 
-        return latest;
+        return (earliest, latest);
     }
 
     /// <summary>

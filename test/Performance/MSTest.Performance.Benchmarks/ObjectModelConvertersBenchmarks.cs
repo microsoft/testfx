@@ -10,7 +10,7 @@ namespace MSTest.Performance.Benchmarks;
 
 /// <summary>
 /// Measures <c>ObjectModelConverters.FixUpTestCase</c>, which VSTestBridge calls once per discovered or
-/// executed <see cref="TestCase"/> to replace the framework's executor URI with the platform's own.
+/// reported <see cref="TestCase"/> lifecycle event to replace the framework's executor URI with the platform's own.
 /// </summary>
 [MemoryDiagnoser]
 [InvocationCount(1)]

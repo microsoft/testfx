@@ -197,12 +197,21 @@ internal sealed partial class AzureDevOpsResultIdStore
                     continue;
                 }
 
+                DateTimeOffset? startedDate = entry.StartedDate;
+                DateTimeOffset? completedDate = entry.CompletedDate;
+                if (startedDate is null || completedDate is null)
+                {
+                    (DateTimeOffset? fallbackStartedDate, DateTimeOffset? fallbackCompletedDate) = GetDateRange(entry.Attempts!);
+                    startedDate ??= fallbackStartedDate;
+                    completedDate ??= fallbackCompletedDate;
+                }
+
                 _results[key] = new AzureDevOpsPublishedResult(entry.Storage!, entry.Name!, entry.Title!, entry.Id, entry.Attempts!)
                 {
                     LastPublishedSubResultSequenceId = entry.LastPublishedSubResultSequenceId!.Value,
                     TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
-                    StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts!),
-                    CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts!),
+                    StartedDate = startedDate,
+                    CompletedDate = completedDate,
                 };
             }
         }
