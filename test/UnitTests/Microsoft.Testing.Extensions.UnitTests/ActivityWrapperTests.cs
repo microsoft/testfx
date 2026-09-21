@@ -50,7 +50,7 @@ public sealed class ActivityWrapperTests : IDisposable
     [TestMethod]
     public void TraceIdAndSpanId_WithHierarchicalActivity_ReturnNull()
     {
-        Activity activity = new Activity("hierarchical")
+        using Activity activity = new Activity("hierarchical")
             .SetIdFormat(ActivityIdFormat.Hierarchical)
             .Start();
         using ActivityWrapper wrapper = new(activity);
