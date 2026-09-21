@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="needs-review-translation">Adicione um atraso entre as repetições. O atraso é expresso como um valor temporal, por exemplo, 200, 500ms, 1s, 2.5m, 1h, 1d. A unidade padrão é milissegundos.</target>
+        <target state="translated">Adicione um atraso entre as repetições. O atraso é expresso como um valor temporal, por exemplo, 200, 500ms, 1s, 2.5m, 1h, 1d. A unidade padrão é milissegundos.</target>
         <note>Do not localize time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
-        <target state="needs-review-translation">Desabilite o mecanismo de nova tentativa se o percentual de testes com falha for maior que o valor especificado.</target>
+        <target state="translated">Desabilite o mecanismo de nova tentativa se o percentual de testes com falha for maior que o valor especificado.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
@@ -79,7 +79,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
-        <target state="needs-review-translation">Desabilite o mecanismo de nova tentativa se o número de testes com falha for maior que o valor especificado.</target>
+        <target state="translated">Desabilite o mecanismo de nova tentativa se o número de testes com falha for maior que o valor especificado.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times.</source>
-        <target state="needs-review-translation">Repetir os testes com falha pelo número de vezes especificado.</target>
+        <target state="translated">Repetir os testes com falha pelo número de vezes especificado.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
