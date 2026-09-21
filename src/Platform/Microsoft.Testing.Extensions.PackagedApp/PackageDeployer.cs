@@ -190,7 +190,14 @@ internal static class PackageDeployer
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            throw CreateDeploymentFailureException(manifestPath, ex);
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.PackagedAppRegistrationRemovalFailed,
+                    packageFullName,
+                    manifestPath,
+                    ex.Message),
+                ex);
         }
     }
 
