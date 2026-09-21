@@ -281,7 +281,9 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.AreEqual("Queued tests", instrument.Description);
         Assert.IsEmpty(instrument.Tags);
 
-        Assert.HasCount(1, GetObservableInstruments());
+        IReadOnlyCollection<object> observableInstruments = GetObservableInstruments();
+        Assert.HasCount(1, observableInstruments);
+        Assert.IsInstanceOfType<ObservableGauge<long>>(observableInstruments.Single());
         capture.RecordObservableInstruments();
 
         Assert.AreEqual(1, callbackCount);
