@@ -27,8 +27,8 @@ public sealed class NamespaceHelpersTests
     [TestMethod]
     [DataRow(".Namespace", "_Namespace")]
     [DataRow("Namespace.", "Namespace_")]
-    [DataRow("Namespace..Child", "Namespace..Child")]
-    [DataRow("Namespace...", "Namespace.._")]
+    [DataRow("Namespace..Child", "Namespace._Child")]
+    [DataRow("Namespace...", "Namespace.__")]
     [DataRow(".", "_")]
     public void ToSafeNamespace_DotBoundary_ReturnsExpectedValue(string value, string expected)
         => Assert.AreEqual(expected, NamespaceHelpers.ToSafeNamespace(value));

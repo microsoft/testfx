@@ -9,8 +9,10 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 public sealed class UnicodeCharacterUtilitiesTests
 {
     [TestMethod]
+    [DataRow('A')]
     [DataRow('a')]
     [DataRow('Z')]
+    [DataRow('z')]
     [DataRow('_')]
     [DataRow('\u00C5')]
     [DataRow('\u00E9')]
@@ -39,8 +41,10 @@ public sealed class UnicodeCharacterUtilitiesTests
         => Assert.IsFalse(UnicodeCharacterUtilities.IsIdentifierStartCharacter(value));
 
     [TestMethod]
+    [DataRow('A')]
     [DataRow('a')]
     [DataRow('Z')]
+    [DataRow('z')]
     [DataRow('_')]
     [DataRow('0')]
     [DataRow('9')]
