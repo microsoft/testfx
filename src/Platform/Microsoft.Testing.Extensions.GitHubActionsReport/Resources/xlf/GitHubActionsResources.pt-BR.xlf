@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="needs-review-translation">Gerador de relatório do GitHub Actions</target>
+        <target state="translated">Gerador de relatório do GitHub Actions</target>
         <note>Translate "report generator". Do not localize the product name {Locked="GitHub Actions"}.</note>
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
@@ -219,7 +219,7 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
-        <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
+        <target state="translated">Valor inválido ‘{0}’. O limite de teste lento deve ser uma duração positiva, por exemplo, '60', '90s' ou '2m'.</target>
         <note>{Locked="60"}{Locked="90s"}{Locked="2m"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
         <source>The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</source>
-        <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
+        <target state="translated">O tempo durante o qual um teste pode ser executado antes que seja emitido um aviso de teste lento do GitHub Actions. Aceita um número de segundos sem sufixo ou um valor com um sufixo de unidade, como '90s', '2m' ou '1.5h'. O padrão é 60s.</target>
         <note>{Locked="90s"}{Locked="2m"}{Locked="1.5h"}{Locked="60s"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryLimitExceededWarning">

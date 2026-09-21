@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="EnvironmentVariableNotSet">
         <source>Environment variable '{0}' is not set.</source>
-        <target state="needs-review-translation">'{0}' ortam değişkeni ayarlı değil.</target>
+        <target state="translated">'{0}' ortam değişkeni ayarlı değil.</target>
         <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="NoAuthenticationConfigured">

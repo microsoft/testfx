@@ -66,7 +66,7 @@ Unterstützt die folgenden Platzhalter: {pname} (Name der ausführbaren Prozessd
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
-        <target state="needs-review-translation">Der Testhostprozess mit PID "{0}" ist abgestürzt. Es wurde eine Abbilddatei generiert</target>
+        <target state="translated">Der Testhostprozess mit PID "{0}" ist abgestürzt. Es wurde eine Abbilddatei generiert</target>
         <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
