@@ -51,12 +51,13 @@ permissions:
   statuses: read
   vulnerability-alerts: read
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
     - defaults
     - dotnet
-    # .NET builds can emit telemetry to region-specific Application Insights ingestion hosts.
-    - "*.in.applicationinsights.azure.com"
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
