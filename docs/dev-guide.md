@@ -171,25 +171,35 @@ On Windows PowerShell:
 ```powershell
 $strykerVersion = (Get-Content .config/stryker/dotnet-tools.json | ConvertFrom-Json).tools.'dotnet-stryker'.version
 $toolCommand = if (Test-Path artifacts/tools/stryker/dotnet-stryker.exe) { "update" } else { "install" }
-dotnet tool $toolCommand dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
 $previousMutationTesting = $env:MutationTesting
+$previousDotnetRoot = $env:DOTNET_ROOT
+$previousPath = $env:PATH
 try {
+    $env:DOTNET_ROOT = (Resolve-Path .dotnet).Path
+    $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+    & ./.dotnet/dotnet tool $toolCommand dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
     $env:MutationTesting = "true"
     ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
 }
 finally {
     $env:MutationTesting = $previousMutationTesting
+    $env:DOTNET_ROOT = $previousDotnetRoot
+    $env:PATH = $previousPath
 }
 ```
 
 On Linux and macOS:
 
 ```shell
-stryker_version=$(jq -r '.tools["dotnet-stryker"].version' .config/stryker/dotnet-tools.json)
-tool_command=install
-[ -x artifacts/tools/stryker/dotnet-stryker ] && tool_command=update
-dotnet tool "$tool_command" dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
-MutationTesting=true ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+(
+  export DOTNET_ROOT="$PWD/.dotnet"
+  export PATH="$DOTNET_ROOT:$PATH"
+  stryker_version=$(jq -r '.tools["dotnet-stryker"].version' .config/stryker/dotnet-tools.json)
+  tool_command=install
+  [ -x artifacts/tools/stryker/dotnet-stryker ] && tool_command=update
+  "$DOTNET_ROOT/dotnet" tool "$tool_command" dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
+  MutationTesting=true ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+)
 ```
 
 The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.

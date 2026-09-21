@@ -35,6 +35,8 @@ jobs:
           MutationTesting: true
         run: |
           set -o pipefail
+          export DOTNET_ROOT="$GITHUB_WORKSPACE/.dotnet"
+          export PATH="$DOTNET_ROOT:$PATH"
           mkdir -p "$GITHUB_WORKSPACE/artifacts/mutation-testing"
           "$GITHUB_WORKSPACE/artifacts/tools/stryker/dotnet-stryker" --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
 
