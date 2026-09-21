@@ -164,7 +164,7 @@ Note that `-test` allows to run the unit tests and `-integrationTest` allows to 
 
 ### Mutation testing
 
-The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the server-mode client sources with their unit tests in `MutationTesting.slnx`. Install the pinned tool to a dedicated path and run it from the repository root:
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the server-mode client sources with their unit tests in `MutationTesting.slnx`. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
 
 On Windows PowerShell:
 
@@ -185,6 +185,9 @@ try {
     else {
         & ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
     }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to install the pinned Stryker.NET tool."
+    }
     $env:MutationTesting = "true"
     ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
 }
@@ -200,6 +203,7 @@ On Linux and macOS:
 
 ```shell
 (
+  set -e
   export DOTNET_ROOT="$PWD/.dotnet"
   export DOTNET_CLI_TELEMETRY_OPTOUT=1
   export PATH="$DOTNET_ROOT:$PATH"
