@@ -169,7 +169,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="translated">Od verze MSTest 3.8 je 'DynamicDataSourceType.AutoDetect' výchozí hodnotou a automaticky rozpoznává vlastnosti, metody a pole, čímž omezuje rozvláčnost a závislost na druhu členu.</target>
+        <target state="translated">Od verze MSTest 3.8 je ‚DynamicDataSourceType.AutoDetect' výchozí hodnotou a automaticky rozpoznává vlastnosti, metody a pole, čímž omezuje rozvláčnost a závislost na druhu členu.</target>
         <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
@@ -417,7 +417,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="translated">Objekt TestContext předaný inicializaci sestavení nebo třídy je specifický pro daný kontext a při každém spuštění testu se neaktualizuje. Jeho opakované použití ve členovi 'static' může zpřístupnit zastaralý kontext.</target>
+        <target state="translated">Objekt TestContext předaný inicializaci sestavení nebo třídy je specifický pro daný kontext a při každém spuštění testu se neaktualizuje. Jeho opakované použití ve členovi ‚static' může zpřístupnit zastaralý kontext.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameDescription">
@@ -792,7 +792,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="translated">'Assert.Fail' explicitně vyjadřuje záměrné selhání a umožňuje ve zprávě o selhání zdokumentovat, proč test nemůže pokračovat.</target>
+        <target state="translated">‚Assert.Fail' explicitně vyjadřuje záměrné selhání a umožňuje ve zprávě o selhání zdokumentovat, proč test nemůže pokračovat.</target>
         <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -827,7 +827,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="translated">Klíč prostředku atributu '[ResourceLock]' '{0}' je zadaný přímo jako řetězcový literál. Odkazujte na sdílenou konstantu (například člen 'WellKnownResources' nebo vlastní konstantu 'const'), aby překlepy bez upozornění nevytvářely jiný nesdílený klíč</target>
+        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
         <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
@@ -837,7 +837,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="translated">Konstruktory umožňují inicializaci prostřednictvím polí 'readonly' a poskytují lepší zpětnou vazbu kompilátoru, zejména u typů odkazů s možnou hodnotou null. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0019.</target>
+        <target state="translated">Konstruktory umožňují inicializaci prostřednictvím polí ‚readonly' a poskytují lepší zpětnou vazbu kompilátoru, zejména u typů odkazů s možnou hodnotou null. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0019.</target>
         <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
@@ -847,7 +847,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="translated">'[TestCleanup]' podporuje asynchronní vyčištění v cílových architekturách, ve kterých není k dispozici 'IAsyncDisposable'. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0021.</target>
+        <target state="translated">‚[TestCleanup]' podporuje asynchronní vyčištění v cílových architekturách, ve kterých není k dispozici ‚IAsyncDisposable'. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0021.</target>
         <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
@@ -1032,7 +1032,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">Testovací class '{0}' by měla být platná.</target>
+        <target state="translated">Testovací class ‚{0}' by měla být platná.</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -1087,7 +1087,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="translated">Odvozená class TestMethodAttribute '{0}' by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
+        <target state="translated">Odvozená class TestMethodAttribute ‚{0}' by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
@@ -1198,12 +1198,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být 'static' s metodami s označením '[AssemblyInitialize]' a/nebo '[AssemblyCleanup]'.</target>
+        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být ‚static' s metodami s označením ‚'[AssemblyInitialize]' a/nebo '[AssemblyCleanup]'.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">Testovací class '{0}' by měla mít aspoň jednu testovací metodu nebo by měla být 'static' s metodami s označením '[AssemblyInitialize]' a/nebo '[AssemblyCleanup]'.</target>
+        <target state="translated">Testovací class ‚{0}' by měla mít aspoň jednu testovací metodu nebo by měla být ‚static' s metodami s označením ‚[AssemblyInitialize]' a/nebo ‚[AssemblyCleanup]'.</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
@@ -1424,7 +1424,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="translated">MSTest ignoruje '[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
+        <target state="translated">MSTest ignoruje ‚[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
         <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -1529,7 +1529,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksTitle">
         <source>Do not use asserts in catch blocks</source>
-        <target state="translated">Nepoužívat kontrolní výrazy v blocích catch</target>
+        <target state="translated">Nepoužívejte kontrolní výrazy v blocích catch</target>
         <note>{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
@@ -1539,7 +1539,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
-        <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' nebo 'Assert.ThrowsExactlyAsync' a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch. Pravidlo také označí výjimku 'throw new AssertFailedException(...)' a 'throw new AssertInconclusiveException(...)'. (asynchronní tvary 'Assert.Fail' a 'Assert.Inconclusive)'. 'Assert.Inconclusive' (a 'throw new AssertInconclusiveException(...)') se vyloučí při použití uvnitř filtrovaného catch ('catch (...) when (...)'), protože snížení úrovně zachyceného selhání na neprůkazný výsledek je jediný případ použití, který se nedá vyjádřit bez bloku catch. U jiných záměrných obejití (například při připojení zprávy sestavené za běhu k selhání) potlačte diagnostiku pomocí „#pragma warning disable MSTEST0058'.</target>
+        <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde i tehdy, když se nevyvolá žádná výjimka a blok catch se vůbec nespustí. K ověření, že je vyvolána výjimka, použijte metody ‚Assert.Throws‘, ‚Assert.ThrowsExactly‘, ‚Assert.ThrowsAsync‘ nebo ‚Assert.ThrowsExactlyAsync‘, a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try‑catch. Pravidlo také označí výskyty ‚throw new AssertFailedException(...)‘ a ‚throw new AssertInconclusiveException(...)‘ (desugarované formy ‚Assert.Fail‘ a ‚Assert.Inconclusive‘). ‚Assert.Inconclusive‘ (a ‚throw new AssertInconclusiveException(...)‘) je vyňato, pokud je použito uvnitř filtrovaného catch (‚catch (...) when (...)‘), protože převedení zachyceného selhání na neprůkazný výsledek je jediný případ použití, který nelze vyjádřit bez bloku catch.
+U jiných záměrných obejití (například při připojení zprávy sestavené za běhu k selhání) potlačte diagnostiku pomocí ‚#pragma warning disable MSTEST0058‘.</target>
         <note>{Locked="#pragma warning disable MSTEST0058"}{Locked="AssertInconclusiveException"}{Locked="Assert.ThrowsExactlyAsync"}{Locked="AssertFailedException"}{Locked="Assert.ThrowsExactly"}{Locked="Assert.Inconclusive"}{Locked="Assert.ThrowsAsync"}{Locked="Assert.Throws"}{Locked="Assert.Fail"}{Locked="throw new AssertFailedException(...)"}{Locked="throw new AssertInconclusiveException(...)"}{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
@@ -1609,7 +1610,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="translated">Testovací class '{0}' nemá platný konstruktor. Platné konstruktory jsou 'public' a buď bez parametrů, nebo s jedním parametrem typu 'TestContext'.</target>
+        <target state="translated">Testovací class ‚{0}' nemá platný konstruktor. Platné konstruktory jsou ‚public', a to a buď bez parametrů, nebo s jedním parametrem typu ‚TestContext'.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
