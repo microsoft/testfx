@@ -138,8 +138,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, newAttemptResults);
             appendedAttempts[i] = [.. attemptHistories[i].Where(attempt => attempt.SequenceId > updates[i].Published.LastPublishedSubResultSequenceId)];
             totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, newAttemptResults);
-            startedDates[i] = Min(updates[i].Published.StartedDate, AzureDevOpsResultIdStore.GetEarliestStartedDate(newAttemptResults));
-            completedDates[i] = Max(updates[i].Published.CompletedDate, AzureDevOpsResultIdStore.GetLatestCompletedDate(newAttemptResults));
+            (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(newAttemptResults);
+            startedDates[i] = Min(updates[i].Published.StartedDate, startedDate);
+            completedDates[i] = Max(updates[i].Published.CompletedDate, completedDate);
             parents[i] = updates[i].Attempt.Result with
             {
                 Id = updates[i].Published.Id,
