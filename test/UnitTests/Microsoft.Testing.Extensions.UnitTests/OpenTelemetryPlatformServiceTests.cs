@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
+using System.Reflection;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Telemetry;
@@ -22,6 +23,9 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class OpenTelemetryPlatformServiceTests : IDisposable
 {
+    private static readonly FieldInfo ObservableInstrumentsField = typeof(OpenTelemetryPlatformService)
+        .GetField("_observableInstruments", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
     private readonly string _namePrefix = $"test-{Guid.NewGuid():N}-";
     private readonly List<Activity> _stoppedActivities = [];
     private readonly Activity? _ambientAtStart = Activity.Current;
@@ -254,10 +258,10 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void CreateObservableGauge_RootsTheInstrumentAndObservesItsValueAfterGarbageCollection()
+    public void CreateObservableGauge_RootsTheInstrumentUntilDisposalAndObservesItsValue()
     {
         string instrumentName = Name("observable-gauge");
-        using MetricCapture capture = new(instrumentName, enableMeasurementEventsOnPublish: false);
+        using MetricCapture capture = new(instrumentName);
         int callbackCount = 0;
 
         _service.CreateObservableGauge(
@@ -277,12 +281,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.AreEqual("Queued tests", instrument.Description);
         Assert.IsEmpty(instrument.Tags);
 
-        WeakReference<Instrument>? instrumentReference = capture.InstrumentReference;
-        Assert.IsNotNull(instrumentReference);
-        ForceGarbageCollection();
-        Assert.IsTrue(instrumentReference.TryGetTarget(out Instrument? observableGauge));
-
-        capture.EnableMeasurementEvents(observableGauge);
+        Assert.HasCount(1, GetObservableInstruments());
         capture.RecordObservableInstruments();
 
         Assert.AreEqual(1, callbackCount);
@@ -290,19 +289,54 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.AreEqual(instrumentName, measurement.InstrumentName);
         Assert.AreEqual(42d, measurement.Value);
         Assert.IsEmpty(measurement.Tags);
-        GC.KeepAlive(_service);
+
+        _service.Dispose();
+        Assert.IsEmpty(GetObservableInstruments());
     }
 
     [TestMethod]
     public void StartNonAmbientActivity_WithRootTraceState_StampsTheActivity()
     {
-        _service.RootTraceState = "vendor=state";
-
-        using (_service.StartNonAmbientActivity(Name("root-trace-state")))
+        Activity? ambient = Activity.Current;
+        try
         {
+            Activity.Current = null;
+            _service.RootTraceState = "vendor=state";
+
+            using IPlatformActivity? activity = _service.StartNonAmbientActivity(Name("root-trace-state"));
+            Assert.IsNotNull(activity);
+            Assert.IsNull(Activity.Current);
+        }
+        finally
+        {
+            Activity.Current = ambient;
         }
 
         Assert.AreEqual("vendor=state", Single().TraceStateString);
+        Assert.AreSame(_ambientAtStart, Activity.Current);
+    }
+
+    [TestMethod]
+    public void StartActivity_WithRootTraceState_StampsTheActivity()
+    {
+        Activity? ambient = Activity.Current;
+        try
+        {
+            Activity.Current = null;
+            _service.RootTraceState = "vendor=state";
+
+            using IPlatformActivity? activity = _service.StartActivity(Name("root-trace-state"));
+            Assert.IsNotNull(activity);
+            Assert.IsNotNull(Activity.Current);
+            Assert.AreEqual(Name("root-trace-state"), Activity.Current.OperationName);
+            Assert.AreEqual("vendor=state", Activity.Current.TraceStateString);
+        }
+        finally
+        {
+            Activity.Current = ambient;
+        }
+
+        Assert.AreSame(_ambientAtStart, Activity.Current);
     }
 
     [TestMethod]
@@ -315,11 +349,12 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             parent.TraceStateString = "parent=state";
             parent.Start();
 
-            using (_service.StartActivity(Name("child")))
-            {
-                Assert.IsNotNull(Activity.Current);
-                Assert.AreEqual("parent=state", Activity.Current.TraceStateString);
-            }
+            using IPlatformActivity? child = _service.StartActivity(Name("child"));
+            Assert.IsNotNull(child);
+            Assert.AreEqual(parent.TraceId.ToString(), child.TraceId);
+            Assert.IsNotNull(Activity.Current);
+            Assert.AreEqual(Name("child"), Activity.Current.OperationName);
+            Assert.AreEqual("parent=state", Activity.Current.TraceStateString);
         }
 
         Assert.AreSame(_ambientAtStart, Activity.Current);
@@ -348,14 +383,6 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.AreSame(_ambientAtStart, Activity.Current);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ForceGarbageCollection()
-    {
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-    }
-
     private static void AssertSingleTag(KeyValuePair<string, object?>[] tags, string key, object? value)
     {
         Assert.HasCount(1, tags);
@@ -368,6 +395,9 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             .Where(tag => tag.Key == key)
             .Select(tag => tag.Value)
             .FirstOrDefault();
+
+    private IReadOnlyCollection<object> GetObservableInstruments()
+        => (IReadOnlyCollection<object>)ObservableInstrumentsField.GetValue(_service)!;
 
     private string Name(string name) => _namePrefix + name;
 
@@ -397,7 +427,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         private readonly List<Measurement> _measurements = [];
         private readonly MeterListener _listener;
 
-        public MetricCapture(string instrumentName, bool enableMeasurementEventsOnPublish = true)
+        public MetricCapture(string instrumentName)
         {
             _listener = new MeterListener
             {
@@ -417,15 +447,9 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
                             instrument.Unit,
                             instrument.Description,
                             instrument.Tags?.ToArray() ?? []));
-                        InstrumentReference = new(instrument);
                     }
 
-                    // The gauge lifetime test deliberately waits until after a forced GC before enabling events,
-                    // so this listener cannot be the object keeping the observable instrument alive.
-                    if (enableMeasurementEventsOnPublish)
-                    {
-                        listener.EnableMeasurementEvents(instrument);
-                    }
+                    listener.EnableMeasurementEvents(instrument);
                 },
             };
             _listener.SetMeasurementEventCallback<long>((instrument, measurement, tags, _) => Capture(instrument, measurement, tags));
@@ -433,11 +457,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             _listener.Start();
         }
 
-        public WeakReference<Instrument>? InstrumentReference { get; private set; }
-
         public void Dispose() => _listener.Dispose();
-
-        public void EnableMeasurementEvents(Instrument instrument) => _listener.EnableMeasurementEvents(instrument);
 
         public void RecordObservableInstruments() => _listener.RecordObservableInstruments();
 
