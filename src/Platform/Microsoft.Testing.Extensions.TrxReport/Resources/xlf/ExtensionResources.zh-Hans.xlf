@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file.</source>
-        <target state="needs-review-translation">基线 TRX 文件。</target>
+        <target state="translated">基线 TRX 文件。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
@@ -44,17 +44,17 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="needs-review-translation">“--{0}”需要单一 trx 文件路径作为参数</target>
+        <target state="translated">“--{0}”需要单一 trx 文件路径作为参数</target>
         <note>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline.</source>
-        <target state="needs-review-translation">要与基线进行比较的 TRX 文件。</target>
+        <target state="translated">要与基线进行比较的 TRX 文件。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">警告： Trx 文件 '{0}' 已存在，将被覆盖。</target>
+        <target state="translated">警告： Trx 文件 '{0}' 已存在，将被覆盖。</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths.</source>
-        <target state="needs-review-translation">两个或更多输入 TRX 文件路径。</target>
+        <target state="translated">两个或更多输入 TRX 文件路径。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path.</source>
-        <target state="needs-review-translation">输出 TRX 文件路径。</target>
+        <target state="translated">输出 TRX 文件路径。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
@@ -178,7 +178,7 @@ Example: 'MyReport_{tfm}.trx'.</source>
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report.</source>
-        <target state="needs-review-translation">启用 TRX 报表生成。</target>
+        <target state="translated">启用 TRX 报表生成。</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

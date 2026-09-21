@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="needs-review-translation">Для "--publish-azdo-test-results" установлено значение, но публикация в реальном времени в Azure DevOps отключена, так как следующие переменные среды отсутствуют или недопустимы: {0}.</target>
+        <target state="translated">Для "--publish-azdo-test-results" установлено значение, но публикация в реальном времени в Azure DevOps отключена, так как следующие переменные среды отсутствуют или недопустимы: {0}.</target>
         <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="needs-review-translation">Не удалось загрузить журнал ненадежных экземпляров Azure DevOps. Продолжение без заметок журнала. {0}</target>
+        <target state="translated">Не удалось загрузить журнал ненадежных экземпляров Azure DevOps. Продолжение без заметок журнала. {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
@@ -244,7 +244,7 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="needs-review-translation">Запрошен журнал ненадежных экземпляров Azure DevOps, но обязательные переменные среды Azure DevOps отсутствуют. Продолжение без заметок журнала.</target>
+        <target state="translated">Запрошен журнал ненадежных экземпляров Azure DevOps, но обязательные переменные среды Azure DevOps отсутствуют. Продолжение без заметок журнала.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
@@ -349,7 +349,7 @@
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="needs-review-translation">Не удалось загрузить файл карантина Azure DevOps "{0}". Продолжение без учета карантина. {1}</target>
+        <target state="translated">Не удалось загрузить файл карантина Azure DevOps "{0}". Продолжение без учета карантина. {1}</target>
         <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">

@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="needs-review-translation">在重试之间添加延迟。延迟以时间值表示，例如 200、500ms、1s、2.5m、1h、1d。默认单位为毫秒。</target>
+        <target state="translated">在重试之间添加延迟。延迟以时间值表示，例如 200、500ms、1s、2.5m、1h、1d。默认单位为毫秒。</target>
         <note>Do not localize time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
-        <target state="needs-review-translation">如果失败的测试百分比大于指定值，则禁用重试机制。</target>
+        <target state="translated">如果失败的测试百分比大于指定值，则禁用重试机制。</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
@@ -79,7 +79,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
-        <target state="needs-review-translation">如果失败的测试数大于指定值，则禁用重试机制。</target>
+        <target state="translated">如果失败的测试数大于指定值，则禁用重试机制。</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times.</source>
-        <target state="needs-review-translation">将失败的测试重试指定次数。</target>
+        <target state="translated">将失败的测试重试指定次数。</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="needs-review-translation">型 '{0}' を '{1}' に割り当てることはできません。</target>
+        <target state="translated">型 '{0}' を '{1}' に割り当てることはできません。</target>
         <note>{0} is the argument name, for example applicationType. {1} is the fully qualified class name, for example Microsoft.UI.Xaml.Application.</note>
       </trans-unit>
       <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">

@@ -93,7 +93,7 @@ Exemple : « MyReport_{tfm}.xml ».</target>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report.</source>
-        <target state="needs-review-translation">Activer la génération d’un rapport XML JUnit.</target>
+        <target state="translated">Activer la génération d’un rapport XML JUnit.</target>
         <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportRequiresArtifactPostProcessing">

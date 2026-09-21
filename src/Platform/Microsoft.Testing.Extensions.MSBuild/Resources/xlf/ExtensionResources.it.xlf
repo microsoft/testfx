@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="MSBuildNodeOptionDescription">
         <source>Used to pass the MSBuild node handle.</source>
-        <target state="needs-review-translation">Utilizzato per passare l'handle del nodo MSBuild.</target>
+        <target state="translated">Utilizzato per passare l'handle del nodo MSBuild.</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>

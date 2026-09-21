@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file.</source>
-        <target state="needs-review-translation">Fichier TRX de référence.</target>
+        <target state="translated">Fichier TRX de référence.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
@@ -44,17 +44,17 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="needs-review-translation">'--{0}' attend un seul chemin de fichier trx comme argument</target>
+        <target state="translated">'--{0}' attend un seul chemin de fichier trx comme argument</target>
         <note>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline.</source>
-        <target state="needs-review-translation">Fichier TRX à comparer à la ligne de base.</target>
+        <target state="translated">Fichier TRX à comparer à la ligne de base.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">Avertissement : le fichier Trx '{0}' existe déjà et sera remplacé.</target>
+        <target state="translated">Avertissement : le fichier Trx '{0}' existe déjà et sera remplacé.</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths.</source>
-        <target state="needs-review-translation">Deux chemins d’accès ou plus vers des fichiers TRX d’entrée.</target>
+        <target state="translated">Deux chemins d’accès ou plus vers des fichiers TRX d’entrée.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path.</source>
-        <target state="needs-review-translation">Le chemin d’accès vers le fichier TRX de sortie.</target>
+        <target state="translated">Le chemin d’accès vers le fichier TRX de sortie.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
@@ -178,7 +178,7 @@ Exemple : « MyReport_{tfm}.trx ».</target>
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report.</source>
-        <target state="needs-review-translation">Activer la génération du rapport TRX.</target>
+        <target state="translated">Activer la génération du rapport TRX.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
