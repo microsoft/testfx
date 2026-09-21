@@ -164,7 +164,7 @@ Note that `-test` allows to run the unit tests and `-integrationTest` allows to 
 
 ### Mutation testing
 
-The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the production projects covered by the unit-test projects in `MutationTesting.slnx`. Install the pinned tool to a dedicated path and run it from the repository root:
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the server-mode client sources with their unit tests in `MutationTesting.slnx`. Install the pinned tool to a dedicated path and run it from the repository root:
 
 On Windows PowerShell:
 
@@ -173,9 +173,11 @@ $strykerVersion = (Get-Content .config/stryker/dotnet-tools.json | ConvertFrom-J
 $toolCommand = if (Test-Path artifacts/tools/stryker/dotnet-stryker.exe) { "update" } else { "install" }
 $previousMutationTesting = $env:MutationTesting
 $previousDotnetRoot = $env:DOTNET_ROOT
+$previousTelemetryOptOut = $env:DOTNET_CLI_TELEMETRY_OPTOUT
 $previousPath = $env:PATH
 try {
     $env:DOTNET_ROOT = (Resolve-Path .dotnet).Path
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
     $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
     & ./.dotnet/dotnet tool $toolCommand dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
     $env:MutationTesting = "true"
@@ -184,6 +186,7 @@ try {
 finally {
     $env:MutationTesting = $previousMutationTesting
     $env:DOTNET_ROOT = $previousDotnetRoot
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = $previousTelemetryOptOut
     $env:PATH = $previousPath
 }
 ```
@@ -193,6 +196,7 @@ On Linux and macOS:
 ```shell
 (
   export DOTNET_ROOT="$PWD/.dotnet"
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
   export PATH="$DOTNET_ROOT:$PATH"
   stryker_version=$(jq -r '.tools["dotnet-stryker"].version' .config/stryker/dotnet-tools.json)
   tool_command=install
