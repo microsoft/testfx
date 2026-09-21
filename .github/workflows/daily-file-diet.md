@@ -201,11 +201,11 @@ Based on the file's structure, split it into the following modules:
 Submit the issue only after the final title and body are complete:
 
 1. Use the file-editing tool to write the final body to
-   `/tmp/gh-aw/agent/issue-body.md`.
+   `/tmp/gh-aw/issue-body.md`.
 2. Invoke the safe-output CLI exactly once:
 
    ```bash
-   safeoutputs create_issue --title "<FINAL_TITLE>" --body "$(cat /tmp/gh-aw/agent/issue-body.md)"
+   safeoutputs create_issue --title "<FINAL_TITLE>" --body "$(cat /tmp/gh-aw/issue-body.md)"
    ```
 
 Do not call `create_issue` as a direct tool; it is not registered by the current
