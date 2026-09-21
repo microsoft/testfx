@@ -434,12 +434,12 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組勾點宣告為 'async void'。平台會同步叫用此勾點，因此它會在第一次 await 時返回: 此後其所註冊的所有內容都會和測試應用程式本身的設定進行競爭，進而遺失所有的失敗資訊。請將此勾點設為同步。</target>
+        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組勾點宣告為 'async void'。平台會同步叫用此勾點，因此它會在第一次等待時返回: 此後其所註冊的所有內容都會和測試應用程式本身的設定進行競爭，進而遺失所有的失敗資訊。請將此勾點設為同步。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組勾點傳回 '{4}'，但應該要傳回 'void'。平台會同步叫用此勾點，因此永遠不會觀察到傳回值；尤其是，不會等待傳回的工作，並會遺失其註冊和失敗的相關資訊。</target>
+        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組勾點傳回了 '{4}'，但預期要傳回 'void'。平台會同步叫用勾點，因此永遠不會觀察到傳回值；尤其是，永遠不會等待傳回的工作，並會遺失其註冊和失敗的相關資訊。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">

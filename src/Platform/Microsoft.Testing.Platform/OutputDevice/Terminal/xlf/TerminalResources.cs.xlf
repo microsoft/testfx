@@ -437,10 +437,10 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="translated">Určuje, jestli se vygenerují řídicí znaky ANSI.
-Platné hodnoty jsou 'auto' (výchozí), 'on' (přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0').
-Hodnota 'on' vynutí použití řídicích sekvencí ANSI (včetně pohybu kurzoru) i v případě, že je standardní výstup (stdout) přesměrován; pokud chcete pouze barvy, použijte ji společně s přepínačem --progress off.
-Pokud je zadán přepínač --ansi i přepínač --no-ansi, má přednost přepínač --ansi.</target>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -486,8 +486,8 @@ Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
         <target state="translated">Určuje, jestli se má průběh zobrazovat na obrazovce.
-Platné hodnoty jsou 'auto' (výchozí), 'on' (přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0').
-Hodnota 'auto' zobrazuje průběh, pokud terminál nemůže provádět místní aktualizaci (například pomocí --no-ansi nebo v CI).
+Platné hodnoty jsou ‚auto' (výchozí), 'on' (přijímá také hodnoty ‚true', ‚enable', ‚1') nebo ‚off' (přijímá také hodnoty ‚false', ‚disable', '0').
+Hodnota ‚auto' zobrazuje průběh, pokud terminál nemůže provádět místní aktualizaci (například pomocí --no-ansi nebo v CI).
 Tato možnost má přednost před zastaralým příznakem --no-progress.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
       </trans-unit>
@@ -505,9 +505,9 @@ Tato možnost má přednost před zastaralým příznakem --no-progress.</target
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="translated">Určete, jestli jsou testy, které selhaly alespoň jednou, ale nakonec úspěšné po opakování, uvedené v souhrnu spuštění.
-Platné hodnoty jsou 'on' (výchozí hodnota, přijímá také 'true', 'enable', '1') nebo 'off' (přijímá také 'false', 'disable', '0').
-Když se možnost předá bez hodnoty, zapne se.</target>
+        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</target>
         <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">

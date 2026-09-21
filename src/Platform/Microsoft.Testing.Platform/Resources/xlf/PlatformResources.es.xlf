@@ -953,7 +953,7 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
         <target state="translated">No informe de un valor de salida no correcto para los códigos de salida especificados.
-Por ejemplo, "--ignore-exit-code 8;9" omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
+Por ejemplo, '--ignore-exit-code 8;9' omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
 Para obtener más información sobre los códigos de salida, consulte https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
