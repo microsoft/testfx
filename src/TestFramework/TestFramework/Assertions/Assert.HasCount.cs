@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -237,7 +239,7 @@ public sealed partial class Assert
         // string instead of allocating "Assert." + assertionName on every call.
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
-        int actualCount = GetCount(collection);
+        int actualCount = CollectionCountHelper.GetCount(collection);
         if (actualCount == expected)
         {
             return;
@@ -245,13 +247,6 @@ public sealed partial class Assert
 
         ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
     }
-
-    private static int GetCount<T>(IEnumerable<T> collection)
-        => collection is ICollection<T> genericCollection
-            ? genericCollection.Count
-            : collection is ICollection nonGenericCollection
-                ? nonGenericCollection.Count
-                : collection.Count();
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
     {

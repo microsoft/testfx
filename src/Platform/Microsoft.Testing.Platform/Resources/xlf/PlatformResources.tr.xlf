@@ -534,7 +534,7 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="translated">Uzantı bildirimi '{0}', yüklemek için uzantılar bildiriyor, ancak geçerli clr çalışma zamanı derlemeleri dinamik olarak yüklemeyi desteklemiyor (örneğin, native AOT ile yayımlandığında). Her uzantının '{1}' özelliğini 'false' olarak ayarlayın, bildirimi kaldırın veya komut satırından '{2}' seçeneğini kaldırın.</target>
+        <target state="translated">Uzantı bildirimi '{0}', yüklemek için uzantılar bildiriyor, ancak geçerli çalışma zamanı derlemeleri dinamik olarak yüklemeyi desteklemiyor (örneğin, native AOT ile yayımlandığında). Her uzantının '{1}' özelliğini 'false' olarak ayarlayın, bildirimi kaldırın veya komut satırından '{2}' seçeneğini kaldırın.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">

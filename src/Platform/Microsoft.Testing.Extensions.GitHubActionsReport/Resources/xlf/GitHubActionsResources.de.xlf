@@ -219,7 +219,7 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
-        <target state="translated">Ungültiger Wert: „{0}“. Der Schwellenwert für langsame Tests muss eine positive Dauer aufweisen, z. B. „60“, „90 Sek.“ oder „2 Min.“.</target>
+        <target state="translated">Ungültiger Wert: „{0}“. Der Schwellenwert für langsame Tests muss eine positive Dauer aufweisen, z. B. „60“, „90s“ oder „2m“.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
@@ -304,7 +304,7 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="translated">Für die Unteroptionen des GitHub Actions-Berichts muss '--{0}' angegeben werden.</target>
+        <target state="translated">Für Unteroptionen des GitHub Actions-Berichts muss „--{0}“ angegeben werden.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">

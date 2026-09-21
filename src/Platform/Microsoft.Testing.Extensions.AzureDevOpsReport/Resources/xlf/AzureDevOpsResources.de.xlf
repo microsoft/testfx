@@ -269,7 +269,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
-        <target state="translated">Aktivieren oder deaktivieren Sie assemblyspezifische Azure DevOps Protokollgruppen („on“ oder „off“). Wird standardmäßig auf „off“ festgelegt. Erfordert „--report-azdo“.</target>
+        <target state="translated">Aktiviert oder deaktiviert assemblyspezifische Azure DevOps Protokollgruppen („on“ oder „off“). Wird standardmäßig auf „off“ festgelegt. Erfordert „--report-azdo“.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -424,7 +424,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">Schreiben Sie am Ende des Testlaufs eine Markdownauftragszusammenfassung, und laden Sie sie über „##vso[task.uploadsummary]“ hoch. Ein optionales Dateipfadargument überschreibt den Standardspeicherort („{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'“). Erfordert „--report-azdo“.</target>
+        <target state="new">Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</target>
         <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
