@@ -10,7 +10,7 @@
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
         <target state="new">Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
@@ -19,8 +19,8 @@
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="translated">GitHub Actions 報告產生器</target>
-        <note />
+        <target state="needs-review-translation">GitHub Actions 報告產生器</target>
+        <note>Translate "report generator". Do not localize the product name {Locked="GitHub Actions"}.</note>
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
         <source>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</source>
@@ -155,7 +155,7 @@
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
         <target state="new">Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
         <source>Historical duration: p95 {0}, p99 {1} across {2} prior samples.</source>
@@ -220,7 +220,7 @@
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
         <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
-        <note>{Locked="s"}{Locked="m"}</note>
+        <note>{Locked="60"}{Locked="90s"}{Locked="2m"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
         <source>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</source>
@@ -270,7 +270,7 @@
       <trans-unit id="SlowTestNoticesOptionDescription">
         <source>Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
         <target state="new">Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
@@ -280,7 +280,7 @@
       <trans-unit id="SlowTestThresholdOptionDescription">
         <source>The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</source>
         <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
-        <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
+        <note>{Locked="90s"}{Locked="2m"}{Locked="1.5h"}{Locked="60s"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryLimitExceededWarning">
         <source>The GitHub job summary file is {0} bytes and appending this report section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for these results.</source>

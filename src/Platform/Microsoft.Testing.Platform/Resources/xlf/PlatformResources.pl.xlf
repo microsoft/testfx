@@ -671,8 +671,8 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
-        <target state="translated">W testconfig.json w obszarze „commandLineOptions”: {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
+        <target state="needs-review-translation">W testconfig.json w obszarze „commandLineOptions”: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -681,13 +681,13 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="translated">Element JSON najwyższego poziomu musi być obiektem. Zamiast tego znaleziono element „{0}”</target>
-        <note>{0} is the JSON value kind that was found.</note>
+        <target state="needs-review-translation">Element JSON najwyższego poziomu musi być obiektem. Zamiast tego znaleziono element „{0}”</target>
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="translated">Znaleziono nieobsługiwany token JSON „{0}”</target>
-        <note>{0} is the unsupported JSON token type.</note>
+        <target state="needs-review-translation">Znaleziono nieobsługiwany token JSON „{0}”</target>
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>

@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">Abilita o disabilita le annotazioni degli errori di Azure DevOps ('on' o 'off'). L'impostazione predefinita è 'on'. Richiede "--report-azdo".</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+        <target state="needs-review-translation">Abilita o disabilita le annotazioni degli errori di Azure DevOps ('on' o 'off'). L'impostazione predefinita è 'on'. Richiede "--report-azdo".</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>

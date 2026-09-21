@@ -244,11 +244,11 @@
   </data>
   <data name="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage" xml:space="preserve">
     <value>Top-level JSON element must be an object. Instead, '{0}' was found</value>
-    <comment>{0} is the JSON value kind that was found.</comment>
+    <comment>{0} is the JSON value kind that was found and must occur exactly once in the translation.</comment>
   </data>
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
-    <comment>{0} is the unsupported JSON token type.</comment>
+    <comment>{0} is the unsupported JSON token type and must occur exactly once in the translation.</comment>
   </data>
   <data name="JsonConfigurationSectionMustBeAnObjectErrorMessage" xml:space="preserve">
     <value>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</value>
@@ -264,7 +264,7 @@
   </data>
   <data name="JsonCommandLineOptionsValidationErrorPrefix" xml:space="preserve">
     <value>In testconfig.json under 'commandLineOptions': {0}</value>
-    <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</comment>
+    <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</comment>
   </data>
   <data name="JsonCommandLineOptionDefaultsValidationErrorPrefix" xml:space="preserve">
     <value>In testconfig.json under 'commandLineOptionDefaults': {0}</value>
