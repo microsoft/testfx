@@ -379,6 +379,87 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: and(failed(), eq(variables.HasCrashDumps, 'true'))
 
+      # Non-blocking A/B experiment for replacing the full Windows Debug graph with the unit-test graph.
+      # Failures are emitted as warnings while this runs in parallel with the required Debug matrix leg.
+      - job: WindowsDebugSlim
+        displayName: Windows Debug slim experiment
+        dependsOn: DetectChanges
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        timeoutInMinutes: 45
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
+          - name: _BuildConfig
+            value: Debug
+        steps:
+        - pwsh: |
+            Write-Host "##vso[task.setvariable variable=WindowsDebugSlimPrerequisitesSucceeded]false"
+
+            $windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+            $failed = $false
+            foreach ($script in @(
+              '.\eng\install-windows-sdk.ps1',
+              '.\eng\install-procdump.ps1',
+              '.\eng\install-access-database-engine.ps1'
+            )) {
+              & $windowsPowerShell -ExecutionPolicy Bypass -NoProfile -File $script
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "##vso[task.logissue type=warning]Windows Debug slim prerequisite '$script' failed with exit code $LASTEXITCODE. The required full Debug leg remains authoritative."
+                $failed = $true
+              }
+            }
+
+            if (-not $failed) {
+              Write-Host "##vso[task.setvariable variable=WindowsDebugSlimPrerequisitesSucceeded]true"
+            }
+
+            exit 0
+          displayName: Install slim prerequisites
+
+        - pwsh: |
+            Write-Host "##vso[task.setvariable variable=WindowsDebugSlimBuildSucceeded]false"
+
+            & .\eng\common\CIBuild.cmd `
+              -configuration $(_BuildConfig) `
+              -prepareMachine `
+              -projects WindowsDebugUnitTests.slnf `
+              -binaryLogName WindowsDebugSlim.binlog `
+              -disablePipelineSetResult `
+              /p:Test=false `
+              /p:Pack=false `
+              /p:Sign=false `
+              /p:Publish=false `
+              /p:PublishWindowsPdb=false `
+              /p:FastAcceptanceTest=true
+            $exitCode = $LASTEXITCODE
+
+            if ($exitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]Windows Debug slim build failed with exit code $exitCode. The required full Debug leg remains authoritative."
+              exit 0
+            }
+
+            Write-Host "##vso[task.setvariable variable=WindowsDebugSlimBuildSucceeded]true"
+          displayName: Build unit-test graph
+          condition: and(succeeded(), eq(variables.WindowsDebugSlimPrerequisitesSucceeded, 'true'))
+
+        - pwsh: |
+            New-Item "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)" -ItemType Directory -Force | Out-Null
+
+            dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace --show-test-results failed
+            $exitCode = $LASTEXITCODE
+
+            if ($exitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]Windows Debug slim tests failed with exit code $exitCode. The required full Debug leg remains authoritative."
+            }
+
+            exit 0
+          displayName: Test unit-test graph
+          condition: and(succeeded(), eq(variables.WindowsDebugSlimBuildSucceeded, 'true'))
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
       # Real UWP and packaged WinUI activation require more than a Windows image label. Keep this as a
       # separate blocking job: its strict preflight verifies the VS/UWP SDKs and interactive machine state
       # before packing and running the application-model acceptance tests. If this image stops satisfying
