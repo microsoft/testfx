@@ -269,7 +269,7 @@ stages:
             targetType: 'inline'
             script: |
               New-Item -Path $(Build.SourcesDirectory)\artifacts\CrashDumps -ItemType Directory -Force
-              Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+              New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Force | Out-Null
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
