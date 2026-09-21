@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Globalization;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Telemetry;
@@ -9,14 +11,13 @@ using Microsoft.Testing.Platform.Telemetry;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 /// <summary>
-/// Exercises the real <see cref="OpenTelemetryPlatformService"/> against a live <see cref="ActivityListener"/>,
-/// which is the only way to cover the ambient-context behaviour that the mock-based platform tests cannot see.
+/// Exercises the real <see cref="OpenTelemetryPlatformService"/> against live <see cref="ActivityListener"/> and
+/// <see cref="MeterListener"/> instances, covering activity semantics and service-level instrument registration.
 /// </summary>
 /// <remarks>
-/// <see cref="Activity.Current"/> and the listener registry are process-global and the test host may already have
-/// an ambient activity of its own, so every assertion is made relative to the activity that was current when the
-/// test started, and the listener only collects activities this instance created (identified by a unique name
-/// prefix).
+/// <see cref="Activity.Current"/> and the listener registries are process-global, so listeners only collect
+/// activities and instruments created by this test instance (identified by a unique name prefix), and ambient
+/// activity assertions are relative to the activity that was current when the test started.
 /// </remarks>
 [TestClass]
 public sealed class OpenTelemetryPlatformServiceTests : IDisposable
@@ -174,6 +175,194 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.AreEqual("MyTest", Single().GetTagItem("test.case.name"));
     }
 
+    [TestMethod]
+    public void CreateCounter_ForwardsMetadataAndEmitsMeasurements()
+    {
+        string instrumentName = Name("counter");
+        using MetricCapture capture = new(instrumentName);
+
+        ICounter<long> counter = _service.CreateCounter<long>(
+            instrumentName,
+            unit: "{test}",
+            description: "Completed tests",
+            tags: [new("scope", "run")]);
+        counter.Add(7, [new("outcome", "passed")]);
+
+        PublishedInstrument instrument = capture.SingleInstrument();
+        Assert.AreEqual(OpenTelemetryPlatformService.MeterName, instrument.MeterName);
+        Assert.AreEqual(instrumentName, instrument.Name);
+        Assert.AreEqual("{test}", instrument.Unit);
+        Assert.AreEqual("Completed tests", instrument.Description);
+        AssertSingleTag(instrument.Tags, "scope", "run");
+
+        Measurement measurement = capture.SingleMeasurement();
+        Assert.AreEqual(instrumentName, measurement.InstrumentName);
+        Assert.AreEqual(7d, measurement.Value);
+        AssertSingleTag(measurement.Tags, "outcome", "passed");
+    }
+
+    [TestMethod]
+    public void CreateUpDownCounter_ForwardsMetadataAndEmitsMeasurements()
+    {
+        string instrumentName = Name("up-down-counter");
+        using MetricCapture capture = new(instrumentName);
+
+        IUpDownCounter<long> counter = _service.CreateUpDownCounter<long>(
+            instrumentName,
+            unit: "{test}",
+            description: "Active tests",
+            tags: [new("scope", "run")]);
+        counter.Add(-2, [new("state", "completed")]);
+
+        PublishedInstrument instrument = capture.SingleInstrument();
+        Assert.AreEqual(OpenTelemetryPlatformService.MeterName, instrument.MeterName);
+        Assert.AreEqual(instrumentName, instrument.Name);
+        Assert.AreEqual("{test}", instrument.Unit);
+        Assert.AreEqual("Active tests", instrument.Description);
+        AssertSingleTag(instrument.Tags, "scope", "run");
+
+        Measurement measurement = capture.SingleMeasurement();
+        Assert.AreEqual(instrumentName, measurement.InstrumentName);
+        Assert.AreEqual(-2d, measurement.Value);
+        AssertSingleTag(measurement.Tags, "state", "completed");
+    }
+
+    [TestMethod]
+    public void CreateHistogram_ForwardsMetadataAndEmitsMeasurements()
+    {
+        string instrumentName = Name("histogram");
+        using MetricCapture capture = new(instrumentName);
+
+        IHistogram<double> histogram = _service.CreateHistogram<double>(
+            instrumentName,
+            unit: "ms",
+            description: "Test duration",
+            tags: [new("scope", "test")]);
+        histogram.Record(12.5, [new("outcome", "failed")]);
+
+        PublishedInstrument instrument = capture.SingleInstrument();
+        Assert.AreEqual(OpenTelemetryPlatformService.MeterName, instrument.MeterName);
+        Assert.AreEqual(instrumentName, instrument.Name);
+        Assert.AreEqual("ms", instrument.Unit);
+        Assert.AreEqual("Test duration", instrument.Description);
+        AssertSingleTag(instrument.Tags, "scope", "test");
+
+        Measurement measurement = capture.SingleMeasurement();
+        Assert.AreEqual(instrumentName, measurement.InstrumentName);
+        Assert.AreEqual(12.5, measurement.Value);
+        AssertSingleTag(measurement.Tags, "outcome", "failed");
+    }
+
+    [TestMethod]
+    public void CreateObservableGauge_RootsTheInstrumentAndObservesItsValueAfterGarbageCollection()
+    {
+        string instrumentName = Name("observable-gauge");
+        using MetricCapture capture = new(instrumentName, enableMeasurementEventsOnPublish: false);
+        int callbackCount = 0;
+
+        _service.CreateObservableGauge(
+            instrumentName,
+            () =>
+            {
+                callbackCount++;
+                return 42L;
+            },
+            unit: "{test}",
+            description: "Queued tests");
+
+        PublishedInstrument instrument = capture.SingleInstrument();
+        Assert.AreEqual(OpenTelemetryPlatformService.MeterName, instrument.MeterName);
+        Assert.AreEqual(instrumentName, instrument.Name);
+        Assert.AreEqual("{test}", instrument.Unit);
+        Assert.AreEqual("Queued tests", instrument.Description);
+        Assert.IsEmpty(instrument.Tags);
+
+        WeakReference<Instrument>? instrumentReference = capture.InstrumentReference;
+        Assert.IsNotNull(instrumentReference);
+        ForceGarbageCollection();
+        Assert.IsTrue(instrumentReference.TryGetTarget(out Instrument? observableGauge));
+
+        capture.EnableMeasurementEvents(observableGauge);
+        capture.RecordObservableInstruments();
+
+        Assert.AreEqual(1, callbackCount);
+        Measurement measurement = capture.SingleMeasurement();
+        Assert.AreEqual(instrumentName, measurement.InstrumentName);
+        Assert.AreEqual(42d, measurement.Value);
+        Assert.IsEmpty(measurement.Tags);
+        GC.KeepAlive(_service);
+    }
+
+    [TestMethod]
+    public void StartNonAmbientActivity_WithRootTraceState_StampsTheActivity()
+    {
+        _service.RootTraceState = "vendor=state";
+
+        using (_service.StartNonAmbientActivity(Name("root-trace-state")))
+        {
+        }
+
+        Assert.AreEqual("vendor=state", Single().TraceStateString);
+    }
+
+    [TestMethod]
+    public void StartActivity_WithInheritedTraceState_DoesNotOverwriteIt()
+    {
+        _service.RootTraceState = "root=state";
+
+        using (Activity parent = new Activity(Name("external-parent")).SetIdFormat(ActivityIdFormat.W3C))
+        {
+            parent.TraceStateString = "parent=state";
+            parent.Start();
+
+            using (_service.StartActivity(Name("child")))
+            {
+                Assert.IsNotNull(Activity.Current);
+                Assert.AreEqual("parent=state", Activity.Current.TraceStateString);
+            }
+        }
+
+        Assert.AreSame(_ambientAtStart, Activity.Current);
+    }
+
+    [TestMethod]
+    public void TestFrameworkActivity_RoundTripsTheAssignedActivity()
+    {
+        using IPlatformActivity? activity = _service.StartActivity(Name("test-framework"));
+        Assert.IsNotNull(activity);
+
+        _service.TestFrameworkActivity = activity;
+        Assert.AreSame(activity, _service.TestFrameworkActivity);
+
+        _service.TestFrameworkActivity = null;
+        Assert.IsNull(_service.TestFrameworkActivity);
+    }
+
+    [TestMethod]
+    public void Dispose_PreventsNewActivitiesFromBeingCreated()
+    {
+        _service.Dispose();
+
+        Assert.IsNull(_service.StartActivity(Name("after-dispose")));
+        Assert.IsNull(_service.StartNonAmbientActivity(Name("non-ambient-after-dispose")));
+        Assert.AreSame(_ambientAtStart, Activity.Current);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ForceGarbageCollection()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
+
+    private static void AssertSingleTag(KeyValuePair<string, object?>[] tags, string key, object? value)
+    {
+        Assert.HasCount(1, tags);
+        Assert.AreEqual(key, tags[0].Key);
+        Assert.AreEqual(value, tags[0].Value);
+    }
+
     private static object? GetTag(ActivityEvent activityEvent, string key)
         => activityEvent.Tags
             .Where(tag => tag.Key == key)
@@ -187,6 +376,99 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         lock (_stoppedActivities)
         {
             return _stoppedActivities.Single();
+        }
+    }
+
+    private sealed record PublishedInstrument(
+        string MeterName,
+        string Name,
+        string? Unit,
+        string? Description,
+        KeyValuePair<string, object?>[] Tags);
+
+    private sealed record Measurement(
+        string InstrumentName,
+        double Value,
+        KeyValuePair<string, object?>[] Tags);
+
+    private sealed class MetricCapture : IDisposable
+    {
+        private readonly List<PublishedInstrument> _instruments = [];
+        private readonly List<Measurement> _measurements = [];
+        private readonly MeterListener _listener;
+
+        public MetricCapture(string instrumentName, bool enableMeasurementEventsOnPublish = true)
+        {
+            _listener = new MeterListener
+            {
+                InstrumentPublished = (instrument, listener) =>
+                {
+                    if (instrument.Meter.Name != OpenTelemetryPlatformService.MeterName
+                        || instrument.Name != instrumentName)
+                    {
+                        return;
+                    }
+
+                    lock (_instruments)
+                    {
+                        _instruments.Add(new(
+                            instrument.Meter.Name,
+                            instrument.Name,
+                            instrument.Unit,
+                            instrument.Description,
+                            instrument.Tags?.ToArray() ?? []));
+                        InstrumentReference = new(instrument);
+                    }
+
+                    // The gauge lifetime test deliberately waits until after a forced GC before enabling events,
+                    // so this listener cannot be the object keeping the observable instrument alive.
+                    if (enableMeasurementEventsOnPublish)
+                    {
+                        listener.EnableMeasurementEvents(instrument);
+                    }
+                },
+            };
+            _listener.SetMeasurementEventCallback<long>((instrument, measurement, tags, _) => Capture(instrument, measurement, tags));
+            _listener.SetMeasurementEventCallback<double>((instrument, measurement, tags, _) => Capture(instrument, measurement, tags));
+            _listener.Start();
+        }
+
+        public WeakReference<Instrument>? InstrumentReference { get; private set; }
+
+        public void Dispose() => _listener.Dispose();
+
+        public void EnableMeasurementEvents(Instrument instrument) => _listener.EnableMeasurementEvents(instrument);
+
+        public void RecordObservableInstruments() => _listener.RecordObservableInstruments();
+
+        public PublishedInstrument SingleInstrument()
+        {
+            lock (_instruments)
+            {
+                Assert.HasCount(1, _instruments);
+                return _instruments[0];
+            }
+        }
+
+        public Measurement SingleMeasurement()
+        {
+            lock (_instruments)
+            {
+                Assert.HasCount(1, _measurements);
+                return _measurements[0];
+            }
+        }
+
+        private void Capture<T>(Instrument instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags)
+            where T : struct
+        {
+            lock (_instruments)
+            {
+                _measurements.Add(new(
+                    instrument.Name,
+                    Convert.ToDouble(measurement, CultureInfo.InvariantCulture),
+                    tags.ToArray()));
+            }
         }
     }
 }
