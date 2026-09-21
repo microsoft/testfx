@@ -485,10 +485,10 @@ Os valores válidos são ''Minimal'', ''Normal'' e ''Detailed''. O padrão é ''
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-This option takes precedence over the deprecated --no-progress flag.</target>
+        <target state="translated">Controle se o progresso é exibido na tela.
+Os valores válidos são 'auto' (padrão), 'on' (também aceita 'true', 'enable', '1') ou 'off' (também aceita 'false', 'disable', '0').
+'auto' mostra o progresso, a menos que o terminal não consiga atualizar a exibição na mesma posição (por exemplo, com --no-ansi ou em CI).
+Essa opção tem precedência sobre o sinalizador preterido --no-progress.</target>
         <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">

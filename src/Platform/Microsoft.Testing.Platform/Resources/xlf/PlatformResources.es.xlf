@@ -953,7 +953,7 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
         <target state="translated">No informe de un valor de salida no correcto para los códigos de salida especificados.
-Por ejemplo, '--ignore-exit-code 8;9' omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
+Por ejemplo, "--ignore-exit-code 8;9" omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
 Para obtener más información sobre los códigos de salida, consulte https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
@@ -1294,7 +1294,7 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="translated">El iniciador de host de prueba "{0}" (UID: {1}) solicitó autorizar la identidad de seguridad "{2}" en la conexión del controlador host de prueba, pero solo se puede autorizar la identidad de una sola aplicación de espacio aislado (en Windows, un identificador de seguridad con el formato 'S-1-15-2-...'). Nunca se concede acceso a usuarios, grupos ni al identificador de seguridad "{3}" de uso general.</target>
+        <target state="translated">El iniciador de host de prueba "{0}" (UID: {1}) solicitó autorizar la identidad de seguridad "{2}" en la conexión del controlador host de prueba, pero solo se puede autorizar la identidad de una sola aplicación de espacio aislado (en Windows, un identificador de seguridad con el formato "S-1-15-2-..."). Nunca se concede acceso a usuarios, grupos ni al identificador de seguridad "{3}" de uso general.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
