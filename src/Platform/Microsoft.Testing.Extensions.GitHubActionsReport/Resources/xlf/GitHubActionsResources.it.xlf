@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="needs-review-translation">GitHub Actions report generator</target>
+        <target state="translated">GitHub Actions report generator</target>
         <note>Translate "report generator". Do not localize the product name {Locked="GitHub Actions"}.</note>
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="needs-review-translation">Enable o disable per i gruppi di log per assembly. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
+        <target state="translated">Enable o disable per i gruppi di log per assembly. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="HistoryDurationContext">
@@ -219,7 +219,7 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
-        <target state="needs-review-translation">Valore '{0}' non valido. La soglia di test lento deve essere espressa come durata positiva, ad esempio '60', '90s' o '2m'.</target>
+        <target state="translated">Valore '{0}' non valido. La soglia di test lento deve essere espressa come durata positiva, ad esempio '60', '90s' o '2m'.</target>
         <note>{Locked="60"}{Locked="90s"}{Locked="2m"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
@@ -269,7 +269,7 @@
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
         <source>Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="needs-review-translation">Enable o disable per le notifiche dei test lenti di GitHub Actions. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
+        <target state="translated">Enable o disable per le notifiche dei test lenti di GitHub Actions. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
         <note>{Locked="'on'"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">

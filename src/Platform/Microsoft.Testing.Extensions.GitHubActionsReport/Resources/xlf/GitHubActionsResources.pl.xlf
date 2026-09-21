@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="needs-review-translation">Generator raportów usługi GitHub Actions</target>
+        <target state="translated">Generator raportów usługi GitHub Actions</target>
         <note>Translate "report generator". Do not localize the product name {Locked="GitHub Actions"}.</note>
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
@@ -219,7 +219,7 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
-        <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
+        <target state="translated">Nieprawidłowa wartość „{0}”. Próg powolnego testu musi mieć dodatni czas trwania, np. „60”, „90s” lub „2m”.</target>
         <note>{Locked="60"}{Locked="90s"}{Locked="2m"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
