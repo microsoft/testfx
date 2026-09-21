@@ -193,6 +193,6 @@ Example: 'MyReport_{tfm}.xml'.</value>
   </data>
   <data name="JUnitReportOptionDescription" xml:space="preserve">
     <value>Enable generating a JUnit XML report.</value>
-    <comment>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</comment>
+    <comment>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</comment>
   </data>
 </root>
