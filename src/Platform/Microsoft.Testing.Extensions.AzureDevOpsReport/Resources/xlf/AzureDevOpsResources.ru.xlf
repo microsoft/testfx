@@ -94,8 +94,8 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="needs-review-translation">Для "--publish-azdo-test-results" установлено значение, но публикация в реальном времени в Azure DevOps отключена, так как следующие переменные среды отсутствуют или недопустимы: {0}.</target>
-        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
+        <target state="translated">Для "--publish-azdo-test-results" установлено значение, но публикация в реальном времени в Azure DevOps отключена, так как следующие переменные среды отсутствуют или недопустимы: {0}.</target>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -234,8 +234,8 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="needs-review-translation">Не удалось загрузить журнал ненадежных экземпляров Azure DevOps. Продолжение без заметок журнала. {0}</target>
-        <note>{0} is the exception message.</note>
+        <target state="translated">Не удалось загрузить журнал ненадежных экземпляров Azure DevOps. Продолжение без заметок журнала. {0}</target>
+        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
@@ -244,8 +244,8 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="needs-review-translation">Запрошен журнал ненадежных экземпляров Azure DevOps, но обязательные переменные среды Azure DevOps отсутствуют. Продолжение без заметок журнала.</target>
-        <note />
+        <target state="translated">Запрошен журнал ненадежных экземпляров Azure DevOps, но обязательные переменные среды Azure DevOps отсутствуют. Продолжение без заметок журнала.</target>
+        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -349,8 +349,8 @@
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="needs-review-translation">Не удалось загрузить файл карантина Azure DevOps "{0}". Продолжение без учета карантина. {1}</target>
-        <note>{0} is the quarantine file path. {1} is the exception message.</note>
+        <target state="translated">Не удалось загрузить файл карантина Azure DevOps "{0}". Продолжение без учета карантина. {1}</target>
+        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
