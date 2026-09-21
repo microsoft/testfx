@@ -343,7 +343,7 @@ public sealed class IPCTests
                 requestTask,
                 Task.Delay(TimeoutHelper.DefaultHangTimeSpanTimeout, _testContext.CancellationToken));
             Assert.AreSame(requestTask, completedRequestTask, "The client request did not observe the closed pipe.");
-            await Assert.ThrowsAsync<Exception>(() => requestTask);
+            await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => requestTask);
         }
         finally
         {
