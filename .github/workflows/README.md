@@ -251,12 +251,13 @@ on the presence of an actual safe output or patch:
 ```yaml
 safe-outputs:
   threat-detection:
-    enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
+    enabled: ${{ (needs.agent.outputs.output_types != '' && needs.agent.outputs.output_types != 'noop') || needs.agent.outputs.has_patch == 'true' }}
 ```
 
-This preserves detection for every publishable output and patch while skipping the broken
-no-content conclude path. Remove the workaround after gh-aw fixes the external detector's skipped
-conclusion behavior.
+The collector reports an intentional no-op as `output_types=noop`, so the explicit exclusion is
+needed to skip the broken no-content conclude path while preserving detection for every
+publishable output and patch. Remove the workaround after gh-aw fixes the external detector's
+skipped conclusion behavior.
 
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
@@ -291,9 +292,13 @@ safe-outputs:
   threat-detection:
     prompt: >-
       [Workflow-specific trust-boundary guidance.]
-      Report the verdict only by invoking the pre-provisioned
-      `threat_detection_result` command exactly once. Do not print, echo, or
-      manually format a `THREAT_DETECTION_RESULT` line.
+      After deciding the three booleans, use the shell tool to execute exactly
+      one invocation of the pre-provisioned `threat_detection_result` command,
+      passing `--prompt-injection`, `--secret-leak`, and `--malicious-patch` with
+      boolean values. This command execution is the only accepted report; it
+      must happen before the final response. Never put the command in prose or
+      a Markdown code block, and do not print, echo, or manually format a
+      `THREAT_DETECTION_RESULT` line.
     model: detection
     engine:
       id: copilot
