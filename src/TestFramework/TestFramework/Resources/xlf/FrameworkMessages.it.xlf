@@ -115,7 +115,7 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchAt">
         <source>Mismatch at '{0}': {1}</source>
-        <target state="needs-review-translation">Mancata corrispondenza di ''{0}'': {1}</target>
+        <target state="translated">Mancata corrispondenza di ''{0}'': {1}</target>
         <note>{0} is a member path (e.g., Order.Items[2].Price). {1} is a localized reason describing the kind of mismatch.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
