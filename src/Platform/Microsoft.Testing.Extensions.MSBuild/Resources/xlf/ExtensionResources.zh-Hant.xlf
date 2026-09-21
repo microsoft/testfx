@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="MSBuildNodeOptionDescription">
         <source>Used to pass the MSBuild node handle.</source>
-        <target state="needs-review-translation">用來傳遞 MSBuild 節點控制代碼。</target>
+        <target state="translated">用來傳遞 MSBuild 節點控制代碼。</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>

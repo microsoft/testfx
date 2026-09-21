@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="MSBuildNodeOptionDescription">
         <source>Used to pass the MSBuild node handle.</source>
-        <target state="needs-review-translation">MSBuild düğümü tanıtıcısını geçirmek için kullanılır.</target>
+        <target state="translated">MSBuild düğümü tanıtıcısını geçirmek için kullanılır.</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>

@@ -93,7 +93,7 @@ Example: 'MyReport_{tfm}.html'.</source>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report.</source>
-        <target state="needs-review-translation">HTML raporu oluşturmayı etkinleştirin.</target>
+        <target state="translated">HTML raporu oluşturmayı etkinleştirin.</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">
