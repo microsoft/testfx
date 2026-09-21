@@ -219,7 +219,7 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
-        <target state="translated">Neplatná hodnota '{0}'. Prahová hodnota pomalého testu musí být kladná doba trvání, např. '60', '90s' nebo '2m'.</target>
+        <target state="translated">Neplatná hodnota ‚{0}'. Prahová hodnota pomalého testu musí být kladná doba trvání, např. ‚60', ‚90s' nebo ‚2m'.</target>
         <note>{Locked="60"}{Locked="90s"}{Locked="2m"}</note>
       </trans-unit>
       <trans-unit id="InvalidStepSummarySection">
@@ -279,7 +279,7 @@
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
         <source>The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</source>
-        <target state="translated">Doba trvání testu může běžet před GitHub Actions oznámení o pomalém testu. Přijímá holý počet sekund nebo hodnotu s příponou jednotky, například '90s', '2m' nebo '1.5h'. Výchozí hodnota je 60s.</target>
+        <target state="translated">Doba trvání testu může běžet před GitHub Actions oznámení o pomalém testu. Přijímá holý počet sekund nebo hodnotu s příponou jednotky, například ‚90s', ‚2m' nebo ‚1.5h'. Výchozí hodnota je 60s.</target>
         <note>{Locked="90s"}{Locked="2m"}{Locked="1.5h"}{Locked="60s"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryLimitExceededWarning">
@@ -304,7 +304,7 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="translated">Dílčí možnosti sestavy GitHub Actions vyžadují zadání parametru '--{0}'.</target>
+        <target state="translated">Dílčí možnosti sestavy GitHub Actions vyžadují zadání parametru ‚--{0}'.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="--{0}"}</note>
       </trans-unit>
       <trans-unit id="SummaryCondensed">
