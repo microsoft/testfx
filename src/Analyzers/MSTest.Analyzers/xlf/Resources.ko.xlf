@@ -347,7 +347,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">'{0}'은(는) 프로세스 전역 현재 디렉터리를 변경합니다. 이 디렉터리는 스레드별 대응 항목이 없고 동시에 실행되는 모든 테스트에서 관찰됩니다. 병렬화된 테스트 도구 모음에서는 이를 변경하지 마세요. 최소한 '[ResourceLock(WellKnownResources.CurrentDirectory)]'로 조정하거나 '[DoNotParallelize]'를 지정하세요.</target>
+        <target state="translated">'{0}'은(는) 프로세스 전역 현재 디렉터리를 변경합니다. 이 디렉터리는 스레드별 대응 항목이 없고 동시에 실행되는 모든 테스트에서 관찰됩니다. 병렬화된 테스트 도구 모음에서는 이를 변경하지 마세요. 최소한 '[ResourceLock(WellKnownResources.CurrentDirectory)]'로 조정하거나 '[DoNotParallelize]'를 지정하세요.</target>
         <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
@@ -1107,7 +1107,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">'{0}'은(는) 프로세스 전역 상태를 변경하므로 테스트가 병렬로 실행될 때는 안전하지 않습니다. 테스트에 '[ResourceLock(WellKnownResources.{1})]'을(를) 선언하세요. 또는 '[DoNotParallelize]'을(를) 사용하세요.</target>
+        <target state="translated">'{0}'은(는) 프로세스 전역 상태를 변경하므로 테스트가 병렬로 실행될 때는 안전하지 않습니다. 테스트에 '[ResourceLock(WellKnownResources.{1})]'을(를) 선언하세요. 또는 '[DoNotParallelize]'을(를) 사용하세요.</target>
         <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">

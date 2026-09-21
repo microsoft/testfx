@@ -347,7 +347,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">‘{0}' işlem-genel geçerli dizini değiştirir; bunun iş parçacığı başına bir karşılığı yoktur ve eşzamanlı çalışan her test tarafından gözlemlenir; paralelleştirilmiş bir test paketinde bunu değiştirmekten kaçının (en azından koordinasyon sağlamak için '[ResourceLock(WellKnownResources.CurrentDirectory)]' bildirin ya da '[DoNotParallelize]')</target>
+        <target state="translated">‘{0}' işlem-genel geçerli dizini değiştirir; bunun iş parçacığı başına bir karşılığı yoktur ve eşzamanlı çalışan her test tarafından gözlemlenir; paralelleştirilmiş bir test paketinde bunu değiştirmekten kaçının (en azından koordinasyon sağlamak için '[ResourceLock(WellKnownResources.CurrentDirectory)]' bildirin ya da '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
@@ -1107,7 +1107,7 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">‘{0}' işlem-genel durumu değiştirir ve testler paralel çalıştığında güvenli değildir; çakışan testte '[ResourceLock(WellKnownResources.{1})]' bildirin (veya '[DoNotParallelize]')</target>
+        <target state="translated">‘{0}' işlem-genel durumu değiştirir ve testler paralel çalıştığında güvenli değildir; çakışan testte '[ResourceLock(WellKnownResources.{1})]' bildirin (veya '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">

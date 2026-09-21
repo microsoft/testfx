@@ -347,7 +347,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">'{0}' modifica la directory corrente globale del processo, che non ha un equivalente per thread ed è osservata da ogni test in esecuzione contemporaneamente; evita di modificarla in un gruppo di test parallelizzato (dichiara '[ResourceLock(WellKnownResources.CurrentDirectory)]' almeno per coordinare, oppure '[DoNotParallelize]')</target>
+        <target state="translated">'{0}' modifica la directory corrente globale del processo, che non ha un equivalente per thread ed è osservata da ogni test in esecuzione contemporaneamente; evita di modificarla in un gruppo di test parallelizzato (dichiara '[ResourceLock(WellKnownResources.CurrentDirectory)]' almeno per coordinare, oppure '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
@@ -1107,7 +1107,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="needs-review-translation">'{0}' muta lo stato globale del processo e non è sicuro quando i test vengono eseguiti in parallelo; dichiarare '[ResourceLock(WellKnownResources.{1})]' sul test (o '[DoNotParallelize]')</target>
+        <target state="translated">'{0}' muta lo stato globale del processo e non è sicuro quando i test vengono eseguiti in parallelo; dichiarare '[ResourceLock(WellKnownResources.{1})]' sul test (o '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
