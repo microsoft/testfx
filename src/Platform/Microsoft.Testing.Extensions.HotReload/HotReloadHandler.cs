@@ -106,7 +106,7 @@ internal sealed class HotReloadHandler
             return false;
         }
 
-        cancellationToken.Register(() => s_shutdownProcess = true);
+        using CancellationTokenRegistration registration = cancellationToken.Register(RequestShutdown);
 
         if (waitExecutionCompletion is not null)
         {
@@ -114,14 +114,7 @@ internal sealed class HotReloadHandler
             await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
         }
 
-        try
-        {
-            await SemaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // We're closing
-        }
+        await SemaphoreSlim.WaitAsync(CancellationToken.None).ConfigureAwait(false);
 
         if (!_console.IsOutputRedirected && !IsClearNotSupported())
         {

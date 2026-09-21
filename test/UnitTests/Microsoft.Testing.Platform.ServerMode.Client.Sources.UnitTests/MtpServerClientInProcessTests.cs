@@ -601,7 +601,7 @@ public sealed class MtpServerClientInProcessTests
         var releaseCancellationHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
         MtpServerClientOptions options = CreateOptions();
-        options.ServerShutdownTimeout = TimeSpan.FromSeconds(1);
+        options.ServerShutdownTimeout = TimeSpan.FromSeconds(5);
         var log = new StringBuilder();
         options.Logger = new DelegateMtpClientLogger((_, message) =>
         {
@@ -647,10 +647,11 @@ public sealed class MtpServerClientInProcessTests
             client.Dispose();
             stopwatch.Stop();
 
-            // The connection's fixed 5s read-loop wait must overlap ServerShutdownTimeout (1s) plus the fixed
-            // 5s cancellation grace. Running those waits serially would take at least 11s.
+            // Matching ServerShutdownTimeout to the connection's fixed 5s read-loop wait avoids depending on a
+            // shorter timer continuation getting a worker before a blocked handler releases one on net462. The
+            // fixed 5s cancellation grace makes the concurrent path take about 10s; serial waits take at least 15s.
             Assert.IsLessThan(
-                TimeSpan.FromSeconds(9),
+                TimeSpan.FromSeconds(13),
                 stopwatch.Elapsed,
                 $"Dispose took {stopwatch.Elapsed.TotalSeconds:N1}s; it must abandon an unresponsive application within the documented bound rather than block indefinitely.");
 

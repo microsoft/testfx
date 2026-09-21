@@ -37,7 +37,7 @@
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
         <target state="translated">Especifique el nombre del archivo de volcado.
 Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del proceso, diferido al entorno de ejecución de .NET como "%e"), {pid} (id. de proceso, diferido al entorno de ejecución de .NET como "%p"), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {time} (marca de tiempo cuando se configura el entorno de volcado de bloqueo). También se admiten los tokens heredados %p / %e / %h / %t consumidos directamente por el archivo createdump del runtime de .NET.</target>
-        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
+        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
@@ -52,7 +52,7 @@ Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del pr
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
         <target state="translated">[solo net6.0+ ] Genere un archivo de volcado si el proceso de prueba se bloquea.</target>
-        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
@@ -111,7 +111,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">Especifique el tipo de volcado.
 Los valores válidos son "Mini", "Heap", "Triage" o "Full". El tipo predeterminado es "Full".
 Para obtener más información, visite https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
-        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
+        <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are {1}</source>
@@ -151,7 +151,7 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">Igual que "--crash-report", pero se omite silenciosamente (con un mensaje informativo) en plataformas en las que no se admite la generación de informes de bloqueo. Use esta opción para mantener la misma línea de comandos en matrices de CI que incluyen Windows. Mutuamente excluyente con "--crash-report".</target>
-        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
+        <note>Do not localize option name {Locked="--crash-report"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
