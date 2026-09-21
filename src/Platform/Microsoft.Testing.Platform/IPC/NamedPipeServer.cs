@@ -285,21 +285,20 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
             // Serialize and send the response
             INamedPipeSerializer responseNamedPipeSerializer = GetSerializer(response.GetType());
-            bool clientDisconnected = false;
+            bool transportClosed = false;
             try
             {
                 await WriteMessageAsync(_namedPipeServerStream, responseNamedPipeSerializer, response, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException or ObjectDisposedException)
             {
-                // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
-                // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
-                // the host.
-                await TryLogDebugAsync($"Client disconnected from pipe '{PipeName.Name}' while writing reply; exiting server loop.").ConfigureAwait(false);
-                clientDisconnected = true;
+                // The pipe closed while we were writing the reply. Treat transport closure as graceful
+                // (symmetric with the read-side EOF handling above) so the server loop exits without crashing.
+                await TryLogDebugAsync($"Pipe '{PipeName.Name}' closed while writing reply; exiting server loop.").ConfigureAwait(false);
+                transportClosed = true;
             }
 
-            if (clientDisconnected)
+            if (transportClosed)
             {
                 return;
             }

@@ -278,7 +278,7 @@ public sealed class IPCTests
     }
 
     [TestMethod]
-    public async Task SingleConnectionNamedPipeServer_ClientDisconnectsBeforeReply_LogsConciseDisconnect()
+    public async Task SingleConnectionNamedPipeServer_ClientDisconnectsBeforeReply_LogsConciseClosure()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         TaskCompletionSource<bool> requestReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -311,7 +311,10 @@ public sealed class IPCTests
             _testContext.CancellationToken);
         server.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        NamedPipeClient client = new(pipeNameDescription.Name);
+        NamedPipeClient client = new(
+            pipeNameDescription.Name,
+            new SystemEnvironment(),
+            exitProcessOnConnectionLoss: false);
         client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
 
@@ -324,19 +327,24 @@ public sealed class IPCTests
             Task<VoidResponse> requestTask = client.RequestReplyAsync<IntMessage, VoidResponse>(
                 new IntMessage(42),
                 _testContext.CancellationToken);
-            await requestReceived.Task;
+            await requestReceived.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             client.Dispose();
             releaseResponse.TrySetResult(true);
 
             await loggedMessage.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             string message = await loggedMessage.Task;
             Assert.AreEqual(
-                $"Client disconnected from pipe '{pipeNameDescription.Name}' while writing reply; exiting server loop.",
+                $"Pipe '{pipeNameDescription.Name}' closed while writing reply; exiting server loop.",
                 message);
+            Task completedRequestTask = await Task.WhenAny(
+                requestTask,
+                Task.Delay(TimeoutHelper.DefaultHangTimeSpanTimeout, _testContext.CancellationToken));
+            Assert.AreSame(requestTask, completedRequestTask, "The client request did not observe the closed pipe.");
             await Assert.ThrowsAsync<Exception>(() => requestTask);
         }
         finally
         {
+            releaseResponse.TrySetResult(true);
             client.Dispose();
 #if NETCOREAPP
             await server.DisposeAsync();
