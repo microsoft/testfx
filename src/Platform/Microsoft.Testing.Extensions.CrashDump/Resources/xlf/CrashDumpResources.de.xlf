@@ -35,7 +35,7 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="needs-review-translation">Namen der Speicherabbilddatei angeben.
+        <target state="translated">Namen der Speicherabbilddatei angeben.
 Unterstützt die folgenden Platzhalter: {pname} (Name der ausführbaren Prozessdatei, wird von der .NET-Runtime als „%e“ übernommen), {pid} (Prozess-ID, wird von der .NET-Runtime als „%p“ übernommen), {asm} (Name der Einstiegsassembly), {tfm} (Zielframeworkmoniker), {time} (Zeitstempel zum Zeitpunkt der Konfiguration der Crashdumpumgebung). Auch die Legacytokens %p / %e / %h / %t, die von createdump in der .NET-Runtime direkt verarbeitet werden, werden unterstützt.</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
@@ -51,7 +51,7 @@ Unterstützt die folgenden Platzhalter: {pname} (Name der ausführbaren Prozessd
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
-        <target state="needs-review-translation">[nur net6.0+] Speicherabbilddatei generieren, wenn der Testprozess abstürzt.</target>
+        <target state="translated">[nur net6.0+] Speicherabbilddatei generieren, wenn der Testprozess abstürzt.</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -108,7 +108,7 @@ Unterstützt die folgenden Platzhalter: {pname} (Name der ausführbaren Prozessd
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
-        <target state="needs-review-translation">Geben Sie den Typ des Speicherabbilds an.
+        <target state="translated">Geben Sie den Typ des Speicherabbilds an.
 Gültige Werte sind „Mini“, „Heap“, „Triage“ oder „Full“. Der Standardtyp ist „Full“.
 Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
@@ -150,7 +150,7 @@ Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/d
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
-        <target state="needs-review-translation">Entspricht „--crash-report“, wird aber auf Plattformen, auf denen das Erstellen von Absturzberichten nicht unterstützt wird, stillschweigend ignoriert (mit einer Informationsmeldung). Verwenden Sie diese Option, um dieselbe Befehlszeile für CI-Matrizen beizubehalten, die Windows enthalten. Schließt sich gegenseitig mit „--crash-report“ aus.</target>
+        <target state="translated">Entspricht „--crash-report“, wird aber auf Plattformen, auf denen das Erstellen von Absturzberichten nicht unterstützt wird, stillschweigend ignoriert (mit einer Informationsmeldung). Verwenden Sie diese Option, um dieselbe Befehlszeile für CI-Matrizen beizubehalten, die Windows enthalten. Schließt sich gegenseitig mit „--crash-report“ aus.</target>
         <note>Do not localize option name {Locked="--crash-report"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">

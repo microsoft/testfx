@@ -35,7 +35,7 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="needs-review-translation">Especifique el nombre del archivo de volcado.
+        <target state="translated">Especifique el nombre del archivo de volcado.
 Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del proceso, diferido al entorno de ejecución de .NET como "%e"), {pid} (id. de proceso, diferido al entorno de ejecución de .NET como "%p"), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {time} (marca de tiempo cuando se configura el entorno de volcado de bloqueo). También se admiten los tokens heredados %p / %e / %h / %t consumidos directamente por el archivo createdump del runtime de .NET.</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
@@ -51,7 +51,7 @@ Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del pr
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
-        <target state="needs-review-translation">[solo net6.0+ ] Genere un archivo de volcado si el proceso de prueba se bloquea.</target>
+        <target state="translated">[solo net6.0+ ] Genere un archivo de volcado si el proceso de prueba se bloquea.</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -108,7 +108,7 @@ Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del pr
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
-        <target state="needs-review-translation">Especifique el tipo de volcado.
+        <target state="translated">Especifique el tipo de volcado.
 Los valores válidos son "Mini", "Heap", "Triage" o "Full". El tipo predeterminado es "Full".
 Para obtener más información, visite https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
         <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
@@ -150,7 +150,7 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
-        <target state="needs-review-translation">Igual que "--crash-report", pero se omite silenciosamente (con un mensaje informativo) en plataformas en las que no se admite la generación de informes de bloqueo. Use esta opción para mantener la misma línea de comandos en matrices de CI que incluyen Windows. Mutuamente excluyente con "--crash-report".</target>
+        <target state="translated">Igual que "--crash-report", pero se omite silenciosamente (con un mensaje informativo) en plataformas en las que no se admite la generación de informes de bloqueo. Use esta opción para mantener la misma línea de comandos en matrices de CI que incluyen Windows. Mutuamente excluyente con "--crash-report".</target>
         <note>Do not localize option name {Locked="--crash-report"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">

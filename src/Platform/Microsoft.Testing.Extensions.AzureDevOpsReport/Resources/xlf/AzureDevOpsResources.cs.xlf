@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="needs-review-translation">Byla nastavena hodnota --publish-azdo-test-results, ale živé publikování Azure DevOps je zakázáno, protože chybí nebo jsou neplatné následující proměnné prostředí: {0}.</target>
+        <target state="translated">Byla nastavena hodnota --publish-azdo-test-results, ale živé publikování Azure DevOps je zakázáno, protože chybí nebo jsou neplatné následující proměnné prostředí: {0}.</target>
         <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="needs-review-translation">Nepodařilo se načíst historii nestability Azure DevOps. Pokračuje se bez poznámek k historii. {0}</target>
+        <target state="translated">Nepodařilo se načíst historii nestability Azure DevOps. Pokračuje se bez poznámek k historii. {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
@@ -244,7 +244,7 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="needs-review-translation">Byla vyžádána historie nestability Azure DevOps, ale chybí požadované proměnné prostředí Azure DevOps. Pokračuje se bez poznámek k historii.</target>
+        <target state="translated">Byla vyžádána historie nestability Azure DevOps, ale chybí požadované proměnné prostředí Azure DevOps. Pokračuje se bez poznámek k historii.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
@@ -349,7 +349,7 @@
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="needs-review-translation">Nelze načíst soubor karantény Azure DevOps {0}. Pokračuje se bez informací o karanténě. {1}</target>
+        <target state="translated">Nelze načíst soubor karantény Azure DevOps {0}. Pokračuje se bez informací o karanténě. {1}</target>
         <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
