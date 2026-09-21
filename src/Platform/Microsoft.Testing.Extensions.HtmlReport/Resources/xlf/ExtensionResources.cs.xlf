@@ -93,7 +93,7 @@ Příklad: 'MyReport_{tfm}.html'.</target>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report.</source>
-        <target state="needs-review-translation">Povolte generování sestavy HTML.</target>
+        <target state="translated">Povolte generování sestavy HTML.</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">

@@ -83,7 +83,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</source>
       </trans-unit>
       <trans-unit id="CtrfReportOptionDescription">
         <source>Enable generating a CTRF (Common Test Report Format) JSON report.</source>
-        <target state="needs-review-translation">能夠產生 CTRF (Common Test Report Format) JSON 報告。</target>
+        <target state="translated">能夠產生 CTRF (Common Test Report Format) JSON 報告。</target>
         <note>Do not localize format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">

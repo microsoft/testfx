@@ -83,13 +83,13 @@ Disk info:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="needs-review-translation">Укажите имя файла дампа.
+        <target state="translated">Укажите имя файла дампа.
 Поддерживает следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя входной сборки), {tfm} (моникер целевой платформы), {arch} (архитектура процесса), {time} (метка времени). Для обеспечения обратной совместимости также поддерживается устаревший токен (идентификатор процесса) %p.</target>
         <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"} or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs.</source>
-        <target state="needs-review-translation">Создавать файл дампа, если тестовый процесс завис.</target>
+        <target state="translated">Создавать файл дампа, если тестовый процесс завис.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -107,7 +107,7 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="needs-review-translation">Укажите время ожидания, по истечении которого будет сгенерирован дамп.
+        <target state="translated">Укажите время ожидания, по истечении которого будет сгенерирован дамп.
 Значение времени ожидания задано в одном из следующих форматов:
     500ms, 500mil, 500millisecond, 500milliseconds,
     5400s, 5400sec, 5400second, 5400seconds,
@@ -135,14 +135,14 @@ The timeout value is specified in one of the following formats:
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
-        <target state="needs-review-translation">То же, что и "--hangdump-type", но при недоступности запрошенного типа в текущей среде выполнения автоматически переходит (с информационным сообщением) на ближайший поддерживаемый тип дампа (например, "Triage" поддерживается только в .NET Core и в .NET Framework переходит на "Mini"). Используйте этот параметр, чтобы сохранять одну и ту же командную строку во всех матрицах CI, где сочетаются .NET Framework и .NET. Допустимые значения: "Mini", "Heap", "Full", "Triage", "None". Взаимоисключающий с "--hangdump-type".</target>
+        <target state="translated">То же, что и "--hangdump-type", но при недоступности запрошенного типа в текущей среде выполнения автоматически переходит (с информационным сообщением) на ближайший поддерживаемый тип дампа (например, "Triage" поддерживается только в .NET Core и в .NET Framework переходит на "Mini"). Используйте этот параметр, чтобы сохранять одну и ту же командную строку во всех матрицах CI, где сочетаются .NET Framework и .NET. Допустимые значения: "Mini", "Heap", "Full", "Triage", "None". Взаимоисключающий с "--hangdump-type".</target>
         <note>Do not localize option name {Locked="--hangdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'.</source>
-        <target state="needs-review-translation">Укажите тип дампа.
+        <target state="translated">Укажите тип дампа.
 Допустимые значения: {0}.
 Тип по умолчанию — "Full".</target>
         <note>{0} is the list of valid dump type values. Do not localize default dump type {Locked="Full"}.</note>
