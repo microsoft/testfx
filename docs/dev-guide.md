@@ -190,6 +190,9 @@ try {
     }
     $env:MutationTesting = "true"
     ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+    if ($LASTEXITCODE -ne 0) {
+        throw "Stryker.NET mutation testing failed."
+    }
 }
 finally {
     $env:MutationTesting = $previousMutationTesting
