@@ -179,7 +179,12 @@ try {
     $env:DOTNET_ROOT = (Resolve-Path .dotnet).Path
     $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
     $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
-    & ./.dotnet/dotnet tool $toolCommand dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
+    if ($toolCommand -eq "update") {
+        & ./.dotnet/dotnet tool update dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config --allow-downgrade
+    }
+    else {
+        & ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
+    }
     $env:MutationTesting = "true"
     ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
 }
@@ -198,10 +203,13 @@ On Linux and macOS:
   export DOTNET_ROOT="$PWD/.dotnet"
   export DOTNET_CLI_TELEMETRY_OPTOUT=1
   export PATH="$DOTNET_ROOT:$PATH"
-  stryker_version=$(jq -r '.tools["dotnet-stryker"].version' .config/stryker/dotnet-tools.json)
-  tool_command=install
-  [ -x artifacts/tools/stryker/dotnet-stryker ] && tool_command=update
-  "$DOTNET_ROOT/dotnet" tool "$tool_command" dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
+  stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+  test -n "$stryker_version"
+  if [ -x artifacts/tools/stryker/dotnet-stryker ]; then
+    "$DOTNET_ROOT/dotnet" tool update dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config --allow-downgrade
+  else
+    "$DOTNET_ROOT/dotnet" tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
+  fi
   MutationTesting=true ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
 )
 ```

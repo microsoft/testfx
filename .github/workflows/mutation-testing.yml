@@ -29,7 +29,8 @@ jobs:
 
       - name: Install Stryker.NET
         run: |
-          stryker_version=$(jq -r '.tools["dotnet-stryker"].version' .config/stryker/dotnet-tools.json)
+          stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+          test -n "$stryker_version"
           ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
