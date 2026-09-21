@@ -333,12 +333,9 @@ public sealed class IPCTests
 
             await loggedMessage.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             string message = await loggedMessage.Task;
-            Assert.StartsWith(
-                $"Pipe '{pipeNameDescription.Name}' closed while writing reply; exiting server loop. Reason: ",
+            Assert.AreEqual(
+                $"Pipe '{pipeNameDescription.Name}' closed while writing reply; exiting server loop.",
                 message);
-            Assert.DoesNotContain("System.IO.", message);
-            Assert.DoesNotContain("\r", message);
-            Assert.DoesNotContain("\n", message);
             Task completedRequestTask = await Task.WhenAny(
                 requestTask,
                 Task.Delay(TimeoutHelper.DefaultHangTimeSpanTimeout, _testContext.CancellationToken));
