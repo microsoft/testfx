@@ -130,6 +130,13 @@ public class UnitTest1 : GenericBase<int>
     [CombinatorialData]
     public void TestMethod6(CustomValue? value)
         => Assert.IsTrue(value is null or CustomValue.First or CustomValue.Second);
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullDataRow(string? value)
+    {
+        Assert.IsNull(value);
+    }
 }
 
 public enum CustomValue
@@ -216,8 +223,14 @@ public sealed class AsyncVoidTests
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 0);
         result.AssertExitCodeIs(0);
+
+        TestHostResult nullRowResult = await testHost.ExecuteAsync(
+            "--filter FullyQualifiedName~NullDataRow",
+            cancellationToken: TestContext.CancellationToken);
+        nullRowResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        nullRowResult.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(
             "--filter TestCategory=AsyncGenerated",
