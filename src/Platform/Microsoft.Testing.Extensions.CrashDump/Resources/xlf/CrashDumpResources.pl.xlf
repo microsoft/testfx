@@ -35,9 +35,9 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="translated">Określ nazwę pliku zrzutu.
+        <target state="needs-review-translation">Określ nazwę pliku zrzutu.
 Obsługuje następujące symbole zastępcze: {pname} (nazwa pliku wykonywalnego procesu, odroczony do środowiska uruchomieniowego platformy .NET jako „%e”), {pid} (identyfikator procesu, odroczony do środowiska uruchomieniowego platformy .NET jako „%p”), {asm} (nazwa zestawu wpisu), {tfm} (moniker platformy docelowej), {time} (sygnatura czasowa po skonfigurowaniu środowiska crashdump). Obsługiwane są również starsze tokeny %p / %e / %h / %t używane bezpośrednio przez element createdump środowiska uruchomieniowego platformy .NET.</target>
-        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
+        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
@@ -51,8 +51,8 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa pliku wykonywalnego 
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
-        <target state="translated">[dotyczy tylko net6.0+ ] Wygeneruj plik zrzutu w przypadku awarii procesu testowego.</target>
-        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
+        <target state="needs-review-translation">[dotyczy tylko net6.0+ ] Wygeneruj plik zrzutu w przypadku awarii procesu testowego.</target>
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
@@ -108,10 +108,10 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa pliku wykonywalnego 
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
-        <target state="translated">Określ typ zrzutu.
+        <target state="needs-review-translation">Określ typ zrzutu.
 Prawidłowe wartości to „Mini”, „Heap”, „Triage” i „Full”. Typ domyślny to „Full”.
 Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
-        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
+        <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are {1}</source>
@@ -150,8 +150,8 @@ Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/do
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
-        <target state="translated">Taki sam jak „--crash-report”, ale dyskretnie ignorowany (z komunikatem informacyjnym) na platformach, na których generowanie raportów o awariach nie jest obsługiwane. Użyj tej opcji, aby zachować ten sam wiersz polecenia w macierzach ciągłej integracji, które zawierają system Windows. Wzajemnie wykluczają się z „--crash-report”.</target>
-        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
+        <target state="needs-review-translation">Taki sam jak „--crash-report”, ale dyskretnie ignorowany (z komunikatem informacyjnym) na platformach, na których generowanie raportów o awariach nie jest obsługiwane. Użyj tej opcji, aby zachować ten sam wiersz polecenia w macierzach ciągłej integracji, które zawierają system Windows. Wzajemnie wykluczają się z „--crash-report”.</target>
+        <note>Do not localize option name {Locked="--crash-report"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
