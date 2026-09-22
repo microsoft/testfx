@@ -358,6 +358,33 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task InitializeAsync_ResponseWithoutTestingCapabilities_DefaultsAllCapabilityFlagsToFalse()
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponseOverride = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.ProcessId] = 4242,
+            [JsonRpcStrings.ServerInfo] = new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Name] = "FakeMtpServer",
+                [JsonRpcStrings.Version] = "1.2.3",
+            },
+            [JsonRpcStrings.ProtocolVersion] = JsonRpcProtocolVersions.Current,
+        };
+        using MtpServerClient client = server.ConnectClient();
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        // The server omitted the entire 'testing' capabilities object, so every capability flag must fall back
+        // to its false default rather than leaking an uninitialized `true`.
+        Assert.IsFalse(capabilities.SupportsDiscovery);
+        Assert.IsFalse(capabilities.MultiRequestSupport);
+        Assert.IsFalse(capabilities.VSTestProviderSupport);
+        Assert.IsFalse(capabilities.SupportsAttachments);
+        Assert.IsFalse(capabilities.MultiConnectionProvider);
+    }
+
+    [TestMethod]
     public async Task DiscoverTestsAsync_All_SendsDiscoverRequest()
     {
         using FakeMtpServer server = new();
