@@ -252,6 +252,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         {
             ShouldListenTo = source => source.Name == sourceName,
             Sample = (ref _) => ActivitySamplingResult.PropagationData,
+            SampleUsingParentId = (ref _) => ActivitySamplingResult.PropagationData,
         };
         ActivitySource.AddActivityListener(listener);
         using ActivitySource source = new(sourceName);
