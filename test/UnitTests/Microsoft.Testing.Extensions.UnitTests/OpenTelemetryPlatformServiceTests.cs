@@ -248,6 +248,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     public void IsRecording_WhenNoListenerSamplesTheActivityForData_IsFalse()
     {
         string sourceName = Name("propagation-only");
+        using ActivitySource source = new(sourceName);
         using ActivityListener listener = new()
         {
             ShouldListenTo = source => source.Name == sourceName,
@@ -255,7 +256,6 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             SampleUsingParentId = (ref _) => ActivitySamplingResult.PropagationData,
         };
         ActivitySource.AddActivityListener(listener);
-        using ActivitySource source = new(sourceName);
         using Activity? activity = source.StartActivity(Name("not-recording"));
         Assert.IsNotNull(activity);
         using IPlatformActivity wrapper = WrapNonAmbient(activity);
@@ -267,7 +267,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     public void Dispose_ForANonAmbientActivity_RestoresThePreviousAmbientActivity()
     {
         using Activity ambientActivity = new Activity(Name("ambient")).Start();
-        using Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
+        Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
         Activity.Current = ambientActivity;
 
         using (WrapNonAmbient(nonAmbientActivity))
