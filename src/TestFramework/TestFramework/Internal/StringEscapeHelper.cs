@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 internal static class StringEscapeHelper
 {
@@ -171,9 +171,9 @@ internal static class StringEscapeHelper
 
         return escapedCharacter != '\0'
             ? EscapeKind.Short
-            : forceUnicodeEscape
+            : (forceUnicodeEscape
                 || char.IsControl(character)
-                || (useExtendedEscapes && character is '\u2028' or '\u2029')
+                || (useExtendedEscapes && character is '\u2028' or '\u2029'))
                     ? EscapeKind.Unicode
                     : EscapeKind.None;
     }
