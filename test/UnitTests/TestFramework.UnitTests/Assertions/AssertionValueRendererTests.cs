@@ -53,6 +53,12 @@ public class AssertionValueRendererTests : TestContainer
         AssertionValueRenderer.IsBuiltInStringRendering(Value, rendered).Should().BeTrue();
     }
 
+    public void RenderValue_QuoteAndBackslashCharacters_PreservesCurrentRendering()
+    {
+        AssertionValueRenderer.RenderValue('\'').Should().Be("'''");
+        AssertionValueRenderer.RenderValue('\\').Should().Be("'\\'");
+    }
+
     public void IsBuiltInStringRendering_MatchesAllEscapes()
     {
         const string Value = "text \"quoted\"\\path\n\r\t\0\u0001🌍";
