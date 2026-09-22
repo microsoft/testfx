@@ -169,7 +169,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="needs-review-translation">Od verze MSTest 3.8 je 'DynamicDataSourceType.AutoDetect' výchozí hodnotou a automaticky rozpoznává vlastnosti, metody a pole, čímž omezuje rozvláčnost a závislost na druhu členu.</target>
         <target state="translated">Od verze MSTest 3.8 je ‚DynamicDataSourceType.AutoDetect' výchozí hodnotou a automaticky rozpoznává vlastnosti, metody a pole, čímž omezuje rozvláčnost a závislost na druhu členu.</target>
         <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
@@ -418,7 +417,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="needs-review-translation">Objekt TestContext předaný inicializaci sestavení nebo třídy je specifický pro daný kontext a při každém spuštění testu se neaktualizuje. Jeho opakované použití ve členovi 'static' může zpřístupnit zastaralý kontext.</target>
         <target state="translated">Objekt TestContext předaný inicializaci sestavení nebo třídy je specifický pro daný kontext a při každém spuštění testu se neaktualizuje. Jeho opakované použití ve členovi ‚static' může zpřístupnit zastaralý kontext.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
@@ -794,7 +792,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="needs-review-translation">'Assert.Fail' explicitně vyjadřuje záměrné selhání a umožňuje ve zprávě o selhání zdokumentovat, proč test nemůže pokračovat.</target>
         <target state="translated">‚Assert.Fail' explicitně vyjadřuje záměrné selhání a umožňuje ve zprávě o selhání zdokumentovat, proč test nemůže pokračovat.</target>
         <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
@@ -840,7 +837,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="needs-review-translation">Konstruktory umožňují inicializaci prostřednictvím polí 'readonly' a poskytují lepší zpětnou vazbu kompilátoru, zejména u typů odkazů s možnou hodnotou null. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0019.</target>
         <target state="translated">Konstruktory umožňují inicializaci prostřednictvím polí ‚readonly' a poskytují lepší zpětnou vazbu kompilátoru, zejména u typů odkazů s možnou hodnotou null. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0019.</target>
         <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
@@ -851,7 +847,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="needs-review-translation">'[TestCleanup]' podporuje asynchronní vyčištění v cílových architekturách, ve kterých není k dispozici 'IAsyncDisposable'. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0021.</target>
         <target state="translated">‚[TestCleanup]' podporuje asynchronní vyčištění v cílových architekturách, ve kterých není k dispozici ‚IAsyncDisposable'. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0021.</target>
         <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
@@ -1429,7 +1424,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="needs-review-translation">'MSTest' ignoruje '[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
         <target state="translated">MSTest ignoruje ‚[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
         <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>

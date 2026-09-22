@@ -651,8 +651,8 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
-        <target state="translated">Запись "{0}" в разделе "{1}" файла testconfig.json ("{2}") должна содержать ненулевое скалярное значение или непустой массив скалярных значений.</target>
-        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+        <target state="needs-review-translation">Запись "{0}" в разделе "{1}" файла testconfig.json ("{2}") должна содержать ненулевое скалярное значение или непустой массив скалярных значений.</target>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
@@ -952,9 +952,6 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="needs-review-translation">Не сообщать о неуспешном значении завершения для указанных кодов завершения.
-Например, "'--ignore-exit-code 8;9" игнорирует коды завершения 8 и 9 и в этих случаях возвращает 0.
-Дополнительные сведения о кодах завершения см. на странице https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <target state="new">Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>

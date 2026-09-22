@@ -312,7 +312,6 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="needs-review-translation">'CollectionAssert' 方法具有等效的 'Assert' 对应项。使用一个断言 API 可提高一致性和可发现性。</target>
         <target state="new">'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
         <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
@@ -843,7 +842,6 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="needs-review-translation">'Dispose' 和 'DisposeAsync' 遵循标准的 .NET 生存期模式，从而保持测试清理与生产代码处于一致状态。此选择加入样式规则与 MSTEST0022 互斥。</target>
         <target state="new">'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</target>
         <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
@@ -1004,7 +1002,6 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="needs-review-translation">'StringAssert' 方法具有等效的 'Assert' 对应项。使用一个断言 API 可提高一致性和可发现性。</target>
         <target state="new">'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
         <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
