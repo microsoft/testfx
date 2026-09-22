@@ -79,7 +79,7 @@ public sealed partial class Assert
         for (int i = start; i < start + length;)
         {
             ScalarInfo scalar = GetScalar(value, i);
-            renderedLength += GetEscapedCharacterLength(value, i);
+            renderedLength += StringEscapeHelper.GetEscapedCharacterLength(value, i);
             isSafePrefix &= scalar.Value <= 0x7F && !scalar.IsUnpairedSurrogate;
             hasUnpairedSurrogate |= scalar.IsUnpairedSurrogate;
             scalarCount++;
