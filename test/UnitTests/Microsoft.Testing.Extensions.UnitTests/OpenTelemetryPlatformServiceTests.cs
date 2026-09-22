@@ -218,7 +218,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         using Activity activity = new Activity(Name("hierarchical"))
             .SetIdFormat(ActivityIdFormat.Hierarchical)
             .Start();
-        using IPlatformActivity wrapper = WrapNonAmbient(activity);
+        using IPlatformActivity wrapper = new ActivityWrapper(activity);
 
         Assert.IsNull(wrapper.TraceId);
         Assert.IsNull(wrapper.SpanId);
@@ -258,7 +258,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         ActivitySource.AddActivityListener(listener);
         using Activity? activity = source.StartActivity(Name("not-recording"));
         Assert.IsNotNull(activity);
-        using IPlatformActivity wrapper = WrapNonAmbient(activity);
+        using IPlatformActivity wrapper = new ActivityWrapper(activity);
 
         Assert.IsFalse(wrapper.IsRecording);
     }
@@ -266,9 +266,9 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     [TestMethod]
     public void Dispose_ForANonAmbientActivity_RestoresThePreviousAmbientActivity()
     {
-        using Activity ambientActivity = new Activity(Name("ambient")).Start();
         Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
-        Activity.Current = ambientActivity;
+        Activity.Current = nonAmbientActivity.Parent;
+        using Activity ambientActivity = new Activity(Name("ambient")).Start();
 
         IPlatformActivity wrapper = WrapNonAmbient(nonAmbientActivity);
         wrapper.Dispose();
