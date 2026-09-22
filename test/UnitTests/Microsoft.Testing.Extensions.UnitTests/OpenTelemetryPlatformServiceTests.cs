@@ -270,9 +270,9 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
         Activity.Current = ambientActivity;
 
-        using (WrapNonAmbient(nonAmbientActivity))
-        {
-        }
+        IPlatformActivity wrapper = WrapNonAmbient(nonAmbientActivity);
+        wrapper.Dispose();
+        nonAmbientActivity.Dispose();
 
         Assert.AreSame(ambientActivity, Activity.Current);
     }
