@@ -120,7 +120,8 @@ internal static class TestCaseExtensions
         List<TestTrait>? traits = null;
         foreach (Trait trait in testCase.Traits)
         {
-            (traits ??= []).Add(new TestTrait(trait.Name, trait.Value));
+            traits ??= [];
+            traits.Add(new TestTrait(trait.Name, trait.Value));
         }
 
         if (traits is not null)
