@@ -1,1 +1,20 @@
 #nullable enable
+<<<<<<< HEAD
+=======
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath) -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Dispose() -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ExitCode.get -> int
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.HasExited.get -> bool
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Identifier.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Terminate() -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager
+static Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager.ActivateApplication(string! appUserModelId, string? arguments) -> uint
+static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.Activate(string! appUserModelId, string? activationArguments) -> uint
+<<<<<<< HEAD
+static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAsync(string! manifestPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+>>>>>>> Fix packaged app registration when switching layouts
+=======
+static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAsync(string! manifestPath, Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo! manifestInfo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+>>>>>>> Keep packaged app manifest and registration state consistent
