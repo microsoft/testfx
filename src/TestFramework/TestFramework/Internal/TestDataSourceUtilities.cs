@@ -66,11 +66,11 @@ internal static class TestDataSourceUtilities
                 break;
 
             case string value:
-                builder.Append('"').Append(value).Append('"');
+                AppendEscapedString(builder, value);
                 break;
 
             case char value:
-                builder.Append('\'').Append(value).Append('\'');
+                AppendEscapedChar(builder, value);
                 break;
 
             case Array:
@@ -84,4 +84,112 @@ internal static class TestDataSourceUtilities
                 break;
         }
     }
+<<<<<<< HEAD
+=======
+
+    private static void AppendEscapedString(StringBuilder builder, string value)
+    {
+        builder.Append('"');
+        for (int i = 0; i < value.Length; i++)
+        {
+            char character = value[i];
+            switch (character)
+            {
+                case '"':
+                    builder.Append("\\\"");
+                    break;
+                case '\\':
+                    builder.Append("\\\\");
+                    break;
+                default:
+                    AppendEscapedCharacter(builder, character, IsUnpairedSurrogate(value, i));
+                    break;
+            }
+        }
+
+        builder.Append('"');
+    }
+
+    private static void AppendEscapedChar(StringBuilder builder, char value)
+    {
+        builder.Append('\'');
+        if (value == '\'')
+        {
+            builder.Append("\\'");
+        }
+        else if (value == '\\')
+        {
+            builder.Append("\\\\");
+        }
+        else
+        {
+            AppendEscapedCharacter(builder, value, char.IsSurrogate(value));
+        }
+
+        builder.Append('\'');
+    }
+
+    private static void AppendEscapedCharacter(StringBuilder builder, char character, bool forceUnicodeEscape)
+    {
+        switch (character)
+        {
+            case '\0':
+                builder.Append("\\0");
+                break;
+            case '\a':
+                builder.Append("\\a");
+                break;
+            case '\b':
+                builder.Append("\\b");
+                break;
+            case '\f':
+                builder.Append("\\f");
+                break;
+            case '\n':
+                builder.Append("\\n");
+                break;
+            case '\r':
+                builder.Append("\\r");
+                break;
+            case '\t':
+                builder.Append("\\t");
+                break;
+            case '\v':
+                builder.Append("\\v");
+                break;
+            default:
+                if (forceUnicodeEscape || char.IsControl(character) || character is '\u2028' or '\u2029')
+                {
+                    builder.Append("\\u");
+                    builder.Append(((int)character).ToString("X4", CultureInfo.InvariantCulture));
+                }
+                else
+                {
+                    builder.Append(character);
+                }
+
+                break;
+        }
+    }
+
+    private static bool IsUnpairedSurrogate(string value, int index)
+    {
+        char character = value[index];
+        return char.IsHighSurrogate(character)
+            ? index + 1 >= value.Length || !char.IsLowSurrogate(value[index + 1])
+            : char.IsLowSurrogate(character)
+                && (index == 0 || !char.IsHighSurrogate(value[index - 1]));
+    }
+
+    private sealed class MethodData
+    {
+        public MethodData(MethodInfo method)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            HasSingleObjectArrayParameter = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[]);
+        }
+
+        public bool HasSingleObjectArrayParameter { get; }
+    }
+>>>>>>> Escape control characters in data row display names
 }
