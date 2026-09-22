@@ -156,6 +156,27 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void RecordException_WithAdditionalTags_MergesThemOntoTheExceptionEvent()
+    {
+        InvalidOperationException exception = new("boom");
+
+        using (IPlatformActivity? activity = _service.StartActivity(Name("exception-with-additional-tags")))
+        {
+            Assert.IsNotNull(activity);
+            activity.RecordException(exception, [new("test.additional", "value")]);
+        }
+
+        Activity stopped = Single();
+        Assert.AreEqual(ActivityStatusCode.Error, stopped.Status);
+        ActivityEvent exceptionEvent = stopped.Events.Single();
+        Assert.AreEqual("exception", exceptionEvent.Name);
+        Assert.AreEqual(typeof(InvalidOperationException).FullName, GetTag(exceptionEvent, "exception.type"));
+        Assert.AreEqual(exception.Message, GetTag(exceptionEvent, "exception.message"));
+        Assert.AreEqual(exception.ToString(), GetTag(exceptionEvent, "exception.stacktrace"));
+        Assert.AreEqual("value", GetTag(exceptionEvent, "test.additional"));
+    }
+
+    [TestMethod]
     public void AddEvent_AddsANamedEventWithItsTags()
     {
         using (IPlatformActivity? activity = _service.StartActivity(Name("events")))
@@ -177,6 +198,83 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         }
 
         Assert.AreEqual("MyTest", Single().GetTagItem("test.case.name"));
+    }
+
+    [TestMethod]
+    public void SetTag_SetsTheTagAndReturnsTheSameActivityForChaining()
+    {
+        using (IPlatformActivity? activity = _service.StartActivity(Name("set-tag")))
+        {
+            Assert.IsNotNull(activity);
+            Assert.AreSame(activity, activity.SetTag("test.case.name", "MyTest"));
+        }
+
+        Assert.AreEqual("MyTest", Single().GetTagItem("test.case.name"));
+    }
+
+    [TestMethod]
+    public void TraceIdAndSpanId_WhenActivityIsNotW3CFormat_AreNull()
+    {
+        using Activity activity = new Activity(Name("hierarchical"))
+            .SetIdFormat(ActivityIdFormat.Hierarchical)
+            .Start();
+        using IPlatformActivity wrapper = new ActivityWrapper(activity);
+
+        Assert.IsNull(wrapper.TraceId);
+        Assert.IsNull(wrapper.SpanId);
+    }
+
+    [TestMethod]
+    public void TraceIdAndSpanId_WhenActivityIsW3CFormat_AreHexadecimalIdentifiers()
+    {
+        using IPlatformActivity? wrapper = _service.StartActivity(Name("w3c"));
+        Assert.IsNotNull(wrapper);
+        Assert.IsNotNull(Activity.Current);
+
+        Assert.AreEqual(Activity.Current.TraceId.ToHexString(), wrapper.TraceId);
+        Assert.AreEqual(Activity.Current.SpanId.ToHexString(), wrapper.SpanId);
+    }
+
+    [TestMethod]
+    public void IsRecording_WhenListenerSamplesAllDataAndRecorded_IsTrue()
+    {
+        using IPlatformActivity? activity = _service.StartActivity(Name("recording"));
+        Assert.IsNotNull(activity);
+
+        Assert.IsTrue(activity.IsRecording);
+    }
+
+    [TestMethod]
+    public void IsRecording_WhenNoListenerSamplesTheActivityForData_IsFalse()
+    {
+        string sourceName = Name("propagation-only");
+        using ActivitySource source = new(sourceName);
+        using ActivityListener listener = new()
+        {
+            ShouldListenTo = source => source.Name == sourceName,
+            Sample = (ref _) => ActivitySamplingResult.PropagationData,
+            SampleUsingParentId = (ref _) => ActivitySamplingResult.PropagationData,
+        };
+        ActivitySource.AddActivityListener(listener);
+        using Activity? activity = source.StartActivity(Name("not-recording"));
+        Assert.IsNotNull(activity);
+        using IPlatformActivity wrapper = new ActivityWrapper(activity);
+
+        Assert.IsFalse(wrapper.IsRecording);
+    }
+
+    [TestMethod]
+    public void Dispose_ForANonAmbientActivity_RestoresThePreviousAmbientActivity()
+    {
+        Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
+        Activity.Current = nonAmbientActivity.Parent;
+        using Activity ambientActivity = new Activity(Name("ambient")).Start();
+
+        IPlatformActivity wrapper = WrapNonAmbient(nonAmbientActivity);
+        wrapper.Dispose();
+        nonAmbientActivity.Dispose();
+
+        Assert.AreSame(ambientActivity, Activity.Current);
     }
 
     [TestMethod]
@@ -402,6 +500,8 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         => (IReadOnlyCollection<object>)ObservableInstrumentsField.GetValue(_service)!;
 
     private string Name(string name) => _namePrefix + name;
+
+    private static IPlatformActivity WrapNonAmbient(Activity activity) => new ActivityWrapper(activity, isAmbient: false);
 
     private Activity Single()
     {
