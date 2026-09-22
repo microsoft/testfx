@@ -67,7 +67,7 @@ Supporta i seguenti segnaposto: {pname} (nome eseguibile del processo, inviato a
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Il processo host di test con PID '{0}' si è arrestato in modo anomalo. È stato generato un file di dump</target>
-        <note>{0} is the crashed test host process ID.</note>
+        <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>

@@ -67,7 +67,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Произошло аварийное завершение тестового хост-процесса с идентификатором процесса "{0}". Создан файл дампа</target>
-        <note>{0} is the crashed test host process ID.</note>
+        <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>

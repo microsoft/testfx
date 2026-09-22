@@ -763,6 +763,18 @@ The type declaring these methods should also respect the following rules:
     <value>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</value>
     <comment>{0} is the first duplicate attribute index. {1} is the second duplicate attribute index. {Locked="DataRow"}</comment>
   </data>
+  <data name="DuplicateDataRowDisplayNameTitle" xml:space="preserve">
+    <value>Avoid duplicated 'DataRow' display names</value>
+    <comment>{Locked="DataRow"}</comment>
+  </data>
+  <data name="DuplicateDataRowDisplayNameDescription" xml:space="preserve">
+    <value>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</value>
+    <comment>{Locked="DataRow"}</comment>
+  </data>
+  <data name="DuplicateDataRowDisplayNameMessageFormat" xml:space="preserve">
+    <value>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</value>
+    <comment>{0} is the duplicated display name. {Locked="DataRow"}</comment>
+  </data>
   <data name="UseRetryWithTestMethodDescription" xml:space="preserve">
     <value>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</value>
     <comment>{Locked="MSTest"}</comment>

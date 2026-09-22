@@ -59,6 +59,7 @@ Example: 'MyReport_{tfm}.html'.</source>
         <target state="needs-review-translation">Název vygenerované sestavy HTML. Může obsahovat relativní nebo absolutní cestu. Relativní cesty se překládají na adresář výsledků testů a vytvoří se chybějící adresáře.
 Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko).
 Příklad: MyReport_{tfm}.html.</target>
+Příklad: ‚MyReport_{tfm}.html'.</target>
         <note>Do not localize format name {Locked="HTML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".html"}, or example file name {Locked="MyReport_{tfm}.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">

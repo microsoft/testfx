@@ -91,4 +91,5 @@ internal static class DiagnosticIds
     public const string OSPlatformAttributesShouldBeConsistentRuleId = "MSTEST0084";
     public const string TestClassAttributeShouldNotBeAppliedToAbstractClassRuleId = "MSTEST0085";
     public const string RedundantTestMethodAttributeRuleId = "MSTEST0086";
+    public const string DuplicateDataRowDisplayNameRuleId = "MSTEST0087";
 }

@@ -164,23 +164,61 @@ Note that `-test` allows to run the unit tests and `-integrationTest` allows to 
 
 ### Mutation testing
 
-The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the production projects covered by the unit-test projects in `MutationTesting.slnx`. Restore the pinned local tool and run it from the repository root:
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the server-mode client sources with their unit tests in `MutationTesting.slnx`. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
 
 On Windows PowerShell:
 
 ```powershell
-dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
-$env:MutationTesting = "true"
-Push-Location .config/stryker
-dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing
-Pop-Location
+$strykerVersion = (Get-Content .config/stryker/dotnet-tools.json | ConvertFrom-Json).tools.'dotnet-stryker'.version
+$toolCommand = if (Test-Path artifacts/tools/stryker/dotnet-stryker.exe) { "update" } else { "install" }
+$previousMutationTesting = $env:MutationTesting
+$previousDotnetRoot = $env:DOTNET_ROOT
+$previousTelemetryOptOut = $env:DOTNET_CLI_TELEMETRY_OPTOUT
+$previousPath = $env:PATH
+try {
+    $env:DOTNET_ROOT = (Resolve-Path .dotnet).Path
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
+    $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+    if ($toolCommand -eq "update") {
+        & ./.dotnet/dotnet tool update dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config --allow-downgrade
+    }
+    else {
+        & ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to install the pinned Stryker.NET tool."
+    }
+    $env:MutationTesting = "true"
+    ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+    if ($LASTEXITCODE -ne 0) {
+        throw "Stryker.NET mutation testing failed."
+    }
+}
+finally {
+    $env:MutationTesting = $previousMutationTesting
+    $env:DOTNET_ROOT = $previousDotnetRoot
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = $previousTelemetryOptOut
+    $env:PATH = $previousPath
+}
 ```
 
 On Linux and macOS:
 
 ```shell
-dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
-(cd .config/stryker && MutationTesting=true dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing)
+(
+  set -e
+  export DOTNET_ROOT="$PWD/.dotnet"
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export PATH="$DOTNET_ROOT:$PATH"
+  stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+  test -n "$stryker_version"
+  if [ -x artifacts/tools/stryker/dotnet-stryker ]; then
+    "$DOTNET_ROOT/dotnet" tool update dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config --allow-downgrade
+  else
+    "$DOTNET_ROOT/dotnet" tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
+  fi
+  MutationTesting=true ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+)
 ```
 
 The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.

@@ -67,7 +67,7 @@ Prend en charge les espaces réservés suivants : {pname} (nom de l’exécutabl
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Le processus hôte de test avec le PID «{0}» s’est arrêté, un fichier de vidage a été généré</target>
-        <note>{0} is the crashed test host process ID.</note>
+        <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>

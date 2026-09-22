@@ -435,6 +435,7 @@
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
         <target state="needs-review-translation">“{3}” uzantı bildiriminde bildirilen “{2}” derlemesindeki “{0}.{1}” uzantı kancası “async void” olarak bildirilmiş. Platform kancayı senkron olarak çağırır, bu nedenle ilk await ifadesinde geri döner; bu noktadan sonra kaydettiği her şey test uygulamasının kendi kurulumuyla yarışır ve herhangi bir hata kaybolur. Kancayı senkron yapın.</target>
+        <target state="translated">“{3}” uzantı bildiriminde bildirilen “{2}” derlemesindeki “{0}.{1}” uzantı kancası “async void” olarak bildirilmiş. Platform kancayı senkron olarak çağırır, bu nedenle ilk await ifadesinde geri döner; bu noktadan sonra kaydettiği her şey test uygulamasının kendi kurulumuyla çakışma durumuna girer ve herhangi bir hata kaybolur. Kancayı senkron yapın.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
@@ -672,7 +673,7 @@
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
         <target state="translated">testconfig.json dosyasındaki 'commandLineOptions' altında: {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -682,12 +683,12 @@
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
         <target state="translated">Üst düzey JSON öğesi bir nesne olmalıdır. Bunun yerine '{0}' bulundu</target>
-        <note>{0} is the JSON value kind that was found.</note>
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">Desteklenmeyen JSON belirteci '{0}' bulundu</target>
-        <note>{0} is the unsupported JSON token type.</note>
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
@@ -1051,6 +1052,7 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="needs-review-translation">'timeout' seçeneğinin, açık birim soneki ve desteklenen aralıkta (en fazla yaklaşık 49,7 gün) olan pozitif bir sayısal değer içeren bir zaman değeri olarak tek bir bağımsız değişkeni olmalıdır. Kabul edilen sonekler: 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', ör. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">'timeout' seçeneğinin, açık birim soneki ve desteklenen aralıkta (en fazla yaklaşık 49,7 gün) olan pozitif bir sayısal değer içeren bir zaman değeri olarak tek bir bağımsız değişkeni olmalıdır. Kabul edilen sonekler: 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' ve 'd'/'day(s)', ör. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
@@ -1058,6 +1060,8 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="needs-review-translation">Genel bir test yürütme zaman aşımı.
 Açık bir birim soneki bulunan bir zaman değeri olarak bir bağımsız değişken alır. Kabul edilen sonekler: 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', ör. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">Genel bir test yürütme zaman aşımı.
+Açık bir birim soneki bulunan bir zaman değeri olarak bir bağımsız değişken alır. Kabul edilen sonekler: 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' ve 'd'/'day(s)', ör. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">

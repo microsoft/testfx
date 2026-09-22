@@ -420,6 +420,21 @@ The type declaring these methods should also respect the following rules:
         <target state="needs-review-translation">アセンブリまたはクラスの初期化に渡される TestContext は、そのコンテキストに固有であり、テストの実行ごとに更新されません。'static' メンバーで再利用すると、古いコンテキストが公開される可能性があります。</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="new">Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
+        <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
+        <target state="new">Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</target>
+        <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameTitle">
+        <source>Avoid duplicated 'DataRow' display names</source>
+        <target state="new">Avoid duplicated 'DataRow' display names</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
         <target state="needs-review-translation">MSTest では、継承されたライフサイクル属性 '[TestInitialize]'、'[TestCleanup]'、'[ClassInitialize]'、'[ClassCleanup]' と、テスト属性 '[TestMethod]' および '[DataTestMethod]' が、厳密なフレームワークの型 ID で解決されます。フレームワーク アセンブリは 'Microsoft.VisualStudio.TestPlatform.TestFramework' から 'MSTest.TestFramework' に名前が変更されたため、異なる MSTest のメジャーに対してコンパイルされた基底クラスでは、異なる型 ID でこれらの属性が公開されます。こうした基底のものが、別のバージョンに対してコンパイルされたテスト クラスによって継承されると、継承されたセットアップとクリーンアップは実行されず、継承されたテスト メソッドは検出されず、ビルド エラーも検出エラーも発生しません。基本アセンブリと、カスタム属性の場合はその属性を定義しているアセンブリを、テスト プロジェクトと同じバージョンの MSTest に対して再コンパイルします。</target>

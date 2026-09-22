@@ -18,6 +18,8 @@ jobs:
     name: Run Stryker.NET
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -25,17 +27,21 @@ jobs:
       - name: Build repository
         run: ./build.sh --binaryLog
 
-      - name: Restore Stryker.NET
-        run: ./.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
+      - name: Install Stryker.NET
+        run: |
+          stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+          test -n "$stryker_version"
+          ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
-        working-directory: .config/stryker
         env:
           MutationTesting: true
         run: |
           set -o pipefail
+          export DOTNET_ROOT="$GITHUB_WORKSPACE/.dotnet"
+          export PATH="$DOTNET_ROOT:$PATH"
           mkdir -p "$GITHUB_WORKSPACE/artifacts/mutation-testing"
-          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+          "$GITHUB_WORKSPACE/artifacts/tools/stryker/dotnet-stryker" --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
 
       - name: Summarize mutation testing results
         if: ${{ always() }}

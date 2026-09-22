@@ -129,6 +129,9 @@ Example: 'MyReport_{tfm}.trx'.</source>
         <target state="needs-review-translation">Název vygenerované sestavy TRX. Může obsahovat relativní nebo absolutní cestu. Relativní cesty se překládají na adresář výsledků testů a vytvoří se chybějící adresáře.
 Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko).
 Příklad: MyReport_{tfm}.trx.</target>
+        <target state="translated">Název vygenerované sestavy TRX. Může obsahovat relativní nebo absolutní cestu; relativní cesty se vyhodnocují vůči adresáři výsledků testů a chybějící adresáře se vytvoří.
+Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název vstupního sestavení), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko).
+Příklad: ‚MyReport_{tfm}.trx‘.</target>
         <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">

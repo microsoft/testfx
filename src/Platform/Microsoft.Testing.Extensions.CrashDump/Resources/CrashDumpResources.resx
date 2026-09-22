@@ -200,7 +200,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
   </data>
   <data name="CrashDumpProcessCrashedDumpFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a dump file was generated</value>
-    <comment>{0} is the crashed test host process ID.</comment>
+    <comment>{0} is the crashed test host process ID and must occur exactly once in the translation.</comment>
   </data>
   <data name="CrashDumpProcessCrashedReportFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a crash report was generated</value>

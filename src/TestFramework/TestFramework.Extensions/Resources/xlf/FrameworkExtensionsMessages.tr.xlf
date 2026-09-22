@@ -5,7 +5,7 @@
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
         <target state="translated">'{0}' tipi '{1}'ye atanamaz.</target>
-        <note>{0} is the argument name, for example applicationType. {1} is the fully qualified class name, for example Microsoft.UI.Xaml.Application.</note>
+        <note>{0} is the argument name, for example applicationType, and must occur exactly once in the translation. {1} is the fully qualified class name, for example Microsoft.UI.Xaml.Application, and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
         <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>

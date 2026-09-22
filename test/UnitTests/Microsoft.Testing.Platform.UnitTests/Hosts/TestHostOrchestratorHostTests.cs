@@ -237,7 +237,6 @@ public sealed class TestHostOrchestratorHostTests
 
     private sealed class RecordingLifetime : ITestHostOrchestratorApplicationLifetime, IDisposable
     {
-        private static int s_instanceCount;
         private readonly Exception? _beforeRunException;
         private readonly Exception? _afterRunException;
 
@@ -245,7 +244,13 @@ public sealed class TestHostOrchestratorHostTests
         {
             _beforeRunException = beforeRunException;
             _afterRunException = afterRunException;
-            Uid = $"{nameof(RecordingLifetime)}-{Interlocked.Increment(ref s_instanceCount)}";
+
+            // A per-instance GUID (rather than a shared static counter) keeps Uid unique without any
+            // process-global state: every test method in this class constructs its own RecordingLifetime
+            // instances, and under the assembly's method-level parallelization those constructions can run
+            // concurrently on different worker threads. Nothing asserts on the specific Uid value, only that
+            // it is stable and unique per instance, so a GUID satisfies that without a shared counter.
+            Uid = $"{nameof(RecordingLifetime)}-{Guid.NewGuid():N}";
         }
 
         public int BeforeRunCount { get; private set; }
