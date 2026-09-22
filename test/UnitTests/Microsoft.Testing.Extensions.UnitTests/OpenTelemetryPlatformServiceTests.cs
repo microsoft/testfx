@@ -225,7 +225,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void TraceIdAndSpanId_WhenActivityIsW3CFormat_ReturnHexadecimalIdentifiers()
+    public void TraceIdAndSpanId_WhenActivityIsW3CFormat_AreHexadecimalIdentifiers()
     {
         using IPlatformActivity? wrapper = _service.StartActivity(Name("w3c"));
         Assert.IsNotNull(wrapper);
