@@ -437,10 +437,10 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="translated">Určuje, jestli se vygenerují řídicí znaky ANSI.
-Platné hodnoty jsou 'auto' (výchozí), 'on' (přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0').
-Hodnota 'on' vynutí použití řídicích sekvencí ANSI (včetně pohybu kurzoru) i v případě, že je standardní výstup (stdout) přesměrován; pokud chcete pouze barvy, použijte ji společně s přepínačem --progress off.
-Pokud je zadán přepínač --ansi i přepínač --no-ansi, má přednost přepínač --ansi.</target>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</target>
         <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -461,13 +461,13 @@ Pokud je zadán přepínač --ansi i přepínač --no-ansi, má přednost přep�
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="translated">Přednastavte bloky výsledků jednotlivých testů zobrazené v terminálu.
+        <target state="needs-review-translation">Přednastavte bloky výsledků jednotlivých testů zobrazené v terminálu.
 Platné hodnoty jsou Minimal, Normal a Detailed. Výchozí hodnota je Normal. K přesnému výběru výsledků použijte --show-test-results.</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="translated">--output očekává jeden parametr s hodnotou Minimal, Normal nebo Detailed.</target>
+        <target state="needs-review-translation">--output očekává jeden parametr s hodnotou Minimal, Normal nebo Detailed.</target>
         <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
@@ -546,7 +546,7 @@ Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All (nebo Failed, k
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="translated">Hodnotu all nebo none možnosti --show-test-results nelze kombinovat s žádnou jinou hodnotou.</target>
+        <target state="needs-review-translation">Hodnotu all nebo none možnosti --show-test-results nelze kombinovat s žádnou jinou hodnotou.</target>
         <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
@@ -560,12 +560,12 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="translated">--show-test-results vyžaduje minimálně jednu z hodnot passed, failed, skipped, all nebo none.</target>
+        <target state="needs-review-translation">--show-test-results vyžaduje minimálně jednu z hodnot passed, failed, skipped, all nebo none.</target>
         <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="translated">--show-test-results očekává jednu nebo více hodnot oddělených čárkami nebo mezerami z následujících možností: passed, failed, skipped, all nebo none.</target>
+        <target state="needs-review-translation">--show-test-results očekává jednu nebo více hodnot oddělených čárkami nebo mezerami z následujících možností: passed, failed, skipped, all nebo none.</target>
         <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
