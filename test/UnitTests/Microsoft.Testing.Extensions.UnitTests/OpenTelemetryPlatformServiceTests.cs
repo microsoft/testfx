@@ -166,7 +166,13 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             activity.RecordException(exception, [new("test.additional", "value")]);
         }
 
-        ActivityEvent exceptionEvent = Single().Events.Single();
+        Activity stopped = Single();
+        Assert.AreEqual(ActivityStatusCode.Error, stopped.Status);
+        ActivityEvent exceptionEvent = stopped.Events.Single();
+        Assert.AreEqual("exception", exceptionEvent.Name);
+        Assert.AreEqual(typeof(InvalidOperationException).FullName, GetTag(exceptionEvent, "exception.type"));
+        Assert.AreEqual(exception.Message, GetTag(exceptionEvent, "exception.message"));
+        Assert.AreEqual(exception.ToString(), GetTag(exceptionEvent, "exception.stacktrace"));
         Assert.AreEqual("value", GetTag(exceptionEvent, "test.additional"));
     }
 
@@ -216,6 +222,26 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
 
         Assert.IsNull(wrapper.TraceId);
         Assert.IsNull(wrapper.SpanId);
+    }
+
+    [TestMethod]
+    public void TraceIdAndSpanId_WhenActivityIsW3CFormat_ReturnHexadecimalIdentifiers()
+    {
+        using IPlatformActivity? wrapper = _service.StartActivity(Name("w3c"));
+        Assert.IsNotNull(wrapper);
+        Assert.IsNotNull(Activity.Current);
+
+        Assert.AreEqual(Activity.Current.TraceId.ToHexString(), wrapper.TraceId);
+        Assert.AreEqual(Activity.Current.SpanId.ToHexString(), wrapper.SpanId);
+    }
+
+    [TestMethod]
+    public void IsRecording_WhenListenerSamplesAllDataAndRecorded_IsTrue()
+    {
+        using IPlatformActivity? activity = _service.StartActivity(Name("recording"));
+        Assert.IsNotNull(activity);
+
+        Assert.IsTrue(activity.IsRecording);
     }
 
     [TestMethod]
