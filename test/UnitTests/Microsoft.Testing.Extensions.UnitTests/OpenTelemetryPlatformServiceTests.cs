@@ -266,7 +266,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     public void Dispose_ForANonAmbientActivity_RestoresThePreviousAmbientActivity()
     {
         using Activity ambientActivity = new Activity(Name("ambient")).Start();
-        Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
+        using Activity nonAmbientActivity = new Activity(Name("non-ambient")).Start();
         Activity.Current = ambientActivity;
 
         WrapNonAmbient(nonAmbientActivity).Dispose();
