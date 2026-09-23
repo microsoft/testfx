@@ -422,7 +422,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameDescription">
         <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
-        <target state="new">Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</target>
+        <target state="translated">Os nomes de exibição "DataRow" duplicados tornam indistinguíveis os casos de teste orientados por dados nos resultados de teste e no gerenciadores de testes.</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
@@ -432,7 +432,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameTitle">
         <source>Avoid duplicated 'DataRow' display names</source>
-        <target state="new">Avoid duplicated 'DataRow' display names</target>
+        <target state="translated">Evite nomes de exibição de "DataRow" duplicados</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">

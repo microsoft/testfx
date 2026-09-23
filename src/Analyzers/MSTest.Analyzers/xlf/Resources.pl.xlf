@@ -422,17 +422,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameDescription">
         <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
-        <target state="new">Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</target>
+        <target state="translated">Zduplikowane nazwy wyświetlane „DataRow” sprawiają, że przypadków testowych opartych na danych nie można odróżnić w wynikach testów i eksploratorach testów.</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
         <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
-        <target state="new">Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</target>
+        <target state="translated">Nie duplikuj nazwy wyświetlanej „DataRow” „{0}”. Każdy atrybut „DataRow” w metodzie testowej powinien mieć unikatową nazwę wyświetlaną.</target>
         <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameTitle">
         <source>Avoid duplicated 'DataRow' display names</source>
-        <target state="new">Avoid duplicated 'DataRow' display names</target>
+        <target state="translated">Unikaj duplikowania nazw wyświetlanych elementu „DataRow”</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
