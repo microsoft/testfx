@@ -9,17 +9,6 @@ parameters:
   values:
   - Linux
   - MacOS
-# Shell trailer appended (with an explicit separating space) to the `dotnet test` command below.
-# Defaults to empty so Linux fails the job (and thus the run) on any test failure, keeping it a hard PR
-# blocker. The macOS job passes $(_MacOSNonBlockingTrailer) ("|| { ... }"), which swallows the exit code
-# ONLY on PR runs (BUILD_REASON = PullRequest) so a macOS test failure keeps the overall run "Succeeded" —
-# the only way to make macOS non-blocking, because job/step-level continueOnError only produces
-# "PartiallySucceeded", which Azure Repos build-validation policies still treat as a block. macOS failures
-# remain visible via --report-azdo (Tests tab) and the published TestResults artifact. This only converts
-# exit codes; timeout/agent-loss/publish failures are not covered (see _MacOSNonBlockingTrailer).
-- name: testFailureTrailer
-  type: string
-  default: ''
 
 steps:
 # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -31,7 +20,7 @@ steps:
 # by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
 # output is buffered into a per-module .log file and only surfaced on failure, so no live progress
 # is visible during long-running test sessions.
-- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed ${{ parameters.testFailureTrailer }}
+- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
   name: Test
   displayName: Test
   condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
