@@ -119,8 +119,10 @@ internal static class MtpServerConnector
     /// </summary>
     /// <param name="listener">The already-started loopback listener.</param>
     /// <param name="tryGetServerStoppedFailure">
-    /// Probed on every poll. Returns the exception to throw when the server has already stopped without
-    /// connecting back, or <see langword="null"/> while it is still running.
+    /// Probed on every poll. Returns a task whose result is the exception to throw when the server has already
+    /// stopped without connecting back, or <see langword="null"/> while it is still running. An asynchronous
+    /// probe can finish bounded diagnostic collection without allowing a late accept to win after the stopped
+    /// state was observed.
     /// </param>
     /// <param name="createTimeoutFailure">Creates the exception thrown when the connection timeout elapses.</param>
     /// <param name="connectionTimeout">Upper bound on the wait for the server to connect back.</param>
@@ -135,7 +137,7 @@ internal static class MtpServerConnector
     /// </remarks>
     public static async Task<TcpClient> AcceptAsync(
         TcpListener listener,
-        Func<Exception?> tryGetServerStoppedFailure,
+        Func<CancellationToken, Task<Exception?>> tryGetServerStoppedFailure,
         Func<Exception> createTimeoutFailure,
         TimeSpan connectionTimeout,
         Task? serverCompletion,
@@ -156,12 +158,12 @@ internal static class MtpServerConnector
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // No grace period here on purpose. Once the server has stopped, any socket the accept might
-                // still yield belongs to a dead peer, so waiting for it would only trade this precise failure
-                // (exit code, captured stderr) for a generic connection-closed error on the first request.
-                // The loop re-checks acceptTask above, so a connection that completed while the server was
-                // still alive is already taken before this probe runs.
-                if (tryGetServerStoppedFailure() is { } serverStopped)
+                // Once a probe observes that the server stopped, await its bounded diagnostic collection
+                // before checking acceptTask again. Any socket accepted during that wait belongs to a dead
+                // peer, so the precise stopped-server failure (exit code, captured stderr) must win. The loop
+                // checks acceptTask before probing, so a connection completed while the server was still
+                // alive is already taken.
+                if (await tryGetServerStoppedFailure(cancellationToken).ConfigureAwait(false) is { } serverStopped)
                 {
                     throw serverStopped;
                 }

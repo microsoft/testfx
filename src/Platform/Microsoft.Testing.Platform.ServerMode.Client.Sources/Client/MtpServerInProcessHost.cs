@@ -157,7 +157,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
 
             acceptedClient = await MtpServerConnector.AcceptAsync(
                 listener,
-                () => TryGetServerStoppedFailure(serverTask),
+                _ => Task.FromResult(TryGetServerStoppedFailure(serverTask)),
                 () => new MtpServerConnectionClosedException(
                     $"The in-process MTP application did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. "
                     + "Make sure the callback forwards the supplied server-mode arguments to the test application."),

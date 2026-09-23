@@ -240,27 +240,9 @@ internal sealed class MtpServerProcess : IMtpServerHost
             // process.HasExited (rather than racing the accept against Process.Exited) keeps this free of a
             // TaskCompletionSource ordering race.
             Process startedProcess = process;
-            Stopwatch? standardErrorDrainStopwatch = null;
             acceptedClient = await MtpServerConnector.AcceptAsync(
                 listener,
-                () =>
-                {
-                    if (!startedProcess.HasExited)
-                    {
-                        return null;
-                    }
-
-                    if (!standardErrorDrained.IsCompleted)
-                    {
-                        standardErrorDrainStopwatch ??= Stopwatch.StartNew();
-                        if (standardErrorDrainStopwatch.Elapsed < StandardErrorDrainTimeout)
-                        {
-                            return null;
-                        }
-                    }
-
-                    return CreateEarlyExitFailure(startedProcess, source, standardError);
-                },
+                token => TryGetProcessStoppedFailureAsync(startedProcess, source, standardError, standardErrorDrained, token),
                 () => startedProcess.HasExited
                     ? CreateEarlyExitFailure(startedProcess, source, standardError)
                     : new MtpServerConnectionClosedException(
@@ -299,6 +281,35 @@ internal sealed class MtpServerProcess : IMtpServerHost
     /// </summary>
     public string GetStandardError()
         => GetStandardError(_standardError);
+
+    private static Task<Exception?> TryGetProcessStoppedFailureAsync(
+        Process process,
+        string source,
+        StringBuilder standardError,
+        Task standardErrorDrained,
+        CancellationToken cancellationToken)
+        => !process.HasExited
+            ? Task.FromResult<Exception?>(null)
+            : WaitForStandardErrorAndCreateEarlyExitFailureAsync(
+                process,
+                source,
+                standardError,
+                standardErrorDrained,
+                cancellationToken);
+
+    private static async Task<Exception?> WaitForStandardErrorAndCreateEarlyExitFailureAsync(
+        Process process,
+        string source,
+        StringBuilder standardError,
+        Task standardErrorDrained,
+        CancellationToken cancellationToken)
+    {
+        _ = await Task.WhenAny(
+            standardErrorDrained,
+            Task.Delay(StandardErrorDrainTimeout, cancellationToken)).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return CreateEarlyExitFailure(process, source, standardError);
+    }
 
     private static MtpServerConnectionClosedException CreateEarlyExitFailure(
         Process process,

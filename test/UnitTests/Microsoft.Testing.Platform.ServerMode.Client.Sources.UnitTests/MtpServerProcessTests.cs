@@ -82,15 +82,21 @@ public sealed class MtpServerProcessTests
         OperatingSystems.Windows,
         IgnoreMessage = "Uses a Unix shell script and POSIX executable permissions.")]
     [UnsupportedOSPlatform("windows")]
-    public async Task StartAsyncWhenDescendantKeepsStandardErrorOpenDoesNotHang()
+    public async Task StartAsyncWhenStoppedProcessHasDescendantConnectAndKeepStandardErrorOpenReportsEarlyExit()
     {
         using var temp = TempDirectory.Create();
         string script = temp.CreateFile("App");
         File.WriteAllText(
             script,
-            "#" + "!/bin/sh\n"
+            "#" + "!/bin/bash\n"
+            + "while [[ \"$1\" != \"--client-port\" && \"$#\" -gt 0 ]]; do shift; done\n"
+            + "port=\"$2\"\n"
+            + "(\n"
+            + "  sleep 1\n"
+            + "  exec 3<>\"/dev/tcp/127.0.0.1/$port\"\n"
+            + "  sleep 5\n"
+            + ") &\n"
             + "echo inherited-standard-error >&2\n"
-            + "sleep 5 &\n"
             + "exit 7\n");
         MakeExecutable(script);
         var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(1) };
