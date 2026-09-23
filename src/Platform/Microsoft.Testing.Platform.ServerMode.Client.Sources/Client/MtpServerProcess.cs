@@ -243,10 +243,13 @@ internal sealed class MtpServerProcess : IMtpServerHost
             acceptedClient = await MtpServerConnector.AcceptAsync(
                 listener,
                 token => TryGetProcessStoppedFailureAsync(startedProcess, source, standardError, standardErrorDrained, token),
-                () => startedProcess.HasExited
-                    ? CreateEarlyExitFailure(startedProcess, source, standardError)
-                    : new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
+                token => CreateTimeoutOrStoppedFailureAsync(
+                    startedProcess,
+                    source,
+                    standardError,
+                    standardErrorDrained,
+                    options.ConnectionTimeout,
+                    token),
                 options.ConnectionTimeout,
                 serverCompletion: null,
                 cancellationToken).ConfigureAwait(false);
@@ -309,6 +312,27 @@ internal sealed class MtpServerProcess : IMtpServerHost
             Task.Delay(StandardErrorDrainTimeout, cancellationToken)).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         return CreateEarlyExitFailure(process, source, standardError);
+    }
+
+    private static async Task<Exception> CreateTimeoutOrStoppedFailureAsync(
+        Process process,
+        string source,
+        StringBuilder standardError,
+        Task standardErrorDrained,
+        TimeSpan connectionTimeout,
+        CancellationToken cancellationToken)
+    {
+        Exception? stopped = await TryGetProcessStoppedFailureAsync(
+            process,
+            source,
+            standardError,
+            standardErrorDrained,
+            cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return stopped
+            ?? new MtpServerConnectionClosedException(
+                $"The Microsoft.Testing.Platform application '{source}' did not connect back within {connectionTimeout.TotalSeconds:N0}s. "
+                + GetStandardError(standardError));
     }
 
     private static MtpServerConnectionClosedException CreateEarlyExitFailure(

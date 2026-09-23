@@ -124,7 +124,10 @@ internal static class MtpServerConnector
     /// probe can finish bounded diagnostic collection without allowing a late accept to win after the stopped
     /// state was observed.
     /// </param>
-    /// <param name="createTimeoutFailure">Creates the exception thrown when the connection timeout elapses.</param>
+    /// <param name="createTimeoutFailure">
+    /// Creates the exception thrown when the connection timeout elapses. The asynchronous callback lets a
+    /// launcher preserve a stopped-server diagnostic when exit races the timeout boundary.
+    /// </param>
     /// <param name="connectionTimeout">Upper bound on the wait for the server to connect back.</param>
     /// <param name="serverCompletion">
     /// Optional completion signal for the launched server. When supplied it joins the wait so a server that
@@ -138,7 +141,7 @@ internal static class MtpServerConnector
     public static async Task<TcpClient> AcceptAsync(
         TcpListener listener,
         Func<CancellationToken, Task<Exception?>> tryGetServerStoppedFailure,
-        Func<Exception> createTimeoutFailure,
+        Func<CancellationToken, Task<Exception>> createTimeoutFailure,
         TimeSpan connectionTimeout,
         Task? serverCompletion,
         CancellationToken cancellationToken)
@@ -170,7 +173,7 @@ internal static class MtpServerConnector
 
                 if (connectStopwatch.Elapsed >= connectionTimeout)
                 {
-                    throw createTimeoutFailure();
+                    throw await createTimeoutFailure(cancellationToken).ConfigureAwait(false);
                 }
 
                 var delayTask = Task.Delay(ServerStoppedPollInterval, cancellationToken);
@@ -180,6 +183,11 @@ internal static class MtpServerConnector
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+            if (await tryGetServerStoppedFailure(cancellationToken).ConfigureAwait(false) is { } stoppedAfterAccept)
+            {
+                throw stoppedAfterAccept;
+            }
+
             acceptedClient = await acceptTask.ConfigureAwait(false);
             acceptedClient.NoDelay = true;
             return acceptedClient;

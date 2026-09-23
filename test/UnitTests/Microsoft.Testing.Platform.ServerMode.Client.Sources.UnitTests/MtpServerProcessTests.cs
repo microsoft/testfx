@@ -92,7 +92,7 @@ public sealed class MtpServerProcessTests
             + "while [[ \"$1\" != \"--client-port\" && \"$#\" -gt 0 ]]; do shift; done\n"
             + "port=\"$2\"\n"
             + "(\n"
-            + "  sleep 1\n"
+            + "  sleep 0.05\n"
             + "  exec 3<>\"/dev/tcp/127.0.0.1/$port\"\n"
             + "  sleep 5\n"
             + ") &\n"
@@ -100,6 +100,7 @@ public sealed class MtpServerProcessTests
             + "exit 7\n");
         MakeExecutable(script);
         var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(1) };
+        var maximumExpectedDuration = TimeSpan.FromMilliseconds(4500);
         var stopwatch = Stopwatch.StartNew();
 
         MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
@@ -110,9 +111,10 @@ public sealed class MtpServerProcessTests
         Assert.Contains("inherited-standard-error", exception.Message);
         Assert.DoesNotContain("did not connect back within", exception.Message);
         Assert.IsLessThan(
-            TimeSpan.FromSeconds(3),
+            maximumExpectedDuration,
             stopwatch.Elapsed,
-            "The connection timeout may end the stderr grace, but it must still report the direct child's early exit rather than wait for the descendant.");
+            "The stopped-process probe includes a two-second stderr grace plus process startup and polling allowance, "
+            + "but must finish before the descendant's five-second pipe hold.");
     }
 #endif
 
