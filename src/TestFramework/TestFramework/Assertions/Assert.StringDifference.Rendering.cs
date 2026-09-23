@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
@@ -11,7 +13,7 @@ public sealed partial class Assert
         for (int i = 0; i < value.Length && length <= StringDifferencePreviewBudget; i++)
         {
             char c = value[i];
-            length += GetEscapedCharacterLength(value, i);
+            length += StringEscapeHelper.GetEscapedCharacterLength(value, i);
             if (char.IsHighSurrogate(c) && i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
             {
                 i++;
@@ -106,7 +108,7 @@ public sealed partial class Assert
         for (int i = beforeStart; i < window.Before.Length; i++)
         {
             StringToken token = window.Before[i];
-            AppendEscapedToken(builder, window.Value, token);
+            StringEscapeHelper.AppendEscapedString(builder, window.Value, token.Start, token.End, escapeUnpairedSurrogates: true, useExtendedEscapes: false);
             isPrefixSafe &= token.IsSafePrefix;
         }
 
@@ -115,7 +117,8 @@ public sealed partial class Assert
 
         for (int i = 0; i < afterCount; i++)
         {
-            AppendEscapedToken(builder, window.Value, window.After[i]);
+            StringToken token = window.After[i];
+            StringEscapeHelper.AppendEscapedString(builder, window.Value, token.Start, token.End, escapeUnpairedSurrogates: true, useExtendedEscapes: false);
         }
 
         if (omittedAfter)
@@ -187,7 +190,7 @@ public sealed partial class Assert
         }
 
         StringBuilder builder = new(mismatch.RenderedLength);
-        AppendEscapedToken(builder, window.Value, mismatch);
+        StringEscapeHelper.AppendEscapedString(builder, window.Value, mismatch.Start, mismatch.End, escapeUnpairedSurrogates: true, useExtendedEscapes: false);
         return builder.ToString();
     }
 
