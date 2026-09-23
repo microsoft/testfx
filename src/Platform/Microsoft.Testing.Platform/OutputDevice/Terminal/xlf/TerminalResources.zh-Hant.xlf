@@ -437,7 +437,7 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="needs-review-translation">控制是否發出 ANSI 逸出字元。
+        <target state="translated">控制是否發出 ANSI 逸出字元。
 有效值為 'auto' (預設值)、'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。
 即使 stdout 已重新導向，'on' 會強制 ANSI 逸出程式碼 (包括游標移動); 如果您只想要色彩，將它與 --progress off 配對。
 同時提供 --ansi 和 --no-ansi 時,--ansi 優先。</target>
@@ -461,13 +461,13 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Preset the per-test result blocks shown in the terminal.
 Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
-        <target state="needs-review-translation">預設終端機中顯示的每個測試結果區塊。
+        <target state="translated">預設終端機中顯示的每個測試結果區塊。
 有效值為 'Minimal'、'Normal'、'Detailed'。預設為 'Normal'。使用 '--show-test-results' 以精確選取結果。</target>
         <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
-        <target state="needs-review-translation">--output 需要值為 'Minimal'、'Normal' 或 'Detailed' 的單一參數。</target>
+        <target state="translated">--output 需要值為 'Minimal'、'Normal' 或 'Detailed' 的單一參數。</target>
         <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
@@ -546,26 +546,26 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
         <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
-        <target state="needs-review-translation">--show-test-results 的值 'all' 或 'none' 不能與任何其他值組合。</target>
+        <target state="translated">--show-test-results 的值 'all' 或 'none' 不能與任何其他值組合。</target>
         <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionDescription">
         <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
 Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
-        <target state="needs-review-translation">選取哪些測試結果會在終端機中顯示每個測試的結果區塊，以及其說明詳細資料、堆疊追蹤和擷取的輸出。
+        <target state="translated">選取哪些測試結果會在終端機中顯示每個測試的結果區塊，以及其說明詳細資料、堆疊追蹤和擷取的輸出。
 有效值為 'passed'、'failed' (也包含發生錯誤、逾時和已取消的測試)、'skipped'、'all' 和 'none'。您可以將多個值組合成以逗號或空格分隔的清單，或重複使用此選項；'all' 和 'none' 不能與任何其他值組合。
 當 '--output' 為 'Minimal' 時，預設值為 'failed'；當為 'Normal' 或未指定時，預設值為 'failed' 和 'skipped'；當為 'Detailed' 時，預設值為 'all'。無論傳遞順序為何，明確指定的 '--show-test-results' 一律優先於 '--output'。</target>
         <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
         <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="needs-review-translation">--show-test-results 至少需要一個值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
+        <target state="translated">--show-test-results 至少需要一個值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
         <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
         <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
-        <target state="needs-review-translation">--show-test-results 接受一或多個以逗號或空格分隔的值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
+        <target state="translated">--show-test-results 接受一或多個以逗號或空格分隔的值，值可為 'passed'、'failed'、'skipped'、'all' 或 'none'。</target>
         <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
