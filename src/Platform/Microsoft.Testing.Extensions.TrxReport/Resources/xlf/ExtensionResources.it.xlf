@@ -54,8 +54,8 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">Avviso: il file TRX '{0}' già esistente e verrà sovrascritto.</target>
-        <note>{0} is the {Locked="TRX"} report file path.</note>
+        <target state="translated">Avviso: il file Trx '{0}' esiste già e verrà sovrascritto.</target>
+        <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
         <source>Merges multiple TRX files into one from the command line.</source>

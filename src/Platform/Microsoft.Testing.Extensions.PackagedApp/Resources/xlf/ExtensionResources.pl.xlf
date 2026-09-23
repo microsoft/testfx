@@ -99,17 +99,17 @@
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationLocationMismatch">
         <source>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</source>
-        <target state="new">Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</target>
+        <target state="translated">Nie można aktywować żądanego układu „{0}”: system Windows zgłosił pomyślne ukończenie rejestracji, ale zarejestrowane lokalizacje pakietów bieżącego użytkownika to [{1}]. Zamknij wszystkie uruchomione wystąpienia pakietu i spróbuj ponownie. Nie aktywowano hosta testowego.</target>
         <note>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationLockDirectoryUnavailable">
         <source>Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</source>
-        <target state="new">Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</target>
+        <target state="translated">Nie można serializować rejestracji aplikacji w pakiecie, ponieważ katalog lokalnych danych aplikacji bieżącego użytkownika jest niedostępny. Przed ponowną próbą upewnij się, że profil użytkownika został załadowany. Nie aktywowano hosta testowego.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationNotDevelopment">
         <source>Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</source>
-        <target state="new">Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</target>
+        <target state="translated">Nie można przełączyć pakietu „{0}” z „{1}” na „{2}”: istniejący pakiet nie jest rejestracją deweloperską, więc nie można go usunąć z zachowaniem danych aplikacji. Użyj osobnej tożsamości pakietu na potrzeby programowania. Nie aktywowano hosta testowego.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationRemovalFailed">
@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationRemovalIncomplete">
         <source>Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</source>
-        <target state="new">Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</target>
+        <target state="translated">Nie można przełączyć pakietu „{0}” z „{1}” na „{2}”: system Windows zakończył żądanie usunięcia, ale pakiet nadal jest zarejestrowany. Zamknij wszystkie uruchomione wystąpienia pakietu i spróbuj ponownie. Nie podjęto próby rejestracji zastępczej ani aktywacji hosta testowego.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
     </body>

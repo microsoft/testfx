@@ -44,8 +44,8 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="translated">'--{0}' 需要單一 TRX 檔案路徑做為引數</target>
-        <note>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</note>
+        <target state="translated">'--{0}' 需要單一 trx 檔案路徑做為引數</target>
+        <note>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline.</source>
