@@ -93,18 +93,20 @@ public sealed class MtpServerProcessTests
             + "sleep 5 &\n"
             + "exit 7\n");
         MakeExecutable(script);
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
+        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(1) };
         var stopwatch = Stopwatch.StartNew();
 
         MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
             () => MtpServerProcess.StartAsync(script, options, TestContext.CancellationToken));
         stopwatch.Stop();
 
+        Assert.Contains("exited with code 7", exception.Message);
         Assert.Contains("inherited-standard-error", exception.Message);
+        Assert.DoesNotContain("did not connect back within", exception.Message);
         Assert.IsLessThan(
-            TimeSpan.FromSeconds(4),
+            TimeSpan.FromSeconds(3),
             stopwatch.Elapsed,
-            "A descendant that inherits the stderr pipe must not keep the connector probe blocked until that descendant exits.");
+            "The connection timeout may end the stderr grace, but it must still report the direct child's early exit rather than wait for the descendant.");
     }
 #endif
 

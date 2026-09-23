@@ -37,7 +37,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
 
     // Give asynchronous stderr callbacks a short chance to publish the direct child's final diagnostics.
     // The wait is polled rather than blocking because a descendant can inherit the pipe and keep it open.
-    private static readonly TimeSpan StandardErrorDrainTimeout = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan StandardErrorDrainTimeout = TimeSpan.FromSeconds(2);
 
     private static readonly object NoExitCode = new();
 
@@ -259,11 +259,12 @@ internal sealed class MtpServerProcess : IMtpServerHost
                         }
                     }
 
-                    return new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}");
+                    return CreateEarlyExitFailure(startedProcess, source, standardError);
                 },
-                () => new MtpServerConnectionClosedException(
-                    $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
+                () => startedProcess.HasExited
+                    ? CreateEarlyExitFailure(startedProcess, source, standardError)
+                    : new MtpServerConnectionClosedException(
+                        $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
                 options.ConnectionTimeout,
                 serverCompletion: null,
                 cancellationToken).ConfigureAwait(false);
@@ -298,6 +299,14 @@ internal sealed class MtpServerProcess : IMtpServerHost
     /// </summary>
     public string GetStandardError()
         => GetStandardError(_standardError);
+
+    private static MtpServerConnectionClosedException CreateEarlyExitFailure(
+        Process process,
+        string source,
+        StringBuilder standardError)
+        => new(
+            $"The Microsoft.Testing.Platform application '{source}' exited with code {process.ExitCode} before connecting back. "
+            + GetStandardError(standardError));
 
     private static string GetStandardError(StringBuilder buffer)
     {
