@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="new">'--{0}' expects a single trx file path as argument</target>
+        <target state="translated">"--{0}" ожидает в качестве аргумента один путь к файлу trx</target>
         <note>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
@@ -54,7 +54,7 @@
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: Trx file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Предупреждение: файл Trx "{0}" уже существует и будет перезаписан.</target>
         <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
