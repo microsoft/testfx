@@ -114,7 +114,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationRemovalFailed">
         <source>Failed to remove the existing packaged Windows app registration '{0}' before registering manifest '{1}'. Close any running instances of the package and retry. Error: {2}</source>
-        <target state="new">Failed to remove the existing packaged Windows app registration '{0}' before registering manifest '{1}'. Close any running instances of the package and retry. Error: {2}</target>
+        <target state="translated">Nie można usunąć istniejącej '{0}' rejestracji spakowanej aplikacji systemu Windows przed zarejestrowaniem manifestu '{1}'. Zamknij wszystkie uruchomione wystąpienia pakietu i ponów próbę. Błąd: {2}</target>
         <note>{0} is the package full name. {1} is the requested AppxManifest.xml path. {2} is the removal error.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationRemovalIncomplete">
