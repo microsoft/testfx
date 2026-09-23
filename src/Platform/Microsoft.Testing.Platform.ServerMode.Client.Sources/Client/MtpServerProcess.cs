@@ -35,6 +35,10 @@ internal sealed class MtpServerProcess : IMtpServerHost
     // cap is exceeded the oldest text is dropped from the front and the most recent output is kept.
     private const int MaxStandardErrorLength = 64 * 1024;
 
+    // Give asynchronous stderr callbacks a short chance to publish the direct child's final diagnostics.
+    // The wait is polled rather than blocking because a descendant can inherit the pipe and keep it open.
+    private static readonly TimeSpan StandardErrorDrainTimeout = TimeSpan.FromSeconds(2);
+
     private static readonly object NoExitCode = new();
 
     private readonly TcpListener _listener;
@@ -205,7 +209,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
                 startInfo.Environment[variable.Key] = variable.Value;
             }
 
-            process = CreateProcess(startInfo, standardError);
+            process = CreateProcess(startInfo, standardError, out Task standardErrorDrained);
             try
             {
                 process.Start();
@@ -221,7 +225,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
                     MtpClientLogLevel.Warning,
                     $"The sibling apphost could not be executed; retrying through '{launch.FileName} {launch.Arguments}'.");
 
-                process = CreateProcess(startInfo, standardError);
+                process = CreateProcess(startInfo, standardError, out standardErrorDrained);
                 process.Start();
             }
 
@@ -238,12 +242,14 @@ internal sealed class MtpServerProcess : IMtpServerHost
             Process startedProcess = process;
             acceptedClient = await MtpServerConnector.AcceptAsync(
                 listener,
-                () => startedProcess.HasExited
-                    ? new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}")
-                    : null,
-                () => new MtpServerConnectionClosedException(
-                    $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
+                token => TryGetProcessStoppedFailureAsync(startedProcess, source, standardError, standardErrorDrained, token),
+                token => CreateTimeoutOrStoppedFailureAsync(
+                    startedProcess,
+                    source,
+                    standardError,
+                    standardErrorDrained,
+                    options.ConnectionTimeout,
+                    token),
                 options.ConnectionTimeout,
                 serverCompletion: null,
                 cancellationToken).ConfigureAwait(false);
@@ -279,6 +285,64 @@ internal sealed class MtpServerProcess : IMtpServerHost
     public string GetStandardError()
         => GetStandardError(_standardError);
 
+    private static Task<Exception?> TryGetProcessStoppedFailureAsync(
+        Process process,
+        string source,
+        StringBuilder standardError,
+        Task standardErrorDrained,
+        CancellationToken cancellationToken)
+        => !process.HasExited
+            ? Task.FromResult<Exception?>(null)
+            : WaitForStandardErrorAndCreateEarlyExitFailureAsync(
+                process,
+                source,
+                standardError,
+                standardErrorDrained,
+                cancellationToken);
+
+    private static async Task<Exception?> WaitForStandardErrorAndCreateEarlyExitFailureAsync(
+        Process process,
+        string source,
+        StringBuilder standardError,
+        Task standardErrorDrained,
+        CancellationToken cancellationToken)
+    {
+        _ = await Task.WhenAny(
+            standardErrorDrained,
+            Task.Delay(StandardErrorDrainTimeout, cancellationToken)).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return CreateEarlyExitFailure(process, source, standardError);
+    }
+
+    private static async Task<Exception> CreateTimeoutOrStoppedFailureAsync(
+        Process process,
+        string source,
+        StringBuilder standardError,
+        Task standardErrorDrained,
+        TimeSpan connectionTimeout,
+        CancellationToken cancellationToken)
+    {
+        Exception? stopped = await TryGetProcessStoppedFailureAsync(
+            process,
+            source,
+            standardError,
+            standardErrorDrained,
+            cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return stopped
+            ?? new MtpServerConnectionClosedException(
+                $"The Microsoft.Testing.Platform application '{source}' did not connect back within {connectionTimeout.TotalSeconds:N0}s. "
+                + GetStandardError(standardError));
+    }
+
+    private static MtpServerConnectionClosedException CreateEarlyExitFailure(
+        Process process,
+        string source,
+        StringBuilder standardError)
+        => new(
+            $"The Microsoft.Testing.Platform application '{source}' exited with code {process.ExitCode} before connecting back. "
+            + GetStandardError(standardError));
+
     private static string GetStandardError(StringBuilder buffer)
     {
         lock (buffer)
@@ -288,20 +352,26 @@ internal sealed class MtpServerProcess : IMtpServerHost
         }
     }
 
-    private static Process CreateProcess(ProcessStartInfo startInfo, StringBuilder standardError)
+    private static Process CreateProcess(ProcessStartInfo startInfo, StringBuilder standardError, out Task standardErrorDrained)
     {
+        var standardErrorDrainedSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        standardErrorDrained = standardErrorDrainedSource.Task;
+
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.ErrorDataReceived += (_, e) =>
         {
-            if (e.Data is not null)
+            if (e.Data is null)
             {
-                lock (standardError)
+                _ = standardErrorDrainedSource.TrySetResult(true);
+                return;
+            }
+
+            lock (standardError)
+            {
+                standardError.AppendLine(e.Data);
+                if (standardError.Length > MaxStandardErrorLength)
                 {
-                    standardError.AppendLine(e.Data);
-                    if (standardError.Length > MaxStandardErrorLength)
-                    {
-                        standardError.Remove(0, standardError.Length - MaxStandardErrorLength);
-                    }
+                    standardError.Remove(0, standardError.Length - MaxStandardErrorLength);
                 }
             }
         };
