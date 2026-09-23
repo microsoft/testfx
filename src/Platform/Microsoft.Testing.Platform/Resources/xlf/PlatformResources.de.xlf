@@ -913,7 +913,7 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="translated">Aktivieren Sie das Laden von Testplattformerweiterungen, die von den Manifesten „*.testingplatformextensions.json“ deklariert wurden, die neben der Testanwendung gefunden wurden. Standardmäßig deaktiviert.</target>
+        <target state="translated">Aktivieren Sie das Laden von Testplattformerweiterungen, die von „*.testingplatformextensions.json“-Manifesten deklariert wurden, die neben der Testanwendung gefunden wurden. Standardmäßig deaktiviert.</target>
         <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -1057,7 +1057,7 @@ Der Standardwert ist "TestResults" im Verzeichnis, das die Testanwendung enthäl
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="translated">Eine globale Testausführungszeitüberschreitung.
-Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzeptierte Suffixe sind 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', z. B. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzeptierte Suffixe sind 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' und 'd'/'day(s)', z. B. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
