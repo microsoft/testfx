@@ -154,108 +154,87 @@ internal sealed partial class ServerTestHost
             }
             catch (OperationCanceledException e)
             {
-                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
-                    ? MakeInitializationRetryable(
-                        GetRequestKey(request.Id, request.StringId),
-                        rpcState)
-                    : null;
-                try
-                {
-                    if (!testUpdateCompletionSent)
-                    {
-                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
-                    }
+                // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
+                (string errorMessage, int errorCode) = rpcState.IsCancellationRequested
+                    ? (string.Empty, ErrorCodes.RequestCanceled)
+                    : (e.ToString(), ErrorCodes.RequestCanceled);
 
-                    // We don't return the stack of the exception if we're canceling the single request because it's expected and it's not an exception.
-                    (string errorMessage, int errorCode) = rpcState.IsCancellationRequested
-                        ? (string.Empty, ErrorCodes.RequestCanceled)
-                        : (e.ToString(), ErrorCodes.RequestCanceled);
-
-                    await SendErrorAsync(
-                        reqId: request.Id,
-                        errorCode: errorCode,
-                        message: errorMessage,
-                        data: null,
-                        cancellationToken,
-                        stringId: request.StringId).ConfigureAwait(false);
-                }
-                finally
-                {
-                    failedInitialization?.TrySetResult(false);
-
-                    CompleteFailedRequest(
-                        isInitializeRequest,
-                        GetRequestKey(request.Id, request.StringId),
-                        rpcState,
-                        completion => completion.TrySetCanceled());
-                }
+                await HandleRequestFailureAsync(
+                    request,
+                    rpcState,
+                    isInitializeRequest,
+                    testUpdateCompletionSent,
+                    cancellationToken,
+                    errorCode,
+                    errorMessage,
+                    completion => completion.TrySetCanceled()).ConfigureAwait(false);
             }
             catch (JsonRpcException e)
             {
-                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
-                    ? MakeInitializationRetryable(
-                        GetRequestKey(request.Id, request.StringId),
-                        rpcState)
-                    : null;
-                try
-                {
-                    if (!testUpdateCompletionSent)
-                    {
-                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
-                    }
-
-                    await SendErrorAsync(
-                        reqId: request.Id,
-                        errorCode: e.ErrorCode,
-                        message: e.Message,
-                        data: null,
-                        cancellationToken,
-                        stringId: request.StringId).ConfigureAwait(false);
-                }
-                finally
-                {
-                    failedInitialization?.TrySetResult(false);
-
-                    CompleteFailedRequest(
-                        isInitializeRequest,
-                        GetRequestKey(request.Id, request.StringId),
-                        rpcState,
-                        completion => completion.TrySetException(e));
-                }
+                await HandleRequestFailureAsync(
+                    request,
+                    rpcState,
+                    isInitializeRequest,
+                    testUpdateCompletionSent,
+                    cancellationToken,
+                    e.ErrorCode,
+                    e.Message,
+                    completion => completion.TrySetException(e)).ConfigureAwait(false);
             }
             catch (Exception e)
             {
-                TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
-                    ? MakeInitializationRetryable(
-                        GetRequestKey(request.Id, request.StringId),
-                        rpcState)
-                    : null;
-                try
-                {
-                    if (!testUpdateCompletionSent)
-                    {
-                        await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
-                    }
-
-                    await SendErrorAsync(
-                        reqId: request.Id,
-                        errorCode: ErrorCodes.InternalError,
-                        message: e.ToString(),
-                        data: null,
-                        cancellationToken,
-                        stringId: request.StringId).ConfigureAwait(false);
-                }
-                finally
-                {
-                    failedInitialization?.TrySetResult(false);
-
-                    CompleteFailedRequest(
-                        isInitializeRequest,
-                        GetRequestKey(request.Id, request.StringId),
-                        rpcState,
-                        completion => completion.TrySetException(e));
-                }
+                await HandleRequestFailureAsync(
+                    request,
+                    rpcState,
+                    isInitializeRequest,
+                    testUpdateCompletionSent,
+                    cancellationToken,
+                    ErrorCodes.InternalError,
+                    e.ToString(),
+                    completion => completion.TrySetException(e)).ConfigureAwait(false);
             }
+        }
+    }
+
+    private async Task HandleRequestFailureAsync(
+        RequestMessage request,
+        RpcInvocationState rpcState,
+        bool isInitializeRequest,
+        bool testUpdateCompletionSent,
+        CancellationToken cancellationToken,
+        int errorCode,
+        string errorMessage,
+        Action<TaskCompletionSource<object>> completion)
+    {
+        TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
+            ? MakeInitializationRetryable(
+                GetRequestKey(request.Id, request.StringId),
+                rpcState)
+            : null;
+        try
+        {
+            if (!testUpdateCompletionSent)
+            {
+                await SendTestUpdateCompleteIfNeededAsync(request, cancellationToken, bestEffort: true).ConfigureAwait(false);
+            }
+
+            await SendErrorAsync(
+                reqId: request.Id,
+                errorCode: errorCode,
+                message: errorMessage,
+                data: null,
+                cancellationToken,
+                stringId: request.StringId).ConfigureAwait(false);
+        }
+        finally
+        {
+            failedInitialization?.TrySetResult(false);
+
+            CompleteFailedRequest(
+                isInitializeRequest,
+                GetRequestKey(request.Id, request.StringId),
+                rpcState,
+                completion);
         }
     }
 }
