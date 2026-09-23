@@ -4,6 +4,8 @@
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 
+using Microsoft.Win32.SafeHandles;
+
 using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -37,19 +39,33 @@ public sealed class NonCooperativeParentProcessListenerTests
     }
 
     [TestMethod]
-    public void ParentProcessExitedHandler_WhenInvoked_CallsEnvironmentExit()
+    public async Task ParentProcessExited_CallsEnvironmentExit()
     {
-        int currentPid = Process.GetCurrentProcess().Id;
-        Mock<ICommandLineOptions> commandLineOptions = CreateCommandLineOptions(currentPid);
-        Mock<IEnvironment> environment = new();
+        using Process parentProcess = StartBlockingProcess();
+        try
+        {
+            Mock<ICommandLineOptions> commandLineOptions = CreateCommandLineOptions(parentProcess.Id);
+            Mock<IEnvironment> environment = new();
+            TaskCompletionSource<bool> exitCalled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            environment
+                .Setup(e => e.Exit((int)ExitCode.DependentProcessExited))
+                .Callback(() => exitCalled.TrySetResult(true));
 
-        using var listener = new NonCooperativeParentProcessListener(commandLineOptions.Object, environment.Object);
+            using var listener = new NonCooperativeParentProcessListener(commandLineOptions.Object, environment.Object);
 
-        MethodInfo handler = typeof(NonCooperativeParentProcessListener).GetMethod(
-            "ParentProcess_Exited", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        handler.Invoke(listener, [null, EventArgs.Empty]);
+            environment.Verify(e => e.Exit(It.IsAny<int>()), Times.Never);
 
-        environment.Verify(e => e.Exit((int)ExitCode.DependentProcessExited), Times.Once);
+            parentProcess.StandardInput.Close();
+            await exitCalled.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            environment.Verify(e => e.Exit((int)ExitCode.DependentProcessExited), Times.Once);
+        }
+        finally
+        {
+            if (!parentProcess.HasExited)
+            {
+                parentProcess.Kill();
+            }
+        }
     }
 
     [TestMethod]
@@ -73,8 +89,11 @@ public sealed class NonCooperativeParentProcessListenerTests
         Mock<IEnvironment> environment = new();
 
         var listener = new NonCooperativeParentProcessListener(commandLineOptions.Object, environment.Object);
+        Process parentProcess = GetParentProcess(listener);
+        SafeProcessHandle processHandle = parentProcess.SafeHandle;
 
         listener.Dispose();
+        Assert.IsTrue(processHandle.IsClosed);
         listener.Dispose();
     }
 
@@ -106,12 +125,33 @@ public sealed class NonCooperativeParentProcessListenerTests
     {
         // Spawn a short-lived process and wait for it to exit, so that we have a process id that is
         // guaranteed to no longer correspond to a running process.
-        ProcessStartInfo startInfo = OperatingSystem.IsWindows()
+        ProcessStartInfo startInfo = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? new ProcessStartInfo("cmd.exe", "/c exit") { UseShellExecute = false }
             : new ProcessStartInfo("/bin/sh", "-c exit") { UseShellExecute = false };
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
         return process.Id;
+    }
+
+    private static Process StartBlockingProcess()
+    {
+        ProcessStartInfo startInfo = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? new ProcessStartInfo("cmd.exe", "/d /c more")
+            : new ProcessStartInfo("/bin/sh", "-c cat");
+        startInfo.UseShellExecute = false;
+        startInfo.RedirectStandardInput = true;
+        startInfo.CreateNoWindow = true;
+
+        Process process = Process.Start(startInfo)!;
+        Assert.IsFalse(process.HasExited);
+        return process;
+    }
+
+    private static Process GetParentProcess(NonCooperativeParentProcessListener listener)
+    {
+        FieldInfo parentProcessField = typeof(NonCooperativeParentProcessListener).GetField(
+            "_parentProcess", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        return (Process)parentProcessField.GetValue(listener)!;
     }
 }
