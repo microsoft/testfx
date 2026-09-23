@@ -35,6 +35,10 @@ internal sealed class MtpServerProcess : IMtpServerHost
     // cap is exceeded the oldest text is dropped from the front and the most recent output is kept.
     private const int MaxStandardErrorLength = 64 * 1024;
 
+    // Give asynchronous stderr callbacks a short chance to publish the direct child's final diagnostics.
+    // The wait is polled rather than blocking because a descendant can inherit the pipe and keep it open.
+    private static readonly TimeSpan StandardErrorDrainTimeout = TimeSpan.FromSeconds(1);
+
     private static readonly object NoExitCode = new();
 
     private readonly TcpListener _listener;
@@ -205,7 +209,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
                 startInfo.Environment[variable.Key] = variable.Value;
             }
 
-            process = CreateProcess(startInfo, standardError);
+            process = CreateProcess(startInfo, standardError, out Task standardErrorDrained);
             try
             {
                 process.Start();
@@ -221,7 +225,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
                     MtpClientLogLevel.Warning,
                     $"The sibling apphost could not be executed; retrying through '{launch.FileName} {launch.Arguments}'.");
 
-                process = CreateProcess(startInfo, standardError);
+                process = CreateProcess(startInfo, standardError, out standardErrorDrained);
                 process.Start();
             }
 
@@ -236,6 +240,7 @@ internal sealed class MtpServerProcess : IMtpServerHost
             // process.HasExited (rather than racing the accept against Process.Exited) keeps this free of a
             // TaskCompletionSource ordering race.
             Process startedProcess = process;
+            Stopwatch? standardErrorDrainStopwatch = null;
             acceptedClient = await MtpServerConnector.AcceptAsync(
                 listener,
                 () =>
@@ -245,9 +250,15 @@ internal sealed class MtpServerProcess : IMtpServerHost
                         return null;
                     }
 
-                    // HasExited can become true before the asynchronous stdout/stderr callbacks have drained.
-                    // The parameterless wait completes those callbacks, so the failure includes all diagnostics.
-                    startedProcess.WaitForExit();
+                    if (!standardErrorDrained.IsCompleted)
+                    {
+                        standardErrorDrainStopwatch ??= Stopwatch.StartNew();
+                        if (standardErrorDrainStopwatch.Elapsed < StandardErrorDrainTimeout)
+                        {
+                            return null;
+                        }
+                    }
+
                     return new MtpServerConnectionClosedException(
                         $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}");
                 },
@@ -297,20 +308,26 @@ internal sealed class MtpServerProcess : IMtpServerHost
         }
     }
 
-    private static Process CreateProcess(ProcessStartInfo startInfo, StringBuilder standardError)
+    private static Process CreateProcess(ProcessStartInfo startInfo, StringBuilder standardError, out Task standardErrorDrained)
     {
+        var standardErrorDrainedSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        standardErrorDrained = standardErrorDrainedSource.Task;
+
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.ErrorDataReceived += (_, e) =>
         {
-            if (e.Data is not null)
+            if (e.Data is null)
             {
-                lock (standardError)
+                _ = standardErrorDrainedSource.TrySetResult(true);
+                return;
+            }
+
+            lock (standardError)
+            {
+                standardError.AppendLine(e.Data);
+                if (standardError.Length > MaxStandardErrorLength)
                 {
-                    standardError.AppendLine(e.Data);
-                    if (standardError.Length > MaxStandardErrorLength)
-                    {
-                        standardError.Remove(0, standardError.Length - MaxStandardErrorLength);
-                    }
+                    standardError.Remove(0, standardError.Length - MaxStandardErrorLength);
                 }
             }
         };

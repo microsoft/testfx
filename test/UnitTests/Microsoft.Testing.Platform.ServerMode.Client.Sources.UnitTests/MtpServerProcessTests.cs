@@ -65,7 +65,7 @@ public sealed class MtpServerProcessTests
         IgnoreMessage = "Uses the standard Unix 'false' executable to produce a silent nonzero exit.")]
     public async Task StartAsyncWhenProcessExitsWithoutStandardErrorOmitsStandardErrorSuffix()
     {
-        const string FalseExecutable = "/bin/false";
+        const string FalseExecutable = "/usr/bin/false";
         var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(20) };
 
         MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
@@ -74,6 +74,39 @@ public sealed class MtpServerProcessTests
         Assert.Contains("exited with code", exception.Message);
         Assert.DoesNotContain("Standard error:", exception.Message);
     }
+
+#if NET
+    [TestMethod]
+    [OSCondition(
+        ConditionMode.Exclude,
+        OperatingSystems.Windows,
+        IgnoreMessage = "Uses a Unix shell script and POSIX executable permissions.")]
+    [UnsupportedOSPlatform("windows")]
+    public async Task StartAsyncWhenDescendantKeepsStandardErrorOpenDoesNotHang()
+    {
+        using var temp = TempDirectory.Create();
+        string script = temp.CreateFile("App");
+        File.WriteAllText(
+            script,
+            "#" + "!/bin/sh\n"
+            + "echo inherited-standard-error >&2\n"
+            + "sleep 5 &\n"
+            + "exit 7\n");
+        MakeExecutable(script);
+        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
+        var stopwatch = Stopwatch.StartNew();
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(script, options, TestContext.CancellationToken));
+        stopwatch.Stop();
+
+        Assert.Contains("inherited-standard-error", exception.Message);
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(4),
+            stopwatch.Elapsed,
+            "A descendant that inherits the stderr pipe must not keep the connector probe blocked until that descendant exits.");
+    }
+#endif
 
     [TestMethod]
     public void BuildLaunchWhenSourceIsExeLaunchesItDirectly()
