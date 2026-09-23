@@ -99,7 +99,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationLocationMismatch">
         <source>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</source>
-        <target state="new">Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</target>
+        <target state="translated">无法激活请求的布局“{0}”: Windows 报告注册成功，但当前用户的注册包位置为 [{1}]。关闭包的任何正在运行的实例，然后重试。未激活测试主机。</target>
         <note>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationLockDirectoryUnavailable">
