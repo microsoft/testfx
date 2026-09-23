@@ -427,7 +427,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
         <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
-        <target state="new">Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</target>
+        <target state="translated">Non duplicare il nome visualizzato 'DataRow' '{0}'. Ogni 'DataRow' di un metodo di test deve utilizzare un nome visualizzato univoco.</target>
         <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowDisplayNameTitle">
