@@ -320,7 +320,7 @@ public sealed class MtpServerClientSourcePackageTests
         // do not exist on net462 and no facade forwards them). The two client source sites that use them are
         // guarded with #if NETFRAMEWORK.
         var missingGuard = new List<string>();
-        foreach (string guarded in new[] { "Client/MtpClientOperatingSystem.cs", "Client/MtpServerProcess.cs" })
+        foreach (string guarded in new[] { "Client/MtpClientOperatingSystem.cs", "Client/MtpServerProcess.LaunchCommand.cs" })
         {
             if (!Package.PackedTextByTfm[NetStandard].TryGetValue(guarded, out string? text))
             {
@@ -348,7 +348,7 @@ public sealed class MtpServerClientSourcePackageTests
         // net5.0, net6.0 and net7.0 consumers, so reusing it here would drop a Linux net7.0 consumer back to
         // the existence-only check, select a non-executable apphost, and abort with 'Permission denied'
         // instead of falling back to `dotnet <dll>`.
-        const string Logical = "Client/MtpServerProcess.cs";
+        const string Logical = "Client/MtpServerProcess.LaunchCommand.cs";
         const string Fence = "#if NET7_0_OR_GREATER";
         const string GuardedCall = "File.GetUnixFileMode(";
 
