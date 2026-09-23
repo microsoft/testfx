@@ -99,27 +99,27 @@
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationLocationMismatch">
         <source>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</source>
-        <target state="new">Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</target>
+        <target state="translated">요청한 레이아웃 '{0}'을(를) 활성화할 수 없습니다. Windows에서 등록 성공을 보고했지만, 현재 사용자의 등록된 패키지 위치는 [{1}]입니다. 실행 중인 패키지 인스턴스를 모두 닫고 다시 시도하세요. 테스트 호스트가 활성화되지 않았습니다.</target>
         <note>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationLockDirectoryUnavailable">
         <source>Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</source>
-        <target state="new">Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</target>
+        <target state="translated">현재 사용자의 로컬 응용 프로그램 데이터 디렉터리를 사용할 수 없으므로 패키지된 앱 등록을 직렬화할 수 없습니다. 다시 시도하기 전에 사용자 프로필이 로드되었는지 확인하세요. 활성화된 테스트 호스트가 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationNotDevelopment">
         <source>Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</source>
-        <target state="new">Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</target>
+        <target state="translated">패키지 '{0}' '{1}'에서 '{2}'로 전환할 수 없습니다. 기존 패키지는 개발 등록이 아니므로 애플리케이션 데이터를 유지하면서 제거할 수 없습니다. 개발에 별도의 패키지 ID를 사용합니다. 활성화된 테스트 호스트가 없습니다.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationRemovalFailed">
         <source>Failed to remove the existing packaged Windows app registration '{0}' before registering manifest '{1}'. Close any running instances of the package and retry. Error: {2}</source>
-        <target state="new">Failed to remove the existing packaged Windows app registration '{0}' before registering manifest '{1}'. Close any running instances of the package and retry. Error: {2}</target>
+        <target state="translated">매니페스트 '{1}' 등록하기 전에 기존 패키지된 Windows 앱 등록 '{0}' 제거하지 못했습니다. 실행 중인 패키지 인스턴스를 모두 닫고 다시 시도하세요. 오류: {2}</target>
         <note>{0} is the package full name. {1} is the requested AppxManifest.xml path. {2} is the removal error.</note>
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationRemovalIncomplete">
         <source>Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</source>
-        <target state="new">Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</target>
+        <target state="translated">패키지 '{0}' '{1}'에서 '{2}'로 전환할 수 없습니다. Windows에서 제거 요청을 완료했지만 패키지가 등록된 상태로 유지됩니다. 실행 중인 패키지 인스턴스를 모두 닫고 다시 시도하세요. 대체 등록 또는 테스트 호스트 활성화가 시도되지 않았습니다.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
     </body>

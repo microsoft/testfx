@@ -6,6 +6,12 @@
         <source>Environment variable '{0}' is not set.</source>
         <target state="translated">環境変数 '{0}' が設定されていません。</target>
         <note />
+        <note>{0} is the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NoAuthenticationConfigured">
+        <source>No authentication is configured for the Azure OpenAI chat client provider. Set the 'AZURE_OPENAI_API_KEY' environment variable, or reference the 'Azure.Identity' package and pass a credential (for example 'new DefaultAzureCredential()') to 'AddAzureOpenAIChatClientProvider'.</source>
+        <target state="translated">Azure OpenAI チャット クライアント プロバイダーに対して認証が構成されていません。'AZURE_OPENAI_API_KEY' 環境変数を設定するか、'Azure.Identity' パッケージを参照して資格情報 ('new DefaultAzureCredential()' など) を 'AddAzureOpenAIChatClientProvider' に渡します。</target>
+        <note>Do not localize the environment variable {Locked="AZURE_OPENAI_API_KEY"}, package name {Locked="Azure.Identity"}, code example {Locked="new DefaultAzureCredential()"}, or API name {Locked="AddAzureOpenAIChatClientProvider"}.</note>
       </trans-unit>
     </body>
   </file>

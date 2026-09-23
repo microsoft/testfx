@@ -169,7 +169,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="needs-review-translation">从 MSTest 3.8 开始，'DynamicDataSourceType.AutoDetect' 为默认值，可自动标识属性、方法和字段，从而降低详细程度并减少与成员类型的耦合。</target>
+        <target state="translated">从 MSTest 3.8 开始，“DynamicDataSourceType.AutoDetect”为默认值，可自动标识属性、方法和字段，从而降低详细程度并减少与成员类型的耦合。</target>
         <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
@@ -417,12 +417,27 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="needs-review-translation">传递给程序集或类初始化的 TestContext 特定于该上下文，并且不会随每个测试执行进行更新。在 'static' 成员中重用它可能会公开过时的上下文。</target>
+        <target state="translated">传递给程序集或类初始化的 TestContext 特定于该上下文，并且不会随每个测试执行进行更新。在“static”成员中重用它可能会公开过时的上下文。</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="translated">如果 'DataRow' 显示名称重复，将导致无法区分测试结果与测试资源管理器中的数据驱动的测试用例。</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
+        <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
+        <target state="translated">请勿复制 'DataRow' 显示名称“{0}”。测试方法上的每个 'DataRow' 都应使用唯一的显示名称。</target>
+        <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameTitle">
+        <source>Avoid duplicated 'DataRow' display names</source>
+        <target state="translated">避免重复的 'DataRow' 显示名称</target>
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
-        <target state="needs-review-translation">MSTest 会通过其完全相同的框架类型标识解析继承的生命周期特性 "[TestInitialize]"、"[TestCleanup]"、"[ClassInitialize]" 和 "[ClassCleanup]"，以及测试特性 "[TestMethod]" 和 "[DataTestMethod]"。框架程序集已从 "Microsoft.VisualStudio.TestPlatform.TestFramework" 重命名为 "MSTest.TestFramework"，因此针对不同 MSTest 主要版本编译的基类会以不同的类型标识公开这些特性。当测试类继承此类基类，而测试类是针对另一个版本编译时，继承的初始化和清理不会运行，继承的测试方法也不会被发现，而且不会出现生成错误或发现错误。请使用与测试项目相同的 MSTest 版本重新编译基础程序集，对于自定义特性，还要重新编译定义该特性的程序集。</target>
+        <target state="translated">MSTest 会通过其完全相同的框架类型标识解析继承的生命周期特性 "[TestInitialize]"、"[TestCleanup]"、"[ClassInitialize]" 和 "[ClassCleanup]"，以及测试特性 "[TestMethod]" 和 "[DataTestMethod]"。框架程序集已从 "Microsoft.VisualStudio.TestPlatform.TestFramework" 重命名为 "MSTest.TestFramework"，因此针对不同 MSTest 主要版本编译的基类会以不同的类型标识公开这些特性。当测试类继承此类基类，而测试类是针对另一个版本编译时，继承的初始化和清理不会运行，继承的测试方法也不会被发现，而且不会出现生成错误或发现错误。请使用与测试项目相同的 MSTest 版本重新编译基础程序集，对于自定义特性，还要重新编译定义该特性的程序集。</target>
         <note>{Locked="MSTest"}{Locked="[TestInitialize]"}{Locked="[TestCleanup]"}{Locked="[ClassInitialize]"}{Locked="[ClassCleanup]"}{Locked="[TestMethod]"}{Locked="[DataTestMethod]"}{Locked="Microsoft.VisualStudio.TestPlatform.TestFramework"}{Locked="MSTest.TestFramework"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
@@ -762,7 +777,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="needs-review-translation">'Assert.Fail' 可显式化处理有意失败，并允许失败消息记录测试无法继续的原因。</target>
+        <target state="translated">“Assert.Fail”可显式化处理有意失败，并允许失败消息记录测试无法继续的原因。</target>
         <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -807,7 +822,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="needs-review-translation">构造函数允许通过 'readonly' 字段进行初始化，并提供更强大的编译器反馈，对于可为 null 的引用类型尤为如此。此选择加入样式规则与 MSTEST0019 互斥。</target>
+        <target state="translated">构造函数允许通过“readonly”字段进行初始化，并提供更强大的编译器反馈，对于可为空的引用类型尤为如此。此选择加入样式规则与 MSTEST0019 互斥。</target>
         <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
@@ -817,12 +832,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="needs-review-translation">'[TestCleanup]' 支持在 'IAsyncDisposable' 不可用的目标框架上进行异步清理。此选择加入样式规则与 MSTEST0021 互斥。</target>
+        <target state="translated">“[TestCleanup]”支持在“IAsyncDisposable”不可用的目标框架上进行异步清理。此选择加入样式规则与 MSTEST0021 互斥。</target>
         <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
         <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
-        <target state="needs-review-translation">'[TestInitialize]' 同时支持同步初始化和异步初始化，但构造函数无法成为等待目标。此选择加入样式规则与 MSTEST0020 互斥。</target>
+        <target state="translated">'[TestInitialize]' 同时支持同步初始化和异步初始化，但构造函数无法成为等待目标。此选择加入样式规则与 MSTEST0020 互斥。</target>
         <note>{Locked="[TestInitialize]"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -1364,7 +1379,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="needs-review-translation">在测试类或测试方法外部应用时，MSTest 会忽略 '[DeploymentItem]'。</target>
+        <target state="translated">在测试类或测试方法外部应用时，MSTest 会忽略“[DeploymentItem]”。</target>
         <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
