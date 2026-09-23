@@ -238,10 +238,19 @@ internal sealed class MtpServerProcess : IMtpServerHost
             Process startedProcess = process;
             acceptedClient = await MtpServerConnector.AcceptAsync(
                 listener,
-                () => startedProcess.HasExited
-                    ? new MtpServerConnectionClosedException(
-                        $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}")
-                    : null,
+                () =>
+                {
+                    if (!startedProcess.HasExited)
+                    {
+                        return null;
+                    }
+
+                    // HasExited can become true before the asynchronous stdout/stderr callbacks have drained.
+                    // The parameterless wait completes those callbacks, so the failure includes all diagnostics.
+                    startedProcess.WaitForExit();
+                    return new MtpServerConnectionClosedException(
+                        $"The Microsoft.Testing.Platform application '{source}' exited with code {startedProcess.ExitCode} before connecting back. {GetStandardError(standardError)}");
+                },
                 () => new MtpServerConnectionClosedException(
                     $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}"),
                 options.ConnectionTimeout,
