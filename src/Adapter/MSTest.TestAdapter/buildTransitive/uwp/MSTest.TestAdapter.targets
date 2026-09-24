@@ -112,7 +112,7 @@
 
   <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
   <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild"
-          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' "
+          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' AND '$(EnableMSTestRunner)' != 'true' "
           DependsOnTargets="GetMSTestV2CultureHierarchy"
           Inputs="@(MSTestV2Files)"
           Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)\%(FileName)%(Extension)')">
