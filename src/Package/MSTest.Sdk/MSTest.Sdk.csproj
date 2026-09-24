@@ -57,12 +57,12 @@ $(CommonProductDescription)]]></PackageDescription>
              Properties="Configuration=$(Configuration);TargetFramework=net9.0-windows10.0.19041.0" />
 
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net8.0-windows10.0.19041.0\**\*"
-                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net8.0-windows10.0.19041.0\**\.*">
+      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net8.0-windows10.0.19041.0\win-x64\**\*"
+                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net8.0-windows10.0.19041.0\win-x64\**\.*">
         <PackagePath>tools\AppModelController\net8.0\</PackagePath>
       </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net9.0-windows10.0.19041.0\**\*"
-                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net9.0-windows10.0.19041.0\**\.*">
+      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net9.0-windows10.0.19041.0\win-x64\**\*"
+                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController\$(Configuration)\net9.0-windows10.0.19041.0\win-x64\**\.*">
         <PackagePath>tools\AppModelController\net9.0\</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>

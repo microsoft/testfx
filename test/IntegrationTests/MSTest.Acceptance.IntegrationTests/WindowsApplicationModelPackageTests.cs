@@ -11,7 +11,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// Verifies the physical Windows application-model assets in the configuration-matched MSTest packages.
 /// </summary>
 [TestClass]
-[OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
 public sealed class WindowsApplicationModelPackageTests
 {
     private static readonly string[] RequiredTestAdapterEntries =
@@ -74,12 +73,14 @@ public sealed class WindowsApplicationModelPackageTests
     ];
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestAdapter_ContainsRequiredWindowsApplicationModelAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestAdapter"),
             RequiredTestAdapterEntries);
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestAdapter_UwpPropsRegisterMSTestBuilderHook()
     {
         string packagePath = GetExactCurrentPackagePath("MSTest.TestAdapter");
@@ -97,6 +98,7 @@ public sealed class WindowsApplicationModelPackageTests
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestFramework_ContainsRequiredWindowsApplicationModelAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestFramework"),
@@ -118,6 +120,7 @@ public sealed class WindowsApplicationModelPackageTests
             Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);
             Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Platform.dll", entries);
             Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Extensions.PackagedApp.dll", entries);
+            Assert.DoesNotContain($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller", entries);
         }
 
         string[] forbiddenEntries = entries

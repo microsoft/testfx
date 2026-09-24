@@ -70,7 +70,7 @@
              Link="MicrosoftTestingPlatformApplication.g.cs" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true' ">
+  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true' AND (('$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None') OR '$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">
     <_MSTestAppModelControllerTfm Condition="$(TargetFramework.StartsWith('net9.'))">net9.0</_MSTestAppModelControllerTfm>
     <_MSTestAppModelControllerTfm Condition="'$(_MSTestAppModelControllerTfm)' == ''">net8.0</_MSTestAppModelControllerTfm>
     <TestingPlatformExecutablePath>$([MSBuild]::NormalizePath($(MSBuildThisFileDirectory), '..', '..', 'tools', 'AppModelController', '$(_MSTestAppModelControllerTfm)', 'mstest-appmodel-controller.exe'))</TestingPlatformExecutablePath>

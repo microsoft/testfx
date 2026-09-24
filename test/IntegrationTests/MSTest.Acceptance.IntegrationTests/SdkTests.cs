@@ -1054,6 +1054,37 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUIWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIWithPackagedAppSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_ConsoleWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ConsoleWithPackagedAppSdk",
+            """
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
     public async Task MSTestSdk_UnpackagedWinUI_RejectsVSTest()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(

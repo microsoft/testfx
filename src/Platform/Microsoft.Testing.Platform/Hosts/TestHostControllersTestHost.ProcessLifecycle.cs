@@ -253,14 +253,12 @@ internal sealed partial class TestHostControllersTestHost
         int testHostProcessExitCode = testHostProcessExited
             ? testHostProcess.ExitCode
             : (int)ExitCode.TestSessionAborted;
-        bool testExecutionCanceled = applicationCancellationToken.IsCancellationRequested
-            || _testHostUnfilteredExitCodeReceived is (int)ExitCode.TestSessionAborted
-            || testHostProcessExitCode == (int)ExitCode.TestSessionAborted;
-        int reportedTestHostExitCode = testExecutionCanceled
-            ? (int)ExitCode.TestSessionAborted
-            : !testHostProcessExitCodeIsAuthoritative && _testHostExitCodeReceived.HasValue
-                ? _testHostExitCodeReceived.Value
-                : testHostProcessExitCode;
+        (bool testExecutionCanceled, int reportedTestHostExitCode) = ResolveTestHostExitState(
+            applicationCancellationToken.IsCancellationRequested,
+            _testHostUnfilteredExitCodeReceived,
+            _testHostExitCodeReceived,
+            testHostProcessExitCode,
+            testHostProcessExitCodeIsAuthoritative);
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         CancellationTokenSource finalizationCancellationTokenSource = EnsureControllerFinalizationCancellationTokenSource();
@@ -454,6 +452,25 @@ internal sealed partial class TestHostControllersTestHost
             $"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'.").ConfigureAwait(false);
 
         return (exitCode, testHostProcessInformation, extensionInformation);
+    }
+
+    internal static (bool TestExecutionCanceled, int ReportedTestHostExitCode) ResolveTestHostExitState(
+        bool applicationCancellationRequested,
+        int? testHostUnfilteredExitCodeReceived,
+        int? testHostExitCodeReceived,
+        int testHostProcessExitCode,
+        bool testHostProcessExitCodeIsAuthoritative)
+    {
+        bool testExecutionCanceled = applicationCancellationRequested
+            || testHostUnfilteredExitCodeReceived is (int)ExitCode.TestSessionAborted
+            || (testHostProcessExitCodeIsAuthoritative && testHostProcessExitCode == (int)ExitCode.TestSessionAborted);
+        int reportedTestHostExitCode = testExecutionCanceled
+            ? (int)ExitCode.TestSessionAborted
+            : !testHostProcessExitCodeIsAuthoritative && testHostExitCodeReceived.HasValue
+                ? testHostExitCodeReceived.Value
+                : testHostProcessExitCode;
+
+        return (testExecutionCanceled, reportedTestHostExitCode);
     }
 
     internal static async Task<bool> WaitForTestHostControllerConnectionAsync(
