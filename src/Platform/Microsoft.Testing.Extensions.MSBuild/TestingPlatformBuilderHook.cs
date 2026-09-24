@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Platform.Builder;
 
 #if !NETCOREAPP
@@ -14,6 +15,9 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// </summary>
 public static class TestingPlatformBuilderHook
 {
+    private const string TestHostControllerPidOption = "--internal-testhostcontroller-pid";
+    private const string RetryPipeNameOption = "--internal-retry-pipename";
+
     /// <summary>
     /// Adds MSBuild support to the Testing Platform Builder.
     /// </summary>
@@ -29,6 +33,16 @@ public static class TestingPlatformBuilderHook
         // https://github.com/microsoft/testfx/issues/2196.
         if (OperatingSystem.IsBrowser())
         {
+            return;
+        }
+
+        // The full-trust controller owns the MSBuild-node connection and relays the child host's
+        // messages through the controller protocol. A sandboxed test host cannot and must not open
+        // the outer build pipe directly.
+        if (_.Contains(TestHostControllerPidOption, StringComparer.Ordinal)
+            || _.Contains(RetryPipeNameOption, StringComparer.Ordinal))
+        {
+            testApplicationBuilder.CommandLine.AddProvider(() => new MSBuildCommandLineProvider());
             return;
         }
 

@@ -52,6 +52,10 @@ $(CommonProductDescription)]]></PackageDescription>
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+    <DefineConstants>$(DefineConstants);CLASSIC_UWP</DefineConstants>
+  </PropertyGroup>
+
   <!-- Properties specific to WinUI -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
@@ -66,6 +70,7 @@ $(CommonProductDescription)]]></PackageDescription>
          targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" PrivateAssets="none" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" PrivateAssets="none" />
     <!-- On Windows the package depends on MSTest.TestFramework, matching the historical MSTest.TestAdapter.nuspec.
          The historical MSTest.TestAdapter.NonWindows.nuspec did NOT declare this dependency, so on non-Windows builds
@@ -99,6 +104,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="PublicAPI\classicuwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
     <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
@@ -185,6 +191,20 @@ $(CommonProductDescription)]]></PackageDescription>
            Bundle the direct dependencies introduced by the native MTP integration so the adapter remains loadable. -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Platform.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Buffers.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Collections.Immutable.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Diagnostics.DiagnosticSource.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Memory.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Numerics.Vectors.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Reflection.Metadata.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Threading.Tasks.Extensions.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.ApplicationInsights.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.MSBuild.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.Telemetry.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.TestPlatform.CoreUtilities.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.TestPlatform.PlatformAbstractions.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" PackagePath="$(_BuildTransitiveDir)" />
 
       <!-- .NET Framework also bundles the TestFramework assemblies. -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="$(_BuildTransitiveDir)" />

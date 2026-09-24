@@ -16,6 +16,11 @@ public partial class InvokeTestingPlatformTask
     {
         get
         {
+            if (TestingPlatformUseDirectExecutable)
+            {
+                return Path.GetFileName(TargetPath.ItemSpec);
+            }
+
             if (TryGetRunCommand() is string runCommand)
             {
                 Log.LogMessage(MessageImportance.Low, $"Constructed target path via similar logic as to RunCommand: '{runCommand}'");
@@ -46,6 +51,11 @@ public partial class InvokeTestingPlatformTask
     /// <inheritdoc />
     protected override string? GenerateFullPathToTool()
     {
+        if (TestingPlatformUseDirectExecutable)
+        {
+            return TargetPath.ItemSpec;
+        }
+
         if (TryGetRunCommand() is string runCommand)
         {
             return runCommand;

@@ -140,6 +140,11 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     public bool TestingPlatformDisableAppHostDotnetRoot { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether <see cref="TargetPath"/> is an executable that must be started directly.
+    /// </summary>
+    public bool TestingPlatformUseDirectExecutable { get; set; }
+
+    /// <summary>
     /// Gets or sets the testing platform command line arguments.
     /// </summary>
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }
