@@ -28,6 +28,24 @@ internal sealed record UwpRunResult(
     string ErrorOutput,
     string TrxPath);
 
+internal sealed class WindowsSubstDrive : IDisposable
+{
+    public WindowsSubstDrive(string driveRoot)
+        => DriveRoot = driveRoot;
+
+    public string DriveRoot { get; }
+
+    public void Dispose()
+    {
+        using var process = Process.Start(new ProcessStartInfo("subst.exe", $"{DriveRoot.TrimEnd('\\')} /d")
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false,
+        });
+        process?.WaitForExit();
+    }
+}
+
 /// <summary>
 /// Test-only infrastructure for building and executing real Windows application-model assets.
 /// </summary>
@@ -100,21 +118,23 @@ internal static class WindowsApplicationModelTestTools
         VisualStudioTestTools tools,
         TestAsset testAsset,
         string projectFileName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? projectDirectory = null)
     {
-        string projectPath = Path.Combine(testAsset.TargetAssetPath, projectFileName);
+        projectDirectory ??= testAsset.TargetAssetPath;
+        string projectPath = Path.Combine(projectDirectory, projectFileName);
         Assert.IsTrue(File.Exists(projectPath), $"The generated UWP project '{projectPath}' does not exist.");
 
-        string[] staleRecipes = Directory.GetFiles(testAsset.TargetAssetPath, "*.build.appxrecipe", SearchOption.AllDirectories);
+        string[] staleRecipes = Directory.GetFiles(projectDirectory, "*.build.appxrecipe", SearchOption.AllDirectories);
         Assert.IsEmpty(
             staleRecipes,
             $"The unique UWP test asset '{testAsset.TargetAssetPath}' contained stale .build.appxrecipe files before its build:" +
             $"{Environment.NewLine}{string.Join(Environment.NewLine, staleRecipes)}");
 
-        string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{Path.GetFileNameWithoutExtension(projectFileName)}.binlog");
+        string binlogPath = Path.Combine(projectDirectory, $"{Path.GetFileNameWithoutExtension(projectFileName)}.binlog");
         BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
             $"\"{tools.MSBuildPath}\" \"{projectPath}\" /restore /t:Build /p:Configuration=Release /p:Platform=x64 /warnaserror /bl:\"{binlogPath}\"",
-            testAsset.TargetAssetPath,
+            projectDirectory,
             cancellationToken);
         Assert.AreEqual(
             0,
@@ -123,15 +143,15 @@ internal static class WindowsApplicationModelTestTools
             $"Standard output:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}" +
             $"Standard error:{Environment.NewLine}{result.ErrorOutput}");
 
-        string[] recipes = Directory.GetFiles(testAsset.TargetAssetPath, "*.build.appxrecipe", SearchOption.AllDirectories);
+        string[] recipes = Directory.GetFiles(projectDirectory, "*.build.appxrecipe", SearchOption.AllDirectories);
         Assert.HasCount(
             1,
             recipes,
-            $"Expected exactly one tooling-generated .build.appxrecipe beneath '{testAsset.TargetAssetPath}', but found {recipes.Length}:" +
+            $"Expected exactly one tooling-generated .build.appxrecipe beneath '{projectDirectory}', but found {recipes.Length}:" +
             $"{Environment.NewLine}{string.Join(Environment.NewLine, recipes)}{Environment.NewLine}Binlog: '{binlogPath}'.");
 
         string recipePath = recipes[0];
-        string[] generatedManifests = Directory.GetFiles(testAsset.TargetAssetPath, "AppxManifest.xml", SearchOption.AllDirectories)
+        string[] generatedManifests = Directory.GetFiles(projectDirectory, "AppxManifest.xml", SearchOption.AllDirectories)
             .Where(path => !path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 .Contains("obj", StringComparer.OrdinalIgnoreCase))
             .ToArray();
@@ -148,6 +168,32 @@ internal static class WindowsApplicationModelTestTools
         return new(projectPath, binlogPath, recipePath, packageLayoutPath, result.StandardOutput, result.ErrorOutput);
     }
 
+    public static async Task<WindowsSubstDrive> CreateSubstDriveAsync(
+        string directory,
+        CancellationToken cancellationToken)
+    {
+        HashSet<char> usedDriveLetters = [.. DriveInfo.GetDrives().Select(drive => char.ToUpperInvariant(drive.Name[0]))];
+        for (char driveLetter = 'Z'; driveLetter >= 'D'; driveLetter--)
+        {
+            if (usedDriveLetters.Contains(driveLetter))
+            {
+                continue;
+            }
+
+            string driveRoot = $"{driveLetter}:\\";
+            BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
+                $"subst.exe {driveLetter}: \"{directory}\"",
+                directory,
+                cancellationToken);
+            if (result.ExitCode == 0)
+            {
+                return new WindowsSubstDrive(driveRoot);
+            }
+        }
+
+        throw new InvalidOperationException($"No unused drive letter was available to shorten classic UWP build path '{directory}'.");
+    }
+
     public static async Task<UwpRunResult> RunUwpRecipeAsync(
         VisualStudioTestTools tools,
         string recipePath,
@@ -162,6 +208,34 @@ internal static class WindowsApplicationModelTestTools
         BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
             $"\"{tools.VSTestConsolePath}\" \"{recipePath}\" /Logger:\"trx;LogFileName={trxFileName}\" /ResultsDirectory:\"{resultsDirectory}\" /Platform:x64 /Framework:FrameworkUap10",
             Path.GetDirectoryName(recipePath),
+            cancellationToken);
+
+        return new(result.ExitCode, result.StandardOutput, result.ErrorOutput, trxPath);
+    }
+
+    public static async Task<UwpRunResult> RunMtpUwpProjectAsync(
+        VisualStudioTestTools tools,
+        string projectPath,
+        string resultsDirectory,
+        CancellationToken cancellationToken,
+        string? packagedAppTargetPath = null)
+    {
+        Assert.IsTrue(File.Exists(projectPath), $"The UWP project '{projectPath}' does not exist.");
+        Directory.CreateDirectory(resultsDirectory);
+        string trxFileName = $"uwp-{Guid.NewGuid():N}.trx";
+        string trxPath = Path.Combine(resultsDirectory, trxFileName);
+        string binlogPath = Path.Combine(resultsDirectory, $"mtp-run-{Guid.NewGuid():N}.binlog");
+        string arguments =
+            $"--report-trx --report-trx-filename {trxFileName} --results-directory {resultsDirectory} " +
+            $"--diagnostic --diagnostic-verbosity Trace --diagnostic-output-directory {resultsDirectory}";
+        string packagedAppTargetProperty = packagedAppTargetPath is null
+            ? string.Empty
+            : $" /p:TestingPlatformPackagedAppTargetPath=\"{packagedAppTargetPath}\"";
+
+        BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
+            $"\"{tools.MSBuildPath}\" \"{projectPath}\" /t:InvokeTestingPlatform /p:Configuration=Release /p:Platform=x64 " +
+            $"/p:TestingPlatformCommandLineArguments=\"{arguments}\"{packagedAppTargetProperty} /bl:\"{binlogPath}\"",
+            Path.GetDirectoryName(projectPath),
             cancellationToken);
 
         return new(result.ExitCode, result.StandardOutput, result.ErrorOutput, trxPath);
@@ -286,7 +360,7 @@ internal static class WindowsApplicationModelTestTools
             cleanupFailure = ex;
         }
 
-        if (cleanupFailure is null)
+        if (testFailure is null && cleanupFailure is null)
         {
             testAsset.Dispose();
         }
@@ -310,6 +384,50 @@ internal static class WindowsApplicationModelTestTools
         {
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(testFailure).Throw();
         }
+    }
+
+    public static async Task<string> TryReadPackageLocalStateFileAsync(
+        string packageIdentityName,
+        string fileName,
+        CancellationToken cancellationToken)
+    {
+        string escapedIdentity = packageIdentityName.Replace("'", "''", StringComparison.Ordinal);
+        string escapedFileName = fileName.Replace("'", "''", StringComparison.Ordinal);
+        string script =
+            $"$package = Get-AppxPackage -Name '{escapedIdentity}' -ErrorAction SilentlyContinue | " +
+            $"Where-Object {{ $_.Name -ceq '{escapedIdentity}' }} | Select-Object -First 1; " +
+            "if ($null -eq $package) { return }; " +
+            $"$path = Join-Path $env:LOCALAPPDATA ('Packages\\' + $package.PackageFamilyName + '\\LocalState\\{escapedFileName}'); " +
+            "if (Test-Path -LiteralPath $path -PathType Leaf) { Get-Content -LiteralPath $path -Raw }";
+        string encodedCommand = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
+        BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
+            $"powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {encodedCommand}",
+            workingDirectory: null,
+            cancellationToken);
+
+        return result.ExitCode == 0 ? result.StandardOutput.Trim() : string.Empty;
+    }
+
+    public static async Task<string> TryReadPackageLocalStateDiagnosticsAsync(
+        string packageIdentityName,
+        CancellationToken cancellationToken)
+    {
+        string escapedIdentity = packageIdentityName.Replace("'", "''", StringComparison.Ordinal);
+        string script =
+            $"$package = Get-AppxPackage -Name '{escapedIdentity}' -ErrorAction SilentlyContinue | " +
+            $"Where-Object {{ $_.Name -ceq '{escapedIdentity}' }} | Select-Object -First 1; " +
+            "if ($null -eq $package) { return }; " +
+            "$root = Join-Path $env:LOCALAPPDATA ('Packages\\' + $package.PackageFamilyName + '\\LocalState\\MtpTestHost'); " +
+            "if (Test-Path -LiteralPath $root -PathType Container) { " +
+            "Get-ChildItem -LiteralPath $root -Recurse -File -Filter '*.diag' | ForEach-Object { " +
+            "'=== ' + $_.FullName + ' ==='; Get-Content -LiteralPath $_.FullName -Raw } }";
+        string encodedCommand = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
+        BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
+            $"powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {encodedCommand}",
+            workingDirectory: null,
+            cancellationToken);
+
+        return result.ExitCode == 0 ? result.StandardOutput.Trim() : string.Empty;
     }
 
     private static async Task RemoveAndVerifyPackageRegistrationAsync(string packageIdentityName)

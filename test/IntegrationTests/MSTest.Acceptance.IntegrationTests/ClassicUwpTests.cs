@@ -19,10 +19,10 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
 {
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP execution is supported only on Windows.")]
-    public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughVSTest()
+    public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp()
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
-        string assetName = $"ClassicUwp{uniqueSuffix[..12]}";
+        const string assetName = "CUwp";
         string packageIdentityName = $"MSTestClassicUwp{uniqueSuffix}";
         string sourceCode = ClassicUwpSourceCode
             .PatchCodeWithReplace("$AssetName$", assetName)
@@ -32,6 +32,10 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
 
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
+        using WindowsSubstDrive substDrive = await WindowsApplicationModelTestTools.CreateSubstDriveAsync(
+            Path.GetDirectoryName(testAsset.TargetAssetPath)!,
+            TestContext.CancellationToken);
+        string shortAssetPath = Path.Combine(substDrive.DriveRoot, assetName);
         await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
             testAsset,
             packageIdentityName,
@@ -45,35 +49,55 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
                     tools,
                     testAsset,
                     $"{assetName}.csproj",
-                    TestContext.CancellationToken);
+                    TestContext.CancellationToken,
+                    shortAssetPath);
 
-                string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
+                string resolvedAssetsReport = Path.Combine(shortAssetPath, "resolved-mstest-assets.txt");
                 WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                     resolvedAssetsReport,
                     WindowsApplicationModelAssetKind.ClassicUwp);
                 AssertClassicUwpPackageLayout(build, packageIdentityName);
 
-                string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
-                UwpRunResult run = await WindowsApplicationModelTestTools.RunUwpRecipeAsync(
+                string resultsDirectory = Path.Combine(shortAssetPath, "TestResults");
+                string packagedAppTargetPath = Path.Combine(
+                    testAsset.TargetAssetPath,
+                    "bin",
+                    "x64",
+                    "Release",
+                    "uap10.0.16299",
+                    $"{assetName}.exe");
+                UwpRunResult run = await WindowsApplicationModelTestTools.RunMtpUwpProjectAsync(
                     tools,
-                    build.RecipePath,
+                    build.ProjectPath,
                     resultsDirectory,
-                    TestContext.CancellationToken);
+                    TestContext.CancellationToken,
+                    packagedAppTargetPath);
+                string? packageDirectory = Directory.GetDirectories(
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages"),
+                        $"{packageIdentityName}_*",
+                        SearchOption.TopDirectoryOnly)
+                    .SingleOrDefault();
+                string startupErrorPath = packageDirectory is null
+                    ? string.Empty
+                    : Path.Combine(packageDirectory, "LocalState", "mtp-startup-error.txt");
+                string startupMarkerPath = packageDirectory is null
+                    ? string.Empty
+                    : Path.Combine(packageDirectory, "LocalState", "mtp-startup-marker.txt");
+                string startupError = File.Exists(startupErrorPath)
+                    ? await File.ReadAllTextAsync(startupErrorPath, TestContext.CancellationToken)
+                    : "<no startup error>";
+                string startupMarker = File.Exists(startupMarkerPath)
+                    ? await File.ReadAllTextAsync(startupMarkerPath, TestContext.CancellationToken)
+                    : "<no startup marker>";
 
                 Assert.AreEqual(
                     0,
                     run.ExitCode,
-                    $"VSTest failed to execute the real classic UWP recipe '{build.RecipePath}'. TRX: '{run.TrxPath}'. " +
+                    $"MTP failed to execute the real classic UWP project '{build.ProjectPath}'. TRX: '{run.TrxPath}'. " +
                     $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +
-                    $"{Environment.NewLine}Standard error:{Environment.NewLine}{run.ErrorOutput}");
-                Assert.DoesNotContain(
-                    "No test is available",
-                    run.StandardOutput,
-                    $"VSTest reported no discovered tests for '{build.RecipePath}'.");
-                Assert.DoesNotContain(
-                    "Total tests: 0",
-                    run.StandardOutput,
-                    $"VSTest reported zero discovered tests for '{build.RecipePath}'.");
+                    $"{Environment.NewLine}Standard error:{Environment.NewLine}{run.ErrorOutput}" +
+                    $"{Environment.NewLine}UWP startup marker:{Environment.NewLine}{startupMarker}" +
+                    $"{Environment.NewLine}UWP startup error:{Environment.NewLine}{startupError}");
 
                 AssertClassicUwpTrx(run.TrxPath, build);
             });
@@ -124,7 +148,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     {
         Assert.IsTrue(
             File.Exists(trxPath),
-            $"VSTest did not create the expected TRX '{trxPath}' for recipe '{build.RecipePath}'. Binlog: '{build.BinlogPath}'.");
+            $"MTP did not create the expected TRX '{trxPath}' for project '{build.ProjectPath}'. Binlog: '{build.BinlogPath}'.");
 
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var trx = XDocument.Load(trxPath);
@@ -165,7 +189,9 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
 
     private const string ClassicUwpSourceCode = """
 #file $AssetName$.csproj
-<Project Sdk="MSBuild.Sdk.Extras/$MSBuildSdkExtrasVersion$">
+<Project>
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Version="$MSBuildSdkExtrasVersion$" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" Version="$MSTestVersion$" />
   <PropertyGroup>
     <TargetFramework>uap10.0.16299</TargetFramework>
     <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
@@ -176,12 +202,20 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     <DefaultLanguage>en-US</DefaultLanguage>
     <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GenerateTestingPlatformApplicationHelper>false</GenerateTestingPlatformApplicationHelper>
+    <GenerateSelfRegisteredExtensions>false</GenerateSelfRegisteredExtensions>
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectCapability Include="TestContainer" />
-    <SDKReference Include="TestPlatform.Universal, Version=$(VisualStudioVersion)" />
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -195,20 +229,15 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="$MicrosoftNETCoreUniversalWindowsPlatformVersion$" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" GeneratePathProperty="true">
-      <NoWarn>NU1903</NoWarn>
-    </PackageReference>
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(PkgNewtonsoft_Json)\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll"
-             Link="Newtonsoft.Json.dll" />
-    <Content Include="$(PkgMSTest_TestFramework)\lib\uap10.0\MSTest.TestFramework.dll"
-             Link="MSTest.TestFramework.dll" />
-    <Content Include="$(PkgMSTest_TestFramework)\lib\uap10.0\MSTest.TestFramework.Extensions.dll"
-             Link="MSTest.TestFramework.Extensions.dll" />
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0\MSTest.TestFramework.dll"
+             Link="MSTest.TestFramework.dll"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NuGetPackageRoot)\mstest.testframework\$MSTestVersion$\lib\uap10.0\MSTest.TestFramework.Extensions.dll"
+             Link="MSTest.TestFramework.Extensions.dll"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
@@ -221,6 +250,8 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
       Lines="@(ReferencePath->'%(FullPath)')"
       Overwrite="false" />
   </Target>
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Version="$MSBuildSdkExtrasVersion$" />
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" Version="$MSTestVersion$" />
 </Project>
 
 #file App.xaml
@@ -233,8 +264,8 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
 
 #file App.xaml.cs
 using System;
-using Microsoft.VisualStudio.TestPlatform.TestExecutor;
 using Windows.ApplicationModel.Activation;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -243,9 +274,22 @@ namespace $AssetName$
 {
     sealed partial class App : Application
     {
-        public App() => InitializeComponent();
+        public App()
+        {
+            try
+            {
+                System.IO.File.WriteAllText(
+                    System.IO.Path.Combine(ApplicationData.Current.LocalFolder.Path, "mtp-startup-marker.txt"),
+                    "App constructor entered");
+            }
+            catch
+            {
+            }
 
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+            InitializeComponent();
+        }
+
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             Frame rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)
@@ -255,9 +299,23 @@ namespace $AssetName$
                 Window.Current.Content = rootFrame;
             }
 
-            UnitTestClient.CreateDefaultUI();
             Window.Current.Activate();
-            UnitTestClient.Run(args.Arguments);
+            try
+            {
+                Environment.ExitCode = await global::MicrosoftTestingPlatformApplication.RunAsync(args.Arguments);
+            }
+            catch (Exception ex)
+            {
+                StorageFile errorFile = await ApplicationData.Current.LocalFolder.CreateFileAsync(
+                    "mtp-startup-error.txt",
+                    CreationCollisionOption.ReplaceExisting);
+                await FileIO.WriteTextAsync(errorFile, ex.ToString());
+                Environment.ExitCode = 1;
+            }
+            finally
+            {
+                Exit();
+            }
         }
 
         private static void OnNavigationFailed(object sender, NavigationFailedEventArgs args)
@@ -288,7 +346,7 @@ namespace $AssetName$
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="vstest.executionengine.universal.App" Executable="$targetnametoken$.exe" EntryPoint="$AssetName$.App">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$AssetName$.App">
       <uap:VisualElements
         DisplayName="$AssetName$"
         Square150x150Logo="Assets\Square150x150Logo.png"
