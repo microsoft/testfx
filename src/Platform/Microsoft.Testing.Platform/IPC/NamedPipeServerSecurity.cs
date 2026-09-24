@@ -388,18 +388,18 @@ internal static class NamedPipeServerSecurity
                 $"AppContainer-local pipe '{pipeName}' requires exactly one authorized package SID, but received {authorizedSecurityIdentities.Count}.");
         }
 
-        if (!ConvertStringSidToSid(authorizedSecurityIdentities[0], out IntPtr appContainerSid))
+        if (!ConvertStringSidToSid(authorizedSecurityIdentities[0], out SafeLocalAllocHandle appContainerSid))
         {
             throw new Win32Exception(
                 Marshal.GetLastWin32Error(),
                 $"Failed to parse the AppContainer SID '{authorizedSecurityIdentities[0]}'.");
         }
 
-        try
+        using (appContainerSid)
         {
             _ = GetAppContainerNamedObjectPath(
                 IntPtr.Zero,
-                appContainerSid,
+                appContainerSid.DangerousGetHandle(),
                 objectPathLength: 0,
                 objectPath: null,
                 out uint requiredLength);
@@ -413,7 +413,7 @@ internal static class NamedPipeServerSecurity
             var objectPath = new StringBuilder((int)requiredLength);
             if (!GetAppContainerNamedObjectPath(
                 IntPtr.Zero,
-                appContainerSid,
+                appContainerSid.DangerousGetHandle(),
                 requiredLength,
                 objectPath,
                 out _))
@@ -436,10 +436,6 @@ internal static class NamedPipeServerSecurity
             }
 
             return $@"\\.\pipe\{namedObjectPath}\{unqualifiedPipeName}";
-        }
-        finally
-        {
-            LocalFree(appContainerSid);
         }
     }
 
@@ -525,6 +521,17 @@ internal static class NamedPipeServerSecurity
         public int InheritHandle;
     }
 
+    private sealed class SafeLocalAllocHandle : SafeHandleZeroOrMinusOneIsInvalid
+    {
+        private SafeLocalAllocHandle()
+            : base(ownsHandle: true)
+        {
+        }
+
+        protected override bool ReleaseHandle()
+            => LocalFree(handle) == IntPtr.Zero;
+    }
+
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -542,7 +549,7 @@ internal static class NamedPipeServerSecurity
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", EntryPoint = "ConvertStringSidToSidW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ConvertStringSidToSid(string stringSid, out IntPtr sid);
+    private static extern bool ConvertStringSidToSid(string stringSid, out SafeLocalAllocHandle sid);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
