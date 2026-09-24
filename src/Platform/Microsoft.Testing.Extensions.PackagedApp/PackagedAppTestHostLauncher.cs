@@ -570,7 +570,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
     }
 
-#if PACKAGEDAPP_WINRT
+#if !PACKAGEDAPP_WINRT
+#pragma warning disable IDE0051 // Compiled into the non-Windows flavor so recipe materialization is unit-testable.
+#endif
     private static string MaterializeAppxRecipeLayout(string targetFileName, out string? appxRecipePath)
     {
         string sourceDirectory = Path.GetDirectoryName(targetFileName)
@@ -602,6 +604,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
 
         Directory.CreateDirectory(layoutDirectory);
+        string recipeDirectory = Path.GetDirectoryName(Path.GetFullPath(appxRecipePath))!;
+        string requestedTargetPath = Path.GetFullPath(targetFileName);
+        string? targetPackagePath = null;
         foreach (XElement item in recipe.Descendants().Where(element =>
             element.Name.LocalName is "AppXManifest" or "AppxPackagedFile"))
         {
@@ -612,12 +617,18 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 continue;
             }
 
-            sourcePath = Uri.UnescapeDataString(sourcePath);
+            sourcePath = Path.GetFullPath(Uri.UnescapeDataString(sourcePath), recipeDirectory);
             if (!File.Exists(sourcePath))
             {
                 throw new FileNotFoundException(
                     $"The AppX recipe '{appxRecipePath}' references missing payload '{sourcePath}'.",
                     sourcePath);
+            }
+
+            if (item.Name.LocalName == "AppxPackagedFile"
+                && string.Equals(sourcePath, requestedTargetPath, StringComparison.OrdinalIgnoreCase))
+            {
+                targetPackagePath = packagePath;
             }
 
             string destinationPath = Path.Combine(
@@ -627,14 +638,13 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             File.Copy(sourcePath, destinationPath, overwrite: true);
         }
 
-        string manifestPath = Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName);
-        AppxApplicationInfo application = AppxManifestInfo.ReadFromManifest(manifestPath).Applications.FirstOrDefault()
-            ?? throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no application.");
-        return application.Executable is { Length: > 0 } executable
-            ? Path.Combine(layoutDirectory, executable.Replace('\\', Path.DirectorySeparatorChar))
-            : throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no executable.");
+        return targetPackagePath is not null
+            ? Path.Combine(layoutDirectory, targetPackagePath.Replace('\\', Path.DirectorySeparatorChar))
+            : throw new InvalidOperationException(
+                $"The AppX recipe '{appxRecipePath}' does not package the requested executable '{targetFileName}'.");
     }
 
+#if PACKAGEDAPP_WINRT
     private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
     {
         for (int i = 0; i < arguments.Count - 1; i++)
@@ -669,9 +679,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 #endif
 
-#if !PACKAGEDAPP_WINRT
-#pragma warning disable IDE0051 // Compiled into the non-Windows flavor so the pure argument transformation is unit-testable.
-#endif
     private static bool IsAppxRecipeAlreadyMaterialized(XDocument recipe, string sourceDirectory)
     {
         XElement? manifestItem = recipe.Descendants().FirstOrDefault(element => element.Name.LocalName == "AppXManifest");

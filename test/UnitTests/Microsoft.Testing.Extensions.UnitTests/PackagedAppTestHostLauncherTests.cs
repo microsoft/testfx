@@ -330,6 +330,65 @@ public sealed class PackagedAppTestHostLauncherTests
         }
     }
 
+    [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithMultipleApplications_ReturnsRequestedPackagedExecutable()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "Source");
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, "AppxManifest.xml");
+            File.WriteAllText(
+                manifestPath,
+                BuildManifestXmlWithApplications(
+                    "Contoso.MyTestApp",
+                    MicrosoftStorePublisher,
+                    """
+                    <Applications>
+                      <Application Id="First" Executable="Apps\First.exe" />
+                      <Application Id="Requested" Executable="Apps\Requested.exe" />
+                    </Applications>
+                    """));
+            string firstExecutablePath = Path.Combine(root, "First.exe");
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "Requested.exe");
+            File.WriteAllText(firstExecutablePath, "first");
+            File.WriteAllText(requestedExecutablePath, "requested");
+
+            string recipePath = Path.Combine(sourceDirectory, "App.build.appxrecipe");
+            File.WriteAllText(
+                recipePath,
+                $"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                  <AppxPackagedFile Include="{firstExecutablePath}">
+                    <PackagePath>Apps\First.exe</PackagePath>
+                  </AppxPackagedFile>
+                  <AppxPackagedFile Include="{requestedExecutablePath}">
+                    <PackagePath>Apps\Requested.exe</PackagePath>
+                  </AppxPackagedFile>
+                </Project>
+                """);
+
+            string materializedExecutablePath = MaterializeAppxRecipeLayout(requestedExecutablePath, out string? actualRecipePath);
+
+            string layoutDirectory = Path.Combine(sourceDirectory, "_MtpPackageLayout");
+            Assert.AreEqual(Path.Combine(layoutDirectory, "Apps", "Requested.exe"), materializedExecutablePath);
+            Assert.AreEqual(recipePath, actualRecipePath);
+            Assert.AreEqual(
+                "Requested",
+                AppxManifestInfo.ReadFromManifest(Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName))
+                    .ResolveApplication(layoutDirectory, materializedExecutablePath)?
+                    .Id);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     private static Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string? applicationId)
         => LaunchInLayoutContainingManifestAsync(
             BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, applicationId),
@@ -439,6 +498,18 @@ public sealed class PackagedAppTestHostLauncherTests
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .Invoke(null, [recipe, sourceDirectory])!;
 
+    private static string MaterializeAppxRecipeLayout(string targetFileName, out string? appxRecipePath)
+    {
+        object?[] arguments = [targetFileName, null];
+        string materializedTargetFileName = (string)typeof(PackagedAppTestHostLauncher)
+            .GetMethod(
+                "MaterializeAppxRecipeLayout",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, arguments)!;
+        appxRecipePath = (string?)arguments[1];
+        return materializedTargetFileName;
+    }
+
     /// <summary>
     /// Runs <paramref name="action"/> against a throw-away layout, optionally containing an
     /// <c>AppxManifest.xml</c> at its root so the layout classifies as packaged. The action receives the
@@ -471,6 +542,15 @@ public sealed class PackagedAppTestHostLauncherTests
 
     private static string BuildManifestXml(string name, string publisher, string? applicationId)
         => BuildManifestXml(name, publisher, applicationId, executable: null);
+
+    private static string BuildManifestXmlWithApplications(string name, string publisher, string applications)
+        => $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="{name}" Publisher="{publisher}" Version="1.0.0.0" />
+              {applications}
+            </Package>
+            """;
 
     private static string BuildManifestXml(string name, string publisher, string? applicationId, string? executable)
     {
