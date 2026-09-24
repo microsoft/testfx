@@ -2,10 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 
-using Microsoft.Testing.Platform.Builder;
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
@@ -41,21 +38,8 @@ public partial class UnitTestApp : Application
 
         try
         {
-            // Ideally we would want to reuse the generated main so we don't have to manually handle all
-            // dependencies, but this type is generated too late in the build process so we fail before.
-            // You can build, inspect the generated type to copy its content if you want.
-            string[] cliArgs = Environment.GetCommandLineArgs()
-                .Skip(1)
-                .Where(arg => !arg.Contains("EnableMSTestRunner"))
-                .ToArray();
-            ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
-            builder.AddSelfRegisteredExtensions(cliArgs);
-            using ITestApplication app = await builder.BuildAsync();
-
-            // The WinUI-generated entry point is 'void', so the run's exit code has to be published
-            // through Environment.ExitCode. Without this the app would always exit 0 and failing tests
-            // would never fail the build.
-            Environment.ExitCode = await app.RunAsync();
+            // The WinUI-generated entry point is void, so publish the generated MTP runner's exit code.
+            Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(Environment.GetCommandLineArgs()[1..]);
         }
         finally
         {
