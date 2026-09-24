@@ -721,11 +721,16 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 #if PACKAGEDAPP_WINRT
     private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
     {
-        for (int i = 0; i < arguments.Count - 1; i++)
+        for (int i = 0; i < arguments.Count; i++)
         {
             if (string.Equals(arguments[i], option, StringComparison.Ordinal))
             {
-                return arguments[i + 1];
+                return i + 1 < arguments.Count ? arguments[i + 1] : null;
+            }
+
+            if (TryGetInlineOptionValue(arguments[i], option, out string? value))
+            {
+                return value;
             }
         }
 
@@ -752,6 +757,20 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
     }
 #endif
+
+    private static bool TryGetInlineOptionValue(string argument, string option, out string? value)
+    {
+        if (argument.Length > option.Length
+            && argument.StartsWith(option, StringComparison.Ordinal)
+            && argument[option.Length] is '=' or ':')
+        {
+            value = argument.Substring(option.Length + 1);
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
 
     private static bool IsAppxRecipeAlreadyMaterialized(XDocument recipe, string sourceDirectory)
     {
@@ -795,22 +814,29 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         {
             string argument = redirectedArguments[i];
             diagnosticEnabled |= string.Equals(argument, "--diagnostic", StringComparison.Ordinal);
-            if (i + 1 >= redirectedArguments.Count)
-            {
-                continue;
-            }
-
-            if (string.Equals(argument, ResultsDirectoryOption, StringComparison.Ordinal))
+            if (string.Equals(argument, ResultsDirectoryOption, StringComparison.Ordinal)
+                && i + 1 < redirectedArguments.Count)
             {
                 redirectedArguments[i + 1] = resultsScratchDirectory;
                 hasResultsDirectory = true;
                 i++;
             }
-            else if (string.Equals(argument, DiagnosticOutputDirectoryOption, StringComparison.Ordinal))
+            else if (TryGetInlineOptionValue(argument, ResultsDirectoryOption, out _))
+            {
+                redirectedArguments[i] = $"{ResultsDirectoryOption}{argument[ResultsDirectoryOption.Length]}{resultsScratchDirectory}";
+                hasResultsDirectory = true;
+            }
+            else if (string.Equals(argument, DiagnosticOutputDirectoryOption, StringComparison.Ordinal)
+                && i + 1 < redirectedArguments.Count)
             {
                 redirectedArguments[i + 1] = diagnosticScratchDirectory;
                 hasDiagnosticOutputDirectory = true;
                 i++;
+            }
+            else if (TryGetInlineOptionValue(argument, DiagnosticOutputDirectoryOption, out _))
+            {
+                redirectedArguments[i] = $"{DiagnosticOutputDirectoryOption}{argument[DiagnosticOutputDirectoryOption.Length]}{diagnosticScratchDirectory}";
+                hasDiagnosticOutputDirectory = true;
             }
         }
 

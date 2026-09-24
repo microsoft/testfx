@@ -244,6 +244,33 @@ public sealed class PackagedAppTestHostLauncherTests
             actual);
     }
 
+    [DataRow("=")]
+    [DataRow(":")]
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_WithInlineExplicitDirectories_ReplacesTheirValues(string separator)
+    {
+        string resultsScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "results"));
+        string diagnosticScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "diagnostics"));
+
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            [
+                $"--results-directory{separator}controller-results",
+                "--diagnostic",
+                $"--diagnostic-output-directory{separator}controller-diagnostics",
+            ],
+            resultsScratchDirectory,
+            diagnosticScratchDirectory,
+            removeMSBuildNode: false);
+
+        Assert.AreSequenceEqual(
+            [
+                $"--results-directory{separator}{resultsScratchDirectory}",
+                "--diagnostic",
+                $"--diagnostic-output-directory{separator}{diagnosticScratchDirectory}",
+            ],
+            actual);
+    }
+
     [TestMethod]
     public void RedirectAppContainerFileSystemOptions_WithoutExplicitDirectories_AddsRequiredScratchDirectories()
     {
