@@ -28,7 +28,7 @@ public sealed class SingleFlightTaskTests
     {
         var singleFlight = new SingleFlightTask();
         int invocationCount = 0;
-        var releaseAction = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseAction = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var tasks = new Task[32];
 
         Parallel.For(
@@ -39,7 +39,7 @@ public sealed class SingleFlightTaskTests
                 Interlocked.Increment(ref invocationCount);
                 await releaseAction.Task;
             }));
-        releaseAction.SetResult();
+        releaseAction.SetResult(true);
 
         await Task.WhenAll(tasks);
         Assert.AreEqual(1, invocationCount);
