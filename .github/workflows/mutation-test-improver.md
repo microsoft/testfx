@@ -39,6 +39,8 @@ network:
   - defaults
   - dotnet
   - "*.blob.core.windows.net"
+  - github
+  - "*.in.applicationinsights.azure.com"
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
@@ -97,6 +99,7 @@ safe-outputs:
 tools:
   bash: true
   github:
+    mode: gh-proxy
     toolsets: [actions, issues, pull_requests, repos]
 ---
 
@@ -147,7 +150,7 @@ If the conclusion is not `success`:
 
 ### Step 3: Download and parse the report
 
-1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
+1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` with `gh run download "$upstream_run_id" --repo "${{ github.repository }}" --name mutation-testing-report --dir ./stryker-report`. The configured `gh-proxy` mode provides the authenticated `gh` session without direct access to `api.github.com`.
 2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Compute a stable fingerprint for every candidate before comparing it to memory. Include at least the normalized repository-relative source path, mutator name, replacement text, start/end line and column, and original source snippet at that location. Revalidate any memory match against the current report and current source snippet before suppressing it; Stryker mutant IDs and line locations alone are not stable enough.

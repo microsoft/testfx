@@ -75,7 +75,13 @@ public sealed class TestHostBuilderTests
             ShutdownTimeouts.GetCanceledConsumerCompletion("60"));
     }
 
+    // Mutates a real process-global environment variable (via SystemEnvironment, not a mock) under the
+    // assembly's method-level parallelism. No other test in this assembly reads or writes the same
+    // PID-qualified TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_<pid> key (the other tests in this class use
+    // mocked ITestHostEnvironmentVariableProvider/IEnvironmentVariables, never the real Environment), so a
+    // method-level lock is sufficient without serializing the rest of the class.
     [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task ConnectToTestHostProcessMonitorIfAvailableAsync_MissingPipeName_ReportsPidQualifiedEnvironmentVariable()
     {
         const int testHostControllerPid = 123456789;
