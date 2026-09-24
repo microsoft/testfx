@@ -107,16 +107,7 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
 
         try
         {
-            Directory.CreateDirectory(_recoveryDirectory);
-            foreach (string sourcePath in Directory.EnumerateFiles(_scratchDirectory, "*", SearchOption.AllDirectories))
-            {
-                string relativePath = Path.GetRelativePath(_scratchDirectory, sourcePath);
-                string destinationPath = string.Equals(Path.GetExtension(sourcePath), ".diag", StringComparison.OrdinalIgnoreCase)
-                    ? Path.Combine(_recoveryDirectory, "AppContainer", relativePath)
-                    : Path.Combine(_recoveryDirectory, relativePath);
-                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-                File.Copy(sourcePath, destinationPath, overwrite: true);
-            }
+            PackagedAppScratchArtifactRecovery.Recover(_scratchDirectory, _recoveryDirectory);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

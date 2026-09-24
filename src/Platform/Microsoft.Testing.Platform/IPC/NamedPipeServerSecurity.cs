@@ -443,6 +443,14 @@ internal static class NamedPipeServerSecurity
         }
     }
 
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the platform wrapper for the current process ID.")]
+    private static uint GetCurrentProcessId()
+#if NETCOREAPP
+        => unchecked((uint)Environment.ProcessId);
+#else
+        => GetCurrentProcessIdNative();
+#endif
+
     /// <summary>
     /// Returns the current process token's <i>owner</i> SID — the very SID
     /// <c>PipeOptions.CurrentUserOnly</c> uses — in SDDL string form.
@@ -577,9 +585,11 @@ internal static class NamedPipeServerSecurity
     [DllImport("kernel32.dll")]
     private static extern IntPtr GetCurrentProcess();
 
+#if !NETCOREAPP
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    [DllImport("kernel32.dll")]
-    private static extern uint GetCurrentProcessId();
+    [DllImport("kernel32.dll", EntryPoint = "GetCurrentProcessId")]
+    private static extern uint GetCurrentProcessIdNative();
+#endif
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)]
