@@ -313,7 +313,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         string targetFileName = _targetExecutable ?? context.FileName;
 #if PACKAGEDAPP_WINRT
         targetFileName = ResolveFinalPath(targetFileName);
-        targetFileName = MaterializeAppxRecipeLayout(targetFileName);
+        targetFileName = MaterializeAppxRecipeLayout(targetFileName, out string? appxRecipePath);
+#else
+        string? appxRecipePath = null;
 #endif
         string sourceDirectory = Path.GetDirectoryName(targetFileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
@@ -334,7 +336,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory, context.FileName);
         if (manifestPath is not null)
         {
-            return await LaunchPackagedAsync(context, manifestPath, cancellationToken).ConfigureAwait(false);
+            return await LaunchPackagedAsync(context, manifestPath, appxRecipePath, cancellationToken).ConfigureAwait(false);
         }
 
         // The layout is not packaged (no AppxManifest.xml). Deploy the loose layout into an isolated
@@ -387,15 +389,20 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         uint filePathLength,
         uint flags);
 
-    private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
+    private static Task<ITestHostHandle> LaunchPackagedAsync(
+        TestHostLaunchContext context,
+        string manifestPath,
+        string? appxRecipePath,
+        CancellationToken cancellationToken)
         => PackageRegistrationLock.WithManifestAsync(
             manifestPath,
-            manifestInfo => LaunchRegisteredPackagedAsync(context, manifestPath, manifestInfo, cancellationToken),
+            manifestInfo => LaunchRegisteredPackagedAsync(context, manifestPath, appxRecipePath, manifestInfo, cancellationToken),
             cancellationToken);
 
     private static async Task<ITestHostHandle> LaunchRegisteredPackagedAsync(
         TestHostLaunchContext context,
         string manifestPath,
+        string? appxRecipePath,
         AppxManifestInfo manifestInfo,
         CancellationToken cancellationToken)
     {
@@ -413,7 +420,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // Registration provisions the package-owned LocalState directory and its AppContainer ACL.
         // Handoffs must be written only after this completes; creating the directory from the unpackaged
         // controller first would give it the controller's ACL and make it unreadable by the activated app.
-        await PackageDeployer.RegisterAsync(manifestPath, manifestInfo, cancellationToken).ConfigureAwait(false);
+        await PackageDeployer.RegisterAsync(manifestPath, appxRecipePath, manifestInfo, cancellationToken).ConfigureAwait(false);
 
         // Hand off the explicit safe environment allowlist through package LocalState. Controller-host runs
         // key the file by controller PID; retry runs key it by a hash of their unique pipe name. An
@@ -505,7 +512,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 
 #else
-    private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
+    private static Task<ITestHostHandle> LaunchPackagedAsync(
+        TestHostLaunchContext context,
+        string manifestPath,
+        string? appxRecipePath,
+        CancellationToken cancellationToken)
     {
         // Registering and activating a packaged (MSIX) app needs the PackageManager WinRT projection,
         // which is only available in the Windows build of this extension. When a consumer resolves the
@@ -513,6 +524,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // activation would use — pointing at the Windows TFM, instead of starting an executable that
         // cannot host the run.
         _ = cancellationToken;
+        _ = appxRecipePath;
         var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
         AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName);
         throw new InvalidOperationException(
@@ -559,13 +571,14 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 
 #if PACKAGEDAPP_WINRT
-    private static string MaterializeAppxRecipeLayout(string targetFileName)
+    private static string MaterializeAppxRecipeLayout(string targetFileName, out string? appxRecipePath)
     {
         string sourceDirectory = Path.GetDirectoryName(targetFileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
         string[] recipePaths = Directory.GetFiles(sourceDirectory, "*.build.appxrecipe", SearchOption.TopDirectoryOnly);
         if (recipePaths.Length == 0)
         {
+            appxRecipePath = null;
             return targetFileName;
         }
 
@@ -575,7 +588,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 $"Expected exactly one .build.appxrecipe beside '{targetFileName}', but found {recipePaths.Length}.");
         }
 
-        var recipe = XDocument.Load(recipePaths[0]);
+        appxRecipePath = recipePaths[0];
+        var recipe = XDocument.Load(appxRecipePath);
         if (IsAppxRecipeAlreadyMaterialized(recipe, sourceDirectory))
         {
             return targetFileName;
@@ -602,7 +616,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             if (!File.Exists(sourcePath))
             {
                 throw new FileNotFoundException(
-                    $"The AppX recipe '{recipePaths[0]}' references missing payload '{sourcePath}'.",
+                    $"The AppX recipe '{appxRecipePath}' references missing payload '{sourcePath}'.",
                     sourcePath);
             }
 

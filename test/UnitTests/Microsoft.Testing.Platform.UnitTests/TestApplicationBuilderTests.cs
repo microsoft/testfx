@@ -254,6 +254,15 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public void TestHostControllerProcessExit_DisposedCancellationTokenSourceIsIgnored()
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Dispose();
+
+        TestHostControllersTestHost.TryCancelTestHostExitCancellationTokenSource(cancellationTokenSource, new NopLogger());
+    }
+
+    [TestMethod]
     public async Task TestHostControllerConnectionTimeout_TerminatesCustomHandleDefersDisposalAndReturnsFailure()
     {
         TaskCompletionSource<bool> exited = new(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -27,18 +27,20 @@ internal static class PackageDeployer
     /// verifies its registered location before any activation handoffs are written.
     /// </summary>
     /// <param name="manifestPath">The full path to the layout's <c>AppxManifest.xml</c>.</param>
+    /// <param name="appxRecipePath">The original <c>.build.appxrecipe</c> path, when one was used to materialize the layout.</param>
     /// <param name="manifestInfo">The identity read from the manifest held open by the caller.</param>
     /// <param name="cancellationToken">A token to observe while registering.</param>
     [SupportedOSPlatform("windows10.0.19041.0")]
     public static async Task RegisterAsync(
         string manifestPath,
+        string? appxRecipePath,
         AppxManifestInfo manifestInfo,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var packageManager = new PackageManager();
-        await EnsureRecipeDependenciesAsync(packageManager, manifestPath, cancellationToken).ConfigureAwait(false);
+        await EnsureRecipeDependenciesAsync(packageManager, manifestPath, appxRecipePath, cancellationToken).ConfigureAwait(false);
 
         string packageFamilyName = manifestInfo.PackageFamilyName;
         string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
@@ -108,11 +110,11 @@ internal static class PackageDeployer
     private static async Task EnsureRecipeDependenciesAsync(
         PackageManager packageManager,
         string manifestPath,
+        string? appxRecipePath,
         CancellationToken cancellationToken)
     {
-        string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
-        string[] recipePaths = Directory.GetFiles(layoutDirectory, "*.build.appxrecipe", SearchOption.TopDirectoryOnly);
-        if (recipePaths.Length != 1)
+        string? recipePath = ResolveAppxRecipePath(manifestPath, appxRecipePath);
+        if (recipePath is null)
         {
             return;
         }
@@ -129,7 +131,7 @@ internal static class PackageDeployer
         }
 
         Windows.ApplicationModel.Package[] installedPackages = [.. packageManager.FindPackagesForUser(string.Empty)];
-        var recipe = XDocument.Load(recipePaths[0]);
+        var recipe = XDocument.Load(recipePath);
         foreach (XElement dependency in recipe.Descendants().Where(element => element.Name.LocalName == "ResolvedSDKReference"))
         {
             string? name = dependency.Elements().FirstOrDefault(element => element.Name.LocalName == "Name")?.Value;
@@ -159,9 +161,9 @@ internal static class PackageDeployer
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            string dependencyPath = Uri.UnescapeDataString(appxLocation);
+            string dependencyPath = ResolveAppxLocation(recipePath, appxLocation);
             DeploymentResult result = await packageManager
-                .AddPackageAsync(new Uri(Path.GetFullPath(dependencyPath)), dependencyPackageUris: null, DeploymentOptions.None)
+                .AddPackageAsync(new Uri(dependencyPath), dependencyPackageUris: null, DeploymentOptions.None)
                 .AsTask()
                 .ConfigureAwait(false);
             if (result.ExtendedErrorCode is { HResult: < 0 })
@@ -173,8 +175,26 @@ internal static class PackageDeployer
 #endif
 
 #if !PACKAGEDAPP_WINRT
-#pragma warning disable IDE0051 // Compiled into the plain flavor so dependency architecture matching is unit-testable.
+#pragma warning disable IDE0051 // Compiled into the plain flavor so recipe dependency handling is unit-testable.
 #endif
+    private static string? ResolveAppxRecipePath(string manifestPath, string? appxRecipePath)
+    {
+        if (appxRecipePath is not null)
+        {
+            return Path.GetFullPath(appxRecipePath);
+        }
+
+        string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
+        string[] recipePaths = Directory.GetFiles(layoutDirectory, "*.build.appxrecipe", SearchOption.TopDirectoryOnly);
+        return recipePaths.Length == 1 ? Path.GetFullPath(recipePaths[0]) : null;
+    }
+
+    private static string ResolveAppxLocation(string appxRecipePath, string appxLocation)
+    {
+        string recipeDirectory = Path.GetDirectoryName(Path.GetFullPath(appxRecipePath))!;
+        return Path.GetFullPath(Uri.UnescapeDataString(appxLocation), recipeDirectory);
+    }
+
     private static bool IsApplicableDependencyArchitecture(string dependencyArchitecture, string targetArchitecture)
         => string.Equals(dependencyArchitecture, targetArchitecture, StringComparison.OrdinalIgnoreCase)
             || string.Equals(dependencyArchitecture, "neutral", StringComparison.OrdinalIgnoreCase);

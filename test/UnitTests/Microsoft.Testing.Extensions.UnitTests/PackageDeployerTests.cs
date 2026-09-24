@@ -33,6 +33,51 @@ public sealed class PackageDeployerTests
     }
 
     [TestMethod]
+    public void ResolveAppxRecipePath_WithMaterializedLayout_PreservesOriginalRecipe()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
+        string recipePath = Path.Combine(root, "Original", "App.build.appxrecipe");
+        string manifestPath = Path.Combine(root, "_MtpPackageLayout", AppxManifestInfo.AppxManifestFileName);
+
+        string? actual = ResolveAppxRecipePath(manifestPath, recipePath);
+
+        Assert.AreEqual(Path.GetFullPath(recipePath), actual);
+    }
+
+    [TestMethod]
+    public void ResolveAppxRecipePath_WithAlreadyMaterializedLayout_FindsAdjacentRecipe()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string recipePath = Path.Combine(root, "App.build.appxrecipe");
+            File.WriteAllText(recipePath, "<Project />");
+
+            string? actual = ResolveAppxRecipePath(
+                Path.Combine(root, AppxManifestInfo.AppxManifestFileName),
+                appxRecipePath: null);
+
+            Assert.AreEqual(Path.GetFullPath(recipePath), actual);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void ResolveAppxLocation_WithRelativePath_UsesRecipeDirectory()
+    {
+        string recipeDirectory = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
+        string recipePath = Path.Combine(recipeDirectory, "App.build.appxrecipe");
+
+        string actual = ResolveAppxLocation(recipePath, @"Dependencies\Framework%20Package.appx");
+
+        Assert.AreEqual(Path.Combine(recipeDirectory, "Dependencies", "Framework Package.appx"), actual);
+    }
+
+    [TestMethod]
     public async Task RegisterAsync_WithUnregisteredPackage_RegistersRequestedLayout()
     {
         var packageManager = new TestPackageManager();
@@ -523,6 +568,20 @@ public sealed class PackageDeployerTests
 
     private static string GetLayoutDirectory(string name)
         => Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), name);
+
+    private static string? ResolveAppxRecipePath(string manifestPath, string? appxRecipePath)
+        => (string?)typeof(PackageDeployer)
+            .GetMethod(
+                "ResolveAppxRecipePath",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [manifestPath, appxRecipePath]);
+
+    private static string ResolveAppxLocation(string appxRecipePath, string appxLocation)
+        => (string)typeof(PackageDeployer)
+            .GetMethod(
+                "ResolveAppxLocation",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [appxRecipePath, appxLocation])!;
 
     private sealed class TestPackageManager
     {

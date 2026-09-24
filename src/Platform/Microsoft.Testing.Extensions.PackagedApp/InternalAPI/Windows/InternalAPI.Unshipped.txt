@@ -12,4 +12,4 @@ Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.WaitForExitA
 Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager
 static Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager.ActivateApplication(string! appUserModelId, string? arguments) -> uint
 static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.Activate(string! appUserModelId, string? activationArguments) -> uint
-static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAsync(string! manifestPath, Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo! manifestInfo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAsync(string! manifestPath, string? appxRecipePath, Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo! manifestInfo, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!

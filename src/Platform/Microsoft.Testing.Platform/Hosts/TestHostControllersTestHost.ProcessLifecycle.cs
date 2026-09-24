@@ -101,13 +101,7 @@ internal sealed partial class TestHostControllersTestHost
                     await _logger.LogDebugAsync("Waiting for the test host process to connect to the controller's named pipe.").ConfigureAwait(false);
                     using var testHostExitCancellationTokenSource = new CancellationTokenSource();
                     EventHandler onTestHostExited = (_, _) =>
-                    {
-#if NET
-                        _ = testHostExitCancellationTokenSource.CancelAsync();
-#else
-                        testHostExitCancellationTokenSource.Cancel();
-#endif
-                    };
+                        TryCancelTestHostExitCancellationTokenSource(testHostExitCancellationTokenSource, _logger);
                     testHostProcess.Exited += onTestHostExited;
                     if (testHostProcess.HasExited)
                     {
@@ -471,6 +465,21 @@ internal sealed partial class TestHostControllersTestHost
                 : testHostProcessExitCode;
 
         return (testExecutionCanceled, reportedTestHostExitCode);
+    }
+
+    internal static void TryCancelTestHostExitCancellationTokenSource(CancellationTokenSource cancellationTokenSource, ILogger logger)
+    {
+        try
+        {
+            cancellationTokenSource.Cancel();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            // The handler can race with the connection-wait cleanup: if the process exit signal is
+            // queued before the handler is detached but executes after the CTS has been disposed,
+            // cancellation throws. Keep the late notification observable without failing the run.
+            logger.LogDebug($"CancellationTokenSource already disposed when test host process exited: {ex.Message}");
+        }
     }
 
     internal static async Task<bool> WaitForTestHostControllerConnectionAsync(
