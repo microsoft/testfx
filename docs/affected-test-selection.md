@@ -24,8 +24,10 @@ assets for the base extension, collector, CodeCoverage extension, and Azure DevO
   package's `netstandard2.0` assets.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
+- The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
+  test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
-  command names, and fallbacks.
+  nested-process isolation, command names, and fallbacks.
 
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.

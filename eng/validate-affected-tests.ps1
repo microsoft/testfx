@@ -5,6 +5,7 @@ $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
 $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
+$wellKnownEnvironmentVariablesPath = Join-Path $repoRoot "test/Utilities/Microsoft.Testing.TestInfrastructure/WellKnownEnvironmentVariables.cs"
 
 $configuration = Get-Content -LiteralPath $globalJsonPath -Raw | ConvertFrom-Json
 $affectedTests = $configuration.test.affectedTests
@@ -153,7 +154,8 @@ $pipelineVariables = Get-Content -LiteralPath (Join-Path $repoRoot "eng/pipeline
 $outerPipelineConfiguration = $pipeline, $pipelineVariables -join "`n"
 foreach ($variableName in @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
-    "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE"
+    "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+    "TESTINGPLATFORM_EXITCODE_IGNORE"
 )) {
     if ($outerPipelineConfiguration.Contains($variableName)) {
         throw "$variableName must be scoped to the affected-test template."
@@ -172,6 +174,17 @@ $affectedTestsGateCount = [regex]::Matches(
     'DOTNET_CLI_ENABLE_AFFECTED_TESTS').Count
 if ($affectedTestsGateCount -ne 2) {
     throw "DOTNET_CLI_ENABLE_AFFECTED_TESTS must appear exactly once in each enabled affected-test branch."
+}
+
+$wellKnownEnvironmentVariables = Get-Content -LiteralPath $wellKnownEnvironmentVariablesPath -Raw
+foreach ($variableName in @(
+    "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
+    "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+    "TESTINGPLATFORM_EXITCODE_IGNORE"
+)) {
+    if (-not $wellKnownEnvironmentVariables.Contains("""$variableName""")) {
+        throw "Child test processes must not inherit $variableName from the outer pipeline invocation."
+    }
 }
 
 if ($templateWithoutComments.Contains("Cache@2") -or
