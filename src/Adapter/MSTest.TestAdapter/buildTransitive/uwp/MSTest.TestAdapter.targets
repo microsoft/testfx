@@ -61,6 +61,21 @@
     </PropertyGroup>
 
     <!--
+      MTP scenario (EnableMSTestRunner): the UI language is chosen at runtime (for example via
+      TESTINGPLATFORM_UI_LANGUAGE / DOTNET_CLI_UI_LANGUAGE), so the build-machine culture is irrelevant.
+      Every requested localized satellite must be copied to the output directory so any selected culture can be resolved at run time.
+      -->
+    <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
+      <_MSTestV2Files Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\_localization'))\**\*.dll" />
+      <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because
+           the well-known %(RecursiveDir) metadata is only available on items after they have been created. -->
+      <_MSTestV2Files Update="@(_MSTestV2Files)">
+        <UICulture>%(RecursiveDir)</UICulture>
+        <Culture>$([System.String]::Copy('%(RecursiveDir)').TrimEnd('\').TrimEnd('/').ToLowerInvariant())</Culture>
+      </_MSTestV2Files>
+    </ItemGroup>
+
+    <!--
       VSTest scenario: the UI language is fixed to the build-machine culture, so only that culture's hierarchy
       is copied to keep the output directory slim.
       Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient
@@ -97,7 +112,7 @@
 
   <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
   <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild"
-          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' AND '$(EnableMSTestRunner)' != 'true' "
+          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' "
           DependsOnTargets="GetMSTestV2CultureHierarchy"
           Inputs="@(MSTestV2Files)"
           Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)\%(FileName)%(Extension)')">
