@@ -26,10 +26,9 @@ internal sealed class MtpServerClient : IMtpServerClient
     private readonly MtpJsonRpcConnection _connection;
     private readonly MtpServerClientOptions _options;
     private readonly IMtpServerHost? _host;
-    private readonly object _shutdownLock = new();
+    private readonly SingleFlightTask _shutdown = new();
 
     private Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? _serverRequestHandler;
-    private Task? _shutdown;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MtpServerClient"/> class over an existing connection.
@@ -282,12 +281,7 @@ internal sealed class MtpServerClient : IMtpServerClient
     }
 
     private Task StartConnectionShutdownAsync()
-    {
-        lock (_shutdownLock)
-        {
-            return _shutdown ??= Task.Run(_connection.Dispose);
-        }
-    }
+        => _shutdown.StartAsync(_connection.Dispose);
 
     private void DetachHandlers()
     {
