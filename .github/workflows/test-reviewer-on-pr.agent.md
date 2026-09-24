@@ -5,8 +5,9 @@ description: >-
   is opened, reopened, marked ready-for-review, or pushed to — but only when
   the change touches files under `test/`. Reviews correctness, effectiveness,
   reliability, maintainability, and repository conventions; posts a compact
-  COMMENT review with a compact scorecard plus complete, apply-ready inline
-  suggestions when actionable findings exist. Clean automatic runs are silent.
+  COMMENT review with a compact scorecard plus inline improvement comments for
+  below-A tests, using complete, apply-ready suggestions whenever possible.
+  Clean automatic runs are silent.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial
