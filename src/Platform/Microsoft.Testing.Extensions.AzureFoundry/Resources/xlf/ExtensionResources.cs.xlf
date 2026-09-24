@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="NoAuthenticationConfigured">
         <source>No authentication is configured for the Azure OpenAI chat client provider. Set the 'AZURE_OPENAI_API_KEY' environment variable, or reference the 'Azure.Identity' package and pass a credential (for example 'new DefaultAzureCredential()') to 'AddAzureOpenAIChatClientProvider'.</source>
-        <target state="new">No authentication is configured for the Azure OpenAI chat client provider. Set the 'AZURE_OPENAI_API_KEY' environment variable, or reference the 'Azure.Identity' package and pass a credential (for example 'new DefaultAzureCredential()') to 'AddAzureOpenAIChatClientProvider'.</target>
+        <target state="translated">Pro poskytovatele chatovacího klienta Azure OpenAI není nakonfigurované žádné ověřování. Nastavte proměnnou prostředí AZURE_OPENAI_API_KEY nebo odkažte na balíček Azure.Identity a předejte přihlašovací údaj (například new DefaultAzureCredential()) metodě AddAzureOpenAIChatClientProvider.</target>
         <note>Do not localize the environment variable {Locked="AZURE_OPENAI_API_KEY"}, package name {Locked="Azure.Identity"}, code example {Locked="new DefaultAzureCredential()"}, or API name {Locked="AddAzureOpenAIChatClientProvider"}.</note>
       </trans-unit>
     </body>
