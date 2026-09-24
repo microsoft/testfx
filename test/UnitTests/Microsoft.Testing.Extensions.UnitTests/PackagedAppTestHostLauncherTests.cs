@@ -230,26 +230,30 @@ public sealed class PackagedAppTestHostLauncherTests
     [TestMethod]
     public void RedirectAppContainerFileSystemOptions_WithExplicitDirectories_ReplacesTheirValues()
     {
-        string scratchDirectory = Path.GetFullPath("appcontainer-scratch");
+        string resultsScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "results"));
+        string diagnosticScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "diagnostics"));
 
         IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
             ["--results-directory", "controller-results", "--diagnostic", "--diagnostic-output-directory", "controller-diagnostics"],
-            scratchDirectory,
+            resultsScratchDirectory,
+            diagnosticScratchDirectory,
             removeMSBuildNode: false);
 
         Assert.AreSequenceEqual(
-            ["--results-directory", scratchDirectory, "--diagnostic", "--diagnostic-output-directory", scratchDirectory],
+            ["--results-directory", resultsScratchDirectory, "--diagnostic", "--diagnostic-output-directory", diagnosticScratchDirectory],
             actual);
     }
 
     [TestMethod]
     public void RedirectAppContainerFileSystemOptions_WithoutExplicitDirectories_AddsRequiredScratchDirectories()
     {
-        string scratchDirectory = Path.GetFullPath("appcontainer-scratch");
+        string resultsScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "results"));
+        string diagnosticScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "diagnostics"));
 
         IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
             ["--diagnostic", "--filter", "two words"],
-            scratchDirectory,
+            resultsScratchDirectory,
+            diagnosticScratchDirectory,
             removeMSBuildNode: false);
 
         Assert.AreSequenceEqual(
@@ -258,9 +262,9 @@ public sealed class PackagedAppTestHostLauncherTests
                 "--filter",
                 "two words",
                 "--results-directory",
-                scratchDirectory,
+                resultsScratchDirectory,
                 "--diagnostic-output-directory",
-                scratchDirectory,
+                diagnosticScratchDirectory,
             ],
             actual);
     }
@@ -268,11 +272,13 @@ public sealed class PackagedAppTestHostLauncherTests
     [TestMethod]
     public void RedirectAppContainerFileSystemOptions_ForRetry_RemovesMSBuildNode()
     {
-        string scratchDirectory = Path.GetFullPath("appcontainer-scratch");
+        string resultsScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "results"));
+        string diagnosticScratchDirectory = Path.GetFullPath(Path.Combine("appcontainer-scratch", "diagnostics"));
 
         IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
             ["--internal-msbuild-node", "msbuild-pipe", "--internal-retry-pipename", "retry-pipe"],
-            scratchDirectory,
+            resultsScratchDirectory,
+            diagnosticScratchDirectory,
             removeMSBuildNode: true);
 
         Assert.AreSequenceEqual(
@@ -280,7 +286,7 @@ public sealed class PackagedAppTestHostLauncherTests
                 "--internal-retry-pipename",
                 "retry-pipe",
                 "--results-directory",
-                scratchDirectory,
+                resultsScratchDirectory,
             ],
             actual);
     }
@@ -562,13 +568,14 @@ public sealed class PackagedAppTestHostLauncherTests
 
     private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
         IReadOnlyList<string> arguments,
-        string scratchDirectory,
+        string resultsScratchDirectory,
+        string diagnosticScratchDirectory,
         bool removeMSBuildNode)
         => (IReadOnlyList<string>)typeof(PackagedAppTestHostLauncher)
             .GetMethod(
                 "RedirectAppContainerFileSystemOptions",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-            .Invoke(null, [arguments, scratchDirectory, removeMSBuildNode])!;
+            .Invoke(null, [arguments, resultsScratchDirectory, diagnosticScratchDirectory, removeMSBuildNode])!;
 
     private static string GetControllerPath(string path, TestHostLaunchContext context)
         => (string)typeof(PackagedAppTestHostLauncher)

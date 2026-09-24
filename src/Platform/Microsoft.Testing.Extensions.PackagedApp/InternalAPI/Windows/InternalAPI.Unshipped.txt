@@ -1,6 +1,6 @@
 #nullable enable
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle
-Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath, string? scratchDirectory, string? recoveryDirectory, string? retryArtifactManifestPath, string? retryArtifactManifestDestinationPath) -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath, string? scratchDirectory, string? resultsScratchDirectory, string? resultsRecoveryDirectory, string? diagnosticScratchDirectory, string? diagnosticRecoveryDirectory, string? retryArtifactManifestPath, string? retryArtifactManifestDestinationPath) -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Dispose() -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ExitCode.get -> int
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.HasExited.get -> bool

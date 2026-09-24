@@ -173,22 +173,29 @@ public sealed class RetryDataConsumerTests
         Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
-    [DataRow("test.trx", "nested", "test.trx")]
-    [DataRow("test.diag", "AppContainer", "nested", "test.diag")]
+    [DataRow(
+        "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT",
+        "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT",
+        "test.trx")]
+    [DataRow(
+        "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT",
+        "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT",
+        "test.diag")]
     [TestMethod]
     public void GetControllerArtifactPath_AppContainerArtifact_MapsToControllerRecoveryDirectory(
-        string fileName,
-        params string[] expectedRelativePath)
+        string sourceRootEnvironmentVariable,
+        string destinationRootEnvironmentVariable,
+        string fileName)
     {
         string sourceRoot = Path.GetFullPath("package-local-state");
-        string destinationRoot = Path.GetFullPath("controller-results");
+        string destinationRoot = Path.GetFullPath("controller-recovery");
         string artifactPath = Path.Combine(sourceRoot, "nested", fileName);
         var environment = new Mock<IEnvironment>();
         environment
-            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT"))
+            .Setup(x => x.GetEnvironmentVariable(sourceRootEnvironmentVariable))
             .Returns(sourceRoot);
         environment
-            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT"))
+            .Setup(x => x.GetEnvironmentVariable(destinationRootEnvironmentVariable))
             .Returns(destinationRoot);
         ServiceProvider serviceProvider = CreateServiceProvider(environment.Object);
         serviceProvider.AddService(new TestCommandLineOptions([]));
@@ -196,7 +203,7 @@ public sealed class RetryDataConsumerTests
 
         string actual = GetControllerArtifactPath(consumer, artifactPath);
 
-        Assert.AreEqual(Path.Combine([destinationRoot, .. expectedRelativePath]), actual);
+        Assert.AreEqual(Path.Combine(destinationRoot, "nested", fileName), actual);
     }
 
     [TestMethod]

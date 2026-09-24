@@ -22,9 +22,7 @@ internal static class PackagedAppScratchArtifactRecovery
             }
 
             string relativePath = Path.GetRelativePath(scratchDirectory, sourcePath);
-            string destinationPath = string.Equals(Path.GetExtension(sourcePath), ".diag", StringComparison.OrdinalIgnoreCase)
-                ? Path.Combine(recoveryDirectory, "AppContainer", relativePath)
-                : Path.Combine(recoveryDirectory, relativePath);
+            string destinationPath = Path.Combine(recoveryDirectory, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             File.Copy(sourcePath, destinationPath, overwrite: true);
         }

@@ -113,12 +113,28 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         const string SourceRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
         const string DestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+        const string DiagnosticSourceRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT";
+        const string DiagnosticDestinationRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
 
-        string? sourceRoot = _environment.GetEnvironmentVariable(SourceRootEnvironmentVariable);
-        string? destinationRoot = _environment.GetEnvironmentVariable(DestinationRootEnvironmentVariable);
+        return TryGetControllerArtifactPath(
+            artifactPath,
+            _environment.GetEnvironmentVariable(SourceRootEnvironmentVariable),
+            _environment.GetEnvironmentVariable(DestinationRootEnvironmentVariable))
+            ?? TryGetControllerArtifactPath(
+                artifactPath,
+                _environment.GetEnvironmentVariable(DiagnosticSourceRootEnvironmentVariable),
+                _environment.GetEnvironmentVariable(DiagnosticDestinationRootEnvironmentVariable))
+            ?? artifactPath;
+    }
+
+    private static string? TryGetControllerArtifactPath(
+        string artifactPath,
+        string? sourceRoot,
+        string? destinationRoot)
+    {
         if (sourceRoot is not { Length: > 0 } || destinationRoot is not { Length: > 0 })
         {
-            return artifactPath;
+            return null;
         }
 
         string fullArtifactPath = Path.GetFullPath(artifactPath);
@@ -130,14 +146,11 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             : StringComparison.Ordinal;
         if (!fullArtifactPath.StartsWith(sourcePrefix, comparison))
         {
-            return artifactPath;
+            return null;
         }
 
         string relativePath = fullArtifactPath.Substring(sourcePrefix.Length);
-        return Path.GetFullPath(
-            string.Equals(Path.GetExtension(fullArtifactPath), ".diag", StringComparison.OrdinalIgnoreCase)
-                ? Path.Combine(destinationRoot, "AppContainer", relativePath)
-                : Path.Combine(destinationRoot, relativePath));
+        return Path.GetFullPath(Path.Combine(destinationRoot, relativePath));
     }
 
     /// <summary>

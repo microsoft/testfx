@@ -20,7 +20,10 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
     private readonly Process _process;
     private readonly string? _handshakePath;
     private readonly string? _activationPayloadPath;
-    private readonly string? _recoveryDirectory;
+    private readonly string? _diagnosticRecoveryDirectory;
+    private readonly string? _diagnosticScratchDirectory;
+    private readonly string? _resultsRecoveryDirectory;
+    private readonly string? _resultsScratchDirectory;
     private readonly string? _retryArtifactManifestDestinationPath;
     private readonly string? _retryArtifactManifestPath;
     private readonly string? _scratchDirectory;
@@ -30,7 +33,10 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
         string? handshakePath,
         string? activationPayloadPath,
         string? scratchDirectory,
-        string? recoveryDirectory,
+        string? resultsScratchDirectory,
+        string? resultsRecoveryDirectory,
+        string? diagnosticScratchDirectory,
+        string? diagnosticRecoveryDirectory,
         string? retryArtifactManifestPath,
         string? retryArtifactManifestDestinationPath)
     {
@@ -38,7 +44,10 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
         _handshakePath = handshakePath;
         _activationPayloadPath = activationPayloadPath;
         _scratchDirectory = scratchDirectory;
-        _recoveryDirectory = recoveryDirectory;
+        _resultsScratchDirectory = resultsScratchDirectory;
+        _resultsRecoveryDirectory = resultsRecoveryDirectory;
+        _diagnosticScratchDirectory = diagnosticScratchDirectory;
+        _diagnosticRecoveryDirectory = diagnosticRecoveryDirectory;
         _retryArtifactManifestPath = retryArtifactManifestPath;
         _retryArtifactManifestDestinationPath = retryArtifactManifestDestinationPath;
     }
@@ -98,20 +107,26 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
 
     private void RecoverScratchArtifacts()
     {
-        if (_scratchDirectory is null
-            || _recoveryDirectory is null
-            || !Directory.Exists(_scratchDirectory))
+        RecoverScratchArtifacts(_resultsScratchDirectory, _resultsRecoveryDirectory);
+        RecoverScratchArtifacts(_diagnosticScratchDirectory, _diagnosticRecoveryDirectory);
+    }
+
+    private static void RecoverScratchArtifacts(string? scratchDirectory, string? recoveryDirectory)
+    {
+        if (scratchDirectory is null
+            || recoveryDirectory is null
+            || !Directory.Exists(scratchDirectory))
         {
             return;
         }
 
         try
         {
-            PackagedAppScratchArtifactRecovery.Recover(_scratchDirectory, _recoveryDirectory);
+            PackagedAppScratchArtifactRecovery.Recover(scratchDirectory, recoveryDirectory);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Debug.WriteLine($"Best-effort recovery of packaged test-host scratch directory '{_scratchDirectory}' failed: {ex}");
+            Debug.WriteLine($"Best-effort recovery of packaged test-host scratch directory '{scratchDirectory}' failed: {ex}");
         }
     }
 
@@ -123,19 +138,19 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
 
         if (_retryArtifactManifestPath is null
             || _retryArtifactManifestDestinationPath is null
-            || _scratchDirectory is null
-            || _recoveryDirectory is null
-            || !File.Exists(_retryArtifactManifestPath)
-            || new FileInfo(_retryArtifactManifestPath).Length > MaxManifestBytes)
+            || _scratchDirectory is null)
         {
             return;
         }
 
         try
         {
-            string scratchPrefix = Path.GetFullPath(_scratchDirectory)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                + Path.DirectorySeparatorChar;
+            if (!File.Exists(_retryArtifactManifestPath)
+                || new FileInfo(_retryArtifactManifestPath).Length > MaxManifestBytes)
+            {
+                return;
+            }
+
             var recoveredLines = new List<string>();
             foreach (string line in File.ReadLines(_retryArtifactManifestPath).Take(MaxManifestRecords))
             {
@@ -152,16 +167,15 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
 
                 string sourcePath = Path.GetFullPath(
                     Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(0, separatorIndex))));
-                if (!sourcePath.StartsWith(scratchPrefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                string relativePath = Path.GetRelativePath(_scratchDirectory, sourcePath);
-                string recoveredPath = string.Equals(Path.GetExtension(sourcePath), ".diag", StringComparison.OrdinalIgnoreCase)
-                    ? Path.Combine(_recoveryDirectory, "AppContainer", relativePath)
-                    : Path.Combine(_recoveryDirectory, relativePath);
-                if (!File.Exists(recoveredPath))
+                string? recoveredPath = TryGetRecoveredArtifactPath(
+                    sourcePath,
+                    _resultsScratchDirectory,
+                    _resultsRecoveryDirectory)
+                    ?? TryGetRecoveredArtifactPath(
+                        sourcePath,
+                        _diagnosticScratchDirectory,
+                        _diagnosticRecoveryDirectory);
+                if (recoveredPath is null || !File.Exists(recoveredPath))
                 {
                     continue;
                 }
@@ -186,6 +200,24 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
         {
             Debug.WriteLine($"Best-effort recovery of retry artifact manifest '{_retryArtifactManifestPath}' failed: {ex}");
         }
+    }
+
+    private static string? TryGetRecoveredArtifactPath(
+        string sourcePath,
+        string? scratchDirectory,
+        string? recoveryDirectory)
+    {
+        if (scratchDirectory is null || recoveryDirectory is null)
+        {
+            return null;
+        }
+
+        string scratchPrefix = Path.GetFullPath(scratchDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        return sourcePath.StartsWith(scratchPrefix, StringComparison.OrdinalIgnoreCase)
+            ? Path.Combine(recoveryDirectory, Path.GetRelativePath(scratchDirectory, sourcePath))
+            : null;
     }
 
     private static void TryDeleteScratchDirectory(string? scratchDirectory)

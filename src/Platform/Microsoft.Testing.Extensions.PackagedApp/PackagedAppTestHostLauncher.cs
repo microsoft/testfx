@@ -111,6 +111,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 #if PACKAGEDAPP_WINRT
     private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
     private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+    private const string DiagnosticArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT";
+    private const string DiagnosticArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
 #endif
     private const string ResultsDirectoryOption = "--results-directory";
     private const string DiagnosticOutputDirectoryOption = "--diagnostic-output-directory";
@@ -432,30 +434,40 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         string? handshakePath = null;
         string? activationPayloadPath = null;
         string? scratchDirectory = null;
+        string? resultsScratchDirectory = null;
+        string? resultsRecoveryDirectory = null;
+        string? diagnosticScratchDirectory = null;
+        string? diagnosticRecoveryDirectory = null;
         string? retryArtifactManifestPath = null;
         string? retryArtifactManifestDestinationPath = null;
         bool isRetryChild = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments) is null
             && handshakeId is not null;
-        string? recoveryDirectory = TryGetOptionValue(
-            context.Arguments,
-            ResultsDirectoryOption)
-            ?? TryGetOptionValue(context.Arguments, DiagnosticOutputDirectoryOption);
         try
         {
             IReadOnlyList<string> hostArguments = context.Arguments;
             if (application.RunsInAppContainer)
             {
-                recoveryDirectory = GetControllerPath(
-                    recoveryDirectory ?? "TestResults",
+                resultsRecoveryDirectory = GetControllerPath(
+                    TryGetOptionValue(context.Arguments, ResultsDirectoryOption) ?? "TestResults",
                     context);
+                string diagnosticOutputDirectory = GetControllerPath(
+                    TryGetOptionValue(context.Arguments, DiagnosticOutputDirectoryOption)
+                        ?? resultsRecoveryDirectory,
+                    context);
+                diagnosticRecoveryDirectory = Path.Combine(diagnosticOutputDirectory, "AppContainer");
                 scratchDirectory = Path.Combine(
                     PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName),
                     "MtpTestHost",
                     handshakeId ?? Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(scratchDirectory);
+                resultsScratchDirectory = Path.Combine(scratchDirectory, "results");
+                diagnosticScratchDirectory = Path.Combine(scratchDirectory, "diagnostics");
+                Directory.CreateDirectory(resultsScratchDirectory);
+                Directory.CreateDirectory(diagnosticScratchDirectory);
                 hostArguments = RedirectAppContainerFileSystemOptions(
                     context.Arguments,
-                    scratchDirectory,
+                    resultsScratchDirectory,
+                    diagnosticScratchDirectory,
                     removeMSBuildNode: isRetryChild);
                 retryArtifactManifestDestinationPath = context.EnvironmentVariables
                     .FirstOrDefault(environmentVariable => string.Equals(
@@ -476,8 +488,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                     handshakePath,
                     GetConnectBackEnvironment(context, retryArtifactManifestPath)
                         .Append(new(LauncherModeEnvironmentVariable, NeverMode))
-                        .Append(new(ArtifactPathSourceRootEnvironmentVariableName, scratchDirectory))
-                        .Append(new(ArtifactPathDestinationRootEnvironmentVariableName, recoveryDirectory)));
+                        .Append(new(ArtifactPathSourceRootEnvironmentVariableName, resultsScratchDirectory))
+                        .Append(new(ArtifactPathDestinationRootEnvironmentVariableName, resultsRecoveryDirectory))
+                        .Append(new(DiagnosticArtifactPathSourceRootEnvironmentVariableName, diagnosticScratchDirectory))
+                        .Append(new(DiagnosticArtifactPathDestinationRootEnvironmentVariableName, diagnosticRecoveryDirectory)));
             }
 
             PackagedAppActivationData activationData = CreateActivationArguments(
@@ -498,7 +512,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 handshakePath,
                 activationPayloadPath,
                 scratchDirectory,
-                recoveryDirectory,
+                resultsScratchDirectory,
+                resultsRecoveryDirectory,
+                diagnosticScratchDirectory,
+                diagnosticRecoveryDirectory,
                 retryArtifactManifestPath,
                 retryArtifactManifestDestinationPath);
         }
@@ -761,7 +778,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
     private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
         IReadOnlyList<string> arguments,
-        string scratchDirectory,
+        string resultsScratchDirectory,
+        string diagnosticScratchDirectory,
         bool removeMSBuildNode)
     {
         List<string> redirectedArguments = [.. arguments];
@@ -784,13 +802,13 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
             if (string.Equals(argument, ResultsDirectoryOption, StringComparison.Ordinal))
             {
-                redirectedArguments[i + 1] = scratchDirectory;
+                redirectedArguments[i + 1] = resultsScratchDirectory;
                 hasResultsDirectory = true;
                 i++;
             }
             else if (string.Equals(argument, DiagnosticOutputDirectoryOption, StringComparison.Ordinal))
             {
-                redirectedArguments[i + 1] = scratchDirectory;
+                redirectedArguments[i + 1] = diagnosticScratchDirectory;
                 hasDiagnosticOutputDirectory = true;
                 i++;
             }
@@ -799,13 +817,13 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         if (!hasResultsDirectory)
         {
             redirectedArguments.Add(ResultsDirectoryOption);
-            redirectedArguments.Add(scratchDirectory);
+            redirectedArguments.Add(resultsScratchDirectory);
         }
 
         if (diagnosticEnabled && !hasDiagnosticOutputDirectory)
         {
             redirectedArguments.Add(DiagnosticOutputDirectoryOption);
-            redirectedArguments.Add(scratchDirectory);
+            redirectedArguments.Add(diagnosticScratchDirectory);
         }
 
         return redirectedArguments;

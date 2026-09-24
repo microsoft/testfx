@@ -11,6 +11,36 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class PackagedAppScratchArtifactRecoveryTests
 {
     [TestMethod]
+    public void Recover_DiagnosticFile_PreservesRelativePathWithinRequestedRecoveryDirectory()
+    {
+        string testDirectory = Path.Combine(
+            Path.GetTempPath(),
+            nameof(PackagedAppScratchArtifactRecoveryTests),
+            Guid.NewGuid().ToString("N"));
+        string scratchDirectory = Path.Combine(testDirectory, "scratch");
+        string recoveryDirectory = Path.Combine(testDirectory, "diagnostics", "AppContainer");
+        Directory.CreateDirectory(Path.Combine(scratchDirectory, "nested"));
+
+        try
+        {
+            File.WriteAllText(Path.Combine(scratchDirectory, "nested", "test.diag"), "diagnostic");
+
+            PackagedAppScratchArtifactRecovery.Recover(scratchDirectory, recoveryDirectory);
+
+            Assert.AreEqual(
+                "diagnostic",
+                File.ReadAllText(Path.Combine(recoveryDirectory, "nested", "test.diag")));
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Recover_ReparsePointFilesAndDirectories_AreSkipped()
     {
         string testDirectory = Path.Combine(
