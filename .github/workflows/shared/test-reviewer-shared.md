@@ -31,6 +31,7 @@ permissions:
 network:
   allowed:
     - defaults
+    - "github.com"
 
 tools:
   github:
