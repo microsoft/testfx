@@ -13,24 +13,43 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// returned by <c>IApplicationActivationManager::ActivateApplication</c> — so the handle monitors and
 /// terminates the actual activated process and surfaces its id as the identifier.
 /// </summary>
-internal sealed class ActivatedAppTestHostHandle : ITestHostHandle
+internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHostHandleExitCodePolicy
 {
     private readonly Process _process;
     private readonly string? _handshakePath;
     private readonly string? _activationPayloadPath;
+    private readonly string? _recoveryDirectory;
+    private readonly string? _retryArtifactManifestDestinationPath;
+    private readonly string? _retryArtifactManifestPath;
+    private readonly string? _scratchDirectory;
 
-    public ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath)
+    public ActivatedAppTestHostHandle(
+        uint processId,
+        string? handshakePath,
+        string? activationPayloadPath,
+        string? scratchDirectory,
+        string? recoveryDirectory,
+        string? retryArtifactManifestPath,
+        string? retryArtifactManifestDestinationPath)
     {
         _process = Process.GetProcessById((int)processId);
         _handshakePath = handshakePath;
         _activationPayloadPath = activationPayloadPath;
+        _scratchDirectory = scratchDirectory;
+        _recoveryDirectory = recoveryDirectory;
+        _retryArtifactManifestPath = retryArtifactManifestPath;
+        _retryArtifactManifestDestinationPath = retryArtifactManifestDestinationPath;
     }
 
     public string? Identifier => _process.Id.ToString(CultureInfo.InvariantCulture);
 
+    public int ProcessId => _process.Id;
+
     public int ExitCode => _process.ExitCode;
 
     public bool HasExited => _process.HasExited;
+
+    public bool IsExitCodeAuthoritative => false;
 
     public Task WaitForExitAsync(CancellationToken cancellationToken) => _process.WaitForExitAsync(cancellationToken);
 
@@ -59,6 +78,130 @@ internal sealed class ActivatedAppTestHostHandle : ITestHostHandle
         }
 
         PackagedAppActivationArguments.TryDeletePayload(_activationPayloadPath);
+        RecoverScratchArtifacts();
+        RecoverRetryArtifactManifest();
+        TryDeleteScratchDirectory(_scratchDirectory);
+    }
+
+    private void RecoverScratchArtifacts()
+    {
+        if (_scratchDirectory is null
+            || _recoveryDirectory is null
+            || !Directory.Exists(_scratchDirectory))
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(_recoveryDirectory);
+            foreach (string sourcePath in Directory.EnumerateFiles(_scratchDirectory, "*", SearchOption.AllDirectories))
+            {
+                string relativePath = Path.GetRelativePath(_scratchDirectory, sourcePath);
+                string destinationPath = string.Equals(Path.GetExtension(sourcePath), ".diag", StringComparison.OrdinalIgnoreCase)
+                    ? Path.Combine(_recoveryDirectory, "AppContainer", relativePath)
+                    : Path.Combine(_recoveryDirectory, relativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+                File.Copy(sourcePath, destinationPath, overwrite: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Debug.WriteLine($"Best-effort recovery of packaged test-host scratch directory '{_scratchDirectory}' failed: {ex}");
+        }
+    }
+
+    private void RecoverRetryArtifactManifest()
+    {
+        const long MaxManifestBytes = 16L * 1024 * 1024;
+        const int MaxManifestLineChars = 64 * 1024;
+        const int MaxManifestRecords = 10_000;
+
+        if (_retryArtifactManifestPath is null
+            || _retryArtifactManifestDestinationPath is null
+            || _scratchDirectory is null
+            || _recoveryDirectory is null
+            || !File.Exists(_retryArtifactManifestPath)
+            || new FileInfo(_retryArtifactManifestPath).Length > MaxManifestBytes)
+        {
+            return;
+        }
+
+        try
+        {
+            string scratchPrefix = Path.GetFullPath(_scratchDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+            var recoveredLines = new List<string>();
+            foreach (string line in File.ReadLines(_retryArtifactManifestPath).Take(MaxManifestRecords))
+            {
+                if (line.Length > MaxManifestLineChars)
+                {
+                    continue;
+                }
+
+                int separatorIndex = line.IndexOf('\t');
+                if (separatorIndex <= 0)
+                {
+                    continue;
+                }
+
+                string sourcePath = Path.GetFullPath(
+                    Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(0, separatorIndex))));
+                if (!sourcePath.StartsWith(scratchPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string relativePath = Path.GetRelativePath(_scratchDirectory, sourcePath);
+                string recoveredPath = string.Equals(Path.GetExtension(sourcePath), ".diag", StringComparison.OrdinalIgnoreCase)
+                    ? Path.Combine(_recoveryDirectory, "AppContainer", relativePath)
+                    : Path.Combine(_recoveryDirectory, relativePath);
+                if (!File.Exists(recoveredPath))
+                {
+                    continue;
+                }
+
+                recoveredLines.Add(
+                    $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(Path.GetFullPath(recoveredPath)))}{line[separatorIndex..]}");
+            }
+
+            if (recoveredLines.Count == 0)
+            {
+                return;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(_retryArtifactManifestDestinationPath)!);
+            File.WriteAllLines(
+                _retryArtifactManifestDestinationPath,
+                recoveredLines,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+            or FormatException or ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            Debug.WriteLine($"Best-effort recovery of retry artifact manifest '{_retryArtifactManifestPath}' failed: {ex}");
+        }
+    }
+
+    private static void TryDeleteScratchDirectory(string? scratchDirectory)
+    {
+        if (scratchDirectory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (Directory.Exists(scratchDirectory))
+            {
+                Directory.Delete(scratchDirectory, recursive: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Debug.WriteLine($"Best-effort delete of packaged test-host scratch directory '{scratchDirectory}' failed: {ex}");
+        }
     }
 }
 

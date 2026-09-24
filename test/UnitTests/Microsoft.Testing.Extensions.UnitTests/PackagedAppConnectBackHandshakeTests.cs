@@ -167,6 +167,28 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual("logical-run", environment["testingplatform_logical_run_id"]);
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
     }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_ForAppContainer_RedirectsRetryArtifactManifest()
+    {
+        const string RedirectedManifestPath = @"C:\PackageLocalState\MtpTestHost\retry-recovered-artifacts.manifest";
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            [],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = @"C:\ControllerTemp\retry.txt",
+            },
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher
+            .GetConnectBackEnvironment(context, RedirectedManifestPath)
+            .ToDictionary();
+
+        Assert.AreEqual(
+            RedirectedManifestPath,
+            environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
+    }
 }
 
 #endif

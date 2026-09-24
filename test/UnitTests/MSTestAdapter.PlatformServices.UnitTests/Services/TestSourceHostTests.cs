@@ -24,6 +24,24 @@ public class TestSourceHostTests : TestContainer
         type.Should().NotBeNull();
         type.IsDefaultConstructorCalled.Should().BeTrue();
     }
+
+    public void DisposeDoesNotThrowWhenOriginalCurrentDirectoryCannotBeRestored()
+    {
+        string inaccessiblePath = Path.GetTempFileName();
+        TestSourceHost testSourceHost = new(Assembly.GetExecutingAssembly().Location, null);
+        typeof(TestSourceHost)
+            .GetField("_currentDirectory", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(testSourceHost, inaccessiblePath);
+
+        try
+        {
+            testSourceHost.Invoking(static host => host.Dispose()).Should().NotThrow();
+        }
+        finally
+        {
+            File.Delete(inaccessiblePath);
+        }
+    }
 }
 
 public class DummyType

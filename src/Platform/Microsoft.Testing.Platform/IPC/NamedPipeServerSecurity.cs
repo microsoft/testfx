@@ -290,7 +290,10 @@ internal static class NamedPipeServerSecurity
     /// <returns>An asynchronous, not-yet-connected server stream.</returns>
     [SupportedOSPlatform("windows")]
     internal static NamedPipeServerStream CreateServerStream(string pipeName, int maxNumberOfServerInstances, IReadOnlyList<string> authorizedSecurityIdentities)
-        => CreateServerStreamWithExplicitSecurityDescriptor(pipeName, maxNumberOfServerInstances, BuildSecurityDescriptor(GetCurrentProcessOwnerSid(), authorizedSecurityIdentities));
+        => CreateServerStreamCore(
+            GetNativePipePath(pipeName, authorizedSecurityIdentities),
+            maxNumberOfServerInstances,
+            BuildSecurityDescriptor(GetCurrentProcessOwnerSid(), authorizedSecurityIdentities));
 
     /// <summary>
     /// Creates a named pipe server stream protected by a caller-supplied SDDL security descriptor.
@@ -308,10 +311,14 @@ internal static class NamedPipeServerSecurity
     /// <returns>An asynchronous, not-yet-connected server stream.</returns>
     [SupportedOSPlatform("windows")]
     internal static NamedPipeServerStream CreateServerStreamWithExplicitSecurityDescriptor(string pipeName, int maxNumberOfServerInstances, string securityDescriptorSddl)
+        => CreateServerStreamCore($@"\\.\pipe\{pipeName}", maxNumberOfServerInstances, securityDescriptorSddl);
+
+    [SupportedOSPlatform("windows")]
+    private static NamedPipeServerStream CreateServerStreamCore(string nativePipePath, int maxNumberOfServerInstances, string securityDescriptorSddl)
     {
         if (!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptorSddl, SddlRevision1, out IntPtr securityDescriptor, IntPtr.Zero))
         {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to build the security descriptor for the named pipe '{pipeName}'.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to build the security descriptor for the named pipe '{nativePipePath}'.");
         }
 
         try
@@ -336,7 +343,7 @@ internal static class NamedPipeServerSecurity
             uint maxInstances = maxNumberOfServerInstances == -1 ? PipeUnlimitedInstances : (uint)maxNumberOfServerInstances;
 
             IntPtr handle = CreateNamedPipe(
-                $@"\\.\pipe\{pipeName}",
+                nativePipePath,
                 openMode,
                 pipeMode,
                 maxInstances,
@@ -347,7 +354,7 @@ internal static class NamedPipeServerSecurity
 
             if (handle == InvalidHandleValue)
             {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to create the named pipe '{pipeName}'.");
+                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to create the named pipe '{nativePipePath}'.");
             }
 
             var safePipeHandle = new SafePipeHandle(handle, ownsHandle: true);
@@ -364,6 +371,70 @@ internal static class NamedPipeServerSecurity
         finally
         {
             LocalFree(securityDescriptor);
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static string GetNativePipePath(string pipeName, IReadOnlyList<string> authorizedSecurityIdentities)
+    {
+        if (!pipeName.StartsWith(SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
+            || authorizedSecurityIdentities.Count != 1)
+        {
+            return $@"\\.\pipe\{pipeName}";
+        }
+
+        if (!ConvertStringSidToSid(authorizedSecurityIdentities[0], out IntPtr appContainerSid))
+        {
+            throw new Win32Exception(
+                Marshal.GetLastWin32Error(),
+                $"Failed to parse the AppContainer SID '{authorizedSecurityIdentities[0]}'.");
+        }
+
+        try
+        {
+            _ = GetAppContainerNamedObjectPath(
+                IntPtr.Zero,
+                appContainerSid,
+                objectPathLength: 0,
+                objectPath: null,
+                out uint requiredLength);
+            if (requiredLength == 0)
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    $"Failed to query the named-object path for AppContainer SID '{authorizedSecurityIdentities[0]}'.");
+            }
+
+            var objectPath = new StringBuilder((int)requiredLength);
+            if (!GetAppContainerNamedObjectPath(
+                IntPtr.Zero,
+                appContainerSid,
+                requiredLength,
+                objectPath,
+                out _))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    $"Failed to resolve the named-object path for AppContainer SID '{authorizedSecurityIdentities[0]}'.");
+            }
+
+            string unqualifiedPipeName = pipeName[SandboxedApplicationPipeNamePrefix.Length..];
+            string namedObjectPath = objectPath.ToString().Trim('\\');
+            if (!namedObjectPath.StartsWith("Sessions\\", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!ProcessIdToSessionId(GetCurrentProcessId(), out uint sessionId))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to resolve the current Windows session.");
+                }
+
+                namedObjectPath = $@"Sessions\{sessionId}\{namedObjectPath}";
+            }
+
+            return $@"\\.\pipe\{namedObjectPath}\{unqualifiedPipeName}";
+        }
+        finally
+        {
+            LocalFree(appContainerSid);
         }
     }
 
@@ -456,6 +527,21 @@ internal static class NamedPipeServerSecurity
     private static extern bool ConvertSidToStringSid(IntPtr sid, out IntPtr stringSid);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [DllImport("advapi32.dll", EntryPoint = "ConvertStringSidToSidW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ConvertStringSidToSid(string stringSid, out IntPtr sid);
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetAppContainerNamedObjectPath(
+        IntPtr token,
+        IntPtr appContainerSid,
+        uint objectPathLength,
+        StringBuilder? objectPath,
+        out uint returnLength);
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out IntPtr tokenHandle);
@@ -485,6 +571,15 @@ internal static class NamedPipeServerSecurity
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll")]
     private static extern IntPtr GetCurrentProcess();
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentProcessId();
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ProcessIdToSessionId(uint processId, out uint sessionId);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)]

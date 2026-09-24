@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.TrustedProcessId.get -> int?
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.CommandLineParseResult(string? toolName, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>! options, System.Collections.Generic.IReadOnlyList<string!>! errors, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Collections.Generic.IReadOnlyList<string!>! expandedArguments) -> void
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ExpandedArguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestApplicationBuilder(Microsoft.Testing.Platform.Logging.ApplicationLoggingState! loggingState, System.DateTimeOffset createBuilderStart, Microsoft.Testing.Platform.Builder.TestApplicationOptions! testApplicationOptions, Microsoft.Testing.Platform.Helpers.IUnhandledExceptionsHandler! unhandledExceptionsHandler, string![]! args, string![]! expandedArgs) -> void

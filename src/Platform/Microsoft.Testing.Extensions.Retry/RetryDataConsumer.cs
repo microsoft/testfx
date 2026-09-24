@@ -19,6 +19,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IEnvironment _environment;
 
     // Uids of the tests this attempt was asked to retry which produced a passing result and no failing one, i.e.
     // the ones that genuinely recovered. Reported explicitly so the orchestrator does not have to infer recovery
@@ -39,6 +40,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         _serviceProvider = serviceProvider;
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
+        _environment = _serviceProvider.GetEnvironment();
     }
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
@@ -55,9 +57,10 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         if (value is SessionFileArtifact artifact)
         {
+            string artifactPath = GetControllerArtifactPath(artifact.FileInfo.FullName);
             NamedPipeClient client = GetClient();
             await client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
-                new ArtifactRequest(artifact.FileInfo.FullName, artifact.Kind),
+                new ArtifactRequest(artifactPath, artifact.Kind),
                 cancellationToken).ConfigureAwait(false);
             return;
         }
@@ -104,6 +107,30 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             _skippedTests++;
             MarkNotRecovered(uid);
         }
+    }
+
+    private string GetControllerArtifactPath(string artifactPath)
+    {
+        const string SourceRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
+        const string DestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+
+        string? sourceRoot = _environment.GetEnvironmentVariable(SourceRootEnvironmentVariable);
+        string? destinationRoot = _environment.GetEnvironmentVariable(DestinationRootEnvironmentVariable);
+        if (sourceRoot is not { Length: > 0 } || destinationRoot is not { Length: > 0 })
+        {
+            return artifactPath;
+        }
+
+        string fullArtifactPath = Path.GetFullPath(artifactPath);
+        string sourcePrefix = Path.GetFullPath(sourceRoot)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return fullArtifactPath.StartsWith(sourcePrefix, comparison)
+            ? Path.GetFullPath(Path.Combine(destinationRoot, fullArtifactPath.Substring(sourcePrefix.Length)))
+            : artifactPath;
     }
 
     /// <summary>

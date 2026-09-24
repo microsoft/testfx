@@ -85,6 +85,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// </summary>
     internal const string PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION";
 
+    /// <summary>
+    /// The full path of the packaged test-host executable selected by an external full-trust controller.
+    /// </summary>
+    private const string TargetExecutableEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_TARGET";
+
     // The handoff is an explicit allowlist of protocol metadata: controller connect-back values,
     // TRX/HangDump pipe endpoints, and Retry attempt/run correlation. Some correlation values may be
     // supplied by CI or the user, but arbitrary environment values remain excluded because broader
@@ -99,24 +104,47 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string JUnitReportJournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
     private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
     private const string RetryRecoveredArtifactManifestEnvironmentVariableName = "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST";
+    private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
+    private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
     private const string TrxTestRunIdEnvironmentVariableName = "TESTINGPLATFORM_TRX_TESTRUN_ID";
     private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
+#if PACKAGEDAPP_WINRT
+    private const string ResultsDirectoryOption = "--results-directory";
+    private const string DiagnosticOutputDirectoryOption = "--diagnostic-output-directory";
+#endif
 
     private readonly string _testApplicationDirectory;
+    private readonly bool _isActivatedChild;
+    private readonly string? _targetExecutable;
     private readonly Func<string, string?> _getEnvironmentVariable;
 
     public PackagedAppTestHostLauncher()
         // The controller process runs the very test application whose host is about to be launched, so
         // its base directory is the layout the platform will ask this launcher to start. The launch
         // context (which carries the authoritative path) does not exist yet when enablement is decided.
-        : this(AppContext.BaseDirectory, Environment.GetEnvironmentVariable)
+        : this(
+            AppContext.BaseDirectory,
+            Environment.GetEnvironmentVariable,
+            PackagedAppConnectBackHandshake.TryGetHandshakeId(Environment.GetCommandLineArgs()) is not null)
     {
     }
 
     internal PackagedAppTestHostLauncher(string testApplicationDirectory, Func<string, string?> getEnvironmentVariable)
+        : this(testApplicationDirectory, getEnvironmentVariable, isActivatedChild: false)
     {
-        _testApplicationDirectory = testApplicationDirectory;
+    }
+
+    private PackagedAppTestHostLauncher(
+        string testApplicationDirectory,
+        Func<string, string?> getEnvironmentVariable,
+        bool isActivatedChild)
+    {
         _getEnvironmentVariable = getEnvironmentVariable;
+        _isActivatedChild = isActivatedChild;
+        _targetExecutable = GetTargetExecutable(getEnvironmentVariable);
+        _testApplicationDirectory = _targetExecutable is null
+            ? testApplicationDirectory
+            : Path.GetDirectoryName(_targetExecutable)!;
     }
 
     public string Uid => nameof(PackagedAppTestHostLauncher);
@@ -155,7 +183,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
     private bool IsEnabled()
     {
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows() || _isActivatedChild)
         {
             return false;
         }
@@ -166,7 +194,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // else — including an unset or misspelled value — falls back to probing the layout.
         return !string.Equals(mode, NeverMode, StringComparison.OrdinalIgnoreCase)
             && (string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase)
-                || AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not null);
+                || (_targetExecutable is null
+                    ? AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not null
+                    : AppxManifestInfo.FindManifestPath(_testApplicationDirectory, _targetExecutable) is not null));
     }
 
     internal static PackagedAppActivationData CreateActivationArguments(
@@ -223,7 +253,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(string testHostFileName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers(testHostFileName));
+        return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers(_targetExecutable ?? testHostFileName));
     }
 
     private IReadOnlyList<string> GetAuthorizedAppContainerSecurityIdentifiers(string testHostFileName)
@@ -280,8 +310,18 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // Honor immediate cancellation before doing any (potentially expensive) deployment work.
         cancellationToken.ThrowIfCancellationRequested();
 
-        string sourceDirectory = Path.GetDirectoryName(context.FileName)
-            ?? throw new InvalidOperationException($"Unable to determine the source directory of '{context.FileName}'.");
+        string targetFileName = _targetExecutable ?? context.FileName;
+        string sourceDirectory = Path.GetDirectoryName(targetFileName)
+            ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
+
+        if (_targetExecutable is not null)
+        {
+            context = new TestHostLaunchContext(
+                targetFileName,
+                context.Arguments,
+                context.EnvironmentVariables,
+                context.WorkingDirectory);
+        }
 
         // A packaged (MSIX) app is detected by a matching AppxManifest.xml. The manifest lives at the
         // package layout root, which may be an ancestor of the executable's directory
@@ -296,6 +336,17 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // The layout is not packaged (no AppxManifest.xml). Deploy the loose layout into an isolated
         // directory and launch the produced executable from there.
         return LaunchLooseLayout(context, sourceDirectory, cancellationToken);
+    }
+
+    private static string? GetTargetExecutable(Func<string, string?> getEnvironmentVariable)
+    {
+        string? targetExecutable = getEnvironmentVariable(TargetExecutableEnvironmentVariable);
+        return targetExecutable is null || targetExecutable.Trim().Length == 0
+            ? null
+            : Path.IsPathFullyQualified(targetExecutable)
+                ? Path.GetFullPath(targetExecutable)
+                : throw new InvalidOperationException(
+                    $"Environment variable '{TargetExecutableEnvironmentVariable}' must contain a fully qualified executable path.");
     }
 
 #if PACKAGEDAPP_WINRT
@@ -334,19 +385,50 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(context.Arguments);
         string? handshakePath = null;
         string? activationPayloadPath = null;
+        string? scratchDirectory = null;
+        string? retryArtifactManifestPath = null;
+        string? retryArtifactManifestDestinationPath = null;
+        string? recoveryDirectory = TryGetOptionValue(
+            context.Arguments,
+            ResultsDirectoryOption)
+            ?? TryGetOptionValue(context.Arguments, DiagnosticOutputDirectoryOption);
         try
         {
+            IReadOnlyList<string> hostArguments = context.Arguments;
+            if (application.RunsInAppContainer)
+            {
+                scratchDirectory = Path.Combine(
+                    PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName),
+                    "MtpTestHost",
+                    handshakeId ?? Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(scratchDirectory);
+                hostArguments = RedirectAppContainerFileSystemOptions(context.Arguments, scratchDirectory);
+                retryArtifactManifestDestinationPath = context.EnvironmentVariables
+                    .FirstOrDefault(environmentVariable => string.Equals(
+                        environmentVariable.Key,
+                        RetryRecoveredArtifactManifestEnvironmentVariableName,
+                        StringComparison.OrdinalIgnoreCase))
+                    .Value;
+                if (retryArtifactManifestDestinationPath is { Length: > 0 })
+                {
+                    retryArtifactManifestPath = Path.Combine(scratchDirectory, "retry-recovered-artifacts.manifest");
+                }
+            }
+
             if (handshakeId is not null)
             {
                 handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, handshakeId);
                 PackagedAppConnectBackHandshake.Write(
                     handshakePath,
-                    GetConnectBackEnvironment(context).Append(new(LauncherModeEnvironmentVariable, NeverMode)));
+                    GetConnectBackEnvironment(context, retryArtifactManifestPath)
+                        .Append(new(LauncherModeEnvironmentVariable, NeverMode))
+                        .Append(new(ArtifactPathSourceRootEnvironmentVariableName, scratchDirectory))
+                        .Append(new(ArtifactPathDestinationRootEnvironmentVariableName, recoveryDirectory)));
             }
 
             PackagedAppActivationData activationData = CreateActivationArguments(
                 application,
-                context.Arguments,
+                hostArguments,
                 PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
             string activationArguments = activationData.Arguments;
             activationPayloadPath = activationData.PayloadPath;
@@ -357,7 +439,14 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             // The handle owns deleting the hand-off from now on: the activated host normally consumes and
             // deletes it, but if that host exits before reading it the handle still removes it on dispose,
             // so connect-back data is never left behind.
-            return new ActivatedAppTestHostHandle(processId, handshakePath, activationPayloadPath);
+            return new ActivatedAppTestHostHandle(
+                processId,
+                handshakePath,
+                activationPayloadPath,
+                scratchDirectory,
+                recoveryDirectory,
+                retryArtifactManifestPath,
+                retryArtifactManifestDestinationPath);
         }
         catch
         {
@@ -370,6 +459,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             }
 
             PackagedAppActivationArguments.TryDeletePayload(activationPayloadPath);
+            TryDeleteScratchDirectory(scratchDirectory);
             throw;
         }
     }
@@ -398,6 +488,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     // correlation metadata that an AUMID-activated host would not otherwise inherit. Unrelated
     // environment values remain excluded because they can contain user data or secrets.
     internal static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
+        => GetConnectBackEnvironment(context, retryArtifactManifestPath: null);
+
+    internal static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(
+        TestHostLaunchContext context,
+        string? retryArtifactManifestPath)
     {
         foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
         {
@@ -412,10 +507,69 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, HangDumpPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
             {
-                yield return environmentVariable;
+                yield return string.Equals(
+                    environmentVariable.Key,
+                    RetryRecoveredArtifactManifestEnvironmentVariableName,
+                    StringComparison.OrdinalIgnoreCase)
+                    && retryArtifactManifestPath is not null
+                        ? new KeyValuePair<string, string?>(environmentVariable.Key, retryArtifactManifestPath)
+                        : environmentVariable;
             }
         }
     }
+
+#if PACKAGEDAPP_WINRT
+    private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
+        IReadOnlyList<string> arguments,
+        string scratchDirectory)
+    {
+        string[] redirectedArguments = [.. arguments];
+        for (int i = 0; i < redirectedArguments.Length - 1; i++)
+        {
+            if (string.Equals(redirectedArguments[i], ResultsDirectoryOption, StringComparison.Ordinal)
+                || string.Equals(redirectedArguments[i], DiagnosticOutputDirectoryOption, StringComparison.Ordinal))
+            {
+                redirectedArguments[i + 1] = scratchDirectory;
+                i++;
+            }
+        }
+
+        return redirectedArguments;
+    }
+
+    private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
+    {
+        for (int i = 0; i < arguments.Count - 1; i++)
+        {
+            if (string.Equals(arguments[i], option, StringComparison.Ordinal))
+            {
+                return arguments[i + 1];
+            }
+        }
+
+        return null;
+    }
+
+    private static void TryDeleteScratchDirectory(string? scratchDirectory)
+    {
+        if (scratchDirectory is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (Directory.Exists(scratchDirectory))
+            {
+                Directory.Delete(scratchDirectory, recursive: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Debug.WriteLine($"Best-effort delete of packaged test-host scratch directory '{scratchDirectory}' failed: {ex}");
+        }
+    }
+#endif
 
     private static ITestHostHandle LaunchLooseLayout(TestHostLaunchContext context, string sourceDirectory, CancellationToken cancellationToken)
     {

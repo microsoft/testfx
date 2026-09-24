@@ -39,6 +39,16 @@ internal static class PackageDeployer
 
         var packageManager = new PackageManager();
         string packageFamilyName = manifestInfo.PackageFamilyName;
+        string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
+
+        RegisteredPackageInfo[] existingPackages = packageManager
+            .FindPackagesForUserWithPackageTypes(string.Empty, packageFamilyName, PackageTypes.Main)
+            .Select(static package => new RegisteredPackageInfo(package.Id.FullName, package.InstalledPath, package.IsDevelopmentMode))
+            .ToArray();
+        if (IsRegisteredFromLayout(existingPackages, layoutDirectory))
+        {
+            return Task.CompletedTask;
+        }
 
         // DeveloperMode registers the unsigned build-output layout in place. It requires Developer Mode
         // (or sideloading) to be enabled on the machine, exactly like 'Add-AppxPackage -Register'.

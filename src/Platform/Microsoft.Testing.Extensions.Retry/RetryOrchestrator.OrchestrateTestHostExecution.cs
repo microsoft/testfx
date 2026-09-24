@@ -120,6 +120,7 @@ internal sealed partial class RetryOrchestrator
             CollectRecoveredArtifacts(
                 fileSystem,
                 attemptResult.RecoveredArtifactManifestPath,
+                currentTryResultFolder,
                 retryFailedTestsPipeServer.Artifacts,
                 logger);
 

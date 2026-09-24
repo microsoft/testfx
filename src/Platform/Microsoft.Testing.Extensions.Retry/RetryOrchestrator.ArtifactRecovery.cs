@@ -18,6 +18,7 @@ internal sealed partial class RetryOrchestrator
     private static void CollectRecoveredArtifacts(
         IFileSystem fileSystem,
         string manifestPath,
+        string attemptDirectory,
         List<ArtifactRequest> artifacts,
         ILogger logger)
     {
@@ -72,16 +73,24 @@ internal sealed partial class RetryOrchestrator
                         continue;
                     }
 
+                    string artifactPath = Path.GetFullPath(path);
+                    if (!IsUnderDirectory(artifactPath, attemptDirectory))
+                    {
+                        logger.LogWarning(
+                            $"Ignoring recovered retry artifact '{path}' because it is outside the retry attempt directory '{attemptDirectory}'.");
+                        continue;
+                    }
+
                     if (kind is not null)
                     {
                         artifacts.RemoveAll(artifact => string.Equals(artifact.Kind, kind, StringComparison.Ordinal));
                     }
-                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, path, StringComparison.Ordinal)))
+                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, artifactPath, StringComparison.Ordinal)))
                     {
                         continue;
                     }
 
-                    artifacts.Add(new ArtifactRequest(path, kind));
+                    artifacts.Add(new ArtifactRequest(artifactPath, kind));
                 }
                 catch (Exception ex) when (ex is FormatException or ArgumentException or NotSupportedException or PathTooLongException)
                 {
@@ -109,6 +118,19 @@ internal sealed partial class RetryOrchestrator
                 logger.LogWarning($"Failed to delete recovered retry artifact manifest '{manifestPath}': {ex}");
             }
         }
+    }
+
+    private static bool IsUnderDirectory(string path, string directory)
+    {
+        string directoryPrefix = Path.GetFullPath(directory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return path.StartsWith(
+            directoryPrefix,
+            comparison);
     }
 
     private enum BoundedManifestLineReadResult

@@ -19,6 +19,7 @@ internal static class RetryArgumentsBuilder
     // targets where each argument may gain wrapping quotes and a separator space.
     private const int CommandLineLengthLimit = 30_000;
     private const int PerArgumentOverhead = 3;
+    private const string MSBuildNodeOptionName = "internal-msbuild-node";
 
     internal static string GetArgumentsResponseFilePath(string retryRootFolder, int attemptCount)
         => Path.Combine(retryRootFolder, $"retry-arguments-{attemptCount}.rsp");
@@ -43,6 +44,7 @@ internal static class RetryArgumentsBuilder
         AddOptionIndicesToCleanup(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName);
         AddOptionIndicesToCleanup(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
         AddOptionIndicesToCleanup(PlatformCommandLineProvider.ResultDirectoryOptionKey);
+        AddOptionIndicesToCleanup(MSBuildNodeOptionName);
 
         return indexToCleanup;
 

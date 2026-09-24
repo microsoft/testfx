@@ -1,10 +1,12 @@
 #nullable enable
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle
-Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath) -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath, string? scratchDirectory, string? recoveryDirectory, string? retryArtifactManifestPath, string? retryArtifactManifestDestinationPath) -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Dispose() -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ExitCode.get -> int
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.HasExited.get -> bool
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Identifier.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.IsExitCodeAuthoritative.get -> bool
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ProcessId.get -> int
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Terminate() -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager

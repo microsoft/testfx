@@ -24,6 +24,7 @@ public sealed class RetryArgumentsBuilderTests
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "5")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, "1s")]
     [DataRow(PlatformCommandLineProvider.ResultDirectoryOptionKey, "results")]
+    [DataRow("internal-msbuild-node", "testingplatform.pipe.msbuild")]
     [TestMethod]
     public void ComputeIndicesToCleanup_WithOptionalOption_ReturnsOptionAndValueIndices(string optionalOptionName, string optionalOptionValue)
     {

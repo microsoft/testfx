@@ -1,4 +1,6 @@
 #nullable enable
+static Microsoft.Testing.Extensions.PackagedAppExtensions.AddPackagedAppDeployment(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Collections.Generic.IReadOnlyList<string!>! processArguments) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.GetConnectBackEnvironment(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, string? retryArtifactManifestPath) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>!
 Microsoft.Testing.Extensions.PackagedApp.PackageDeployer
 Microsoft.Testing.Extensions.PackagedApp.PackageRegistrationLock
 Microsoft.Testing.Extensions.PackagedApp.RegisteredPackageInfo

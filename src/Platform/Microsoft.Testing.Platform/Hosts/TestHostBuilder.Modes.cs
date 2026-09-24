@@ -158,8 +158,8 @@ internal sealed partial class TestHostBuilder
 
     private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context)
     {
-        if ((context.TestHostControllerInfo.HasTestHostController
-                && context.SystemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{context.TestHostControllerInfo.GetTestHostControllerPID()}") == "1")
+        if (context.TestHostControllerInfo.HasTestHostController
+            || context.CommandLineHandler.IsOptionSet("internal-retry-pipename")
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return null;
