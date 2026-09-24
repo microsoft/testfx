@@ -98,6 +98,13 @@ public static class WellKnownEnvironmentVariables
         "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
         "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
 
+        // Affected-test selection and its per-module exit-code normalization are scoped to the outer repository
+        // test invocation. Acceptance tests launch nested test applications that must run the selected scenarios
+        // with their own filtering and exit-code policies.
+        "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
+        "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+        "TESTINGPLATFORM_EXITCODE_IGNORE",
+
         // Logical run correlation. A CI job may set this to tie several modules or machines into one
         // logical run, so it must not bleed into child test hosts and make a test observe an id it did
         // not choose. Tests that exercise run correlation inject it explicitly.
