@@ -102,6 +102,36 @@ public sealed class WindowsApplicationModelPackageTests
             GetExactCurrentPackagePath("MSTest.TestFramework"),
             RequiredTestFrameworkEntries);
 
+    [TestMethod]
+    public void PackedMSTestSdk_AppModelControllerContainsMtpOnlyRuntime()
+    {
+        string packagePath = GetExactCurrentPackagePath("MSTest.Sdk");
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        string[] entries = archive.Entries
+            .Select(entry => entry.FullName.Replace('\\', '/'))
+            .Where(entry => entry.StartsWith("tools/AppModelController/", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        string[] targetFrameworks = ["net8.0", "net9.0"];
+        foreach (string targetFramework in targetFrameworks)
+        {
+            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Platform.dll", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Extensions.PackagedApp.dll", entries);
+        }
+
+        string[] forbiddenEntries = entries
+            .Where(entry =>
+                entry.Contains("Microsoft.NET.Test.Sdk", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("vstest", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("UwpTestHostRuntimeProvider", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        Assert.IsEmpty(
+            forbiddenEntries,
+            $"The MSTest.Sdk app-model controller must not carry VSTest runtime/deployment assets:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, forbiddenEntries));
+    }
+
     private static string GetExactCurrentPackagePath(string packageId)
     {
         string expectedVersion = AcceptanceTestBase.MSTestVersion;

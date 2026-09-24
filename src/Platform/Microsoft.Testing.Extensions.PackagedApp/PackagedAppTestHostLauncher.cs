@@ -109,9 +109,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 #if PACKAGEDAPP_WINRT
     private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
     private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+#endif
     private const string ResultsDirectoryOption = "--results-directory";
     private const string DiagnosticOutputDirectoryOption = "--diagnostic-output-directory";
-#endif
 
     private readonly string _testApplicationDirectory;
     private readonly bool _isActivatedChild;
@@ -312,6 +312,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
         string targetFileName = _targetExecutable ?? context.FileName;
 #if PACKAGEDAPP_WINRT
+        targetFileName = ResolveFinalPath(targetFileName);
         targetFileName = MaterializeAppxRecipeLayout(targetFileName);
 #endif
         string sourceDirectory = Path.GetDirectoryName(targetFileName)
@@ -353,6 +354,39 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 
 #if PACKAGEDAPP_WINRT
+    private static string ResolveFinalPath(string path)
+    {
+        using Microsoft.Win32.SafeHandles.SafeFileHandle handle = File.OpenHandle(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete);
+        var buffer = new StringBuilder(32_768);
+        uint length = GetFinalPathNameByHandle(handle, buffer, (uint)buffer.Capacity, 0);
+        if (length == 0 || length >= buffer.Capacity)
+        {
+            throw new System.ComponentModel.Win32Exception(
+                Marshal.GetLastWin32Error(),
+                $"Failed to resolve the physical path for packaged test host '{path}'.");
+        }
+
+        const string DevicePathPrefix = @"\\?\";
+        const string DeviceUncPathPrefix = @"\\?\UNC\";
+        string finalPath = buffer.ToString();
+        return finalPath.StartsWith(DeviceUncPathPrefix, StringComparison.OrdinalIgnoreCase)
+            ? @"\\" + finalPath[DeviceUncPathPrefix.Length..]
+            : finalPath.StartsWith(DevicePathPrefix, StringComparison.Ordinal)
+                ? finalPath[DevicePathPrefix.Length..]
+                : finalPath;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetFinalPathNameByHandle(
+        Microsoft.Win32.SafeHandles.SafeFileHandle file,
+        StringBuilder filePath,
+        uint filePathLength,
+        uint flags);
+
     private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
         => PackageRegistrationLock.WithManifestAsync(
             manifestPath,
@@ -400,6 +434,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             IReadOnlyList<string> hostArguments = context.Arguments;
             if (application.RunsInAppContainer)
             {
+                recoveryDirectory = GetControllerPath(
+                    recoveryDirectory ?? "TestResults",
+                    context);
                 scratchDirectory = Path.Combine(
                     PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName),
                     "MtpTestHost",
@@ -538,6 +575,12 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 $"Expected exactly one .build.appxrecipe beside '{targetFileName}', but found {recipePaths.Length}.");
         }
 
+        var recipe = XDocument.Load(recipePaths[0]);
+        if (IsAppxRecipeAlreadyMaterialized(recipe, sourceDirectory))
+        {
+            return targetFileName;
+        }
+
         string layoutDirectory = Path.Combine(sourceDirectory, "_MtpPackageLayout");
         if (Directory.Exists(layoutDirectory))
         {
@@ -545,7 +588,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
 
         Directory.CreateDirectory(layoutDirectory);
-        var recipe = XDocument.Load(recipePaths[0]);
         foreach (XElement item in recipe.Descendants().Where(element =>
             element.Name.LocalName is "AppXManifest" or "AppxPackagedFile"))
         {
@@ -577,24 +619,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         return application.Executable is { Length: > 0 } executable
             ? Path.Combine(layoutDirectory, executable.Replace('\\', Path.DirectorySeparatorChar))
             : throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no executable.");
-    }
-
-    private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
-        IReadOnlyList<string> arguments,
-        string scratchDirectory)
-    {
-        string[] redirectedArguments = [.. arguments];
-        for (int i = 0; i < redirectedArguments.Length - 1; i++)
-        {
-            if (string.Equals(redirectedArguments[i], ResultsDirectoryOption, StringComparison.Ordinal)
-                || string.Equals(redirectedArguments[i], DiagnosticOutputDirectoryOption, StringComparison.Ordinal))
-            {
-                redirectedArguments[i + 1] = scratchDirectory;
-                i++;
-            }
-        }
-
-        return redirectedArguments;
     }
 
     private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
@@ -629,6 +653,95 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             Debug.WriteLine($"Best-effort delete of packaged test-host scratch directory '{scratchDirectory}' failed: {ex}");
         }
     }
+#endif
+
+#if !PACKAGEDAPP_WINRT
+#pragma warning disable IDE0051 // Compiled into the non-Windows flavor so the pure argument transformation is unit-testable.
+#endif
+    private static bool IsAppxRecipeAlreadyMaterialized(XDocument recipe, string sourceDirectory)
+    {
+        XElement? manifestItem = recipe.Descendants().FirstOrDefault(element => element.Name.LocalName == "AppXManifest");
+        string? manifestSourcePath = manifestItem?.Attribute("Include")?.Value;
+        if (manifestSourcePath is null)
+        {
+            return false;
+        }
+
+        manifestSourcePath = Uri.UnescapeDataString(manifestSourcePath);
+        if (!Path.IsPathFullyQualified(manifestSourcePath))
+        {
+            manifestSourcePath = Path.GetFullPath(Path.Combine(sourceDirectory, manifestSourcePath));
+        }
+
+        string existingManifestPath = Path.Combine(sourceDirectory, AppxManifestInfo.AppxManifestFileName);
+        return File.Exists(existingManifestPath)
+            && string.Equals(
+                Path.GetFullPath(manifestSourcePath),
+                Path.GetFullPath(existingManifestPath),
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
+        IReadOnlyList<string> arguments,
+        string scratchDirectory)
+    {
+        List<string> redirectedArguments = [.. arguments];
+        bool hasResultsDirectory = false;
+        bool hasDiagnosticOutputDirectory = false;
+        bool diagnosticEnabled = false;
+        for (int i = 0; i < redirectedArguments.Count; i++)
+        {
+            string argument = redirectedArguments[i];
+            diagnosticEnabled |= string.Equals(argument, "--diagnostic", StringComparison.Ordinal);
+            if (i + 1 >= redirectedArguments.Count)
+            {
+                continue;
+            }
+
+            if (string.Equals(argument, ResultsDirectoryOption, StringComparison.Ordinal))
+            {
+                redirectedArguments[i + 1] = scratchDirectory;
+                hasResultsDirectory = true;
+                i++;
+            }
+            else if (string.Equals(argument, DiagnosticOutputDirectoryOption, StringComparison.Ordinal))
+            {
+                redirectedArguments[i + 1] = scratchDirectory;
+                hasDiagnosticOutputDirectory = true;
+                i++;
+            }
+        }
+
+        if (!hasResultsDirectory)
+        {
+            redirectedArguments.Add(ResultsDirectoryOption);
+            redirectedArguments.Add(scratchDirectory);
+        }
+
+        if (diagnosticEnabled && !hasDiagnosticOutputDirectory)
+        {
+            redirectedArguments.Add(DiagnosticOutputDirectoryOption);
+            redirectedArguments.Add(scratchDirectory);
+        }
+
+        return redirectedArguments;
+    }
+
+    private static string GetControllerPath(string path, TestHostLaunchContext context)
+    {
+        if (Path.IsPathFullyQualified(path))
+        {
+            return Path.GetFullPath(path);
+        }
+
+        string baseDirectory = context.WorkingDirectory is { Length: > 0 } workingDirectory
+            ? workingDirectory
+            : Path.GetDirectoryName(context.FileName)
+                ?? throw new InvalidOperationException($"Unable to determine the working directory for '{context.FileName}'.");
+        return Path.GetFullPath(Path.Combine(baseDirectory, path));
+    }
+#if !PACKAGEDAPP_WINRT
+#pragma warning restore IDE0051
 #endif
 
     private static ITestHostHandle LaunchLooseLayout(TestHostLaunchContext context, string sourceDirectory, CancellationToken cancellationToken)

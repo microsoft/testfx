@@ -70,7 +70,7 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 The handoff is versioned and length-prefixed, so empty values, whitespace, quotes, backslashes, Unicode, repeated options, and option order round-trip exactly. Payloads within Windows' documented 2,048-character launch-argument envelope stay entirely in the activation string. Larger payloads are written to package `LocalState` only as authenticated ciphertext; the one-shot key remains in the activation string, and both the host and launcher delete the file at the earliest cleanup point. User filters, runsettings, and other arguments are never persisted in plaintext.
 
-Argument restoration and exact package-SID pipe authorization are both implemented. They are the communication primitives needed after AppContainer activation; true UWP/AppContainer still is not an end-to-end MTP test-host mode because the SDK/platform startup path routes those projects to VSTest rather than starting an ordinary MTP controller process. Full-trust packaged and unpackaged hosts are unaffected by that limitation.
+Argument restoration and exact package-SID pipe authorization are both implemented. `MSTest.Sdk` uses them from an ordinary full-trust sidecar controller, so classic UWP, modern UWP, and AppContainer-configured WinUI applications execute through Microsoft.Testing.Platform without a VSTest runtime or deployment provider.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.PackagedApp` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 

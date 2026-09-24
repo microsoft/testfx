@@ -82,8 +82,10 @@
     <PropertyGroup>
       <_MSTestPackagedAppTarget>$(TargetPath)</_MSTestPackagedAppTarget>
       <_MSTestPackagedAppTarget Condition=" '$(_IsExecutable)' == 'true' AND '$(UseAppHost)' == 'true' AND Exists('$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)') ">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_MSTestPackagedAppTarget>
+      <_MSTestPackagedAppTarget Condition="$(TargetFramework.StartsWith('uap')) AND Exists('$(TargetDir)$(AssemblyName).exe')">$(TargetDir)$(AssemblyName).exe</_MSTestPackagedAppTarget>
       <_MSTestPackagedAppTarget Condition=" '$(TestingPlatformPackagedAppTargetPath)' != '' ">$(TestingPlatformPackagedAppTargetPath)</_MSTestPackagedAppTarget>
       <_MSTestAppModelControllerExtensions>msbuild;packagedapp</_MSTestAppModelControllerExtensions>
+      <_MSTestAppModelControllerExtensions Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' ">$(_MSTestAppModelControllerExtensions);codecoverage</_MSTestAppModelControllerExtensions>
       <_MSTestAppModelControllerExtensions Condition="$(TargetFramework.StartsWith('uap'))">$(_MSTestAppModelControllerExtensions);trx</_MSTestAppModelControllerExtensions>
       <_MSTestAppModelControllerExtensions Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' ">$(_MSTestAppModelControllerExtensions);hangdump</_MSTestAppModelControllerExtensions>
       <_MSTestAppModelControllerExtensions Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' ">$(_MSTestAppModelControllerExtensions);retry</_MSTestAppModelControllerExtensions>

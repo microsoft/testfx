@@ -59,19 +59,12 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
                 AssertClassicUwpPackageLayout(build, packageIdentityName);
 
                 string resultsDirectory = Path.Combine(shortAssetPath, "TestResults");
-                string packagedAppTargetPath = Path.Combine(
-                    testAsset.TargetAssetPath,
-                    "bin",
-                    "x64",
-                    "Release",
-                    "uap10.0.16299",
-                    $"{assetName}.exe");
                 UwpRunResult run = await WindowsApplicationModelTestTools.RunMtpUwpProjectAsync(
                     tools,
                     build.ProjectPath,
                     resultsDirectory,
                     TestContext.CancellationToken,
-                    packagedAppTargetPath);
+                    $"--internal-appmodel-activation-payload {new string('x', 3_000)}");
                 string? packageDirectory = Directory.GetDirectories(
                         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages"),
                         $"{packageIdentityName}_*",
@@ -116,6 +109,13 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
                     $"{Environment.NewLine}UWP startup error:{Environment.NewLine}{startupError}");
 
                 AssertClassicUwpTrx(run.TrxPath, build);
+                if (packageDirectory is not null)
+                {
+                    string localStateDirectory = Path.Combine(packageDirectory, "LocalState");
+                    Assert.IsEmpty(
+                        Directory.GetFiles(localStateDirectory, "mtp-activation-*.payload", SearchOption.TopDirectoryOnly),
+                        "The classic UWP host must consume and delete its encrypted activation payload.");
+                }
             });
     }
 

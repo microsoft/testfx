@@ -17,6 +17,38 @@ namespace MSTest.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class ModernUwpTests : AcceptanceTestBase
 {
+    [DataRow("x86")]
+    [DataRow("ARM64")]
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP builds are supported only on Windows.")]
+    public async Task ModernUwp_BuildsMtpPackageForArchitecture(string platform)
+    {
+        string uniqueSuffix = Guid.NewGuid().ToString("N");
+        string assetName = $"ModernUwp{uniqueSuffix[..12]}";
+        string sourceCode = ModernUwpSourceCode
+            .PatchCodeWithReplace("$AssetName$", assetName)
+            .PatchCodeWithReplace("$PackageIdentityName$", $"MSTestModernUwp{uniqueSuffix}")
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
+        WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
+        await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
+        VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateModernUwpVisualStudioToolsAsync(TestContext.CancellationToken);
+
+        UwpBuildResult build = await WindowsApplicationModelTestTools.BuildUwpAssetAsync(
+            tools,
+            testAsset,
+            $"{assetName}.csproj",
+            TestContext.CancellationToken,
+            platform: platform);
+
+        Assert.IsTrue(Directory.Exists(build.PackageLayoutPath), build.BinlogPath);
+        WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+            Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"),
+            WindowsApplicationModelAssetKind.ModernUwp);
+    }
+
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP execution is supported only on Windows.")]
     public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp()

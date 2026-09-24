@@ -128,9 +128,16 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
-        return fullArtifactPath.StartsWith(sourcePrefix, comparison)
-            ? Path.GetFullPath(Path.Combine(destinationRoot, fullArtifactPath.Substring(sourcePrefix.Length)))
-            : artifactPath;
+        if (!fullArtifactPath.StartsWith(sourcePrefix, comparison))
+        {
+            return artifactPath;
+        }
+
+        string relativePath = fullArtifactPath.Substring(sourcePrefix.Length);
+        return Path.GetFullPath(
+            string.Equals(Path.GetExtension(fullArtifactPath), ".diag", StringComparison.OrdinalIgnoreCase)
+                ? Path.Combine(destinationRoot, "AppContainer", relativePath)
+                : Path.Combine(destinationRoot, relativePath));
     }
 
     /// <summary>

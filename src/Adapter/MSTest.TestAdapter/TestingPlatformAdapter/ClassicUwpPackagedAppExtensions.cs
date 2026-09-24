@@ -7,6 +7,11 @@ using System.Security.Cryptography;
 
 using Microsoft.Testing.Platform.Builder;
 
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
+using Windows.Storage;
+using Windows.Storage.Streams;
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
@@ -16,6 +21,10 @@ namespace Microsoft.Testing.Extensions;
 public static class PackagedAppExtensions
 {
     private const string InlinePrefix = "mtp:v1:inline:";
+    private const string FilePrefix = "mtp:v1:file:";
+    private const int KeySize = 32;
+    private const int NonceSize = 12;
+    private const int TagSize = 16;
     private const string TestHostControllerPidOption = "--internal-testhostcontroller-pid";
     private const string RetryPipeNameOption = "--internal-retry-pipename";
 
@@ -29,6 +38,13 @@ public static class PackagedAppExtensions
         if (activationArguments is null)
         {
             throw new ArgumentNullException(nameof(activationArguments));
+        }
+
+        if (activationArguments.StartsWith(FilePrefix, StringComparison.Ordinal))
+        {
+            string[] fileArguments = ReadEncryptedPayload(activationArguments.Substring(FilePrefix.Length));
+            ApplyConnectBackEnvironment(fileArguments);
+            return fileArguments;
         }
 
         if (!activationArguments.StartsWith(InlinePrefix, StringComparison.Ordinal))
@@ -49,6 +65,128 @@ public static class PackagedAppExtensions
         string[] arguments = Deserialize(payload);
         ApplyConnectBackEnvironment(arguments);
         return arguments;
+    }
+
+    private static string[] ReadEncryptedPayload(string reference)
+    {
+        int separator = reference.IndexOf(':');
+        if (separator <= 0 || !Guid.TryParseExact(reference.Substring(0, separator), "N", out Guid tokenValue))
+        {
+            throw new FormatException("The activation argument file reference is invalid.");
+        }
+
+        byte[] key;
+        try
+        {
+            key = Convert.FromBase64String(reference.Substring(separator + 1));
+        }
+        catch (FormatException ex)
+        {
+            throw new FormatException("The activation argument file key is invalid.", ex);
+        }
+
+        if (key.Length != KeySize)
+        {
+            Array.Clear(key, 0, key.Length);
+            throw new FormatException("The activation argument file key is invalid.");
+        }
+
+        string token = tokenValue.ToString("N");
+        string payloadPath = Path.Combine(
+            ApplicationData.Current.LocalFolder.Path,
+            $"mtp-activation-{token}.payload");
+        byte[] encryptedPayload;
+        try
+        {
+            using var stream = new FileStream(payloadPath, FileMode.Open, FileAccess.Read, FileShare.None);
+            if (stream.Length > int.MaxValue)
+            {
+                throw new FormatException("The activation argument payload is too large.");
+            }
+
+            encryptedPayload = new byte[(int)stream.Length];
+            int offset = 0;
+            while (offset < encryptedPayload.Length)
+            {
+                int read = stream.Read(encryptedPayload, offset, encryptedPayload.Length - offset);
+                if (read == 0)
+                {
+                    throw new EndOfStreamException("The activation argument payload is truncated.");
+                }
+
+                offset += read;
+            }
+        }
+        catch (FormatException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new FormatException("The activation argument payload could not be read.", ex);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(payloadPath))
+                {
+                    File.Delete(payloadPath);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Debug.WriteLine($"Best-effort delete of activation-argument payload file '{payloadPath}' failed: {ex}");
+            }
+        }
+
+        try
+        {
+            if (encryptedPayload.Length < NonceSize + TagSize)
+            {
+                throw new FormatException("The activation argument payload is truncated.");
+            }
+
+            byte[] nonce = new byte[NonceSize];
+            byte[] tag = new byte[TagSize];
+            byte[] ciphertext = new byte[encryptedPayload.Length - NonceSize - TagSize];
+            System.Buffer.BlockCopy(encryptedPayload, 0, nonce, 0, nonce.Length);
+            System.Buffer.BlockCopy(encryptedPayload, NonceSize, tag, 0, tag.Length);
+            System.Buffer.BlockCopy(encryptedPayload, NonceSize + TagSize, ciphertext, 0, ciphertext.Length);
+
+            var algorithm = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesGcm);
+            IBuffer keyBuffer = CryptographicBuffer.CreateFromByteArray(key);
+            CryptographicKey cryptographicKey = algorithm.CreateSymmetricKey(keyBuffer);
+            IBuffer plaintextBuffer;
+            try
+            {
+                plaintextBuffer = CryptographicEngine.DecryptAndAuthenticate(
+                    cryptographicKey,
+                    CryptographicBuffer.CreateFromByteArray(ciphertext),
+                    CryptographicBuffer.CreateFromByteArray(nonce),
+                    CryptographicBuffer.CreateFromByteArray(tag),
+                    CryptographicBuffer.CreateFromByteArray(Encoding.ASCII.GetBytes(FilePrefix + token)));
+            }
+            catch (Exception ex)
+            {
+                throw new FormatException("The activation argument payload failed authentication.", ex);
+            }
+
+            CryptographicBuffer.CopyToByteArray(plaintextBuffer, out byte[] plaintext);
+            try
+            {
+                return Deserialize(plaintext);
+            }
+            finally
+            {
+                Array.Clear(plaintext, 0, plaintext.Length);
+            }
+        }
+        finally
+        {
+            Array.Clear(key, 0, key.Length);
+            Array.Clear(encryptedPayload, 0, encryptedPayload.Length);
+        }
     }
 
     /// <summary>

@@ -377,10 +377,15 @@ internal static class NamedPipeServerSecurity
     [SupportedOSPlatform("windows")]
     private static string GetNativePipePath(string pipeName, IReadOnlyList<string> authorizedSecurityIdentities)
     {
-        if (!pipeName.StartsWith(SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
-            || authorizedSecurityIdentities.Count != 1)
+        if (!pipeName.StartsWith(SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal))
         {
             return $@"\\.\pipe\{pipeName}";
+        }
+
+        if (authorizedSecurityIdentities.Count != 1)
+        {
+            throw new InvalidOperationException(
+                $"AppContainer-local pipe '{pipeName}' requires exactly one authorized package SID, but received {authorizedSecurityIdentities.Count}.");
         }
 
         if (!ConvertStringSidToSid(authorizedSecurityIdentities[0], out IntPtr appContainerSid))

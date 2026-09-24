@@ -166,7 +166,7 @@ internal sealed partial class TestHostControllersTestHost
 
                     if (_testHostPID is null)
                     {
-                        throw ApplicationStateGuard.Unreachable();
+                        return;
                     }
 
                     if (testHostProcess is TestHostHandleToProcessAdapter handleAdapter
@@ -240,7 +240,11 @@ internal sealed partial class TestHostControllersTestHost
 
         if (_testHostPID is null)
         {
-            throw ApplicationStateGuard.Unreachable();
+            int fallbackPid = testHostProcessId ?? 0;
+            return (
+                (int)ExitCode.GenericFailure,
+                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
+                telemetryInformation.IsEnabled ? "[]" : null);
         }
 
         bool testHostProcessExited = testHostProcess.HasExited;

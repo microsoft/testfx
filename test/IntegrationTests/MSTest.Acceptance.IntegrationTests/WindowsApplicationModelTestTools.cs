@@ -12,7 +12,7 @@ internal enum WindowsApplicationModelAssetKind
     WinUI,
 }
 
-internal sealed record VisualStudioTestTools(string InstallationPath, string MSBuildPath, string VSTestConsolePath);
+internal sealed record VisualStudioTestTools(string InstallationPath, string MSBuildPath);
 
 internal sealed record UwpBuildResult(
     string ProjectPath,
@@ -58,37 +58,12 @@ internal static class WindowsApplicationModelTestTools
     {
         string installationPath = await AcceptanceTestBase.FindVisualStudioWithUwpToolsAsync(cancellationToken);
         string msbuildPath = Path.Combine(installationPath, "MSBuild", "Current", "Bin", "MSBuild.exe");
-        if (!File.Exists(msbuildPath))
-        {
-            throw new FileNotFoundException(
+        return File.Exists(msbuildPath)
+            ? new(installationPath, msbuildPath)
+            : throw new FileNotFoundException(
                 $"Visual Studio at '{installationPath}' satisfies the UWP workload query, but desktop MSBuild.exe was not found at '{msbuildPath}'. " +
                 "Repair Microsoft.Component.MSBuild in that installation.",
                 msbuildPath);
-        }
-
-        string[] vstestCandidates =
-        [
-            Path.Combine(installationPath, "Common7", "IDE", "Extensions", "TestPlatform", "vstest.console.exe"),
-            Path.Combine(installationPath, "Common7", "IDE", "CommonExtensions", "Microsoft", "TestWindow", "vstest.console.exe"),
-        ];
-        string vstestConsolePath = vstestCandidates.FirstOrDefault(File.Exists)
-            ?? throw new FileNotFoundException(
-                $"Visual Studio at '{installationPath}' has MSBuild and the UWP workload, but vstest.console.exe was not found. " +
-                $"Install the Visual Studio Test Platform/UWP test tools. Checked:{Environment.NewLine}{string.Join(Environment.NewLine, vstestCandidates)}");
-
-        string testPlatformDirectory = Path.Combine(installationPath, "Common7", "IDE", "Extensions", "TestPlatform");
-        string[] uwpRuntimeProviderFiles =
-        [
-            Path.Combine(testPlatformDirectory, "Extensions", "Microsoft.VisualStudio.UwpTestHostRuntimeProvider.dll"),
-            Path.Combine(testPlatformDirectory, "Microsoft.VisualStudio.UwpTestHostRuntimeProvider.Deployment.dll"),
-        ];
-        string[] missingRuntimeProviderFiles = uwpRuntimeProviderFiles.Where(path => !File.Exists(path)).ToArray();
-        return missingRuntimeProviderFiles.Length == 0
-            ? new(installationPath, msbuildPath, vstestConsolePath)
-            : throw new FileNotFoundException(
-                $"Visual Studio 2026 at '{installationPath}' does not contain the VSTest UWP runtime provider required to execute " +
-                $".build.appxrecipe files. Install or repair the UWP testing tools. Missing:{Environment.NewLine}" +
-                string.Join(Environment.NewLine, missingRuntimeProviderFiles));
     }
 
     public static async Task<VisualStudioTestTools> LocateModernUwpVisualStudioToolsAsync(CancellationToken cancellationToken)
@@ -119,7 +94,8 @@ internal static class WindowsApplicationModelTestTools
         TestAsset testAsset,
         string projectFileName,
         CancellationToken cancellationToken,
-        string? projectDirectory = null)
+        string? projectDirectory = null,
+        string platform = "x64")
     {
         projectDirectory ??= testAsset.TargetAssetPath;
         string projectPath = Path.Combine(projectDirectory, projectFileName);
@@ -131,9 +107,9 @@ internal static class WindowsApplicationModelTestTools
             $"The unique UWP test asset '{testAsset.TargetAssetPath}' contained stale .build.appxrecipe files before its build:" +
             $"{Environment.NewLine}{string.Join(Environment.NewLine, staleRecipes)}");
 
-        string binlogPath = Path.Combine(projectDirectory, $"{Path.GetFileNameWithoutExtension(projectFileName)}.binlog");
+        string binlogPath = Path.Combine(projectDirectory, $"{Path.GetFileNameWithoutExtension(projectFileName)}-{platform}.binlog");
         BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
-            $"\"{tools.MSBuildPath}\" \"{projectPath}\" /restore /t:Build /p:Configuration=Release /p:Platform=x64 /warnaserror /bl:\"{binlogPath}\"",
+            $"\"{tools.MSBuildPath}\" \"{projectPath}\" /restore /t:Build /p:Configuration=Release /p:Platform={platform} /warnaserror /bl:\"{binlogPath}\"",
             projectDirectory,
             cancellationToken);
         Assert.AreEqual(
@@ -194,31 +170,12 @@ internal static class WindowsApplicationModelTestTools
         throw new InvalidOperationException($"No unused drive letter was available to shorten classic UWP build path '{directory}'.");
     }
 
-    public static async Task<UwpRunResult> RunUwpRecipeAsync(
-        VisualStudioTestTools tools,
-        string recipePath,
-        string resultsDirectory,
-        CancellationToken cancellationToken)
-    {
-        Assert.IsTrue(File.Exists(recipePath), $"The UWP recipe '{recipePath}' does not exist.");
-        Directory.CreateDirectory(resultsDirectory);
-        string trxFileName = $"uwp-{Guid.NewGuid():N}.trx";
-        string trxPath = Path.Combine(resultsDirectory, trxFileName);
-
-        BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
-            $"\"{tools.VSTestConsolePath}\" \"{recipePath}\" /Logger:\"trx;LogFileName={trxFileName}\" /ResultsDirectory:\"{resultsDirectory}\" /Platform:x64 /Framework:FrameworkUap10",
-            Path.GetDirectoryName(recipePath),
-            cancellationToken);
-
-        return new(result.ExitCode, result.StandardOutput, result.ErrorOutput, trxPath);
-    }
-
     public static async Task<UwpRunResult> RunMtpUwpProjectAsync(
         VisualStudioTestTools tools,
         string projectPath,
         string resultsDirectory,
         CancellationToken cancellationToken,
-        string? packagedAppTargetPath = null)
+        string? additionalArguments = null)
     {
         Assert.IsTrue(File.Exists(projectPath), $"The UWP project '{projectPath}' does not exist.");
         Directory.CreateDirectory(resultsDirectory);
@@ -227,14 +184,11 @@ internal static class WindowsApplicationModelTestTools
         string binlogPath = Path.Combine(resultsDirectory, $"mtp-run-{Guid.NewGuid():N}.binlog");
         string arguments =
             $"--report-trx --report-trx-filename {trxFileName} --results-directory {resultsDirectory} " +
-            $"--diagnostic --diagnostic-verbosity Trace --diagnostic-output-directory {resultsDirectory}";
-        string packagedAppTargetProperty = packagedAppTargetPath is null
-            ? string.Empty
-            : $" /p:TestingPlatformPackagedAppTargetPath=\"{packagedAppTargetPath}\"";
-
+            $"--diagnostic --diagnostic-verbosity Trace --diagnostic-output-directory {resultsDirectory}" +
+            (additionalArguments is null ? string.Empty : $" {additionalArguments}");
         BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
             $"\"{tools.MSBuildPath}\" \"{projectPath}\" /t:InvokeTestingPlatform /p:Configuration=Release /p:Platform=x64 " +
-            $"/p:TestingPlatformCommandLineArguments=\"{arguments}\"{packagedAppTargetProperty} /bl:\"{binlogPath}\"",
+            $"/p:TestingPlatformCommandLineArguments=\"{arguments}\" /bl:\"{binlogPath}\"",
             Path.GetDirectoryName(projectPath),
             cancellationToken);
 

@@ -227,6 +227,109 @@ public sealed class PackagedAppTestHostLauncherTests
         Assert.AreEqual("--filter \"two words\" \"\"", activation.Arguments);
     }
 
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_WithExplicitDirectories_ReplacesTheirValues()
+    {
+        string scratchDirectory = Path.GetFullPath("appcontainer-scratch");
+
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--results-directory", "controller-results", "--diagnostic", "--diagnostic-output-directory", "controller-diagnostics"],
+            scratchDirectory);
+
+        Assert.AreSequenceEqual(
+            ["--results-directory", scratchDirectory, "--diagnostic", "--diagnostic-output-directory", scratchDirectory],
+            actual);
+    }
+
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_WithoutExplicitDirectories_AddsRequiredScratchDirectories()
+    {
+        string scratchDirectory = Path.GetFullPath("appcontainer-scratch");
+
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--diagnostic", "--filter", "two words"],
+            scratchDirectory);
+
+        Assert.AreSequenceEqual(
+            [
+                "--diagnostic",
+                "--filter",
+                "two words",
+                "--results-directory",
+                scratchDirectory,
+                "--diagnostic-output-directory",
+                scratchDirectory,
+            ],
+            actual);
+    }
+
+    [TestMethod]
+    public void GetControllerPath_WithRelativePath_UsesLaunchWorkingDirectory()
+    {
+        string workingDirectory = Path.GetFullPath("controller-working-directory");
+#pragma warning disable TPEXP // TestHostLaunchContext is experimental.
+        var context = new TestHostLaunchContext(
+            Path.Combine(workingDirectory, "testhost.exe"),
+            [],
+            new Dictionary<string, string?>(),
+            workingDirectory);
+#pragma warning restore TPEXP
+
+        string actual = GetControllerPath("TestResults", context);
+
+        Assert.AreEqual(Path.Combine(workingDirectory, "TestResults"), actual);
+    }
+
+    [TestMethod]
+    public void IsAppxRecipeAlreadyMaterialized_ManifestComesFromLayout_ReturnsTrue()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string manifestPath = Path.Combine(directory, "AppxManifest.xml");
+            File.WriteAllText(manifestPath, "<Package />");
+            var recipe = XDocument.Parse($"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                </Project>
+                """);
+
+            Assert.IsTrue(IsAppxRecipeAlreadyMaterialized(recipe, directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void IsAppxRecipeAlreadyMaterialized_ManifestComesFromCoreStagingDirectory_ReturnsFalse()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "AppxManifest.xml"), "<Package />");
+            string stagedManifestPath = Path.Combine(directory, "Core", "AppxManifest.xml");
+            var recipe = XDocument.Parse($"""
+                <Project>
+                  <AppXManifest Include="{stagedManifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                </Project>
+                """);
+
+            Assert.IsFalse(IsAppxRecipeAlreadyMaterialized(recipe, directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string? applicationId)
         => LaunchInLayoutContainingManifestAsync(
             BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, applicationId),
@@ -312,6 +415,29 @@ public sealed class PackagedAppTestHostLauncherTests
             Assert.AreEqual(expected, await launcher.IsEnabledAsync());
         },
         appSubdirectoryDepth);
+
+    private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
+        IReadOnlyList<string> arguments,
+        string scratchDirectory)
+        => (IReadOnlyList<string>)typeof(PackagedAppTestHostLauncher)
+            .GetMethod(
+                "RedirectAppContainerFileSystemOptions",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [arguments, scratchDirectory])!;
+
+    private static string GetControllerPath(string path, TestHostLaunchContext context)
+        => (string)typeof(PackagedAppTestHostLauncher)
+            .GetMethod(
+                "GetControllerPath",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [path, context])!;
+
+    private static bool IsAppxRecipeAlreadyMaterialized(XDocument recipe, string sourceDirectory)
+        => (bool)typeof(PackagedAppTestHostLauncher)
+            .GetMethod(
+                "IsAppxRecipeAlreadyMaterialized",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [recipe, sourceDirectory])!;
 
     /// <summary>
     /// Runs <paramref name="action"/> against a throw-away layout, optionally containing an

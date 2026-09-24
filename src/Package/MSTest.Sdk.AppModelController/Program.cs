@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
+using CodeCoverageBuilderHook = Microsoft.Testing.Extensions.CodeCoverage.TestingPlatformBuilderHook;
 using HangDumpBuilderHook = Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook;
 using MSBuildBuilderHook = Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook;
 using PackagedAppBuilderHook = Microsoft.Testing.Extensions.PackagedApp.TestingPlatformBuilderHook;
@@ -45,6 +46,11 @@ internal static class Program
         if (enabledExtensions.Contains("trx"))
         {
             TrxBuilderHook.AddExtensions(builder, args);
+        }
+
+        if (enabledExtensions.Contains("codecoverage"))
+        {
+            CodeCoverageBuilderHook.AddExtensions(builder, args);
         }
 
         builder.RegisterTestFramework(

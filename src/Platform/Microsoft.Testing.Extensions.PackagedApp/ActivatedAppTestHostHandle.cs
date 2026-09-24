@@ -15,6 +15,8 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// </summary>
 internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHostHandleExitCodePolicy
 {
+    private static readonly TimeSpan RetryActivationTeardownDelay = TimeSpan.FromSeconds(5);
+
     private readonly Process _process;
     private readonly string? _handshakePath;
     private readonly string? _activationPayloadPath;
@@ -49,9 +51,20 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
 
     public bool HasExited => _process.HasExited;
 
-    public bool IsExitCodeAuthoritative => false;
+    public bool IsExitCodeAuthoritative => _scratchDirectory is null;
 
-    public Task WaitForExitAsync(CancellationToken cancellationToken) => _process.WaitForExitAsync(cancellationToken);
+    public async Task WaitForExitAsync(CancellationToken cancellationToken)
+    {
+        await _process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        if (_retryArtifactManifestDestinationPath is not null)
+        {
+            // Windows can report the AppContainer process exit before activation/PLM has released that
+            // application instance. A retry activated immediately afterward can start but remain unable to
+            // resolve the newly created LOCAL\ pipe. Keep the delay bounded to retry attempts, and long enough
+            // for the same AUMID to become independently activatable on loaded Windows agents.
+            await Task.Delay(RetryActivationTeardownDelay, cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     public void Terminate()
     {

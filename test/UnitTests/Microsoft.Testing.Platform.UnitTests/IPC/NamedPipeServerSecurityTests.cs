@@ -460,14 +460,15 @@ public sealed class NamedPipeServerSecurityTests
     }
 
     /// <summary>
-    /// End-to-end through <see cref="NamedPipeServer"/> itself: the hardened pipe is created from a raw
-    /// handle rather than by the <see cref="NamedPipeServerStream"/> name constructor, so the whole
-    /// connect / request / reply / dispose cycle has to keep working on it.
+    /// Verifies that <see cref="NamedPipeServer"/> publishes the AppContainer-local name that the packaged
+    /// child must use. A desktop process cannot resolve another package's <c>LOCAL\</c> namespace; the
+    /// live AppContainer acceptance tests cover the request/reply path, while
+    /// <see cref="CreateServerStream_TheCurrentUserCanStillConnect"/> covers the owner DACL entry.
     /// </summary>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
-    public async Task NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip()
+    public void NamedPipeServer_WithAuthorizedPackage_PublishesAppContainerLocalPipeName()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
@@ -480,23 +481,28 @@ public sealed class NamedPipeServerSecurityTests
             maxNumberOfServerInstances: 1,
             [PackageSid],
             CancellationToken.None);
-        server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        server.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
         Assert.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, server.PipeName.Name);
-        using var client = new NamedPipeClient(server.PipeName.Name);
-        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        client.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+    }
 
-        Task waitConnection = server.WaitConnectionAsync(CancellationToken.None);
-        await client.ConnectAsync(CancellationToken.None);
-        await waitConnection;
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void NamedPipeServer_WithMultipleAuthorizedPackages_FailsBeforePublishingAnUnreachableLocalPipe()
+    {
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
-        VoidResponse response = await client.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
-            new TestHostCompletedRequest(returnCode: 0),
-            CancellationToken.None);
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => new NamedPipeServer(
+            pipeNameDescription,
+            static _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
+            new SystemEnvironment(),
+            new Mock<ILogger>().Object,
+            new SystemTask(),
+            maxNumberOfServerInstances: 1,
+            [PackageSid, OtherPackageSid],
+            CancellationToken.None));
 
-        Assert.IsNotNull(response);
+        Assert.Contains("exactly one authorized package SID", exception.Message);
     }
 
     /// <summary>
@@ -514,10 +520,9 @@ public sealed class NamedPipeServerSecurityTests
     /// Token impersonation does not place the desktop test process inside the AppContainer named-object
     /// namespace: trying to resolve <c>LOCAL\</c> under impersonation returns
     /// <c>ERROR_FILE_NOT_FOUND</c>. This test therefore isolates the restricted-token/DACL check on a bare
-    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip"/>
-    /// separately proves the product publishes and connects through the Windows-required <c>LOCAL\</c>
-    /// namespace. A real package-activated process remains the only way to exercise both constraints in one
-    /// process boundary.
+    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_PublishesAppContainerLocalPipeName"/>
+    /// separately proves the product publishes the Windows-required <c>LOCAL\</c> name. A real
+    /// package-activated process remains the only way to exercise both constraints in one process boundary.
     /// </para>
     /// <para>
     /// Candidates are filtered to the shape a real test host has. An AppContainer at <em>untrusted</em>

@@ -25,6 +25,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string DiscoverTestsJsonArgument = "json";
     public const string DiscoverTestsTextArgument = "text";
 
+    private const string AppModelActivationPayloadOptionKey = "internal-appmodel-activation-payload";
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
     private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
     private static readonly string SupportedDotNetTestTransportValues = $"'{DotNetTestTransportPipeArgument}', '{DotNetTestTransportHttpArgument}'";
@@ -88,6 +89,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+        new(AppModelActivationPayloadOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestHttpEndpointOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpEndpointOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestHttpTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
