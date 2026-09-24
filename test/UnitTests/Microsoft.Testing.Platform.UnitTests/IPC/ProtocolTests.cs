@@ -56,6 +56,37 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    [DataRow(0)]
+    [DataRow(1234)]
+    [DataRow(-1)]
+    [DataRow(int.MaxValue)]
+    [DataRow(int.MinValue)]
+    public void TestHostProcessPIDRequestSerializeDeserialize_PreservesPID(int pid)
+    {
+        var message = new TestHostProcessPIDRequest(pid);
+
+        TestHostProcessPIDRequest actual = RoundTrip(new TestHostProcessPIDRequestSerializer(), message);
+
+        Assert.AreEqual(pid, actual.PID);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    [DataRow(3)]
+    public void TestHostProcessPIDRequestDeserialize_TruncatedPIDThrows(int byteCount)
+    {
+        var stream = new MemoryStream();
+        byte[] pidBytes = BitConverter.GetBytes(1234);
+        stream.Write(pidBytes, 0, byteCount);
+        stream.Position = 0;
+
+        TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
+            () => Deserialize(new TestHostProcessPIDRequestSerializer(), stream));
+        Assert.IsInstanceOfType<EndOfStreamException>(wrapper.InnerException);
+    }
+
+    [TestMethod]
     public void TestResultMessagesSerializeDeserialize()
     {
         object serializer = new TestResultMessagesSerializer();

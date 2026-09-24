@@ -66,6 +66,7 @@ network:
   allowed:
   - defaults
   - dotnet
+  - "*.in.applicationinsights.azure.com"
   - node
   - python
   - rust
