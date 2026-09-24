@@ -12,6 +12,26 @@ public sealed class PackageDeployerTests
 {
     private const string PackageFullName = "Contoso.LayoutTests_1.0.0.0_neutral__abcdefghijklm";
 
+    [DataRow("x64", "x64", true)]
+    [DataRow("X64", "x64", true)]
+    [DataRow("neutral", "x64", true)]
+    [DataRow("NEUTRAL", "arm64", true)]
+    [DataRow("x86", "x64", false)]
+    [TestMethod]
+    public void IsApplicableDependencyArchitecture_ReturnsExpectedResult(
+        string dependencyArchitecture,
+        string targetArchitecture,
+        bool expected)
+    {
+        bool actual = (bool)typeof(PackageDeployer)
+            .GetMethod(
+                "IsApplicableDependencyArchitecture",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [dependencyArchitecture, targetArchitecture])!;
+
+        Assert.AreEqual(expected, actual);
+    }
+
     [TestMethod]
     public async Task RegisterAsync_WithUnregisteredPackage_RegistersRequestedLayout()
     {

@@ -140,7 +140,7 @@ internal static class PackageDeployer
                 || version is null
                 || architecture is null
                 || appxLocation is null
-                || !string.Equals(architecture, targetArchitecture, StringComparison.OrdinalIgnoreCase))
+                || !IsApplicableDependencyArchitecture(architecture, targetArchitecture))
             {
                 continue;
             }
@@ -170,6 +170,16 @@ internal static class PackageDeployer
             }
         }
     }
+#endif
+
+#if !PACKAGEDAPP_WINRT
+#pragma warning disable IDE0051 // Compiled into the plain flavor so dependency architecture matching is unit-testable.
+#endif
+    private static bool IsApplicableDependencyArchitecture(string dependencyArchitecture, string targetArchitecture)
+        => string.Equals(dependencyArchitecture, targetArchitecture, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(dependencyArchitecture, "neutral", StringComparison.OrdinalIgnoreCase);
+#if !PACKAGEDAPP_WINRT
+#pragma warning restore IDE0051
 #endif
 
     internal static async Task RegisterAsync(
