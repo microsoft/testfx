@@ -4,8 +4,8 @@ description: >-
   Re-reviews the new and modified test methods of a pull request when a
   maintainer comments `/review-tests`. Reviews correctness, effectiveness,
   reliability, maintainability, and repository conventions; posts a compact
-  COMMENT review with a compact scorecard plus complete, apply-ready inline
-  suggestions.
+  COMMENT review with a compact scorecard plus inline improvement comments for
+  below-A tests, using complete, apply-ready suggestions whenever possible.
 
 # The automatic on-open / on-synchronize variant lives in
 # `test-reviewer-on-pr.agent.md`. They must remain separate workflows
