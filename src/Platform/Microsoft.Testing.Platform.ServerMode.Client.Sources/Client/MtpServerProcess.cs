@@ -45,9 +45,7 @@ internal sealed partial class MtpServerProcess : IMtpServerHost
     private readonly IMtpClientLogger _logger;
     private readonly StringBuilder _standardError;
     private readonly TcpClient _client;
-    private readonly object _shutdownLock = new();
-
-    private Task? _shutdown;
+    private readonly SingleFlightTask _shutdown = new();
 
     /// <summary>
     /// The exit code captured during teardown, boxed so the read is atomic. <see langword="null"/> means

@@ -38,12 +38,7 @@ internal sealed partial class MtpServerProcess
     }
 
     private Task StartShutdownAsync()
-    {
-        lock (_shutdownLock)
-        {
-            return _shutdown ??= Task.Run(ShutdownCore);
-        }
-    }
+        => _shutdown.StartAsync(ShutdownCore);
 
     private void ShutdownCore()
     {
