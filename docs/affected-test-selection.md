@@ -11,20 +11,17 @@ The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `t
 mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder hook is
 registered by the repository's hand-authored MTP entry points.
 
-Selection remains disabled at the shared pipeline call site. Package
-`18.12.0-preview.26466.2` starts collection, but its internal `--list-tests` discovery child exits successfully before
-connecting to the extension's discovery pipe, so the parent reports
-`Test discovery child exited with code 0 before connecting.` and fails the run. Ordinary full-test CI remains active
-until a package containing a working discovery handshake is available.
+Package `18.12.0-preview.26473.3` includes the fixed JSON discovery path and ships both `netstandard2.0` and `net8.0`
+assets for the base extension, collector, CodeCoverage extension, and Azure DevOps provider.
 
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- Once enabled, the trusted main-branch Windows Release test runs `--collect-test-map`.
-- Once enabled, the Windows Release PR test runs `--affected-tests`.
-- The package targets .NET 8 and later, so .NET Framework test modules continue to run in full before the affected-test
-  step. Collection, selection, and fallback commands are scoped to .NETCoreApp modules.
+- The trusted main-branch Windows Release test runs `--collect-test-map`.
+- The Windows Release PR test runs `--affected-tests`.
+- Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
+  package's `netstandard2.0` assets.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,

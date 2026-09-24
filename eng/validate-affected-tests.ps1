@@ -123,10 +123,7 @@ foreach ($requiredText in @(
     "--collect-test-map",
     "--affected-tests",
     "enableAffectedTests",
-    "affectedTestsMode",
-    "AffectedTestsCoreOnly",
-    "AffectedTestsNonCoreOnly",
-    "Test .NET Framework modules"
+    "affectedTestsMode"
 )) {
     if (-not $testTemplate.Contains($requiredText)) {
         throw "The affected-test template is missing '$requiredText'."
@@ -172,6 +169,11 @@ if ($affectedTestsGateCount -ne 2) {
 if ($templateWithoutComments.Contains("Cache@2") -or
     $templateWithoutComments.Contains("AffectedTestsMapCacheRestored")) {
     throw "Azure DevOps artifact storage must not be combined with Pipeline Cache map transport."
+}
+
+if ($templateWithoutComments.Contains("AffectedTestsCoreOnly") -or
+    $templateWithoutComments.Contains("AffectedTestsNonCoreOnly")) {
+    throw "Affected-test execution must include every target framework."
 }
 
 $collectBranch = [regex]::Match(

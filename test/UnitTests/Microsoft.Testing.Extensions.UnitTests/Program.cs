@@ -11,10 +11,8 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-
-#if NET8_0_OR_GREATER
 Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
-#endif
+
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
