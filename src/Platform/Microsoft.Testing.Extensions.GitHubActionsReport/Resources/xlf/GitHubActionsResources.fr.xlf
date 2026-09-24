@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">Générateur de rapports GitHub Actions</target>
         <note>Translate "report generator". Do not localize the product name {Locked="GitHub Actions"}.</note>
       </trans-unit>
       <trans-unit id="EmptyStepSummarySections">
