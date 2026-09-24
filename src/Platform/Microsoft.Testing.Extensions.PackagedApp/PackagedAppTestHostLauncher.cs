@@ -104,11 +104,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string JUnitReportJournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
     private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
     private const string RetryRecoveredArtifactManifestEnvironmentVariableName = "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST";
-    private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
-    private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
     private const string TrxTestRunIdEnvironmentVariableName = "TESTINGPLATFORM_TRX_TESTRUN_ID";
     private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
 #if PACKAGEDAPP_WINRT
+    private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
+    private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
     private const string ResultsDirectoryOption = "--results-directory";
     private const string DiagnosticOutputDirectoryOption = "--diagnostic-output-directory";
 #endif
@@ -311,6 +311,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         cancellationToken.ThrowIfCancellationRequested();
 
         string targetFileName = _targetExecutable ?? context.FileName;
+#if PACKAGEDAPP_WINRT
+        targetFileName = MaterializeAppxRecipeLayout(targetFileName);
+#endif
         string sourceDirectory = Path.GetDirectoryName(targetFileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
 
@@ -519,6 +522,63 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 
 #if PACKAGEDAPP_WINRT
+    private static string MaterializeAppxRecipeLayout(string targetFileName)
+    {
+        string sourceDirectory = Path.GetDirectoryName(targetFileName)
+            ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
+        string[] recipePaths = Directory.GetFiles(sourceDirectory, "*.build.appxrecipe", SearchOption.TopDirectoryOnly);
+        if (recipePaths.Length == 0)
+        {
+            return targetFileName;
+        }
+
+        if (recipePaths.Length != 1)
+        {
+            throw new InvalidOperationException(
+                $"Expected exactly one .build.appxrecipe beside '{targetFileName}', but found {recipePaths.Length}.");
+        }
+
+        string layoutDirectory = Path.Combine(sourceDirectory, "_MtpPackageLayout");
+        if (Directory.Exists(layoutDirectory))
+        {
+            Directory.Delete(layoutDirectory, recursive: true);
+        }
+
+        Directory.CreateDirectory(layoutDirectory);
+        var recipe = XDocument.Load(recipePaths[0]);
+        foreach (XElement item in recipe.Descendants().Where(element =>
+            element.Name.LocalName is "AppXManifest" or "AppxPackagedFile"))
+        {
+            string? sourcePath = item.Attribute("Include")?.Value;
+            string? packagePath = item.Elements().FirstOrDefault(element => element.Name.LocalName == "PackagePath")?.Value;
+            if (sourcePath is null || packagePath is null)
+            {
+                continue;
+            }
+
+            sourcePath = Uri.UnescapeDataString(sourcePath);
+            if (!File.Exists(sourcePath))
+            {
+                throw new FileNotFoundException(
+                    $"The AppX recipe '{recipePaths[0]}' references missing payload '{sourcePath}'.",
+                    sourcePath);
+            }
+
+            string destinationPath = Path.Combine(
+                layoutDirectory,
+                packagePath.Replace('\\', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.Copy(sourcePath, destinationPath, overwrite: true);
+        }
+
+        string manifestPath = Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName);
+        AppxApplicationInfo application = AppxManifestInfo.ReadFromManifest(manifestPath).Applications.FirstOrDefault()
+            ?? throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no application.");
+        return application.Executable is { Length: > 0 } executable
+            ? Path.Combine(layoutDirectory, executable.Replace('\\', Path.DirectorySeparatorChar))
+            : throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no executable.");
+    }
+
     private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
         IReadOnlyList<string> arguments,
         string scratchDirectory)

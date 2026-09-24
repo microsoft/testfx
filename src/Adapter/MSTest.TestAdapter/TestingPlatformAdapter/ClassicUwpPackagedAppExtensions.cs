@@ -63,6 +63,7 @@ public static class PackagedAppExtensions
         Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
         Telemetry.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
         Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
+        TrxReport.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
         using ITestApplication application = await builder.BuildAsync().ConfigureAwait(false);
         return await application.RunAsync().ConfigureAwait(false);
     }

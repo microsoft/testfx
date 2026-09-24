@@ -83,9 +83,25 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
                 string startupMarkerPath = packageDirectory is null
                     ? string.Empty
                     : Path.Combine(packageDirectory, "LocalState", "mtp-startup-marker.txt");
-                string startupError = File.Exists(startupErrorPath)
-                    ? await File.ReadAllTextAsync(startupErrorPath, TestContext.CancellationToken)
-                    : "<no startup error>";
+                string[] diagnosticPaths = packageDirectory is null
+                    ? []
+                    :
+                    [
+                        startupErrorPath,
+                        Path.Combine(packageDirectory, "LocalState", "mtp-constructor-error.txt"),
+                        Path.Combine(packageDirectory, "LocalState", "mtp-unhandled-error.txt"),
+                    ];
+                string startupError = string.Join(
+                    Environment.NewLine,
+                    await Task.WhenAll(diagnosticPaths
+                        .Where(File.Exists)
+                        .Select(async path =>
+                            $"{Path.GetFileName(path)}:{Environment.NewLine}{await File.ReadAllTextAsync(path, TestContext.CancellationToken)}")));
+                if (startupError.Length == 0)
+                {
+                    startupError = "<no startup error>";
+                }
+
                 string startupMarker = File.Exists(startupMarkerPath)
                     ? await File.ReadAllTextAsync(startupMarkerPath, TestContext.CancellationToken)
                     : "<no startup marker>";
@@ -276,45 +292,60 @@ namespace $AssetName$
     {
         public App()
         {
+            UnhandledException += (sender, args) => WriteStartupDiagnostic(
+                "mtp-unhandled-error.txt",
+                args.Exception.ToString());
             try
             {
-                System.IO.File.WriteAllText(
-                    System.IO.Path.Combine(ApplicationData.Current.LocalFolder.Path, "mtp-startup-marker.txt"),
-                    "App constructor entered");
+                WriteStartupDiagnostic("mtp-startup-marker.txt", "App constructor entered");
+                InitializeComponent();
             }
-            catch
+            catch (Exception ex)
             {
+                WriteStartupDiagnostic("mtp-constructor-error.txt", ex.ToString());
+                throw;
             }
-
-            InitializeComponent();
         }
 
         protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-            if (rootFrame == null)
-            {
-                rootFrame = new Frame();
-                rootFrame.NavigationFailed += OnNavigationFailed;
-                Window.Current.Content = rootFrame;
-            }
-
-            Window.Current.Activate();
             try
             {
+                WriteStartupDiagnostic("mtp-startup-marker.txt", "OnLaunched entered");
+                Frame rootFrame = Window.Current.Content as Frame;
+                if (rootFrame == null)
+                {
+                    rootFrame = new Frame();
+                    rootFrame.NavigationFailed += OnNavigationFailed;
+                    Window.Current.Content = rootFrame;
+                }
+
+                Window.Current.Activate();
+                WriteStartupDiagnostic("mtp-startup-marker.txt", "Starting MTP");
                 Environment.ExitCode = await global::MicrosoftTestingPlatformApplication.RunAsync(args.Arguments);
+                WriteStartupDiagnostic("mtp-startup-marker.txt", "MTP completed: " + Environment.ExitCode);
             }
             catch (Exception ex)
             {
-                StorageFile errorFile = await ApplicationData.Current.LocalFolder.CreateFileAsync(
-                    "mtp-startup-error.txt",
-                    CreationCollisionOption.ReplaceExisting);
-                await FileIO.WriteTextAsync(errorFile, ex.ToString());
+                WriteStartupDiagnostic("mtp-startup-error.txt", ex.ToString());
                 Environment.ExitCode = 1;
             }
             finally
             {
                 Exit();
+            }
+        }
+
+        private static void WriteStartupDiagnostic(string fileName, string content)
+        {
+            try
+            {
+                System.IO.File.WriteAllText(
+                    System.IO.Path.Combine(ApplicationData.Current.LocalFolder.Path, fileName),
+                    content);
+            }
+            catch
+            {
             }
         }
 

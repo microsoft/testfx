@@ -69,6 +69,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <!-- Curated package dependencies. PrivateAssets="none" so all assets (including build/buildTransitive
          targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" PrivateAssets="none" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" PrivateAssets="none" />
@@ -191,14 +192,7 @@ $(CommonProductDescription)]]></PackageDescription>
            Bundle the direct dependencies introduced by the native MTP integration so the adapter remains loadable. -->
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Platform.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Buffers.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Collections.Immutable.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Diagnostics.DiagnosticSource.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Memory.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Numerics.Vectors.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Reflection.Metadata.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" PackagePath="$(_BuildTransitiveDir)" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)System.Threading.Tasks.Extensions.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.TrxReport.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.ApplicationInsights.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.MSBuild.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(TargetDir)Microsoft.Testing.Extensions.Telemetry.dll" PackagePath="$(_BuildTransitiveDir)" />
