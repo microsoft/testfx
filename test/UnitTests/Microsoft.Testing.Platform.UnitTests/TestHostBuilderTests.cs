@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 using Moq;
 
@@ -105,6 +106,78 @@ public sealed class TestHostBuilderTests
             environment.SetEnvironmentVariable(pipeEnvironmentVariable, previousPipeName);
         }
     }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_RetryChild_RetainsControllerComposition()
+    {
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(testHostControllerPid: null);
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            ["internal-retry-pipename"] = ["retry-pipe"],
+        });
+
+        Assert.IsFalse(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            commandLineOptions,
+            Mock.Of<IEnvironment>()));
+    }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_PackagedRetryChildWithSkipMarker_SkipsControllerComposition()
+    {
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(testHostControllerPid: null);
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            ["internal-retry-pipename"] = ["retry-pipe"],
+        });
+        Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION))
+            .Returns("1");
+
+        Assert.IsTrue(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            commandLineOptions,
+            environment.Object));
+    }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_ControllerChildWithSkipMarker_SkipsControllerComposition()
+    {
+        const int ControllerPid = 42;
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(ControllerPid);
+        Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(
+                $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{ControllerPid}"))
+            .Returns("1");
+
+        Assert.IsTrue(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            new TestCommandLineOptions([]),
+            environment.Object));
+    }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_ControllerChildWithoutSkipMarker_RetainsControllerComposition()
+    {
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(testHostControllerPid: 42);
+
+        Assert.IsFalse(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            new TestCommandLineOptions([]),
+            Mock.Of<IEnvironment>()));
+    }
+
+    private static TestHostControllerInfo CreateTestHostControllerInfo(int? testHostControllerPid)
+        => new(new CommandLineParseResult(
+            null,
+            testHostControllerPid.HasValue
+                ? [new CommandLineParseOption(
+                    PlatformCommandLineProvider.TestHostControllerPIDOptionKey,
+                    [testHostControllerPid.Value.ToString(CultureInfo.InvariantCulture)])]
+                : [],
+            []));
 
     private static async Task ConnectToTestHostProcessMonitorIfAvailableAsync(
         MethodInfo method,

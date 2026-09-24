@@ -16,7 +16,6 @@ namespace Microsoft.Testing.Platform.MSBuild;
 public static class TestingPlatformBuilderHook
 {
     private const string TestHostControllerPidOption = "--internal-testhostcontroller-pid";
-    private const string RetryPipeNameOption = "--internal-retry-pipename";
 
     /// <summary>
     /// Adds MSBuild support to the Testing Platform Builder.
@@ -39,8 +38,7 @@ public static class TestingPlatformBuilderHook
         // The full-trust controller owns the MSBuild-node connection and relays the child host's
         // messages through the controller protocol. A sandboxed test host cannot and must not open
         // the outer build pipe directly.
-        if (_.Contains(TestHostControllerPidOption, StringComparer.Ordinal)
-            || _.Contains(RetryPipeNameOption, StringComparer.Ordinal))
+        if (_.Contains(TestHostControllerPidOption, StringComparer.Ordinal))
         {
             testApplicationBuilder.CommandLine.AddProvider(() => new MSBuildCommandLineProvider());
             return;

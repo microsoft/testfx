@@ -774,6 +774,11 @@
         <target state="translated">Bestanden</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineAppModelActivationPayloadOptionDescription">
+        <source>Specifies the app-model activation payload.</source>
+        <target state="new">Specifies the app-model activation payload.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
         <target state="translated">Geben Sie den Hostnamen des Clients an.</target>

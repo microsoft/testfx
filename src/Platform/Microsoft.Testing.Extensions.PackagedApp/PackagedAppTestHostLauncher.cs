@@ -97,6 +97,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
     private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     private const string LogicalRunIdEnvironmentVariableName = "TESTINGPLATFORM_LOGICAL_RUN_ID";
+    private const string MSBuildNodeOption = "--internal-msbuild-node";
+    private const string TestHostControllerSkipExtensionEnvironmentVariableName = "TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION";
     // These names must match the reporter packages' JournalEnvironmentVariableName constants. They are repeated
     // here intentionally so PackagedApp does not take dependencies on every report package just to forward launch metadata.
     private const string CtrfReportJournalEnvironmentVariableName = "TESTINGPLATFORM_CTRFREPORT_JOURNAL";
@@ -432,6 +434,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         string? scratchDirectory = null;
         string? retryArtifactManifestPath = null;
         string? retryArtifactManifestDestinationPath = null;
+        bool isRetryChild = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments) is null
+            && handshakeId is not null;
         string? recoveryDirectory = TryGetOptionValue(
             context.Arguments,
             ResultsDirectoryOption)
@@ -449,7 +453,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                     "MtpTestHost",
                     handshakeId ?? Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(scratchDirectory);
-                hostArguments = RedirectAppContainerFileSystemOptions(context.Arguments, scratchDirectory);
+                hostArguments = RedirectAppContainerFileSystemOptions(
+                    context.Arguments,
+                    scratchDirectory,
+                    removeMSBuildNode: isRetryChild);
                 retryArtifactManifestDestinationPath = context.EnvironmentVariables
                     .FirstOrDefault(environmentVariable => string.Equals(
                         environmentVariable.Key,
@@ -546,6 +553,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         TestHostLaunchContext context,
         string? retryArtifactManifestPath)
     {
+        bool isRetryChild = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments) is null
+            && PackagedAppConnectBackHandshake.TryGetHandshakeId(context.Arguments) is not null;
+        bool skipExtensionMarkerIncluded = false;
         foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
         {
             if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.OrdinalIgnoreCase)
@@ -559,6 +569,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, HangDumpPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
             {
+                skipExtensionMarkerIncluded |= string.Equals(
+                    environmentVariable.Key,
+                    TestHostControllerSkipExtensionEnvironmentVariableName,
+                    StringComparison.OrdinalIgnoreCase);
                 yield return string.Equals(
                     environmentVariable.Key,
                     RetryRecoveredArtifactManifestEnvironmentVariableName,
@@ -568,13 +582,28 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                         : environmentVariable;
             }
         }
+
+        if (isRetryChild && !skipExtensionMarkerIncluded)
+        {
+            yield return new(
+                TestHostControllerSkipExtensionEnvironmentVariableName,
+                "1");
+        }
     }
 
 #if !PACKAGEDAPP_WINRT
 #pragma warning disable IDE0051 // Compiled into the non-Windows flavor so recipe materialization is unit-testable.
 #endif
-    private static string MaterializeAppxRecipeLayout(string targetFileName, out string? appxRecipePath)
+    private static string MaterializeAppxRecipeLayout(
+        string targetFileName,
+        out string? appxRecipePath,
+        Func<string, string>? resolveFinalPath = null)
     {
+#if PACKAGEDAPP_WINRT
+        resolveFinalPath ??= ResolveFinalPath;
+#else
+        resolveFinalPath ??= static path => Path.GetFullPath(path);
+#endif
         string sourceDirectory = Path.GetDirectoryName(targetFileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
         string[] recipePaths = Directory.GetFiles(sourceDirectory, "*.build.appxrecipe", SearchOption.TopDirectoryOnly);
@@ -605,7 +634,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
         Directory.CreateDirectory(layoutDirectory);
         string recipeDirectory = Path.GetDirectoryName(Path.GetFullPath(appxRecipePath))!;
-        string requestedTargetPath = Path.GetFullPath(targetFileName);
+        string requestedTargetPath = resolveFinalPath(Path.GetFullPath(targetFileName));
         string? targetPackagePath = null;
         foreach (XElement item in recipe.Descendants().Where(element =>
             element.Name.LocalName is "AppXManifest" or "AppxPackagedFile"))
@@ -625,6 +654,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                     sourcePath);
             }
 
+            sourcePath = resolveFinalPath(sourcePath);
             if (item.Name.LocalName == "AppxPackagedFile"
                 && string.Equals(sourcePath, requestedTargetPath, StringComparison.OrdinalIgnoreCase))
             {
@@ -638,10 +668,37 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             File.Copy(sourcePath, destinationPath, overwrite: true);
         }
 
-        return targetPackagePath is not null
-            ? Path.Combine(layoutDirectory, targetPackagePath.Replace('\\', Path.DirectorySeparatorChar))
-            : throw new InvalidOperationException(
+        if (targetPackagePath is null)
+        {
+            throw new InvalidOperationException(
                 $"The AppX recipe '{appxRecipePath}' does not package the requested executable '{targetFileName}'.");
+        }
+
+        string normalizedTargetPackagePath = targetPackagePath.Replace('\\', Path.DirectorySeparatorChar);
+        string materializedTargetPath = Path.Combine(layoutDirectory, normalizedTargetPackagePath);
+        var manifestInfo = AppxManifestInfo.ReadFromManifest(
+            Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName));
+        bool targetIsManifestExecutable = manifestInfo.Applications.Any(application =>
+            application.Executable is not null
+            && string.Equals(
+                application.Executable.Replace('\\', Path.DirectorySeparatorChar),
+                normalizedTargetPackagePath,
+                StringComparison.OrdinalIgnoreCase));
+        bool targetIsClassicUwpEntrypoint = string.Equals(
+            Path.GetDirectoryName(normalizedTargetPackagePath),
+            "entrypoint",
+            StringComparison.OrdinalIgnoreCase);
+        // Classic UWP recipes package the managed target below entrypoint but activate a generated
+        // root bootstrap with the same file name so the framework package runtime is initialized.
+        AppxApplicationInfo application = (targetIsManifestExecutable
+            ? manifestInfo.ResolveApplication(layoutDirectory, materializedTargetPath)
+            : targetIsClassicUwpEntrypoint
+                ? manifestInfo.ResolveApplication(Path.GetFileName(materializedTargetPath))
+                : manifestInfo.ResolveApplication(layoutDirectory, materializedTargetPath))
+            ?? throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no application.");
+        return application.Executable is { Length: > 0 } executable
+            ? Path.Combine(layoutDirectory, executable.Replace('\\', Path.DirectorySeparatorChar))
+            : throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no executable.");
     }
 
 #if PACKAGEDAPP_WINRT
@@ -704,9 +761,15 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
     private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
         IReadOnlyList<string> arguments,
-        string scratchDirectory)
+        string scratchDirectory,
+        bool removeMSBuildNode)
     {
         List<string> redirectedArguments = [.. arguments];
+        if (removeMSBuildNode)
+        {
+            RemoveOptionWithValue(redirectedArguments, MSBuildNodeOption);
+        }
+
         bool hasResultsDirectory = false;
         bool hasDiagnosticOutputDirectory = false;
         bool diagnosticEnabled = false;
@@ -746,6 +809,27 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
 
         return redirectedArguments;
+    }
+
+    private static void RemoveOptionWithValue(List<string> arguments, string option)
+    {
+        for (int i = arguments.Count - 1; i >= 0; i--)
+        {
+            string argument = arguments[i];
+            if (string.Equals(argument, option, StringComparison.Ordinal))
+            {
+                arguments.RemoveAt(i);
+                if (i < arguments.Count)
+                {
+                    arguments.RemoveAt(i);
+                }
+            }
+            else if (argument.StartsWith(option + "=", StringComparison.Ordinal)
+                || argument.StartsWith(option + ":", StringComparison.Ordinal))
+            {
+                arguments.RemoveAt(i);
+            }
+        }
     }
 
     private static string GetControllerPath(string path, TestHostLaunchContext context)

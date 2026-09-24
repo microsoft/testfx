@@ -24,7 +24,6 @@ public sealed class RetryArgumentsBuilderTests
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "5")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, "1s")]
     [DataRow(PlatformCommandLineProvider.ResultDirectoryOptionKey, "results")]
-    [DataRow("internal-msbuild-node", "testingplatform.pipe.msbuild")]
     [TestMethod]
     public void ComputeIndicesToCleanup_WithOptionalOption_ReturnsOptionAndValueIndices(string optionalOptionName, string optionalOptionValue)
     {
@@ -43,6 +42,23 @@ public sealed class RetryArgumentsBuilderTests
 
         int[] expected = [1, 2, 3, 4];
         Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder);
+    }
+
+    [TestMethod]
+    public void ComputeIndicesToCleanup_WithMSBuildNode_PreservesOptionAndValue()
+    {
+        string[] executableArguments =
+        [
+            "test.dll",
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsOptionName}",
+            "3",
+            "--internal-msbuild-node",
+            "testingplatform.pipe.msbuild",
+        ];
+
+        List<int> actual = RetryArgumentsBuilder.ComputeIndicesToCleanup(executableArguments);
+
+        Assert.AreSequenceEqual([1, 2], actual, SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]

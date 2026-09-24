@@ -67,7 +67,7 @@ public sealed class PackageDeployerTests
     }
 
     [TestMethod]
-    public void ResolveAppxLocation_WithRelativePath_UsesRecipeDirectory()
+    public void ResolveAppxLocation_WithRelativeWindowsPath_UsesRecipeDirectory()
     {
         string recipeDirectory = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
         string recipePath = Path.Combine(recipeDirectory, "App.build.appxrecipe");

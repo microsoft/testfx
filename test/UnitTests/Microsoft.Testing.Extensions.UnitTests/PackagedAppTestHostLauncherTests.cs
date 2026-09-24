@@ -234,7 +234,8 @@ public sealed class PackagedAppTestHostLauncherTests
 
         IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
             ["--results-directory", "controller-results", "--diagnostic", "--diagnostic-output-directory", "controller-diagnostics"],
-            scratchDirectory);
+            scratchDirectory,
+            removeMSBuildNode: false);
 
         Assert.AreSequenceEqual(
             ["--results-directory", scratchDirectory, "--diagnostic", "--diagnostic-output-directory", scratchDirectory],
@@ -248,7 +249,8 @@ public sealed class PackagedAppTestHostLauncherTests
 
         IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
             ["--diagnostic", "--filter", "two words"],
-            scratchDirectory);
+            scratchDirectory,
+            removeMSBuildNode: false);
 
         Assert.AreSequenceEqual(
             [
@@ -258,6 +260,26 @@ public sealed class PackagedAppTestHostLauncherTests
                 "--results-directory",
                 scratchDirectory,
                 "--diagnostic-output-directory",
+                scratchDirectory,
+            ],
+            actual);
+    }
+
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_ForRetry_RemovesMSBuildNode()
+    {
+        string scratchDirectory = Path.GetFullPath("appcontainer-scratch");
+
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--internal-msbuild-node", "msbuild-pipe", "--internal-retry-pipename", "retry-pipe"],
+            scratchDirectory,
+            removeMSBuildNode: true);
+
+        Assert.AreSequenceEqual(
+            [
+                "--internal-retry-pipename",
+                "retry-pipe",
+                "--results-directory",
                 scratchDirectory,
             ],
             actual);
@@ -335,7 +357,9 @@ public sealed class PackagedAppTestHostLauncherTests
     {
         string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
         string sourceDirectory = Path.Combine(root, "Source");
+        string aliasDirectory = Path.Combine(root, "Alias");
         Directory.CreateDirectory(sourceDirectory);
+        Directory.CreateDirectory(aliasDirectory);
         try
         {
             string manifestPath = Path.Combine(root, "AppxManifest.xml");
@@ -352,8 +376,10 @@ public sealed class PackagedAppTestHostLauncherTests
                     """));
             string firstExecutablePath = Path.Combine(root, "First.exe");
             string requestedExecutablePath = Path.Combine(sourceDirectory, "Requested.exe");
+            string aliasedExecutablePath = Path.Combine(aliasDirectory, "Requested.exe");
             File.WriteAllText(firstExecutablePath, "first");
             File.WriteAllText(requestedExecutablePath, "requested");
+            File.WriteAllText(aliasedExecutablePath, "alias");
 
             string recipePath = Path.Combine(sourceDirectory, "App.build.appxrecipe");
             File.WriteAllText(
@@ -366,22 +392,81 @@ public sealed class PackagedAppTestHostLauncherTests
                   <AppxPackagedFile Include="{firstExecutablePath}">
                     <PackagePath>Apps\First.exe</PackagePath>
                   </AppxPackagedFile>
-                  <AppxPackagedFile Include="{requestedExecutablePath}">
+                  <AppxPackagedFile Include="{aliasedExecutablePath}">
                     <PackagePath>Apps\Requested.exe</PackagePath>
                   </AppxPackagedFile>
                 </Project>
                 """);
 
-            string materializedExecutablePath = MaterializeAppxRecipeLayout(requestedExecutablePath, out string? actualRecipePath);
+            string materializedExecutablePath = MaterializeAppxRecipeLayout(
+                requestedExecutablePath,
+                out string? actualRecipePath,
+                path => string.Equals(path, aliasedExecutablePath, StringComparison.OrdinalIgnoreCase)
+                    ? requestedExecutablePath
+                    : Path.GetFullPath(path));
 
             string layoutDirectory = Path.Combine(sourceDirectory, "_MtpPackageLayout");
             Assert.AreEqual(Path.Combine(layoutDirectory, "Apps", "Requested.exe"), materializedExecutablePath);
             Assert.AreEqual(recipePath, actualRecipePath);
+            Assert.AreEqual("requested", File.ReadAllText(materializedExecutablePath));
             Assert.AreEqual(
                 "Requested",
                 AppxManifestInfo.ReadFromManifest(Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName))
                     .ResolveApplication(layoutDirectory, materializedExecutablePath)?
                     .Id);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithClassicUwpEntrypoint_ReturnsManifestBootstrapExecutable()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "Source");
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, "AppxManifest.xml");
+            File.WriteAllText(
+                manifestPath,
+                BuildManifestXml(
+                    "Contoso.MyTestApp",
+                    MicrosoftStorePublisher,
+                    applicationId: "App",
+                    executable: "CUwp.exe"));
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "CUwp.exe");
+            string bootstrapExecutablePath = Path.Combine(root, "Core", "CUwp.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(bootstrapExecutablePath)!);
+            File.WriteAllText(requestedExecutablePath, "managed entrypoint");
+            File.WriteAllText(bootstrapExecutablePath, "native bootstrap");
+
+            File.WriteAllText(
+                Path.Combine(sourceDirectory, "App.build.appxrecipe"),
+                $"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                  <AppxPackagedFile Include="{requestedExecutablePath}">
+                    <PackagePath>entrypoint\CUwp.exe</PackagePath>
+                  </AppxPackagedFile>
+                  <AppxPackagedFile Include="{bootstrapExecutablePath}">
+                    <PackagePath>CUwp.exe</PackagePath>
+                  </AppxPackagedFile>
+                </Project>
+                """);
+
+            string materializedExecutablePath = MaterializeAppxRecipeLayout(requestedExecutablePath, out _);
+
+            string layoutDirectory = Path.Combine(sourceDirectory, "_MtpPackageLayout");
+            Assert.AreEqual(Path.Combine(layoutDirectory, "CUwp.exe"), materializedExecutablePath);
+            Assert.AreEqual("native bootstrap", File.ReadAllText(materializedExecutablePath));
+            Assert.AreEqual(
+                "managed entrypoint",
+                File.ReadAllText(Path.Combine(layoutDirectory, "entrypoint", "CUwp.exe")));
         }
         finally
         {
@@ -477,12 +562,13 @@ public sealed class PackagedAppTestHostLauncherTests
 
     private static IReadOnlyList<string> RedirectAppContainerFileSystemOptions(
         IReadOnlyList<string> arguments,
-        string scratchDirectory)
+        string scratchDirectory,
+        bool removeMSBuildNode)
         => (IReadOnlyList<string>)typeof(PackagedAppTestHostLauncher)
             .GetMethod(
                 "RedirectAppContainerFileSystemOptions",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-            .Invoke(null, [arguments, scratchDirectory])!;
+            .Invoke(null, [arguments, scratchDirectory, removeMSBuildNode])!;
 
     private static string GetControllerPath(string path, TestHostLaunchContext context)
         => (string)typeof(PackagedAppTestHostLauncher)
@@ -498,9 +584,12 @@ public sealed class PackagedAppTestHostLauncherTests
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .Invoke(null, [recipe, sourceDirectory])!;
 
-    private static string MaterializeAppxRecipeLayout(string targetFileName, out string? appxRecipePath)
+    private static string MaterializeAppxRecipeLayout(
+        string targetFileName,
+        out string? appxRecipePath,
+        Func<string, string>? resolveFinalPath = null)
     {
-        object?[] arguments = [targetFileName, null];
+        object?[] arguments = [targetFileName, null, resolveFinalPath];
         string materializedTargetFileName = (string)typeof(PackagedAppTestHostLauncher)
             .GetMethod(
                 "MaterializeAppxRecipeLayout",

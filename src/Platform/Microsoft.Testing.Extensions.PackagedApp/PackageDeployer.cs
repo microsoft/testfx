@@ -192,7 +192,9 @@ internal static class PackageDeployer
     private static string ResolveAppxLocation(string appxRecipePath, string appxLocation)
     {
         string recipeDirectory = Path.GetDirectoryName(Path.GetFullPath(appxRecipePath))!;
-        return Path.GetFullPath(Uri.UnescapeDataString(appxLocation), recipeDirectory);
+        string normalizedLocation = Uri.UnescapeDataString(appxLocation)
+            .Replace('\\', Path.DirectorySeparatorChar);
+        return Path.GetFullPath(normalizedLocation, recipeDirectory);
     }
 
     private static bool IsApplicableDependencyArchitecture(string dependencyArchitecture, string targetArchitecture)

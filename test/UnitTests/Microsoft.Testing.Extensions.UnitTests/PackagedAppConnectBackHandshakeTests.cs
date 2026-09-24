@@ -5,7 +5,10 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -136,6 +139,36 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.StartsWith("retry-", handshakeId);
         Assert.AreEqual(handshakeId, PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
         Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public async Task AddPackagedAppDeployment_RetryChild_DoesNotRegisterLauncher()
+    {
+        string[] arguments = ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(arguments);
+
+        PackagedAppExtensions.AddPackagedAppDeployment(builder, arguments);
+
+        ITestHostLauncher? launcher =
+            await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        Assert.IsNull(launcher);
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_RetryChild_AddsControllerSkipMarker()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"],
+            new Dictionary<string, string?>(),
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
+
+        Assert.HasCount(1, environment);
+        Assert.AreEqual(
+            "1",
+            environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION"]);
     }
 
     [TestMethod]

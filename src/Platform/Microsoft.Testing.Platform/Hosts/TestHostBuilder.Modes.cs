@@ -158,9 +158,10 @@ internal sealed partial class TestHostBuilder
 
     private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context)
     {
-        if (context.TestHostControllerInfo.HasTestHostController
-            || context.CommandLineHandler.IsOptionSet("internal-retry-pipename")
-            || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        if (ShouldSkipTestHostControllersHost(
+            context.TestHostControllerInfo,
+            context.CommandLineHandler,
+            context.SystemEnvironment))
         {
             return null;
         }
@@ -214,6 +215,17 @@ internal sealed partial class TestHostBuilder
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostControllersTestHost));
         return testHostControllersHost;
     }
+
+    internal static bool ShouldSkipTestHostControllersHost(
+        ITestHostControllerInfo testHostControllerInfo,
+        ICommandLineOptions commandLineOptions,
+        IEnvironment environment)
+        => (testHostControllerInfo.HasTestHostController
+                && environment.GetEnvironmentVariable(
+                    $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID()}") == "1")
+            || (commandLineOptions.IsOptionSet("internal-retry-pipename")
+                && environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION) == "1")
+            || commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
 
     private async Task<IHost> BuildTestHostModeAsync(BuildContext context)
     {

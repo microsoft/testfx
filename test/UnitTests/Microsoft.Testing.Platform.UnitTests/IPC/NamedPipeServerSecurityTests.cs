@@ -210,16 +210,13 @@ public sealed class NamedPipeServerSecurityTests
     /// actually uses: the pipe must still be created with a DACL that names only the owner and the validated
     /// package.
     /// </summary>
-    /// <remarks>
-    /// Reading the descriptor back by name connects a client and consumes this single-instance pipe, so this
-    /// test deliberately never calls <c>WaitConnectionAsync</c> and performs exactly one such read.
-    /// </remarks>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
     public void NamedPipeServer_WithASequenceThatChangesBetweenEnumerations_DoesNotWidenTheDacl()
     {
         PipeNameDescription pipeName = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        var shapeShifting = new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD");
 
         using var server = new NamedPipeServer(
             pipeName,
@@ -228,12 +225,14 @@ public sealed class NamedPipeServerSecurityTests
             new Mock<ILogger>().Object,
             new SystemTask(),
             maxNumberOfServerInstances: 1,
-            new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD"),
+            shapeShifting,
             CancellationToken.None);
 
-        string sddl = WindowsSecurity.ConnectAndGetSecurityDescriptorSddl(server.PipeName.Name);
+        string sddl = WindowsSecurity.GetSecurityDescriptorSddl(server.GetServerStream().SafePipeHandle);
 
+        Assert.AreEqual(1, shapeShifting.ReadCount);
         Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
+        Assert.Contains($"(A;;0x12019b;;;{PackageSid})", sddl);
         Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
         Assert.IsFalse(sddl.Contains(";;;S-1-1-0)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
     }
