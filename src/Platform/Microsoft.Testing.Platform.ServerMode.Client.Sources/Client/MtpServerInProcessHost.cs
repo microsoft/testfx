@@ -30,9 +30,8 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
     private readonly CancellationTokenSource _serverCancellation;
     private readonly TimeSpan _shutdownTimeout;
     private readonly IMtpClientLogger _logger;
-    private readonly object _shutdownLock = new();
+    private readonly SingleFlightTask _shutdown = new();
 
-    private Task? _shutdown;
     private int _skipConnectionReadLoopWait;
 
     /// <summary>
@@ -258,10 +257,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             Volatile.Write(ref _skipConnectionReadLoopWait, 1);
         }
 
-        lock (_shutdownLock)
-        {
-            return _shutdown ??= Task.Run(ShutdownCoreAsync);
-        }
+        return _shutdown.StartAsync(ShutdownCoreAsync);
     }
 
     private async Task ShutdownCoreAsync()

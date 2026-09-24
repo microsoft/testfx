@@ -4,11 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## Unreleased
+## <a name="2.5.0" />[2.5.0] - UNRELEASED
+
+See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
 
 ### Added
 
 * Enable native Microsoft.Testing.Platform execution for UWP and AppContainer Windows test hosts through a full-trust sidecar controller, including exact package-SID authorization for controller and extension pipes, LocalState artifact recovery, and multi-host Retry activation.
+
+### Changed
+
+* Reduce duplicate test-identity computation when merging HTML reports, by @Evangelink in [#11076](https://github.com/microsoft/testfx/pull/11076)
+* Replace repeated LINQ passes in Azure DevOps result-date calculations with allocation-free single-pass scans, by @Evangelink in [#11403](https://github.com/microsoft/testfx/pull/11403)
+* Enrich and redesign Azure DevOps job summaries with pass rates, flaky-test history, duration comparisons, dependency edges, focused failure diagnostics and compact deterministic multi-module presentation, by @Evangelink in [#11337](https://github.com/microsoft/testfx/pull/11337) and [#11335](https://github.com/microsoft/testfx/pull/11335)
+
+### Fixed
+
+* Re-register the requested PackagedApp development layout when Windows still points the package identity at an older build directory, while preserving application data and refusing to replace conflicting non-development registrations, by @Sergio0694 in [#11372](https://github.com/microsoft/testfx/pull/11372)
+* Prevent a cancellation callback ordering race in the Hot Reload extension from allowing another test run after shutdown has started, by @Evangelink in [#11401](https://github.com/microsoft/testfx/pull/11401)
+* Log normal cooperative-cancellation pipe closure as a concise lifecycle event instead of an exception-shaped DEBUG diagnostic, by @Evangelink in [#11416](https://github.com/microsoft/testfx/pull/11416)
 
 ## <a name="2.4.1" />[2.4.1] - 2026-09-15
 
