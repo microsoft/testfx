@@ -84,7 +84,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</source>
       <trans-unit id="CtrfReportOptionDescription">
         <source>Enable generating a CTRF (Common Test Report Format) JSON report.</source>
         <target state="translated">CTRF (Common Test Report Format) JSON レポートの生成を有効にします。</target>
-        <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
+        <note>Do not localize format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>

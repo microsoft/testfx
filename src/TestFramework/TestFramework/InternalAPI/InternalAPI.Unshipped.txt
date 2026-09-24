@@ -1,4 +1,11 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CollectionCountHelper
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnostics(string! message, string? expected, string? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnosticsOnFailure.get -> System.Action<string!, string?, string?>?
 static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.CaptureDiagnosticsOnFailure.set -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.CollectionCountHelper.GetCount<T>(System.Collections.Generic.IEnumerable<T>! collection) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.AppendEscapedChar(System.Text.StringBuilder! builder, char value, bool useExtendedEscapes) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.AppendEscapedString(System.Text.StringBuilder! builder, string! value, int start, int end, bool escapeUnpairedSurrogates, bool useExtendedEscapes) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.GetEscapedCharacterLength(string! value, int index) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.IsEscapedString(string! value, string! rendered) -> bool

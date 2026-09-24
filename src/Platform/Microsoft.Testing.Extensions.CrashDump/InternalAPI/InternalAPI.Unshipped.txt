@@ -1,1 +1,2 @@
 #nullable enable
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.GetDumpSearchPattern(string! dumpFileNamePattern) -> string!

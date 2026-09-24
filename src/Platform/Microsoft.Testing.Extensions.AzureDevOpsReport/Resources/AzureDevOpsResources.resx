@@ -119,7 +119,7 @@
   </resheader>
   <data name="AnnotationsOptionDescription" xml:space="preserve">
     <value>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</value>
-    <comment>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</comment>
+    <comment>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="ArtifactUploadOptionsRequireUploadArtifacts" xml:space="preserve">
     <value>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</value>
@@ -186,7 +186,7 @@
   </data>
   <data name="AzureDevOpsLivePublishingMissingConfiguration" xml:space="preserve">
     <value>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</value>
-    <comment>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</comment>
+    <comment>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingMissingRunIdFile" xml:space="preserve">
     <value>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</value>
@@ -275,7 +275,7 @@
   </data>
   <data name="FlakyHistoryLoadFailedWarning" xml:space="preserve">
     <value>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</value>
-    <comment>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</comment>
+    <comment>{0} is the exception message.</comment>
   </data>
   <data name="FlakyHistoryLoadTimedOutInfo" xml:space="preserve">
     <value>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</value>
@@ -283,7 +283,7 @@
   </data>
   <data name="FlakyHistoryMissingEnvironmentWarning" xml:space="preserve">
     <value>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</value>
-    <comment>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</comment>
+    <comment />
   </data>
   <data name="FlakyHistoryOptionDescription" xml:space="preserve">
     <value>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</value>
@@ -354,7 +354,7 @@
   </data>
   <data name="QuarantineFileLoadFailedWarning" xml:space="preserve">
     <value>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</value>
-    <comment>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</comment>
+    <comment>{0} is the quarantine file path. {1} is the exception message.</comment>
   </data>
   <data name="QuarantineFileMissingWarning" xml:space="preserve">
     <value>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</value>

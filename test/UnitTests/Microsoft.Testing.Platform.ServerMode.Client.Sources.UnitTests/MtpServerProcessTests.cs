@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
 /// <summary>
@@ -20,6 +22,101 @@ public sealed class MtpServerProcessTests
     private const int Port = 12345;
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task StartAsyncWhenAlreadyCanceledDoesNotAttemptToLaunch()
+    {
+        using var temp = TempDirectory.Create();
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        string source = Path.Combine(temp.Path, "missing-directory", "App.dll");
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => MtpServerProcess.StartAsync(source, cancellationToken: cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExitAndStandardError()
+    {
+        using var temp = TempDirectory.Create();
+        string source = Path.Combine(temp.Path, "Missing.dll");
+        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(20) };
+        var stopwatch = Stopwatch.StartNew();
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
+        stopwatch.Stop();
+
+        Assert.Contains("exited with code", exception.Message);
+        Assert.Contains("before connecting back", exception.Message);
+        Assert.Contains("Standard error:", exception.Message);
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(10),
+            stopwatch.Elapsed,
+            "A process that exits during startup must be reported immediately instead of waiting for the connection timeout.");
+    }
+
+    [TestMethod]
+    [OSCondition(
+        ConditionMode.Exclude,
+        OperatingSystems.Windows,
+        IgnoreMessage = "Uses the standard Unix 'false' executable to produce a silent nonzero exit.")]
+    public async Task StartAsyncWhenProcessExitsWithoutStandardErrorOmitsStandardErrorSuffix()
+    {
+        const string FalseExecutable = "/usr/bin/false";
+        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(20) };
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(FalseExecutable, options, TestContext.CancellationToken));
+
+        Assert.Contains("exited with code", exception.Message);
+        Assert.DoesNotContain("Standard error:", exception.Message);
+    }
+
+#if NET
+    [TestMethod]
+    [OSCondition(
+        ConditionMode.Exclude,
+        OperatingSystems.Windows,
+        IgnoreMessage = "Uses a Unix shell script and POSIX executable permissions.")]
+    [UnsupportedOSPlatform("windows")]
+    public async Task StartAsyncWhenStoppedProcessHasDescendantConnectAndKeepStandardErrorOpenReportsEarlyExit()
+    {
+        using var temp = TempDirectory.Create();
+        string script = temp.CreateFile("App");
+        File.WriteAllText(
+            script,
+            "#" + "!/bin/bash\n"
+            + "while [[ \"$1\" != \"--client-port\" && \"$#\" -gt 0 ]]; do shift; done\n"
+            + "port=\"$2\"\n"
+            + "(\n"
+            + "  sleep 0.05\n"
+            + "  exec 3<>\"/dev/tcp/127.0.0.1/$port\"\n"
+            + "  sleep 5\n"
+            + ") &\n"
+            + "echo inherited-standard-error >&2\n"
+            + "exit 7\n");
+        MakeExecutable(script);
+        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(1) };
+        var maximumExpectedDuration = TimeSpan.FromMilliseconds(4500);
+        var stopwatch = Stopwatch.StartNew();
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(script, options, TestContext.CancellationToken));
+        stopwatch.Stop();
+
+        Assert.Contains("exited with code 7", exception.Message);
+        Assert.Contains("inherited-standard-error", exception.Message);
+        Assert.DoesNotContain("did not connect back within", exception.Message);
+        Assert.IsLessThan(
+            maximumExpectedDuration,
+            stopwatch.Elapsed,
+            "The stopped-process probe includes a two-second stderr grace plus process startup and polling allowance, "
+            + "but must finish before the descendant's five-second pipe hold.");
+    }
+#endif
 
     [TestMethod]
     public void BuildLaunchWhenSourceIsExeLaunchesItDirectly()

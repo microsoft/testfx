@@ -485,11 +485,11 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</source>
-        <target state="new">Control whether progress is reported to screen.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
-This option takes precedence over the deprecated --no-progress flag.</target>
-        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
+        <target state="translated">진행률을 화면에 표시할지 여부를 제어합니다.
+유효한 값은 'auto'(기본값), 'on' ('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
+'auto'는 터미널이 현재 위치에서 업데이트할 수 없는 경우를 제외하고 진행률을 표시합니다. 예를 들어 --no-ansi를 사용하거나 CI 환경에서 실행할 때입니다.
+이 옵션은 더 이상 사용되지 않는 --no-progress 플래그보다 우선합니다.</target>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -505,10 +505,10 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
 Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 Passing the option without a value turns it on.</source>
-        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
-Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-Passing the option without a value turns it on.</target>
-        <note>Do not localize the values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+        <target state="translated">한 번 이상 실패했지만 다시 시도 후 최종적으로 통과된 테스트가 실행 요약에 나열되는지 여부를 제어합니다.
+유효한 값은 'on'(기본값, 'true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
+값을 사용하지 않고 옵션을 전달하면 옵션이 켜집니다.</target>
+        <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
         <source>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</source>

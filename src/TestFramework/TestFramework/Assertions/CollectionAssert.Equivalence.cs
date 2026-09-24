@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -136,8 +138,8 @@ public sealed partial class CollectionAssert
 
         DebugEx.Assert(actual is not null, "actual is not null here");
 
-        int expectedCollectionCount = expected.Count();
-        int actualCollectionCount = actual.Count();
+        int expectedCollectionCount = CollectionCountHelper.GetCount(expected);
+        int actualCollectionCount = CollectionCountHelper.GetCount(actual);
 
         // Check whether the element counts are different.
         if (expectedCollectionCount != actualCollectionCount)
@@ -312,8 +314,8 @@ public sealed partial class CollectionAssert
         DebugEx.Assert(notExpected is not null, "expected is not null here");
 
         // Check whether the element counts are different.
-        int notExpectedCount = notExpected.Count();
-        int actualCount = actual.Count();
+        int notExpectedCount = CollectionCountHelper.GetCount(notExpected);
+        int actualCount = CollectionCountHelper.GetCount(actual);
         if (notExpectedCount != actualCount)
         {
             return;

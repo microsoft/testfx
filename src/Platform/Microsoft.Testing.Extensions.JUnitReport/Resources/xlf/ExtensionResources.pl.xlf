@@ -62,7 +62,7 @@
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: 'MyReport_{tfm}.xml'.</source>
         <target state="translated">Nazwa wygenerowanego raportu XML JUnit. Może zawierać ścieżkę względną lub bezwzględną; ścieżki względne są rozpoznawane względem katalogu wyników testów, a brakujące katalogi są tworzone.
-Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej), {pid} (identyfikator procesu), {asm} (nazwa zestawu wejściowego), {tfm} (moniker platformy docelowej), {arch} ()architektura procesu, {time} (sygnatura czasowa).
+Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej), {pid} (identyfikator procesu), {asm} (nazwa zestawu wejściowego), {tfm} (moniker platformy docelowej), {arch} (architektura procesu), {time} (sygnatura czasowa).
 Przykład: „MyReport_{tfm}.xml”.</target>
         <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
@@ -94,7 +94,7 @@ Przykład: „MyReport_{tfm}.xml”.</target>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report.</source>
         <target state="translated">Włącz generowanie raportu JUnit w formacie XML.</target>
-        <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportRequiresArtifactPostProcessing">
         <source>JUnit report generation requires a test application builder that supports artifact post-processing.</source>

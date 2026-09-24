@@ -134,11 +134,11 @@ internal static class TestDataSourceUtilities
                 break;
 
             case string value:
-                builder.Append('"').Append(value).Append('"');
+                AppendEscapedString(builder, value);
                 break;
 
             case char value:
-                builder.Append('\'').Append(value).Append('\'');
+                AppendEscapedChar(builder, value);
                 break;
 
             case object?[] values:
@@ -157,6 +157,20 @@ internal static class TestDataSourceUtilities
                 builder.Append(data.ToString());
                 break;
         }
+    }
+
+    private static void AppendEscapedString(StringBuilder builder, string value)
+    {
+        builder.Append('"');
+        StringEscapeHelper.AppendEscapedString(builder, value, 0, value.Length, escapeUnpairedSurrogates: true, useExtendedEscapes: true);
+        builder.Append('"');
+    }
+
+    private static void AppendEscapedChar(StringBuilder builder, char value)
+    {
+        builder.Append('\'');
+        StringEscapeHelper.AppendEscapedChar(builder, value, useExtendedEscapes: true);
+        builder.Append('\'');
     }
 
     private sealed class MethodData

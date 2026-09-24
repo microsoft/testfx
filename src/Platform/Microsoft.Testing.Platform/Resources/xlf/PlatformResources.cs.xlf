@@ -434,17 +434,17 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="translated">Háček rozšíření {0}.{1} ze sestavení {2}, který je deklarovaný v manifestu rozšíření {3}, je deklarovaný jako „async void“. Platforma volá háček synchronně, takže by se vrátila při prvním čekání: vše, co se zaregistruje po tomto bodu, by se zahodilo ve vlastním nastavení testovací aplikace a všechny chyby by se ztratily. Nastavte háček jako synchronní.</target>
+        <target state="translated">Háček rozšíření ‚{0}.{1}' ze sestavení ‚{2}', který je deklarovaný v manifestu rozšíření ‚{3}', je deklarovaný jako ‚async void'. Platforma volá háček synchronně, takže by se vrátila při prvním čekání: vše, co se zaregistruje po tomto bodu, by se zahodilo ve vlastním nastavení testovací aplikace a všechny chyby by se ztratily. Nastavte háček jako synchronní.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="translated">Háček rozšíření {0}.{1} ze sestavení {2}, který je deklarovaný v manifestu rozšíření {3}, vrací {4}, ale musí vracet „void“. Platforma volá háček synchronně, takže se nikdy nezpozoruje návratová hodnota. Konkrétně vrácená úloha by se nikdy neočekávaná a jeho registrace a selhání by se ztratily.</target>
+        <target state="translated">Háček rozšíření ‚{0}.{1}' ze sestavení ‚{2}', který je deklarovaný v manifestu rozšíření ‚{3}', vrací ‚{4}', ale musí vracet ‚void'. Platforma volá háček synchronně, takže se nikdy nezpozoruje návratová hodnota. Konkrétně vrácená úloha by se nikdy neočekávaná a jeho registrace a selhání by se ztratily.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="translated">Typ {0} v sestavení '{1}, které je deklarováno v manifestu rozšíření {2}, nezpřístupňuje metodu „public static void“ s názvem {3}, která přijímá „ITestApplicationBuilder“ a „string[]“.</target>
+        <target state="translated">Typ ‚{0}' v sestavení ‚{1}', které je deklarováno v manifestu rozšíření ‚{2}', nezpřístupňuje metodu ‚public static void' s názvem ‚{3}', která přijímá ‚ITestApplicationBuilder' a ‚string[]'.</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
@@ -534,7 +534,7 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="translated">Manifest rozšíření {0} deklaruje načtení rozšíření, ale aktuální modul runtime nepodporuje dynamické načítání sestavení (například při publikování s nativním AOT). Nastavte vlastnost {1} každého rozšíření na „false“, odeberte manifest nebo odeberte {2} z příkazového řádku.</target>
+        <target state="translated">Manifest rozšíření ‚{0}' deklaruje načtení rozšíření, ale aktuální modul runtime nepodporuje dynamické načítání sestavení (například při publikování s nativním AOT). Nastavte vlastnost ‚{1}' každého rozšíření na ‚false', odeberte manifest nebo odeberte ‚{2}' z příkazového řádku.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -652,7 +652,7 @@
       <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
         <target state="translated">Položka „{0}“ v oddílu „{1}“ v souboru testconfig.json („{2}“) musí poskytnout neprázdnou skalární hodnotu nebo neprázdné pole skalárních hodnot.</target>
-        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
@@ -667,12 +667,12 @@
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
         <target state="translated">Položka {0} v oddílu {1} v souboru testconfig.json ({2}) musí být buď skalární hodnota (řetězec, číslo, logická hodnota), nebo pole skalárních hodnot. Vnořené objekty nejsou podporovány.</target>
-        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptions"}{Locked="timeout"}{Locked="timeout:0"}</note>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
         <target state="translated">V testconfig.json v části commandLineOptions: {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -682,12 +682,12 @@
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
         <target state="translated">Element JSON nejvyšší úrovně musí být objekt. Místo toho bylo nalezeno: {0}.</target>
-        <note>{0} is the JSON value kind that was found.</note>
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">Našel se nepodporovaný token JSON {0}.</target>
-        <note>{0} is the unsupported JSON token type.</note>
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
@@ -697,7 +697,7 @@
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
         <target state="translated">Oddíl {0} v souboru testconfig.json ({1}) musí být objekt JSON.</target>
-        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="environmentVariables"}</note>
+        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
@@ -842,7 +842,7 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">Parametr --list-tests přijal neočekávanou hodnotu {0}. Podporované hodnoty: {1}</target>
-        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}{Locked="text"}{Locked="json"}</note>
+        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
@@ -854,7 +854,7 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
         <target state="translated">Parametr „--server {0}“ vyžaduje zadání hodnoty „--{1}“.</target>
-        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
+        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
@@ -904,7 +904,7 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">Parametr --dotnet-test-transport obdržel neočekávanou hodnotu {0}. Podporované hodnoty jsou {1}.</target>
-        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
@@ -913,7 +913,7 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="translated">Povolte načítání rozšíření testovací platformy deklarovaných manifesty „*.testingplatformextensions.json“ nalezenými vedle testovací aplikace. Ve výchozím nastavení je to zakázané.</target>
+        <target state="translated">Povolte načítání rozšíření testovací platformy deklarovaných manifesty ‚*.testingplatformextensions.json' nalezenými vedle testovací aplikace. Ve výchozím nastavení je to zakázané.</target>
         <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -953,7 +953,7 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
         <target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu zadaných ukončovacích kódů.
-Například „--ignore-exit-code 8;9“ ignoruje ukončovací kódy 8 a 9 a v těchto případech vrátí hodnotu 0.
+Například '--ignore-exit-code 8;9' ignoruje ukončovací kódy 8 a 9 a v těchto případech vrátí hodnotu 0.
 Další informace o ukončovacích kódech najdete na https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
@@ -1031,7 +1031,7 @@ Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplika
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">Parametr „--server“ přijal neočekávanou hodnotu „{0}“. Podporované hodnoty: {1}.</target>
-        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}{Locked="jsonrpc"}{Locked="dotnettestcli"}</note>
+        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
@@ -1145,7 +1145,7 @@ Platné hodnoty jsou allow-skipped (výchozí), která započítává přeskoče
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">Stále se čeká na: </target>
-        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ". {Locked="{DisplayName} ({Phase}, {Seconds}s)"}{Locked="; "}</note>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -1294,7 +1294,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="translated">Spouštěč testovacího hostitele {0} (UID: {1}) požádal o autorizaci identity zabezpečení {2} v připojení ke kontroleru testovacího hostitele, ale autorizovat je možné jen identitu jedné aplikace v sandboxu (ve Windows identifikátor zabezpečení ve tvaru 'S-1-15-2-...'). Uživatelům, skupinám ani univerzálnímu identifikátoru zabezpečení {3} se přístup nikdy neuděluje.</target>
+        <target state="translated">Spouštěč testovacího hostitele ‚{0}' (UID: {1}) požádal o autorizaci identity zabezpečení ‚{2}' v připojení k řadiči testovacího hostitele, ale autorizovat je možné jen identitu jedné aplikace v sandboxu (ve Windows identifikátor zabezpečení ve tvaru ‚S-1-15-2-...'). Uživatelům, skupinám ani univerzálnímu identifikátoru zabezpečení ‚{3}' se přístup nikdy neuděluje.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
@@ -1355,7 +1355,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
         <target state="translated">Výraz filtru {0} obsahuje nevyvážený počet operátorů {1} {2}.</target>
-        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs. {Locked="()"}{Locked="[]"}</note>
+        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
@@ -1365,7 +1365,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
         <target state="translated">Filtr uvnitř výrazu v závorkách obsahuje neočekávaný operátor /. Filtr: {0}. Pokud chcete kombinovat alternativy pro jeden segment cesty, použijte syntaxi jako /A/B/C/(X|Y).</target>
-        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}{Locked="/A/(B/C)"}</note>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>

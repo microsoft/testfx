@@ -39,6 +39,8 @@ network:
   - defaults
   - dotnet
   - "*.blob.core.windows.net"
+  - github
+  - "*.in.applicationinsights.azure.com"
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
@@ -97,6 +99,7 @@ safe-outputs:
 tools:
   bash: true
   github:
+    mode: gh-proxy
     toolsets: [actions, issues, pull_requests, repos]
 ---
 
@@ -113,7 +116,7 @@ Always be:
 
 ## Scope
 
-Mutation testing covers the production projects exercised by the unit-test projects in `MutationTesting.slnx`, driven by the root `stryker-config.json` and run daily by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). **Do not** widen the solution, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
+Mutation testing covers the server-mode client sources exercised by their unit-test project in `MutationTesting.slnx`, selected by the root `stryker-config.json` and run daily by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). **Do not** widen the solution, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
 
 ## Persistent state
 
@@ -147,7 +150,7 @@ If the conclusion is not `success`:
 
 ### Step 3: Download and parse the report
 
-1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` using the configured GitHub Actions tools and the `upstream_run_id`. Do not use shell `gh run download` for this; the agent sandbox is not guaranteed to have an authenticated `gh` session.
+1. Download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` with `gh run download "$upstream_run_id" --repo "${{ github.repository }}" --name mutation-testing-report --dir ./stryker-report`. The configured `gh-proxy` mode provides the authenticated `gh` session without direct access to `api.github.com`.
 2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Compute a stable fingerprint for every candidate before comparing it to memory. Include at least the normalized repository-relative source path, mutator name, replacement text, start/end line and column, and original source snippet at that location. Revalidate any memory match against the current report and current source snippet before suppressing it; Stryker mutant IDs and line locations alone are not stable enough.
@@ -158,13 +161,13 @@ If the conclusion is not `success`:
 For **at most 2** of the remaining highest-value `Survived` or `NoCoverage` mutants (favor ones in behaviorally meaningful code — public API surfaces, error handling, boundary conditions — over pure boilerplate or generated code), and with **at most 2 total Stryker verification runs across the whole workflow run**:
 
 1. List open PRs with the `[mutation-test-improver]` title prefix. If there are already 3 or more open PRs, skip the rest of Step 4 for this run so the monthly report still updates without creating more PRs.
-2. From the repository root, run `./build.sh --binaryLog` before test or Stryker commands so the repo-local `.dotnet` SDK is provisioned from `global.json`.
+2. From the repository root, run `./build.sh --binaryLog` before test or Stryker commands so the repo-local `.dotnet` SDK is provisioned from `global.json`. Before iterating over candidate mutants, read the pinned version from `.config/stryker/dotnet-tools.json` and install `dotnet-stryker` once to `$GITHUB_WORKSPACE/artifacts/tools/stryker` with `$GITHUB_WORKSPACE/.dotnet/dotnet tool install dotnet-stryker --tool-path "$GITHUB_WORKSPACE/artifacts/tools/stryker" --version "<pinned-version>" --configfile "$GITHUB_WORKSPACE/.config/stryker/NuGet.config"`. Reuse this installation for every verification run.
 3. Read the mutated file and surrounding context to understand the intended behavior and what the specific mutation (e.g. a boundary flip, boolean negation, removed block) would break.
 4. If you cannot confidently explain the intended behavior, skip this mutant — do not guess.
 5. If the mutant looks behaviorally equivalent (the mutated code cannot be distinguished from the original by any observable behavior), record it in the monthly report as a known equivalent mutant with your reasoning, and skip it.
 6. Otherwise, find (or create) the corresponding test file under the unit-test project associated with the mutated production project and add a focused test asserting the exact behavior the mutant would violate. Match that project's existing test framework and assertion style (check its `BannedSymbols.txt` if present, otherwise mirror neighboring tests).
 7. Build and run the unit test project with `$GITHUB_WORKSPACE/.dotnet/dotnet` to confirm the new test compiles and passes against the original (unmutated) code.
-8. **Verify the fix**: restore Stryker with `$GITHUB_WORKSPACE/.dotnet/dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config`, identify the mutated production project's `.csproj` file name and the mutated source path relative to that project, then from `$GITHUB_WORKSPACE/.config/stryker` run `MutationTesting=true $GITHUB_WORKSPACE/.dotnet/dotnet stryker --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --project "<ProductionProject.csproj>" --mutate "<project-relative-source-path>" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing-verify" --skip-version-check`. Confirm the targeted mutant's status flipped to `Killed` in the new report.
+8. **Verify the fix**: set `DOTNET_CLI_TELEMETRY_OPTOUT=1`, set `DOTNET_ROOT="$GITHUB_WORKSPACE/.dotnet"`, and prepend it to `PATH` so Stryker's child builds use the repository-pinned SDK without telemetry overhead. Identify the mutated production project's `.csproj` file name and the mutated source path relative to that project. Then, from the repository root, run `MutationTesting=true "$GITHUB_WORKSPACE/artifacts/tools/stryker/dotnet-stryker" --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --project "<ProductionProject.csproj>" --mutate "<project-relative-source-path>" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing-verify" --skip-version-check`. Stryker solution mode requires the working directory to match the solution directory. Confirm the targeted mutant's status flipped to `Killed` in the new report.
    - Count each Stryker invocation against the workflow's total verification budget. If the budget is exhausted, stop attempting fixes and continue to Step 5.
    - If it did not flip, don't force it — try at most one more angle only when verification budget remains; otherwise abandon this mutant, record the attempt outcome in the monthly report, restore the test worktree to remove the abandoned edits, and move to the next candidate.
 9. For each mutant you successfully kill, emit a safe-output request for a small draft PR from a fresh branch (`mutation-test-improver/<short-desc>`) with:

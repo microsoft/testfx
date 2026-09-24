@@ -49,6 +49,10 @@ public sealed class MtpServerClientInProcessTests
             $"'--client-port' must carry the client's listener port. Actual: {string.Join(" ", arguments)}");
         Assert.AreEqual("--no-banner", arguments[6]);
         Assert.HasCount(7, arguments);
+        Assert.Contains(
+            $"Hosting an MTP server in process with '{string.Join(" ", arguments)}'.",
+            server.Log,
+            "The launch diagnostic must include the complete argument array handed to the callback.");
     }
 
     [TestMethod]
@@ -126,6 +130,27 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken));
 
         Assert.AreSame(callbackFailure, exception.InnerException);
+        Assert.Contains("failed before connecting back", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackReportsMultipleFailuresBeforeConnecting_PreservesAggregateException()
+    {
+        var firstFailure = new InvalidOperationException("The first startup operation failed.");
+        var secondFailure = new IOException("The second startup operation failed.");
+        var callbackCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        callbackCompletion.SetException([firstFailure, secondFailure]);
+
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) => callbackCompletion.Task,
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        AggregateException aggregateException = Assert.IsInstanceOfType<AggregateException>(exception.InnerException);
+        Assert.HasCount(2, aggregateException.InnerExceptions);
+        Assert.AreSame(firstFailure, aggregateException.InnerExceptions[0]);
+        Assert.AreSame(secondFailure, aggregateException.InnerExceptions[1]);
     }
 
     [TestMethod]
@@ -182,6 +207,7 @@ public sealed class MtpServerClientInProcessTests
 
         TaskCanceledException cancellationException = Assert.IsInstanceOfType<TaskCanceledException>(exception.InnerException);
         Assert.IsNotNull(cancellationException.Task);
+        Assert.Contains("was canceled before connecting back", exception.Message);
     }
 
     [TestMethod]
@@ -221,6 +247,10 @@ public sealed class MtpServerClientInProcessTests
             "exited with code 3",
             exception.Message,
             "A callback that returns without connecting back must be reported with its exit code, not as a timeout.");
+        Assert.Contains(
+            "Make sure the callback forwards the supplied server-mode arguments",
+            exception.Message,
+            "The failure must tell embedded hosts how to correct a callback that exits before connecting.");
     }
 
     [TestMethod]
@@ -235,6 +265,7 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken));
 
         Assert.IsInstanceOfType<MtpServerClientException>(exception.InnerException);
+        Assert.Contains("returned a null task", exception.InnerException.Message);
     }
 
     [TestMethod]
@@ -319,6 +350,10 @@ public sealed class MtpServerClientInProcessTests
             stopwatch.Stop();
 
             Assert.Contains("did not connect back within", exception.Message);
+            Assert.Contains(
+                "Make sure the callback forwards the supplied server-mode arguments",
+                exception.Message,
+                "A connection timeout must explain the most likely embedded-host integration error.");
             Assert.IsLessThan(
                 TimeSpan.FromSeconds(20),
                 stopwatch.Elapsed,
@@ -519,9 +554,13 @@ public sealed class MtpServerClientInProcessTests
             server.Completion.Exception?.GetBaseException());
         Assert.AreEqual("The application failed while shutting down.", faultException.Message);
         Assert.Contains(
-            "The in-process MTP application failed",
+            "The in-process MTP application failed during disposal",
             server.Log,
             $"The shutdown failure must be reported through the client logger. Log:{Environment.NewLine}{server.Log}");
+        Assert.Contains(
+            "The application failed while shutting down.",
+            server.Log,
+            "The disposal diagnostic must retain the callback failure details.");
     }
 
     [TestMethod]
@@ -601,7 +640,7 @@ public sealed class MtpServerClientInProcessTests
         var releaseCancellationHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
         MtpServerClientOptions options = CreateOptions();
-        options.ServerShutdownTimeout = TimeSpan.FromSeconds(1);
+        options.ServerShutdownTimeout = TimeSpan.FromSeconds(5);
         var log = new StringBuilder();
         options.Logger = new DelegateMtpClientLogger((_, message) =>
         {
@@ -647,10 +686,11 @@ public sealed class MtpServerClientInProcessTests
             client.Dispose();
             stopwatch.Stop();
 
-            // The connection's fixed 5s read-loop wait must overlap ServerShutdownTimeout (1s) plus the fixed
-            // 5s cancellation grace. Running those waits serially would take at least 11s.
+            // Matching ServerShutdownTimeout to the connection's fixed 5s read-loop wait avoids depending on a
+            // shorter timer continuation getting a worker before a blocked handler releases one on net462. The
+            // fixed 5s cancellation grace makes the concurrent path take about 10s; serial waits take at least 15s.
             Assert.IsLessThan(
-                TimeSpan.FromSeconds(9),
+                TimeSpan.FromSeconds(13),
                 stopwatch.Elapsed,
                 $"Dispose took {stopwatch.Elapsed.TotalSeconds:N1}s; it must abandon an unresponsive application within the documented bound rather than block indefinitely.");
 
@@ -665,6 +705,10 @@ public sealed class MtpServerClientInProcessTests
             }
 
             Assert.Contains("abandoning it", text, $"Abandoning the application must be reported. Log:{Environment.NewLine}{text}");
+            Assert.Contains(
+                "requesting cancellation",
+                text,
+                $"Escalating from graceful shutdown to cancellation must be reported. Log:{Environment.NewLine}{text}");
         }
         finally
         {
@@ -760,6 +804,23 @@ public sealed class MtpServerClientInProcessTests
             nameof(MtpServerClientOptions.EnvironmentVariables),
             server.Log,
             "An in-process application shares the caller's environment, so silently dropping the variables would be a trap.");
+        Assert.Contains(
+            "application is hosted in process: it shares the caller's environment",
+            server.Log,
+            "The warning must explain why the configured variables are ignored.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_WithNoEnvironmentVariables_DoesNotWarnAboutIgnoredVariables()
+    {
+        using var server = new InProcessServerFixture();
+
+        using MtpServerClient client = await LaunchAsync(server);
+
+        Assert.DoesNotContain(
+            nameof(MtpServerClientOptions.EnvironmentVariables),
+            server.Log,
+            "The client must not emit an ignored-environment warning when no variables were configured.");
     }
 
     private async Task<MtpServerClient> LaunchAsync(InProcessServerFixture server, MtpServerClientOptions? options = null)

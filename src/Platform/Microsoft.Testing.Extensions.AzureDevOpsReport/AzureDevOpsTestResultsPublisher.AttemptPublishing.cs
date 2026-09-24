@@ -26,14 +26,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         for (int i = 0; i < seeds.Count; i++)
         {
             AzureDevOpsTestCaseResult[] attemptResults = [.. seeds[i].Attempts.Select(static attempt => attempt.Result)];
+            (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(attemptResults);
             parents[i] = seeds[i].Parent.Result with
             {
                 Id = seeds[i].ResultId,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
                 SubResults = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1),
                 DurationInMs = AzureDevOpsResultIdStore.SumResultDurations(attemptResults),
-                StartedDate = AzureDevOpsResultIdStore.GetEarliestStartedDate(attemptResults),
-                CompletedDate = AzureDevOpsResultIdStore.GetLatestCompletedDate(attemptResults),
+                StartedDate = startedDate,
+                CompletedDate = completedDate,
             };
         }
 
@@ -120,5 +121,27 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     attempt.Attachments));
             }
         }
+    }
+
+    private static (DateTimeOffset? StartedDate, DateTimeOffset? CompletedDate) GetDateRange(
+        IReadOnlyList<AzureDevOpsTestCaseResult> attempts)
+    {
+        DateTimeOffset? earliest = null;
+        DateTimeOffset? latest = null;
+        for (int i = 0; i < attempts.Count; i++)
+        {
+            AzureDevOpsTestCaseResult attempt = attempts[i];
+            if (attempt.StartedDate is { } startedDate && (earliest is null || startedDate < earliest))
+            {
+                earliest = startedDate;
+            }
+
+            if (attempt.CompletedDate is { } completedDate && (latest is null || completedDate > latest))
+            {
+                latest = completedDate;
+            }
+        }
+
+        return (earliest, latest);
     }
 }

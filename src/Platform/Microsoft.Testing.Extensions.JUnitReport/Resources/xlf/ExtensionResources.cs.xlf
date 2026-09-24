@@ -63,7 +63,7 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
 Example: 'MyReport_{tfm}.xml'.</source>
         <target state="translated">Název vygenerované sestavy JUnit XML. Může obsahovat relativní nebo absolutní cestu. Relativní cesty se překládají na adresář výsledků testů a vytvoří se chybějící adresáře.
 Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko).
-Příklad: MyReport_{tfm}.xml.</target>
+Příklad: ‚MyReport_{tfm}.xml'.</target>
         <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
@@ -94,7 +94,7 @@ Příklad: MyReport_{tfm}.xml.</target>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report.</source>
         <target state="translated">Povolit generování sestavy JUnit XML.</target>
-        <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportRequiresArtifactPostProcessing">
         <source>JUnit report generation requires a test application builder that supports artifact post-processing.</source>

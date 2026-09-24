@@ -37,7 +37,7 @@
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
         <target state="translated">Zadejte název souboru výpisu paměti.
 Podporuje následující zástupné symboly: {pname} (název spustitelného souboru procesu, odloženo na modul runtime .NET jako „%e“), {pid} (ID procesu, odloženo na modul runtime .NET jako „%p“), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {time} (časové razítko při konfiguraci prostředí crashdump). Podporují se také starší tokeny %p / %e / %h / %t spotřebované přímo v createdump modulu runtime .NET.</target>
-        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
+        <note>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
@@ -52,7 +52,7 @@ Podporuje následující zástupné symboly: {pname} (název spustitelného soub
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
         <target state="translated">[Pouze net6.0+ ] Vygenerovat soubor výpisu paměti v případě chybového ukončení procesu testu.</target>
-        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
@@ -67,7 +67,7 @@ Podporuje následující zástupné symboly: {pname} (název spustitelného soub
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Hostitelský proces testu s identifikátorem PID {0} byl chybově ukončen. Byl vygenerován soubor výpisu paměti.</target>
-        <note>{0} is the crashed test host process ID.</note>
+        <note>{0} is the crashed test host process ID and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
@@ -111,7 +111,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">Určete typ výpisu paměti.
 Platné hodnoty jsou Mini, Heap, Triage a Full. Výchozí typ je Full.
 Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</target>
-        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
+        <note>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are {1}</source>
@@ -151,7 +151,7 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">Totéž jako --crash-report, ale na platformách, kde se generování hlášení o chybovém ukončení nepodporuje, se potichu ignoruje s informační zprávou. Tuto možnost použijte, pokud chcete zachovat stejný příkazový řádek napříč maticemi CI, které zahrnují Windows. Vzájemně se vylučuje s --crash-report.</target>
-        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
+        <note>Do not localize option name {Locked="--crash-report"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
@@ -167,9 +167,9 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">Určuje, zda se spolu s výpisem stavu systému při chybovém ukončení nebo sestavou o chybovém ukončení vygeneruje soubor sekvence uvádějící testy spuštěné a ukončené během testovací relace.
-Soubor umožňuje identifikovat testy, které byly spuštěny v době chybového ukončení, aniž by bylo nutné kontrolovat výpis paměti.
-Platné hodnoty jsou 'on' (výchozí; přijímá také hodnoty 'true', 'enable', '1') nebo 'off' (přijímá také hodnoty 'false', 'disable', '0').</target>
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
         <note>Do not localize option values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">

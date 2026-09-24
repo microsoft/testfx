@@ -289,7 +289,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerDescription" xml:space="preserve">
     <value>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</value>
-    <comment>{Locked="TestContext"}{Locked="static"}</comment>
+    <comment>{Locked=&quot;TestContext&quot;}{Locked=&quot;static&quot;}</comment>
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerMessageFormat" xml:space="preserve">
     <value>Do not store TestContext in a static member</value>
@@ -301,7 +301,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsDescription" xml:space="preserve">
     <value>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</value>
-    <comment>{Locked="Assert.Fail"}</comment>
+    <comment>{Locked=&quot;Assert.Fail&quot;}</comment>
   </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</value>
@@ -313,7 +313,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferConstructorOverTestInitializeDescription" xml:space="preserve">
     <value>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</value>
-    <comment>{Locked="readonly"}{Locked="MSTEST0019"}</comment>
+    <comment>{Locked=&quot;readonly&quot;}{Locked=&quot;MSTEST0019&quot;}</comment>
   </data>
   <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
@@ -325,7 +325,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferDisposeOverTestCleanupDescription" xml:space="preserve">
     <value>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</value>
-    <comment>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</comment>
+    <comment>{Locked=&quot;DisposeAsync&quot;}{Locked=&quot;&apos;Dispose&apos;&quot;}{Locked=&quot;.NET&quot;}{Locked=&quot;MSTEST0022&quot;}</comment>
   </data>
   <data name="PreferDisposeOverTestCleanupMessageFormat" xml:space="preserve">
     <value>Prefer 'Dispose' over TestCleanup methods</value>
@@ -337,7 +337,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferTestCleanupOverDisposeDescription" xml:space="preserve">
     <value>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</value>
-    <comment>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</comment>
+    <comment>{Locked=&quot;[TestCleanup]&quot;}{Locked=&quot;IAsyncDisposable&quot;}{Locked=&quot;MSTEST0021&quot;}</comment>
   </data>
   <data name="PreferTestCleanupOverDisposeMessageFormat" xml:space="preserve">
     <value>Prefer TestCleanup over 'Dispose' methods</value>
@@ -349,7 +349,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferTestInitializeOverConstructorDescription" xml:space="preserve">
     <value>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</value>
-    <comment>{Locked="[TestInitialize]"}{Locked="MSTEST0020"}</comment>
+    <comment>{Locked=&quot;[TestInitialize]&quot;}{Locked=&quot;MSTEST0020&quot;}</comment>
   </data>
   <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
@@ -632,7 +632,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassDescription" xml:space="preserve">
     <value>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</value>
-    <comment>{Locked="MSTest"}{Locked="[DeploymentItem]"}</comment>
+    <comment>{Locked=&quot;MSTest&quot;}{Locked=&quot;[DeploymentItem]&quot;}</comment>
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
@@ -669,7 +669,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="StringAssertToAssertDescription" xml:space="preserve">
     <value>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</value>
-    <comment>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</comment>
+    <comment>{Locked=&quot;StringAssert&quot;}{Locked=&quot;&apos;Assert&apos;&quot;}{Locked=&quot;API&quot;}</comment>
   </data>
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'StringAssert'</value>
@@ -681,7 +681,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="CollectionAssertToAssertDescription" xml:space="preserve">
     <value>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</value>
-    <comment>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</comment>
+    <comment>{Locked=&quot;CollectionAssert&quot;}{Locked=&quot;&apos;Assert&apos;&quot;}{Locked=&quot;API&quot;}</comment>
   </data>
   <data name="CollectionAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'CollectionAssert'</value>
@@ -762,6 +762,18 @@ The type declaring these methods should also respect the following rules:
   <data name="DuplicateDataRowMessageFormat" xml:space="preserve">
     <value>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</value>
     <comment>{0} is the first duplicate attribute index. {1} is the second duplicate attribute index. {Locked="DataRow"}</comment>
+  </data>
+  <data name="DuplicateDataRowDisplayNameTitle" xml:space="preserve">
+    <value>Avoid duplicated 'DataRow' display names</value>
+    <comment>{Locked="DataRow"}</comment>
+  </data>
+  <data name="DuplicateDataRowDisplayNameDescription" xml:space="preserve">
+    <value>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</value>
+    <comment>{Locked="DataRow"}</comment>
+  </data>
+  <data name="DuplicateDataRowDisplayNameMessageFormat" xml:space="preserve">
+    <value>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</value>
+    <comment>{0} is the duplicated display name. {Locked="DataRow"}</comment>
   </data>
   <data name="UseRetryWithTestMethodDescription" xml:space="preserve">
     <value>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</value>
@@ -863,7 +875,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeDescription" xml:space="preserve">
     <value>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</value>
-    <comment>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</comment>
+    <comment>{Locked=&quot;MSTest 3.8&quot;}{Locked=&quot;DynamicDataSourceType.AutoDetect&quot;}</comment>
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
     <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
@@ -1190,7 +1202,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UndeclaredProcessGlobalStateMutationMessageFormat" xml:space="preserve">
     <value>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</value>
-    <comment>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
+    <comment>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
   </data>
   <data name="UndeclaredProcessGlobalStateMutationDescription" xml:space="preserve">
     <value>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</value>
@@ -1201,7 +1213,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="CurrentDirectoryMutationUnderParallelizationMessageFormat" xml:space="preserve">
     <value>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</value>
-    <comment>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
+    <comment>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</comment>
   </data>
   <data name="CurrentDirectoryMutationUnderParallelizationDescription" xml:space="preserve">
     <value>The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</value>
@@ -1271,7 +1283,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="InheritedMemberFromDifferentMSTestVersionDescription" xml:space="preserve">
     <value>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</value>
-    <comment>{Locked="MSTest"}{Locked="[TestInitialize]"}{Locked="[TestCleanup]"}{Locked="[ClassInitialize]"}{Locked="[ClassCleanup]"}{Locked="[TestMethod]"}{Locked="[DataTestMethod]"}{Locked="Microsoft.VisualStudio.TestPlatform.TestFramework"}{Locked="MSTest.TestFramework"}</comment>
+    <comment>{Locked=&quot;MSTest&quot;}{Locked=&quot;[TestInitialize]&quot;}{Locked=&quot;[TestCleanup]&quot;}{Locked=&quot;[ClassInitialize]&quot;}{Locked=&quot;[ClassCleanup]&quot;}{Locked=&quot;[TestMethod]&quot;}{Locked=&quot;[DataTestMethod]&quot;}{Locked=&quot;Microsoft.VisualStudio.TestPlatform.TestFramework&quot;}{Locked=&quot;MSTest.TestFramework&quot;}</comment>
   </data>
   <data name="OSPlatformAttributesShouldBeConsistentTitle" xml:space="preserve">
     <value>Platform compatibility attributes should be consistent with '[OSCondition]'</value>

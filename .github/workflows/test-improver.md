@@ -186,6 +186,12 @@ Use persistent repo memory to track:
 
 Read memory at the **start** of every run; update it at the **end**.
 
+Keep memory bounded and compact:
+
+- Store durable facts, stable identifiers, cursors, and one-line outcomes. Do not copy issue or PR bodies, comments, workflow logs, monthly summary text, or other content that GitHub already preserves.
+- Replace stale or completed entries instead of appending an unbounded history. Remove duplicates and obsolete details whenever memory is updated.
+- Before finishing, run `find /tmp/gh-aw/repo-memory -type f -print0 | xargs -0 -r wc -c` and ensure every file is below 90,000 bytes. If a file is larger, compact it by pruning stale, completed, duplicated, or reconstructable content; do not bypass the limit by moving the same verbose content into another file.
+
 **Important**: Memory may not be 100% accurate. Issues may have been created, closed, or commented on; PRs may have been created, merged, commented on, or closed since the last run. Always verify memory against current repository state - reviewing recent activity since your last run is wise before acting on stale assumptions.
 
 ## Workflow
