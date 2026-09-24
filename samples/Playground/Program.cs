@@ -37,7 +37,6 @@ public class Program
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
             Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args);
 
-
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
             testApplicationBuilder.AddCrashDumpProvider();

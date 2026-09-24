@@ -16,7 +16,6 @@ CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
 
-
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();

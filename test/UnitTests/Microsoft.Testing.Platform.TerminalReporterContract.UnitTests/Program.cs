@@ -16,7 +16,6 @@ Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
 
-
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
 #if ENABLE_CODECOVERAGE

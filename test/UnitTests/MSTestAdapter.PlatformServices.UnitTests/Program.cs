@@ -11,7 +11,6 @@ using TestFramework.ForTestingMSTest;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
 
-
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();
 #endif

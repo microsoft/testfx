@@ -11,7 +11,6 @@ using OpenTelemetry.Trace;
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args);
 
-
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddJUnitReportProvider();

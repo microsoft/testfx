@@ -18,7 +18,6 @@ Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
 
-
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
 // Register the same platform extensions every other testfx unit-test app registers. CI runs each test
