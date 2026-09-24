@@ -95,6 +95,15 @@ if (-not $directoryBuildTargets.Contains(
     '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"')) {
     throw "MTP test applications must reference the Azure DevOps affected-tests storage provider."
 }
+foreach ($testApplicationProperty in @(
+    "IsTestingPlatformApplication",
+    "EnableMSTestRunner",
+    "UseInternalTestFramework"
+)) {
+    if (-not $directoryBuildTargets.Contains("'`$($testApplicationProperty)' == 'true'")) {
+        throw "Affected-test package references must include projects enabled through $testApplicationProperty."
+    }
+}
 
 $manualEntryPoints = @(
     Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File

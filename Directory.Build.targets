@@ -72,7 +72,9 @@
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(IsTestingPlatformApplication)' == 'true' ">
+  <ItemGroup Condition=" '$(IsTestingPlatformApplication)' == 'true'
+    OR '$(EnableMSTestRunner)' == 'true'
+    OR '$(UseInternalTestFramework)' == 'true' ">
     <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests" />
     <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" />
   </ItemGroup>
