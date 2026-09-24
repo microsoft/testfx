@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.5.0" />[4.5.0] - UNRELEASED
+
+See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
+
+### Added
+
+* Ship the MSTest adapter's Microsoft.Testing.Platform integration and required runtime assets for classic and modern UWP targets while retaining VSTest routing for true UWP/AppContainer `MSTest.Sdk` applications, by @Evangelink in [#11118](https://github.com/microsoft/testfx/pull/11118)
+* Add opt-in assertion failure diagnostics through `CaptureAssertionFailureDiagnostics` / `mstest:execution:captureAssertionFailureDiagnostics`, producing bounded per-test artifacts with assertion values, source frames, concurrent tests and process state for supported VSTest and Microsoft.Testing.Platform runs, by @Evangelink in [#11244](https://github.com/microsoft/testfx/pull/11244)
+* Add MSTEST0084 and a code fix to align MSTest `OSCondition` attributes with `SupportedOSPlatformAttribute` and `UnsupportedOSPlatformAttribute`, including safe handling of versioned platform constraints, by @Evangelink in [#11044](https://github.com/microsoft/testfx/pull/11044) and [#11302](https://github.com/microsoft/testfx/pull/11302)
+* Add MSTEST0085 to report `[TestClass]` and derived attributes on abstract classes that MSTest cannot discover directly, by @Evangelink in [#11240](https://github.com/microsoft/testfx/pull/11240)
+* Add MSTEST0086 and a code fix to remove method-level MSTest attributes whose effective behavior is already supplied by the containing test class, by @Evangelink in [#11267](https://github.com/microsoft/testfx/pull/11267)
+* Add MSTEST0087 to report duplicate explicit `DataRow` display names within the same test method, by @Evangelink in [#11409](https://github.com/microsoft/testfx/pull/11409)
+
+### Changed
+
+* Use direct collection counts and indexers across `Assert.IsNotEmpty`, `Assert.HasCount`, `Assert.IsEmpty`, `Assert.ContainsSingle` and `CollectionAssert` equivalence checks, avoiding unnecessary enumeration for collection-backed inputs, by @Evangelink in [#10980](https://github.com/microsoft/testfx/pull/10980), [#11326](https://github.com/microsoft/testfx/pull/11326) and [#11353](https://github.com/microsoft/testfx/pull/11353)
+* Reduce reflection, resource lookup, allocation and array-enumeration overhead when generating data-driven test display names, by @Evangelink in [#11019](https://github.com/microsoft/testfx/pull/11019)
+* Escape control characters and unpaired surrogates in automatically generated data-driven test display names while preserving valid surrogate pairs and distinguishing literal escape-sequence text, by @Evangelink in [#11428](https://github.com/microsoft/testfx/pull/11428)
+* Avoid double enumeration and unnecessary allocation when converting VSTest test traits into Microsoft.Testing.Platform properties, by @Evangelink in [#11452](https://github.com/microsoft/testfx/pull/11452)
+
+### Fixed
+
+* Copy requested classic UWP adapter satellite assemblies independently of the build-machine culture when `EnableMSTestRunner=true`, by @Evangelink in [#11112](https://github.com/microsoft/testfx/pull/11112)
+* Prevent the MSTest source generator from crashing on null array attribute arguments such as `[DataRow(null)]`, preserving the value as one null test argument, by @Sergio0694 in [#11371](https://github.com/microsoft/testfx/pull/11371)
+* Restore source compatibility when asserting a non-null value against a collection with nullable element types, by @Sergio0694 in [#11374](https://github.com/microsoft/testfx/pull/11374)
+
 ## <a name="4.4.1" />[4.4.1] - 2026-09-15
 
 See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4.4.0...v4.4.1)
