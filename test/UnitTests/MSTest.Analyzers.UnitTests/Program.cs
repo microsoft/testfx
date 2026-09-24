@@ -12,7 +12,7 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE

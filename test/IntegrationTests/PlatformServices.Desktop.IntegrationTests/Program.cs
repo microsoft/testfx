@@ -9,7 +9,7 @@ using OpenTelemetry.Trace;
 using TestFramework.ForTestingMSTest;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
+builder.AddAffectedTestsProvider();
 
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverageProvider();

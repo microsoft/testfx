@@ -7,7 +7,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 

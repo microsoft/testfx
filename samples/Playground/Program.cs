@@ -35,7 +35,7 @@ public class Program
 #endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-            Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args);
+            testApplicationBuilder.AddAffectedTestsProvider();
 
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);

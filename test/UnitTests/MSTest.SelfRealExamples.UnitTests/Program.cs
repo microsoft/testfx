@@ -9,7 +9,7 @@ using OpenTelemetry.Trace;
 [assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.ClassLevel, Workers = 0)]
 
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args);
+testApplicationBuilder.AddAffectedTestsProvider();
 
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 testApplicationBuilder.AddTrxReportProvider();

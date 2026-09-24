@@ -17,7 +17,7 @@ Console.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.R
 #endif
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(builder, args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 

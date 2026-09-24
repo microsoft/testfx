@@ -5,6 +5,7 @@ namespace FSharpPlayground
 
 open System
 open System.Reflection
+open Microsoft.Testing.Extensions
 open Microsoft.Testing.Platform.Builder
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
@@ -16,7 +17,7 @@ module Program =
 
         task {
             let! testApplicationBuilder = TestApplication.CreateBuilderAsync(args)
-            Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions(testApplicationBuilder, args)
+            testApplicationBuilder.AddAffectedTestsProvider()
 
             // Test MSTest
             let entryAssembly =

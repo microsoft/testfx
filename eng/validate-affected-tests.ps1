@@ -106,8 +106,7 @@ $manualEntryPoints = @(
 foreach ($entryPoint in $manualEntryPoints) {
     $entryPointText = Get-Content -LiteralPath $entryPoint.FullName -Raw
     if ($entryPointText.Contains("TestApplication.CreateBuilderAsync(args)") -and
-        -not $entryPointText.Contains(
-            "Microsoft.Testing.Extensions.AffectedTests.TestingPlatformBuilderHook.AddExtensions")) {
+        -not $entryPointText.Contains(".AddAffectedTestsProvider()")) {
         throw "MTP entry point '$($entryPoint.FullName)' must register Microsoft.Testing.Extensions.AffectedTests."
     }
 }
