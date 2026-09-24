@@ -12,7 +12,7 @@ steps:
 
 - pwsh: |
     $installDirectory = "$(Agent.TempDirectory)\dotnet10"
-    & .\eng\common\dotnet-install.ps1 -version 10.0.401 -runtime sdk -dotnetPath $installDirectory
+    & .\eng\common\dotnet-install.ps1 -version 10.0.401 -runtime '' -dotnetPath $installDirectory
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     & .\eng\common\dotnet-install.ps1 -version 8.0.31 -runtime dotnet -dotnetPath $installDirectory
     exit $LASTEXITCODE
