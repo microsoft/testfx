@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -15,7 +15,6 @@
     <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
-    <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
 
     <!--
@@ -28,15 +27,6 @@
 
     <!-- Unpackaged apps do not need any of the MSIX packaging tooling. -->
     <EnableMsixTooling>false</EnableMsixTooling>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <!--
-      A WinUI app already owns its entry point (generated from the ApplicationDefinition below), so the
-      testing platform must not generate a competing one. UnitTestApp.OnLaunched hosts the platform instead.
-    -->
-    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,13 +42,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
-    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
-    <!--
-      NOTE: Microsoft.Testing.Extensions.PackagedApp is deliberately NOT referenced here. It exists to
-      register and AUMID-activate a *packaged* (MSIX) app, which an unpackaged app does not need — the
-      executable is simply started. Referencing it anyway would be harmless (the launcher detects that
-      this layout has no AppxManifest.xml and stays disabled), but there is nothing for it to do.
-    -->
   </ItemGroup>
 
   <!-- Publish Properties -->
