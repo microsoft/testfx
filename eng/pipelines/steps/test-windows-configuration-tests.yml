@@ -79,8 +79,9 @@ steps:
       BUILD_CONTAINERID: $(Build.ContainerId)
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-  # Scheduled and manual runs keep their full-validation contract. PRs also fall back when the cache is absent or the
-  # extension rejects a missing, stale, or incompatible map.
+  # Scheduled and manual runs keep their full-validation contract. PRs use this explicit fallback only when the
+  # affected-test command fails; missing, stale, incompatible, or inaccessible maps are handled inside the extension
+  # by running all tests.
   - pwsh: |
       Write-Host "##vso[task.setvariable variable=PublishCoverageReport]true"
 
