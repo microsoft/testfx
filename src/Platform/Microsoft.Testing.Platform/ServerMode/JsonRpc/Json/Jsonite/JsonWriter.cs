@@ -58,11 +58,11 @@ namespace Jsonite
         {
             // These converters have to match to the one declared in JsonReflectorDefault.Converters.
             //
-            // Static and allocation-free: the previous version rebuilt this Dictionary<Type, Action<object>>
-            // (with 18 closures each capturing the per-call TextWriter) inside the constructor, i.e. on every
-            // single JSON serialization on this (net462/netstandard2.0-only) code path - every RPC message and
-            // test-node update sent by a server-mode host running on .NET Framework. The instance methods
-            // (WriteString) are reached through a static local delegate that takes the owning JsonWriter as its
+            // Static and allocation-free per serialization: the previous version rebuilt this
+            // Dictionary<Type, Action<object>> (with 19 delegates capturing per-call state) inside the constructor,
+            // i.e. on every single JSON serialization on this (net462/netstandard2.0-only) code path - every RPC
+            // message and test-node update sent by a server-mode host running on .NET Framework. The instance
+            // methods (WriteString) are reached through a static delegate that takes the owning JsonWriter as its
             // first argument, so the table itself never captures per-instance state.
             private static readonly Dictionary<Type, Action<JsonWriter, object>> Writers = new()
             {
