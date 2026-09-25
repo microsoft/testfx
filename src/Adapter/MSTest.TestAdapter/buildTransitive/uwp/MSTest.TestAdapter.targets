@@ -33,6 +33,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.MSBuild.dll"
              Link="Microsoft.Testing.Extensions.MSBuild.dll"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.Retry.dll"
+             Link="Microsoft.Testing.Extensions.Retry.dll"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)Microsoft.Testing.Extensions.Telemetry.dll"
              Link="Microsoft.Testing.Extensions.Telemetry.dll"
              CopyToOutputDirectory="PreserveNewest" />

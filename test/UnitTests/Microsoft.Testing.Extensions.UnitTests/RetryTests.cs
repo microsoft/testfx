@@ -137,6 +137,71 @@ public class RetryTests
         processHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
     }
 
+    [DataRow(0, 1, true, 0)]
+    [DataRow(1, 0, true, 2)]
+    [DataRow(0, 0, false, 1)]
+    [TestMethod]
+    public async Task RunAttemptAsync_NonAuthoritativeHandle_DerivesExitCodeFromReportedCounts(
+        int failedTestResults,
+        int passedTestResults,
+        bool countsReported,
+        int expectedExitCode)
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        serviceProvider.AddService(Mock.Of<IFileSystem>());
+        serviceProvider.AddService(Mock.Of<ITestApplicationCancellationTokenSource>(
+            source => source.CancellationToken == CancellationToken.None));
+        serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], Mock.Of<ILogger>());
+        serviceProvider.AddService(new ConnectingTestHostLauncher(
+            exitCode: 1,
+            isExitCodeAuthoritative: false,
+            onConnected: () =>
+            {
+                if (!countsReported)
+                {
+                    return;
+                }
+
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.FailedTestResults))!
+                    .SetValue(server, failedTestResults);
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.TotalTestRan))!
+                    .SetValue(server, failedTestResults + passedTestResults);
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.CountsReported))!
+                    .SetValue(server, true);
+            }));
+
+        List<string> arguments =
+        [
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}",
+            server.PipeName,
+        ];
+
+        RetryTestHostRunner.AttemptResult result = await RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            arguments,
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            CancellationToken.None);
+
+        Assert.AreEqual(expectedExitCode, result.ExitCode);
+        Assert.IsFalse(result.ExitedBeforeConnect);
+    }
+
     [TestMethod]
     public async Task RunAttemptAsync_AlreadyExitedCustomHandle_DoesNotWaitForPipeTimeout()
     {
@@ -1313,7 +1378,10 @@ public class RetryTests
         }
     }
 
-    private sealed class ConnectingTestHostLauncher : ITestHostLauncher
+    private sealed class ConnectingTestHostLauncher(
+        int exitCode = 0,
+        bool isExitCodeAuthoritative = true,
+        Action? onConnected = null) : ITestHostLauncher
     {
         public TestHostLaunchContext? Context { get; private set; }
 
@@ -1333,30 +1401,34 @@ public class RetryTests
             int pipeNameIndex = context.Arguments.ToList().IndexOf($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}") + 1;
             var pipeClient = new NamedPipeClientStream(".", context.Arguments[pipeNameIndex], PipeDirection.InOut, PipeOptions.Asynchronous);
             await pipeClient.ConnectAsync(5_000, cancellationToken);
-            return new ConnectedTestHostHandle(pipeClient, new GetListOfFailedTestsRequestSerializer().Id);
+            return new ConnectedTestHostHandle(
+                pipeClient,
+                new GetListOfFailedTestsRequestSerializer().Id,
+                exitCode,
+                isExitCodeAuthoritative,
+                onConnected);
         }
     }
 
-    private sealed class ConnectedTestHostHandle : ITestHostHandle
+    private sealed class ConnectedTestHostHandle(
+        NamedPipeClientStream pipeClient,
+        int requestSerializerId,
+        int exitCode,
+        bool isExitCodeAuthoritative,
+        Action? onConnected) : ITestHostHandle, ITestHostHandleExitCodePolicy
     {
         private static readonly TimeSpan RetryPipeRoundTripTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly NamedPipeClientStream _pipeClient;
-        private readonly Task _exitTask;
-        private readonly int _requestSerializerId;
-
-        public ConnectedTestHostHandle(NamedPipeClientStream pipeClient, int requestSerializerId)
-        {
-            _pipeClient = pipeClient;
-            _requestSerializerId = requestSerializerId;
-            _exitTask = CompleteRunAsync();
-        }
+        private readonly NamedPipeClientStream _pipeClient = pipeClient;
+        private readonly Task _exitTask = CompleteRunAsync(pipeClient, requestSerializerId, onConnected);
 
         public string Identifier => nameof(ConnectedTestHostHandle);
 
-        public int ExitCode => 0;
+        public int ExitCode => exitCode;
 
         public bool HasExited => _exitTask.IsCompleted;
+
+        public bool IsExitCodeAuthoritative => isExitCodeAuthoritative;
 
         public Task WaitForExitAsync(CancellationToken cancellationToken)
             => _exitTask.WithCancellationAsync(cancellationToken);
@@ -1367,7 +1439,10 @@ public class RetryTests
 
         public void Dispose() => _pipeClient.Dispose();
 
-        private async Task CompleteRunAsync()
+        private static async Task CompleteRunAsync(
+            NamedPipeClientStream pipeClient,
+            int requestSerializerId,
+            Action? onConnected)
         {
             await Task.Yield();
 
@@ -1376,27 +1451,31 @@ public class RetryTests
             // Complete a retry-protocol round trip before reporting exit so the server has accepted the connection.
             byte[] request = new byte[2 * sizeof(int)];
             BitConverter.GetBytes(sizeof(int)).CopyTo(request, 0);
-            BitConverter.GetBytes(_requestSerializerId).CopyTo(request, sizeof(int));
-            await _pipeClient.WriteAsync(request, 0, request.Length, timeout.Token);
-            await _pipeClient.FlushAsync(timeout.Token);
+            BitConverter.GetBytes(requestSerializerId).CopyTo(request, sizeof(int));
+            await pipeClient.WriteAsync(request, 0, request.Length, timeout.Token);
+            await pipeClient.FlushAsync(timeout.Token);
 
             byte[] responseSizeBuffer = new byte[sizeof(int)];
-            await ReadExactlyAsync(responseSizeBuffer, timeout.Token);
+            await ReadExactlyAsync(pipeClient, responseSizeBuffer, timeout.Token);
             int responseSize = BitConverter.ToInt32(responseSizeBuffer, 0);
             if (responseSize < sizeof(int))
             {
                 throw new InvalidDataException($"Invalid retry pipe response size: {responseSize}.");
             }
 
-            await ReadExactlyAsync(new byte[responseSize], timeout.Token);
+            await ReadExactlyAsync(pipeClient, new byte[responseSize], timeout.Token);
+            onConnected?.Invoke();
         }
 
-        private async Task ReadExactlyAsync(byte[] buffer, CancellationToken cancellationToken)
+        private static async Task ReadExactlyAsync(
+            NamedPipeClientStream pipeClient,
+            byte[] buffer,
+            CancellationToken cancellationToken)
         {
             int bytesRead = 0;
             while (bytesRead < buffer.Length)
             {
-                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken)
+                int read = await pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken)
                     .WithCancellationAsync(cancellationToken);
                 if (read == 0)
                 {

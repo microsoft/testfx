@@ -158,6 +158,12 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             expectedPackageIdentityName,
             (string?)identity.Attribute("Name"),
             $"Unexpected package identity in the tooling-generated manifest '{manifestPath}'.");
+
+        string retryExtensionPath = Path.Combine(build.PackageLayoutPath, "Microsoft.Testing.Extensions.Retry.dll");
+        Assert.IsTrue(
+            File.Exists(retryExtensionPath),
+            $"The classic UWP package layout does not contain the Retry runtime asset '{retryExtensionPath}'. " +
+            $"Recipe: '{build.RecipePath}'. Binlog: '{build.BinlogPath}'.");
     }
 
     private static void AssertClassicUwpTrx(string trxPath, UwpBuildResult build)
