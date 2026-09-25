@@ -147,6 +147,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
             new Dictionary<string, string?>
             {
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"] = "controller-pipe",
+                ["testingplatform_dotnettest_executionid"] = "execution-id",
                 ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2",
                 ["TRXNAMEDPIPENAME"] = @"LOCAL\trx-pipe",
                 ["TESTINGPLATFORM_HANGDUMP_PIPENAME"] = @"LOCAL\hangdump-pipe",
@@ -158,8 +159,16 @@ public sealed class PackagedAppConnectBackHandshakeTests
 
         var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
 
-        Assert.HasCount(6, environment);
+        Assert.HasCount(7, environment);
         Assert.AreEqual("controller-pipe", environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"]);
+        Assert.AreEqual("execution-id", environment["testingplatform_dotnettest_executionid"]);
+        Assert.HasCount(
+            1,
+            environment.Keys.Where(
+                static key => string.Equals(
+                    key,
+                    "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
+                    StringComparison.OrdinalIgnoreCase)));
         Assert.AreEqual("2", environment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
         Assert.AreEqual(@"LOCAL\trx-pipe", environment["TRXNAMEDPIPENAME"]);
         Assert.AreEqual(@"LOCAL\hangdump-pipe", environment["TESTINGPLATFORM_HANGDUMP_PIPENAME"]);
