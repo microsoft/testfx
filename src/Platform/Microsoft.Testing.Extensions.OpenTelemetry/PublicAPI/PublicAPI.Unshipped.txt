@@ -1,1 +1,2 @@
 #nullable enable
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformDiagnostics(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

@@ -2,6 +2,8 @@
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.CommandLineParseResult(string? toolName, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>! options, System.Collections.Generic.IReadOnlyList<string!>! errors, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Collections.Generic.IReadOnlyList<string!>! expandedArguments) -> void
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ExpandedArguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestApplicationBuilder(Microsoft.Testing.Platform.Logging.ApplicationLoggingState! loggingState, System.DateTimeOffset createBuilderStart, Microsoft.Testing.Platform.Builder.TestApplicationOptions! testApplicationOptions, Microsoft.Testing.Platform.Helpers.IUnhandledExceptionsHandler! unhandledExceptionsHandler, string![]! args, string![]! expandedArgs) -> void
+Microsoft.Testing.Platform.Telemetry.TelemetryManager.AddOpenTelemetryService(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService!>! openTelemetryServiceFactory) -> void
+Microsoft.Testing.Platform.Telemetry.TelemetryManager.BuildOTelService(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService?
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool? IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool? IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool?
