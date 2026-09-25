@@ -1,6 +1,23 @@
 [CmdletBinding()]
 param()
 
+function Assert-Containment {
+    param(
+        [string]$Text,
+        [string[]]$Substrings,
+        [scriptblock]$MessageFormatter,
+        [scriptblock]$SubstringFormatter = { param($substring) $substring },
+        [switch]$Absent
+    )
+
+    foreach ($substring in $Substrings) {
+        $expectedSubstring = & $SubstringFormatter $substring
+        if ($Text.Contains($expectedSubstring) -eq $Absent.IsPresent) {
+            throw (& $MessageFormatter $substring)
+        }
+    }
+}
+
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
@@ -77,34 +94,27 @@ if ($affectedTests.storage.type -ne "azureDevOpsArtifact" -or
 
 $directoryPackagesPath = Join-Path $repoRoot "Directory.Packages.props"
 $directoryPackages = Get-Content -LiteralPath $directoryPackagesPath -Raw
-if (-not $directoryPackages.Contains(
-    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
-    throw "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
-}
-if (-not $directoryPackages.Contains(
-    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
-    throw "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency."
-}
+Assert-Containment $directoryPackages `
+    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
+    { "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency." }
+Assert-Containment $directoryPackages `
+    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
+    { "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency." }
 
 $directoryBuildTargetsPath = Join-Path $repoRoot "Directory.Build.targets"
 $directoryBuildTargets = Get-Content -LiteralPath $directoryBuildTargetsPath -Raw
-if (-not $directoryBuildTargets.Contains(
-    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"')) {
-    throw "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests."
-}
-if (-not $directoryBuildTargets.Contains(
-    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"')) {
-    throw "MTP test applications must reference the Azure DevOps affected-tests storage provider."
-}
-foreach ($testApplicationProperty in @(
+Assert-Containment $directoryBuildTargets `
+    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"' `
+    { "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests." }
+Assert-Containment $directoryBuildTargets `
+    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"' `
+    { "MTP test applications must reference the Azure DevOps affected-tests storage provider." }
+Assert-Containment $directoryBuildTargets @(
     "IsTestingPlatformApplication",
     "EnableMSTestRunner",
     "UseInternalTestFramework"
-)) {
-    if (-not $directoryBuildTargets.Contains("'`$($testApplicationProperty)' == 'true'")) {
-        throw "Affected-test package references must include projects enabled through $testApplicationProperty."
-    }
-}
+) { param($testApplicationProperty) "Affected-test package references must include projects enabled through $testApplicationProperty." } `
+    { param($testApplicationProperty) "'`$($testApplicationProperty)' == 'true'" }
 
 $manualEntryPoints = @(
     Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File
@@ -122,7 +132,7 @@ foreach ($entryPoint in $manualEntryPoints) {
 }
 
 $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
-foreach ($requiredText in @(
+Assert-Containment $testTemplate @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1",
     'CTS_ACCESSTOKEN: $(System.AccessToken)',
     'CTS_COLLECTIONURI: $(System.CollectionUri)',
@@ -133,11 +143,7 @@ foreach ($requiredText in @(
     "--affected-tests",
     "enableAffectedTests",
     "affectedTestsMode"
-)) {
-    if (-not $testTemplate.Contains($requiredText)) {
-        throw "The affected-test template is missing '$requiredText'."
-    }
-}
+) { param($requiredText) "The affected-test template is missing '$requiredText'." }
 
 $disabledBranch = [regex]::Match(
     $testTemplate,
@@ -152,15 +158,11 @@ if ($disabledBranch.Value -match 'DOTNET_CLI_ENABLE_AFFECTED_TESTS|--collect-tes
 
 $pipelineVariables = Get-Content -LiteralPath (Join-Path $repoRoot "eng/pipelines/variables/test-env-vars.yml") -Raw
 $outerPipelineConfiguration = $pipeline, $pipelineVariables -join "`n"
-foreach ($variableName in @(
+Assert-Containment $outerPipelineConfiguration @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
-)) {
-    if ($outerPipelineConfiguration.Contains($variableName)) {
-        throw "$variableName must be scoped to the affected-test template."
-    }
-}
+) { param($variableName) "$variableName must be scoped to the affected-test template." } -Absent
 
 $templateWithoutComments = $testTemplate -split '\r?\n' |
     Where-Object { -not $_.TrimStart().StartsWith("#") } |
@@ -177,15 +179,12 @@ if ($affectedTestsGateCount -ne 2) {
 }
 
 $wellKnownEnvironmentVariables = Get-Content -LiteralPath $wellKnownEnvironmentVariablesPath -Raw
-foreach ($variableName in @(
+Assert-Containment $wellKnownEnvironmentVariables @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
-)) {
-    if (-not $wellKnownEnvironmentVariables.Contains("""$variableName""")) {
-        throw "Child test processes must not inherit $variableName from the outer pipeline invocation."
-    }
-}
+) { param($variableName) "Child test processes must not inherit $variableName from the outer pipeline invocation." } `
+    { param($variableName) """$variableName""" }
 
 if ($templateWithoutComments.Contains("Cache@2") -or
     $templateWithoutComments.Contains("AffectedTestsMapCacheRestored")) {
