@@ -121,6 +121,96 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifyInProgress_WithExecutionContext_UsesActivityLinkCapability()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> linkService = new();
+        using OpenTelemetryResultHandler handler = CreateLinkAwareHandler(linkService);
+        Mock<IPlatformActivity> activity = new();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var executionContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: "vendor=value");
+        linkService.Setup(s => s.StartActivityWithLink(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            executionContext)).Returns(activity.Object);
+
+        TestNode testNode = CreateTestNode("linked-test");
+        handler.NotifyInProgress(testNode, null, executionContext);
+        handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        linkService.Verify(
+            s => s.StartActivityWithLink(
+                "Test",
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                executionContext),
+            Times.Once);
+        linkService.Verify(
+            s => s.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_WithExecutionContextAndOldService_FallsBackToStartActivity()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("compatibility-fallback");
+        var executionContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            isRecorded: false,
+            traceState: null);
+        TestNode testNode = CreateTestNode("compatibility-fallback");
+
+        _handler.NotifyInProgress(testNode, null, executionContext);
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        _otelService.Verify(
+            s => s.StartActivity(
+                "Test",
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_WithoutExecutionContext_DoesNotUseActivityLinkCapability()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> linkService = new();
+        using OpenTelemetryResultHandler handler = CreateLinkAwareHandler(linkService);
+        Mock<IPlatformActivity> activity = new();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        linkService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+
+        TestNode testNode = CreateTestNode("unlinked-test");
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        linkService.Verify(
+            s => s.StartActivityWithLink(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<PlatformActivityContext>()),
+            Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
     public void NotifyInProgress_WhenStartActivityReturnsNull_DoesNotTrackActivity()
     {
         _otelService.Setup(s => s.StartActivity(
@@ -414,6 +504,52 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         activity2.Verify(a => a.Dispose(), Times.Once);
 
         Assert.AreEqual(2, _completedCounter.Value);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_WithRetryAttempt_PairsOutOfOrderResultsByAttempt()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> linkService = new();
+        using OpenTelemetryResultHandler handler = CreateLinkAwareHandler(linkService);
+        Mock<IPlatformActivity> attempt1Activity = new();
+        attempt1Activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(attempt1Activity.Object);
+        Mock<IPlatformActivity> attempt2Activity = new();
+        attempt2Activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(attempt2Activity.Object);
+        var attempt1Context = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            isRecorded: true,
+            traceState: null);
+        var attempt2Context = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        linkService.Setup(s => s.StartActivityWithLink(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            attempt1Context)).Returns(attempt1Activity.Object);
+        linkService.Setup(s => s.StartActivityWithLink(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            attempt2Context)).Returns(attempt2Activity.Object);
+
+        TestNode attempt1 = CreateRetryTestNode("retry-test", attemptNumber: 1);
+        TestNode attempt2 = CreateRetryTestNode("retry-test", attemptNumber: 2);
+        handler.NotifyInProgress(attempt1, null, attempt1Context);
+        handler.NotifyInProgress(attempt2, null, attempt2Context);
+
+        handler.NotifyFailed(attempt2, new FailedTestNodeStateProperty());
+        handler.NotifyPassed(attempt1, PassedTestNodeStateProperty.CachedInstance);
+
+        attempt1Activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        attempt1Activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        attempt2Activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        attempt2Activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Never);
+        attempt1Activity.Verify(a => a.Dispose(), Times.Once);
+        attempt2Activity.Verify(a => a.Dispose(), Times.Once);
     }
 
     [TestMethod]
@@ -773,6 +909,14 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             DisplayName = "Test",
         };
 
+    private static TestNode CreateRetryTestNode(string uid, int attemptNumber)
+        => new()
+        {
+            Uid = new TestNodeUid(uid),
+            DisplayName = "Test",
+            Properties = new PropertyBag(new RetryAttemptProperty(attemptNumber, isSuperseded: false)),
+        };
+
     private static Exception CreateExceptionWithStackTrace(string message)
     {
         try
@@ -797,6 +941,34 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<DateTimeOffset>())).Returns(activity.Object);
 
         return activity;
+    }
+
+    private OpenTelemetryResultHandler CreateLinkAwareHandler(Mock<IPlatformOpenTelemetryServiceWithActivityLinks> service)
+    {
+        service.Setup(s => s.CreateCounter<int>(
+            "test.case.result.count",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseResultCounter);
+        service.Setup(s => s.CreateUpDownCounter<int>(
+            "test.case.active",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_activeTestCases);
+        service.Setup(s => s.CreateHistogram<double>(
+            "test.case.duration",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseDurationHistogram);
+        service.Setup(s => s.CreateHistogram<double>(
+            "test.run.duration",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testRunDurationHistogram);
+
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES")).Returns("0");
+        return new OpenTelemetryResultHandler(service.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
     }
 
     [TestMethod]

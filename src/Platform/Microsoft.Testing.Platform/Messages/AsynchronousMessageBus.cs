@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Messages;
 
@@ -27,6 +28,8 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IShutdownProgressReporter? _shutdownProgressReporter;
+    private readonly IPlatformOpenTelemetryServiceWithActivityLinks? _openTelemetryServiceWithActivityLinks;
+    private readonly TestExecutionActivityContextStore? _testExecutionActivityContextStore;
 #pragma warning disable IDE0330 // Use 'System.Threading.Lock' - not available on all target frameworks of this project.
     private readonly object _disableLock = new();
 #pragma warning restore IDE0330
@@ -54,12 +57,35 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         ILoggerFactory loggerFactory,
         IEnvironment environment,
         IShutdownProgressReporter? shutdownProgressReporter)
+        : this(
+            dataConsumers,
+            testApplicationCancellationTokenSource,
+            task,
+            loggerFactory,
+            environment,
+            shutdownProgressReporter,
+            openTelemetryService: null,
+            testExecutionActivityContextStore: null)
+    {
+    }
+
+    public AsynchronousMessageBus(
+        IDataConsumer[] dataConsumers,
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        ITask task,
+        ILoggerFactory loggerFactory,
+        IEnvironment environment,
+        IShutdownProgressReporter? shutdownProgressReporter,
+        IPlatformOpenTelemetryService? openTelemetryService,
+        TestExecutionActivityContextStore? testExecutionActivityContextStore)
     {
         _dataConsumers = dataConsumers;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _task = task;
         _environment = environment;
         _shutdownProgressReporter = shutdownProgressReporter;
+        _openTelemetryServiceWithActivityLinks = openTelemetryService as IPlatformOpenTelemetryServiceWithActivityLinks;
+        _testExecutionActivityContextStore = testExecutionActivityContextStore;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
@@ -191,9 +217,27 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             return;
         }
 
+        CaptureTestExecutionActivityContext(data);
+
         for (int i = 0; i < values.Count; i++)
         {
             await values[i].PublishAsync(dataProducer, data).ConfigureAwait(false);
+        }
+    }
+
+    private void CaptureTestExecutionActivityContext(IData data)
+    {
+        if (_openTelemetryServiceWithActivityLinks is null
+            || _testExecutionActivityContextStore is null
+            || data is not TestNodeUpdateMessage message
+            || !message.TestNode.Properties.Any<InProgressTestNodeStateProperty>())
+        {
+            return;
+        }
+
+        if (_openTelemetryServiceWithActivityLinks.CaptureCurrentActivityContext() is { } context)
+        {
+            _testExecutionActivityContextStore.Set(message, context);
         }
     }
 

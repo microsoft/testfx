@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.Hosts;
@@ -116,7 +117,9 @@ internal sealed partial class TestHostControllersTestHost
             ServiceProvider.GetTask(),
             ServiceProvider.GetLoggerFactory(),
             ServiceProvider.GetEnvironment(),
-            ServiceProvider.GetService<IShutdownProgressReporter>());
+            ServiceProvider.GetService<IShutdownProgressReporter>(),
+            ServiceProvider.GetPlatformOTelService(),
+            ServiceProvider.GetRequiredService<TestExecutionActivityContextStore>());
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 

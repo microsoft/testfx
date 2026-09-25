@@ -337,13 +337,16 @@ internal sealed partial class TestHostBuilder
             serviceProvider.AddService(new NonCooperativeParentProcessListener(commandLineOptions, _environment));
         }
 
+        var testExecutionActivityContextStore = new TestExecutionActivityContextStore();
+        serviceProvider.AddService(testExecutionActivityContextStore);
         serviceProvider.AddService(new TestApplicationResult(
             context.ProxyOutputDevice,
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
             context.PoliciesService,
             serviceProvider.GetPlatformOTelService(),
-            serviceProvider.GetRequiredService<ITestCoverageResult>()));
+            serviceProvider.GetRequiredService<ITestCoverageResult>(),
+            testExecutionActivityContextStore));
 
         ChatClientManager.BuildChatClients(serviceProvider);
 

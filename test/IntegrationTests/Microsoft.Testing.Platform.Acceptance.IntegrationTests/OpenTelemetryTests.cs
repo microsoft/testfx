@@ -16,11 +16,13 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
 
         result.AssertExitCodeIs(ExitCode.Success);
         result.AssertOutputContains("[APP-OWNED-TRACE] TestHostBuilder");
-        result.AssertOutputContains("[APP-OWNED-TEST-TRACE] application-test-activity");
+        result.AssertOutputContains("[APP-OWNED-TEST-TRACE] application-test-activity-one");
         result.AssertOutputContains("[APP-OWNED-METRIC] test.run.duration");
         result.AssertOutputContains("[APP-OWNED-RESOURCE] service.name=application-owned-tests");
         result.AssertOutputContains("[APP-OWNED-PARENT] inherited");
         result.AssertOutputContains("[APP-OWNED-TOPOLOGY] sibling-under-TestFramework");
+        result.AssertOutputContains("[APP-OWNED-CORRELATION] activity-links");
+        result.AssertOutputContains("[APP-OWNED-PARALLEL-CORRELATION] isolated");
     }
 
     public TestContext TestContext { get; set; } = null!;
@@ -120,18 +122,24 @@ internal static class Program
         Activity applicationRootActivity = activityExporter.Single(
             activity => activity.Source.Name == ApplicationActivitySourceName
                 && activity.OperationName == "application-test-run");
-        Activity customTestActivity = activityExporter.Single(
+        Activity firstCustomTestActivity = activityExporter.Single(
             activity => activity.Source.Name == ApplicationActivitySourceName
-                && activity.OperationName == "application-test-activity");
+                && activity.OperationName == "application-test-activity-one");
+        Activity secondCustomTestActivity = activityExporter.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-activity-two");
         Activity builderActivity = activityExporter.Single(
             activity => activity.Source.Name == "Microsoft.Testing.Platform"
                 && activity.OperationName == "TestHostBuilder");
         Activity testFrameworkActivity = activityExporter.Single(
             activity => activity.Source.Name == "Microsoft.Testing.Platform"
                 && activity.OperationName == "TestFramework");
-        Activity testResultActivity = activityExporter.Single(
+        Activity firstTestResultActivity = activityExporter.Single(
             activity => activity.Source.Name == "Microsoft.Testing.Platform"
-                && activity.OperationName == "Application-owned telemetry test");
+                && activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-one");
+        Activity secondTestResultActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-two");
 
         if (applicationRootActivity.TraceId != applicationTraceId
             || applicationRootActivity.SpanId != applicationSpanId)
@@ -147,13 +155,33 @@ internal static class Program
         }
 
         if (testFrameworkActivity.TraceId != applicationTraceId
-            || customTestActivity.TraceId != testFrameworkActivity.TraceId
-            || testResultActivity.TraceId != testFrameworkActivity.TraceId
-            || customTestActivity.ParentSpanId != testFrameworkActivity.SpanId
-            || testResultActivity.ParentSpanId != testFrameworkActivity.SpanId)
+            || firstCustomTestActivity.TraceId != testFrameworkActivity.TraceId
+            || secondCustomTestActivity.TraceId != testFrameworkActivity.TraceId
+            || firstTestResultActivity.TraceId != testFrameworkActivity.TraceId
+            || secondTestResultActivity.TraceId != testFrameworkActivity.TraceId
+            || firstCustomTestActivity.ParentSpanId != testFrameworkActivity.SpanId
+            || secondCustomTestActivity.ParentSpanId != testFrameworkActivity.SpanId
+            || firstTestResultActivity.ParentSpanId != testFrameworkActivity.SpanId
+            || secondTestResultActivity.ParentSpanId != testFrameworkActivity.SpanId)
         {
             throw new InvalidOperationException(
-                "The application test activity and MTP test-result activity must be siblings under TestFramework.");
+                "The application test activities and MTP test-result activities must be siblings under TestFramework.");
+        }
+
+        ActivityLink firstLink = firstTestResultActivity.Links.Single();
+        ActivityLink secondLink = secondTestResultActivity.Links.Single();
+        if (firstLink.Context.TraceId != firstCustomTestActivity.TraceId
+            || firstLink.Context.SpanId != firstCustomTestActivity.SpanId
+            || secondLink.Context.TraceId != secondCustomTestActivity.TraceId
+            || secondLink.Context.SpanId != secondCustomTestActivity.SpanId)
+        {
+            throw new InvalidOperationException("MTP test-result activity links did not match their test execution activities.");
+        }
+
+        if (firstLink.Context.SpanId == secondCustomTestActivity.SpanId
+            || secondLink.Context.SpanId == firstCustomTestActivity.SpanId)
+        {
+            throw new InvalidOperationException("Parallel test execution activity links were crossed.");
         }
 
         if (!metricExporter.Contains("test.run.duration"))
@@ -165,11 +193,13 @@ internal static class Program
         _ = GetServiceName(metricExporter.GetCapturedResource(), "metric");
 
         Console.WriteLine($"[APP-OWNED-TRACE] {builderActivity.OperationName}");
-        Console.WriteLine($"[APP-OWNED-TEST-TRACE] {customTestActivity.OperationName}");
+        Console.WriteLine($"[APP-OWNED-TEST-TRACE] {firstCustomTestActivity.OperationName}");
         Console.WriteLine("[APP-OWNED-METRIC] test.run.duration");
         Console.WriteLine($"[APP-OWNED-RESOURCE] service.name={traceServiceName}");
         Console.WriteLine("[APP-OWNED-PARENT] inherited");
         Console.WriteLine("[APP-OWNED-TOPOLOGY] sibling-under-TestFramework");
+        Console.WriteLine("[APP-OWNED-CORRELATION] activity-links");
+        Console.WriteLine("[APP-OWNED-PARALLEL-CORRELATION] isolated");
 
         await host.StopAsync();
         return exitCode;
@@ -271,7 +301,7 @@ internal sealed class SingleTestFramework(ActivitySource activitySource) : ITest
     public string Uid => nameof(SingleTestFramework);
     public string Version => "1.0.0";
     public string DisplayName => nameof(SingleTestFramework);
-    public string Description => "Publishes one passing test.";
+    public string Description => "Publishes two passing tests in parallel.";
     public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -284,12 +314,42 @@ internal sealed class SingleTestFramework(ActivitySource activitySource) : ITest
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        using Activity? testActivity = activitySource.StartActivity("application-test-activity");
+        TaskCompletionSource firstStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource secondStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await Task.WhenAll(
+            ExecuteTestAsync(
+                context,
+                uid: "application-owned-test-one",
+                displayName: "Application-owned telemetry test one",
+                activityName: "application-test-activity-one",
+                started: firstStarted,
+                otherStarted: secondStarted.Task),
+            ExecuteTestAsync(
+                context,
+                uid: "application-owned-test-two",
+                displayName: "Application-owned telemetry test two",
+                activityName: "application-test-activity-two",
+                started: secondStarted,
+                otherStarted: firstStarted.Task));
+        context.Complete();
+    }
+
+    private async Task ExecuteTestAsync(
+        ExecuteRequestContext context,
+        string uid,
+        string displayName,
+        string activityName,
+        TaskCompletionSource started,
+        Task otherStarted)
+    {
+        using Activity? testActivity = activitySource.StartActivity(activityName);
         if (testActivity is null)
         {
             throw new InvalidOperationException("The application-owned provider did not subscribe to the test activity source.");
         }
 
+        testActivity.SetTag("test.id", uid);
         var sessionUid = new SessionUid("application-owned-session");
         await context.MessageBus.PublishAsync(
             this,
@@ -297,21 +357,22 @@ internal sealed class SingleTestFramework(ActivitySource activitySource) : ITest
                 sessionUid,
                 new TestNode
                 {
-                    Uid = "application-owned-test",
-                    DisplayName = "Application-owned telemetry test",
+                    Uid = uid,
+                    DisplayName = displayName,
                     Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
                 }));
+        started.SetResult();
+        await otherStarted;
         await context.MessageBus.PublishAsync(
             this,
             new TestNodeUpdateMessage(
                 sessionUid,
                 new TestNode
                 {
-                    Uid = "application-owned-test",
-                    DisplayName = "Application-owned telemetry test",
+                    Uid = uid,
+                    DisplayName = displayName,
                     Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
                 }));
-        context.Complete();
     }
 }
 """;

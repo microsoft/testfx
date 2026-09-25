@@ -102,13 +102,16 @@ internal sealed partial class ServerTestHost
                 ProcessRole = applicationPoliciesService.ProcessRole,
             };
             perRequestServiceProvider.ReplaceService<IStopPoliciesService>(requestPoliciesService);
+            var testExecutionActivityContextStore = new TestExecutionActivityContextStore();
+            perRequestServiceProvider.ReplaceService(testExecutionActivityContextStore);
             perRequestServiceProvider.ReplaceService<ITestApplicationProcessExitCode>(new TestApplicationResult(
                 perRequestServiceProvider.GetOutputDevice(),
                 perRequestServiceProvider.GetCommandLineOptions(),
                 perRequestServiceProvider.GetEnvironment(),
                 requestPoliciesService,
                 perRequestServiceProvider.GetPlatformOTelService(),
-                perRequestServiceProvider.GetRequiredService<ITestCoverageResult>()));
+                perRequestServiceProvider.GetRequiredService<ITestCoverageResult>(),
+                testExecutionActivityContextStore));
 
             // The JSON-RPC payload owns server request selection. Providers receive a server-origin
             // context so they can explicitly opt out; non-empty contributions are rejected below.

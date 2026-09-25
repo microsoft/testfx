@@ -21,6 +21,74 @@ public sealed class TestApplicationResultTests : IDisposable
     public void Dispose() => _testApplicationResult.Dispose();
 
     [TestMethod]
+    public void Dispose_ClearsPendingExecutionActivityContexts()
+    {
+        var contextStore = new TestExecutionActivityContextStore();
+        var message = new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = "pending-test",
+                DisplayName = "Pending test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        contextStore.Set(
+            message,
+            new PlatformActivityContext(
+                "11111111111111111111111111111111",
+                "2222222222222222",
+                isRecorded: true,
+                traceState: null));
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService: null,
+            testCoverageResult: null,
+            contextStore);
+
+        testApplicationResult.Dispose();
+
+        Assert.IsFalse(contextStore.TryTake(message, out _));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryStart_RemovesCapturedExecutionActivityContext()
+    {
+        var contextStore = new TestExecutionActivityContextStore();
+        var message = new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = "retry-test",
+                DisplayName = "Retry test",
+                Properties = new PropertyBag(
+                    new InProgressTestNodeStateProperty(),
+                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true)),
+            });
+        contextStore.Set(
+            message,
+            new PlatformActivityContext(
+                "11111111111111111111111111111111",
+                "2222222222222222",
+                isRecorded: true,
+                traceState: null));
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService: null,
+            testCoverageResult: null,
+            contextStore);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), message, CancellationToken.None);
+
+        Assert.IsFalse(contextStore.TryTake(message, out _));
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_ExecutionCompleted_ClosesOnlyOldestActivityWithoutOutcome()
     {
         var firstActivity = new Mock<IPlatformActivity>();

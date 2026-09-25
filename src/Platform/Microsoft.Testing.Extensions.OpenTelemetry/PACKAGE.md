@@ -68,8 +68,17 @@ The focused resource helpers are recommended when Aspire ServiceDefaults, `HostA
 
 See the complete [`HostApplicationBuilder` sample](../../../samples/public/MTPOTel).
 It also subscribes to a custom `ActivitySource` used inside test execution. The custom activity and MTP's test-case
-result span share the run trace and are siblings under the `TestFramework` span; MTP does not make user test code
-ambient to its asynchronously produced result span.
+result span share the run trace and are siblings under the `TestFramework` span. The result span also carries an
+`ActivityLink` to the custom activity that was current when the framework published the test's in-progress update.
+This preserves the real parentage of both spans while giving backends a deterministic edge from the asynchronously
+created result to the activity that represents actual execution.
+
+MTP deliberately does not reparent the result span to ambient user test code: result messages are consumed on an
+asynchronous message bus, where `Activity.Current` can belong to another parallel test or no longer exist. Frameworks
+that want this correlation should keep their W3C execution activity current while publishing the
+`InProgressTestNodeStateProperty` update for that `TestNodeUid`. The link is intentionally absent when no distinct
+W3C activity is current. In a backend, query the test-result span's links by linked trace ID and span ID rather than
+assuming the linked execution activity is a child of the result span.
 
 ## Emitted metrics
 
