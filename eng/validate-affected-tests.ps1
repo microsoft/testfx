@@ -5,7 +5,7 @@ function Assert-Containment {
     param(
         [string]$Text,
         [string[]]$Substrings,
-        [scriptblock]$MessageFormatter,
+        [object]$Message,
         [scriptblock]$SubstringFormatter = { param($substring) $substring },
         [switch]$Absent
     )
@@ -13,7 +13,13 @@ function Assert-Containment {
     foreach ($substring in $Substrings) {
         $expectedSubstring = & $SubstringFormatter $substring
         if ($Text.Contains($expectedSubstring) -eq $Absent.IsPresent) {
-            throw (& $MessageFormatter $substring)
+            $formattedMessage = if ($Message -is [scriptblock]) {
+                & $Message $substring
+            } else {
+                [string]$Message
+            }
+
+            throw $formattedMessage
         }
     }
 }
@@ -97,22 +103,22 @@ $directoryPackages = Get-Content -LiteralPath $directoryPackagesPath -Raw
 Assert-Containment `
     -Text $directoryPackages `
     -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
-    -MessageFormatter { "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency." }
+    -Message "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
 Assert-Containment `
     -Text $directoryPackages `
     -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
-    -MessageFormatter { "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency." }
+    -Message "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency."
 
 $directoryBuildTargetsPath = Join-Path $repoRoot "Directory.Build.targets"
 $directoryBuildTargets = Get-Content -LiteralPath $directoryBuildTargetsPath -Raw
 Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"' `
-    -MessageFormatter { "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests." }
+    -Message "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests."
 Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"' `
-    -MessageFormatter { "MTP test applications must reference the Azure DevOps affected-tests storage provider." }
+    -Message "MTP test applications must reference the Azure DevOps affected-tests storage provider."
 Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings @(
@@ -120,7 +126,7 @@ Assert-Containment `
     "EnableMSTestRunner",
     "UseInternalTestFramework"
 ) `
-    -MessageFormatter { param($substring) "Affected-test package references must include projects enabled through $substring." } `
+    -Message { param($substring) "Affected-test package references must include projects enabled through $substring." } `
     -SubstringFormatter { param($substring) "'`$($substring)' == 'true'" }
 
 $manualEntryPoints = @(
@@ -153,7 +159,7 @@ Assert-Containment `
     "enableAffectedTests",
     "affectedTestsMode"
 ) `
-    -MessageFormatter { param($substring) "The affected-test template is missing '$substring'." }
+    -Message { param($substring) "The affected-test template is missing '$substring'." }
 
 $disabledBranch = [regex]::Match(
     $testTemplate,
@@ -175,7 +181,7 @@ Assert-Containment `
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
 ) `
-    -MessageFormatter { param($substring) "$substring must be scoped to the affected-test template." } `
+    -Message { param($substring) "$substring must be scoped to the affected-test template." } `
     -Absent
 
 $templateWithoutComments = $testTemplate -split '\r?\n' |
@@ -200,7 +206,7 @@ Assert-Containment `
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
 ) `
-    -MessageFormatter { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
+    -Message { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
     -SubstringFormatter { param($substring) """$substring""" }
 
 if ($templateWithoutComments.Contains("Cache@2") -or
