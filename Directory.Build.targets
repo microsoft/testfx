@@ -75,9 +75,44 @@
   <ItemGroup Condition=" '$(IsTestingPlatformApplication)' == 'true'
     OR '$(EnableMSTestRunner)' == 'true'
     OR '$(UseInternalTestFramework)' == 'true' ">
-    <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests" />
+    <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" />
   </ItemGroup>
+
+  <!--
+    NuGet flattens native runtime assets into .NET Framework output directories, while the affected-tests
+    collector resolves its x64 profiler from the runtime-specific layout used by modern .NET applications.
+    Restore that layout so the same collection command works for every test TFM.
+  -->
+  <Target Name="_CopyAffectedTestsNetFrameworkRuntimeAssets"
+          AfterTargets="CopyFilesToOutputDirectory"
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+            and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
+    <ItemGroup>
+      <_AffectedTestsNetFrameworkRuntimeAsset Include="$(TargetDir)MicrosoftInstrumentationEngine_x64.dll" />
+      <_AffectedTestsNetFrameworkRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\ctsrun64.dll" />
+      <_AffectedTestsNetFrameworkRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\Cts_x64.config" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(TargetDir)runtimes\win-x64\native" />
+    <Copy SourceFiles="@(_AffectedTestsNetFrameworkRuntimeAsset)"
+          DestinationFolder="$(TargetDir)runtimes\win-x64\native"
+          SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="@(_AffectedTestsNetFrameworkRuntimeAsset->'$(TargetDir)runtimes\win-x64\native\%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RegisterAffectedTestsNetFrameworkRuntimeAssetsForClean"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+            and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
+    <ItemGroup>
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\MicrosoftInstrumentationEngine_x64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\ctsrun64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\Cts_x64.config" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_GenerateVersionSourceFileCache">
     <PropertyGroup>

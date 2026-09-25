@@ -15,6 +15,7 @@ dotnet add package Microsoft.Testing.Extensions.OpenTelemetry
 This package extends Microsoft.Testing.Platform with:
 
 - **OpenTelemetry integration**: exposes the Microsoft Testing Platform activity source and meter (both named `Microsoft.Testing.Platform`) so test execution can be observed via the OpenTelemetry .NET SDK.
+- **Application-owned diagnostics**: `AddTestingPlatformDiagnostics()` activates the source and meter without constructing or owning an OpenTelemetry SDK provider, so test applications can use the provider configured by Aspire ServiceDefaults or any other host-level observability setup.
 - **Semantic conventions**: where an OpenTelemetry convention exists it is used verbatim — `test.case.name`, `test.case.result.status` (upstream `pass`/`fail`), `test.suite.name`, `code.function.name`, `code.file.path`, `code.line.number`, `code.stacktrace`, `error.type`, plus an `exception` span event and an `Error` span status on failures. The pre-existing attribute and instrument names are still emitted by default so existing dashboards keep working; set `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0` to drop them.
 - **Platform extensions**: OpenTelemetry does not define any `test.*` **metrics** or test-case **span** conventions (as of semantic conventions 1.43.0), and `test.case.result.status` upstream only defines `pass` and `fail`. The instruments listed below, the additional result statuses (`skipped`, `error`, `timeout`, `cancelled`, `unknown`), `cicd.provider.name`, and the `test.case.*` attributes not listed above are therefore Microsoft.Testing.Platform extensions, deliberately placed in the namespace where an upstream definition would land.
 - **Resource attributes**: `AddTestingPlatformResource()` describes *where* the run happened — test assembly, host, OS, runtime — and detects the CI provider, pipeline run, branch and commit (`cicd.*` / `vcs.*`) from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins.
@@ -32,6 +33,25 @@ This package extends Microsoft.Testing.Platform with:
 > Without instrumentation, no MTP activities or metrics are collected; without an exporter, collected telemetry is not emitted anywhere.
 >
 > Use `AddOpenTelemetryProviderFromEnvironment()` instead if you want all of that configured for you from the standard `OTEL_*` variables. It only installs the instrumentation when an exporter is actually configured (via `OTEL_TRACES_EXPORTER` / `OTEL_METRICS_EXPORTER` / `OTEL_EXPORTER_OTLP_ENDPOINT`) or when you pass a configuration delegate, so leaving it in `Program.cs` unconditionally costs nothing on machines that do not opt in.
+
+### Use an application-owned OpenTelemetry provider
+
+When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, activate only the MTP diagnostics producer in the test application's `Program.cs`:
+
+```csharp
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddTestingPlatformDiagnostics();
+```
+
+Then subscribe the application-owned providers to the MTP source and meter alongside the rest of the application's instrumentation:
+
+```csharp
+services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing.AddTestingPlatformInstrumentation())
+    .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation());
+```
+
+`AddTestingPlatformDiagnostics()` does not build, configure, flush, or dispose a `TracerProvider` or `MeterProvider`. The application keeps full ownership of those providers and their exporters. The older `AddOpenTelemetryProvider()` and `AddOpenTelemetryProviderFromEnvironment()` helpers remain available as standalone convenience paths when the test application wants MTP to own the provider lifetime.
 
 ## Emitted metrics
 
