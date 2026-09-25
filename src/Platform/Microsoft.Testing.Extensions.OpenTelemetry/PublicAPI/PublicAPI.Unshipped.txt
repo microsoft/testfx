@@ -1,2 +1,4 @@
 #nullable enable
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformCiResource(this OpenTelemetry.Resources.ResourceBuilder! builder) -> OpenTelemetry.Resources.ResourceBuilder!
 static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformDiagnostics(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void
+static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(this OpenTelemetry.Resources.ResourceBuilder! builder) -> OpenTelemetry.Resources.ResourceBuilder!

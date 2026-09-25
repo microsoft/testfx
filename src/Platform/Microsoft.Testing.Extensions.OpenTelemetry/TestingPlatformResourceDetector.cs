@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
 /// <summary>
-/// Builds the OpenTelemetry <c>Resource</c> attributes that describe *where* a test run happened.
+/// Builds the OpenTelemetry <c>Resource</c> attributes that describe a test run and where it happened.
 /// </summary>
 /// <remarks>
 /// Traces and metrics coming out of a test run are only actionable when you can tell one run apart from another:
@@ -17,12 +17,17 @@ internal static class TestingPlatformResourceDetector
 
     public static IEnumerable<KeyValuePair<string, object>> GetResourceAttributes()
     {
-        foreach (KeyValuePair<string, object> attribute in GetProcessAttributes())
+        foreach (KeyValuePair<string, object> attribute in GetHostOsAndProcessAttributes())
         {
             yield return attribute;
         }
 
-        foreach (KeyValuePair<string, object> attribute in GetCiAttributes())
+        foreach (KeyValuePair<string, object> attribute in GetTestResourceAttributes())
+        {
+            yield return attribute;
+        }
+
+        foreach (KeyValuePair<string, object> attribute in GetCiResourceAttributes())
         {
             yield return attribute;
         }
@@ -40,7 +45,7 @@ internal static class TestingPlatformResourceDetector
         => Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
 
-    private static IEnumerable<KeyValuePair<string, object>> GetProcessAttributes()
+    private static IEnumerable<KeyValuePair<string, object>> GetHostOsAndProcessAttributes()
     {
         yield return new("host.name", Environment.MachineName);
         yield return new("host.arch", GetHostArchitecture());
@@ -56,7 +61,10 @@ internal static class TestingPlatformResourceDetector
         yield return new("process.pid", GetCurrentProcessId());
         yield return new("process.runtime.name", ".NET");
         yield return new("process.runtime.description", RuntimeInformation.FrameworkDescription);
+    }
 
+    public static IEnumerable<KeyValuePair<string, object>> GetTestResourceAttributes()
+    {
         if (Assembly.GetEntryAssembly()?.GetName().Name is { } entryAssemblyName)
         {
             yield return new("test.assembly.name", entryAssemblyName);
@@ -102,7 +110,7 @@ internal static class TestingPlatformResourceDetector
     /// is <b>not</b>: as of semantic conventions 1.43.0 there is no attribute identifying the CI system, so this is
     /// a platform extension sitting in the namespace where an upstream definition would land.
     /// </remarks>
-    private static IEnumerable<KeyValuePair<string, object>> GetCiAttributes()
+    public static IEnumerable<KeyValuePair<string, object>> GetCiResourceAttributes()
     {
         if (IsTrue(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
         {

@@ -108,8 +108,14 @@ public static class OpenTelemetryProviderExtensions
     /// Adds the Microsoft Testing Platform resource attributes (test assembly, host, OS, runtime and the detected
     /// CI provider, pipeline and commit) to the resource of a tracer, meter or logger provider.
     /// </summary>
-    /// <remarks>Resource attributes are attached once to every span and metric point exported by the provider, which
-    /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.
+    /// <remarks>This is the standalone aggregate convenience path. It configures service identity and adds host, OS,
+    /// process, test assembly, CI and source-control attributes.
+    /// <para>Applications that already configure their own service, host, OS or process identity through Aspire
+    /// ServiceDefaults, <c>HostApplicationBuilder</c> or another application-level OpenTelemetry composition root
+    /// should use <see cref="AddTestingPlatformTestResource(ResourceBuilder)"/> and
+    /// <see cref="AddTestingPlatformCiResource(ResourceBuilder)"/> instead.</para>
+    /// <para>Resource attributes are attached once to every span and metric point exported by the provider, which
+    /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.</para>
     /// <para>The CI attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
     /// from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins environment variables.</para></remarks>
     /// <param name="builder">The resource builder to enrich.</param>
@@ -124,6 +130,39 @@ public static class OpenTelemetryProviderExtensions
                 serviceVersion: TestingPlatformResourceDetector.GetServiceVersion(),
                 autoGenerateServiceInstanceId: true)
             .AddAttributes(TestingPlatformResourceDetector.GetResourceAttributes());
+    }
+
+    /// <summary>
+    /// Adds Microsoft Testing Platform test-specific resource attributes to the resource of a tracer, meter or logger
+    /// provider.
+    /// </summary>
+    /// <remarks>This focused helper currently adds the test assembly name. It does not configure or overwrite
+    /// <c>service.*</c>, <c>host.*</c>, <c>os.*</c>, <c>process.*</c>, <c>cicd.*</c> or <c>vcs.*</c> attributes,
+    /// so it can be composed with application-owned OpenTelemetry resource configuration.</remarks>
+    /// <param name="builder">The resource builder to enrich.</param>
+    /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
+    public static ResourceBuilder AddTestingPlatformTestResource(this ResourceBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        return builder.AddAttributes(TestingPlatformResourceDetector.GetTestResourceAttributes());
+    }
+
+    /// <summary>
+    /// Adds CI and source-control provenance for the current test run to the resource of a tracer, meter or logger
+    /// provider.
+    /// </summary>
+    /// <remarks>The attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
+    /// from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins environment variables. User-info credentials are
+    /// removed from repository URLs. This focused helper does not configure or overwrite <c>service.*</c>,
+    /// <c>host.*</c>, <c>os.*</c>, <c>process.*</c> or <c>test.*</c> attributes.</remarks>
+    /// <param name="builder">The resource builder to enrich.</param>
+    /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
+    public static ResourceBuilder AddTestingPlatformCiResource(this ResourceBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        return builder.AddAttributes(TestingPlatformResourceDetector.GetCiResourceAttributes());
     }
 
     /// <summary>
