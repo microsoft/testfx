@@ -5,7 +5,11 @@ using System.Diagnostics;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
@@ -18,10 +22,11 @@ using EnvironmentConfiguration = Microsoft.Testing.Extensions.OpenTelemetryProvi
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 /// <summary>
-/// Direct tests for the two turnkey OpenTelemetry helpers that shipped as stable API in this release —
+/// Direct tests for the OpenTelemetry registration and configuration helpers —
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/>,
 /// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformResource(ResourceBuilder)"/> and
 /// <see cref="OpenTelemetryProviderExtensions.AddOpenTelemetryProviderFromEnvironment(ITestApplicationBuilder, System.Action{TracerProviderBuilder}?, System.Action{MeterProviderBuilder}?)"/> —
-/// plus an end-to-end trace test that runs the real OpenTelemetry SDK pipeline.
+/// including raw-listener and real OpenTelemetry SDK coverage.
 /// </summary>
 /// <remarks>
 /// The method that mutates real environment variables carries a method-level
@@ -46,6 +51,10 @@ public sealed class OpenTelemetryProviderExtensionsTests
         "OTEL_METRICS_EXPORTER",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
     ];
+
+    [TestMethod]
+    public void AddTestingPlatformDiagnostics_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddTestingPlatformDiagnostics());
 
     [TestMethod]
     public void AddTestingPlatformResource_WithNullBuilder_Throws()
@@ -88,9 +97,12 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
                 builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => tracingConfigured = true);
 
-                IOpenTelemetryProvider? provider = ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).BuildOTelProvider(new ServiceProvider());
+                var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
+                using IPlatformOpenTelemetryService? service = telemetryManager.BuildOTelService(new ServiceProvider());
+                IOpenTelemetryProvider? provider = telemetryManager.BuildOTelProvider(new ServiceProvider());
                 using (provider)
                 {
+                    Assert.IsNotNull(service);
                     Assert.IsNotNull(provider);
                     Assert.IsTrue(tracingConfigured);
                 }
@@ -99,12 +111,169 @@ public sealed class OpenTelemetryProviderExtensionsTests
                 Environment.SetEnvironmentVariable("OTEL_SDK_DISABLED", "true");
                 disabledBuilder.AddOpenTelemetryProviderFromEnvironment();
 
-                IOpenTelemetryProvider? disabledProvider = ((TelemetryManager)((TestApplicationBuilder)disabledBuilder).Telemetry).BuildOTelProvider(new ServiceProvider());
+                var disabledTelemetryManager = (TelemetryManager)((TestApplicationBuilder)disabledBuilder).Telemetry;
+                using IPlatformOpenTelemetryService? disabledService = disabledTelemetryManager.BuildOTelService(new ServiceProvider());
+                IOpenTelemetryProvider? disabledProvider = disabledTelemetryManager.BuildOTelProvider(new ServiceProvider());
                 using (disabledProvider)
                 {
+                    Assert.IsNull(disabledService);
                     Assert.IsNull(disabledProvider);
                 }
             });
+
+    [TestMethod]
+    [DataRow("diagnostics-only")]
+    [DataRow("diagnostics-twice")]
+    [DataRow("provider-only")]
+    [DataRow("diagnostics-provider")]
+    [DataRow("provider-diagnostics")]
+    public async Task DiagnosticsAndProviderRegistration_IsIdempotentAndOrdered(string registrationOrder)
+    {
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+
+        switch (registrationOrder)
+        {
+            case "diagnostics-only":
+                builder.AddTestingPlatformDiagnostics();
+                break;
+
+            case "diagnostics-twice":
+                builder.AddTestingPlatformDiagnostics();
+                builder.AddTestingPlatformDiagnostics();
+                break;
+
+            case "provider-only":
+                builder.AddOpenTelemetryProvider();
+                break;
+
+            case "diagnostics-provider":
+                builder.AddTestingPlatformDiagnostics();
+                builder.AddOpenTelemetryProvider();
+                break;
+
+            case "provider-diagnostics":
+                builder.AddOpenTelemetryProvider();
+                builder.AddTestingPlatformDiagnostics();
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unknown registration order '{registrationOrder}'.");
+        }
+
+        await AssertSingleDiagnosticsRegistrationAsync(builder, expectProvider: registrationOrder.Contains("provider", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task DiagnosticsAndEnvironmentProviderRegistration_IsIdempotentAndOrdered(bool diagnosticsFirst)
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "none",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                ITestApplicationBuilder builder = await CreateBuilderAsync();
+                if (diagnosticsFirst)
+                {
+                    builder.AddTestingPlatformDiagnostics();
+                    builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => { });
+                }
+                else
+                {
+                    builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => { });
+                    builder.AddTestingPlatformDiagnostics();
+                }
+
+                await AssertSingleDiagnosticsRegistrationAsync(builder, expectProvider: true);
+            });
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task AddTestingPlatformDiagnostics_RawListenerObservesBuilderActivityWithoutProvider()
+    {
+        List<Activity> stoppedActivities = [];
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == OpenTelemetryPlatformService.ActivitySourceName,
+            Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                lock (stoppedActivities)
+                {
+                    stoppedActivities.Add(activity);
+                }
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+        builder.AddTestingPlatformDiagnostics();
+
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            Assert.IsNotNull(serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>());
+            Assert.IsNull(serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
+            Assert.Contains(
+                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                stoppedActivities);
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task LegacyProviderFactorySideEffect_StillActivatesDiagnostics()
+    {
+        List<Activity> stoppedActivities = [];
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == OpenTelemetryPlatformService.ActivitySourceName,
+            Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                lock (stoppedActivities)
+                {
+                    stoppedActivities.Add(activity);
+                }
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryProvider(serviceProvider =>
+        {
+            ((ServiceProvider)serviceProvider).AddService(new OpenTelemetryPlatformService());
+            return new LegacyOpenTelemetryProvider();
+        });
+
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            IPlatformOpenTelemetryService service = serviceProvider.GetRequiredService<IPlatformOpenTelemetryService>();
+            LegacyOpenTelemetryProvider provider = Assert.IsInstanceOfType<LegacyOpenTelemetryProvider>(
+                serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
+            Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
+            Assert.Contains(
+                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                stoppedActivities);
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
 
     [TestMethod]
     public void ResolveEnvironmentConfiguration_WhenSdkDisabled_RegistersNothingEvenWithEndpointAndDelegates()
@@ -309,6 +478,36 @@ public sealed class OpenTelemetryProviderExtensionsTests
     private static Func<string, string?> Env(Dictionary<string, string?> values)
         => name => values.TryGetValue(name, out string? value) ? value : null;
 
+    private static async Task<ITestApplicationBuilder> CreateBuilderAsync()
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(["--no-banner", "--ignore-exit-code", "8", "--internal-testingplatform-skipbuildercheck"]);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new MockTestFramework());
+        return builder;
+    }
+
+    private static async Task AssertSingleDiagnosticsRegistrationAsync(ITestApplicationBuilder builder, bool expectProvider)
+    {
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            IPlatformOpenTelemetryService service = serviceProvider.Services.OfType<IPlatformOpenTelemetryService>().Single();
+            IOpenTelemetryProvider? provider = serviceProvider.Services.OfType<IOpenTelemetryProvider>().SingleOrDefault();
+
+            Assert.IsNotNull(service);
+            Assert.AreEqual(expectProvider, provider is not null);
+            if (provider is not null)
+            {
+                Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
+            }
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
+
     private static async Task WithEnvironmentAsync(Dictionary<string, string?> values, Func<Task> body)
     {
         Dictionary<string, string?> snapshot = [];
@@ -364,6 +563,40 @@ public sealed class OpenTelemetryProviderExtensionsTests
             }
 
             return ExportResult.Success;
+        }
+    }
+
+    private sealed class MockTestFramework : ITestFramework
+    {
+        public ICapability[] Capabilities => [];
+
+        public string Uid => nameof(MockTestFramework);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(MockTestFramework);
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+            => Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
+
+        public Task ExecuteRequestAsync(ExecuteRequestContext context)
+        {
+            context.Complete();
+            return Task.CompletedTask;
+        }
+
+        public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+            => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
+    }
+
+    private sealed class LegacyOpenTelemetryProvider : IOpenTelemetryProvider
+    {
+        public void Dispose()
+        {
         }
     }
 }
