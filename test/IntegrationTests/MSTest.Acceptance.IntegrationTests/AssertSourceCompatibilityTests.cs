@@ -524,21 +524,45 @@ public sealed class AssertSourceCompatibilityTests : AcceptanceTestBase<NopAsset
                 Assert.AreNotSequenceEqual(readOnlyMemory, readOnlyMemory, comparer, SequenceOrder.InAnyOrder);
 
                 Assert.Contains(1, span);
+                Assert.Contains(1, span, comparer);
+                Assert.Contains((int value) => value > 0, span);
+                Assert.Contains(1, readOnlySpan);
                 Assert.Contains(1, readOnlySpan, comparer);
+                Assert.Contains((int value) => value > 0, readOnlySpan);
+                Assert.Contains(1, memory);
+                Assert.Contains(1, memory, comparer);
                 Assert.Contains((int value) => value > 0, memory);
                 Assert.Contains(1, readOnlyMemory);
+                Assert.Contains(1, readOnlyMemory, comparer);
+                Assert.Contains((int value) => value > 0, readOnlyMemory);
                 Assert.DoesNotContain(1, span);
+                Assert.DoesNotContain(1, span, comparer);
+                Assert.DoesNotContain((int value) => value < 0, span);
+                Assert.DoesNotContain(1, readOnlySpan);
                 Assert.DoesNotContain(1, readOnlySpan, comparer);
+                Assert.DoesNotContain((int value) => value < 0, readOnlySpan);
+                Assert.DoesNotContain(1, memory);
+                Assert.DoesNotContain(1, memory, comparer);
                 Assert.DoesNotContain((int value) => value < 0, memory);
                 Assert.DoesNotContain(1, readOnlyMemory);
+                Assert.DoesNotContain(1, readOnlyMemory, comparer);
+                Assert.DoesNotContain((int value) => value < 0, readOnlyMemory);
 
                 Assert.ContainsAll(span, span);
+                Assert.ContainsAll(span, span, comparer);
+                Assert.ContainsAll(readOnlySpan, readOnlySpan);
                 Assert.ContainsAll(readOnlySpan, readOnlySpan, comparer);
                 Assert.ContainsAll(memory, memory);
+                Assert.ContainsAll(memory, memory, comparer);
+                Assert.ContainsAll(readOnlyMemory, readOnlyMemory);
                 Assert.ContainsAll(readOnlyMemory, readOnlyMemory, comparer);
                 Assert.DoesNotContainAll(span, span);
+                Assert.DoesNotContainAll(span, span, comparer);
+                Assert.DoesNotContainAll(readOnlySpan, readOnlySpan);
                 Assert.DoesNotContainAll(readOnlySpan, readOnlySpan, comparer);
                 Assert.DoesNotContainAll(memory, memory);
+                Assert.DoesNotContainAll(memory, memory, comparer);
+                Assert.DoesNotContainAll(readOnlyMemory, readOnlyMemory);
                 Assert.DoesNotContainAll(readOnlyMemory, readOnlyMemory, comparer);
 
                 _ = Assert.ContainsSingle(span);
