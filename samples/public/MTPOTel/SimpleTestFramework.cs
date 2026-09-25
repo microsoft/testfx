@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -12,9 +13,13 @@ namespace MTPOTel;
 internal sealed class SimpleTestFramework : ITestFramework, IDataProducer
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ActivitySource _activitySource;
 
-    public SimpleTestFramework(IServiceProvider serviceProvider)
-        => _serviceProvider = serviceProvider;
+    public SimpleTestFramework(IServiceProvider serviceProvider, ActivitySource activitySource)
+    {
+        _serviceProvider = serviceProvider;
+        _activitySource = activitySource;
+    }
 
     public string Uid => nameof(SimpleTestFramework);
 
@@ -43,6 +48,8 @@ internal sealed class SimpleTestFramework : ITestFramework, IDataProducer
         {
             string testId = $"Test{i}";
             string testName = $"Simple Test {i}";
+            using Activity? testActivity = _activitySource.StartActivity("MTPOTel.Test");
+            testActivity?.SetTag("test.name", testName);
 
             // Publish test node as in-progress
             await context.MessageBus.PublishAsync(

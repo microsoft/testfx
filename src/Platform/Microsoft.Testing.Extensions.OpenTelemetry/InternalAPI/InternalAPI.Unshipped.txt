@@ -1,1 +1,3 @@
 #nullable enable
+static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetCiResourceAttributes() -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>!
+static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetTestResourceAttributes() -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>!

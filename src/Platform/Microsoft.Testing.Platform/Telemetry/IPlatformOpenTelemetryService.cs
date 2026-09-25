@@ -53,12 +53,13 @@ internal interface IPlatformOpenTelemetryService : IDisposable
     /// open: the ambient activity is an async-local, so it would be captured too and later restored - parenting
     /// unrelated, much later work to a span that has already ended. MSTest does exactly that when it propagates
     /// async-locals set by <c>AssemblyInitialize</c>/<c>ClassInitialize</c> to every subsequent test.
-    /// <para>Because the span never becomes current it cannot inherit a parent from the ambient context either, so
-    /// pass <paramref name="parentId"/> explicitly to keep it in the right trace.</para>
+    /// <para>When <paramref name="parentId"/> is omitted, the span inherits the current ambient activity as its
+    /// parent without replacing that activity as current. Pass <paramref name="parentId"/> to select a different
+    /// parent explicitly.</para>
     /// </remarks>
     /// <param name="name">The span name.</param>
     /// <param name="tags">Attributes to set on the span at creation time.</param>
-    /// <param name="parentId">The explicit parent of the span.</param>
+    /// <param name="parentId">The explicit parent of the span, or <see langword="null"/> to inherit the current ambient activity.</param>
     IPlatformActivity? StartNonAmbientActivity(string name, IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null);
 
     ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)

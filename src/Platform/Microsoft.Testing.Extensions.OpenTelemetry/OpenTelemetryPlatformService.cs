@@ -23,14 +23,14 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
     public bool HasCurrentActivity => Activity.Current is not null;
 
     public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default)
-        => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, startTime: startTime, parentId: parentId) is Activity activity
+        => StartActivityCore(name, tags, parentId, startTime) is Activity activity
             ? new ActivityWrapper(Stamp(activity))
             : null;
 
     public IPlatformActivity? StartNonAmbientActivity(string name, IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null)
     {
         Activity? ambientBeforeStart = Activity.Current;
-        if (_activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, parentId: parentId) is not Activity activity)
+        if (StartActivityCore(name, tags, parentId, startTime: default) is not Activity activity)
         {
             return null;
         }
@@ -40,6 +40,11 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
         Activity.Current = ambientBeforeStart;
         return new ActivityWrapper(Stamp(activity), isAmbient: false);
     }
+
+    private Activity? StartActivityCore(string name, IEnumerable<KeyValuePair<string, object?>>? tags, string? parentId, DateTimeOffset startTime)
+        => parentId is null && Activity.Current is { IdFormat: ActivityIdFormat.W3C } ambientActivity
+            ? _activitySource.StartActivity(name, ActivityKind.Internal, ambientActivity.Context, tags, links: null, startTime)
+            : _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, startTime: startTime, parentId: parentId ?? Activity.Current?.Id);
 
     /// <summary>
     /// Activity only derives tracestate from an in-process parent reference, which an explicit parent id string
