@@ -22,6 +22,8 @@ public abstract class AcceptanceTestBase
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
+        MicrosoftExtensionsHostingVersion = GetPackageVersion(cpmPropFileDoc, "Microsoft.Extensions.Logging");
+        OpenTelemetryVersion = GetPackageVersion(cpmPropFileDoc, "OpenTelemetry");
 
         using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
         MSBuildSdkExtrasVersion = globalJson.RootElement
@@ -85,6 +87,10 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
+
+    public static string MicrosoftExtensionsHostingVersion { get; private set; }
+
+    public static string OpenTelemetryVersion { get; private set; }
 
     public static string MSBuildSdkExtrasVersion { get; private set; }
 
@@ -154,6 +160,13 @@ public abstract class AcceptanceTestBase
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
+
+    private static string GetPackageVersion(XDocument centralPackageManagementDocument, string packageName)
+        => centralPackageManagementDocument
+            .Descendants("PackageVersion")
+            .Single(element => string.Equals(element.Attribute("Include")?.Value, packageName, StringComparison.Ordinal))
+            .Attribute("Version")?.Value
+            ?? throw new InvalidOperationException($"Directory.Packages.props does not define a version for '{packageName}'.");
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {

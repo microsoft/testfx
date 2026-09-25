@@ -1,5 +1,11 @@
 # Public samples
 
+## Observability
+
+| Scenario | Sample |
+| --- | --- |
+| Use application-owned OpenTelemetry providers from `HostApplicationBuilder` to collect MTP diagnostics and custom test activities while preserving the application's resource identity | [`MTPOTel`](MTPOTel) |
+
 ## Windows application testing
 
 The sample name identifies the Windows application model, test host, and packaging mode.
