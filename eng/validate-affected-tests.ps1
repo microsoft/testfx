@@ -5,6 +5,7 @@ $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
 $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
+$accessDatabaseInstallerPath = Join-Path $repoRoot "eng/install-access-database-engine.ps1"
 $wellKnownEnvironmentVariablesPath = Join-Path $repoRoot "test/Utilities/Microsoft.Testing.TestInfrastructure/WellKnownEnvironmentVariables.cs"
 
 $configuration = Get-Content -LiteralPath $globalJsonPath -Raw | ConvertFrom-Json
@@ -61,7 +62,7 @@ if ($bootstrappedSdk -ne $selectedSdk) {
 
 $lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
 if ($affectedTestsEnabled -and $bootstrappedSdk -le $lastUnsupportedAffectedTestsSdk) {
-    throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55595."
+    throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55574."
 }
 
 if ($null -eq $affectedTests.storage) {
@@ -96,6 +97,17 @@ if (-not $directoryBuildTargets.Contains(
     '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"')) {
     throw "MTP test applications must reference the Azure DevOps affected-tests storage provider."
 }
+foreach ($requiredRuntimeLayoutText in @(
+    'GeneratePathProperty="true"',
+    "_CopyAffectedTestsNetFrameworkRuntimeAssets",
+    "MicrosoftInstrumentationEngine_x64.dll",
+    "ctsrun64.dll",
+    "Cts_x64.config"
+)) {
+    if (-not $directoryBuildTargets.Contains($requiredRuntimeLayoutText)) {
+        throw ".NET Framework affected-test applications must preserve '$requiredRuntimeLayoutText'."
+    }
+}
 foreach ($testApplicationProperty in @(
     "IsTestingPlatformApplication",
     "EnableMSTestRunner",
@@ -119,6 +131,12 @@ foreach ($entryPoint in $manualEntryPoints) {
         -not $entryPointText.Contains(".AddAffectedTestsProvider()")) {
         throw "MTP entry point '$($entryPoint.FullName)' must register Microsoft.Testing.Extensions.AffectedTests."
     }
+}
+
+$accessDatabaseInstaller = Get-Content -LiteralPath $accessDatabaseInstallerPath -Raw
+if (-not $accessDatabaseInstaller.Contains("[System.IO.Path]::GetTempPath()") -or
+    $accessDatabaseInstaller.Contains("-OutFile ./accessdatabaseengine_X64.exe")) {
+    throw "The Access Database Engine installer must not make the repository dirty before affected-test collection."
 }
 
 $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
@@ -210,6 +228,24 @@ if (-not $collectBranch.Success -or
     throw "The affected-test gate must be scoped to the enabled collect and run branches."
 }
 
+foreach ($requiredCollectArgument in @(
+    "-p:TestingPlatformCommandLineArguments=",
+    "-p:TestRunnerAdditionalArguments="
+)) {
+    if (-not $collectBranch.Value.Contains($requiredCollectArgument)) {
+        throw "Affected-test collection must suppress incompatible test-host arguments with '$requiredCollectArgument'."
+    }
+}
+
+if (-not $runBranch.Value.Contains("-p:TestRunnerAdditionalArguments=")) {
+    throw "Affected-test execution must suppress the repository's retry arguments."
+}
+
+if ([regex]::Matches($collectBranch.Value, "dotnet test --solution TestFx\.slnx").Count -ne 2 -or
+    -not $collectBranch.Value.Contains("##vso[task.setvariable variable=PublishCoverageReport]true")) {
+    throw "Affected-test collection must be followed by the normal full test and coverage run."
+}
+
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
     -not $runBranch.Value.Contains('exit $exitCode')) {
     throw "The affected-test run must preserve exit codes 2 and 8 for failed or all-skipped selections."
@@ -223,7 +259,7 @@ if (-not $runFallback.Success) {
 }
 
 if (-not $testTemplate.Contains("PublishCoverageReport")) {
-    throw "Coverage publication must be limited to full-test and collection runs."
+    throw "Coverage publication must be limited to full-test runs."
 }
 
 Write-Output "Affected-test configuration and rollout wiring are valid."
