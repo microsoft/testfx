@@ -113,7 +113,7 @@ public static class OpenTelemetryProviderExtensions
     /// <para>Applications that already configure their own service, host, OS or process identity through Aspire
     /// ServiceDefaults, <c>HostApplicationBuilder</c> or another application-level OpenTelemetry composition root
     /// should use <see cref="AddTestingPlatformTestResource(ResourceBuilder)"/> and
-    /// <see cref="AddTestingPlatformCiResource(ResourceBuilder)"/> instead.</para>
+    /// <see cref="AddTestingPlatformCIResource(ResourceBuilder)"/> instead.</para>
     /// <para>Resource attributes are attached once to every span and metric point exported by the provider, which
     /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.</para>
     /// <para>The CI attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
@@ -158,7 +158,7 @@ public static class OpenTelemetryProviderExtensions
     /// <c>host.*</c>, <c>os.*</c>, <c>process.*</c> or <c>test.*</c> attributes.</remarks>
     /// <param name="builder">The resource builder to enrich.</param>
     /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
-    public static ResourceBuilder AddTestingPlatformCiResource(this ResourceBuilder builder)
+    public static ResourceBuilder AddTestingPlatformCIResource(this ResourceBuilder builder)
     {
         _ = builder ?? throw new ArgumentNullException(nameof(builder));
 

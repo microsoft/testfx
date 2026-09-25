@@ -27,7 +27,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/>,
 /// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformResource(ResourceBuilder)"/>,
 /// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(ResourceBuilder)"/>,
-/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformCiResource(ResourceBuilder)"/> and
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformCIResource(ResourceBuilder)"/> and
 /// <see cref="OpenTelemetryProviderExtensions.AddOpenTelemetryProviderFromEnvironment(ITestApplicationBuilder, System.Action{TracerProviderBuilder}?, System.Action{MeterProviderBuilder}?)"/> —
 /// including raw-listener and real OpenTelemetry SDK coverage.
 /// </summary>
@@ -73,8 +73,8 @@ public sealed class OpenTelemetryProviderExtensionsTests
         => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(null!));
 
     [TestMethod]
-    public void AddTestingPlatformCiResource_WithNullBuilder_Throws()
-        => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformCiResource(null!));
+    public void AddTestingPlatformCIResource_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformCIResource(null!));
 
     [TestMethod]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
@@ -129,7 +129,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow("gitlab")]
     [DataRow("jenkins")]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
-    public void AddTestingPlatformCiResource_EmitsExistingProviderMappingsWithoutApplicationOrTestIdentity(string provider)
+    public void AddTestingPlatformCIResource_EmitsExistingProviderMappingsWithoutApplicationOrTestIdentity(string provider)
     {
         Dictionary<string, string?> environment = provider switch
         {
@@ -180,7 +180,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
             () =>
             {
                 Dictionary<string, object> attributes = GetResourceAttributeMap(
-                    ResourceBuilder.CreateEmpty().AddTestingPlatformCiResource().Build());
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformCIResource().Build());
 
                 Assert.AreEqual(provider, attributes["cicd.provider.name"]);
                 Assert.IsTrue(attributes.ContainsKey("cicd.pipeline.name"));
@@ -226,7 +226,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
                             new("process.pid", 123),
                         ])
                         .AddTestingPlatformTestResource()
-                        .AddTestingPlatformCiResource()
+                        .AddTestingPlatformCIResource()
                         .Build());
 
                 Assert.AreEqual("application-service", attributes["service.name"]);

@@ -79,7 +79,7 @@ internal static class Program
             .ConfigureResource(resource => resource
                 .AddService(ApplicationServiceName)
                 .AddTestingPlatformTestResource()
-                .AddTestingPlatformCiResource())
+                .AddTestingPlatformCIResource())
             .WithTracing(tracing => tracing
                 .AddSource(ApplicationActivitySourceName)
                 .AddTestingPlatformInstrumentation()

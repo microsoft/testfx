@@ -18,7 +18,7 @@ This package extends Microsoft.Testing.Platform with:
 - **Application-owned diagnostics**: `AddTestingPlatformDiagnostics()` activates the source and meter without constructing or owning an OpenTelemetry SDK provider, so test applications can use the provider configured by Aspire ServiceDefaults or any other host-level observability setup.
 - **Semantic conventions**: where an OpenTelemetry convention exists it is used verbatim — `test.case.name`, `test.case.result.status` (upstream `pass`/`fail`), `test.suite.name`, `code.function.name`, `code.file.path`, `code.line.number`, `code.stacktrace`, `error.type`, plus an `exception` span event and an `Error` span status on failures. The pre-existing attribute and instrument names are still emitted by default so existing dashboards keep working; set `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0` to drop them.
 - **Platform extensions**: OpenTelemetry does not define any `test.*` **metrics** or test-case **span** conventions (as of semantic conventions 1.43.0), and `test.case.result.status` upstream only defines `pass` and `fail`. The instruments listed below, the additional result statuses (`skipped`, `error`, `timeout`, `cancelled`, `unknown`), `cicd.provider.name`, and the `test.case.*` attributes not listed above are therefore Microsoft.Testing.Platform extensions, deliberately placed in the namespace where an upstream definition would land.
-- **Composable resource attributes**: `AddTestingPlatformTestResource()` adds test-specific identity and `AddTestingPlatformCiResource()` adds CI/source-control provenance without changing application-owned service, host, OS or process identity. `AddTestingPlatformResource()` remains the standalone aggregate convenience path for test assembly, service, host, OS, runtime, CI provider, pipeline run, branch and commit.
+- **Composable resource attributes**: `AddTestingPlatformTestResource()` adds test-specific identity and `AddTestingPlatformCIResource()` adds CI/source-control provenance without changing application-owned service, host, OS or process identity. `AddTestingPlatformResource()` remains the standalone aggregate convenience path for test assembly, service, host, OS, runtime, CI provider, pipeline run, branch and commit.
 - **Turnkey configuration**: `AddOpenTelemetryProviderFromEnvironment()` wires instrumentation, resource and an OTLP exporter purely from the standard `OTEL_*` environment variables, so a run can be exported without writing configuration code.
 - **Trace context propagation**: when the process that started the test run publishes a `TRACEPARENT` environment variable (CI runners, `dotnet test`, IDEs), the whole run nests under that trace instead of starting an orphan one.
 - **Lifecycle management**: ties the lifetime of a `TracerProvider` and `MeterProvider` to the test application, so they are disposed alongside the test host.
@@ -45,7 +45,7 @@ hostBuilder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource
         .AddService("MyTestApplication")
         .AddTestingPlatformTestResource()
-        .AddTestingPlatformCiResource())
+        .AddTestingPlatformCIResource())
     .WithTracing(tracing => tracing.AddTestingPlatformInstrumentation())
     .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation());
 

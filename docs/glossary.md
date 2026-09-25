@@ -418,7 +418,7 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 ### OpenTelemetry extension
 
-An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes test-session activities and metrics using the [OpenTelemetry](https://opentelemetry.io/) standard. `AddTestingPlatformDiagnostics()` activates the MTP diagnostics producer; application-owned providers configured through `HostApplicationBuilder`, Aspire ServiceDefaults, or another composition root subscribe with `AddTestingPlatformInstrumentation()`. The focused `AddTestingPlatformTestResource()` and `AddTestingPlatformCiResource()` helpers add test and CI metadata without replacing application-owned `service.*`, host, OS, or process identity. See the [`HostApplicationBuilder` sample](../samples/public/MTPOTel).
+An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes test-session activities and metrics using the [OpenTelemetry](https://opentelemetry.io/) standard. `AddTestingPlatformDiagnostics()` activates the MTP diagnostics producer; application-owned providers configured through `HostApplicationBuilder`, Aspire ServiceDefaults, or another composition root subscribe with `AddTestingPlatformInstrumentation()`. The focused `AddTestingPlatformTestResource()` and `AddTestingPlatformCIResource()` helpers add test and CI metadata without replacing application-owned `service.*`, host, OS, or process identity. See the [`HostApplicationBuilder` sample](../samples/public/MTPOTel).
 
 ### OSConditionAttribute
 

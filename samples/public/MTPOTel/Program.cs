@@ -35,7 +35,7 @@ public class Program
             .ConfigureResource(resource => resource
                 .AddService("MTPOTel")
                 .AddTestingPlatformTestResource()
-                .AddTestingPlatformCiResource())
+                .AddTestingPlatformCIResource())
             .WithTracing(tracing => tracing
                 .AddSource(testActivitySource.Name)
                 .AddTestingPlatformInstrumentation()
