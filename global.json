@@ -58,22 +58,16 @@
           "test/**/Directory.Build.*"
         ]
       },
-      "instrumentation": {
-        "include": [
-          "src/**"
-        ],
-        "exclude": [
-          "artifacts/**",
-          "samples/**",
-          "test/**",
-          "**/bin/**",
-          "**/obj/**"
-        ]
+      "storage": {
+        "type": "azureDevOpsArtifact",
+        "project": "public",
+        "buildDefinitionId": 209,
+        "artifactName": "TestFx_AffectedTestsMaps"
       }
     }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26473.4",
+    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26474.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

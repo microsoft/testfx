@@ -23,6 +23,8 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     private const string TargetFramework = "net8.0-windows10.0.19041.0";
     private const string RuntimeIdentifier = "win-x64";
     private const string Publisher = "CN=MSTestAcceptance";
+    private const string DotnetTestExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID";
+    private const string Dotnet10PathEnvironmentVariable = "TESTFX_DOTNET_10_PATH";
     private const string LauncherModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER";
     private const string WinAppCliPathEnvironmentVariable = "TESTFX_WINAPP_CLI_PATH";
 
@@ -140,6 +142,164 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    public async Task PackagedFullTrustWinUI_NativeDotnetTestPreservesExecutionIdAndPublishesResults()
+    {
+        GeneratedPackagedWinUIAsset generatedAsset = await GeneratePackagedWinUIAssetAsync();
+        await ExecuteWithPackageCleanupAsync(
+            generatedAsset,
+            async () =>
+            {
+                PackagedWinUIBuild build = await BuildAssetAsync(
+                    generatedAsset.TestAsset,
+                    generatedAsset.AssetName,
+                    generatedAsset.PackageIdentityName);
+                AssertResolvedWinUIAssets(build.ResolvedAssetsReportPath);
+
+                string dotnetPath = Environment.GetEnvironmentVariable(Dotnet10PathEnvironmentVariable)
+                    ?? throw new InvalidOperationException(
+                        $"{Dotnet10PathEnvironmentVariable} must point to a .NET 10 dotnet executable.");
+                Assert.IsTrue(File.Exists(dotnetPath), $".NET 10 dotnet was not found at '{dotnetPath}'.");
+                string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+                    ?? throw new InvalidOperationException($"Unable to determine the .NET root for '{dotnetPath}'.");
+                string sdkDirectory = Path.Combine(dotnetRoot, "sdk");
+                Assert.IsTrue(Directory.Exists(sdkDirectory), $"The SDK directory '{sdkDirectory}' does not exist.");
+                string sdkVersion = Directory.GetDirectories(sdkDirectory, "10.*")
+                    .Select(Path.GetFileName)
+                    .Where(static version => version is not null)
+                    .OrderByDescending(static version => version, StringComparer.Ordinal)
+                    .FirstOrDefault()
+                    ?? throw new InvalidOperationException($"No .NET 10 SDK was found under '{dotnetRoot}'.");
+                string runtimeDirectory = Path.Combine(dotnetRoot, "shared", "Microsoft.NETCore.App");
+                Assert.IsTrue(
+                    Directory.Exists(runtimeDirectory),
+                    $"The runtime directory '{runtimeDirectory}' does not exist.");
+                Assert.IsNotEmpty(
+                    Directory.GetDirectories(runtimeDirectory, "8.*"),
+                    $"No .NET 8 runtime was found under '{dotnetRoot}'.");
+
+                string globalJsonPath = Path.Combine(generatedAsset.TestAsset.TargetAssetPath, "global.json");
+                await File.WriteAllTextAsync(
+                    globalJsonPath,
+                    $$"""
+                    {
+                      "sdk": {
+                        "version": "{{sdkVersion}}",
+                        "rollForward": "disable"
+                      },
+                      "test": {
+                        "runner": "Microsoft.Testing.Platform"
+                      }
+                    }
+                    """,
+                    TestContext.CancellationToken);
+
+                string executionId = Guid.NewGuid().ToString("N");
+                await File.WriteAllTextAsync(
+                    generatedAsset.ExecutionIdExpectationPath,
+                    executionId,
+                    TestContext.CancellationToken);
+
+                string evidenceDirectory = Path.Combine(
+                    Constants.Root,
+                    "artifacts",
+                    "log",
+                    Constants.BuildConfiguration,
+                    "PackagedWinUI",
+                    generatedAsset.PackageIdentityName);
+                string resultsDirectory = Path.Combine(
+                    Constants.Root,
+                    "artifacts",
+                    "TestResults",
+                    Constants.BuildConfiguration,
+                    "PackagedWinUI",
+                    generatedAsset.PackageIdentityName);
+                string diagnosticsDirectory = Path.Combine(evidenceDirectory, "diagnostics");
+                Directory.CreateDirectory(evidenceDirectory);
+                Directory.CreateDirectory(resultsDirectory);
+                string projectPath = Path.Combine(
+                    generatedAsset.TestAsset.TargetAssetPath,
+                    $"{generatedAsset.AssetName}.csproj");
+                string trxFileName = "packaged-winui-dotnet-test.trx";
+                var environmentVariables = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+                foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+                {
+                    string key = entry.Key.ToString()!;
+                    if (!WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase)
+                        && !IsOuterRunCorrelationEnvironmentVariable(key))
+                    {
+                        environmentVariables[key] = entry.Value?.ToString();
+                    }
+                }
+
+                environmentVariables["DOTNET_INSTALL_DIR"] = dotnetRoot;
+                environmentVariables["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+                environmentVariables["DOTNET_ROOT"] = dotnetRoot;
+                environmentVariables[DotnetTestExecutionIdEnvironmentVariable] = executionId;
+                environmentVariables[LauncherModeEnvironmentVariable] = "auto";
+
+                BoundedCommandLineResult versionResult = await RunWindowsApplicationModelCommandAsync(
+                    $"\"{dotnetPath}\" --version",
+                    generatedAsset.TestAsset.TargetAssetPath,
+                    TestContext.CancellationToken,
+                    environmentVariables,
+                    cleanEnvironment: true);
+                Assert.AreEqual(0, versionResult.ExitCode, versionResult.ErrorOutput);
+                Assert.AreEqual(sdkVersion, versionResult.StandardOutput.Trim());
+
+                BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
+                    $"\"{dotnetPath}\" test --project \"{projectPath}\" --no-build -c Release -a x64 " +
+                    $"-p:Platform=x64 -p:RuntimeIdentifier={RuntimeIdentifier} " +
+                    $"--report-trx --report-trx-filename \"{trxFileName}\" --results-directory \"{resultsDirectory}\" " +
+                    $"--diagnostic --diagnostic-output-directory \"{diagnosticsDirectory}\" --diagnostic-verbosity trace " +
+                    "--show-test-results failed",
+                    generatedAsset.TestAsset.TargetAssetPath,
+                    TestContext.CancellationToken,
+                    environmentVariables,
+                    cleanEnvironment: true);
+                Assert.AreEqual(
+                    0,
+                    result.ExitCode,
+                    $"Native .NET 10 dotnet test failed for the AUMID-activated packaged WinUI app." +
+                    $"{Environment.NewLine}Standard output:{Environment.NewLine}{result.StandardOutput}" +
+                    $"{Environment.NewLine}Standard error:{Environment.NewLine}{result.ErrorOutput}" +
+                    $"{Environment.NewLine}Build binlog: '{build.BinlogPath}'." +
+                    $"{Environment.NewLine}Diagnostics: '{diagnosticsDirectory}'.");
+
+                Assert.IsTrue(
+                    File.Exists(Path.Combine(resultsDirectory, trxFileName)),
+                    $"Native dotnet test did not publish '{trxFileName}' under '{resultsDirectory}'.");
+                Assert.IsTrue(
+                    File.Exists(generatedAsset.ExecutionIdMarkerPath),
+                    $"The activated host did not write '{generatedAsset.ExecutionIdMarkerPath}'.");
+                Assert.AreEqual(
+                    executionId,
+                    File.ReadAllText(generatedAsset.ExecutionIdMarkerPath),
+                    "The AUMID-activated host did not use the controller's dotnet-test execution ID.");
+                AssertExecutedTestsMarker(generatedAsset.ExecutionMarkerPath);
+                AssertActivatedIdentityMarker(
+                    generatedAsset.IdentityMarkerPath,
+                    generatedAsset.PackageIdentityName,
+                    generatedAsset.ExpectedPackageFamilyName,
+                    build.PackageLayoutPath);
+                await AssertPackageIsRegisteredAsync(
+                    generatedAsset.PackageIdentityName,
+                    generatedAsset.ExpectedPackageFamilyName,
+                    build.PackageLayoutPath);
+            });
+    }
+
+    private static bool IsOuterRunCorrelationEnvironmentVariable(string name)
+        => name.StartsWith("TESTINGPLATFORM_TESTHOSTCONTROLLER_", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_CTRFREPORT_JOURNAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_HANGDUMP_PIPENAME", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_HTMLREPORT_JOURNAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_JUNITREPORT_JOURNAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TESTINGPLATFORM_TRX_TESTRUN_ID", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(name, "TRXNAMEDPIPENAME", StringComparison.OrdinalIgnoreCase);
+
+    [TestMethod]
     [MemberCondition(
         typeof(AcceptanceTestBase),
         nameof(AcceptanceTestBase.IsWinAppCliInteropTestEnvironment),
@@ -246,7 +406,14 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         {
             string identityMarkerPath = Path.Combine(testAsset.TargetAssetPath, "activated-package-identity.txt");
             string executionMarkerPath = Path.Combine(testAsset.TargetAssetPath, "executed-tests.txt");
-            PatchMarkerPaths(testAsset.TargetAssetPath, identityMarkerPath, executionMarkerPath);
+            string executionIdExpectationPath = Path.Combine(testAsset.TargetAssetPath, "expected-dotnet-test-execution-id.txt");
+            string executionIdMarkerPath = Path.Combine(testAsset.TargetAssetPath, "actual-dotnet-test-execution-id.txt");
+            PatchMarkerPaths(
+                testAsset.TargetAssetPath,
+                identityMarkerPath,
+                executionMarkerPath,
+                executionIdExpectationPath,
+                executionIdMarkerPath);
             CopyPackagedWinUISampleAssets(testAsset.TargetAssetPath);
             await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
 
@@ -256,7 +423,9 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                 identityMarkerPath,
                 packageIdentityName,
                 expectedPackageFamilyName,
-                executionMarkerPath);
+                executionMarkerPath,
+                executionIdExpectationPath,
+                executionIdMarkerPath);
         }
         catch
         {
@@ -449,7 +618,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             generatedManifestPath);
     }
 
-    private static void AssertWinUITrx(string trxPath, int expectedResultCount = 4)
+    private static void AssertWinUITrx(string trxPath, int expectedResultCount = 5)
     {
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
         var trx = XDocument.Load(trxPath);
@@ -477,7 +646,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         var secondAttemptTrx = XDocument.Load(secondAttemptTrxPath);
         XElement[] firstAttemptResults = [.. firstAttemptTrx.Descendants(ns + "UnitTestResult")];
         XElement[] secondAttemptResults = [.. secondAttemptTrx.Descendants(ns + "UnitTestResult")];
-        Assert.HasCount(5, firstAttemptResults, firstAttemptTrxPath);
+        Assert.HasCount(6, firstAttemptResults, firstAttemptTrxPath);
         Assert.AreEqual(
             "Failed",
             (string?)firstAttemptResults.Single(result =>
@@ -570,7 +739,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             File.Exists(markerPath),
             $"The activated test did not report its package identity to '{markerPath}'.");
         string[] marker = File.ReadAllText(markerPath).Trim().Split('|');
-        Assert.HasCount(3, marker, $"Unexpected activated identity marker content in '{markerPath}'.");
+        Assert.HasCount(5, marker, $"Unexpected activated identity marker content in '{markerPath}'.");
         Assert.AreEqual(packageIdentityName, marker[0], $"Unexpected Package.Current.Id.Name in '{markerPath}'.");
         Assert.AreEqual(expectedPackageFamilyName, marker[1], $"Unexpected Package.Current.Id.FamilyName in '{markerPath}'.");
         Assert.AreEqual(
@@ -578,6 +747,11 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             Path.TrimEndingDirectorySeparator(Path.GetFullPath(marker[2])),
             ignoreCase: true,
             $"The activated app did not run from the tooling-generated loose package layout. Marker: '{markerPath}'.");
+        Assert.AreEqual(
+            $"{expectedPackageFamilyName}!App",
+            marker[3],
+            $"The activated process did not report the exact manifest AUMID in '{markerPath}'.");
+        Assert.IsGreaterThan(0, int.Parse(marker[4], CultureInfo.InvariantCulture), markerPath);
     }
 
     private static void AssertExecutedTestsMarker(string markerPath)
@@ -593,6 +767,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             "PlainTestMethod_Runs",
             "PlainTestMethod_HasExpectedPackageIdentity",
             "PlainTestMethod_HasExpectedTokenIsolation",
+            "PlainTestMethod_PreservesDotnetTestExecutionId",
             "UITestMethod_RunsOnWinUIDispatcher",
         ];
         Array.Sort(expected, StringComparer.Ordinal);
@@ -702,12 +877,16 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     private static void PatchMarkerPaths(
         string targetAssetPath,
         string identityMarkerPath,
-        string executionMarkerPath)
+        string executionMarkerPath,
+        string executionIdExpectationPath,
+        string executionIdMarkerPath)
     {
         string unitTestsPath = Path.Combine(targetAssetPath, "UnitTests.cs");
         string unitTests = File.ReadAllText(unitTestsPath)
             .PatchCodeWithReplace("$IdentityMarkerPath$", identityMarkerPath)
-            .PatchCodeWithReplace("$ExecutionMarkerPath$", executionMarkerPath);
+            .PatchCodeWithReplace("$ExecutionMarkerPath$", executionMarkerPath)
+            .PatchCodeWithReplace("$ExecutionIdExpectationPath$", executionIdExpectationPath)
+            .PatchCodeWithReplace("$ExecutionIdMarkerPath$", executionIdMarkerPath);
         File.WriteAllText(unitTestsPath, unitTests, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
     }
 
@@ -767,7 +946,9 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string IdentityMarkerPath,
         string PackageIdentityName,
         string ExpectedPackageFamilyName,
-        string ExecutionMarkerPath);
+        string ExecutionMarkerPath,
+        string ExecutionIdExpectationPath,
+        string ExecutionIdMarkerPath);
 
     private const string SourceCode = """
 #file $AssetName$.csproj
@@ -978,7 +1159,7 @@ public sealed class PackagedWinUITestCases
 #if !APP_CONTAINER
         File.WriteAllText(
             @"$IdentityMarkerPath$",
-            $"{package.Id.Name}|{package.Id.FamilyName}|{AppContext.BaseDirectory}");
+            $"{package.Id.Name}|{package.Id.FamilyName}|{AppContext.BaseDirectory}|{AppInfo.Current.AppUserModelId}|{Environment.ProcessId}");
 #endif
         RecordExecution(nameof(PlainTestMethod_HasExpectedPackageIdentity));
     }
@@ -1004,6 +1185,22 @@ public sealed class PackagedWinUITestCases
         File.Delete(markerPath);
     }
 #endif
+
+    [TestMethod]
+    public void PlainTestMethod_PreservesDotnetTestExecutionId()
+    {
+        const string ExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID";
+        if (File.Exists(@"$ExecutionIdExpectationPath$"))
+        {
+            string expected = File.ReadAllText(@"$ExecutionIdExpectationPath$");
+            string? actual = Environment.GetEnvironmentVariable(ExecutionIdEnvironmentVariable);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected, actual);
+            File.WriteAllText(@"$ExecutionIdMarkerPath$", actual);
+        }
+        RecordExecution(nameof(PlainTestMethod_PreservesDotnetTestExecutionId));
+    }
+    }
 
     [UITestMethod]
     public void UITestMethod_RunsOnWinUIDispatcher()

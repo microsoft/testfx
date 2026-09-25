@@ -1097,9 +1097,11 @@ public sealed class ServerTests
                 IStopPoliciesService stopPoliciesService = serviceProvider.GetRequiredService<IStopPoliciesService>();
                 RecordingGracefulStopCapability capability = Assert.IsInstanceOfType<RecordingGracefulStopCapability>(
                     capabilities.GetCapability<IGracefulStopTestExecutionCapability>());
+                TestApplicationResult testApplicationResult = Assert.IsInstanceOfType<TestApplicationResult>(
+                    serviceProvider.GetTestApplicationProcessExitCode());
                 ServerRequestState state = new(
                     stopPoliciesService,
-                    serviceProvider.GetTestApplicationProcessExitCode(),
+                    testApplicationResult,
                     capability);
                 requestStates.Add(state);
 
@@ -1190,10 +1192,10 @@ public sealed class ServerTests
 
         Assert.IsTrue(requestStates[0].StopPoliciesService.IsDeadlineTriggered);
         Assert.AreEqual(1, requestStates[0].GracefulStopCapability.StopCount);
-        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, requestStates[0].TestApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, requestStates[0].TestApplicationResult.GetProcessExitCodeWithoutIgnore());
         Assert.IsFalse(requestStates[1].StopPoliciesService.IsDeadlineTriggered);
         Assert.AreEqual(0, requestStates[1].GracefulStopCapability.StopCount);
-        Assert.AreEqual((int)ExitCode.ZeroTests, requestStates[1].TestApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, requestStates[1].TestApplicationResult.GetProcessExitCodeWithoutIgnore());
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 
@@ -1388,7 +1390,7 @@ public sealed class ServerTests
 
     private sealed record ServerRequestState(
         IStopPoliciesService StopPoliciesService,
-        ITestApplicationProcessExitCode TestApplicationResult,
+        TestApplicationResult TestApplicationResult,
         RecordingGracefulStopCapability GracefulStopCapability);
 
     private sealed class RecordingGracefulStopCapability : IGracefulStopTestExecutionResultCapability

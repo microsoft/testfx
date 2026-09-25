@@ -259,7 +259,9 @@ public abstract class AcceptanceTestBase
     internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
         string command,
         string? workingDirectory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IDictionary<string, string?>? environmentVariables = null,
+        bool cleanEnvironment = false)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(WindowsApplicationModelExecutionTimeout);
@@ -269,7 +271,9 @@ public abstract class AcceptanceTestBase
         {
             int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
                 command,
+                environmentVariables,
                 workingDirectory: workingDirectory,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: cleanEnvironment,
                 cancellationToken: timeout.Token);
             return new(exitCode, commandLine.StandardOutput, commandLine.ErrorOutput);
         }

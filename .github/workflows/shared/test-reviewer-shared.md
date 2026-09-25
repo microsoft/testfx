@@ -21,7 +21,8 @@ description: >-
   Expert-reviews the new and modified test methods in a pull request for
   correctness, effectiveness, reliability, maintainability, and repository
   conventions. Submits one COMMENT review containing a compact per-test
-  scorecard and any high-confidence, apply-ready inline suggestions.
+  scorecard plus inline improvement comments for below-A tests, with
+  apply-ready suggestions whenever a complete edit can be anchored to the diff.
 
 permissions:
   contents: read
@@ -88,14 +89,16 @@ safe-outputs:
     max: 1
     allowed-events: [COMMENT]
     footer: "always"
-  # Inline improvement suggestions, one per below-A test, anchored on a line
-  # that the PR actually changed. The cap is deliberately well above the
-  # ~10 comments the prompt asks for: Copilot CLI retries can amplify a
-  # single logical call, and exceeding the cap makes the handler drop the
-  # whole batch. `side: RIGHT` because every anchor comes from the HEAD-side
-  # line ranges computed by the `extract` step below. The `messages.footer`
-  # above deliberately applies here too — the repository requires every
-  # automated comment to disclose that it was machine-generated.
+  # Inline improvement comments for below-A tests, anchored on lines that the
+  # PR actually changed. Each comment carries an apply-ready suggestion when a
+  # complete edit can be expressed; otherwise it still preserves the concrete
+  # improvement next to the test. The cap is deliberately well above the
+  # 10 comments the prompt asks for: Copilot CLI retries can amplify a single
+  # logical call, and exceeding the cap makes the handler drop the whole batch.
+  # `side: RIGHT` because every anchor comes from the HEAD-side line ranges
+  # computed by the `extract` step below. The `messages.footer` above
+  # deliberately applies here too — the repository requires every automated
+  # comment to disclose that it was machine-generated.
   create-pull-request-review-comment:
     max: 25
     side: RIGHT
@@ -229,9 +232,9 @@ of ${{ github.repository }}. Produce two kinds of output:
 
 1. **One** COMMENT review holding a concise expert-review summary and per-test
    letter-grade scorecard.
-2. **Inline review comments** for high-confidence, actionable findings,
-   anchored on a line the PR changed and carrying a complete GitHub
-   `suggestion` block whenever the fix can be expressed as a concrete edit.
+2. **Inline improvement comments** for tests graded below A, anchored on a line
+   the PR changed and carrying a complete GitHub `suggestion` block whenever
+   the improvement can be expressed as a concrete edit.
 
 You are **read-only and advisory**. Do not edit any files. Do not push.
 Do not request changes — your role is to inform, not to block. Inline
@@ -373,8 +376,10 @@ not replacements for — the synced skill's rubric:
 - Do **not** flag missing `init` accessors, license headers, or other
   repo-stylistic concerns — those are out of scope for this rubric.
 
-In addition to the grade, perform a focused code review of each changed test.
-Report only findings that are both observable and high-confidence:
+In addition to the deterministic below-A improvement required by the grading
+skill, perform a focused code review of each changed test. Report separate
+correctness or reliability findings only when they are both observable and
+high-confidence:
 
 - **Correctness** — the test compiles, executes the intended path, and asserts
   expected values that agree with the production contract.
@@ -390,8 +395,11 @@ Report only findings that are both observable and high-confidence:
   project's `BannedSymbols.txt`, and apply testfx's conventions for shared
   assets, durations, derived test attributes, and `[DoNotParallelize]`.
 
-Do not manufacture a finding to accompany every grade. A grade can summarize
-quality without implying that an inline review finding exists.
+Do not manufacture a defect to accompany every grade. However, every grade
+below A already represents an observable improvement opportunity under the
+grading rubric and therefore requires the inline improvement workflow in
+Step 4. Do not apply a second "high-confidence finding" threshold that suppresses
+those comments.
 
 Report the **letter grade** and the **score band** only — no
 fake-precise 0–100 number.
@@ -440,11 +448,19 @@ inline suggestion in Step 4 needs:
 
 ### Step 4 — Post inline improvement suggestions
 
-For every high-confidence actionable finding whose Step 3 record has a concrete
-**Replacement**, post one inline review comment with the
-`create_pull_request_review_comment` safe-output tool. Use `path` +
-`line` (and `start_line` when the replacement spans several lines) from
-the recorded **Anchor**; `side` is always `RIGHT`.
+For every test graded **below A** with a valid changed-line **Anchor**, post one
+inline review comment with the `create_pull_request_review_comment` safe-output
+tool, subject to the 10-comment cap below. Use `path` + `line` (and `start_line`
+when the replacement spans several lines) from the recorded **Anchor**; `side`
+is always `RIGHT`.
+
+This is deterministic: a below-A grade plus a valid anchor is sufficient to
+post the inline improvement comment. Do not reclassify it through a separate
+"high-confidence finding" gate. When the Step 3 record has a concrete
+**Replacement**, include the apply-ready `suggestion` block. When it has
+`Replacement: none`, post the same concrete improvement as a text-only inline
+comment. If at least one below-A test has a valid anchor, making zero
+`create_pull_request_review_comment` calls is incorrect.
 
 Body format — the marker comment must be the first line so re-runs can
 recognize the workflow's own comments (the outer fence below is four
@@ -463,15 +479,18 @@ backticks so the inner `suggestion` fence survives verbatim):
 
 Rules:
 
-- **Only actionable findings.** Never post an inline comment praising a test,
-  restating a grade with no actionable change, or repeating the scorecard.
+- **Only below-A improvements.** The grading skill already requires a concrete
+  improvement for every grade below A, so do not suppress the inline comment as
+  "not actionable." Never post an inline comment praising an A-grade test,
+  restating a grade with no concrete improvement, or merely repeating the
+  scorecard.
 - **One comment per test**, at most. Do not fan out several comments over
   the same test method.
-- **Cap at 10 inline comments per run.** When more than 10 actionable findings
-  exist, post suggestions for the worst grades first (F → D → C → B; ties broken
-  by fully-qualified name) and leave the rest to the Step 5 table. The
-  safe-output cap is higher only to absorb Copilot CLI retry amplification —
-  do not treat it as the target.
+- **Cap at 10 inline comments per run.** When more than 10 below-A tests have
+  valid anchors, post suggestions for the worst grades first (F → D → C → B;
+  ties broken by fully-qualified name) and leave the rest to the Step 5 table.
+  The safe-output cap is higher only to absorb Copilot CLI retry amplification
+  — do not treat it as the target.
 - **The suggestion must be a directly applicable GitHub suggested change.**
   Use the exact fenced block shown above, with `suggestion` as the fence
   language and no extra fence attributes. Its content replaces exactly the

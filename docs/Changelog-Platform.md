@@ -20,6 +20,7 @@ See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4
 
 ### Fixed
 
+* Preserve the native `dotnet test` execution ID across PackagedApp AUMID activation so packaged WinUI hosts reconnect to the controller's existing test session instead of generating a conflicting handshake, while retaining the explicit environment allowlist and one-shot cleanup, in [#11494](https://github.com/microsoft/testfx/issues/11494)
 * Re-register the requested PackagedApp development layout when Windows still points the package identity at an older build directory, while preserving application data and refusing to replace conflicting non-development registrations, by @Sergio0694 in [#11372](https://github.com/microsoft/testfx/pull/11372)
 * Prevent a cancellation callback ordering race in the Hot Reload extension from allowing another test run after shutdown has started, by @Evangelink in [#11401](https://github.com/microsoft/testfx/pull/11401)
 * Log normal cooperative-cancellation pipe closure as a concise lifecycle event instead of an exception-shaped DEBUG diagnostic, by @Evangelink in [#11416](https://github.com/microsoft/testfx/pull/11416)
