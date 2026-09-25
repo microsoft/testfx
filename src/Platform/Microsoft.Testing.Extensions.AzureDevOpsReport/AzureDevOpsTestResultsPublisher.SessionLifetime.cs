@@ -87,7 +87,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        if (_publishConfiguration is null || _coordinatedRun is null || CurrentRunId is null || _runIdCoordinator is null)
+        if (_publishConfiguration is null || _coordinatedRun is null || CurrentRunId is not { } currentRunId || _runIdCoordinator is null)
         {
             return;
         }
@@ -108,7 +108,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 // Unexpected failure in the background flush loop; the loop already logs per-flush warnings.
                 TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             }
-            catch
+            catch (OperationCanceledException)
             {
                 // Cancellation — expected and fine.
             }
@@ -205,7 +205,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             using var cleanupCts = new CancellationTokenSource(_options.CoordinationFinalizeMaxWaitTime + TimeSpan.FromSeconds(60));
             await _runIdCoordinator.FinalizeRunAsync(
                 _coordinatedRun,
-                cancellationToken => _client.UpdateTestRunStateAsync(_publishConfiguration, CurrentRunId.Value, finalState, cancellationToken),
+                cancellationToken => _client.UpdateTestRunStateAsync(_publishConfiguration, currentRunId, finalState, cancellationToken),
                 cleanupCts.Token).ConfigureAwait(false);
         }
         catch (Exception ex)
