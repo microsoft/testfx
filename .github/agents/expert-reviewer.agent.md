@@ -681,7 +681,7 @@ same context across 22 independent agents.
 
 | Review scope | Dimensions | Apply when |
 |--------------|------------|------------|
-| **Correctness & design** | 1, 8, 15, 17, 21 | Always. This scope owns end-to-end behavior, PR intent, hidden scope, and design-level concerns. |
+| **Correctness & design** | 1, 8, 15, 16, 17, 21 | Always. This scope owns end-to-end behavior, conventions, PR intent, hidden scope, and design-level concerns. |
 | **Concurrency & lifecycle** | 2, 7 | Async, parallel, cancellation, disposal, process, stream, shared-state, or lifecycle code changed. |
 | **Security & protocol** | 3, 19 | Trust boundaries, paths, processes, environment variables, serialization, IPC, credentials, artifacts, or workflow permissions changed. |
 | **API & compatibility** | 4, 6 | Public/internal tracked API, target frameworks, overloads, package contracts, or externally observable behavior changed. |
@@ -936,7 +936,9 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
        non-applicable scope.
    - Inside each scope block, use at most these four bullets:
      `Why it applies`, `Evidence`, `Gap or disposition`, and `Action`. Omit a
-     bullet when it adds no information.
+     bullet when it adds no information. This limit applies to the scope's
+     top-level summary only; the required Dependency Upgrade Assessment may
+     follow those bullets with its complete table and evidence list.
    - Inline comments are the canonical detailed explanation for line findings.
      In the summary, reference them briefly instead of repeating the full
      scenario and recommendation.
