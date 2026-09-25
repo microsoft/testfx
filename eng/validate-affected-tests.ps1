@@ -2,10 +2,14 @@
 param()
 
 function Assert-Containment {
+    [CmdletBinding(DefaultParameterSetName = "LiteralMessage")]
     param(
         [string]$Text,
         [string[]]$Substrings,
-        [object]$Message,
+        [Parameter(Mandatory, ParameterSetName = "LiteralMessage")]
+        [string]$Message,
+        [Parameter(Mandatory, ParameterSetName = "FormattedMessage")]
+        [scriptblock]$MessageFormatter,
         [scriptblock]$SubstringFormatter = { param($substring) $substring },
         [switch]$Absent
     )
@@ -15,10 +19,10 @@ function Assert-Containment {
         $containsSubstring = $Text.Contains($expectedSubstring)
         $validationFailed = if ($Absent) { $containsSubstring } else { -not $containsSubstring }
         if ($validationFailed) {
-            $formattedMessage = if ($Message -is [scriptblock]) {
-                & $Message $substring
+            $formattedMessage = if ($PSCmdlet.ParameterSetName -eq "FormattedMessage") {
+                & $MessageFormatter $substring
             } else {
-                [string]$Message
+                $Message
             }
 
             throw $formattedMessage
@@ -128,7 +132,7 @@ Assert-Containment `
     "EnableMSTestRunner",
     "UseInternalTestFramework"
 ) `
-    -Message { param($substring) "Affected-test package references must include projects enabled through $substring." } `
+    -MessageFormatter { param($substring) "Affected-test package references must include projects enabled through $substring." } `
     -SubstringFormatter { param($substring) "'`$($substring)' == 'true'" }
 
 $manualEntryPoints = @(
@@ -161,7 +165,7 @@ Assert-Containment `
     "enableAffectedTests",
     "affectedTestsMode"
 ) `
-    -Message { param($substring) "The affected-test template is missing '$substring'." }
+    -MessageFormatter { param($substring) "The affected-test template is missing '$substring'." }
 
 $disabledBranch = [regex]::Match(
     $testTemplate,
@@ -183,7 +187,7 @@ Assert-Containment `
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
 ) `
-    -Message { param($substring) "$substring must be scoped to the affected-test template." } `
+    -MessageFormatter { param($substring) "$substring must be scoped to the affected-test template." } `
     -Absent
 
 $templateWithoutComments = $testTemplate -split '\r?\n' |
@@ -208,7 +212,7 @@ Assert-Containment `
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
 ) `
-    -Message { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
+    -MessageFormatter { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
     -SubstringFormatter { param($substring) """$substring""" }
 
 if ($templateWithoutComments.Contains("Cache@2") -or
