@@ -81,11 +81,13 @@ internal static class TestingPlatformResourceDetector
 #endif
     }
 
-    private static string? GetOsType()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "darwin"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
-            : null;
+    private static string? GetOsType() => true switch
+    {
+        _ when RuntimeInformation.IsOSPlatform(OSPlatform.Windows) => "windows",
+        _ when RuntimeInformation.IsOSPlatform(OSPlatform.OSX) => "darwin",
+        _ when RuntimeInformation.IsOSPlatform(OSPlatform.Linux) => "linux",
+        _ => null,
+    };
 
     /// <summary>
     /// Maps <see cref="Architecture"/> onto the values allowed by the OpenTelemetry <c>host.arch</c> enum, which
