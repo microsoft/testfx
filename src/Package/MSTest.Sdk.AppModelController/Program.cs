@@ -85,10 +85,8 @@ internal static class Program
             => Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
 
         public Task ExecuteRequestAsync(ExecuteRequestContext context)
-        {
-            context.Complete();
-            return Task.CompletedTask;
-        }
+            => throw new InvalidOperationException(
+                "The packaged application test host was not launched. Ensure the packaged-app launcher is enabled and the configured target has a supported application layout.");
 
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
             => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });

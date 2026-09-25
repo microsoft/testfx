@@ -12,6 +12,8 @@ using Windows.Security.Cryptography.Core;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
+using RetryBuilderHook = Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook;
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
@@ -20,6 +22,7 @@ namespace Microsoft.Testing.Extensions;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The classic UWP bootstrap directly hosts MTP.")]
 public static class PackagedAppExtensions
 {
+    private const string EnabledExtensionsEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_EXTENSIONS";
     private const string InlinePrefix = "mtp:v1:inline:";
     private const string FilePrefix = "mtp:v1:file:";
     private const int KeySize = 32;
@@ -202,9 +205,21 @@ public static class PackagedAppExtensions
         Telemetry.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
         Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
         TrxReport.TestingPlatformBuilderHook.AddExtensions(builder, arguments);
+        if (GetEnabledExtensions().Contains("retry"))
+        {
+            RetryBuilderHook.AddExtensions(builder, arguments);
+        }
+
         using ITestApplication application = await builder.BuildAsync().ConfigureAwait(false);
         return await application.RunAsync().ConfigureAwait(false);
     }
+
+    private static HashSet<string> GetEnabledExtensions()
+        => new(
+            (Environment.GetEnvironmentVariable(EnabledExtensionsEnvironmentVariable) ?? string.Empty)
+                .Split([';'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(extension => extension.Trim()),
+            StringComparer.OrdinalIgnoreCase);
 
     private static void ApplyConnectBackEnvironment(string[] arguments)
     {

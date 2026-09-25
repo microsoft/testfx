@@ -201,13 +201,14 @@ public sealed class RetryDataConsumerTests
         serviceProvider.AddService(new TestCommandLineOptions([]));
         var consumer = new RetryDataConsumer(serviceProvider);
 
-        string actual = GetControllerArtifactPath(consumer, artifactPath);
+        string? actual = GetControllerArtifactPath(consumer, artifactPath);
 
+        Assert.IsNotNull(actual);
         Assert.AreEqual(Path.Combine(destinationRoot, "nested", fileName), actual);
     }
 
     [TestMethod]
-    public void GetControllerArtifactPath_ArtifactOutsideAppContainerRoot_IsUnchanged()
+    public void GetControllerArtifactPath_ArtifactOutsideAppContainerRoots_IsRejected()
     {
         string sourceRoot = Path.GetFullPath("package-local-state");
         string destinationRoot = Path.GetFullPath("controller-results");
@@ -223,7 +224,20 @@ public sealed class RetryDataConsumerTests
         serviceProvider.AddService(new TestCommandLineOptions([]));
         var consumer = new RetryDataConsumer(serviceProvider);
 
-        string actual = GetControllerArtifactPath(consumer, artifactPath);
+        string? actual = GetControllerArtifactPath(consumer, artifactPath);
+
+        Assert.IsNull(actual);
+    }
+
+    [TestMethod]
+    public void GetControllerArtifactPath_ArtifactWithoutAppContainerMappings_IsUnchanged()
+    {
+        string artifactPath = Path.GetFullPath(Path.Combine("other", "test.diag"));
+        ServiceProvider serviceProvider = CreateServiceProvider();
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        string? actual = GetControllerArtifactPath(consumer, artifactPath);
 
         Assert.AreEqual(artifactPath, actual);
     }
@@ -266,12 +280,12 @@ public sealed class RetryDataConsumerTests
         return serviceProvider;
     }
 
-    private static string GetControllerArtifactPath(RetryDataConsumer consumer, string artifactPath)
-        => (string)typeof(RetryDataConsumer)
+    private static string? GetControllerArtifactPath(RetryDataConsumer consumer, string artifactPath)
+        => (string?)typeof(RetryDataConsumer)
             .GetMethod(
                 "GetControllerArtifactPath",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-            .Invoke(consumer, [artifactPath])!;
+            .Invoke(consumer, [artifactPath]);
 
     private sealed class ConnectedConsumer : IDisposable
     {

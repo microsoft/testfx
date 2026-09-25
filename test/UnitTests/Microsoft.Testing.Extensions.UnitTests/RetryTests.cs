@@ -372,7 +372,38 @@ public class RetryTests
         InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
 
         Assert.IsEmpty(artifacts);
+        fileSystem.Verify(fs => fs.ExistFile(externalArtifactPath), Times.Never);
         fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void RemoveArtifactsOutsideControllerRoots_AppContainerMappings_RejectOutsidePaths()
+    {
+        string artifactRoot = Path.GetFullPath("controller-results");
+        string diagnosticArtifactRoot = Path.GetFullPath("controller-diagnostics");
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED"))
+            .Returns("1");
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT"))
+            .Returns(artifactRoot);
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT"))
+            .Returns(diagnosticArtifactRoot);
+        List<ArtifactRequest> artifacts =
+        [
+            new(Path.Combine(artifactRoot, "test.trx"), "microsoft.testing.trx"),
+            new(Path.Combine(diagnosticArtifactRoot, "test.log"), null),
+            new(Path.GetFullPath(Path.Combine("outside", "secret.txt")), null),
+        ];
+
+        InvokeRemoveArtifactsOutsideControllerRoots(environment.Object, artifacts);
+
+        Assert.HasCount(2, artifacts);
+        Assert.IsTrue(artifacts.All(artifact =>
+            artifact.Path.StartsWith(artifactRoot, StringComparison.Ordinal)
+            || artifact.Path.StartsWith(diagnosticArtifactRoot, StringComparison.Ordinal)));
     }
 
     [TestMethod]
@@ -1193,6 +1224,13 @@ public class RetryTests
         => typeof(RetryOrchestrator)
             .GetMethod("CollectRecoveredArtifacts", BindingFlags.Static | BindingFlags.NonPublic)!
             .Invoke(null, [fileSystem, manifestPath, attemptDirectory, artifacts, Mock.Of<ILogger>()]);
+
+    private static void InvokeRemoveArtifactsOutsideControllerRoots(
+        IEnvironment environment,
+        List<ArtifactRequest> artifacts)
+        => typeof(RetryOrchestrator)
+            .GetMethod("RemoveArtifactsOutsideControllerRoots", BindingFlags.Static | BindingFlags.NonPublic)!
+            .Invoke(null, [environment, artifacts, Mock.Of<ILogger>()]);
 
     private static string CreateTemporaryDirectory()
     {

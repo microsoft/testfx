@@ -123,6 +123,10 @@ internal sealed partial class RetryOrchestrator
                 currentTryResultFolder,
                 retryFailedTestsPipeServer.Artifacts,
                 logger);
+            RemoveArtifactsOutsideControllerRoots(
+                _serviceProvider.GetEnvironment(),
+                retryFailedTestsPipeServer.Artifacts,
+                logger);
 
             attemptArtifacts.AddRange(RetryArtifactProcessor.SnapshotAttemptArtifacts(
                 fileSystem,

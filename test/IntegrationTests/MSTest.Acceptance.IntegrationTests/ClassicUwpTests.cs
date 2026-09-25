@@ -64,7 +64,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
                     build.ProjectPath,
                     resultsDirectory,
                     TestContext.CancellationToken,
-                    $"--internal-appmodel-activation-payload {new string('x', 3_000)}");
+                    $"--retry-failed-tests 1 --internal-appmodel-activation-payload {new string('x', 3_000)}");
                 string? packageDirectory = Directory.GetDirectories(
                         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages"),
                         $"{packageIdentityName}_*",
@@ -224,6 +224,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+    <EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <GenerateTestingPlatformApplicationHelper>false</GenerateTestingPlatformApplicationHelper>
     <GenerateSelfRegisteredExtensions>false</GenerateSelfRegisteredExtensions>

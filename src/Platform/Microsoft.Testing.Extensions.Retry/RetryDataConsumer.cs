@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
@@ -57,7 +58,14 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         if (value is SessionFileArtifact artifact)
         {
-            string artifactPath = GetControllerArtifactPath(artifact.FileInfo.FullName);
+            string? artifactPath = GetControllerArtifactPath(artifact.FileInfo.FullName);
+            if (artifactPath is null)
+            {
+                await _serviceProvider.GetLoggerFactory().CreateLogger<RetryDataConsumer>().LogWarningAsync(
+                    $"Ignoring retry artifact '{artifact.FileInfo.FullName}' because it is outside the configured AppContainer artifact roots.").ConfigureAwait(false);
+                return;
+            }
+
             NamedPipeClient client = GetClient();
             await client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
                 new ArtifactRequest(artifactPath, artifact.Kind),
@@ -109,22 +117,36 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
     }
 
-    private string GetControllerArtifactPath(string artifactPath)
+    private string? GetControllerArtifactPath(string artifactPath)
     {
         const string SourceRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
         const string DestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
         const string DiagnosticSourceRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT";
         const string DiagnosticDestinationRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
 
-        return TryGetControllerArtifactPath(
+        string? sourceRoot = _environment.GetEnvironmentVariable(SourceRootEnvironmentVariable);
+        string? destinationRoot = _environment.GetEnvironmentVariable(DestinationRootEnvironmentVariable);
+        string? diagnosticSourceRoot = _environment.GetEnvironmentVariable(DiagnosticSourceRootEnvironmentVariable);
+        string? diagnosticDestinationRoot = _environment.GetEnvironmentVariable(DiagnosticDestinationRootEnvironmentVariable);
+
+        string? controllerArtifactPath = TryGetControllerArtifactPath(
             artifactPath,
-            _environment.GetEnvironmentVariable(SourceRootEnvironmentVariable),
-            _environment.GetEnvironmentVariable(DestinationRootEnvironmentVariable))
+            sourceRoot,
+            destinationRoot)
             ?? TryGetControllerArtifactPath(
                 artifactPath,
-                _environment.GetEnvironmentVariable(DiagnosticSourceRootEnvironmentVariable),
-                _environment.GetEnvironmentVariable(DiagnosticDestinationRootEnvironmentVariable))
-            ?? artifactPath;
+                diagnosticSourceRoot,
+                diagnosticDestinationRoot);
+        if (controllerArtifactPath is not null)
+        {
+            return controllerArtifactPath;
+        }
+
+        bool hasAppContainerMappings = sourceRoot is { Length: > 0 }
+            || destinationRoot is { Length: > 0 }
+            || diagnosticSourceRoot is { Length: > 0 }
+            || diagnosticDestinationRoot is { Length: > 0 };
+        return hasAppContainerMappings ? null : artifactPath;
     }
 
     private static string? TryGetControllerArtifactPath(

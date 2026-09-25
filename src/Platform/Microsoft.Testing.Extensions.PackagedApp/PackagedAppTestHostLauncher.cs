@@ -107,9 +107,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string JUnitReportJournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
     private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
     private const string RetryRecoveredArtifactManifestEnvironmentVariableName = "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST";
+    private const string AppModelControllerExtensionsEnvironmentVariableName = "MSTEST_APPMODEL_CONTROLLER_EXTENSIONS";
     private const string TrxTestRunIdEnvironmentVariableName = "TESTINGPLATFORM_TRX_TESTRUN_ID";
     private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
 #if PACKAGEDAPP_WINRT
+    private const string AppContainerArtifactRootsConfiguredEnvironmentVariableName = "TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED";
     private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
     private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
     private const string DiagnosticArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT";
@@ -465,6 +467,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 diagnosticScratchDirectory = Path.Combine(scratchDirectory, "diagnostics");
                 Directory.CreateDirectory(resultsScratchDirectory);
                 Directory.CreateDirectory(diagnosticScratchDirectory);
+                Environment.SetEnvironmentVariable(AppContainerArtifactRootsConfiguredEnvironmentVariableName, "1");
+                Environment.SetEnvironmentVariable(ArtifactPathDestinationRootEnvironmentVariableName, resultsRecoveryDirectory);
+                Environment.SetEnvironmentVariable(DiagnosticArtifactPathDestinationRootEnvironmentVariableName, diagnosticRecoveryDirectory);
                 hostArguments = RedirectAppContainerFileSystemOptions(
                     context.Arguments,
                     resultsScratchDirectory,
@@ -585,6 +590,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 || string.Equals(environmentVariable.Key, RetryAttemptEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, RetryRecoveredArtifactManifestEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, LogicalRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(environmentVariable.Key, AppModelControllerExtensionsEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, TrxTestRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(environmentVariable.Key, HangDumpPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
