@@ -241,8 +241,32 @@ if (-not $runBranch.Value.Contains("-p:TestRunnerAdditionalArguments=")) {
     throw "Affected-test execution must suppress the repository's retry arguments."
 }
 
-if ([regex]::Matches($collectBranch.Value, "dotnet test --solution TestFx\.slnx").Count -ne 2 -or
-    -not $collectBranch.Value.Contains("##vso[task.setvariable variable=PublishCoverageReport]true")) {
+$collectStepStart = $collectBranch.Value.IndexOf("- script: |", [System.StringComparison]::Ordinal)
+if ($collectStepStart -lt 0) {
+    throw "The affected-test collection step is missing."
+}
+
+$collectStepEnd = $collectBranch.Value.IndexOf("name: CollectAffectedTests", $collectStepStart, [System.StringComparison]::Ordinal)
+if ($collectStepEnd -lt 0) {
+    throw "The affected-test collection step must be named CollectAffectedTests."
+}
+
+$fullTestStepStart = $collectBranch.Value.IndexOf("- script: |", $collectStepEnd, [System.StringComparison]::Ordinal)
+if ($fullTestStepStart -lt 0) {
+    throw "The normal full test step after affected-test collection is missing."
+}
+
+$fullTestStepEnd = $collectBranch.Value.IndexOf("name: Test", $fullTestStepStart, [System.StringComparison]::Ordinal)
+if ($fullTestStepEnd -lt 0) {
+    throw "The normal full test step after affected-test collection must be named Test."
+}
+
+$collectStep = $collectBranch.Value[$collectStepStart..($collectStepEnd - 1)] -join ""
+$fullTestStep = $collectBranch.Value[$fullTestStepStart..($fullTestStepEnd - 1)] -join ""
+if ($collectStep.Contains("PublishCoverageReport") -or
+    -not $collectStep.Contains("--collect-test-map") -or
+    -not $fullTestStep.Contains("PublishCoverageReport") -or
+    $fullTestStep.Contains("--collect-test-map")) {
     throw "Affected-test collection must be followed by the normal full test and coverage run."
 }
 

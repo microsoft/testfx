@@ -98,6 +98,20 @@
     <Copy SourceFiles="@(_AffectedTestsNetFrameworkRuntimeAsset)"
           DestinationFolder="$(TargetDir)runtimes\win-x64\native"
           SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="@(_AffectedTestsNetFrameworkRuntimeAsset->'$(TargetDir)runtimes\win-x64\native\%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RegisterAffectedTestsNetFrameworkRuntimeAssetsForClean"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+            and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
+    <ItemGroup>
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\MicrosoftInstrumentationEngine_x64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\ctsrun64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\Cts_x64.config" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_GenerateVersionSourceFileCache">

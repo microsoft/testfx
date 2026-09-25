@@ -50,8 +50,8 @@ A missing, stale, incompatible, or inaccessible artifact is an expected state, n
 runs all tests. The pipeline's explicit full-test fallback remains for extension/process failures, while scheduled and
 manual builds always keep full validation.
 
-Selected-test runs do not publish their partial coverage as the repository coverage report. Collection and full
-fallback runs still publish complete coverage.
+Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
+after collection and full fallback runs still publish complete coverage.
 
 The one-switch rollback remains setting `enableAffectedTests` to `false`, which keeps the package and dormant storage
 configuration in place while restoring the ordinary full-test command.
