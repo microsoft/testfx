@@ -39,9 +39,12 @@ tests to understand the changed behavior before commenting.
 - Put PR-level findings, scope and description feedback, dependency assessments,
   specialist-review summaries, and overflow findings in the final review body.
   Do not post separate top-level PR comments for review content.
-- Include a compact, collapsed coverage inventory in the review body so readers
-  can see which review dimensions and specialist checks ran without receiving a
-  separate comment for each clean area.
+- Include a compact `Confidence at a glance` section with one color-coded,
+  collapsed block per applicable review scope. Keep the detailed dimensions as
+  an internal coverage checklist; do not publish one status row per dimension.
+- Lead with measurable reviewer actions when action is needed. Keep detailed
+  line-level evidence in inline comments rather than repeating it in the final
+  review body.
 - Do not duplicate a finding already covered by another live review thread.
   Reference the existing thread from the review body when it remains the only
   actionable item.
