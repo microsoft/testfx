@@ -15,6 +15,7 @@ namespace Microsoft.Testing.Platform.Telemetry;
 internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataProducer
 {
     private Func<IServiceProvider, ITelemetryCollector>? _telemetryFactory;
+    private Func<IServiceProvider, IPlatformOpenTelemetryService>? _openTelemetryServiceFactory;
     private Func<IServiceProvider, IOpenTelemetryProvider>? _openTelemetryProviderFactory;
 
     public string Uid => nameof(TelemetryManager);
@@ -28,8 +29,17 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
         => _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
 
+    public void AddOpenTelemetryService(Func<IServiceProvider, IPlatformOpenTelemetryService> openTelemetryServiceFactory)
+    {
+        _ = openTelemetryServiceFactory ?? throw new ArgumentNullException(nameof(openTelemetryServiceFactory));
+        _openTelemetryServiceFactory ??= openTelemetryServiceFactory;
+    }
+
     public void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory)
         => _openTelemetryProviderFactory = openTelemetryProviderFactory ?? throw new ArgumentNullException(nameof(openTelemetryProviderFactory));
+
+    public IPlatformOpenTelemetryService? BuildOTelService(ServiceProvider serviceProvider)
+        => _openTelemetryServiceFactory?.Invoke(serviceProvider);
 
     public IOpenTelemetryProvider? BuildOTelProvider(ServiceProvider serviceProvider)
         => _openTelemetryProviderFactory is null
