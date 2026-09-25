@@ -12,7 +12,9 @@ function Assert-Containment {
 
     foreach ($substring in $Substrings) {
         $expectedSubstring = & $SubstringFormatter $substring
-        if ($Text.Contains($expectedSubstring) -eq $Absent.IsPresent) {
+        $containsSubstring = $Text.Contains($expectedSubstring)
+        $validationFailed = if ($Absent) { $containsSubstring } else { -not $containsSubstring }
+        if ($validationFailed) {
             $formattedMessage = if ($Message -is [scriptblock]) {
                 & $Message $substring
             } else {
