@@ -67,6 +67,9 @@ return exitCode;
 The focused resource helpers are recommended when Aspire ServiceDefaults, `HostApplicationBuilder`, or another application-level composition root already owns `service.*`, `host.*`, `os.*`, and `process.*`. Use `AddTestingPlatformResource()` only when the test application wants the extension to configure that complete standalone resource identity.
 
 See the complete [`HostApplicationBuilder` sample](../../../samples/public/MTPOTel).
+It also subscribes to a custom `ActivitySource` used inside test execution. The custom activity and MTP's test-case
+result span share the run trace and are siblings under the `TestFramework` span; MTP does not make user test code
+ambient to its asynchronously produced result span.
 
 ## Emitted metrics
 

@@ -16,9 +16,11 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
 
         result.AssertExitCodeIs(ExitCode.Success);
         result.AssertOutputContains("[APP-OWNED-TRACE] TestHostBuilder");
+        result.AssertOutputContains("[APP-OWNED-TEST-TRACE] application-test-activity");
         result.AssertOutputContains("[APP-OWNED-METRIC] test.run.duration");
         result.AssertOutputContains("[APP-OWNED-RESOURCE] service.name=application-owned-tests");
         result.AssertOutputContains("[APP-OWNED-PARENT] inherited");
+        result.AssertOutputContains("[APP-OWNED-TOPOLOGY] sibling-under-TestFramework");
     }
 
     public TestContext TestContext { get; set; } = null!;
@@ -102,7 +104,7 @@ internal static class Program
         ITestApplicationBuilder testBuilder = await TestApplication.CreateBuilderAsync(args);
         testBuilder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
-            (_, _) => new SingleTestFramework());
+            (_, _) => new SingleTestFramework(applicationActivitySource));
         testBuilder.AddTestingPlatformDiagnostics();
 
         int exitCode;
@@ -115,8 +117,28 @@ internal static class Program
         ServiceProviderServiceExtensions.GetRequiredService<TracerProvider>(host.Services).ForceFlush();
         ServiceProviderServiceExtensions.GetRequiredService<MeterProvider>(host.Services).ForceFlush();
 
-        Activity builderActivity = activityExporter.Activities.Single(
-            activity => activity.OperationName == "TestHostBuilder");
+        Activity applicationRootActivity = activityExporter.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-run");
+        Activity customTestActivity = activityExporter.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-activity");
+        Activity builderActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.OperationName == "TestHostBuilder");
+        Activity testFrameworkActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.OperationName == "TestFramework");
+        Activity testResultActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.OperationName == "Application-owned telemetry test");
+
+        if (applicationRootActivity.TraceId != applicationTraceId
+            || applicationRootActivity.SpanId != applicationSpanId)
+        {
+            throw new InvalidOperationException("The application-owned root activity was not exported.");
+        }
+
         if (builderActivity.TraceId != applicationTraceId || builderActivity.ParentSpanId != applicationSpanId)
         {
             throw new InvalidOperationException(
@@ -124,18 +146,30 @@ internal static class Program
                 $"actual {builderActivity.TraceId}/{builderActivity.ParentSpanId}.");
         }
 
-        if (!metricExporter.MetricNames.Contains("test.run.duration"))
+        if (testFrameworkActivity.TraceId != applicationTraceId
+            || customTestActivity.TraceId != testFrameworkActivity.TraceId
+            || testResultActivity.TraceId != testFrameworkActivity.TraceId
+            || customTestActivity.ParentSpanId != testFrameworkActivity.SpanId
+            || testResultActivity.ParentSpanId != testFrameworkActivity.SpanId)
+        {
+            throw new InvalidOperationException(
+                "The application test activity and MTP test-result activity must be siblings under TestFramework.");
+        }
+
+        if (!metricExporter.Contains("test.run.duration"))
         {
             throw new InvalidOperationException("The application-owned meter provider did not export test.run.duration.");
         }
 
-        string traceServiceName = GetServiceName(activityExporter.CapturedResource, "trace");
-        _ = GetServiceName(metricExporter.CapturedResource, "metric");
+        string traceServiceName = GetServiceName(activityExporter.GetCapturedResource(), "trace");
+        _ = GetServiceName(metricExporter.GetCapturedResource(), "metric");
 
         Console.WriteLine($"[APP-OWNED-TRACE] {builderActivity.OperationName}");
+        Console.WriteLine($"[APP-OWNED-TEST-TRACE] {customTestActivity.OperationName}");
         Console.WriteLine("[APP-OWNED-METRIC] test.run.duration");
         Console.WriteLine($"[APP-OWNED-RESOURCE] service.name={traceServiceName}");
         Console.WriteLine("[APP-OWNED-PARENT] inherited");
+        Console.WriteLine("[APP-OWNED-TOPOLOGY] sibling-under-TestFramework");
 
         await host.StopAsync();
         return exitCode;
@@ -160,44 +194,79 @@ internal static class Program
 
 internal sealed class CapturingActivityExporter : BaseExporter<Activity>
 {
-    public List<Activity> Activities { get; } = [];
-
-    public Resource? CapturedResource { get; private set; }
+    private readonly object _syncRoot = new();
+    private readonly List<Activity> _activities = [];
+    private Resource? _capturedResource;
 
     public override ExportResult Export(in Batch<Activity> batch)
     {
-        CapturedResource ??= ParentProvider?.GetResource();
-        foreach (Activity activity in batch)
+        lock (_syncRoot)
         {
-            if (activity.Source.Name == "Microsoft.Testing.Platform")
+            _capturedResource ??= ParentProvider?.GetResource();
+            foreach (Activity activity in batch)
             {
-                Activities.Add(activity);
+                _activities.Add(activity);
             }
         }
 
         return ExportResult.Success;
     }
+
+    public Activity Single(Func<Activity, bool> predicate)
+    {
+        lock (_syncRoot)
+        {
+            return _activities.Single(predicate);
+        }
+    }
+
+    public Resource? GetCapturedResource()
+    {
+        lock (_syncRoot)
+        {
+            return _capturedResource;
+        }
+    }
 }
 
 internal sealed class CapturingMetricExporter : BaseExporter<Metric>
 {
-    public HashSet<string> MetricNames { get; } = new(StringComparer.Ordinal);
-
-    public Resource? CapturedResource { get; private set; }
+    private readonly object _syncRoot = new();
+    private readonly HashSet<string> _metricNames = new(StringComparer.Ordinal);
+    private Resource? _capturedResource;
 
     public override ExportResult Export(in Batch<Metric> batch)
     {
-        CapturedResource ??= ParentProvider?.GetResource();
-        foreach (Metric metric in batch)
+        lock (_syncRoot)
         {
-            MetricNames.Add(metric.Name);
+            _capturedResource ??= ParentProvider?.GetResource();
+            foreach (Metric metric in batch)
+            {
+                _metricNames.Add(metric.Name);
+            }
         }
 
         return ExportResult.Success;
     }
+
+    public bool Contains(string metricName)
+    {
+        lock (_syncRoot)
+        {
+            return _metricNames.Contains(metricName);
+        }
+    }
+
+    public Resource? GetCapturedResource()
+    {
+        lock (_syncRoot)
+        {
+            return _capturedResource;
+        }
+    }
 }
 
-internal sealed class SingleTestFramework : ITestFramework, IDataProducer
+internal sealed class SingleTestFramework(ActivitySource activitySource) : ITestFramework, IDataProducer
 {
     public string Uid => nameof(SingleTestFramework);
     public string Version => "1.0.0";
@@ -215,6 +284,12 @@ internal sealed class SingleTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        using Activity? testActivity = activitySource.StartActivity("application-test-activity");
+        if (testActivity is null)
+        {
+            throw new InvalidOperationException("The application-owned provider did not subscribe to the test activity source.");
+        }
+
         var sessionUid = new SessionUid("application-owned-session");
         await context.MessageBus.PublishAsync(
             this,

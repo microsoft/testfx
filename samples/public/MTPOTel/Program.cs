@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,6 +25,7 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        using var testActivitySource = new ActivitySource("MTPOTel.Tests");
         HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
 
         // The host owns the OpenTelemetry providers, just like an Aspire ServiceDefaults project or any other
@@ -35,6 +37,7 @@ public class Program
                 .AddTestingPlatformTestResource()
                 .AddTestingPlatformCiResource())
             .WithTracing(tracing => tracing
+                .AddSource(testActivitySource.Name)
                 .AddTestingPlatformInstrumentation()
                 .AddConsoleExporter())
             .WithMetrics(metrics => metrics
@@ -49,7 +52,7 @@ public class Program
         // Register our simple test framework
         testApplicationBuilder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
-            (capabilities, serviceProvider) => new SimpleTestFramework(serviceProvider));
+            (capabilities, serviceProvider) => new SimpleTestFramework(serviceProvider, testActivitySource));
 
         // Activate only MTP's ActivitySource and Meter. The application host above remains responsible for creating,
         // flushing, and disposing the providers that subscribe to those diagnostics.

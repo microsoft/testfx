@@ -4,7 +4,7 @@
 
 | Scenario | Sample |
 | --- | --- |
-| Use application-owned OpenTelemetry providers from `HostApplicationBuilder` to collect MTP diagnostics while preserving the application's resource identity | [`MTPOTel`](MTPOTel) |
+| Use application-owned OpenTelemetry providers from `HostApplicationBuilder` to collect MTP diagnostics and custom test activities while preserving the application's resource identity | [`MTPOTel`](MTPOTel) |
 
 ## Windows application testing
 
