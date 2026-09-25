@@ -30,8 +30,8 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
 
     // Note: we use a queue per Uid/attempt because frameworks are allowed (but discouraged) to produce multiple
     // test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or MSTest's "folded" parameterized
-    // tests). Explicit retry attempts can therefore complete out of order, while indistinguishable duplicate Uids
-    // retain the established FIFO pairing instead of throwing.
+    // tests). Frameworks that identify attempts on both their in-progress and result updates can complete those
+    // attempts out of order; frameworks without per-start attempt identity retain the established FIFO fallback.
     // The queued activity is nullable on purpose: when no tracer is listening StartActivity returns null, and we
     // still need the entry so the in-flight bookkeeping (and therefore test.case.active) stays balanced.
     private readonly Dictionary<TestActivityKey, Queue<IPlatformActivity?>> _testActivities = [];

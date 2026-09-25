@@ -47,16 +47,15 @@ public sealed class AsynchronousMessageBusTests
             traceState: "vendor=value");
         Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
         openTelemetryService.Setup(s => s.CaptureCurrentActivityContext()).Returns(executionContext);
-        var contextStore = new TestExecutionActivityContextStore();
+        TestNodeConsumer consumer = new();
         using var asynchronousMessageBus = new AsynchronousMessageBus(
-            [new TestNodeConsumer()],
+            [consumer],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
             new NopLoggerFactory(),
             new SystemEnvironment(),
             shutdownProgressReporter: null,
-            openTelemetryService: openTelemetryService.Object,
-            testExecutionActivityContextStore: contextStore);
+            openTelemetryService: openTelemetryService.Object);
         await asynchronousMessageBus.InitAsync();
 
         var message = new TestNodeUpdateMessage(
@@ -70,20 +69,16 @@ public sealed class AsynchronousMessageBusTests
         await asynchronousMessageBus.PublishAsync(
             new DummyProducer("producer", typeof(TestNodeUpdateMessage)),
             message);
+        await asynchronousMessageBus.DrainDataAsync();
 
-        Assert.IsTrue(contextStore.TryTake(message, out PlatformActivityContext? capturedContext));
-        Assert.AreSame(executionContext, capturedContext);
+        Assert.HasCount(1, consumer.ExecutionActivityContexts);
+        Assert.AreSame(executionContext, consumer.ExecutionActivityContexts[0]);
         openTelemetryService.Verify(s => s.CaptureCurrentActivityContext(), Times.Once);
     }
 
     [TestMethod]
-    public async Task PublishAsync_WhenMessageInstanceIsReused_QueuesEachExecutionActivityContext()
+    public async Task PublishAsync_WhenMessageInstanceIsReused_PreservesMissingContextPerPublication()
     {
-        var firstContext = new PlatformActivityContext(
-            "11111111111111111111111111111111",
-            "1111111111111111",
-            isRecorded: true,
-            traceState: null);
         var secondContext = new PlatformActivityContext(
             "22222222222222222222222222222222",
             "2222222222222222",
@@ -91,18 +86,17 @@ public sealed class AsynchronousMessageBusTests
             traceState: null);
         Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
         openTelemetryService.SetupSequence(s => s.CaptureCurrentActivityContext())
-            .Returns(firstContext)
+            .Returns((PlatformActivityContext?)null)
             .Returns(secondContext);
-        var contextStore = new TestExecutionActivityContextStore();
+        TestNodeConsumer consumer = new();
         using var asynchronousMessageBus = new AsynchronousMessageBus(
-            [new TestNodeConsumer()],
+            [consumer],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
             new NopLoggerFactory(),
             new SystemEnvironment(),
             shutdownProgressReporter: null,
-            openTelemetryService: openTelemetryService.Object,
-            testExecutionActivityContextStore: contextStore);
+            openTelemetryService: openTelemetryService.Object);
         await asynchronousMessageBus.InitAsync();
         var message = new TestNodeUpdateMessage(
             new("session"),
@@ -116,12 +110,75 @@ public sealed class AsynchronousMessageBusTests
 
         await asynchronousMessageBus.PublishAsync(producer, message);
         await asynchronousMessageBus.PublishAsync(producer, message);
+        await asynchronousMessageBus.DrainDataAsync();
 
-        Assert.IsTrue(contextStore.TryTake(message, out PlatformActivityContext? firstCapturedContext));
-        Assert.AreSame(firstContext, firstCapturedContext);
-        Assert.IsTrue(contextStore.TryTake(message, out PlatformActivityContext? secondCapturedContext));
-        Assert.AreSame(secondContext, secondCapturedContext);
-        Assert.IsFalse(contextStore.TryTake(message, out _));
+        Assert.HasCount(2, consumer.ExecutionActivityContexts);
+        Assert.IsNull(consumer.ExecutionActivityContexts[0]);
+        Assert.AreSame(secondContext, consumer.ExecutionActivityContexts[1]);
+    }
+
+    [TestMethod]
+    [UnsupportedOSPlatform("browser")]
+    public async Task PublishAsync_WhenCapturesCompleteOutOfOrder_BindsContextToPublication()
+    {
+        var firstContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            isRecorded: true,
+            traceState: null);
+        var secondContext = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        using ManualResetEventSlim firstCaptureStarted = new();
+        using ManualResetEventSlim releaseFirstCapture = new();
+        int captureCount = 0;
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.Setup(s => s.CaptureCurrentActivityContext())
+            .Returns(() =>
+            {
+                if (Interlocked.Increment(ref captureCount) != 1)
+                {
+                    return secondContext;
+                }
+
+                firstCaptureStarted.Set();
+                releaseFirstCapture.Wait(TestContext.CancellationToken);
+                return firstContext;
+            });
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        var producer = new DummyProducer("producer", typeof(TestNodeUpdateMessage));
+
+        var firstPublish = Task.Run(
+            async () => await asynchronousMessageBus.PublishAsync(producer, message),
+            TestContext.CancellationToken);
+        firstCaptureStarted.Wait(TestContext.CancellationToken);
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        releaseFirstCapture.Set();
+        await firstPublish;
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(2, consumer.ExecutionActivityContexts);
+        Assert.AreSame(secondContext, consumer.ExecutionActivityContexts[0]);
+        Assert.AreSame(firstContext, consumer.ExecutionActivityContexts[1]);
     }
 
     // This test relies on the background consumer tasks (started via ITask.Run) ping-ponging
@@ -993,8 +1050,10 @@ public sealed class AsynchronousMessageBusTests
         public ILogger CreateLogger(string categoryName) => new NopLogger();
     }
 
-    private sealed class TestNodeConsumer : IDataConsumer, IBlockingDataConsumer
+    private sealed class TestNodeConsumer : IDataConsumer, ITestExecutionActivityContextConsumer
     {
+        public List<PlatformActivityContext?> ExecutionActivityContexts { get; } = [];
+
         public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
         public string Uid => nameof(TestNodeConsumer);
@@ -1008,7 +1067,17 @@ public sealed class AsynchronousMessageBusTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
         public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+            => throw new InvalidOperationException("The activity-context-aware consumer path was not used.");
+
+        Task ITestExecutionActivityContextConsumer.ConsumeAsync(
+            IDataProducer dataProducer,
+            IData data,
+            PlatformActivityContext? executionActivityContext,
+            CancellationToken cancellationToken)
+        {
+            ExecutionActivityContexts.Add(executionActivityContext);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class DummyConsumer : IDataConsumer

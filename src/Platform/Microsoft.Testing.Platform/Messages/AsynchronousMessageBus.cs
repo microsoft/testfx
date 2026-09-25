@@ -29,7 +29,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IShutdownProgressReporter? _shutdownProgressReporter;
     private readonly IPlatformOpenTelemetryServiceWithActivityLinks? _openTelemetryServiceWithActivityLinks;
-    private readonly TestExecutionActivityContextStore? _testExecutionActivityContextStore;
 #pragma warning disable IDE0330 // Use 'System.Threading.Lock' - not available on all target frameworks of this project.
     private readonly object _disableLock = new();
 #pragma warning restore IDE0330
@@ -64,8 +63,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             loggerFactory,
             environment,
             shutdownProgressReporter,
-            openTelemetryService: null,
-            testExecutionActivityContextStore: null)
+            openTelemetryService: null)
     {
     }
 
@@ -76,8 +74,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         ILoggerFactory loggerFactory,
         IEnvironment environment,
         IShutdownProgressReporter? shutdownProgressReporter,
-        IPlatformOpenTelemetryService? openTelemetryService,
-        TestExecutionActivityContextStore? testExecutionActivityContextStore)
+        IPlatformOpenTelemetryService? openTelemetryService)
     {
         _dataConsumers = dataConsumers;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
@@ -85,7 +82,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         _environment = environment;
         _shutdownProgressReporter = shutdownProgressReporter;
         _openTelemetryServiceWithActivityLinks = openTelemetryService as IPlatformOpenTelemetryServiceWithActivityLinks;
-        _testExecutionActivityContextStore = testExecutionActivityContextStore;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
@@ -217,29 +213,28 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             return;
         }
 
-        CaptureTestExecutionActivityContext(data);
+        PlatformActivityContext? executionActivityContext = CaptureTestExecutionActivityContext(data);
 
         for (int i = 0; i < values.Count; i++)
         {
-            await values[i].PublishAsync(dataProducer, data).ConfigureAwait(false);
+            IAsyncConsumerDataProcessor processor = values[i];
+            if (processor is IAsyncConsumerDataProcessorWithActivityContext activityContextProcessor)
+            {
+                await activityContextProcessor.PublishAsync(dataProducer, data, executionActivityContext).ConfigureAwait(false);
+            }
+            else
+            {
+                await processor.PublishAsync(dataProducer, data).ConfigureAwait(false);
+            }
         }
     }
 
-    private void CaptureTestExecutionActivityContext(IData data)
-    {
-        if (_openTelemetryServiceWithActivityLinks is null
-            || _testExecutionActivityContextStore is null
+    private PlatformActivityContext? CaptureTestExecutionActivityContext(IData data)
+        => _openTelemetryServiceWithActivityLinks is null
             || data is not TestNodeUpdateMessage message
-            || !message.TestNode.Properties.Any<InProgressTestNodeStateProperty>())
-        {
-            return;
-        }
-
-        if (_openTelemetryServiceWithActivityLinks.CaptureCurrentActivityContext() is { } context)
-        {
-            _testExecutionActivityContextStore.Set(message, context);
-        }
-    }
+            || !message.TestNode.Properties.Any<InProgressTestNodeStateProperty>()
+                ? null
+                : _openTelemetryServiceWithActivityLinks.CaptureCurrentActivityContext();
 
     private async Task LogDataAsync(IDataProducer dataProducer, IData data)
     {

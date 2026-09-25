@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer, IDisposable
+internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer, ITestExecutionActivityContextConsumer, IDisposable
 {
     private readonly IOutputDevice _outputService;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -19,7 +19,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly IStopPoliciesService _policiesService;
     private readonly ITestCoverageResult? _testCoverageResult;
     private readonly OpenTelemetryResultHandler? _openTelemetryResultHandler;
-    private readonly TestExecutionActivityContextStore _testExecutionActivityContextStore;
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
     private int _totalRanTests;
@@ -32,14 +31,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IEnvironment environment,
         IStopPoliciesService policiesService,
         IPlatformOpenTelemetryService? otelService)
-        : this(
-            outputService,
-            commandLineOptions,
-            environment,
-            policiesService,
-            otelService,
-            testCoverageResult: null,
-            new TestExecutionActivityContextStore())
+        : this(outputService, commandLineOptions, environment, policiesService, otelService, testCoverageResult: null)
     {
     }
 
@@ -50,32 +42,12 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IStopPoliciesService policiesService,
         IPlatformOpenTelemetryService? otelService,
         ITestCoverageResult? testCoverageResult)
-        : this(
-            outputService,
-            commandLineOptions,
-            environment,
-            policiesService,
-            otelService,
-            testCoverageResult,
-            new TestExecutionActivityContextStore())
-    {
-    }
-
-    public TestApplicationResult(
-        IOutputDevice outputService,
-        ICommandLineOptions commandLineOptions,
-        IEnvironment environment,
-        IStopPoliciesService policiesService,
-        IPlatformOpenTelemetryService? otelService,
-        ITestCoverageResult? testCoverageResult,
-        TestExecutionActivityContextStore testExecutionActivityContextStore)
     {
         _outputService = outputService;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
         _testCoverageResult = testCoverageResult;
-        _testExecutionActivityContextStore = testExecutionActivityContextStore;
         if (otelService is not null)
         {
             _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, PlatformOpenTelemetryOptions.FromEnvironment(environment));
@@ -108,6 +80,16 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        => ConsumeAsync(value, executionActivityContext: null);
+
+    Task ITestExecutionActivityContextConsumer.ConsumeAsync(
+        IDataProducer dataProducer,
+        IData data,
+        PlatformActivityContext? executionActivityContext,
+        CancellationToken cancellationToken)
+        => ConsumeAsync(data, executionActivityContext);
+
+    private Task ConsumeAsync(IData value, PlatformActivityContext? executionActivityContext)
     {
         var message = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? executionState = message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
@@ -121,12 +103,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         if (executionState is null)
         {
             return Task.CompletedTask;
-        }
-
-        PlatformActivityContext? executionActivityContext = null;
-        if (executionState is InProgressTestNodeStateProperty)
-        {
-            _testExecutionActivityContextStore.TryTake(message, out executionActivityContext);
         }
 
         // A test framework that retries a test in-process (MSTest's [Retry], ...) reports every attempt under the
@@ -279,8 +255,5 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, exitCode, runActivity);
 
     public void Dispose()
-    {
-        _testExecutionActivityContextStore.Clear();
-        _openTelemetryResultHandler?.Dispose();
-    }
+        => _openTelemetryResultHandler?.Dispose();
 }

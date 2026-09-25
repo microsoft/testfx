@@ -28,7 +28,10 @@ internal sealed partial class OpenTelemetryResultHandler
         HandleTestResult(testNode, stateProperty);
     }
 
-    internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid, PlatformActivityContext? executionActivityContext = null)
+    internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid)
+        => NotifyInProgress(testNode, parentUid, executionActivityContext: null);
+
+    internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid, PlatformActivityContext? executionActivityContext)
     {
         _totalStartedTests?.Add(1);
         string activityName = GetActivityName(testNode);
