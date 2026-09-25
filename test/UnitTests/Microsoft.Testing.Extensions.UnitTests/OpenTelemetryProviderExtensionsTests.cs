@@ -231,6 +231,51 @@ public sealed class OpenTelemetryProviderExtensionsTests
     }
 
     [TestMethod]
+    [DoNotParallelize]
+    public async Task LegacyProviderFactorySideEffect_StillActivatesDiagnostics()
+    {
+        List<Activity> stoppedActivities = [];
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == OpenTelemetryPlatformService.ActivitySourceName,
+            Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                lock (stoppedActivities)
+                {
+                    stoppedActivities.Add(activity);
+                }
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryProvider(serviceProvider =>
+        {
+            ((ServiceProvider)serviceProvider).AddService(new OpenTelemetryPlatformService());
+            return new LegacyOpenTelemetryProvider();
+        });
+
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            IPlatformOpenTelemetryService service = serviceProvider.GetRequiredService<IPlatformOpenTelemetryService>();
+            LegacyOpenTelemetryProvider provider = Assert.IsInstanceOfType<LegacyOpenTelemetryProvider>(
+                serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
+            Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
+            Assert.Contains(
+                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                stoppedActivities);
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
+
+    [TestMethod]
     public void ResolveEnvironmentConfiguration_WhenSdkDisabled_RegistersNothingEvenWithEndpointAndDelegates()
     {
         // OTEL_SDK_DISABLED must win over an explicit endpoint and over caller-supplied delegates.
@@ -546,5 +591,12 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
             => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
+    }
+
+    private sealed class LegacyOpenTelemetryProvider : IOpenTelemetryProvider
+    {
+        public void Dispose()
+        {
+        }
     }
 }
