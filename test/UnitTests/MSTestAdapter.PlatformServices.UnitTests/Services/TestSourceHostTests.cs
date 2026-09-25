@@ -27,18 +27,21 @@ public class TestSourceHostTests : TestContainer
 
     public void DisposeDoesNotThrowWhenOriginalCurrentDirectoryCannotBeRestored()
     {
+        string originalCurrentDirectory = Environment.CurrentDirectory;
         string inaccessiblePath = Path.GetTempFileName();
-        TestSourceHost testSourceHost = new(Assembly.GetExecutingAssembly().Location, null);
-        typeof(TestSourceHost)
-            .GetField("_currentDirectory", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .SetValue(testSourceHost, inaccessiblePath);
 
         try
         {
+            TestSourceHost testSourceHost = new(Assembly.GetExecutingAssembly().Location, null);
+            typeof(TestSourceHost)
+                .GetField("_currentDirectory", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(testSourceHost, inaccessiblePath);
+
             testSourceHost.Invoking(static host => host.Dispose()).Should().NotThrow();
         }
         finally
         {
+            Environment.CurrentDirectory = originalCurrentDirectory;
             File.Delete(inaccessiblePath);
         }
     }
