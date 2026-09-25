@@ -84,7 +84,7 @@
 
 ## Last Run
 
-2026-09-20 UTC (run 35543089018)
+2026-09-25 UTC (run 36198902851)
 
 ## Completed Work (recent, summarized)
 
@@ -248,3 +248,14 @@ Key lasting gotchas from this window:
 - Created PR "Add unit tests for RpcIdParser.TryParseNumericId" on branch `test-assist/rpc-id-parser-tests`.
 - Task 7: issue #10920 rebuilt cleanly again (same recurring duplicated-section accumulation as prior runs — the safe-outputs `replace` didn't stop the append pattern from a prior run before this one, so rebuilt fully); kept only last ~4 Run History entries inline, older ones condensed into this memory file. Suggested Actions set to only the new PR. Backlog refreshed: `RpcIdParser` removed as resolved, noted other ServerMode/JsonRpc `Json.*` classes as the next vein to check.
 - Remaining candidates for future runs: other classes in `ServerMode/JsonRpc/Json/*` (JsonSerializer/JsonDeserializer/JsonObjectSerializer/JsonValueSerializer family, Jsonite reflector/writer/reader) — not yet individually checked for zero-coverage gaps; HangDump/Retry IPC serializers and MSTest.Engine internal classes remain low-priority/blocked as before.
+
+## Run 2026-09-25 (run 36198902851) — DotnetTestHelper tests + reconciliation
+
+- Task reconciliation: confirmed via `search_pull_requests` no open `[test-improver]`-prefixed PRs need maintenance. Verified on local `main` that `RpcIdParserTests.cs`, `RandomIdTests.cs`, `RetryExtensionsTests.cs`, and `TestHostProcessPIDRequestSerializer` (in `ProtocolTests.cs`) are all present — no orphaned-PR recovery needed this run. No open issues labeled `testing` other than the Monthly Activity issue itself.
+- Task 2/3: continued the `Microsoft.Testing.Platform` ServerMode sweep (standing backlog item). Checked the `Json.*`/Jsonite family first (`JsonReader`/`JsonWriter`/`JsonReflector`/`JsonCollectionDeserializer`/`JsonValueSerializer`/`JsonTypes` — all zero direct refs in tests) but these are either trivial one-line wrapper types (`JsonValueSerializer<T>`, `JsonCollectionDeserializer<T>` — abstract generic base classes with no logic of their own) or large ported third-party (Alexandre Mutel's Jsonite, `#if !NETCOREAPP`-only, `#pragma warning disable` at file top) reflection-based parser code already exercised indirectly and extensively via `JsoniteTests.cs`/`JsonTests.cs` round-trip tests — not a good direct-unit-test target (would require constructing large reflection contexts, low marginal value). Deprioritizing this specific sub-vein.
+- Found genuine gap instead: `DotnetTestHelper.HasDotnetTestServerOption`/`TryGetDotnetTestTransport` (`ServerMode/DotnetTest/DotnetTestHelper.cs`, extension methods on `CommandLineHandler`) had zero direct tests — only exercised incidentally through higher-level `dotnet test` bridge integration tests, never isolated for their own branch logic (case-insensitive protocol/transport-argument matching, single-vs-multi-argument rejection, and the http-transport-takes-precedence-over-pipe-option fallback order).
+- Added `test/UnitTests/Microsoft.Testing.Platform.UnitTests/ServerMode/DotnetTestHelperTests.cs` (12 test methods, several via DataRow): constructed a real `CommandLineHandler` via `CommandLineParser.Parse` (same pattern as the pre-existing `CommandLineHandlerTests.cs`) rather than mocking `ICommandLineOptions`, exercising the real parse+lookup path.
+- Build succeeded (0 warnings/errors with `-warnaserror`). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2643 total (was 2619), 0 failed, 21 skipped (pre-existing, no regressions) — all 12 new test methods confirmed present in the generated .trx. `dotnet format whitespace TestFx.slnx --verify-no-changes --include <file>` clean (only the expected harmless F#-project warning).
+- Created PR "Add unit tests for DotnetTestHelper" on branch `test-assist/dotnet-test-helper-tests`.
+- Task 7: issue #10920 updated — new Run History entry prepended (kept last ~4 inline), Suggested Actions set to only the new PR, backlog refreshed: Jsonite/`Json.*` sub-vein deprioritized as low-value (ported third-party code, already covered indirectly), noted other ServerMode classes still worth a look next (`ServerControlMessage`/`WaitForServerControlRequest` serializers, `TcpMessageHandler` edge cases not yet individually swept for gaps beyond existing `TcpMessageHandlerTests.cs`).
+- Remaining candidates for future runs: re-check `ServerMode` top-level classes not yet individually verified (`ServerModeManager`, `PassiveNode` edge cases beyond existing `PassiveNodeTests.cs`); HangDump/Retry IPC serializers and MSTest.Engine internal classes remain low-priority/blocked as before; consider pivoting to Task 5/6 if the ServerMode vein thins out next run.
