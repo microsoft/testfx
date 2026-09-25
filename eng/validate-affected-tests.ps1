@@ -9,7 +9,7 @@ function Assert-Containment {
         [Parameter(Mandatory, ParameterSetName = "LiteralMessage")]
         [string]$Message,
         [Parameter(Mandatory, ParameterSetName = "FormattedMessage")]
-        [scriptblock]$MessageFormatter,
+        [scriptblock]$ItemMessageFormatter,
         [scriptblock]$SubstringFormatter = { param($substring) $substring },
         [switch]$Absent
     )
@@ -20,7 +20,7 @@ function Assert-Containment {
         $validationFailed = if ($Absent) { $containsSubstring } else { -not $containsSubstring }
         if ($validationFailed) {
             $formattedMessage = if ($PSCmdlet.ParameterSetName -eq "FormattedMessage") {
-                & $MessageFormatter $substring
+                & $ItemMessageFormatter $substring
             } else {
                 $Message
             }
@@ -132,7 +132,7 @@ Assert-Containment `
     "EnableMSTestRunner",
     "UseInternalTestFramework"
 ) `
-    -MessageFormatter { param($substring) "Affected-test package references must include projects enabled through $substring." } `
+    -ItemMessageFormatter { param($substring) "Affected-test package references must include projects enabled through $substring." } `
     -SubstringFormatter { param($substring) "'`$($substring)' == 'true'" }
 
 $manualEntryPoints = @(
@@ -165,7 +165,7 @@ Assert-Containment `
     "enableAffectedTests",
     "affectedTestsMode"
 ) `
-    -MessageFormatter { param($substring) "The affected-test template is missing '$substring'." }
+    -ItemMessageFormatter { param($substring) "The affected-test template is missing '$substring'." }
 
 $disabledBranch = [regex]::Match(
     $testTemplate,
@@ -187,7 +187,7 @@ Assert-Containment `
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
 ) `
-    -MessageFormatter { param($substring) "$substring must be scoped to the affected-test template." } `
+    -ItemMessageFormatter { param($substring) "$substring must be scoped to the affected-test template." } `
     -Absent
 
 $templateWithoutComments = $testTemplate -split '\r?\n' |
@@ -212,7 +212,7 @@ Assert-Containment `
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
 ) `
-    -MessageFormatter { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
+    -ItemMessageFormatter { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
     -SubstringFormatter { param($substring) """$substring""" }
 
 if ($templateWithoutComments.Contains("Cache@2") -or
