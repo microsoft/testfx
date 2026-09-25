@@ -3,6 +3,7 @@ param()
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
+$versionsPropsPath = Join-Path $repoRoot "eng/Versions.props"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
 $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
 $accessDatabaseInstallerPath = Join-Path $repoRoot "eng/install-access-database-engine.ps1"
@@ -54,10 +55,34 @@ if (-not $affectedTestsCall.Success) {
 
 $affectedTestsEnabled = $affectedTestsCall.Groups["enabled"].Value -eq "true"
 
+$versionsProps = Get-Content -LiteralPath $versionsPropsPath -Raw
+$affectedTestsPackageVersionMatch = [regex]::Match(
+    $versionsProps,
+    '<MicrosoftTestingExtensionsCodeCoverageVersion>(?<version>[^<]+)</MicrosoftTestingExtensionsCodeCoverageVersion>')
+if (-not $affectedTestsPackageVersionMatch.Success) {
+    throw "eng/Versions.props must define MicrosoftTestingExtensionsCodeCoverageVersion."
+}
+
+$affectedTestsPackageVersion = $affectedTestsPackageVersionMatch.Groups["version"].Value
+$azureDevOpsStorageVersionsMissingContentRange = @(
+    "18.12.0-preview.26473.3",
+    "18.12.0-preview.26474.2"
+)
+if ($affectedTestsEnabled -and $affectedTestsPackageVersion -in $azureDevOpsStorageVersionsMissingContentRange) {
+    throw "Affected-test execution must remain disabled with Azure DevOps storage package version '$affectedTestsPackageVersion', which omits the required Content-Range upload header."
+}
+
 $bootstrappedSdk = [System.Management.Automation.SemanticVersion]$configuration.tools.dotnet
 $selectedSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version
 if ($bootstrappedSdk -ne $selectedSdk) {
     throw "global.json tools.dotnet and sdk.version must match."
+}
+
+$affectedTestsSdkVersionsWithCollectionHandshakeFailure = @(
+    [System.Management.Automation.SemanticVersion]"11.0.100-rc.2.26471.109"
+)
+if ($affectedTestsEnabled -and $selectedSdk -in $affectedTestsSdkVersionsWithCollectionHandshakeFailure) {
+    throw "Affected-test execution must remain disabled with SDK '$selectedSdk', which reports successful collection children as handshake failures."
 }
 
 $lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
