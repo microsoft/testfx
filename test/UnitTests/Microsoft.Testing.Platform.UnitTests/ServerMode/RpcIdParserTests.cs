@@ -47,6 +47,7 @@ public sealed class RpcIdParserTests
 
     [TestMethod]
     [DataRow("1.5e2", 150)]
+    [DataRow("1e+2", 100)]
     [DataRow("1.23e2", 123)]
     [DataRow("-1.5E2", -150)]
     [DataRow("0.001e3", 1)]
