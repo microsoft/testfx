@@ -553,6 +553,24 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifySupersededRetryAttempt_CompletesSpanWithoutRecordingAggregateMetrics()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("superseded-retry");
+        TestNode testNode = CreateRetryTestNode("superseded-retry", attemptNumber: 1);
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifySupersededRetryAttempt(testNode, new FailedTestNodeStateProperty());
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual(0, _testCaseResultCounter.Value);
+        Assert.AreEqual(0, _completedCounter.Value);
+        Assert.AreEqual(0, _activeTestCases.Value);
+        Assert.IsNull(_testCaseDurationHistogram.LastRecordedValue);
+        Assert.IsNull(_durationHistogram.LastRecordedValue);
+    }
+
+    [TestMethod]
     public void Dispose_WithMultipleActivitiesSharingUid_DisposesAllOfThem()
     {
         // Regression test for https://github.com/microsoft/testfx/issues/7442.

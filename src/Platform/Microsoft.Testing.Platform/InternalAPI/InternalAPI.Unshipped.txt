@@ -16,6 +16,7 @@ Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithActivityLi
 Microsoft.Testing.Platform.Telemetry.ITestExecutionActivityContextConsumer
 Microsoft.Testing.Platform.Telemetry.ITestExecutionActivityContextConsumer.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! data, Microsoft.Testing.Platform.Telemetry.PlatformActivityContext? executionActivityContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyInProgress(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid, Microsoft.Testing.Platform.Telemetry.PlatformActivityContext? executionActivityContext) -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifySupersededRetryAttempt(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty! stateProperty) -> void
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext.IsRecorded.get -> bool
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext.PlatformActivityContext(string! traceId, string! spanId, bool isRecorded, string? traceState) -> void

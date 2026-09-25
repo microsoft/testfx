@@ -28,6 +28,9 @@ internal sealed partial class OpenTelemetryResultHandler
         HandleTestResult(testNode, stateProperty);
     }
 
+    internal void NotifySupersededRetryAttempt(TestNode testNode, TestNodeStateProperty stateProperty)
+        => HandleTestResult(testNode, stateProperty, recordMetrics: false);
+
     internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid)
         => NotifyInProgress(testNode, parentUid, executionActivityContext: null);
 
