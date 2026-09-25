@@ -1,3 +1,5 @@
 #nullable enable
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.CaptureCurrentActivityContext() -> Microsoft.Testing.Platform.Telemetry.PlatformActivityContext?
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.StartActivityWithLink(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags, string? parentId, Microsoft.Testing.Platform.Telemetry.PlatformActivityContext! linkContext) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
 static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetCiResourceAttributes() -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>!
 static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetTestResourceAttributes() -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>!

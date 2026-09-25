@@ -51,7 +51,9 @@ internal sealed class SimpleTestFramework : ITestFramework, IDataProducer
             using Activity? testActivity = _activitySource.StartActivity("MTPOTel.Test");
             testActivity?.SetTag("test.name", testName);
 
-            // Publish test node as in-progress
+            // Publish the in-progress update while the execution activity is current. MTP keeps the result span
+            // parented to TestFramework and adds an ActivityLink back to this activity when results are processed
+            // asynchronously.
             await context.MessageBus.PublishAsync(
                 this,
                 new TestNodeUpdateMessage(

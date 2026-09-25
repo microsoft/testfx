@@ -7,7 +7,7 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
-internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryService
+internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServiceWithActivityLinks
 {
     internal const string ActivitySourceName = "Microsoft.Testing.Platform";
     internal const string MeterName = "Microsoft.Testing.Platform";
@@ -23,14 +23,14 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
     public bool HasCurrentActivity => Activity.Current is not null;
 
     public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default)
-        => StartActivityCore(name, tags, parentId, startTime) is Activity activity
+        => StartActivityCore(name, tags, parentId, links: null, startTime) is Activity activity
             ? new ActivityWrapper(Stamp(activity))
             : null;
 
     public IPlatformActivity? StartNonAmbientActivity(string name, IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null)
     {
         Activity? ambientBeforeStart = Activity.Current;
-        if (StartActivityCore(name, tags, parentId, startTime: default) is not Activity activity)
+        if (StartActivityCore(name, tags, parentId, links: null, startTime: default) is not Activity activity)
         {
             return null;
         }
@@ -41,10 +41,47 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
         return new ActivityWrapper(Stamp(activity), isAmbient: false);
     }
 
-    private Activity? StartActivityCore(string name, IEnumerable<KeyValuePair<string, object?>>? tags, string? parentId, DateTimeOffset startTime)
+    public PlatformActivityContext? CaptureCurrentActivityContext()
+    {
+        Activity? activity = Activity.Current;
+        return activity is null
+            || activity.IdFormat != ActivityIdFormat.W3C
+            || activity.Id == TestFrameworkActivity?.Id
+                ? null
+                : new PlatformActivityContext(
+                    activity.TraceId.ToHexString(),
+                    activity.SpanId.ToHexString(),
+                    activity.ActivityTraceFlags.HasFlag(ActivityTraceFlags.Recorded),
+                    activity.TraceStateString);
+    }
+
+    public IPlatformActivity? StartActivityWithLink(
+        string name,
+        IEnumerable<KeyValuePair<string, object?>>? tags,
+        string? parentId,
+        PlatformActivityContext linkContext)
+    {
+        ActivityContext activityContext = new(
+            ActivityTraceId.CreateFromString(linkContext.TraceId.AsSpan()),
+            ActivitySpanId.CreateFromString(linkContext.SpanId.AsSpan()),
+            linkContext.IsRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None,
+            linkContext.TraceState,
+            isRemote: false);
+
+        return StartActivityCore(name, tags, parentId, [new ActivityLink(activityContext)], startTime: default) is Activity activity
+            ? new ActivityWrapper(Stamp(activity))
+            : null;
+    }
+
+    private Activity? StartActivityCore(
+        string name,
+        IEnumerable<KeyValuePair<string, object?>>? tags,
+        string? parentId,
+        IEnumerable<ActivityLink>? links,
+        DateTimeOffset startTime)
         => parentId is null && Activity.Current is { IdFormat: ActivityIdFormat.W3C } ambientActivity
-            ? _activitySource.StartActivity(name, ActivityKind.Internal, ambientActivity.Context, tags, links: null, startTime)
-            : _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, startTime: startTime, parentId: parentId ?? Activity.Current?.Id);
+            ? _activitySource.StartActivity(name, ActivityKind.Internal, ambientActivity.Context, tags, links, startTime)
+            : _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: parentId ?? Activity.Current?.Id);
 
     /// <summary>
     /// Activity only derives tracestate from an in-process parent reference, which an explicit parent id string

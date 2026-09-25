@@ -12,9 +12,12 @@ internal sealed partial class OpenTelemetryResultHandler
     private const string ExceptionMessageTag = "exception.message";
     private const string ExceptionStackTraceTag = "exception.stacktrace";
 
-    private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty)
+    private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty, bool recordMetrics = true)
     {
-        _totalCompletedTests?.Add(1);
+        if (recordMetrics)
+        {
+            _totalCompletedTests?.Add(1);
+        }
 
         (string result, Exception? exception, TimeSpan? timeoutTime) = stateProperty switch
         {
@@ -35,14 +38,17 @@ internal sealed partial class OpenTelemetryResultHandler
             new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, GetSuiteName(testNode)),
         ];
 
-        _testCaseResultCount.Add(1, measurementTags);
+        if (recordMetrics)
+        {
+            _testCaseResultCount.Add(1, measurementTags);
+        }
 
-        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity) || activity is null)
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity, allowUnnumberedFallback: recordMetrics) || activity is null)
         {
             // Either the framework never reported the test as in-progress, or nothing is listening so no span was
             // created. Either way we still want the duration recorded, otherwise a framework that only publishes
             // final results produces no latency data.
-            SetResultDetails(testNode, measurementTags, activity: null);
+            SetResultDetails(testNode, measurementTags, activity: null, recordMetrics: recordMetrics);
             return;
         }
 
@@ -112,7 +118,7 @@ internal sealed partial class OpenTelemetryResultHandler
 
         try
         {
-            SetResultDetails(testNode, measurementTags, activity);
+            SetResultDetails(testNode, measurementTags, activity, recordMetrics);
         }
         finally
         {
@@ -125,7 +131,11 @@ internal sealed partial class OpenTelemetryResultHandler
     /// <summary>
     /// Collects the timing, output and artifact details of a completed test in a single pass over the property bag.
     /// </summary>
-    private void SetResultDetails(TestNode testNode, KeyValuePair<string, object?>[] measurementTags, IPlatformActivity? activity)
+    private void SetResultDetails(
+        TestNode testNode,
+        KeyValuePair<string, object?>[] measurementTags,
+        IPlatformActivity? activity,
+        bool recordMetrics)
     {
         // Single pass over the property bag: replaces five separate walks
         // (SingleOrDefault<TimingProperty>, OfType<TestMetadataProperty>, SingleOrDefault<StandardOutputProperty>,
@@ -182,8 +192,12 @@ internal sealed partial class OpenTelemetryResultHandler
         if (timingProperty is not null)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
-            _testCaseDuration.Record(timingProperty.GlobalTiming.Duration.TotalSeconds, measurementTags);
-            _totalDuration?.Record(totalMilliseconds);
+            if (recordMetrics)
+            {
+                _testCaseDuration.Record(timingProperty.GlobalTiming.Duration.TotalSeconds, measurementTags);
+                _totalDuration?.Record(totalMilliseconds);
+            }
+
             activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds, totalMilliseconds);
             if (_options.EmitLegacyAttributes)
             {
