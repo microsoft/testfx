@@ -571,6 +571,28 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifySupersededRetryAttempt_DoesNotConsumeUnnumberedSpan()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("single-span-retry");
+        TestNode unnumberedStart = CreateTestNode("single-span-retry");
+        TestNode supersededAttempt = CreateRetryTestNode("single-span-retry", attemptNumber: 1);
+        TestNode finalAttempt = CreateRetryTestNode("single-span-retry", attemptNumber: 2);
+
+        _handler.NotifyInProgress(unnumberedStart, null);
+        _handler.NotifySupersededRetryAttempt(supersededAttempt, new FailedTestNodeStateProperty());
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Never);
+        Assert.AreEqual(1, _activeTestCases.Value);
+
+        _handler.NotifyPassed(finalAttempt, PassedTestNodeStateProperty.CachedInstance);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
     public void Dispose_WithMultipleActivitiesSharingUid_DisposesAllOfThem()
     {
         // Regression test for https://github.com/microsoft/testfx/issues/7442.

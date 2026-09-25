@@ -120,14 +120,15 @@ internal sealed partial class OpenTelemetryResultHandler
     /// <summary>
     /// Removes the oldest in-flight entry for the node and keeps <c>test.case.active</c> balanced.
     /// </summary>
-    private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity)
+    private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity, bool allowUnnumberedFallback = true)
     {
         lock (_syncRoot)
         {
             activity = null;
             TestActivityKey key = GetActivityKey(testNode);
             if (!TryDequeueInFlight(key, out activity)
-                && (key.AttemptNumber is null
+                && (!allowUnnumberedFallback
+                    || key.AttemptNumber is null
                     || !TryDequeueInFlight(new TestActivityKey(testNode.Uid, AttemptNumber: null), out activity)))
             {
                 return false;

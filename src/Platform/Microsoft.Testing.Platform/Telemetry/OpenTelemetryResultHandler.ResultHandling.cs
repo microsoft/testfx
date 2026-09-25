@@ -43,7 +43,7 @@ internal sealed partial class OpenTelemetryResultHandler
             _testCaseResultCount.Add(1, measurementTags);
         }
 
-        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity) || activity is null)
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity, allowUnnumberedFallback: recordMetrics) || activity is null)
         {
             // Either the framework never reported the test as in-progress, or nothing is listening so no span was
             // created. Either way we still want the duration recorded, otherwise a framework that only publishes
