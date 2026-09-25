@@ -72,6 +72,21 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void StartActivity_WithoutExplicitParent_InheritsTheAmbientActivity()
+    {
+        using IPlatformActivity? parent = _service.StartActivity(Name("parent"));
+        Assert.IsNotNull(parent);
+
+        using (IPlatformActivity? child = _service.StartActivity(Name("child")))
+        {
+            Assert.IsNotNull(child);
+            Assert.AreEqual(parent.TraceId, child.TraceId);
+        }
+
+        Assert.AreEqual(parent.SpanId, Single().ParentSpanId.ToHexString());
+    }
+
+    [TestMethod]
     public void StartNonAmbientActivity_NeverBecomesCurrent()
     {
         // This is what keeps MSTest fixture spans out of the ExecutionContext that MSTest captures inside a
@@ -95,10 +110,14 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             Activity? ambient = Activity.Current;
             Assert.IsNotNull(ambient);
 
-            using (_service.StartNonAmbientActivity(Name("inner")))
+            using (IPlatformActivity? inner = _service.StartNonAmbientActivity(Name("inner")))
             {
+                Assert.IsNotNull(inner);
+                Assert.AreEqual(ambient.TraceId.ToHexString(), inner.TraceId);
                 Assert.AreSame(ambient, Activity.Current);
             }
+
+            Assert.AreEqual(ambient.SpanId, Single().ParentSpanId);
 
             // Stopping a non-ambient activity must not pop the ambient one.
             Assert.AreSame(ambient, Activity.Current);

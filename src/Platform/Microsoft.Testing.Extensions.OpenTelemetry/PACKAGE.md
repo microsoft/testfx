@@ -36,27 +36,37 @@ This package extends Microsoft.Testing.Platform with:
 
 ### Use an application-owned OpenTelemetry provider
 
-When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, activate only the MTP diagnostics producer in the test application's `Program.cs`:
+When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, configure and start that host before building the test application:
 
 ```csharp
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestingPlatformDiagnostics();
-```
+HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
 
-Then subscribe the application-owned providers to the MTP source and meter alongside the rest of the application's instrumentation:
-
-```csharp
-services.AddOpenTelemetry()
+hostBuilder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource
+        .AddService("MyTestApplication")
         .AddTestingPlatformTestResource()
         .AddTestingPlatformCiResource())
     .WithTracing(tracing => tracing.AddTestingPlatformInstrumentation())
     .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation());
+
+using IHost host = hostBuilder.Build();
+await host.StartAsync();
+
+ITestApplicationBuilder testBuilder = await TestApplication.CreateBuilderAsync(args);
+testBuilder.AddTestingPlatformDiagnostics();
+
+using ITestApplication testApplication = await testBuilder.BuildAsync();
+int exitCode = await testApplication.RunAsync();
+
+await host.StopAsync();
+return exitCode;
 ```
 
 `AddTestingPlatformDiagnostics()` does not build, configure, flush, or dispose a `TracerProvider` or `MeterProvider`. The application keeps full ownership of those providers and their exporters. The older `AddOpenTelemetryProvider()` and `AddOpenTelemetryProviderFromEnvironment()` helpers remain available as standalone convenience paths when the test application wants MTP to own the provider lifetime.
 
 The focused resource helpers are recommended when Aspire ServiceDefaults, `HostApplicationBuilder`, or another application-level composition root already owns `service.*`, `host.*`, `os.*`, and `process.*`. Use `AddTestingPlatformResource()` only when the test application wants the extension to configure that complete standalone resource identity.
+
+See the complete [`HostApplicationBuilder` sample](../../../samples/public/MTPOTel).
 
 ## Emitted metrics
 
