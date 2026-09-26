@@ -91,7 +91,7 @@ Supporta i seguenti segnaposto: {pname} (nome eseguibile del processo, inviato a
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="translated">Non è possibile leggere il file della sequenza di arresto anomalo ''{0}'': {1}</target>
+        <target state="translated">Non è possibile leggere il file della sequenza di arresto anomalo '{0}': {1}</target>
         <note>{0} is the crash sequence file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileWriteError">
@@ -155,7 +155,7 @@ Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnos
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
-        <target state="translated">''--crash-report'' non è supportato in Windows perché il runtime .NET ignora le variabili di ambiente ''DOTNET_EnableCrashReport'' e ''DOTNET_EnableCrashReportOnly'' sottostanti in questa piattaforma. Vedere https://github.com/dotnet/runtime/issues/80191. Usare '--crash-report-if-supported' per ignorare automaticamente l'opzione in Windows oppure '--crashdump' per generare un file di dump di arresto anomalo del sistema.</target>
+        <target state="translated">'--crash-report' non è supportato in Windows perché il runtime .NET ignora le variabili di ambiente 'DOTNET_EnableCrashReport' e 'DOTNET_EnableCrashReportOnly' sottostanti in questa piattaforma. Vedere https://github.com/dotnet/runtime/issues/80191. Usare '--crash-report-if-supported' per ignorare automaticamente l'opzione in Windows oppure '--crashdump' per generare un file di dump di arresto anomalo del sistema.</target>
         <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
@@ -174,7 +174,7 @@ I valori validi sono ''on'' (impostazione predefinita; accetta anche ''true'', '
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="translated">--crash-sequence prevede un singolo parametro con valore ''on'' (o ''true'', ''enable'', ''1'') o ''off'' (o ''false'', ''disable'', ''0'').</target>
+        <target state="translated">--crash-sequence prevede un singolo parametro con valore 'on' (o 'true', 'enable', '1') o 'off' (o 'false', 'disable', '0').</target>
         <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
