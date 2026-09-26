@@ -87,18 +87,11 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessorWi
                         continue;
                     }
 
-                    if (DataConsumer is ITestExecutionActivityContextConsumer activityContextConsumer)
-                    {
-                        await activityContextConsumer.ConsumeAsync(
-                            message.DataProducer,
-                            message.Data!,
-                            message.ExecutionActivityContext,
-                            _cancellationToken).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await DataConsumer.ConsumeAsync(message.DataProducer, message.Data!, _cancellationToken).ConfigureAwait(false);
-                    }
+                    await DataConsumer.ConsumeWithActivityContextAsync(
+                        message.DataProducer!,
+                        message.Data!,
+                        message.ExecutionActivityContext,
+                        _cancellationToken).ConfigureAwait(false);
                 }
             }
         }

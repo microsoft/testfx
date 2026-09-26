@@ -67,18 +67,11 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
         try
         {
-            if (DataConsumer is ITestExecutionActivityContextConsumer activityContextConsumer)
-            {
-                await activityContextConsumer.ConsumeAsync(
-                    dataProducer,
-                    data,
-                    executionActivityContext,
-                    _cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
-            }
+            await DataConsumer.ConsumeWithActivityContextAsync(
+                dataProducer,
+                data,
+                executionActivityContext,
+                _cancellationToken).ConfigureAwait(false);
         }
         finally
         {
