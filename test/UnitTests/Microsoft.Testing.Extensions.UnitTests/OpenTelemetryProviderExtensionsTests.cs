@@ -36,10 +36,16 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
 /// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
 /// project): they still serialize against every other test in the assembly that mutates environment variables, but
-/// can run in parallel with tests that never touch environment variables at all. The end-to-end
+/// can run in parallel with tests that never touch environment variables at all. The two raw-listener methods carry
+/// a method-level <see cref="ResourceLockAttribute"/> on <see cref="OpenTelemetryPlatformService.ActivitySourceName"/>
+/// instead: <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers against the process-wide
+/// listener registry for that source name, and every test in <c>OpenTelemetryPlatformServiceTests</c> (the only
+/// other class in this assembly that touches the same source) carries a matching class-level lock, so the two
+/// declarations fully cover every concurrently-runnable observer of the resource. The end-to-end
 /// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
-/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c>, an unbounded process-global
-/// resource that a <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
+/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c> through
+/// <see cref="TracerProviderBuilder"/>'s own SDK-level subscription, a broader and unbounded process-global
+/// registration that a single <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
 /// in-memory environment fake (or only read process state) and stay in the parallel set. Captured spans in the
 /// end-to-end test are additionally filtered by a per-test unique name prefix so an ambient provider in the test
 /// host cannot pollute the assertions.
@@ -354,7 +360,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
             });
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
     public async Task AddTestingPlatformDiagnostics_RawListenerObservesBuilderActivityWithoutProvider()
     {
         List<Activity> stoppedActivities = [];
@@ -393,7 +399,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     }
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
     public async Task LegacyProviderFactorySideEffect_StillActivatesDiagnostics()
     {
         List<Activity> stoppedActivities = [];
