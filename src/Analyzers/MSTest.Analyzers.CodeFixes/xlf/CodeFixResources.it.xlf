@@ -104,7 +104,7 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
-        <target state="translated">Rimuovere ''DataRow'' duplicato</target>
+        <target state="translated">Rimuovere 'DataRow' duplicato</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
