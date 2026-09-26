@@ -254,6 +254,15 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public void TestHostControllerProcessExit_DisposedCancellationTokenSourceIsIgnored()
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Dispose();
+
+        TestHostControllersTestHost.TryCancelTestHostExitCancellationTokenSource(cancellationTokenSource, new NopLogger());
+    }
+
+    [TestMethod]
     public async Task TestHostControllerConnectionTimeout_TerminatesCustomHandleDefersDisposalAndReturnsFailure()
     {
         TaskCompletionSource<bool> exited = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -325,6 +334,28 @@ public sealed class TestApplicationBuilderTests
         await disposed.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         handle.Verify(x => x.Dispose(), Times.Once);
     }
+
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    [TestMethod]
+    public void TestHostControllerProcessExit_NonAuthoritativeAbortedExitCodePreservesSuccessfulIpcResult()
+    {
+        Mock<ITestHostHandle> handle = new();
+        handle.SetupGet(x => x.ExitCode).Returns((int)ExitCode.TestSessionAborted);
+        handle.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        handle.As<ITestHostHandleExitCodePolicy>().SetupGet(x => x.IsExitCodeAuthoritative).Returns(false);
+        using var adapter = new TestHostHandleToProcessAdapter(handle.Object);
+
+        (bool testExecutionCanceled, int reportedTestHostExitCode) = TestHostControllersTestHost.ResolveTestHostExitState(
+            applicationCancellationRequested: false,
+            testHostUnfilteredExitCodeReceived: (int)ExitCode.Success,
+            testHostExitCodeReceived: (int)ExitCode.Success,
+            adapter.ExitCode,
+            adapter.IsExitCodeAuthoritative);
+
+        Assert.IsFalse(testExecutionCanceled);
+        Assert.AreEqual((int)ExitCode.Success, reportedTestHostExitCode);
+    }
+#pragma warning restore TPEXP
 
     [TestMethod]
     public void TestHostControllerConnectionFailureMessage_ReportsProcessState()

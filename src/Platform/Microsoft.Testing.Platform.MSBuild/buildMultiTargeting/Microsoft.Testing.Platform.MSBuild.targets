@@ -446,9 +446,20 @@
       value containing a ';' reaches the test process exactly as authored. EnvironmentVariables is inherited from
       ToolTask, which applies these on top of the environment inherited from the MSBuild process.
     -->
-    <InvokeTestingPlatformTask TargetPath="$(TargetPath)"
-                               UseAppHost="$(UseAppHost)"
-                               IsExecutable="$(_IsExecutable)"
+    <PropertyGroup>
+      <_TestingPlatformExecutablePath Condition=" '$(TestingPlatformExecutablePath)' == '' ">$(TargetPath)</_TestingPlatformExecutablePath>
+      <_TestingPlatformExecutablePath Condition=" '$(TestingPlatformExecutablePath)' != '' ">$(TestingPlatformExecutablePath)</_TestingPlatformExecutablePath>
+      <_TestingPlatformUseAppHost>$(UseAppHost)</_TestingPlatformUseAppHost>
+      <_TestingPlatformIsExecutable>$(_IsExecutable)</_TestingPlatformIsExecutable>
+      <_TestingPlatformUseDirectExecutable>false</_TestingPlatformUseDirectExecutable>
+      <_TestingPlatformUseAppHost Condition=" '$(TestingPlatformExecutablePath)' != '' ">false</_TestingPlatformUseAppHost>
+      <_TestingPlatformIsExecutable Condition=" '$(TestingPlatformExecutablePath)' != '' ">false</_TestingPlatformIsExecutable>
+      <_TestingPlatformUseDirectExecutable Condition=" '$(TestingPlatformExecutablePath)' != '' ">true</_TestingPlatformUseDirectExecutable>
+    </PropertyGroup>
+
+    <InvokeTestingPlatformTask TargetPath="$(_TestingPlatformExecutablePath)"
+                               UseAppHost="$(_TestingPlatformUseAppHost)"
+                               IsExecutable="$(_TestingPlatformIsExecutable)"
                                TargetDir="$(TargetDir)"
                                AssemblyName="$(AssemblyName)"
                                NativeExecutableExtension="$(_NativeExecutableExtension)"
@@ -462,6 +473,7 @@
                                VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
                                TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
                                TestingPlatformDisableAppHostDotnetRoot="$(TestingPlatformDisableAppHostDotnetRoot)"
+                               TestingPlatformUseDirectExecutable="$(_TestingPlatformUseDirectExecutable)"
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
   </Target>
 

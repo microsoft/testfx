@@ -681,6 +681,9 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineTestHostControllerPIDOptionDescription" xml:space="preserve">
     <value>Eventual parent test host controller PID.</value>
   </data>
+  <data name="PlatformCommandLineAppModelActivationPayloadOptionDescription" xml:space="preserve">
+    <value>Specifies the app-model activation payload.</value>
+  </data>
   <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
     <value>dotnet test pipe.</value>
     <comment>{Locked="dotnet test"}</comment>

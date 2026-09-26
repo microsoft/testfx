@@ -99,21 +99,51 @@ internal sealed partial class TestHostControllersTestHost
 
                     // Wait for the test host process to connect to the controller's named pipe.
                     await _logger.LogDebugAsync("Waiting for the test host process to connect to the controller's named pipe.").ConfigureAwait(false);
-                    bool connected = await WaitForTestHostControllerConnectionAsync(
-                        testHostControllerIpc.WaitConnectionAsync,
-                        timeoutSeconds,
-                        applicationCancellationToken,
-                        async () =>
-                        {
-                            testHostControllerConnectionTimedOut = true;
-                            await outputDevice.DisplayAsync(
+                    using var testHostExitCancellationTokenSource = new CancellationTokenSource();
+                    EventHandler onTestHostExited = (_, _) =>
+                        TryCancelTestHostExitCancellationTokenSource(testHostExitCancellationTokenSource, _logger);
+                    testHostProcess.Exited += onTestHostExited;
+                    if (testHostProcess.HasExited)
+                    {
+#if NET
+                        await testHostExitCancellationTokenSource.CancelAsync().ConfigureAwait(false);
+#else
+                        testHostExitCancellationTokenSource.Cancel();
+#endif
+                    }
+
+                    bool connected;
+                    try
+                    {
+                        connected = await WaitForTestHostControllerConnectionOrProcessExitAsync(
+                            testHostControllerIpc.WaitConnectionAsync,
+                            timeoutSeconds,
+                            applicationCancellationToken,
+                            async () =>
+                            {
+                                testHostControllerConnectionTimedOut = true;
+                                await outputDevice.DisplayAsync(
+                                    this,
+                                    new ErrorMessageOutputDeviceData(CreateTestHostControllerConnectionFailureMessage(
+                                        TimeSpan.FromSeconds(timeoutSeconds),
+                                        TimeSpan.FromSeconds(timeoutSeconds),
+                                        testHostProcess)),
+                                    CancellationToken.None).ConfigureAwait(false);
+                            },
+                            testHostExitCancellationTokenSource.Token,
+                            () => outputDevice.DisplayAsync(
                                 this,
                                 new ErrorMessageOutputDeviceData(CreateTestHostControllerConnectionFailureMessage(
-                                    TimeSpan.FromSeconds(timeoutSeconds),
-                                    TimeSpan.FromSeconds(timeoutSeconds),
+                                    consoleRunStarted.Elapsed,
+                                    timeout: null,
                                     testHostProcess)),
-                                CancellationToken.None).ConfigureAwait(false);
-                        }).ConfigureAwait(false);
+                                CancellationToken.None)).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        testHostProcess.Exited -= onTestHostExited;
+                    }
+
                     if (!connected)
                     {
                         return;
@@ -130,7 +160,15 @@ internal sealed partial class TestHostControllersTestHost
 
                     if (_testHostPID is null)
                     {
-                        throw ApplicationStateGuard.Unreachable();
+                        return;
+                    }
+
+                    if (testHostProcess is TestHostHandleToProcessAdapter handleAdapter
+                        && handleAdapter.TrustedProcessId is int trustedProcessId
+                        && _testHostPID.Value != trustedProcessId)
+                    {
+                        throw new InvalidOperationException(
+                            $"The test host reported process ID {_testHostPID.Value}, but the launcher created process ID {trustedProcessId}.");
                     }
 
                     bool startHandlersCompleted = true;
@@ -196,19 +234,25 @@ internal sealed partial class TestHostControllersTestHost
 
         if (_testHostPID is null)
         {
-            throw ApplicationStateGuard.Unreachable();
+            int fallbackPid = testHostProcessId ?? 0;
+            return (
+                (int)ExitCode.GenericFailure,
+                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
+                telemetryInformation.IsEnabled ? "[]" : null);
         }
 
         bool testHostProcessExited = testHostProcess.HasExited;
+        bool testHostProcessExitCodeIsAuthoritative = testHostProcess is not TestHostHandleToProcessAdapter handleAdapter
+            || handleAdapter.IsExitCodeAuthoritative;
         int testHostProcessExitCode = testHostProcessExited
             ? testHostProcess.ExitCode
             : (int)ExitCode.TestSessionAborted;
-        bool testExecutionCanceled = applicationCancellationToken.IsCancellationRequested
-            || _testHostUnfilteredExitCodeReceived is (int)ExitCode.TestSessionAborted
-            || testHostProcessExitCode == (int)ExitCode.TestSessionAborted;
-        int reportedTestHostExitCode = testExecutionCanceled
-            ? (int)ExitCode.TestSessionAborted
-            : testHostProcessExitCode;
+        (bool testExecutionCanceled, int reportedTestHostExitCode) = ResolveTestHostExitState(
+            applicationCancellationToken.IsCancellationRequested,
+            _testHostUnfilteredExitCodeReceived,
+            _testHostExitCodeReceived,
+            testHostProcessExitCode,
+            testHostProcessExitCodeIsAuthoritative);
         TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         CancellationTokenSource finalizationCancellationTokenSource = EnsureControllerFinalizationCancellationTokenSource();
@@ -340,7 +384,10 @@ internal sealed partial class TestHostControllersTestHost
         }
 
         // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
-        int exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcessExitCode;
+        int exitCode = _testHostUnfilteredExitCodeReceived
+            ?? (!testHostProcessExitCodeIsAuthoritative && _testHostExitCodeReceived.HasValue
+                ? _testHostExitCodeReceived.Value
+                : testHostProcessExitCode);
         if (!testHostProcessExited)
         {
             exitCode = (int)ExitCode.TestSessionAborted;
@@ -352,13 +399,14 @@ internal sealed partial class TestHostControllersTestHost
             // If there is another exit code indicating another failure, we prefer it over the cancellation.
             exitCode = (int)ExitCode.TestSessionAborted;
         }
-        else if (!testHostProcessInformation.HasExitedGracefully ||
-            _testHostExitCodeReceived != testHostProcessExitCode)
+        else if (!testHostProcessInformation.HasExitedGracefully
+            || (testHostProcessExitCodeIsAuthoritative && _testHostExitCodeReceived != testHostProcessExitCode))
         {
             await _logger.LogWarningAsync(
                 $"""
                  Test host did not exit gracefully.
                    OS exit code: '{testHostProcessExitCode}'
+                   OS exit code authoritative: '{testHostProcessExitCodeIsAuthoritative}'
                    IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
                    TestHostCompletedRequest received: '{_testHostCompletedReceived}'
                    PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}'
@@ -400,14 +448,66 @@ internal sealed partial class TestHostControllersTestHost
         return (exitCode, testHostProcessInformation, extensionInformation);
     }
 
+    internal static (bool TestExecutionCanceled, int ReportedTestHostExitCode) ResolveTestHostExitState(
+        bool applicationCancellationRequested,
+        int? testHostUnfilteredExitCodeReceived,
+        int? testHostExitCodeReceived,
+        int testHostProcessExitCode,
+        bool testHostProcessExitCodeIsAuthoritative)
+    {
+        bool testExecutionCanceled = applicationCancellationRequested
+            || testHostUnfilteredExitCodeReceived is (int)ExitCode.TestSessionAborted
+            || (testHostProcessExitCodeIsAuthoritative && testHostProcessExitCode == (int)ExitCode.TestSessionAborted);
+        int reportedTestHostExitCode = testExecutionCanceled
+            ? (int)ExitCode.TestSessionAborted
+            : !testHostProcessExitCodeIsAuthoritative && testHostExitCodeReceived.HasValue
+                ? testHostExitCodeReceived.Value
+                : testHostProcessExitCode;
+
+        return (testExecutionCanceled, reportedTestHostExitCode);
+    }
+
+    internal static void TryCancelTestHostExitCancellationTokenSource(CancellationTokenSource cancellationTokenSource, ILogger logger)
+    {
+        try
+        {
+            cancellationTokenSource.Cancel();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            // The handler can race with the connection-wait cleanup: if the process exit signal is
+            // queued before the handler is detached but executes after the CTS has been disposed,
+            // cancellation throws. Keep the late notification observable without failing the run.
+            logger.LogDebug($"CancellationTokenSource already disposed when test host process exited: {ex.Message}");
+        }
+    }
+
     internal static async Task<bool> WaitForTestHostControllerConnectionAsync(
         Func<CancellationToken, Task> waitConnectionAsync,
         double timeoutSeconds,
         CancellationToken applicationCancellationToken,
         Func<Task> onTimeoutAsync)
+        => await WaitForTestHostControllerConnectionOrProcessExitAsync(
+            waitConnectionAsync,
+            timeoutSeconds,
+            applicationCancellationToken,
+            onTimeoutAsync,
+            CancellationToken.None,
+            onTestHostExitAsync: null).ConfigureAwait(false);
+
+    internal static async Task<bool> WaitForTestHostControllerConnectionOrProcessExitAsync(
+        Func<CancellationToken, Task> waitConnectionAsync,
+        double timeoutSeconds,
+        CancellationToken applicationCancellationToken,
+        Func<Task> onTimeoutAsync,
+        CancellationToken testHostExitCancellationToken,
+        Func<Task>? onTestHostExitAsync)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-        using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, applicationCancellationToken);
+        using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(
+            timeout.Token,
+            applicationCancellationToken,
+            testHostExitCancellationToken);
         try
         {
             await waitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
@@ -416,6 +516,17 @@ internal sealed partial class TestHostControllersTestHost
         catch (OperationCanceledException) when (timeout.IsCancellationRequested && !applicationCancellationToken.IsCancellationRequested)
         {
             await onTimeoutAsync().ConfigureAwait(false);
+            return false;
+        }
+        catch (OperationCanceledException) when (testHostExitCancellationToken.IsCancellationRequested
+            && !timeout.IsCancellationRequested
+            && !applicationCancellationToken.IsCancellationRequested)
+        {
+            if (onTestHostExitAsync is not null)
+            {
+                await onTestHostExitAsync().ConfigureAwait(false);
+            }
+
             return false;
         }
     }

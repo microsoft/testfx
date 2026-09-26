@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
@@ -19,6 +20,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IEnvironment _environment;
 
     // Uids of the tests this attempt was asked to retry which produced a passing result and no failing one, i.e.
     // the ones that genuinely recovered. Reported explicitly so the orchestrator does not have to infer recovery
@@ -39,6 +41,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         _serviceProvider = serviceProvider;
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
+        _environment = _serviceProvider.GetEnvironment();
     }
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
@@ -55,9 +58,17 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         if (value is SessionFileArtifact artifact)
         {
+            string? artifactPath = GetControllerArtifactPath(artifact.FileInfo.FullName);
+            if (artifactPath is null)
+            {
+                await _serviceProvider.GetLoggerFactory().CreateLogger<RetryDataConsumer>().LogWarningAsync(
+                    $"Ignoring retry artifact '{artifact.FileInfo.FullName}' because it is outside the configured AppContainer artifact roots.").ConfigureAwait(false);
+                return;
+            }
+
             NamedPipeClient client = GetClient();
             await client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
-                new ArtifactRequest(artifact.FileInfo.FullName, artifact.Kind),
+                new ArtifactRequest(artifactPath, artifact.Kind),
                 cancellationToken).ConfigureAwait(false);
             return;
         }
@@ -104,6 +115,64 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             _skippedTests++;
             MarkNotRecovered(uid);
         }
+    }
+
+    private string? GetControllerArtifactPath(string artifactPath)
+    {
+        const string SourceRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
+        const string DestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+        const string DiagnosticSourceRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT";
+        const string DiagnosticDestinationRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
+
+        string? sourceRoot = _environment.GetEnvironmentVariable(SourceRootEnvironmentVariable);
+        string? destinationRoot = _environment.GetEnvironmentVariable(DestinationRootEnvironmentVariable);
+        string? diagnosticSourceRoot = _environment.GetEnvironmentVariable(DiagnosticSourceRootEnvironmentVariable);
+        string? diagnosticDestinationRoot = _environment.GetEnvironmentVariable(DiagnosticDestinationRootEnvironmentVariable);
+
+        string? controllerArtifactPath = TryGetControllerArtifactPath(
+            artifactPath,
+            sourceRoot,
+            destinationRoot)
+            ?? TryGetControllerArtifactPath(
+                artifactPath,
+                diagnosticSourceRoot,
+                diagnosticDestinationRoot);
+        if (controllerArtifactPath is not null)
+        {
+            return controllerArtifactPath;
+        }
+
+        bool hasAppContainerMappings = sourceRoot is { Length: > 0 }
+            || destinationRoot is { Length: > 0 }
+            || diagnosticSourceRoot is { Length: > 0 }
+            || diagnosticDestinationRoot is { Length: > 0 };
+        return hasAppContainerMappings ? null : artifactPath;
+    }
+
+    private static string? TryGetControllerArtifactPath(
+        string artifactPath,
+        string? sourceRoot,
+        string? destinationRoot)
+    {
+        if (sourceRoot is not { Length: > 0 } || destinationRoot is not { Length: > 0 })
+        {
+            return null;
+        }
+
+        string fullArtifactPath = Path.GetFullPath(artifactPath);
+        string sourcePrefix = Path.GetFullPath(sourceRoot)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        if (!fullArtifactPath.StartsWith(sourcePrefix, comparison))
+        {
+            return null;
+        }
+
+        string relativePath = fullArtifactPath.Substring(sourcePrefix.Length);
+        return Path.GetFullPath(Path.Combine(destinationRoot, relativePath));
     }
 
     /// <summary>

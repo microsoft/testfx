@@ -42,6 +42,12 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public bool HasExited => _handle.HasExited;
 
+    internal bool IsExitCodeAuthoritative
+        => _handle is not ITestHostHandleExitCodePolicy exitCodePolicy || exitCodePolicy.IsExitCodeAuthoritative;
+
+    internal int? TrustedProcessId
+        => _handle is ILocalTestHostHandle localTestHostHandle ? localTestHostHandle.ProcessId : null;
+
     public IMainModule? MainModule => null;
 
     public DateTime StartTime => default;

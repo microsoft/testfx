@@ -11,7 +11,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// Verifies the physical Windows application-model assets in the configuration-matched MSTest packages.
 /// </summary>
 [TestClass]
-[OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
 public sealed class WindowsApplicationModelPackageTests
 {
     private static readonly string[] RequiredTestAdapterEntries =
@@ -20,6 +19,7 @@ public sealed class WindowsApplicationModelPackageTests
         "build/uap10.0/MSTest.TestAdapter.props",
         "build/uap10.0/MSTest.TestAdapter.targets",
         "buildTransitive/uap10.0/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+        "buildTransitive/uap10.0/Microsoft.Testing.Extensions.Retry.dll",
         "buildTransitive/uap10.0/Microsoft.Testing.Platform.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
         "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
@@ -74,12 +74,14 @@ public sealed class WindowsApplicationModelPackageTests
     ];
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestAdapter_ContainsRequiredWindowsApplicationModelAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestAdapter"),
             RequiredTestAdapterEntries);
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestAdapter_UwpPropsRegisterMSTestBuilderHook()
     {
         string packagePath = GetExactCurrentPackagePath("MSTest.TestAdapter");
@@ -97,10 +99,42 @@ public sealed class WindowsApplicationModelPackageTests
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestFramework_ContainsRequiredWindowsApplicationModelAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestFramework"),
             RequiredTestFrameworkEntries);
+
+    [TestMethod]
+    public void PackedMSTestSdk_AppModelControllerContainsMtpOnlyRuntime()
+    {
+        string packagePath = GetExactCurrentPackagePath("MSTest.Sdk");
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        string[] entries = archive.Entries
+            .Select(entry => entry.FullName.Replace('\\', '/'))
+            .Where(entry => entry.StartsWith("tools/AppModelController/", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        string[] targetFrameworks = ["net8.0", "net9.0"];
+        foreach (string targetFramework in targetFrameworks)
+        {
+            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Platform.dll", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Extensions.PackagedApp.dll", entries);
+            Assert.DoesNotContain($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller", entries);
+        }
+
+        string[] forbiddenEntries = entries
+            .Where(entry =>
+                entry.Contains("Microsoft.NET.Test.Sdk", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("vstest", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("UwpTestHostRuntimeProvider", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        Assert.IsEmpty(
+            forbiddenEntries,
+            $"The MSTest.Sdk app-model controller must not carry VSTest runtime/deployment assets:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, forbiddenEntries));
+    }
 
     private static string GetExactCurrentPackagePath(string packageId)
     {

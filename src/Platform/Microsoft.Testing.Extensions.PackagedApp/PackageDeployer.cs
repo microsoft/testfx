@@ -27,18 +27,32 @@ internal static class PackageDeployer
     /// verifies its registered location before any activation handoffs are written.
     /// </summary>
     /// <param name="manifestPath">The full path to the layout's <c>AppxManifest.xml</c>.</param>
+    /// <param name="appxRecipePath">The original <c>.build.appxrecipe</c> path, when one was used to materialize the layout.</param>
     /// <param name="manifestInfo">The identity read from the manifest held open by the caller.</param>
     /// <param name="cancellationToken">A token to observe while registering.</param>
     [SupportedOSPlatform("windows10.0.19041.0")]
-    public static Task RegisterAsync(
+    public static async Task RegisterAsync(
         string manifestPath,
+        string? appxRecipePath,
         AppxManifestInfo manifestInfo,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var packageManager = new PackageManager();
+        await EnsureRecipeDependenciesAsync(packageManager, manifestPath, appxRecipePath, cancellationToken).ConfigureAwait(false);
+
         string packageFamilyName = manifestInfo.PackageFamilyName;
+        string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
+
+        RegisteredPackageInfo[] existingPackages = packageManager
+            .FindPackagesForUserWithPackageTypes(string.Empty, packageFamilyName, PackageTypes.Main)
+            .Select(static package => new RegisteredPackageInfo(package.Id.FullName, package.InstalledPath, package.IsDevelopmentMode))
+            .ToArray();
+        if (IsRegisteredFromLayout(existingPackages, layoutDirectory))
+        {
+            return;
+        }
 
         // DeveloperMode registers the unsigned build-output layout in place. It requires Developer Mode
         // (or sideloading) to be enabled on the machine, exactly like 'Add-AppxPackage -Register'.
@@ -47,7 +61,7 @@ internal static class PackageDeployer
             DeveloperMode = true,
         };
 
-        return RegisterAsync(
+        await RegisterAsync(
             manifestPath,
             async token =>
             {
@@ -85,13 +99,109 @@ internal static class PackageDeployer
                     throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode);
                 }
             },
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Activates a registered packaged app and returns its process id.</summary>
     [SupportedOSPlatform("windows10.0.19041.0")]
     public static uint Activate(string appUserModelId, string? activationArguments)
         => ApplicationActivationManager.ActivateApplication(appUserModelId, activationArguments);
+
+    private static async Task EnsureRecipeDependenciesAsync(
+        PackageManager packageManager,
+        string manifestPath,
+        string? appxRecipePath,
+        CancellationToken cancellationToken)
+    {
+        string? recipePath = ResolveAppxRecipePath(manifestPath, appxRecipePath);
+        if (recipePath is null)
+        {
+            return;
+        }
+
+        var manifest = XDocument.Load(manifestPath);
+        string? targetArchitecture = manifest.Root?
+            .Descendants()
+            .FirstOrDefault(element => element.Name.LocalName == "Identity")?
+            .Attribute("ProcessorArchitecture")?
+            .Value;
+        if (targetArchitecture is null)
+        {
+            return;
+        }
+
+        Windows.ApplicationModel.Package[] installedPackages = [.. packageManager.FindPackagesForUser(string.Empty)];
+        var recipe = XDocument.Load(recipePath);
+        foreach (XElement dependency in recipe.Descendants().Where(element => element.Name.LocalName == "ResolvedSDKReference"))
+        {
+            string? name = dependency.Elements().FirstOrDefault(element => element.Name.LocalName == "Name")?.Value;
+            string? version = dependency.Elements().FirstOrDefault(element => element.Name.LocalName == "Version")?.Value;
+            string? architecture = dependency.Elements().FirstOrDefault(element => element.Name.LocalName == "Architecture")?.Value;
+            string? appxLocation = dependency.Elements().FirstOrDefault(element => element.Name.LocalName == "AppxLocation")?.Value;
+            if (name is null
+                || version is null
+                || architecture is null
+                || appxLocation is null
+                || !IsApplicableDependencyArchitecture(architecture, targetArchitecture))
+            {
+                continue;
+            }
+
+            var minimumVersion = Version.Parse(version);
+            if (installedPackages.Any(package =>
+                string.Equals(package.Id.Name, name, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(package.Id.Architecture.ToString(), architecture, StringComparison.OrdinalIgnoreCase)
+                && new Version(
+                    package.Id.Version.Major,
+                    package.Id.Version.Minor,
+                    package.Id.Version.Build,
+                    package.Id.Version.Revision) >= minimumVersion))
+            {
+                continue;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            string dependencyPath = ResolveAppxLocation(recipePath, appxLocation);
+            DeploymentResult result = await packageManager
+                .AddPackageAsync(new Uri(dependencyPath), dependencyPackageUris: null, DeploymentOptions.None)
+                .AsTask()
+                .ConfigureAwait(false);
+            if (result.ExtendedErrorCode is { HResult: < 0 })
+            {
+                throw new InvalidOperationException(result.ErrorText, result.ExtendedErrorCode);
+            }
+        }
+    }
+#endif
+
+#if !PACKAGEDAPP_WINRT
+#pragma warning disable IDE0051 // Compiled into the plain flavor so recipe dependency handling is unit-testable.
+#endif
+    private static string? ResolveAppxRecipePath(string manifestPath, string? appxRecipePath)
+    {
+        if (appxRecipePath is not null)
+        {
+            return Path.GetFullPath(appxRecipePath);
+        }
+
+        string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
+        string[] recipePaths = Directory.GetFiles(layoutDirectory, "*.build.appxrecipe", SearchOption.TopDirectoryOnly);
+        return recipePaths.Length == 1 ? Path.GetFullPath(recipePaths[0]) : null;
+    }
+
+    private static string ResolveAppxLocation(string appxRecipePath, string appxLocation)
+    {
+        string recipeDirectory = Path.GetDirectoryName(Path.GetFullPath(appxRecipePath))!;
+        string normalizedLocation = Uri.UnescapeDataString(appxLocation)
+            .Replace('\\', Path.DirectorySeparatorChar);
+        return Path.GetFullPath(normalizedLocation, recipeDirectory);
+    }
+
+    private static bool IsApplicableDependencyArchitecture(string dependencyArchitecture, string targetArchitecture)
+        => string.Equals(dependencyArchitecture, targetArchitecture, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(dependencyArchitecture, "neutral", StringComparison.OrdinalIgnoreCase);
+#if !PACKAGEDAPP_WINRT
+#pragma warning restore IDE0051
 #endif
 
     internal static async Task RegisterAsync(

@@ -183,6 +183,10 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     public PipeNameDescription PipeName { get; }
 
+#if IS_MTP_UNIT_TESTS
+    internal NamedPipeServerStream GetServerStream() => _namedPipeServerStream;
+#endif
+
     public bool WasConnected { get; private set; }
 
     internal async Task<bool> WaitForDisconnectAsync(TimeSpan timeout)

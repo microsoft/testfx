@@ -301,6 +301,10 @@ internal class TestSourceHost : ITestSourceHost
         {
             setWorkingDirectoryException = ex;
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            setWorkingDirectoryException = ex;
+        }
         catch (System.Security.SecurityException ex)
         {
             setWorkingDirectoryException = ex;
@@ -319,7 +323,31 @@ internal class TestSourceHost : ITestSourceHost
     {
         if (!StringEx.IsNullOrEmpty(_currentDirectory))
         {
-            Environment.CurrentDirectory = _currentDirectory;
+            try
+            {
+                Environment.CurrentDirectory = _currentDirectory;
+            }
+            catch (IOException ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "MSTestExecutor.ResetWorkingDirectory: Failed to restore the working directory to '{0}'. {1}",
+                    _currentDirectory,
+                    ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "MSTestExecutor.ResetWorkingDirectory: Failed to restore the working directory to '{0}'. {1}",
+                    _currentDirectory,
+                    ex);
+            }
+            catch (System.Security.SecurityException ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "MSTestExecutor.ResetWorkingDirectory: Failed to restore the working directory to '{0}'. {1}",
+                    _currentDirectory,
+                    ex);
+            }
         }
     }
 #endif

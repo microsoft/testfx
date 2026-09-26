@@ -12,6 +12,71 @@ public sealed class PackageDeployerTests
 {
     private const string PackageFullName = "Contoso.LayoutTests_1.0.0.0_neutral__abcdefghijklm";
 
+    [DataRow("x64", "x64", true)]
+    [DataRow("X64", "x64", true)]
+    [DataRow("neutral", "x64", true)]
+    [DataRow("NEUTRAL", "arm64", true)]
+    [DataRow("x86", "x64", false)]
+    [TestMethod]
+    public void IsApplicableDependencyArchitecture_ReturnsExpectedResult(
+        string dependencyArchitecture,
+        string targetArchitecture,
+        bool expected)
+    {
+        bool actual = (bool)typeof(PackageDeployer)
+            .GetMethod(
+                "IsApplicableDependencyArchitecture",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [dependencyArchitecture, targetArchitecture])!;
+
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod]
+    public void ResolveAppxRecipePath_WithMaterializedLayout_PreservesOriginalRecipe()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
+        string recipePath = Path.Combine(root, "Original", "App.build.appxrecipe");
+        string manifestPath = Path.Combine(root, "_MtpPackageLayout", AppxManifestInfo.AppxManifestFileName);
+
+        string? actual = ResolveAppxRecipePath(manifestPath, recipePath);
+
+        Assert.AreEqual(Path.GetFullPath(recipePath), actual);
+    }
+
+    [TestMethod]
+    public void ResolveAppxRecipePath_WithAlreadyMaterializedLayout_FindsAdjacentRecipe()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            string recipePath = Path.Combine(root, "App.build.appxrecipe");
+            File.WriteAllText(recipePath, "<Project />");
+
+            string? actual = ResolveAppxRecipePath(
+                Path.Combine(root, AppxManifestInfo.AppxManifestFileName),
+                appxRecipePath: null);
+
+            Assert.AreEqual(Path.GetFullPath(recipePath), actual);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void ResolveAppxLocation_WithRelativeWindowsPath_UsesRecipeDirectory()
+    {
+        string recipeDirectory = Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), Guid.NewGuid().ToString("N"));
+        string recipePath = Path.Combine(recipeDirectory, "App.build.appxrecipe");
+
+        string actual = ResolveAppxLocation(recipePath, @"Dependencies\Framework%20Package.appx");
+
+        Assert.AreEqual(Path.Combine(recipeDirectory, "Dependencies", "Framework Package.appx"), actual);
+    }
+
     [TestMethod]
     public async Task RegisterAsync_WithUnregisteredPackage_RegistersRequestedLayout()
     {
@@ -503,6 +568,20 @@ public sealed class PackageDeployerTests
 
     private static string GetLayoutDirectory(string name)
         => Path.Combine(Path.GetTempPath(), nameof(PackageDeployerTests), name);
+
+    private static string? ResolveAppxRecipePath(string manifestPath, string? appxRecipePath)
+        => (string?)typeof(PackageDeployer)
+            .GetMethod(
+                "ResolveAppxRecipePath",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [manifestPath, appxRecipePath]);
+
+    private static string ResolveAppxLocation(string appxRecipePath, string appxLocation)
+        => (string)typeof(PackageDeployer)
+            .GetMethod(
+                "ResolveAppxLocation",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [appxRecipePath, appxLocation])!;
 
     private sealed class TestPackageManager
     {

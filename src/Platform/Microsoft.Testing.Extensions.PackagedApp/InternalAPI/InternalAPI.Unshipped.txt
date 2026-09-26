@@ -1,6 +1,9 @@
 #nullable enable
+static Microsoft.Testing.Extensions.PackagedAppExtensions.AddPackagedAppDeployment(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Collections.Generic.IReadOnlyList<string!>! processArguments) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.GetConnectBackEnvironment(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, string? retryArtifactManifestPath) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>!
 Microsoft.Testing.Extensions.PackagedApp.PackageDeployer
 Microsoft.Testing.Extensions.PackagedApp.PackageRegistrationLock
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppScratchArtifactRecovery
 Microsoft.Testing.Extensions.PackagedApp.RegisteredPackageInfo
 Microsoft.Testing.Extensions.PackagedApp.RegisteredPackageInfo.FullName.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.RegisteredPackageInfo.InstalledPath.get -> string!
@@ -11,3 +14,4 @@ static Microsoft.Testing.Extensions.PackagedApp.PackageRegistrationLock.AcquireA
 static Microsoft.Testing.Extensions.PackagedApp.PackageRegistrationLock.AcquireAsync(string! packageFamilyName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.IO.FileStream!>!
 static Microsoft.Testing.Extensions.PackagedApp.PackageRegistrationLock.WithManifestAsync<T>(string! manifestPath, System.Func<Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!, System.Threading.Tasks.Task<T>!>! action, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<T>!
 static Microsoft.Testing.Extensions.PackagedApp.PackageRegistrationLock.WithManifestAsync<T>(string! manifestPath, System.Func<string!, System.Threading.CancellationToken, System.Threading.Tasks.Task<System.IO.FileStream!>!>! acquireRegistrationLock, System.Func<Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!, System.Threading.Tasks.Task<T>!>! action, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<T>!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppScratchArtifactRecovery.Recover(string! scratchDirectory, string! recoveryDirectory) -> void

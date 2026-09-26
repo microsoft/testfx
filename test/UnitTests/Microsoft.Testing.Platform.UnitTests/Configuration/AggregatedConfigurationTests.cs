@@ -141,6 +141,30 @@ public sealed class AggregatedConfigurationTests
     }
 
     [TestMethod]
+    public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_TestHostChild_DoesNotTouchControllerDirectory()
+    {
+        Mock<IFileLoggerProvider> mockFileLogger = new();
+        AggregatedConfiguration aggregatedConfiguration = new(
+            [],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            new(
+                null,
+                [
+                    new CommandLineParseOption("results-directory", [ExpectedPath]),
+                    new CommandLineParseOption(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, ["42"]),
+                ],
+                []));
+
+        await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
+
+        _fileSystemMock.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Never);
+        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>()), Times.Never);
+        Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+    }
+
+    [TestMethod]
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromStore()
     {
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
