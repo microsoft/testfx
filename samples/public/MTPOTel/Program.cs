@@ -6,13 +6,13 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 using OpenTelemetry.Metrics;
@@ -27,6 +27,7 @@ public class Program
     {
         using var testActivitySource = new ActivitySource("MTPOTel.Tests");
         HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
+        hostBuilder.Configuration["MTPOTel:Composition"] = "HostApplicationBuilder";
 
         // The host owns the OpenTelemetry providers, just like an Aspire ServiceDefaults project or any other
         // application composition root. The focused MTP resource helpers add test/CI identity without replacing
@@ -57,6 +58,14 @@ public class Program
         // Activate only MTP's ActivitySource and Meter. The application host above remains responsible for creating,
         // flushing, and disposing the providers that subscribe to those diagnostics.
         testApplicationBuilder.AddTestingPlatformDiagnostics();
+
+        // Import an immutable snapshot of the host configuration. MTP command-line and environment values keep their
+        // normal higher precedence, and the host remains the owner of the configuration providers and reload pipeline.
+        testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(hostBuilder.Configuration);
+
+        // Forward MTP diagnostic messages into the host-owned logging pipeline without transferring ownership.
+        // The bridge is process-local; separately launched test hosts must configure their own external sinks.
+        testApplicationBuilder.AddMicrosoftExtensionsLogging(host.Services.GetRequiredService<ILoggerFactory>());
 
         using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
         int exitCode = await testApplication.RunAsync();

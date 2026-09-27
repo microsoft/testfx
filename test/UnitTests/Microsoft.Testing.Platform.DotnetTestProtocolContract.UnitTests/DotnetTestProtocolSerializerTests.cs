@@ -261,7 +261,7 @@ public sealed class DotnetTestProtocolSerializerTests
         var message = new CommandLineOptionMessages(
             "path/to/module.dll",
             [
-                new CommandLineOptionMessage("--filter", "Filter tests", false, true),
+                new CommandLineOptionMessage("--filter", "Filter tests", false, true, "FilterProvider", 1, int.MaxValue),
                 new CommandLineOptionMessage("--hidden", null, true, false),
             ]);
 
@@ -273,6 +273,9 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual("Filter tests", actual.CommandLineOptionMessageList[0].Description);
         Assert.IsFalse(actual.CommandLineOptionMessageList[0].IsHidden);
         Assert.IsTrue(actual.CommandLineOptionMessageList[0].IsBuiltIn);
+        Assert.AreEqual("FilterProvider", actual.CommandLineOptionMessageList[0].ProviderUid);
+        Assert.AreEqual(1, actual.CommandLineOptionMessageList[0].MinimumArity);
+        Assert.AreEqual(int.MaxValue, actual.CommandLineOptionMessageList[0].MaximumArity);
         Assert.IsNull(actual.CommandLineOptionMessageList[1].Description);
         Assert.IsTrue(actual.CommandLineOptionMessageList[1].IsHidden);
     }
