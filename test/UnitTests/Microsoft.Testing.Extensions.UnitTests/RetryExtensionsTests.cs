@@ -52,6 +52,7 @@ public sealed class RetryExtensionsTests
             [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["1"],
             [RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName] = ["pipe"],
         }));
+        serviceProvider.AddService(new SystemEnvironment());
 
         RetryLifecycleCallbacks lifecycle = Assert.IsInstanceOfType<RetryLifecycleCallbacks>(
             (await testHostManager.BuildTestApplicationLifecycleCallbackAsync(serviceProvider)).Single());

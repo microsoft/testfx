@@ -9,6 +9,9 @@ namespace Microsoft.Testing.Extensions.Policy;
 
 internal sealed partial class RetryOrchestrator
 {
+    private const string AppContainerArtifactRootsConfiguredEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED";
+    private const string ArtifactPathDestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+    private const string DiagnosticArtifactPathDestinationRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
     private const long MaxRecoveredArtifactManifestBytes = 16L * 1024 * 1024;
     private const int MaxRecoveredArtifactManifestLineBytes = 64 * 1024;
     private const int MaxRecoveredArtifactManifestRecords = 10_000;
@@ -18,6 +21,7 @@ internal sealed partial class RetryOrchestrator
     private static void CollectRecoveredArtifacts(
         IFileSystem fileSystem,
         string manifestPath,
+        string attemptDirectory,
         List<ArtifactRequest> artifacts,
         ILogger logger)
     {
@@ -66,7 +70,15 @@ internal sealed partial class RetryOrchestrator
                         continue;
                     }
 
-                    if (!fileSystem.ExistFile(path))
+                    string artifactPath = Path.GetFullPath(path);
+                    if (!IsUnderDirectory(artifactPath, attemptDirectory))
+                    {
+                        logger.LogWarning(
+                            $"Ignoring recovered retry artifact '{path}' because it is outside the retry attempt directory '{attemptDirectory}'.");
+                        continue;
+                    }
+
+                    if (!fileSystem.ExistFile(artifactPath))
                     {
                         logger.LogWarning($"Ignoring recovered retry artifact '{path}' because it does not exist.");
                         continue;
@@ -76,12 +88,12 @@ internal sealed partial class RetryOrchestrator
                     {
                         artifacts.RemoveAll(artifact => string.Equals(artifact.Kind, kind, StringComparison.Ordinal));
                     }
-                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, path, StringComparison.Ordinal)))
+                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, artifactPath, StringComparison.Ordinal)))
                     {
                         continue;
                     }
 
-                    artifacts.Add(new ArtifactRequest(path, kind));
+                    artifacts.Add(new ArtifactRequest(artifactPath, kind));
                 }
                 catch (Exception ex) when (ex is FormatException or ArgumentException or NotSupportedException or PathTooLongException)
                 {
@@ -109,6 +121,66 @@ internal sealed partial class RetryOrchestrator
                 logger.LogWarning($"Failed to delete recovered retry artifact manifest '{manifestPath}': {ex}");
             }
         }
+    }
+
+    private static void RemoveArtifactsOutsideControllerRoots(
+        IEnvironment environment,
+        List<ArtifactRequest> artifacts,
+        ILogger logger)
+    {
+        if (!string.Equals(
+                environment.GetEnvironmentVariable(AppContainerArtifactRootsConfiguredEnvironmentVariable),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        string? artifactRoot = environment.GetEnvironmentVariable(ArtifactPathDestinationRootEnvironmentVariable);
+        string? diagnosticArtifactRoot = environment.GetEnvironmentVariable(DiagnosticArtifactPathDestinationRootEnvironmentVariable);
+        string[] allowedRoots =
+        [
+            .. new[] { artifactRoot, diagnosticArtifactRoot }
+                .OfType<string>()
+                .Where(root => root.Length > 0)
+                .Select(Path.GetFullPath),
+        ];
+
+        for (int i = artifacts.Count - 1; i >= 0; i--)
+        {
+            ArtifactRequest artifact = artifacts[i];
+            try
+            {
+                string artifactPath = Path.GetFullPath(artifact.Path);
+                if (allowedRoots.Any(root => IsUnderDirectory(artifactPath, root)))
+                {
+                    continue;
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                logger.LogWarning($"Ignoring malformed retry artifact path '{artifact.Path}': {ex.Message}");
+                artifacts.RemoveAt(i);
+                continue;
+            }
+
+            logger.LogWarning(
+                $"Ignoring retry artifact '{artifact.Path}' because it is outside the configured AppContainer artifact roots.");
+            artifacts.RemoveAt(i);
+        }
+    }
+
+    private static bool IsUnderDirectory(string path, string directory)
+    {
+        string directoryPrefix = Path.GetFullPath(directory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        return path.StartsWith(
+            directoryPrefix,
+            comparison);
     }
 
     private enum BoundedManifestLineReadResult

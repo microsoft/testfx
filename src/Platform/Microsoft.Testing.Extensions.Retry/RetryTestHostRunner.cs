@@ -177,10 +177,20 @@ internal static class RetryTestHostRunner
 
         await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
+        int exitCode = testHostProcess.ExitCode;
+        if (testHostProcess is TestHostHandleToProcessAdapter { IsExitCodeAuthoritative: false })
+        {
+            exitCode = retryFailedTestsPipeServer.CountsReported
+                ? retryFailedTestsPipeServer.FailedTestResults > 0
+                    ? (int)ExitCode.AtLeastOneTestFailed
+                    : (int)ExitCode.Success
+                : (int)ExitCode.GenericFailure;
+        }
+
         manifestOwnership.Transfer();
         return new AttemptResult
         {
-            ExitCode = testHostProcess.ExitCode,
+            ExitCode = exitCode,
             ExitedBeforeConnect = false,
             RecoveredArtifactManifestPath = recoveredArtifactManifestPath,
         };

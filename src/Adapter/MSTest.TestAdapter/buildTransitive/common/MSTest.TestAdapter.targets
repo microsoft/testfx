@@ -67,7 +67,7 @@
       TESTINGPLATFORM_UI_LANGUAGE / DOTNET_CLI_UI_LANGUAGE), so the build-machine culture is irrelevant.
       Every requested localized satellite must be copied to the output directory so any selected culture can be resolved at run time.
       -->
-    <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
+    <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND ('$(UseUwpTools)' != 'true' OR '$(SatelliteResourceLanguages)' != '') ">
       <_MSTestSatelliteResourceLanguages Include="$(SatelliteResourceLanguages)" />
       <_MSTestV2Files Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\_localization'))\**\*.dll" />
       <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because

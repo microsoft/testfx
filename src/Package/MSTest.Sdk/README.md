@@ -24,6 +24,12 @@ Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through t
 
 `UseVSTest=true` takes precedence over `PublishAot`. Set `<IsTestApplication>false</IsTestApplication>` to create a reusable test library instead of an executable test application.
 
+## Windows application models
+
+MSTest.Sdk uses Microsoft.Testing.Platform for unpackaged WinUI, packaged full-trust WinUI, AppContainer-configured WinUI, modern UWP (`UseUwp=true`), and classic `uap10.0` projects. Packaged applications run behind the SDK-shipped full-trust app-model controller, which registers the package and activates the exact manifest application by AUMID while retaining MTP-owned cancellation, reports, retries, and exit-code handling.
+
+Unsigned build-output layouts require Windows Developer Mode or sideloading. UWP builds still require the Visual Studio UWP/MSBuild workload, but they do not require `Microsoft.NET.Test.Sdk`, `vstest.console`, or the Visual Studio UWP test-host runtime provider. See [Testing UWP and WinUI apps with MSTest](../../../docs/winui-testing.md).
+
 ## ClassicEngine extension profiles
 
 | `TestingExtensionsProfile` | Included extensions |

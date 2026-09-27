@@ -998,38 +998,41 @@ namespace MSTestWebTest
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_DefaultsToVSTestAndUsesAppContainerHost()
+    public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpSdk",
             """
             <UseUwp>true</UseUwp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             """);
 
-        result.AssertOutputContains("WindowsTestContract:UseVSTest=true");
-        result.AssertOutputContains("Microsoft.NET.Test.Sdk");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx");
         result.AssertOutputContains("MSTest.TestAdapter");
         result.AssertOutputContains("MSTest.TestFramework");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
         result.AssertOutputContains("TestContainer");
-        result.AssertOutputContains("IsTestProject=true");
-        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
     }
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_RejectsExplicitMtpSelection()
+    public async Task MSTestSdk_ModernUwp_AllowsExplicitMtpSelection()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpMtpSdk",
             """
             <UseUwp>true</UseUwp>
             <UseVSTest>false</UseVSTest>
-            """,
-            failIfReturnValueIsNotZero: false,
-            target: "Build");
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
 
-        Assert.AreNotEqual(0, result.ExitCode);
-        result.AssertOutputContains("Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts.");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
     }
 
     [TestMethod]
@@ -1048,6 +1051,37 @@ namespace MSTestWebTest
         result.AssertOutputContains("Capabilities=TestingPlatformServer");
         result.AssertOutputContains("TestContainer");
         result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUIWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIWithPackagedAppSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_ConsoleWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ConsoleWithPackagedAppSdk",
+            """
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
 
     [TestMethod]
@@ -1078,6 +1112,7 @@ namespace MSTestWebTest
             """);
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
         result.AssertOutputContains("OutputType=Exe");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
@@ -1131,9 +1166,9 @@ namespace MSTestWebTest
               </ItemGroup>
 
               <Target Name="PrintWindowsTestContract"
-                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
+                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_MSTestSDKConfigureAppModelController">
                 <Message Importance="high"
-                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject)" />
+                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerExtensions=$(_MSTestAppModelControllerExtensions)" />
                 <Message Importance="high"
                          Text="PackageReferences=@(PackageReference->'%(Identity)')" />
                 <Message Importance="high"
@@ -1149,9 +1184,10 @@ namespace MSTestWebTest
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 
         return await DotnetCli.RunAsync(
-            $"build {testAsset.TargetAssetPath} -restore -t:{target}",
+            $"build {testAsset.TargetAssetPath} -restore -t:{target} -bl:\"{binlogPath}\"",
             failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
             cancellationToken: TestContext.CancellationToken);
     }

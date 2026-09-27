@@ -10,6 +10,7 @@ See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4
 
 ### Added
 
+* Run classic UWP, modern UWP, and AppContainer-configured WinUI test applications end to end through Microsoft.Testing.Platform using the MSTest.Sdk app-model sidecar controller, with AUMID activation, exact package-SID IPC authorization, UI-thread tests, TRX, HangDump, Retry, and encrypted activation payloads.
 * Ship the MSTest adapter's Microsoft.Testing.Platform integration and required runtime assets for classic and modern UWP targets while retaining VSTest routing for true UWP/AppContainer `MSTest.Sdk` applications, by @Evangelink in [#11118](https://github.com/microsoft/testfx/pull/11118)
 * Add opt-in assertion failure diagnostics through `CaptureAssertionFailureDiagnostics` / `mstest:execution:captureAssertionFailureDiagnostics`, producing bounded per-test artifacts with assertion values, source frames, concurrent tests and process state for supported VSTest and Microsoft.Testing.Platform runs, by @Evangelink in [#11244](https://github.com/microsoft/testfx/pull/11244)
 * Add MSTEST0084 and a code fix to align MSTest `OSCondition` attributes with `SupportedOSPlatformAttribute` and `UnsupportedOSPlatformAttribute`, including safe handling of versioned platform constraints, by @Evangelink in [#11044](https://github.com/microsoft/testfx/pull/11044) and [#11302](https://github.com/microsoft/testfx/pull/11302)

@@ -374,6 +374,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Display .NET test application information.
+      --internal-appmodel-activation-payload
+        Arity: 1
+        Hidden: True
+        Description: Specifies the app-model activation payload.
       --internal-testhostcontroller-pid
         Arity: 0..1
         Hidden: True

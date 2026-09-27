@@ -137,6 +137,71 @@ public class RetryTests
         processHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
     }
 
+    [DataRow(0, 1, true, 0)]
+    [DataRow(1, 0, true, 2)]
+    [DataRow(0, 0, false, 1)]
+    [TestMethod]
+    public async Task RunAttemptAsync_NonAuthoritativeHandle_DerivesExitCodeFromReportedCounts(
+        int failedTestResults,
+        int passedTestResults,
+        bool countsReported,
+        int expectedExitCode)
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        serviceProvider.AddService(loggerFactory.Object);
+        serviceProvider.AddService(new SystemTask());
+        serviceProvider.AddService(Mock.Of<IFileSystem>());
+        serviceProvider.AddService(Mock.Of<ITestApplicationCancellationTokenSource>(
+            source => source.CancellationToken == CancellationToken.None));
+        serviceProvider.AddService(new Mock<IProcessHandler>(MockBehavior.Strict).Object);
+
+        using var server = new RetryFailedTestsPipeServer(serviceProvider, [], Mock.Of<ILogger>());
+        serviceProvider.AddService(new ConnectingTestHostLauncher(
+            exitCode: 1,
+            isExitCodeAuthoritative: false,
+            onConnected: () =>
+            {
+                if (!countsReported)
+                {
+                    return;
+                }
+
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.FailedTestResults))!
+                    .SetValue(server, failedTestResults);
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.TotalTestRan))!
+                    .SetValue(server, failedTestResults + passedTestResults);
+                typeof(RetryFailedTestsPipeServer)
+                    .GetProperty(nameof(RetryFailedTestsPipeServer.CountsReported))!
+                    .SetValue(server, true);
+            }));
+
+        List<string> arguments =
+        [
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}",
+            server.PipeName,
+        ];
+
+        RetryTestHostRunner.AttemptResult result = await RetryTestHostRunner.RunAttemptAsync(
+            serviceProvider,
+            Mock.Of<IOutputDeviceDataProducer>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ILogger>(),
+            server,
+            new ExecutableInfo("testhost.exe", [], string.Empty),
+            arguments,
+            attemptCount: 1,
+            userMaxRetryCount: 2,
+            CancellationToken.None);
+
+        Assert.AreEqual(expectedExitCode, result.ExitCode);
+        Assert.IsFalse(result.ExitedBeforeConnect);
+    }
+
     [TestMethod]
     public async Task RunAttemptAsync_AlreadyExitedCustomHandle_DoesNotWaitForPipeTimeout()
     {
@@ -271,6 +336,7 @@ public class RetryTests
     {
         const string manifestPath = "recovered-artifacts.txt";
         const string missingArtifactPath = "missing.xml";
+        string attemptDirectory = Path.GetFullPath("attempt");
         string manifest = $"not-base64\t-{Environment.NewLine}{CreateManifestLine(missingArtifactPath, "microsoft.testing.junit")}";
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>()))
@@ -279,7 +345,7 @@ public class RetryTests
             .Returns(new ReadOnlyMemoryFileStream(manifest));
         List<ArtifactRequest> artifacts = [];
 
-        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
 
         Assert.IsEmpty(artifacts);
         fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
@@ -289,7 +355,8 @@ public class RetryTests
     public void CollectRecoveredArtifacts_RecoveredKind_ReplacesPreviouslyPublishedArtifact()
     {
         const string manifestPath = "recovered-artifacts.txt";
-        const string recoveredArtifactPath = "recovered.xml";
+        string attemptDirectory = Path.GetFullPath("attempt");
+        string recoveredArtifactPath = Path.Combine(attemptDirectory, "recovered.xml");
         const string kind = "microsoft.testing.junit";
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
@@ -297,7 +364,7 @@ public class RetryTests
             .Returns(new ReadOnlyMemoryFileStream(CreateManifestLine(recoveredArtifactPath, kind)));
         List<ArtifactRequest> artifacts = [new("original.xml", kind)];
 
-        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
 
         ArtifactRequest artifact = Assert.ContainsSingle(artifacts);
         Assert.AreEqual(recoveredArtifactPath, artifact.Path);
@@ -309,6 +376,7 @@ public class RetryTests
     public void CollectRecoveredArtifacts_OversizedLine_IsRejectedAndManifestIsDeleted()
     {
         const string manifestPath = "recovered-artifacts.txt";
+        string attemptDirectory = Path.GetFullPath("attempt");
         int maxLineBytes = (int)typeof(RetryOrchestrator)
             .GetField("MaxRecoveredArtifactManifestLineBytes", BindingFlags.Static | BindingFlags.NonPublic)!
             .GetRawConstantValue()!;
@@ -318,7 +386,7 @@ public class RetryTests
             .Returns(new ReadOnlyMemoryFileStream(new string('x', maxLineBytes + 1)));
         List<ArtifactRequest> artifacts = [];
 
-        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
 
         Assert.IsEmpty(artifacts);
         fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
@@ -328,7 +396,8 @@ public class RetryTests
     public void CollectRecoveredArtifacts_RecordLimit_IsEnforcedAndManifestIsDeleted()
     {
         const string manifestPath = "recovered-artifacts.txt";
-        const string recoveredArtifactPath = "recovered.xml";
+        string attemptDirectory = Path.GetFullPath("attempt");
+        string recoveredArtifactPath = Path.Combine(attemptDirectory, "recovered.xml");
         int maxRecords = (int)typeof(RetryOrchestrator)
             .GetField("MaxRecoveredArtifactManifestRecords", BindingFlags.Static | BindingFlags.NonPublic)!
             .GetRawConstantValue()!;
@@ -347,10 +416,59 @@ public class RetryTests
             .Returns(new ReadOnlyMemoryFileStream(manifest.ToString()));
         List<ArtifactRequest> artifacts = [];
 
-        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, artifacts);
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
 
         Assert.IsEmpty(artifacts);
         fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void CollectRecoveredArtifacts_OutsideAttemptDirectory_IsRejected()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        string attemptDirectory = Path.GetFullPath("attempt");
+        string externalArtifactPath = Path.GetFullPath(Path.Combine("outside", "recovered.xml"));
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(CreateManifestLine(externalArtifactPath, "microsoft.testing.junit")));
+        List<ArtifactRequest> artifacts = [];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
+
+        Assert.IsEmpty(artifacts);
+        fileSystem.Verify(fs => fs.ExistFile(externalArtifactPath), Times.Never);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void RemoveArtifactsOutsideControllerRoots_AppContainerMappings_RejectOutsidePaths()
+    {
+        string artifactRoot = Path.GetFullPath("controller-results");
+        string diagnosticArtifactRoot = Path.GetFullPath("controller-diagnostics");
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED"))
+            .Returns("1");
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT"))
+            .Returns(artifactRoot);
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT"))
+            .Returns(diagnosticArtifactRoot);
+        List<ArtifactRequest> artifacts =
+        [
+            new(Path.Combine(artifactRoot, "test.trx"), "microsoft.testing.trx"),
+            new(Path.Combine(diagnosticArtifactRoot, "test.log"), null),
+            new(Path.GetFullPath(Path.Combine("outside", "secret.txt")), null),
+        ];
+
+        InvokeRemoveArtifactsOutsideControllerRoots(environment.Object, artifacts);
+
+        Assert.HasCount(2, artifacts);
+        Assert.IsTrue(artifacts.All(artifact =>
+            artifact.Path.StartsWith(artifactRoot, StringComparison.Ordinal)
+            || artifact.Path.StartsWith(diagnosticArtifactRoot, StringComparison.Ordinal)));
     }
 
     [TestMethod]
@@ -1166,10 +1284,18 @@ public class RetryTests
     private static void InvokeCollectRecoveredArtifacts(
         IFileSystem fileSystem,
         string manifestPath,
+        string attemptDirectory,
         List<ArtifactRequest> artifacts)
         => typeof(RetryOrchestrator)
             .GetMethod("CollectRecoveredArtifacts", BindingFlags.Static | BindingFlags.NonPublic)!
-            .Invoke(null, [fileSystem, manifestPath, artifacts, Mock.Of<ILogger>()]);
+            .Invoke(null, [fileSystem, manifestPath, attemptDirectory, artifacts, Mock.Of<ILogger>()]);
+
+    private static void InvokeRemoveArtifactsOutsideControllerRoots(
+        IEnvironment environment,
+        List<ArtifactRequest> artifacts)
+        => typeof(RetryOrchestrator)
+            .GetMethod("RemoveArtifactsOutsideControllerRoots", BindingFlags.Static | BindingFlags.NonPublic)!
+            .Invoke(null, [environment, artifacts, Mock.Of<ILogger>()]);
 
     private static string CreateTemporaryDirectory()
     {
@@ -1252,7 +1378,10 @@ public class RetryTests
         }
     }
 
-    private sealed class ConnectingTestHostLauncher : ITestHostLauncher
+    private sealed class ConnectingTestHostLauncher(
+        int exitCode = 0,
+        bool isExitCodeAuthoritative = true,
+        Action? onConnected = null) : ITestHostLauncher
     {
         public TestHostLaunchContext? Context { get; private set; }
 
@@ -1272,30 +1401,34 @@ public class RetryTests
             int pipeNameIndex = context.Arguments.ToList().IndexOf($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}") + 1;
             var pipeClient = new NamedPipeClientStream(".", context.Arguments[pipeNameIndex], PipeDirection.InOut, PipeOptions.Asynchronous);
             await pipeClient.ConnectAsync(5_000, cancellationToken);
-            return new ConnectedTestHostHandle(pipeClient, new GetListOfFailedTestsRequestSerializer().Id);
+            return new ConnectedTestHostHandle(
+                pipeClient,
+                new GetListOfFailedTestsRequestSerializer().Id,
+                exitCode,
+                isExitCodeAuthoritative,
+                onConnected);
         }
     }
 
-    private sealed class ConnectedTestHostHandle : ITestHostHandle
+    private sealed class ConnectedTestHostHandle(
+        NamedPipeClientStream pipeClient,
+        int requestSerializerId,
+        int exitCode,
+        bool isExitCodeAuthoritative,
+        Action? onConnected) : ITestHostHandle, ITestHostHandleExitCodePolicy
     {
         private static readonly TimeSpan RetryPipeRoundTripTimeout = TimeSpan.FromSeconds(30);
 
-        private readonly NamedPipeClientStream _pipeClient;
-        private readonly Task _exitTask;
-        private readonly int _requestSerializerId;
-
-        public ConnectedTestHostHandle(NamedPipeClientStream pipeClient, int requestSerializerId)
-        {
-            _pipeClient = pipeClient;
-            _requestSerializerId = requestSerializerId;
-            _exitTask = CompleteRunAsync();
-        }
+        private readonly NamedPipeClientStream _pipeClient = pipeClient;
+        private readonly Task _exitTask = CompleteRunAsync(pipeClient, requestSerializerId, onConnected);
 
         public string Identifier => nameof(ConnectedTestHostHandle);
 
-        public int ExitCode => 0;
+        public int ExitCode => exitCode;
 
         public bool HasExited => _exitTask.IsCompleted;
+
+        public bool IsExitCodeAuthoritative => isExitCodeAuthoritative;
 
         public Task WaitForExitAsync(CancellationToken cancellationToken)
             => _exitTask.WithCancellationAsync(cancellationToken);
@@ -1306,7 +1439,10 @@ public class RetryTests
 
         public void Dispose() => _pipeClient.Dispose();
 
-        private async Task CompleteRunAsync()
+        private static async Task CompleteRunAsync(
+            NamedPipeClientStream pipeClient,
+            int requestSerializerId,
+            Action? onConnected)
         {
             await Task.Yield();
 
@@ -1315,27 +1451,31 @@ public class RetryTests
             // Complete a retry-protocol round trip before reporting exit so the server has accepted the connection.
             byte[] request = new byte[2 * sizeof(int)];
             BitConverter.GetBytes(sizeof(int)).CopyTo(request, 0);
-            BitConverter.GetBytes(_requestSerializerId).CopyTo(request, sizeof(int));
-            await _pipeClient.WriteAsync(request, 0, request.Length, timeout.Token);
-            await _pipeClient.FlushAsync(timeout.Token);
+            BitConverter.GetBytes(requestSerializerId).CopyTo(request, sizeof(int));
+            await pipeClient.WriteAsync(request, 0, request.Length, timeout.Token);
+            await pipeClient.FlushAsync(timeout.Token);
 
             byte[] responseSizeBuffer = new byte[sizeof(int)];
-            await ReadExactlyAsync(responseSizeBuffer, timeout.Token);
+            await ReadExactlyAsync(pipeClient, responseSizeBuffer, timeout.Token);
             int responseSize = BitConverter.ToInt32(responseSizeBuffer, 0);
             if (responseSize < sizeof(int))
             {
                 throw new InvalidDataException($"Invalid retry pipe response size: {responseSize}.");
             }
 
-            await ReadExactlyAsync(new byte[responseSize], timeout.Token);
+            await ReadExactlyAsync(pipeClient, new byte[responseSize], timeout.Token);
+            onConnected?.Invoke();
         }
 
-        private async Task ReadExactlyAsync(byte[] buffer, CancellationToken cancellationToken)
+        private static async Task ReadExactlyAsync(
+            NamedPipeClientStream pipeClient,
+            byte[] buffer,
+            CancellationToken cancellationToken)
         {
             int bytesRead = 0;
             while (bytesRead < buffer.Length)
             {
-                int read = await _pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken)
+                int read = await pipeClient.ReadAsync(buffer, bytesRead, buffer.Length - bytesRead, cancellationToken)
                     .WithCancellationAsync(cancellationToken);
                 if (read == 0)
                 {

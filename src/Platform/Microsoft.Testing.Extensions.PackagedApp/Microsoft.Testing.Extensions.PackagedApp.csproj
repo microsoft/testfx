@@ -69,6 +69,7 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="mstest-appmodel-controller" Key="$(VsPublicKey)" />
   </ItemGroup>
 
 </Project>
