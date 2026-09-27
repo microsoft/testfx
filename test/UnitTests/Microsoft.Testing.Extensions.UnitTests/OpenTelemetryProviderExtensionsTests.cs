@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reflection;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Builder;
@@ -24,16 +25,18 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <summary>
 /// Direct tests for the OpenTelemetry registration and configuration helpers —
 /// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/>,
-/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformResource(ResourceBuilder)"/> and
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformResource(ResourceBuilder)"/>,
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(ResourceBuilder)"/>,
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformCIResource(ResourceBuilder)"/> and
 /// <see cref="OpenTelemetryProviderExtensions.AddOpenTelemetryProviderFromEnvironment(ITestApplicationBuilder, System.Action{TracerProviderBuilder}?, System.Action{MeterProviderBuilder}?)"/> —
 /// including raw-listener and real OpenTelemetry SDK coverage.
 /// </summary>
 /// <remarks>
-/// The method that mutates real environment variables carries a method-level
+/// Methods that mutate real environment variables carry a method-level
 /// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
 /// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
-/// project): it still serializes against every other test in the assembly that mutates environment variables, but
-/// allows this test to run in parallel with tests that never touch environment variables at all. The end-to-end
+/// project): they still serialize against every other test in the assembly that mutates environment variables, but
+/// can run in parallel with tests that never touch environment variables at all. The end-to-end
 /// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
 /// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c>, an unbounded process-global
 /// resource that a <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
@@ -50,6 +53,11 @@ public sealed class OpenTelemetryProviderExtensionsTests
         "OTEL_TRACES_EXPORTER",
         "OTEL_METRICS_EXPORTER",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_SERVICE_NAME",
+        "GITHUB_ACTIONS", "GITHUB_WORKFLOW", "GITHUB_RUN_ID", "GITHUB_JOB", "GITHUB_REF_NAME", "GITHUB_SHA", "GITHUB_REPOSITORY",
+        "TF_BUILD", "BUILD_DEFINITIONNAME", "BUILD_BUILDID", "SYSTEM_JOBID", "BUILD_SOURCEBRANCHNAME", "BUILD_SOURCEVERSION", "BUILD_REPOSITORY_URI",
+        "GITLAB_CI", "CI_PIPELINE_NAME", "CI_PIPELINE_ID", "CI_JOB_ID", "CI_COMMIT_REF_NAME", "CI_COMMIT_SHA", "CI_REPOSITORY_URL",
+        "JENKINS_URL", "JOB_NAME", "BUILD_NUMBER", "GIT_BRANCH", "GIT_COMMIT", "GIT_URL",
     ];
 
     [TestMethod]
@@ -61,21 +69,175 @@ public sealed class OpenTelemetryProviderExtensionsTests
         => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformResource(null!));
 
     [TestMethod]
-    public void AddTestingPlatformResource_AttachesPlatformAttributesToTheBuiltResource()
+    public void AddTestingPlatformTestResource_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(null!));
+
+    [TestMethod]
+    public void AddTestingPlatformCIResource_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformCIResource(null!));
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void AddTestingPlatformResource_PreservesAggregateResourceBehavior()
+        => WithEnvironment(
+            new()
+            {
+                ["TF_BUILD"] = "true",
+                ["BUILD_DEFINITIONNAME"] = "testfx-ci",
+                ["BUILD_BUILDID"] = "7",
+                ["SYSTEM_JOBID"] = "job-guid",
+                ["BUILD_SOURCEBRANCHNAME"] = "main",
+                ["BUILD_SOURCEVERSION"] = "deadbeef",
+                ["BUILD_REPOSITORY_URI"] = "https://user:token@dev.azure.com/org/_git/repo",
+            },
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformResource().Build());
+
+                Assert.IsTrue(attributes.TryGetValue("service.name", out object? serviceName));
+                Assert.IsFalse(string.IsNullOrWhiteSpace(serviceName as string));
+                Assert.IsTrue(attributes.TryGetValue("service.instance.id", out object? serviceInstanceId));
+                Assert.IsFalse(string.IsNullOrWhiteSpace(serviceInstanceId as string));
+                Assert.AreEqual(Environment.MachineName, attributes["host.name"]);
+                Assert.AreEqual(".NET", attributes["process.runtime.name"]);
+                Assert.AreEqual(Assembly.GetEntryAssembly()!.GetName().Name, attributes["test.assembly.name"]);
+                Assert.AreEqual("azure_pipelines", attributes["cicd.provider.name"]);
+                Assert.AreEqual("testfx-ci", attributes["cicd.pipeline.name"]);
+                Assert.AreEqual("deadbeef", attributes["vcs.ref.head.revision"]);
+                Assert.AreEqual("https://dev.azure.com/org/_git/repo", attributes["vcs.repository.url.full"]);
+            });
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void AddTestingPlatformTestResource_AddsOnlyTestSpecificAttributes()
+        => WithEnvironment(
+            [],
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformTestResource().Build());
+
+                Assert.HasCount(1, attributes);
+                Assert.AreEqual(Assembly.GetEntryAssembly()!.GetName().Name, attributes["test.assembly.name"]);
+                AssertDoesNotContainPrefixes(attributes, "service.", "host.", "os.", "process.", "cicd.", "vcs.");
+            });
+
+    [TestMethod]
+    [DataRow("github_actions")]
+    [DataRow("azure_pipelines")]
+    [DataRow("gitlab")]
+    [DataRow("jenkins")]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void AddTestingPlatformCIResource_EmitsExistingProviderMappingsWithoutApplicationOrTestIdentity(string provider)
     {
-        Resource resource = ResourceBuilder.CreateEmpty().AddTestingPlatformResource().Build();
-
-        Dictionary<string, object> attributes = [];
-        foreach (KeyValuePair<string, object> attribute in resource.Attributes)
+        Dictionary<string, string?> environment = provider switch
         {
-            attributes[attribute.Key] = attribute.Value;
-        }
+            "github_actions" => new()
+            {
+                ["GITHUB_ACTIONS"] = "true",
+                ["GITHUB_WORKFLOW"] = "CI",
+                ["GITHUB_RUN_ID"] = "42",
+                ["GITHUB_JOB"] = "build",
+                ["GITHUB_REF_NAME"] = "main",
+                ["GITHUB_SHA"] = "abc123",
+                ["GITHUB_REPOSITORY"] = "microsoft/testfx",
+            },
+            "azure_pipelines" => new()
+            {
+                ["TF_BUILD"] = "true",
+                ["BUILD_DEFINITIONNAME"] = "testfx-ci",
+                ["BUILD_BUILDID"] = "7",
+                ["SYSTEM_JOBID"] = "job-guid",
+                ["BUILD_SOURCEBRANCHNAME"] = "main",
+                ["BUILD_SOURCEVERSION"] = "deadbeef",
+                ["BUILD_REPOSITORY_URI"] = "https://user:token@dev.azure.com/org/_git/repo",
+            },
+            "gitlab" => new()
+            {
+                ["GITLAB_CI"] = "true",
+                ["CI_PIPELINE_NAME"] = "pipeline",
+                ["CI_PIPELINE_ID"] = "9",
+                ["CI_JOB_ID"] = "13",
+                ["CI_COMMIT_REF_NAME"] = "feature",
+                ["CI_COMMIT_SHA"] = "cafe",
+                ["CI_REPOSITORY_URL"] = "https://gitlab.example.com/group/project.git",
+            },
+            "jenkins" => new()
+            {
+                ["JENKINS_URL"] = "https://jenkins.example.com/",
+                ["JOB_NAME"] = "nightly",
+                ["BUILD_NUMBER"] = "128",
+                ["GIT_BRANCH"] = "origin/main",
+                ["GIT_COMMIT"] = "1234abcd",
+                ["GIT_URL"] = "https://github.com/microsoft/testfx.git",
+            },
+            _ => throw new InvalidOperationException($"Unknown provider '{provider}'."),
+        };
 
-        Assert.IsTrue(attributes.TryGetValue("service.name", out object? serviceName));
-        Assert.IsFalse(string.IsNullOrWhiteSpace(serviceName as string));
-        Assert.AreEqual(Environment.MachineName, attributes["host.name"]);
-        Assert.AreEqual(".NET", attributes["process.runtime.name"]);
+        WithEnvironment(
+            environment,
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformCIResource().Build());
+
+                Assert.AreEqual(provider, attributes["cicd.provider.name"]);
+                Assert.IsTrue(attributes.ContainsKey("cicd.pipeline.name"));
+                Assert.IsTrue(attributes.ContainsKey("cicd.pipeline.run.id"));
+                Assert.IsTrue(attributes.ContainsKey("vcs.ref.head.name"));
+                Assert.IsTrue(attributes.ContainsKey("vcs.ref.head.revision"));
+                AssertDoesNotContainPrefixes(attributes, "service.", "host.", "os.", "process.", "test.");
+
+                if (provider == "github_actions")
+                {
+                    Assert.AreEqual("build", attributes["cicd.pipeline.task.name"]);
+                    Assert.AreEqual("microsoft/testfx", attributes["vcs.repository.name"]);
+                }
+                else if (provider == "azure_pipelines")
+                {
+                    Assert.AreEqual("job-guid", attributes["cicd.pipeline.task.run.id"]);
+                    Assert.AreEqual("https://dev.azure.com/org/_git/repo", attributes["vcs.repository.url.full"]);
+                }
+            });
     }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void FocusedResourceHelpers_PreserveApplicationOwnedIdentity()
+        => WithEnvironment(
+            new()
+            {
+                ["GITHUB_ACTIONS"] = "true",
+                ["GITHUB_WORKFLOW"] = "CI",
+            },
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty()
+                        .AddService(
+                            serviceName: "application-service",
+                            serviceVersion: "1.2.3",
+                            serviceInstanceId: "application-instance")
+                        .AddAttributes(
+                        [
+                            new("host.name", "application-host"),
+                            new("os.description", "application-os"),
+                            new("process.pid", 123),
+                        ])
+                        .AddTestingPlatformTestResource()
+                        .AddTestingPlatformCIResource()
+                        .Build());
+
+                Assert.AreEqual("application-service", attributes["service.name"]);
+                Assert.AreEqual("1.2.3", attributes["service.version"]);
+                Assert.AreEqual("application-instance", attributes["service.instance.id"]);
+                Assert.AreEqual("application-host", attributes["host.name"]);
+                Assert.AreEqual("application-os", attributes["os.description"]);
+                Assert.AreEqual(123L, attributes["process.pid"]);
+                Assert.IsTrue(attributes.ContainsKey("test.assembly.name"));
+                Assert.AreEqual("github_actions", attributes["cicd.provider.name"]);
+            });
 
     [TestMethod]
     public void AddOpenTelemetryProviderFromEnvironment_WithNullBuilder_Throws()
@@ -478,6 +640,28 @@ public sealed class OpenTelemetryProviderExtensionsTests
     private static Func<string, string?> Env(Dictionary<string, string?> values)
         => name => values.TryGetValue(name, out string? value) ? value : null;
 
+    private static Dictionary<string, object> GetResourceAttributeMap(Resource resource)
+    {
+        Dictionary<string, object> attributes = [];
+        foreach (KeyValuePair<string, object> attribute in resource.Attributes)
+        {
+            attributes[attribute.Key] = attribute.Value;
+        }
+
+        return attributes;
+    }
+
+    private static void AssertDoesNotContainPrefixes(Dictionary<string, object> attributes, params string[] prefixes)
+    {
+        foreach (string prefix in prefixes)
+        {
+            Assert.DoesNotContain(
+                key => key.StartsWith(prefix, StringComparison.Ordinal),
+                attributes.Keys,
+                $"Resource unexpectedly contained an attribute with the '{prefix}' prefix.");
+        }
+    }
+
     private static async Task<ITestApplicationBuilder> CreateBuilderAsync()
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(["--no-banner", "--ignore-exit-code", "8", "--internal-testingplatform-skipbuildercheck"]);
@@ -525,6 +709,33 @@ public sealed class OpenTelemetryProviderExtensionsTests
             }
 
             await body().ConfigureAwait(false);
+        }
+        finally
+        {
+            foreach (KeyValuePair<string, string?> entry in snapshot)
+            {
+                Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            }
+        }
+    }
+
+    private static void WithEnvironment(Dictionary<string, string?> values, Action body)
+    {
+        Dictionary<string, string?> snapshot = [];
+        foreach (string name in ObservedEnvironmentVariables)
+        {
+            snapshot[name] = Environment.GetEnvironmentVariable(name);
+            Environment.SetEnvironmentVariable(name, null);
+        }
+
+        try
+        {
+            foreach (KeyValuePair<string, string?> value in values)
+            {
+                Environment.SetEnvironmentVariable(value.Key, value.Value);
+            }
+
+            body();
         }
         finally
         {

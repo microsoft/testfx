@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsFlakyHistoryRequiresAzureDevOps">
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-flaky-history' richiede l'autenticazione di '--report-azdo'</target>
+        <target state="translated">'--report-azdo-flaky-history' richiede '--report-azdo' per essere abilitato</target>
         <note>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-severity' richiede l'autenticazione di '--report-azdo'</target>
+        <target state="translated">'--report-azdo-severity' richiede '--report-azdo' per essere abilitato</target>
         <note>{Locked="--report-azdo-severity"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
