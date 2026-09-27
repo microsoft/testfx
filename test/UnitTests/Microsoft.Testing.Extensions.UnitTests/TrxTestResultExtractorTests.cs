@@ -50,6 +50,7 @@ public class TrxTestResultExtractorTests
     [TestMethod]
     public void Extract_StateProperties_MapToExpectedOutcomes()
     {
+        Assert.AreEqual(TrxTestOutcome.Passed, ExtractResult(new PassedTestNodeStateProperty()).Outcome);
         Assert.AreEqual(TrxTestOutcome.Skipped, ExtractResult(new SkippedTestNodeStateProperty()).Outcome);
         Assert.AreEqual(TrxTestOutcome.Timeout, ExtractResult(new TimeoutTestNodeStateProperty()).Outcome);
         Assert.AreEqual(TrxTestOutcome.Failed, ExtractResult(new FailedTestNodeStateProperty()).Outcome);
