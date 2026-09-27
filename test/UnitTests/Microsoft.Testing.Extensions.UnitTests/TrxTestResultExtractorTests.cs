@@ -95,7 +95,7 @@ public class TrxTestResultExtractorTests
     }
 
     [TestMethod]
-    public void Extract_MultipleMetadataAndArtifacts_PreservesPropertyBagEnumerationOrder()
+    public void Extract_MultipleMetadataAndArtifacts_EnumeratesInReverseInsertionOrder()
     {
         var firstArtifact = new FileInfo("first.txt");
         var secondArtifact = new FileInfo("second.txt");
