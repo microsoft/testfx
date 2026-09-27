@@ -14,12 +14,32 @@ dotnet add package Microsoft.Testing.Platform.MSBuild
 
 No manual API call is required. Referencing the package imports its MSBuild integration, which generates the test application entry point and copies `testconfig.json` to the output directory. Test framework packages normally reference this package transitively.
 
+Command-line option argument defaults can be authored directly in `testconfig.json`:
+
+```json
+{
+  "commandLineOptionDefaults": {
+    "report-trx-filename": "{asm}.trx"
+  }
+}
+```
+
+SDKs and shared build infrastructure can supply the same defaults through MSBuild:
+
+```xml
+<ItemGroup>
+  <TestingPlatformCommandLineOptionDefault Include="report-trx-filename" Value="{asm}.trx" />
+</ItemGroup>
+```
+
+These defaults are passive: they do not enable `--report-trx` or any other feature. An explicit command-line value or active `commandLineOptions` entry takes precedence. If both `testconfig.json` and MSBuild define the same default, the value in `testconfig.json` wins.
+
 ## About
 
 This package provides:
 
 - **Entry-point generation**: generates the required entry point for Microsoft.Testing.Platform test projects
-- **Configuration file support**: copies `testconfig.json` from the project into the output directory as `$(AssemblyName).testconfig.json`
+- **Configuration file support**: generates `$(AssemblyName).testconfig.json` from the project configuration and any `TestingPlatformCommandLineOptionDefault` items
 - **`dotnet test` compatibility**: enables running MTP-based test projects through the VSTest-based `dotnet test` command on .NET SDKs
 
 This package is typically **not referenced directly**. Instead, test framework packages (such as [MSTest](https://www.nuget.org/packages/MSTest)) reference it automatically.

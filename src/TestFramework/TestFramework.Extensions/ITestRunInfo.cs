@@ -10,6 +10,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Unlike <see cref="TestContext"/>, which describes the test currently executing, an
 /// <see cref="ITestRunInfo"/> describes the run as a whole and is queryable from any code reachable
 /// during a test run (for example helpers, fixtures, or <c>[AssemblyInitialize]</c> methods).
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public interface ITestRunInfo

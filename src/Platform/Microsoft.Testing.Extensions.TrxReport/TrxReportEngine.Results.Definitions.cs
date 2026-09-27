@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
@@ -93,7 +93,11 @@ internal sealed partial class TrxReportEngine
             unitTest.Add(properties);
         }
 
-        // Unlike VSTest, we do not add Workitems.
+        if (testResult.WorkItemIds is { Count: > 0 } workItemIds)
+        {
+            unitTest.Add(new XElement("Workitems", workItemIds.Select(id => new XElement("WorkItem", new XAttribute("id", id)))));
+        }
+
         return unitTest;
     }
 }

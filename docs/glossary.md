@@ -4,6 +4,10 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 ## A
 
+### Affected-test selection
+
+An experimental, Microsoft.Testing.Platform-only CI workflow (from [dotnet/sdk#55574](https://github.com/dotnet/sdk/pull/55574), building on the composable filter-provider support added in [testfx#10235](https://github.com/microsoft/testfx/pull/10235)) that narrows a test run to only the tests affected by a given change, using the `Microsoft.Testing.Extensions.AffectedTests` package and a provider-specific storage package (this repository uses `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps`). A trusted main-branch build runs `--collect-test-map` to publish a per-module test-to-source mapping shard to build-artifact storage; a PR build runs `--affected-tests` to select and execute only the tests whose mapped sources changed since the newest compatible baseline shard. A missing, stale, incompatible, or inaccessible map artifact is treated as an expected fallback state — the extension conservatively runs the full test suite rather than under-selecting — and `eng/validate-affected-tests.ps1` validates the package versions, hook registration, and fallback wiring. See [docs/affected-test-selection.md](affected-test-selection.md). Introduced in [PR #11364](https://github.com/microsoft/testfx/pull/11364).
+
 ### ArchitectureConditionAttribute
 
 An MSTest attribute (`[ArchitectureConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current process architecture. Available only on .NET (not .NET Framework). Accepts a [ConditionMode](#conditionmode) argument and a [TestArchitectures](#testarchitectures) flags value; the single-argument overload defaults to `ConditionMode.Include`. Detection uses `RuntimeInformation.ProcessArchitecture`. The attribute is not inherited — applying it to a base class does not affect derived classes. Because its `GroupName` (`"ArchitectureCondition"`) differs from that of [OSConditionAttribute](#osconditionattribute) (`"OSCondition"`), the two compose with logical AND, making it easy to gate a test on both OS and architecture:
@@ -46,6 +50,10 @@ using (Assert.Scope())
 
 See `docs/RFCs/011-Soft-Assertions-Nullability-Design.md` for the nullability-annotation design decisions.
 
+### Assertion failure diagnostics
+
+An opt-in MSTest capture feature, enabled by setting `mstest:execution:captureAssertionFailureDiagnostics` to `true` in `testconfig.json` (or the equivalent legacy `<CaptureAssertionFailureDiagnostics>` element under `<MSTest>` in `.runsettings`), that attaches a bounded JSON diagnostic artifact to a failed test for each of its first three assertion failures. Each artifact — validated against [`mstest-assertion-failure-state.schema.json`](mstest-assertion-failure-state.schema.json) — records the assertion message and comparison values, managed stack frames, other tests concurrently running in the same test host, runtime and operating-system details, current cultures, test-host CPU and memory measurements, process I/O (file/pipe/console/network/device transfers on Windows; `/proc/self/io` `rchar`/`wchar` on Linux), and free/total space for the result volume. Disabled by default; a snapshot created for an assertion the test itself catches is deleted if the test ultimately passes. Because the artifact can contain source paths, test names, assertion values, and process metadata, CI systems should apply appropriate access and retention controls. The initial capture uses in-process stack inspection (frame identities and source locations, not local-variable values) and runs before stack unwinding, serving as the integration point for a future out-of-process debugger provider; capture is skipped on UWP, WinUI, browser/WASI, and wherever runtime code generation is unavailable (e.g., NativeAOT). Assertions raised from work queued without flowing `ExecutionContext` are not captured, since neither the active diagnostic scope nor `TestContext.Current` can be attributed safely on that worker. Introduced in [PR #11244](https://github.com/microsoft/testfx/pull/11244).
+
 ### AzureDevOpsReport
 
 An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting. Its optional Extensions-tab Markdown summary is aggregated across modules through artifact post-processing when the SDK advertises the required capability; live publishing to the Azure DevOps Tests tab remains a separate path. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>`; the extension is enabled automatically by the `AllMicrosoft` profile. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode.
@@ -66,11 +74,11 @@ An MSTest attribute (`[CIConditionAttribute]`) in `Microsoft.VisualStudio.TestTo
 
 ### CodeCoverage
 
-An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option; VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are proposed via a [command-line option mapping](#commandlineoptionmapping) (see `docs/RFCs/015-Command-Line-Option-Mappings.md`).
+An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option. VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are rejected with migration guidance rather than mapped to MTP options.
 
 ### CommandLineOptionMapping
 
-A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would let an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). In RFC 015, this is expressed via `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
+A rejected MTP extensibility proposal (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would have allowed extensions to rewrite VSTest-style options into canonical MTP options. MTP instead keeps those options invalid and provides value-aware migration diagnostics. The decision can be revisited if migration data demonstrates that actionable diagnostics are insufficient.
 
 ### ConditionBaseAttribute
 
@@ -250,6 +258,10 @@ The JSON document conforms to **schema v1**: a top-level object with `schemaVers
 
 An MSTest attribute (`[MemberConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the value of one or more `public static bool` members (property, field, or parameterless method) on a specified type. Accepts a [ConditionMode](#conditionmode) argument and one or more member names; when multiple names are supplied they are combined with logical AND — the condition is met only when every referenced member is `true`. Each `[MemberConditionAttribute]` instance forms its own group, so stacking multiple attributes on the same target is also combined with AND. Throws `InvalidOperationException` at test discovery time if a referenced member cannot be resolved, surfacing typos as errors rather than silent skips. The attribute is not inherited — applying it to a base class does not affect derived classes. Introduced in [PR #9071](https://github.com/microsoft/testfx/pull/9071). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
+### MSTEST0086 (redundant test method attribute)
+
+An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severity, enabled by default) that flags a method-level attribute as redundant when the containing `[TestClass]` already establishes equivalent or more restrictive behavior, so the method-level copy has no effect. Covered attribute pairs include `[OSCondition]`, `[ArchitectureCondition]`, `[CICondition]`, `[DoNotParallelize]`, `[ResourceLock]`, `[Retry]`, `[Ignore]`, `[TestCategory]`, `[TestProperty]`, `[DeploymentItem]`, and `[DependsOn]`. A companion C# code fix (`RedundantTestMethodAttributeFixer`) removes the flagged attribute. Introduced in [PR #11267](https://github.com/microsoft/testfx/pull/11267). See also [ResourceLockAttribute](#resourcelockattribute).
+
 ### MSTest
 
 Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
@@ -282,7 +294,7 @@ Runner selection uses the following precedence:
 | `false` (default) | `true` | NativeAOT | Builds a self-contained MTP test application using `MSTest.SourceGeneration`; only the NativeAOT-compatible extension subset is available |
 | `false` (default) | Unset or `false` | ClassicEngine (MSTest runner) | Builds an executable MTP test application and supports the full extension configuration |
 
-When `UseUwp=true`, `UseVSTest` defaults to `true` because true UWP/AppContainer test hosts do not support MTP. WinUI keeps the MTP default; set `UseVSTest=true` only for a packaged WinUI test application.
+UWP and WinUI use the MTP default. For a packaged application, MSTest.Sdk starts its full-trust app-model sidecar controller and activates the selected package application as the test host; `UseVSTest=true` remains an explicit legacy opt-in.
 
 `IsTestApplication` controls whether the project is an executable test application or a reusable test library. It defaults to `true`, except for .NET Standard targets where it defaults to `false`. Set it to `false` for a project that contains shared test helpers or inherited tests and is referenced by an executable test project:
 
@@ -307,7 +319,7 @@ In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework`
 | `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, GitHubActionsReport, HtmlReport, and Fakes |
 | `None` | No extensions |
 
-Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for a packaged WinUI test application because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
+Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for packaged WinUI and UWP test applications because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
 
 | Property | `Default` | `AllMicrosoft` | `None` | NativeAOT | VSTest |
 | --- | --- | --- | --- | --- | --- |
@@ -324,7 +336,7 @@ Set an individual `Enable*` property to `false` to remove an extension supplied 
 | `EnableMicrosoftTestingExtensionsCtrfReport` | Off | Off | Off | Not available | Build error |
 | `EnableMicrosoftTestingExtensionsJUnitReport` | Off | Off | Off | Not added; emits unsupported warning | Build error |
 | `EnableMicrosoftTestingExtensionsOpenTelemetry` | Off | Off | Off | Not available | Build error |
-| `EnableMicrosoftTestingExtensionsPackagedApp` | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Build error |
+| `EnableMicrosoftTestingExtensionsPackagedApp` | Packaged WinUI/UWP | Packaged WinUI/UWP | Packaged WinUI/UWP | Packaged WinUI/UWP | Build error |
 | `EnableAspireTesting` | Off | Off | Off | Build error | Supported |
 | `EnablePlaywright` | Off | Off | Off | Build error | Supported |
 | `EnableWindowsUIAutomation` | Off | Off | Off | Build error | Supported |
@@ -340,7 +352,7 @@ Individual extension toggles remain unset and disabled when a profile does not e
 | `EnableMSTestSourceGeneration` | Adds `MSTest.SourceGeneration` to non-NativeAOT projects. For reusable test libraries, it also adds `MSTest.TestAdapter`, which provides the runtime hooks referenced by generated code. .NET Standard is not supported because the adapter does not ship compatible runtime hooks. NativeAOT projects always include source generation. |
 | `MSTestVersion` | Overrides the versions of the MSTest framework, adapter, and source generator supplied by the SDK. |
 | `MSTestWindowsUIAutomationVersion` | Overrides the `MSTest.Windows.UIAutomation` package version added when `EnableWindowsUIAutomation=true`. The package version defaults to the MSTest.Sdk version. |
-| `MicrosoftTestingExtensionsPackagedAppVersion` | Overrides the packaged-app launcher version supplied to packaged WinUI MTP projects. |
+| `MicrosoftTestingExtensionsPackagedAppVersion` | Overrides the packaged-app launcher version supplied to packaged WinUI and UWP MTP projects. |
 
 `EnableMSTestRunner` is set by MSTest.Sdk and should not normally be set by projects. Component-specific properties such as `MicrosoftTestingPlatformVersion`, `MicrosoftTestingExtensionsCommonVersion`, and the individual `MicrosoftTestingExtensions*Version` properties are advanced version-alignment controls.
 
@@ -392,7 +404,7 @@ An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`
 
 ### Microsoft.Testing.Extensions.PackagedApp
 
-An MTP extension (`Microsoft.Testing.Extensions.PackagedApp`) that enables testing packaged Windows apps by registering the layout with the `PackageManager` and activating it by AUMID through the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. `packagedClassicApp`/`win32App` hosts receive normal `argv` (including classic AppContainer hosts); `windowsApp`/UWP hosts call `PackagedAppExtensions.GetTestApplicationArguments(LaunchActivatedEventArgs.Arguments)` before creating the MTP builder to restore the same logical arguments. For a selected AppContainer application, the launcher also contributes its exact package SID through `ITestHostControllerConnectionAuthorizer`, and the platform grants only the minimum controller-pipe client rights. Register via `builder.AddPackagedAppDeployment()`, or simply by referencing the package (its MSBuild props register the hook). The launcher only enables itself when the test application is a packaged layout — a manifest in the app's own directory, or an ancestor `AppxManifest.xml` whose `Application/@Executable` resolves back to the app directory — so referencing it from an **unpackaged** app does not force the test host controller process model or copy the build output; `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` (`auto`/`always`/`never`) overrides that decision. These communication primitives do not change the current SDK/platform routing limitation: true UWP/AppContainer projects are still selected for VSTest rather than started as MTP test hosts. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454); AUMID activation added in [PR #9970](https://github.com/microsoft/testfx/pull/9970). See also [ITestHostLauncher](#itesthostlauncher) and [docs/winui-testing.md](winui-testing.md).
+An MTP extension (`Microsoft.Testing.Extensions.PackagedApp`) that enables testing packaged Windows apps by registering the layout with the `PackageManager` and activating it by AUMID through the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. `packagedClassicApp`/`win32App` hosts receive normal `argv` (including classic AppContainer hosts); `windowsApp`/UWP hosts call `PackagedAppExtensions.GetTestApplicationArguments(LaunchActivatedEventArgs.Arguments)` before creating the MTP builder to restore the same logical arguments. For a selected AppContainer application, the launcher also contributes its exact package SID through `ITestHostControllerConnectionAuthorizer`, and the platform grants only the minimum controller-pipe client rights. Register via `builder.AddPackagedAppDeployment()`, or simply by referencing the package (its MSBuild props register the hook). The launcher only enables itself when the test application is a packaged layout — a manifest in the app's own directory, or an ancestor `AppxManifest.xml` whose `Application/@Executable` resolves back to the app directory — so referencing it from an **unpackaged** app does not force the test host controller process model or copy the build output; `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` (`auto`/`always`/`never`) overrides that decision. MSTest.Sdk uses a full-trust sidecar controller to apply this path to classic UWP, modern UWP, packaged WinUI, and AppContainer-configured WinUI without VSTest. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454); AUMID activation added in [PR #9970](https://github.com/microsoft/testfx/pull/9970). See also [ITestHostLauncher](#itesthostlauncher) and [docs/winui-testing.md](winui-testing.md).
 
 ## N
 
@@ -408,7 +420,7 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 ### OpenTelemetry extension
 
-An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
+An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes test-session activities and metrics using the [OpenTelemetry](https://opentelemetry.io/) standard. `AddTestingPlatformDiagnostics()` activates the MTP diagnostics producer; application-owned providers configured through `HostApplicationBuilder`, Aspire ServiceDefaults, or another composition root subscribe with `AddTestingPlatformInstrumentation()`. The focused `AddTestingPlatformTestResource()` and `AddTestingPlatformCIResource()` helpers add test and CI metadata without replacing application-owned `service.*`, host, OS, or process identity. See the [`HostApplicationBuilder` sample](../samples/public/MTPOTel).
 
 ### OSConditionAttribute
 
@@ -453,6 +465,10 @@ Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a rep
 An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that holds a typed collection of `IProperty` instances attached to a [TestNode](#testnode). Extension authors populate a `PropertyBag` with properties such as `TimingProperty`, `TestFileLocationProperty`, and `TestMetadataProperty` to communicate rich metadata about a test to the platform and to other extensions. A `PropertyBag` enforces that at most one `TestNodeStateProperty` may be present at a time.
 
 ## R
+
+### ResourceLockAttribute
+
+An MSTest attribute (`[ResourceLockAttribute]` in `Microsoft.VisualStudio.TestTools.UnitTesting`, applicable to classes and methods, `AllowMultiple = true`, `Inherited = true`) that declares a named shared resource a test or test class contends on, so the in-assembly parallel scheduler serializes it only against other tests declaring the same resource key — instead of forcing a whole class or assembly to opt out of parallelization with `[DoNotParallelizeAttribute]`. The resource is an opaque, ordinal case-sensitive string key with no hierarchical meaning; prefer `const` fields or the built-in `WellKnownResources` constants (`CurrentDirectory`, `EnvironmentVariables`, `Console`) over inline literals so a typo becomes a compile error rather than a silent race. The optional `Mode` property is a `ResourceAccessMode` (`ReadWrite`, the default and exclusive; or `Read`, which allows concurrent readers and blocks only against a writer). Locking scope is the current test host process only — it does not coordinate across processes or machines. What forms a locking "chunk" depends on `ParallelizeAttribute.Scope`: under `ExecutionScope.ClassLevel` (the default) the chunk is the whole class, so a class-level lock is held across every test plus `[ClassInitialize]`/`[ClassCleanup]`; under `ExecutionScope.MethodLevel` each test acquires and releases its locks individually. If a test is also marked `[DoNotParallelizeAttribute]`, that attribute takes precedence and the declared locks have no effect. This attribute is the recommended replacement for broad `[DoNotParallelizeAttribute]` usage where only a specific shared resource — not the whole class — needs serialization; the repository runs a dedicated recurring "ResourceLock refactoring" workflow that narrows existing `[DoNotParallelizeAttribute]` usages to `[ResourceLockAttribute]` where appropriate (see PRs [#11192](https://github.com/microsoft/testfx/pull/11192), [#11210](https://github.com/microsoft/testfx/pull/11210), [#11229](https://github.com/microsoft/testfx/pull/11229)).
 
 ### Retry
 

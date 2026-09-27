@@ -138,6 +138,281 @@ public sealed class CiRunSummaryAggregationTests
     }
 
     [TestMethod]
+    public async Task ReadAndAggregate_ProducingTestModuleMismatch_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module, producingTestModule: Path.Combine(directory, "Other.dll"))],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+
+            Assert.AreEqual($"CI summary module provenance does not match '{path}'.", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_TargetFrameworkMismatch_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module, targetFramework: "net8.0")],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+
+            Assert.AreEqual($"CI summary target framework provenance does not match '{path}'.", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_ArchitectureMismatch_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module, architecture: "arm64")],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+
+            Assert.AreEqual($"CI summary architecture provenance does not match '{path}'.", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_ExecutionIdMismatch_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module, executionId: "other-execution")],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+
+            Assert.AreEqual($"CI summary execution provenance does not match '{path}'.", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("2")]
+    [DataRow("not-an-attempt")]
+    public async Task ReadAndAggregate_ForRetryAttempts_ExecutionIdMismatch_ThrowsFormatExceptionAsync(string executionId)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module, executionId: executionId)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts)));
+
+            Assert.AreEqual($"CI summary execution provenance does not match '{path}'.", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_NullDependencyEntry_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace("\"dependencies\": []", "\"dependencies\": [null]");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("historyTests")]
+    [DataRow("dependencies")]
+    public async Task ReadAndAggregate_NullBoundedCollection_ThrowsFormatExceptionAsync(string propertyName)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace($"\"{propertyName}\": []", $"\"{propertyName}\": null");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_NullHistoryEntry_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            string json = File.ReadAllText(path);
+            string malformedJson = json.Replace("\"historyTests\": []", "\"historyTests\": [null]");
+            Assert.AreNotEqual(json, malformedJson);
+            File.WriteAllText(path, malformedJson);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_AppliesDependencyBoundAfterDeterministicModuleSortAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule moduleA = CreateModule("A", passed: 1, failed: 0);
+            moduleA.Dependencies =
+            [
+                .. Enumerable.Range(0, 600).Select(static index => new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = $"A.Test{index}",
+                    Prerequisite = "A.Setup",
+                }),
+            ];
+            CiRunSummaryModule moduleB = CreateModule("B", passed: 1, failed: 0);
+            moduleB.Dependencies =
+            [
+                .. Enumerable.Range(0, 600).Select(static index => new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = $"B.Test{index}",
+                    Prerequisite = "B.Setup",
+                }),
+            ];
+            string pathA = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                moduleA);
+            string pathB = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                moduleB);
+
+            CiRunSummaryAggregate reverseInput = CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(pathB, moduleB), CreateInput(pathA, moduleA)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            CiRunSummaryAggregate sortedInput = CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(pathA, moduleA), CreateInput(pathB, moduleB)],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+            Assert.HasCount(600, reverseInput.Modules[0].Dependencies);
+            Assert.HasCount(400, reverseInput.Modules[1].Dependencies);
+            Assert.HasCount(600, sortedInput.Modules[0].Dependencies);
+            Assert.HasCount(400, sortedInput.Modules[1].Dependencies);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ReadAndAggregate_DuplicateFragmentIdentity_ThrowsFormatExceptionAsync()
     {
         string directory = CreateDirectory();
@@ -469,7 +744,7 @@ public sealed class CiRunSummaryAggregationTests
             Assert.AreEqual(AzureDevOpsSummaryArtifactPostProcessor.SummaryArtifactKind, first.Kind);
             Assert.IsTrue(File.Exists(first.Path));
             Assert.IsTrue(File.Exists(module.RequestedOutputPath));
-            Assert.Contains("# Overall test summary", File.ReadAllText(first.Path));
+            Assert.Contains("## ❌ Overall test results", File.ReadAllText(first.Path));
             string[] commands =
             [
                 .. output
@@ -477,7 +752,8 @@ public sealed class CiRunSummaryAggregationTests
                     .Select(item => item.Text),
             ];
             Assert.HasCount(1, commands);
-            Assert.StartsWith("##vso[task.uploadsummary]", commands[0]);
+            string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
+            Assert.StartsWith($"##vso[task.addattachment type=Distributedtask.Core.Summary;name=Overall test results - {aggregationId};]", commands[0]);
             Assert.Contains(module.RequestedOutputPath, commands[0]);
         }
         finally
@@ -706,14 +982,20 @@ public sealed class CiRunSummaryAggregationTests
             TotalModuleCount = 1,
         };
 
-    private static InputArtifact CreateInput(string path, CiRunSummaryModule module)
+    private static InputArtifact CreateInput(
+        string path,
+        CiRunSummaryModule module,
+        string? producingTestModule = null,
+        string? targetFramework = null,
+        string? architecture = null,
+        string? executionId = null)
         => new(
             path,
             AzureDevOpsSummaryArtifactPostProcessor.FragmentArtifactKind,
-            module.ModulePath,
-            module.TargetFramework,
-            module.Architecture,
-            module.ExecutionId);
+            producingTestModule ?? module.ModulePath,
+            targetFramework ?? module.TargetFramework,
+            architecture ?? module.Architecture,
+            executionId ?? module.ExecutionId);
 
     private static async Task<string?> RunGitHubPostProcessorAsync(
         int moduleExitCode,

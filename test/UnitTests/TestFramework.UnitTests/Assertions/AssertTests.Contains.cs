@@ -404,6 +404,48 @@ public partial class AssertTests : TestContainer
 
     #region Contains Tests
 
+    public void Contains_NullableList_NonNullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+
+        Assert.Contains("Name", collection);
+    }
+
+    public void Contains_NullableList_NullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+        string? expected = null;
+
+        Assert.Contains(expected, collection);
+    }
+
+    public void Contains_NullableList_WithComparerAndPredicate_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+        string? expected = null;
+        Func<string?, bool> predicate = value => value is null;
+
+        Assert.Contains("NAME", collection, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains(expected, collection, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains(predicate, collection);
+    }
+
+    public void Contains_NullableList_ItemMissing_PreservesMessageAndExpressions()
+    {
+        List<string?> collection = ["Name", null];
+
+        Action action = () => Assert.Contains("Missing", collection, "custom message");
+
+        action.Should().Throw<AssertFailedException>().WithMessage("*custom message*Assert.Contains(\"Missing\", collection)*");
+    }
+
+    public void Contains_NullableHashSet_UsesCollectionComparer()
+    {
+        var collection = new HashSet<string?>(StringComparer.OrdinalIgnoreCase) { "Name", null };
+
+        Assert.Contains("NAME", collection);
+    }
+
     /// <summary>
     /// Tests the Contains method (value overload) when the expected item is present.
     /// </summary>
@@ -939,6 +981,50 @@ public partial class AssertTests : TestContainer
     #endregion
 
     #region DoesNotContain Tests
+
+    public void DoesNotContain_NullableList_NonNullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name", null];
+
+        Assert.DoesNotContain("Missing", collection);
+    }
+
+    public void DoesNotContain_NullableList_NullExpected_DoesNotThrow()
+    {
+        List<string?> collection = ["Name"];
+        string? notExpected = null;
+
+        Assert.DoesNotContain(notExpected, collection);
+    }
+
+    public void DoesNotContain_NullableList_WithComparerAndPredicate_DoesNotThrow()
+    {
+        List<string?> collection = ["Name"];
+        string? notExpected = null;
+        Func<string?, bool> predicate = value => value is null;
+
+        Assert.DoesNotContain("Missing", collection, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain(notExpected, collection, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain(predicate, collection);
+    }
+
+    public void DoesNotContain_NullableList_ItemPresent_PreservesMessageAndExpressions()
+    {
+        List<string?> collection = ["Name", null];
+
+        Action action = () => Assert.DoesNotContain("Name", collection, "custom message");
+
+        action.Should().Throw<AssertFailedException>().WithMessage("*custom message*Assert.DoesNotContain(\"Name\", collection)*");
+    }
+
+    public void DoesNotContain_NullableHashSet_UsesCollectionComparer()
+    {
+        var collection = new HashSet<string?>(StringComparer.OrdinalIgnoreCase) { "Name", null };
+
+        Action action = () => Assert.DoesNotContain("NAME", collection);
+
+        action.Should().Throw<AssertFailedException>();
+    }
 
     /// <summary>
     /// Tests the DoesNotContain method (value overload) when the expected item is not present.

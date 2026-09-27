@@ -66,7 +66,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
              IsCrashReportEffective(_commandLineOptions)) &&
             _crashDumpGeneratorConfiguration.Enable);
 
-    public Task UpdateAsync(IEnvironmentVariables environmentVariables)
+    public async Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
         // IsEnabledAsync gates this method, so we know either '--crashdump' is set or an
         // *effective* crash-report request is in play (i.e. '--crash-report' was passed, or
@@ -180,15 +180,13 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{MiniDumpNameVariable}: {_miniDumpNameValue}");
-            _logger.LogTrace($"{MiniDumpTypeVariable}: {miniDumpTypeValue}");
+            await _logger.LogTraceAsync($"{MiniDumpNameVariable}: {_miniDumpNameValue}").ConfigureAwait(false);
+            await _logger.LogTraceAsync($"{MiniDumpTypeVariable}: {miniDumpTypeValue}").ConfigureAwait(false);
             if (_sequenceFileValue is not null)
             {
-                _logger.LogTrace($"{SequenceFileEnvironmentVariableName}: {_sequenceFileValue}");
+                await _logger.LogTraceAsync($"{SequenceFileEnvironmentVariableName}: {_sequenceFileValue}").ConfigureAwait(false);
             }
         }
-
-        return Task.CompletedTask;
     }
 
     private bool IsSequenceLoggingEnabled()

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -58,6 +58,23 @@ public sealed class CurrentTestApplicationModuleInfoTests
     }
 
     [TestMethod]
+    public void GetCurrentExecutableInfo_AppHost_WithExpandedArgs_PreservesBothArgumentForms()
+    {
+        Mock<IEnvironment> environment = CreateAppHostEnvironment(["myapp.exe"]);
+
+        CurrentTestApplicationModuleInfo info = new(
+            environment.Object,
+            new SystemProcessHandler(),
+            ["@options.rsp"],
+            ["--retry-failed-tests", "1"]);
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        Assert.AreSequenceEqual(["@options.rsp"], executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["--retry-failed-tests", "1"], executable.ExpandedArguments.ToArray());
+    }
+
+    [TestMethod]
     public void GetCurrentExecutableInfo_AppHost_WithEmptyPassedArgs_ReturnsEmpty()
     {
         Mock<IEnvironment> environment = CreateAppHostEnvironment(["myapp.exe", "--filter", "MyTest"]);
@@ -94,6 +111,23 @@ public sealed class CurrentTestApplicationModuleInfoTests
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
         Assert.AreSequenceEqual(["exec", "myapp.dll", "--retry-failed-tests", "1"], executable.Arguments.ToArray());
+    }
+
+    [TestMethod]
+    public void GetCurrentExecutableInfo_DotnetMuxer_WithExpandedArgs_PrependsMuxerArgumentsToBothForms()
+    {
+        Mock<IEnvironment> environment = CreateDotnetMuxerEnvironment(["myapp.dll"]);
+
+        CurrentTestApplicationModuleInfo info = new(
+            environment.Object,
+            new SystemProcessHandler(),
+            ["@options.rsp"],
+            ["--retry-failed-tests", "1"]);
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        Assert.AreSequenceEqual(["exec", "myapp.dll", "@options.rsp"], executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["exec", "myapp.dll", "--retry-failed-tests", "1"], executable.ExpandedArguments.ToArray());
     }
 
     [TestMethod]

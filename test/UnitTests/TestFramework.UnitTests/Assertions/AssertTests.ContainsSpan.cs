@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETCOREAPP3_1_OR_GREATER
@@ -85,6 +85,12 @@ public partial class AssertTests : TestContainer
         Assert.Contains(2, array);
     }
 
+    public void Contains_Array_WithComparer_UsesComparer()
+    {
+        string[] array = ["a"];
+        Assert.Contains("A", array, StringComparer.OrdinalIgnoreCase);
+    }
+
     #endregion
 
     #region DoesNotContain span/memory
@@ -143,6 +149,37 @@ public partial class AssertTests : TestContainer
     {
         int[] array = [1, 2, 3];
         Assert.DoesNotContain(20, array);
+    }
+
+    public void DoesNotContain_Array_WithComparer_UsesComparer()
+    {
+        string[] array = ["a"];
+        bool threw = false;
+        try
+        {
+            Assert.DoesNotContain("A", array, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (AssertFailedException)
+        {
+            threw = true;
+        }
+
+        threw.Should().BeTrue();
+    }
+
+    public void ArrayInterpolatedMessageOverloads_NullCollection_ThrowArgumentNullException()
+    {
+        int[] collection = null!;
+
+        Action containsSingle = () => Assert.ContainsSingle<int>(collection, $"collection: {collection}");
+        Action hasCount = () => Assert.HasCount<int>(0, collection, $"collection: {collection}");
+        Action isEmpty = () => Assert.IsEmpty<int>(collection, $"collection: {collection}");
+        Action isNotEmpty = () => Assert.IsNotEmpty<int>(collection, $"collection: {collection}");
+
+        containsSingle.Should().Throw<ArgumentNullException>();
+        hasCount.Should().Throw<ArgumentNullException>();
+        isEmpty.Should().Throw<ArgumentNullException>();
+        isNotEmpty.Should().Throw<ArgumentNullException>();
     }
 
     #endregion

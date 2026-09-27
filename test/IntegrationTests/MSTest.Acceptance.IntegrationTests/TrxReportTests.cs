@@ -14,6 +14,27 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
 {
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TrxReport_WorkItemAttributes_AreIncludedInTestDefinition(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var trxDocument = XDocument.Load(trxFile);
+        XElement unitTest = trxDocument
+            .Descendants(ns + "UnitTest")
+            .Single(element => element.Attribute("name")?.Value == "WorkItemTest");
+        string[] workItemIds = [.. unitTest.Element(ns + "Workitems")!.Elements(ns + "WorkItem").Select(element => element.Attribute("id")!.Value)];
+
+        Assert.AreSequenceEqual(["1234", "5678"], workItemIds);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TrxReport_WhenTestFails_ContainsExceptionInfoInOutput(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
@@ -83,6 +104,13 @@ namespace MSTestTrxReport;
 [TestClass]
 public class UnitTest1
 {
+    [TestMethod]
+    [WorkItem(1234)]
+    [GitHubWorkItem("https://github.com/microsoft/testfx/issues/5678")]
+    public void WorkItemTest()
+    {
+    }
+
     [TestMethod]
     public void FailingTest()
     {

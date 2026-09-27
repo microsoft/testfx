@@ -36,6 +36,7 @@ internal sealed partial class MSTestSettings
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
+        CurrentSettings.CaptureAssertionFailureDiagnostics = settings.CaptureAssertionFailureDiagnostics;
     }
 
 #if !WINDOWS_UWP
@@ -180,6 +181,9 @@ internal sealed partial class MSTestSettings
                             logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, launchDebuggerOnAssertionFailure, "LaunchDebuggerOnAssertionFailure"));
                         }
 
+                        break;
+                    case "CAPTUREASSERTIONFAILUREDIAGNOSTICS":
+                        ParseBoolSetting(reader.ReadInnerXml(), "CaptureAssertionFailureDiagnostics", logger, v => settings.CaptureAssertionFailureDiagnostics = v);
                         break;
                     default:
                         PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());

@@ -145,6 +145,138 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    [DataRow("MTP", "Unset", "", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("MTP", "Empty", "<SatelliteResourceLanguages />", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("MTP", "SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
+    [DataRow("MTP", "CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr")]
+    [DataRow("MTP", "MultipleLanguages", "<SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>", "fr;ja")]
+    [DataRow("MTP", "SpecificCultureDoesNotMatchParent", "<SatelliteResourceLanguages>fr-FR</SatelliteResourceLanguages>", "")]
+    [DataRow("MTP", "ParentCultureDoesNotMatchSpecific", "<SatelliteResourceLanguages>pt</SatelliteResourceLanguages>", "")]
+    [DataRow("MTP", "NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant")]
+    [DataRow("MTP", "NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
+    [DataRow("VSTest", "Unset", "", "fr")]
+    [DataRow("VSTest", "Empty", "<SatelliteResourceLanguages />", "fr")]
+    [DataRow("VSTest", "SingleLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr")]
+    [DataRow("VSTest", "CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr")]
+    [DataRow("VSTest", "MultipleLanguages", "<SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>", "fr")]
+    [DataRow("VSTest", "DifferentLanguage", "<SatelliteResourceLanguages>ja</SatelliteResourceLanguages>", "")]
+    [DataRow("VSTest", "SpecificCultureDoesNotMatchParent", "<SatelliteResourceLanguages>fr-FR</SatelliteResourceLanguages>", "")]
+    [DataRow("VSTest", "NeutralLanguageOnly", "<NeutralLanguage>en-US</NeutralLanguage>", "fr")]
+    [DataRow("VSTest", "NeutralLanguageFilter", "<NeutralLanguage>en-US</NeutralLanguage><SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>", "")]
+    public async Task SatelliteResourceLanguages_FiltersAdapterResources(string runner, string scenario, string properties, string expectedCultures)
+    {
+        string assetName = $"{AssetName}{runner}Satellites{scenario}";
+        string runnerProperties = runner == "VSTest" ? "<UseVSTest>true</UseVSTest>" : string.Empty;
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            assetName,
+            SingleTestSourceCode
+                .PatchCodeWithReplace("MSTestSdk.csproj", $"{assetName}.csproj")
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ExtraProperties$", runnerProperties + properties));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        string outputDirectory = Path.Combine(testAsset.TargetAssetPath, "bin", BuildConfiguration.Release.ToString(), TargetFrameworks.NetCurrent);
+        string[] expected = expectedCultures.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        AssertSatelliteCultures(outputDirectory, "MSTest.TestAdapter.resources.dll", expected);
+        AssertSatelliteCultures(outputDirectory, "MSTestAdapter.PlatformServices.resources.dll", expected);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only on Windows.")]
+    [DataRow("Unset", "", "fr;fr")]
+    [DataRow("Empty", "<SatelliteResourceLanguages />", "fr;fr")]
+    [DataRow("MatchingLanguage", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>", "fr;fr")]
+    [DataRow("CaseInsensitiveLanguage", "<SatelliteResourceLanguages>FR</SatelliteResourceLanguages>", "fr;fr")]
+    [DataRow("DifferentLanguage", "<SatelliteResourceLanguages>ja</SatelliteResourceLanguages>", "")]
+    [DataRow("SpecificCultureDoesNotMatchParent", "<SatelliteResourceLanguages>fr-FR</SatelliteResourceLanguages>", "")]
+    public async Task SatelliteResourceLanguages_FiltersClassicUwpAdapterResources(string scenario, string properties, string expectedCultures)
+    {
+        const string Source = """
+            #file ClassicUwpSatelliteResources.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                $Properties$
+              </PropertyGroup>
+
+              <ItemGroup>
+                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+              </ItemGroup>
+
+              <Import Project="$(PkgMSTest_TestAdapter)\buildTransitive\uap10.0\MSTest.TestAdapter.targets"
+                      Condition=" '$(PkgMSTest_TestAdapter)' != '' " />
+
+              <Target Name="PrintSatelliteCultures" DependsOnTargets="GetMSTestV2CultureHierarchy">
+                <Message Text="SatelliteCultures=[@(MSTestV2Files->'%(UICulture)')]" Importance="High" />
+              </Target>
+            </Project>
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"{AssetName}ClassicUwpSatellites{scenario}",
+            Source
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$Properties$", properties));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild {testAsset.TargetAssetPath} -restore -t:PrintSatelliteCultures",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains($"SatelliteCultures=[{expectedCultures}]");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP package assets are produced only on Windows.")]
+    public async Task SatelliteResourceLanguages_FiltersClassicUwpMtpAdapterResources()
+    {
+        const string Source = """
+            #file ClassicUwpMtpSatelliteResources.csproj
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <EnableMSTestRunner>true</EnableMSTestRunner>
+                <SatelliteResourceLanguages>fr;ja</SatelliteResourceLanguages>
+              </PropertyGroup>
+
+              <ItemGroup>
+                <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" GeneratePathProperty="true" ExcludeAssets="all" />
+              </ItemGroup>
+
+              <Import Project="$(PkgMSTest_TestAdapter)\buildTransitive\uap10.0\MSTest.TestAdapter.targets"
+                      Condition=" '$(PkgMSTest_TestAdapter)' != '' " />
+
+              <Target Name="PrintSatelliteCultures" DependsOnTargets="GetMSTestV2CultureHierarchy">
+                <Message Text="SatelliteCultures=[@(MSTestV2Files->'%(Culture)')]" Importance="High" />
+              </Target>
+            </Project>
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"{AssetName}ClassicUwpMtpSatellites",
+            Source
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild {testAsset.TargetAssetPath} -restore -t:PrintSatelliteCultures",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "de" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains("SatelliteCultures=[fr;fr;ja;ja]");
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
@@ -866,38 +998,41 @@ namespace MSTestWebTest
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_DefaultsToVSTestAndUsesAppContainerHost()
+    public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpSdk",
             """
             <UseUwp>true</UseUwp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             """);
 
-        result.AssertOutputContains("WindowsTestContract:UseVSTest=true");
-        result.AssertOutputContains("Microsoft.NET.Test.Sdk");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx");
         result.AssertOutputContains("MSTest.TestAdapter");
         result.AssertOutputContains("MSTest.TestFramework");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
         result.AssertOutputContains("TestContainer");
-        result.AssertOutputContains("IsTestProject=true");
-        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
     }
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_RejectsExplicitMtpSelection()
+    public async Task MSTestSdk_ModernUwp_AllowsExplicitMtpSelection()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpMtpSdk",
             """
             <UseUwp>true</UseUwp>
             <UseVSTest>false</UseVSTest>
-            """,
-            failIfReturnValueIsNotZero: false,
-            target: "Build");
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
 
-        Assert.AreNotEqual(0, result.ExitCode);
-        result.AssertOutputContains("Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts.");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
     }
 
     [TestMethod]
@@ -916,6 +1051,37 @@ namespace MSTestWebTest
         result.AssertOutputContains("Capabilities=TestingPlatformServer");
         result.AssertOutputContains("TestContainer");
         result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUIWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIWithPackagedAppSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_ConsoleWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ConsoleWithPackagedAppSdk",
+            """
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
 
     [TestMethod]
@@ -946,6 +1112,7 @@ namespace MSTestWebTest
             """);
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
         result.AssertOutputContains("OutputType=Exe");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
@@ -962,6 +1129,20 @@ namespace MSTestWebTest
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false");
         result.AssertOutputContains("OutputType=Exe");
+    }
+
+    private static void AssertSatelliteCultures(string outputDirectory, string resourceAssemblyName, string[] expectedCultures)
+    {
+        string[] actualCultures = Directory.GetFiles(outputDirectory, resourceAssemblyName, SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(outputDirectory, Path.GetDirectoryName(path)!))
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        string[] expected = expectedCultures.Order(StringComparer.OrdinalIgnoreCase).ToArray();
+
+        CollectionAssert.AreEqual(
+            expected,
+            actualCultures,
+            $"Unexpected cultures for {resourceAssemblyName}. Expected: '{string.Join(";", expected)}'. Actual: '{string.Join(";", actualCultures)}'.");
     }
 
     private async Task<DotnetMuxerResult> EvaluateWindowsApplicationModelAsync(
@@ -985,9 +1166,9 @@ namespace MSTestWebTest
               </ItemGroup>
 
               <Target Name="PrintWindowsTestContract"
-                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
+                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_MSTestSDKConfigureAppModelController">
                 <Message Importance="high"
-                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject)" />
+                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerExtensions=$(_MSTestAppModelControllerExtensions)" />
                 <Message Importance="high"
                          Text="PackageReferences=@(PackageReference->'%(Identity)')" />
                 <Message Importance="high"
@@ -1003,9 +1184,10 @@ namespace MSTestWebTest
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 
         return await DotnetCli.RunAsync(
-            $"build {testAsset.TargetAssetPath} -restore -t:{target}",
+            $"build {testAsset.TargetAssetPath} -restore -t:{target} -bl:\"{binlogPath}\"",
             failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
             cancellationToken: TestContext.CancellationToken);
     }

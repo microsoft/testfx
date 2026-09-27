@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport;
@@ -64,6 +64,57 @@ public sealed class JUnitReportEngineApiTests
         fileSystemMock.Verify(x => x.NewFileStream(It.Is<string>(path => path.StartsWith(expectedPrefix) && path.EndsWith(".tmp")), FileMode.Create), Times.Once);
         fileSystemMock.Verify(x => x.MoveFile(It.Is<string>(path => path.StartsWith(expectedPrefix) && path.EndsWith(".tmp")), fileName, overwrite: true), Times.Once);
     }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_WhenRecoveredAfterCrash_WritesMetadataOnlyIncompleteSuite()
+    {
+        using var stream = new MemoryFileStream();
+        var fileSystem = new Mock<IFileSystem>();
+        var moduleInfo = new Mock<ITestApplicationModuleInfo>();
+        var environment = new Mock<IEnvironment>();
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        var configuration = new Mock<IConfiguration>();
+        var clock = new Mock<IClock>();
+        var testFramework = new Mock<ITestFramework>();
+        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create)).Returns(stream);
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        moduleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("My.Test.Module.dll");
+        configuration.SetupGet(x => x[It.IsAny<string>()]).Returns("/results");
+        testFramework.SetupGet(x => x.DisplayName).Returns("Fake");
+
+        var engine = new JUnitReportEngine(new(
+            fileSystem.Object,
+            moduleInfo.Object,
+            environment.Object,
+            commandLineOptions.Object,
+            configuration.Object,
+            clock.Object,
+            testFramework.Object,
+            DateTimeOffset.UtcNow,
+            137,
+            CancellationToken.None,
+            IsIncomplete: true));
+
+        await engine.GenerateReportAsync([], new Dictionary<string, TestResultCapture.ParentChainEntry>());
+
+        string xml = Encoding.UTF8.GetString(stream.Stream.ToArray());
+        XElement root = XDocument.Parse(xml).Root!;
+        Assert.IsNull(root.Attribute("exit-code"));
+        Assert.IsNull(root.Attribute("status"));
+        Assert.IsNull(root.Attribute("incomplete"));
+        XElement suite = Assert.ContainsSingle(root.Elements("testsuite"));
+        Assert.AreEqual("0", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("137", ReadProperty(suite, "exit-code"));
+        Assert.AreEqual("aborted", ReadProperty(suite, "run-status"));
+        Assert.AreEqual("true", ReadProperty(suite, "incomplete"));
+    }
+
+    private static string? ReadProperty(XElement suite, string name)
+        => suite.Element("properties")?
+            .Elements("property")
+            .SingleOrDefault(property => property.Attribute("name")?.Value == name)?
+            .Attribute("value")?
+            .Value;
 
     private sealed class MemoryFileStream : IFileStream
     {

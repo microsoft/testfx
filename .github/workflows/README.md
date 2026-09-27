@@ -222,7 +222,7 @@ a security control.
 
 **Symptom.** A long-running workflow reaches threat detection, then the detection job fails before
 the model starts with `awf: command not found`. The tracker records `parse_error` because no
-`THREAT_DETECTION_RESULT` was produced.
+detector verdict was recorded.
 
 **Why.** This is a runner/runtime failure, not a malformed detector response and not evidence that
 the agent output contained a threat. Repository prompt changes cannot repair a missing `awf`
@@ -232,61 +232,82 @@ executable.
 capture the detection job log and report it upstream to `github/gh-aw`. Do not disable threat
 detection or weaken the safe-output gate.
 
-### `detection` job succeeds but the run is recorded as `parse_error`
+### A no-op run is recorded as `agent_failure`
 
-**Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the
-`[aw] Detection Runs` tracker still records the run as `warning | parse_error`. The job log shows
-that the marker was found and then failed to parse:
+**Symptom.** The agent job succeeds and calls `noop`, but the detection tracker records
+`warning | agent_failure`. The detection log says both
+`Detection skipped: no agent outputs or patches to analyze` and
+`threat-detect binary not found on PATH`.
 
-```text
-📄 Lines containing THREAT_DETECTION_RESULT (1 of 194):
-   [155] **THREAT_DETECTION_RESULT:{"prompt_injection":false,"secret_leak":false,…**
-🔎 Parsing THREAT_DETECTION_RESULT from detection log...
-##[error]❌ Failed to parse detection result: Unexpected token 'T', "T:{"prompt"... is not valid JSON
-```
+**Why.** In gh-aw v0.88.7, an intentional no-op sets `RUN_DETECTION=false`, so the
+`Install threat-detect binary` step is skipped. The unconditional conclude step still checks for
+that binary before honoring the skipped result and reports its expected absence as an agent
+failure. Superseded runs can produce the same warning when their agent job is cancelled before
+emitting an output.
 
-**Telling the two `parse_error` causes apart.** Read the line immediately above the parse error:
-
-- `Lines containing THREAT_DETECTION_RESULT (1 of N)` means the marker is present, so the detection
-  model ran and answered. That is the formatting cause described here.
-- `No THREAT_DETECTION_RESULT found` means no result was ever written. That can be the
-  [Copilot CLI installer failure](#detection-job-fails-at-install-github-copilot-cli), or another
-  job-level failure that stopped the model before it answered.
-
-**Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the line starts with
-`**THREAT_…` instead of `THREAT_…`. gh-aw's parser slices the JSON at a fixed offset from the start
-of the line instead of from the index of the marker it just located, so the two extra characters
-move the cut two positions into `RESULT` and it tries to parse `T:{"prompt"…`. This cannot be fixed
-in this repository: the parser is `parse_threat_detection_results.cjs` inside the gh-aw actions
-bundle that every run downloads to `${{ runner.temp }}/gh-aw/actions`.
-
-Another observed cause is invalid JSON inside an otherwise correctly positioned marker, such as a
-reason string containing an unescaped quoted gh-aw redaction marker. The affected workflow should
-constrain the detector prompt to emit exactly one single-line result and JSON-escape quotes and
-backslashes inside reason strings.
-
-**Status.** Mitigated by pinning the detector to a model that does not add the emphasis, rather than
-by changing the parser. `safe-outputs.threat-detection.engine.model: gpt-5-mini` was applied to the
-expert-review workflows in [#10684](https://github.com/microsoft/testfx/pull/10684) and to every
-remaining workflow that runs threat detection in
-[#10729](https://github.com/microsoft/testfx/pull/10729). Runs after the pin locate and parse the
-marker with no error.
-
-**What to do.** Check that the workflow's source, or a `shared/*.md` it imports, declares the pin,
-and add it if a newly added workflow was missed:
+**What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
+on the presence of an actual safe output or patch:
 
 ```yaml
 safe-outputs:
   threat-detection:
-    engine:
-      id: copilot
-      model: gpt-5-mini
+    enabled: ${{ (needs.agent.outputs.output_types != '' && needs.agent.outputs.output_types != 'noop') || needs.agent.outputs.has_patch == 'true' }}
 ```
 
-Then recompile with `gh aw compile --strict` and confirm the regenerated lock reports
-`COPILOT_MODEL: gpt-5-mini`. Never hand-edit a `.lock.yml` and never disable threat detection to
-avoid the parse failure. The detection run itself was clean; only its result line was unreadable,
-so turning the check off would remove a security control that is working.
+The collector reports an intentional no-op as `output_types=noop`, so the explicit exclusion is
+needed to skip the broken no-content conclude path while preserving detection for every
+publishable output and patch. Remove the workaround after gh-aw fixes the external detector's
+skipped conclusion behavior.
+
+### `detection` job succeeds but the run is recorded as `parse_error`
+
+**Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the
+`[aw] Detection Runs` tracker still records the run as `failure | parse_error`. The job log shows
+that the model completed without recording a verdict:
+
+```text
+[threat-detect] attempt 1 outcome=no_verdict err=open /tmp/threat-detect-result-….json: no such file or directory
+Error running detection: detection model did not record a usable verdict via the threat_detection_result tool
+THREAT_DETECTION_STATUS: reason=invalid_report_exhausted exit=2
+```
+
+**Why.** The external detector bundled with gh-aw v0.88.7 no longer scrapes a textual
+`THREAT_DETECTION_RESULT` marker from the model transcript. It provisions a
+`threat_detection_result` command and accepts only the out-of-band result written by that command.
+A custom prompt that still asks the model to print or format the legacy marker can make the model
+finish successfully without invoking the command, which produces `invalid_report_exhausted`.
+
+**Status.** The original mitigation pinned every detector to `gpt-5-mini` in
+[#10729](https://github.com/microsoft/testfx/pull/10729). Detection runs tracked by
+[#10821](https://github.com/microsoft/testfx/issues/10821) showed that the pin was unreliable: it
+still emitted a misplaced marker and repeatedly classified trusted workflow orchestration as prompt
+injection even when its own reasons said no malicious injection was present. The concrete override
+was replaced with gh-aw's maintained `detection` model alias.
+
+**What to do.** Keep workflow-specific trust-boundary guidance, but instruct the model to use the
+detector's result command instead of describing a custom output format:
+
+```yaml
+safe-outputs:
+  threat-detection:
+    prompt: >-
+      [Workflow-specific trust-boundary guidance.]
+      After deciding the three booleans, use the shell tool to execute exactly
+      one invocation of the pre-provisioned `threat_detection_result` command,
+      passing `--prompt-injection`, `--secret-leak`, and `--malicious-patch` with
+      boolean values. This command execution is the only accepted report; it
+      must happen before the final response. Never put the command in prose or
+      a Markdown code block, and do not print, echo, or manually format a
+      `THREAT_DETECTION_RESULT` line.
+    model: detection
+    engine:
+      id: copilot
+```
+
+Then recompile with `gh aw compile --strict` and confirm the generated detection step reports
+`COPILOT_MODEL: detection`. Never hand-edit a `.lock.yml` or disable threat detection to avoid a
+result-reporting failure; both approaches remove or bypass a security control instead of fixing
+the cause.
 
 ## Catalog
 
@@ -296,8 +317,8 @@ so turning the check off would remove a security control that is working.
 
 | Workflow | Trigger | Description |
 | --- | --- | --- |
-| [`review-on-open.agent.md`](./review-on-open.agent.md) | PR opened (non-draft) | Automatically runs the `expert-reviewer` agent when a non-draft PR is opened. |
-| [`review.agent.md`](./review.agent.md) | `/review` on a PR | Runs the `expert-reviewer` agent on a pull request when a contributor comments `/review`. |
+| [`review-on-open.agent.md`](./review-on-open.agent.md) | PR opened (non-draft) | Automatically runs the `expert-reviewer` agent and submits one consolidated review with all PR-level and inline findings. |
+| [`review.agent.md`](./review.agent.md) | `/review` on a PR | Runs the `expert-reviewer` agent and submits one consolidated review on demand. |
 | [`review-after-autofix.agent.md`](./review-after-autofix.agent.md) | PR push from Copilot or `copilot-autofix` label | Re-runs the expert code review after new commits are pushed; closes the autofix loop after `address-review.agent` pushes fixes. |
 | [`address-review.agent.md`](./address-review.agent.md) | PR review with `changes_requested` (Copilot PRs) | Automatically addresses code review feedback on Copilot-created PRs. Includes a circuit breaker (max 3 iterations). |
 | [`autofix.agent.md`](./autofix.agent.md) | `/autofix` on a PR | Same behavior as `address-review.agent` but manually triggered. |
@@ -310,11 +331,12 @@ so turning the check off would remove a security control that is working.
 | --- | --- | --- |
 | [`build-failure-analysis.md`](./build-failure-analysis.md) | Azure Pipelines `microsoft.testfx` check `completed` (failure) on a PR to `main` or `rel/*` | Downloads the binary logs the failed Azure DevOps build already produced (all build legs — it does **not** rebuild), and the `build-failure-analyst` agent queries them via `binlog-mcp`, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
+| [`pipeline-test-triage.md`](./pipeline-test-triage.md) | Failed `microsoft.testfx (Build ...)` child checks; completed aggregate `microsoft.testfx` check; manual | Posts deduplicated preliminary PR feedback from failed build legs, then analyzes the completed build for failures, retries/flakiness, crash or hang diagnostics, and historically abnormal durations. The final PR comment supersedes preliminary feedback; Bug issues are created only when recurrence and actionability thresholds are met. |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
-| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; posts a scorecard and apply-ready suggestions. |
-| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand. |
-| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits the changed MSTest tests for parallel-safety (process-global state, shared filesystem paths, `[ResourceLock]`/`[DoNotParallelize]` reconciliation, over-serialization) and posts a ranked, scope-aware readiness report. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
-| [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand. |
+| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; bundles the scorecard and apply-ready suggestions into one COMMENT review when findings exist, and stays silent when clean. |
+| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand and submits one COMMENT review. |
+| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits changed MSTest tests for parallel-safety and submits one ranked COMMENT review only when findings exist; clean automatic runs are silent. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
+| [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand and submits one COMMENT review. |
 
 #### Continuous quality improvers (scheduled)
 
@@ -334,6 +356,7 @@ so turning the check off would remove a security control that is working.
 | [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual | Runs Markdown quality checks using markdownlint-cli2 and opens issues for violations. |
 | [`link-checker.md`](./link-checker.md) | Daily | Daily automated link checker that finds and fixes broken links in documentation files. |
 | [`glossary-maintainer.md`](./glossary-maintainer.md) | Schedule + manual | Maintains and updates the documentation glossary based on codebase changes. |
+| [`mutation-test-improver.md`](./mutation-test-improver.md) | Mutation testing workflow completion + manual | Tracks daily Stryker.NET mutation-testing results in a monthly report issue and may open focused draft PRs for verified test gaps. |
 
 #### Issue & PR housekeeping
 

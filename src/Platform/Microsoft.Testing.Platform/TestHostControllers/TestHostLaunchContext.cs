@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -7,6 +7,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// Carries the fully prepared information the platform would have used to start the test host,
 /// passed to an <see cref="ITestHostLauncher"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class TestHostLaunchContext
 {

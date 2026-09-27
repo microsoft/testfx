@@ -46,6 +46,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// #endif
 /// </code>
 /// </para>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 /// <example>
 /// <code>

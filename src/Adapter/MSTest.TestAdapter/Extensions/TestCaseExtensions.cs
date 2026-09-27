@@ -115,9 +115,18 @@ internal static class TestCaseExtensions
             UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(AdapterTestProperties.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
         };
 
-        if (testCase.Traits.Any())
+        // Single pass over Traits: the previous code enumerated it twice (Any() then Select()), and most
+        // test cases carry no traits at all, so avoid allocating a list/array unless there is at least one.
+        List<TestTrait>? traits = null;
+        foreach (Trait trait in testCase.Traits)
         {
-            testElement.Traits = [.. testCase.Traits.Select(t => new TestTrait(t.Name, t.Value))];
+            traits ??= [];
+            traits.Add(new TestTrait(trait.Name, trait.Value));
+        }
+
+        if (traits is not null)
+        {
+            testElement.Traits = [.. traits];
         }
 
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(AdapterTestProperties.WorkItemIdsProperty, null);

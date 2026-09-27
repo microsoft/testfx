@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Copyright(c) 2016, Alexandre Mutel
@@ -56,6 +56,38 @@ namespace Jsonite
         /// </summary>
         private class JsonWriter
         {
+            // These converters have to match to the one declared in JsonReflectorDefault.Converters.
+            //
+            // Static and allocation-free per serialization: the previous version rebuilt this
+            // Dictionary<Type, Action<object>> (with 19 delegates capturing per-call state) inside the constructor,
+            // i.e. on every single JSON serialization on this (net462/netstandard2.0-only) code path - every RPC
+            // message and test-node update sent by a server-mode host running on .NET Framework. The instance
+            // methods (WriteString) are reached through a static delegate that takes the owning JsonWriter as its
+            // first argument, so the table itself never captures per-instance state.
+            private static readonly Dictionary<Type, Action<JsonWriter, object>> Writers = new()
+            {
+                {typeof (string), static (w, value) => w.WriteString((string) value)},
+                {typeof (bool), static (w, value) => { w.writer.Write((bool) value ? "true" : "false"); }},
+                {typeof (char), static (w, value) => { w.writer.Write(((char) value).ToString()); }},
+                {typeof (byte), static (w, value) => { w.writer.Write(((byte) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (sbyte), static (w, value) => { w.writer.Write(((sbyte) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (short), static (w, value) => { w.writer.Write(((short) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (ushort), static (w, value) => { w.writer.Write(((ushort) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (int), static (w, value) => { w.writer.Write(((int) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (uint), static (w, value) => { w.writer.Write(((uint) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (long), static (w, value) => { w.writer.Write(((long) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (ulong), static (w, value) => { w.writer.Write(((ulong) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (float), static (w, value) => { w.writer.Write(((double)(float) value).ToString("R", CultureInfo.InvariantCulture)); }},
+                {typeof (double), static (w, value) => { w.writer.Write(((double) value).ToString("R", CultureInfo.InvariantCulture)); }},
+                {typeof (decimal), static (w, value) => { w.writer.Write(((decimal) value).ToString(CultureInfo.InvariantCulture)); }},
+                {typeof (Type), static (w, value) => { w.WriteString(value.ToString()); }},
+                {typeof (Guid), static (w, value) => { w.WriteString(((Guid)value).ToString("D")); }},
+                {typeof (StringBuilder), static (w, value) => w.WriteString(((StringBuilder) value).ToString())}, // TODO: Could be optimized but it is a very uncommon case, so...
+                {typeof (DateTime), static (w, value) => { w.WriteString(((DateTime)value).ToString("o")); }},
+                {typeof (DateTimeOffset), static (w, value) => { w.WriteString(((DateTimeOffset)value).ToString("o")); }},
+                // {typeof (TimeSpan), static (w, value) => { w.WriteString(((TimeSpan)value).ToString()); }}, // TODO: handle correctly, remove for now
+            };
+
             private readonly TextWriter writer;
             private readonly JsonSettings settings;
             private readonly IJsonReflector reflector;
@@ -63,7 +95,6 @@ namespace Jsonite
             private readonly char indentChar;
             private readonly int indentCount;
             private int indentLevel;
-            private readonly Dictionary<Type, Action<object>> writers;
 
             public JsonWriter(TextWriter writer, JsonSettings settings)
             {
@@ -74,30 +105,6 @@ namespace Jsonite
                 this.indentChar = settings.IndentChar;
                 this.indentCount = settings.IndentCount;
                 this.indentLevel = 0;
-                writers = new Dictionary<Type, Action<object>>
-                {
-                    // These converters have to match to the one declared in JsonReflectorDefault.Converters
-                    {typeof (string), value => WriteString((string) value)},
-                    {typeof (bool), value => { writer.Write((bool) value ? "true" : "false"); }},
-                    {typeof (char), value =>  { writer.Write(((char) value).ToString()); }},
-                    {typeof (byte), value =>  { writer.Write(((byte) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (sbyte), value => { writer.Write(((sbyte) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (short), value =>  { writer.Write(((short) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (ushort), value => { writer.Write(((ushort) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (int), value =>  { writer.Write(((int) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (uint), value => { writer.Write(((uint) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (long), value =>  { writer.Write(((long) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (ulong), value => { writer.Write(((ulong) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (float), value =>  { writer.Write(((double)(float) value).ToString("R", CultureInfo.InvariantCulture)); }},
-                    {typeof (double), value => { writer.Write(((double) value).ToString("R", CultureInfo.InvariantCulture)); }},
-                    {typeof (decimal), value =>  { writer.Write(((decimal) value).ToString(CultureInfo.InvariantCulture)); }},
-                    {typeof (Type), value => { WriteString(value.ToString()); }},
-                    {typeof (Guid), value =>  { WriteString(((Guid)value).ToString("D")); }},
-                    {typeof (StringBuilder), value => WriteString(((StringBuilder) value).ToString())}, // TODO: Could be optimized but it is a very uncommon case, so...
-                    {typeof (DateTime), value => { WriteString(((DateTime)value).ToString("o")); }},
-                    {typeof (DateTimeOffset), value => { WriteString(((DateTimeOffset)value).ToString("o")); }},
-                    // {typeof (TimeSpan), value => { WriteString(((TimeSpan)value).ToString()); }}, // TODO: handle correctly, remove for now
-                };
             }
 
             public void Write(object? value)
@@ -109,11 +116,11 @@ namespace Jsonite
                 }
 
                 var type = value.GetType();
-                Action<object> valueWriter;
+                Action<JsonWriter, object> valueWriter;
 
-                if (writers.TryGetValue(type, out valueWriter))
+                if (Writers.TryGetValue(type, out valueWriter))
                 {
-                    valueWriter(value);
+                    valueWriter(this, value);
                     return;
                 }
 

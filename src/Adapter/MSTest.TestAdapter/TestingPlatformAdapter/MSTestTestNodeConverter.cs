@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -146,6 +145,7 @@ internal static class MSTestTestNodeConverter
         private readonly TestMetadataProperty[] _categoryMetadata;
         private readonly TestMetadataProperty[] _traitMetadata;
         private readonly string[]? _trxCategories;
+        private readonly string[]? _trxWorkItemIds;
         private readonly TestFileLocationProperty? _fileLocation;
         private readonly ParsedManagedName? _parsedManagedName;
         private readonly string _fullClassName;
@@ -159,6 +159,7 @@ internal static class MSTestTestNodeConverter
             TestMetadataProperty[] categoryMetadata,
             TestMetadataProperty[] traitMetadata,
             string[]? trxCategories,
+            string[]? trxWorkItemIds,
             TestFileLocationProperty? fileLocation,
             ParsedManagedName? parsedManagedName,
             string fullClassName,
@@ -169,6 +170,7 @@ internal static class MSTestTestNodeConverter
             _categoryMetadata = categoryMetadata;
             _traitMetadata = traitMetadata;
             _trxCategories = trxCategories;
+            _trxWorkItemIds = trxWorkItemIds;
             _fileLocation = fileLocation;
             _parsedManagedName = parsedManagedName;
             _fullClassName = fullClassName;
@@ -229,6 +231,7 @@ internal static class MSTestTestNodeConverter
                 categoryMetadata,
                 traitMetadata,
                 categories,
+                element.WorkItemIds is { Length: > 0 } workItemIds ? [.. workItemIds] : null,
                 fileLocation,
                 parsedManagedName,
                 testMethod.FullClassName,
@@ -240,6 +243,11 @@ internal static class MSTestTestNodeConverter
             if (isTrxEnabled && _trxCategories is not null)
             {
                 properties.Add(new TrxCategoriesProperty([.. _trxCategories]));
+            }
+
+            if (isTrxEnabled && _trxWorkItemIds is not null)
+            {
+                properties.Add(new TrxWorkItemsProperty([.. _trxWorkItemIds]));
             }
 
             for (int i = 0; i < _categoryMetadata.Length; i++)
@@ -486,4 +494,3 @@ internal static class MSTestTestNodeConverter
         }
     }
 }
-#endif

@@ -44,8 +44,14 @@ internal static class ShutdownTimeouts
     public static TimeSpan GetCanceledConsumerCompletion(IEnvironment environment)
     {
         string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS);
-        return GetConfiguredTimeout(value, DefaultCanceledConsumerCompletion);
+        return GetCanceledConsumerCompletion(value);
     }
+
+    /// <summary>
+    /// Gets the budget for completing the consumer handshake from a configured environment variable value.
+    /// </summary>
+    public static TimeSpan GetCanceledConsumerCompletion(string? value)
+        => GetConfiguredTimeout(value, DefaultCanceledConsumerCompletion);
 
     /// <summary>
     /// Gets the total budget for test-host controller callbacks, output reporting, and service disposal after

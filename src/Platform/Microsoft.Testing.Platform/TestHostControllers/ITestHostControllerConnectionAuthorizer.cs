@@ -40,6 +40,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// where a sandboxed application is an AppContainer and the values below are its package SID. Elsewhere
 /// the returned values are ignored and the connection is created unchanged.
 /// </para>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostControllerConnectionAuthorizer

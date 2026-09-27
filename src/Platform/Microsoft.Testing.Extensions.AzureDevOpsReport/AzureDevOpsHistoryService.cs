@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -90,7 +90,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
         if (!TryCreateQuery(historyWindowInDays, out AzureDevOpsHistoryQuery? query))
         {
-            _logger.LogWarning(AzureDevOpsResources.FlakyHistoryMissingEnvironmentWarning);
+            await _logger.LogWarningAsync(AzureDevOpsResources.FlakyHistoryMissingEnvironmentWarning).ConfigureAwait(false);
             return;
         }
 
@@ -112,7 +112,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
                     loadCancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103
                     ResetHistoryState();
-                    _logger.LogInformation(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo, (int)HistoryLoadBudget.TotalSeconds));
+                    await _logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo, (int)HistoryLoadBudget.TotalSeconds)).ConfigureAwait(false);
 
                     try
                     {
@@ -138,7 +138,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             ResetHistoryState();
-            _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadFailedWarning, ex.Message));
+            await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadFailedWarning, ex.Message)).ConfigureAwait(false);
         }
     }
 
@@ -179,7 +179,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         IReadOnlyList<AzureDevOpsTestRun> runs = await _historyClient.GetRunsAsync(query, MaxRunsToInspect + 1, cancellationToken).ConfigureAwait(false);
         if (runs.Count > MaxRunsToInspect)
         {
-            _logger.LogInformation(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryRunsCappedInfo, runs.Count, MaxRunsToInspect));
+            await _logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryRunsCappedInfo, runs.Count, MaxRunsToInspect)).ConfigureAwait(false);
             runs = [.. runs.Take(MaxRunsToInspect)];
         }
 
@@ -259,7 +259,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
             if (page.ContinuationToken == previousContinuationToken)
             {
-                _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun));
+                await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun)).ConfigureAwait(false);
                 return;
             }
 
@@ -268,7 +268,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             continuationToken = page.ContinuationToken;
         }
 
-        _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun));
+        await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun)).ConfigureAwait(false);
     }
 
     private void PublishHistoryStats(int historyWindowInDays, Dictionary<string, (int PassCount, int FailCount)> counts, Dictionary<string, List<double>>? durations)

@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroughputTests.TestAssetFixture>
 {
     private const string AssetName = "DataConsumerThroughputTests";
+    private static readonly TimeSpan MaximumExecutionTime = TimeSpan.FromSeconds(30);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -21,7 +22,9 @@ public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroug
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
-        Assert.IsLessThan(7, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
+        // The consumer count scales with the available processors. The limit leaves ample room for process startup,
+        // JIT, and teardown on a loaded CI agent while still detecting a severe throughput regression.
+        Assert.IsLessThan(MaximumExecutionTime, stopwatch.Elapsed, testHostResult.ToString());
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

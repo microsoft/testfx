@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.Json;
-
+#if USE_EXTERNAL_COMBINATORIAL
 using Combinatorial.MSTest;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
+#endif
+
+using System.Text.Json;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -18,6 +22,8 @@ public abstract class AcceptanceTestBase
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
+        MicrosoftExtensionsHostingVersion = GetPackageVersion(cpmPropFileDoc, "Microsoft.Extensions.Logging");
+        OpenTelemetryVersion = GetPackageVersion(cpmPropFileDoc, "OpenTelemetry");
 
         using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
         MSBuildSdkExtrasVersion = globalJson.RootElement
@@ -82,6 +88,10 @@ public abstract class AcceptanceTestBase
 
     public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
 
+    public static string MicrosoftExtensionsHostingVersion { get; private set; }
+
+    public static string OpenTelemetryVersion { get; private set; }
+
     public static string MSBuildSdkExtrasVersion { get; private set; }
 
     // Keep this known-working Windows App SDK/BuildTools pair together. Generated WinUI assets use
@@ -95,6 +105,12 @@ public abstract class AcceptanceTestBase
     public static bool IsWindowsApplicationModelTestEnvironment
         => string.Equals(
             Environment.GetEnvironmentVariable("TESTFX_RUN_WINDOWS_APP_MODEL_TESTS"),
+            "1",
+            StringComparison.Ordinal);
+
+    public static bool IsWinAppCliInteropTestEnvironment
+        => string.Equals(
+            Environment.GetEnvironmentVariable("TESTFX_RUN_WINAPP_CLI_INTEROP_TESTS"),
             "1",
             StringComparison.Ordinal);
 
@@ -144,6 +160,13 @@ public abstract class AcceptanceTestBase
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
+
+    private static string GetPackageVersion(XDocument centralPackageManagementDocument, string packageName)
+        => centralPackageManagementDocument
+            .Descendants("PackageVersion")
+            .Single(element => string.Equals(element.Attribute("Include")?.Value, packageName, StringComparison.Ordinal))
+            .Attribute("Version")?.Value
+            ?? throw new InvalidOperationException($"Directory.Packages.props does not define a version for '{packageName}'.");
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {
@@ -249,7 +272,9 @@ public abstract class AcceptanceTestBase
     internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
         string command,
         string? workingDirectory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IDictionary<string, string?>? environmentVariables = null,
+        bool cleanEnvironment = false)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(WindowsApplicationModelExecutionTimeout);
@@ -259,7 +284,9 @@ public abstract class AcceptanceTestBase
         {
             int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
                 command,
+                environmentVariables,
                 workingDirectory: workingDirectory,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: cleanEnvironment,
                 cancellationToken: timeout.Token);
             return new(exitCode, commandLine.StandardOutput, commandLine.ErrorOutput);
         }

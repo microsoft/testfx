@@ -12,6 +12,9 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// <summary>
 /// A collection of extension methods for <see cref="ITestApplicationBuilder"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class TestApplicationBuilderExtensions
 {
@@ -38,6 +41,9 @@ public static class TestApplicationBuilderExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     /// <param name="extension">The extension owner of the maximum failed tests service.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public static void AddMaximumFailedTestsService(this ITestApplicationBuilder builder, IExtension extension)
         => builder.CommandLine.AddProvider(serviceProvider => new MaxFailedTestsCommandLineOptionsProvider(extension, serviceProvider));

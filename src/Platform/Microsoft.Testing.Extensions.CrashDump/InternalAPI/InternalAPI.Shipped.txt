@@ -43,7 +43,7 @@ Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.Uid.get
 Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.Version.get -> string!
 Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger
 Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.CrashDumpSequenceLogger(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.CrashDumpSequenceLogger(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
 Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.DataTypesConsumed.get -> System.Type![]!
 Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.Description.get -> string!
 Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.DisplayName.get -> string!
@@ -77,10 +77,13 @@ static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTar
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
 static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool

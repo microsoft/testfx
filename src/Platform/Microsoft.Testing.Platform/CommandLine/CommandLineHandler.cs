@@ -13,7 +13,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
+internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOptions, ICommandLineOptionsWithDefaults, IOutputDeviceDataProducer
 {
     private static readonly TextOutputDeviceData EmptyText = new(string.Empty);
 
@@ -240,6 +240,11 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
         => _configuration is not null
             ? _configuration.TryGetCommandLineOptionArguments(optionName, out arguments)
+            : ParseResult.TryGetOptionArgumentList(optionName, out arguments);
+
+    bool ICommandLineOptionsWithDefaults.TryGetOptionArgumentListOrDefault(string optionName, [NotNullWhen(true)] out string[]? arguments)
+        => _configuration is not null
+            ? _configuration.TryGetCommandLineOptionArgumentsOrDefault(optionName, out arguments)
             : ParseResult.TryGetOptionArgumentList(optionName, out arguments);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);

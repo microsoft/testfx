@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
@@ -11,7 +13,7 @@ public sealed partial class Assert
         for (int i = 0; i < value.Length && length <= StringDifferencePreviewBudget; i++)
         {
             char c = value[i];
-            length += GetEscapedCharacterLength(value, i);
+            length += StringEscapeHelper.GetEscapedCharacterLength(value, i);
             if (char.IsHighSurrogate(c) && i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
             {
                 i++;
@@ -33,11 +35,11 @@ public sealed partial class Assert
     }
 
     private static string RenderMismatchFragment(StringTokenWindow window)
-        => $"[[{RenderMismatch(window)}]]";
+        => $"[[{RenderMismatch(window, makeWhitespaceVisible: true)}]]";
 
     private static StringPreview CreatePreview(StringTokenWindow window, bool useInlineMarker)
     {
-        string mismatch = RenderMismatch(window);
+        string mismatch = RenderMismatch(window, makeWhitespaceVisible: useInlineMarker);
         if (useInlineMarker)
         {
             mismatch = $"[[{mismatch}]]";
@@ -106,7 +108,7 @@ public sealed partial class Assert
         for (int i = beforeStart; i < window.Before.Length; i++)
         {
             StringToken token = window.Before[i];
-            AppendEscapedToken(builder, window.Value, token);
+            StringEscapeHelper.AppendEscapedString(builder, window.Value, token.Start, token.End, escapeUnpairedSurrogates: true, useExtendedEscapes: false);
             isPrefixSafe &= token.IsSafePrefix;
         }
 
@@ -115,7 +117,8 @@ public sealed partial class Assert
 
         for (int i = 0; i < afterCount; i++)
         {
-            AppendEscapedToken(builder, window.Value, window.After[i]);
+            StringToken token = window.After[i];
+            StringEscapeHelper.AppendEscapedString(builder, window.Value, token.Start, token.End, escapeUnpairedSurrogates: true, useExtendedEscapes: false);
         }
 
         if (omittedAfter)
@@ -169,7 +172,7 @@ public sealed partial class Assert
         return lastIncludedIndex < window.Value.Length;
     }
 
-    private static string RenderMismatch(StringTokenWindow window)
+    private static string RenderMismatch(StringTokenWindow window, bool makeWhitespaceVisible = false)
     {
         if (window.Mismatch is not StringToken mismatch)
         {
@@ -181,8 +184,101 @@ public sealed partial class Assert
             return "<text element>";
         }
 
+        if (makeWhitespaceVisible && IsWhitespaceOnly(window.Value, mismatch))
+        {
+            return RenderWhitespaceMismatch(window.Value, mismatch);
+        }
+
         StringBuilder builder = new(mismatch.RenderedLength);
-        AppendEscapedToken(builder, window.Value, mismatch);
+        StringEscapeHelper.AppendEscapedString(builder, window.Value, mismatch.Start, mismatch.End, escapeUnpairedSurrogates: true, useExtendedEscapes: false);
+        return builder.ToString();
+    }
+
+    private static bool IsWhitespaceOnly(string value, StringToken token)
+    {
+        for (int i = token.Start; i < token.End;)
+        {
+            ScalarInfo scalar = GetScalar(value, i);
+            if (scalar.Value > char.MaxValue || !char.IsWhiteSpace((char)scalar.Value))
+            {
+                return false;
+            }
+
+            i += scalar.Length;
+        }
+
+        return true;
+    }
+
+    private static bool IsMismatchSuitableForCaret(StringTokenWindow window)
+    {
+        if (window.Mismatch is not StringToken mismatch || !IsWhitespaceOnly(window.Value, mismatch))
+        {
+            return true;
+        }
+
+        for (int i = mismatch.Start; i < mismatch.End;)
+        {
+            ScalarInfo scalar = GetScalar(window.Value, i);
+            if (scalar.Value is not ('\t' or '\n' or '\r'))
+            {
+                return false;
+            }
+
+            i += scalar.Length;
+        }
+
+        return true;
+    }
+
+    private static string RenderWhitespaceMismatch(string value, StringToken token)
+    {
+        int spaceCount = 0;
+        StringBuilder builder = new();
+        for (int i = token.Start; i < token.End;)
+        {
+            ScalarInfo scalar = GetScalar(value, i);
+            if (scalar.Value == ' ')
+            {
+                spaceCount++;
+            }
+            else
+            {
+                switch (scalar.Value)
+                {
+                    case '\t':
+                        builder.Append("\\t");
+                        break;
+                    case '\n':
+                        builder.Append("\\n");
+                        break;
+                    case '\r':
+                        builder.Append("\\r");
+                        break;
+                    default:
+                        builder.Append("\\u");
+                        builder.Append(scalar.Value.ToString("X4", CultureInfo.InvariantCulture));
+                        break;
+                }
+            }
+
+            i += scalar.Length;
+        }
+
+        if (spaceCount > 0)
+        {
+            if (builder.Length > 0)
+            {
+                builder.Insert(0, $"{spaceCount} space(s) ");
+            }
+            else
+            {
+                return spaceCount == 1
+                    ? "<space>"
+                    : $"<{spaceCount} spaces>";
+            }
+        }
+
         return builder.ToString();
     }
 

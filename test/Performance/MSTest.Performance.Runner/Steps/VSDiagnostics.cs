@@ -89,7 +89,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
         Console.WriteLine($"Compressing to '{sample}'");
-        ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
+        await ZipFile.CreateFromDirectoryAsync(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
         return new Files([sample]);
     }

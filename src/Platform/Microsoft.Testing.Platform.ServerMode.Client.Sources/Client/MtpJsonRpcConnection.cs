@@ -50,6 +50,9 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         _logger = logger ?? NullMtpClientLogger.Instance;
     }
 
+    internal bool IsOnReadLoopFlow
+        => _onReadLoopFlow.Value;
+
     /// <summary>
     /// Raised for every server-to-client notification. The handler receives the method name and the raw
     /// params payload (an <c>IDictionary&lt;string, object?&gt;</c> or <see langword="null"/>); the client API
@@ -321,6 +324,9 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         => (id, stringId is not null);
 
     public void Dispose()
+        => Dispose(waitForReadLoop: true);
+
+    internal void Dispose(bool waitForReadLoop)
     {
         Task? readLoop;
         lock (_startLock)
@@ -355,7 +361,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         // surface spurious ObjectDisposedExceptions (one thrown out of the write lock's finally block).
         // Guard against waiting on ourselves in case Dispose runs from a notification / server-request
         // handler executing on the read-loop flow (see _onReadLoopFlow).
-        if (readLoop is not null && !_onReadLoopFlow.Value)
+        if (waitForReadLoop && readLoop is not null && !_onReadLoopFlow.Value)
         {
             try
             {

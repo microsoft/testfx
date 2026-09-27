@@ -248,7 +248,7 @@ public static class WasmRuntime
     public static async Task<(int ExitCode, string Output, string Error, string Combined)> RunUnderNodeAsync(
         string node, string appBundle, string nodeRunnerSource, CancellationToken cancellationToken, string? arguments = null)
     {
-        File.WriteAllText(Path.Combine(appBundle, "runtests.mjs"), nodeRunnerSource);
+        await File.WriteAllTextAsync(Path.Combine(appBundle, "runtests.mjs"), nodeRunnerSource, cancellationToken);
 
         string commandArguments = string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}";
         var commandLine = new CommandLine();

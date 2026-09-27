@@ -19,7 +19,9 @@ This package extends Microsoft.Testing.Platform with:
 - **CI auto-detection**: detects Azure DevOps environments through the `TF_BUILD` variable
 - **Live publishing**: streams test results to the Azure DevOps Tests tab while the run is still in progress (`--publish-azdo-test-results`)
 - **Automatic attachments**: for failed tests, attaches stdout/stderr and any `FileArtifactProperty` data (dumps, screenshots) to the matching result in the Tests tab; uploads `*.coverage`, `*.cobertura.xml`, and `*.opencover.xml` artifacts as run-level attachments
-- **Extensions-tab summary**: `--report-azdo-summary` writes and uploads Markdown through `##vso[task.uploadsummary]`. With an SDK that supports required artifact post-processing, a multi-module `dotnet test` invocation uploads one authoritative overall summary with per-assembly details. Older SDKs preserve the existing per-assembly summaries. This does not change live publishing to the Azure DevOps Tests tab.
+- **Extensions-tab summary**: `--report-azdo-summary` writes and uploads a compact Markdown dashboard with a friendly title, test totals, coverage, failures, and slowest tests. With an SDK that supports required artifact post-processing, a multi-module `dotnet test` invocation uploads one authoritative overall summary with a module overview. Older SDKs preserve per-assembly summaries. This does not change live publishing to the Azure DevOps Tests tab.
+
+The Markdown summary is independent from the self-contained HTML report produced by `--report-html`. Both options can be enabled together: Azure DevOps renders the Markdown in the Extensions tab, while the HTML remains a report file that can be published as a build artifact or displayed by a separately installed Azure DevOps web extension.
 
 ## Usage
 

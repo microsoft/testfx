@@ -5,10 +5,11 @@
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
+internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessorWithActivityContext
 {
     private readonly CancellationToken _cancellationToken;
     private readonly TimeSpan _canceledShutdownTimeout;
@@ -45,10 +46,16 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
     public long ReceivedCount => Volatile.Read(ref _receivedCount);
 
     public Task PublishAsync(IDataProducer dataProducer, IData data)
+        => PublishAsync(dataProducer, data, executionActivityContext: null);
+
+    public Task PublishAsync(
+        IDataProducer dataProducer,
+        IData data,
+        PlatformActivityContext? executionActivityContext)
     {
         _cancellationToken.ThrowIfCancellationRequested();
         Interlocked.Increment(ref _receivedCount);
-        _channel.Write(AsyncConsumerDataProcessorMessage.CreateData(dataProducer, data));
+        _channel.Write(AsyncConsumerDataProcessorMessage.CreateData(dataProducer, data, executionActivityContext));
         return Task.CompletedTask;
     }
 
@@ -80,7 +87,18 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
                         continue;
                     }
 
-                    await DataConsumer.ConsumeAsync(message.DataProducer, message.Data!, _cancellationToken).ConfigureAwait(false);
+                    if (DataConsumer is ITestExecutionActivityContextConsumer activityContextConsumer)
+                    {
+                        await activityContextConsumer.ConsumeAsync(
+                            message.DataProducer,
+                            message.Data!,
+                            message.ExecutionActivityContext,
+                            _cancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await DataConsumer.ConsumeAsync(message.DataProducer, message.Data!, _cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
         }

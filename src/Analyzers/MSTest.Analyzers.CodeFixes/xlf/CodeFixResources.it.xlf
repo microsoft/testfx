@@ -15,7 +15,7 @@
       <trans-unit id="AddResourceLockFix">
         <source>Add '[ResourceLock(WellKnownResources.{0})]'</source>
         <target state="translated">Aggiungi '[ResourceLock(WellKnownResources.{0})]'</target>
-        <note>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</note>
+        <note>{0} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}</note>
       </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
@@ -87,6 +87,11 @@
         <target state="translated">Correggi firma</target>
         <note />
       </trans-unit>
+      <trans-unit id="MakeOSConditionConsistentFix">
+        <source>Make '[OSCondition]' consistent with platform compatibility attributes</source>
+        <target state="translated">Rendere '[OSCondition]' coerente con gli attributi di compatibilità della piattaforma</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Passare l'argomento 'TestContext.CancellationToken' alla chiamata al metodo</target>
@@ -99,7 +104,7 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
-        <target state="translated">Rimuovere ''DataRow'' duplicato</target>
+        <target state="translated">Rimuovere 'DataRow' duplicato</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
@@ -111,6 +116,11 @@
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Rimuovi il parametro ''DynamicDataSourceType'' per utilizzare il valore predefinito ''AutoDetect''</target>
         <note>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</note>
+      </trans-unit>
+      <trans-unit id="RemoveRedundantTestMethodAttributeFix">
+        <source>Remove redundant attribute</source>
+        <target state="translated">Rimuovi attributo ridondante</target>
+        <note />
       </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
         <source>Remove redundant 'DisplayName'</source>

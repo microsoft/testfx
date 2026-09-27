@@ -5,13 +5,28 @@ using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class ExecutableInfo(string filePath, IEnumerable<string> arguments, string workspace)
+internal sealed class ExecutableInfo
 {
-    public string FilePath { get; } = filePath;
+    public ExecutableInfo(string filePath, IEnumerable<string> arguments, string workspace)
+        : this(filePath, arguments, arguments, workspace)
+    {
+    }
 
-    public IEnumerable<string> Arguments { get; } = arguments;
+    public ExecutableInfo(string filePath, IEnumerable<string> arguments, IEnumerable<string> expandedArguments, string workspace)
+    {
+        FilePath = filePath;
+        Arguments = arguments;
+        ExpandedArguments = expandedArguments;
+        Workspace = workspace;
+    }
 
-    public string Workspace { get; } = workspace;
+    public string FilePath { get; }
+
+    public IEnumerable<string> Arguments { get; }
+
+    public IEnumerable<string> ExpandedArguments { get; }
+
+    public string Workspace { get; }
 
     public override string ToString()
         => $"Process: {FilePath}, Arguments: {CommandLineArgumentsRedactor.Redact([.. Arguments])}, Workspace: {Workspace}";

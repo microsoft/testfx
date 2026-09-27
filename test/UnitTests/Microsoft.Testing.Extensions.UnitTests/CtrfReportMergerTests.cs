@@ -50,7 +50,7 @@ public sealed class CtrfReportMergerTests
 
         var testArray = (JsonArray)merged["results"]!["tests"]!;
         Assert.HasCount(3, testArray);
-        List<string?> names = [.. testArray.Select(t => (string?)t!["name"])];
+        List<string> names = [.. testArray.Select(t => t!["name"]!.GetValue<string>())];
         Assert.Contains("TestA", names);
         Assert.Contains("TestC", names);
     }
@@ -163,6 +163,24 @@ public sealed class CtrfReportMergerTests
         Assert.IsNull(environmentExtra["exitCode"]);
         // Shared, non-module-specific fields are retained.
         Assert.AreEqual("someone", (string?)environmentExtra["user"]);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_WhenAnyInputIsIncomplete_PropagatesRecoveryMetadata(bool collapseRetryAttempts)
+    {
+        JsonObject incomplete = JsonNode.Parse(BuildReport(testEntries: [Test("incomplete", "failed")]))!.AsObject();
+        incomplete["results"]!["environment"]!["extra"]!["incomplete"] = true;
+        incomplete["results"]!["environment"]!["extra"]!["runStatus"] = "aborted";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge(
+            [incomplete.ToJsonString(), BuildReport(testEntries: [Test("complete", "passed")])],
+            collapseRetryAttempts ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate))!;
+        JsonNode extra = merged["results"]!["environment"]!["extra"]!;
+
+        Assert.IsTrue((bool)extra["incomplete"]!);
+        Assert.AreEqual("aborted", (string?)extra["runStatus"]);
     }
 
     [TestMethod]
@@ -1066,7 +1084,7 @@ public sealed class CtrfReportMergerTests
 
         Assert.HasCount(4, tests, "Rows differing only by parameters or filePath are distinct tests.");
         Assert.AreSequenceEqual(
-            (string?[])["failed", "passed", "skipped", "passed"],
+            ["failed", "passed", "skipped", "passed"],
             tests.Select(t => (string?)t!["status"]).ToArray());
     }
 

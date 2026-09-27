@@ -134,7 +134,7 @@
   </data>
   <data name="AddResourceLockFix" xml:space="preserve">
     <value>Add '[ResourceLock(WellKnownResources.{0})]'</value>
-    <comment>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</comment>
+    <comment>{0} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}</comment>
   </data>
   <data name="ChangeStructToClassAndAddTestClassFix" xml:space="preserve">
     <value>Change to 'class' and add '[TestClass]'</value>
@@ -297,5 +297,12 @@
   <data name="RemoveRedundantTestMethodDisplayNameFix" xml:space="preserve">
     <value>Remove redundant 'DisplayName'</value>
     <comment>{Locked="DisplayName"}</comment>
+  </data>
+  <data name="MakeOSConditionConsistentFix" xml:space="preserve">
+    <value>Make '[OSCondition]' consistent with platform compatibility attributes</value>
+    <comment>{Locked="[OSCondition]"}</comment>
+  </data>
+  <data name="RemoveRedundantTestMethodAttributeFix" xml:space="preserve">
+    <value>Remove redundant attribute</value>
   </data>
 </root>

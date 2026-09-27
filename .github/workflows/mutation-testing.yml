@@ -2,7 +2,8 @@ name: Mutation testing
 
 on:
   schedule:
-    - cron: '0 5 * * 1'
+    # Runs daily so the mutation-test-improver workflow has fresh data to act on.
+    - cron: '0 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +17,9 @@ jobs:
   stryker:
     name: Run Stryker.NET
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -24,15 +27,56 @@ jobs:
       - name: Build repository
         run: ./build.sh --binaryLog
 
-      - name: Restore local tools
-        run: ./.dotnet/dotnet tool restore
+      - name: Install Stryker.NET
+        run: |
+          stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+          test -n "$stryker_version"
+          ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
-        working-directory: test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests
         env:
           MutationTesting: true
         run: |
-          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check
+          set -o pipefail
+          export DOTNET_ROOT="$GITHUB_WORKSPACE/.dotnet"
+          export PATH="$DOTNET_ROOT:$PATH"
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/mutation-testing"
+          "$GITHUB_WORKSPACE/artifacts/tools/stryker/dotnet-stryker" --config-file "$GITHUB_WORKSPACE/stryker-config.json" --solution "$GITHUB_WORKSPACE/MutationTesting.slnx" --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check | tee "$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+
+      - name: Summarize mutation testing results
+        if: ${{ always() }}
+        run: |
+          log="$GITHUB_WORKSPACE/artifacts/mutation-testing/stryker-console.log"
+          if [ ! -f "$log" ]; then
+            echo "## Mutation testing" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Stryker did not produce console output (the run likely failed before reporting)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Strip ANSI escape codes before scraping the summary lines Stryker prints.
+          clean_log=$(sed -E 's/\x1b\[[0-9;]*m//g' "$log")
+
+          killed=$(echo "$clean_log" | grep -oE 'Killed: *[0-9]+' | tail -n1 | grep -oE '[0-9]+' || true)
+          survived=$(echo "$clean_log" | grep -oE 'Survived: *[0-9]+' | tail -n1 | grep -oE '[0-9]+' || true)
+          timeout=$(echo "$clean_log" | grep -oE 'Timeout: *[0-9]+' | tail -n1 | grep -oE '[0-9]+' || true)
+          score=$(echo "$clean_log" | grep -oE 'final mutation score is [0-9.]+ *%' | tail -n1 | grep -oE '[0-9.]+' || true)
+
+          {
+            echo "## Mutation testing (Stryker.NET)"
+            echo ""
+            if [ -n "$score" ]; then
+              echo "**Mutation score: ${score}%**"
+            else
+              echo "⚠️ Could not determine the mutation score from Stryker's output; see the \`mutation-testing-report\` artifact uploaded by this run for the raw log."
+            fi
+            echo ""
+            echo "| Killed | Survived | Timeout |"
+            echo "| --- | --- | --- |"
+            echo "| ${killed:-?} | ${survived:-?} | ${timeout:-?} |"
+            echo ""
+            echo "Full HTML/JSON report: download the \`mutation-testing-report\` artifact from this run."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload mutation report
         if: ${{ always() }}

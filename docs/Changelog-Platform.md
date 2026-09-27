@@ -4,14 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="2.4.0" />[2.4.0] - UNRELEASED
+## <a name="2.5.0" />[2.5.0] - UNRELEASED
+
+See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
+
+### Added
+
+* Enable native Microsoft.Testing.Platform execution for UWP and AppContainer Windows test hosts through a full-trust sidecar controller, including exact package-SID authorization for controller and extension pipes, LocalState artifact recovery, and multi-host Retry activation.
+
+### Changed
+
+* Reduce duplicate test-identity computation when merging HTML reports, by @Evangelink in [#11076](https://github.com/microsoft/testfx/pull/11076)
+* Replace repeated LINQ passes in Azure DevOps result-date calculations with allocation-free single-pass scans, by @Evangelink in [#11403](https://github.com/microsoft/testfx/pull/11403)
+* Enrich and redesign Azure DevOps job summaries with pass rates, flaky-test history, duration comparisons, dependency edges, focused failure diagnostics and compact deterministic multi-module presentation, by @Evangelink in [#11337](https://github.com/microsoft/testfx/pull/11337) and [#11335](https://github.com/microsoft/testfx/pull/11335)
+
+### Fixed
+
+* Preserve the native `dotnet test` execution ID across PackagedApp AUMID activation so packaged WinUI hosts reconnect to the controller's existing test session instead of generating a conflicting handshake, while retaining the explicit environment allowlist and one-shot cleanup, in [#11494](https://github.com/microsoft/testfx/issues/11494)
+* Re-register the requested PackagedApp development layout when Windows still points the package identity at an older build directory, while preserving application data and refusing to replace conflicting non-development registrations, by @Sergio0694 in [#11372](https://github.com/microsoft/testfx/pull/11372)
+* Prevent a cancellation callback ordering race in the Hot Reload extension from allowing another test run after shutdown has started, by @Evangelink in [#11401](https://github.com/microsoft/testfx/pull/11401)
+* Log normal cooperative-cancellation pipe closure as a concise lifecycle event instead of an exception-shaped DEBUG diagnostic, by @Evangelink in [#11416](https://github.com/microsoft/testfx/pull/11416)
+
+## <a name="2.4.1" />[2.4.1] - 2026-09-15
+
+See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4.4.0...v4.4.1)
+
+### Fixed
+
+* Prevent the Application Insights telemetry consumer from being starved by the thread pool on .NET Framework, by @Evangelink in [#10988](https://github.com/microsoft/testfx/pull/10988)
+* Preserve and safely regenerate response-file arguments when the Retry extension relaunches a test application, including nested response-file diagnostics and command-line redaction, by @Evangelink in [#10963](https://github.com/microsoft/testfx/pull/10963) and [#10997](https://github.com/microsoft/testfx/pull/10997)
+* Honor passive terminal-reporter defaults in directly launched test hosts while preserving explicit command-line overrides, by @Evangelink in [#11010](https://github.com/microsoft/testfx/pull/11010)
+* Report actionable Azure DevOps authentication diagnostics for redirects, unauthorized responses and browser transports instead of surfacing misleading JSON failures, by @Evangelink in [#10999](https://github.com/microsoft/testfx/pull/10999)
+* Preserve the distinction between an undeclared, explicitly stateless and stateful server-mode client capability while retaining compatibility with clients that predate the capability, by @Evangelink in [#11037](https://github.com/microsoft/testfx/pull/11037)
+* Preserve graceful cancellation through the test-host controller and force termination only after the bounded cleanup period expires, by @Evangelink in [#11054](https://github.com/microsoft/testfx/pull/11054)
+* Avoid a timing-sensitive self-wait when disposing an in-process server-mode client from a notification handler, by @Evangelink in [#11074](https://github.com/microsoft/testfx/pull/11074)
+* Avoid connection-reset failures when disposing a named-pipe server with a client connected but no request in flight, by @Evangelink in [#11113](https://github.com/microsoft/testfx/pull/11113)
+* Mark terminal Azure DevOps live-published test results as completed so finished runs report accurate passed, failed and incomplete counts, by @Evangelink in [#11142](https://github.com/microsoft/testfx/pull/11142)
+* Handle test-host controller pipe timeouts and early child-process exits as normal platform failures with actionable diagnostics instead of crashing the parent process, by @Evangelink in [#11152](https://github.com/microsoft/testfx/pull/11152)
+* Preserve nested and aggregate exception details in server-mode test results so IDE clients receive the same failure context as terminal and `dotnet test` output, by @Evangelink in [#11221](https://github.com/microsoft/testfx/pull/11221)
+* Stop `Microsoft.Testing.Platform.ServerMode.Client.Sources` from overriding the target-framework C# language default in consuming projects, by @Evangelink in [#11258](https://github.com/microsoft/testfx/pull/11258)
+
+## <a name="2.4.0" />[2.4.0] - 2026-09-02
 
 See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...main)
 
 ### Added
 
 * Add managed-identity authentication to `Microsoft.Testing.Extensions.AzureFoundry`, while keeping `Azure.Identity` optional for consumers that provide their own `TokenCredential`, by @Evangelink in [#9707](https://github.com/microsoft/testfx/pull/9707) and [#9779](https://github.com/microsoft/testfx/pull/9779)
-* Add the client-declared `IsStateful` capability to the Microsoft.Testing.Platform server-mode protocol, allowing editor and IDE clients to tell the server whether state must be preserved between requests, by @Evangelink in [#9789](https://github.com/microsoft/testfx/pull/9789)
+* Add the client-declared `IsStateful` capability to the Microsoft.Testing.Platform server-mode protocol, allowing editor and IDE clients to declare that they retain test-node state for the whole session, by @Evangelink in [#9789](https://github.com/microsoft/testfx/pull/9789)
 * Add the public injectable `IArtifactNamingService` for extensions that need platform-consistent artifact names by @Evangelink in [#9783](https://github.com/microsoft/testfx/pull/9783)
 * Allow overriding the Unix directory used for IPC named pipes, enabling test execution in sandboxes where the default temporary directory is unavailable, by @Evangelink in [#9846](https://github.com/microsoft/testfx/pull/9846)
 * Add `--show-slowest-tests <count>` to the core terminal reporter to list the requested number of slowest completed tests at the end of a run by @Evangelink in [#9894](https://github.com/microsoft/testfx/pull/9894)
@@ -32,9 +72,14 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Add the source-only `Microsoft.Testing.Platform.ServerMode.Client.Sources` package, providing a canonical dependency-free, Native AOT-compatible client for the platform's server-mode JSON-RPC protocol, by @nohwnd in [#10085](https://github.com/microsoft/testfx/pull/10085)
 * Aggregate GitHub Actions and Azure DevOps Markdown summaries across all modules in a `dotnet test` invocation while retaining deterministic per-assembly details and authoritative run totals, duration and exit verdict, by @Evangelink in [#10530](https://github.com/microsoft/testfx/pull/10530)
 * Add provider-neutral code-coverage counts, percentages, threshold results and partial-coverage indicators to aggregated GitHub Actions and Azure DevOps summaries, by @Evangelink in [#10693](https://github.com/microsoft/testfx/pull/10693)
-* Add `on-failure` support to `--report-gh-step-summary` and add `--report-gh-step-summary-sections` for selecting `test-results`, `slow-tests`, `coverage` or `all`, by @Evangelink in [#10695](https://github.com/microsoft/testfx/pull/10695) and [#10697](https://github.com/microsoft/testfx/pull/10697)
+* Add bounded, collapsible failure details to GitHub Actions step summaries, add `on-failure` support to `--report-gh-step-summary`, and add `--report-gh-step-summary-sections` for selecting `test-results`, `slow-tests`, `coverage` or `all`, by @azat-msft in [#10633](https://github.com/microsoft/testfx/pull/10633) and @Evangelink in [#10695](https://github.com/microsoft/testfx/pull/10695) and [#10697](https://github.com/microsoft/testfx/pull/10697)
 * Add bounded GitHub Actions test-history snapshots through `--report-gh-history`, including historical failure context, retry-aware results, and workflow-managed artifact persistence in [#10770](https://github.com/microsoft/testfx/issues/10770)
 * Add `IConfigurationRoot`, `IConfigurationSection` and `IHierarchicalConfigurationProvider` so extensions can consume merged nested configuration without reparsing source-specific JSON, by @Evangelink in [#10699](https://github.com/microsoft/testfx/pull/10699)
+* Add `--show-test-results <outcomes>` to filter which passed, failed, skipped, error and timeout result blocks the terminal reporter displays without changing progress or summary counts, by @Evangelink in [#10737](https://github.com/microsoft/testfx/pull/10737)
+* Add an opt-in prototype for deadline-aware cancellation so CI can request a graceful test-framework stop before a hard job deadline, leaving time for reports to finalize and for HangDump to capture a wedged test host, by @nohwnd and @Evangelink in [#10018](https://github.com/microsoft/testfx/pull/10018)
+* Suggest uniquely matching command-line options for likely typos and identify the extension package that provides a known but unregistered option, by @Evangelink in [#10798](https://github.com/microsoft/testfx/pull/10798)
+* Preserve MSTest `[WorkItem]` and `[GitHubWorkItem]` metadata as schema-compatible work-item definitions in MTP-generated TRX reports, by @Evangelink in [#10861](https://github.com/microsoft/testfx/pull/10861)
+* Add `MtpServerClient.LaunchInProcessAsync` to `Microsoft.Testing.Platform.ServerMode.Client.Sources`, so embedded hosts such as MAUI or Android/iOS test apps can drive a Microsoft.Testing.Platform application hosted in their own process without `Process.Start`. The client still owns the loopback listener, the server-mode arguments, the connect race, the transport setup and a bounded shutdown (`MtpServerClientOptions.ServerShutdownTimeout`); the caller only supplies how to build and run the test application. `IMtpServerClient` also gains `ShutdownAsync()` for a non-blocking teardown and `ServerExitCode` for the value the application returned. The path is loopback TCP, so it fails fast with `PlatformNotSupportedException` on browser/WASM in [#10890](https://github.com/microsoft/testfx/issues/10890)
 
 ### Changed
 
@@ -46,13 +91,16 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Send `pipelineReference` (stage, phase and job, with their attempt numbers) and `startedDate` when `--publish-azdo-test-results` creates an Azure DevOps test run, so the run is attributed to the stage and job that produced it in multi-stage pipelines instead of only to the build, by @Evangelink in [#10331](https://github.com/microsoft/testfx/pull/10331)
 * Expand OpenTelemetry support with testing semantic conventions, environment-driven configuration, resource detection and spans for MSTest tests and fixtures by @Evangelink in [#10358](https://github.com/microsoft/testfx/pull/10358)
 * Publish Azure DevOps retry attempts as sub-results of one logical test result, so a test recovered by retry has the final outcome while retaining its attempt history, by @Evangelink in [#10431](https://github.com/microsoft/testfx/pull/10431)
-* Preserve in-process retry attempt metadata over the `dotnet test` pipe, make retry-consolidated HTML reports retain a visible flaky-test history, and list recovered tests in GitHub Actions summaries. GitHub summary fragments remain composable with solution-wide artifact post-processing, while TRX intentionally keeps its existing final-attempt behavior.
+* Preserve in-process retry attempt metadata over the `dotnet test` pipe, make retry-consolidated HTML reports retain a visible flaky-test history, and list recovered tests in GitHub Actions summaries. GitHub summary fragments remain composable with solution-wide artifact post-processing, while TRX intentionally keeps its existing final-attempt behavior, by @Evangelink in [#10761](https://github.com/microsoft/testfx/pull/10761)
 * Promote the OpenTelemetry, PackagedApp and GitHub Actions report extensions from experimental alpha versioning to the Microsoft.Testing.Platform release line, while keeping the generic test-host launcher contract experimental, by @Evangelink in [#10476](https://github.com/microsoft/testfx/pull/10476)
 * Default Azure DevOps per-assembly log groups to `off` because parallel assembly output can interleave anonymous groups; use `--report-azdo-groups on` to opt in, by @Evangelink in [#10474](https://github.com/microsoft/testfx/pull/10474)
 * Suppress redundant in-progress server-mode updates when the same emitted batch contains a terminal update for that test UID, by @Evangelink in [#10483](https://github.com/microsoft/testfx/pull/10483)
 * Defer Application Insights client initialization until the first telemetry payload, avoiding initialization and flush overhead for runs that emit no telemetry, by @Evangelink in [#10544](https://github.com/microsoft/testfx/pull/10544)
 * Reduce allocations in VSTestBridge custom-property lookup and server-mode notification serialization without changing protocol shape or ordering, by @Evangelink in [#10586](https://github.com/microsoft/testfx/pull/10586) and [#10670](https://github.com/microsoft/testfx/pull/10670)
 * Label Azure DevOps retry sub-results as `Attempt# <n> - <test>` and upload each retry attempt's artifacts to the sub-result that produced them, by @Evangelink in [#10704](https://github.com/microsoft/testfx/pull/10704) and [#10723](https://github.com/microsoft/testfx/pull/10723)
+* Harden server-mode JSON-RPC lifecycle and error handling, add independent protocol-version negotiation, align the System.Text.Json and Jsonite serializers, and publish a versioned JSON Schema, by @Evangelink in [#10779](https://github.com/microsoft/testfx/pull/10779)
+* Use controller-backed TRX recovery by default whenever the platform supports a test-host controller, while retaining the in-process compatibility path on browser, WASI, iOS and tvOS, by @Evangelink in [#10808](https://github.com/microsoft/testfx/pull/10808)
+* Include concise descriptions for known non-success Microsoft.Testing.Platform exit codes in run and discovery summaries, by @Evangelink in [#10882](https://github.com/microsoft/testfx/pull/10882)
 
 ### Fixed
 
@@ -77,6 +125,15 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Consolidate JUnit and CTRF results across `--retry-failed-tests` attempts so top-level reports retain tests that passed before the final narrowed attempt and represent each logical test's final outcome, by @Evangelink in [#10542](https://github.com/microsoft/testfx/pull/10542)
 * Fix a TRX process-lifetime handshake race that could fail fast, zero-selection runs when TRX and crash-dump reporting were enabled under thread-pool contention, by @Evangelink in [#10682](https://github.com/microsoft/testfx/pull/10682)
 * Publish Azure DevOps live test results with their canonical fully qualified test name and TRX-compatible assembly storage identity instead of an opaque test-node UID, restoring history matching with `PublishTestResults@2`, by @Evangelink in [#10706](https://github.com/microsoft/testfx/pull/10706)
+* Preserve every untagged duplicate-UID CTRF result, collapse only unambiguous retry sequences, and serialize per-test and retry-attempt file artifacts as CTRF attachments, by @Evangelink in [#10769](https://github.com/microsoft/testfx/pull/10769)
+* Preserve report inputs and let the run continue when TRX or CTRF artifact post-processing cannot create its merged output directory, by @Evangelink in [#10734](https://github.com/microsoft/testfx/pull/10734)
+* Fall back to `dotnet <assembly>` when a Unix server-mode apphost exists but is not executable, instead of failing the launch with `Permission denied`, by @nohwnd in [#10641](https://github.com/microsoft/testfx/pull/10641)
+* Let controller-side extensions complete bounded cleanup after a test timeout, preserving non-success exit semantics and recovering completed TRX data from an aborted child process, by @Evangelink in [#10797](https://github.com/microsoft/testfx/pull/10797)
+* Publish each Azure DevOps retry sub-result exactly once and retain stable attachment targets across retry processes, by @Evangelink in [#10795](https://github.com/microsoft/testfx/pull/10795)
+* Publish superseded in-process MSTest retry attempts to Azure DevOps as ordered rerun sub-results with their durations and attachments, by @Evangelink in [#10845](https://github.com/microsoft/testfx/pull/10845)
+* Authorize TRX, HangDump and Retry extension pipes for sandboxed test-host identities supplied by a custom launcher, by @Evangelink in [#10842](https://github.com/microsoft/testfx/pull/10842)
+* Recover partial HTML, JUnit and CTRF reports after an abnormal test-host termination on platforms with a test-host controller, by @Evangelink in [#10894](https://github.com/microsoft/testfx/pull/10894)
+* Use wall-clock elapsed time instead of the sum of individual test durations for HTML report summaries, so parallel test runs report an accurate duration, by @Evangelink in [#10944](https://github.com/microsoft/testfx/pull/10944)
 
 ## <a name="2.3.3" />[2.3.3] - 2026-07-28
 

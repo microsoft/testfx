@@ -4,6 +4,8 @@
 // The PackagedApp extension only targets .NET (net8.0/net9.0), so these tests are compiled only there.
 #if !NETFRAMEWORK
 
+using System.Text.Json;
+
 using Microsoft.Testing.Extensions.PackagedApp;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -50,6 +52,43 @@ public sealed class AppxManifestInfoTests
         AppxApplicationInfo application = Assert.ContainsSingle(info.Applications);
         Assert.AreEqual("App", application.Id);
         Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", application.AppUserModelId);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_MatchesSharedWindowsAppModelConformanceVectors()
+    {
+        string vectorsPath = Path.Combine(AppContext.BaseDirectory, "AppxManifestConformanceVectors.json");
+        Assert.IsTrue(File.Exists(vectorsPath), $"Shared Windows app-model vectors were not copied to '{vectorsPath}'.");
+
+        ManifestConformanceVectors? vectors = JsonSerializer.Deserialize<ManifestConformanceVectors>(
+            File.ReadAllText(vectorsPath),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.IsNotNull(vectors, $"Could not deserialize shared Windows app-model vectors from '{vectorsPath}'.");
+        Assert.AreEqual(1, vectors.SchemaVersion, $"Unsupported Windows app-model vector schema in '{vectorsPath}'.");
+        Assert.IsNotEmpty(vectors.Vectors, $"No Windows app-model vectors were found in '{vectorsPath}'.");
+
+        foreach (ManifestConformanceVector vector in vectors.Vectors)
+        {
+            string manifestXml = string.Join(Environment.NewLine, vector.ManifestLines);
+            AppxManifestInfo info = ReadManifest(manifestXml);
+
+            Assert.AreEqual(vector.Expected.PackageName, info.PackageName, vector.Name);
+            Assert.AreEqual(vector.Expected.Publisher, info.Publisher, vector.Name);
+            Assert.AreEqual(vector.Expected.PublisherId, AppxManifestInfo.ComputePublisherId(info.Publisher), vector.Name);
+            Assert.AreEqual(vector.Expected.PackageFamilyName, info.PackageFamilyName, vector.Name);
+            Assert.HasCount(vector.Expected.Applications.Length, info.Applications, vector.Name);
+
+            for (int index = 0; index < vector.Expected.Applications.Length; index++)
+            {
+                ExpectedApplication expected = vector.Expected.Applications[index];
+                AppxApplicationInfo actual = info.Applications[index];
+                Assert.AreEqual(expected.Id, actual.Id, vector.Name);
+                Assert.AreEqual(expected.Executable, actual.Executable, vector.Name);
+                Assert.AreEqual(expected.AppUserModelId, actual.AppUserModelId, vector.Name);
+                Assert.AreEqual(expected.UsesLaunchActivationArguments, actual.UsesLaunchActivationArguments, vector.Name);
+                Assert.AreEqual(expected.RunsInAppContainer, actual.RunsInAppContainer, vector.Name);
+            }
+        }
     }
 
     [TestMethod]
@@ -689,6 +728,27 @@ public sealed class AppxManifestInfoTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(manifestXml));
         return AppxManifestInfo.ReadFromManifest(stream);
     }
+
+    private sealed record ManifestConformanceVectors(int SchemaVersion, ManifestConformanceVector[] Vectors);
+
+    private sealed record ManifestConformanceVector(
+        string Name,
+        string[] ManifestLines,
+        ExpectedManifest Expected);
+
+    private sealed record ExpectedManifest(
+        string PackageName,
+        string Publisher,
+        string PublisherId,
+        string PackageFamilyName,
+        ExpectedApplication[] Applications);
+
+    private sealed record ExpectedApplication(
+        string Id,
+        string? Executable,
+        string AppUserModelId,
+        bool UsesLaunchActivationArguments,
+        bool RunsInAppContainer);
 
     private static string BuildManifestXml(string name, string publisher, string? applicationId)
     {

@@ -17,6 +17,9 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// that first-party platform extensions can derive from it across the assembly boundary without an
 /// <c>InternalsVisibleTo</c> grant. Its shape is an implementation detail; do not depend on it from
 /// your own code.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [Experimental("TPINTERNAL")]

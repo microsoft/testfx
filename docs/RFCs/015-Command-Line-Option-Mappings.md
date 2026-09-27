@@ -4,6 +4,13 @@
 - [ ] Under discussion
 - [ ] Implementation
 - [ ] Shipped
+- [x] Rejected
+
+## Decision
+
+The mapping extensibility API was rejected in favor of value-aware migration diagnostics. MTP keeps VSTest options such as `--logger` and `--collect` invalid, but recognizes common values and reports the canonical MTP options and extension packages to use instead.
+
+This preserves the single-owner command-line option model and avoids making a temporary migration aid into permanent public API. The decision can be revisited if migration telemetry or supported tooling that injects immutable VSTest arguments demonstrates that diagnostics are insufficient. In that case, prefer a narrow, hidden, first-party compatibility shim with an explicit removal release over a general public mapping API.
 
 ## Summary
 

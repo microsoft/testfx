@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -132,6 +132,12 @@ internal sealed partial class CtrfReportEngine
             writer.WriteString("machine", _environment.MachineName);
             writer.WriteNumber("exitCode", _exitCode);
             writer.WriteString("testApplication", _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+            if (_isIncomplete)
+            {
+                writer.WriteBoolean("incomplete", true);
+                writer.WriteString("runStatus", "aborted");
+            }
+
             writer.WriteEndObject();
             writer.WriteEndObject();
 

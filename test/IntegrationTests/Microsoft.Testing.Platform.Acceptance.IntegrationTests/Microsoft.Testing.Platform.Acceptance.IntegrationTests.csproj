@@ -10,6 +10,7 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
+    <DefineConstants>$(DefineConstants);USE_EXTERNAL_COMBINATORIAL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

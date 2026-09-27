@@ -37,6 +37,9 @@ public class FileArtifact : PropertyBagData
     /// the same kind for consolidation. <see langword="null"/> when the producer does not
     /// declare a kind.
     /// </param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public FileArtifact(FileInfo fileInfo, string displayName, string? description, string? kind)
         : base(displayName, description)
@@ -55,6 +58,9 @@ public class FileArtifact : PropertyBagData
     /// (e.g. <c>microsoft.testing.trx</c>), or <see langword="null"/> when the producer
     /// did not declare one.
     /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public string? Kind { get; }
 
@@ -129,6 +135,9 @@ public class SessionFileArtifact : DataWithSessionUid
     /// the same kind for consolidation. <see langword="null"/> when the producer does not
     /// declare a kind.
     /// </param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description, string? kind)
         : base(displayName, description, sessionUid)
@@ -147,6 +156,9 @@ public class SessionFileArtifact : DataWithSessionUid
     /// (e.g. <c>microsoft.testing.trx</c>), or <see langword="null"/> when the producer
     /// did not declare one.
     /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public string? Kind { get; }
 

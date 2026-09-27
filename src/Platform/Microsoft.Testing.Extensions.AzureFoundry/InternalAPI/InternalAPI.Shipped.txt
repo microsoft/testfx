@@ -3,7 +3,11 @@ Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey = 1 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.None = 0 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.TokenCredential = 2 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AzureOpenAIChatClientProvider() -> void
+Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AzureOpenAIChatClientProvider(Azure.Core.TokenCredential! credential) -> void
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.CreateChatClientAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Extensions.AI.IChatClient!>!
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.HasToolsCapability.get -> bool
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.IsAvailable.get -> bool

@@ -72,16 +72,16 @@ internal sealed class GitHubActionsReporter :
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync()
+    public async Task<bool> IsEnabledAsync()
     {
         bool isEnabled = GitHubActionsFeature.IsEnabled(_commandLine, _environment, GitHubActionsCommandLineOptions.GitHubActionsGroups);
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{nameof(GitHubActionsReport)} groups is {(isEnabled ? "enabled" : "disabled")}.");
+            await _logger.LogTraceAsync($"{nameof(GitHubActionsReport)} groups is {(isEnabled ? "enabled" : "disabled")}.").ConfigureAwait(false);
         }
 
-        return Task.FromResult(isEnabled);
+        return isEnabled;
     }
 
     // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session end

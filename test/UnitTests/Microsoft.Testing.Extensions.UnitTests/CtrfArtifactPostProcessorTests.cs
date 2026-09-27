@@ -21,9 +21,9 @@ public sealed class CtrfArtifactPostProcessorTests
     {
         CtrfArtifactPostProcessor processor = new();
 
-        Assert.AreSequenceEqual(new[] { CtrfReportGenerator.CtrfArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual([CtrfReportGenerator.CtrfArtifactKind], processor.SupportedKinds);
         Assert.AreSequenceEqual(
-            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts],
             processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);

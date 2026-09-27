@@ -6,6 +6,8 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
+// InvokeTestingPlatformTask does not yet preserve its terminal summary and artifacts in -mt's
+// out-of-process TaskHost, so tests that exercise the MSBuild Test target must opt out.
 [TestClass]
 public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
 {
@@ -46,7 +48,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore {solution.SolutionFile} --configfile {nugetFile}", cancellationToken: TestContext.CancellationToken);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test {solution.SolutionFile}", workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test {solution.SolutionFile}", workingDirectory: generator.TargetAssetPath, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         if (isMultiTfm)
         {

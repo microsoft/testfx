@@ -50,6 +50,7 @@ internal sealed partial class TestMethodRunner
                 try
                 {
                     TestResult[] testResults = await ExecuteTestWithDataSourceAsync(iterationContext, testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
+                    FinalizeIterationAssertionFailureDiagnostics(iterationContext, outerContext, testResults);
 
                     // Sync the iteration context's outcome with the final (post-cleanup) result
                     // before it is disposed. RunTestMethod sets the context outcome *before* running
@@ -97,6 +98,7 @@ internal sealed partial class TestMethodRunner
         {
             stopwatch = Stopwatch.StartNew();
             executionContext.SetDataRow(dataRow);
+            executionContext.SetDisplayName(displayName);
             testResults = await ExecuteTestAsync(executionContext, _testMethodInfo).ConfigureAwait(false);
         }
         finally
@@ -112,5 +114,22 @@ internal sealed partial class TestMethodRunner
         }
 
         return testResults;
+    }
+
+    private static void FinalizeIterationAssertionFailureDiagnostics(
+        TestContextImplementation iterationContext,
+        TestContextImplementation outerContext,
+        TestResult[] results)
+    {
+#if !WINDOWS_UWP && !WIN_UI
+        if (results.Length == 0)
+        {
+            iterationContext.TransferAssertionFailureDiagnosticsTo(outerContext);
+        }
+        else
+        {
+            iterationContext.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: false);
+        }
+#endif
     }
 }

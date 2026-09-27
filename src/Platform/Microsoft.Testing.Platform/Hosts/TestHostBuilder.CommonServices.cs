@@ -120,23 +120,28 @@ internal sealed partial class TestHostBuilder
         }
 #pragma warning restore CA1416
 
-        if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
+        var telemetryManager = (TelemetryManager)Telemetry;
+        if (telemetryManager.BuildOTelService(serviceProvider) is { } platformOTelService)
         {
-            serviceProvider.AddService(otelService);
+            serviceProvider.AddService(platformOTelService);
+        }
 
-            // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
-            // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
-            IPlatformOpenTelemetryService? platformOTelService = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>();
-            if (platformOTelService is not null)
-            {
-                // Set before creating any span so every span picks it up, including the ones created with an
-                // explicit parent id (which do not inherit tracestate).
-                platformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
-                context.BuilderActivity = platformOTelService.StartActivity(
-                    TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                    parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
-                    startTime: buildBuilderStart);
-            }
+        if (telemetryManager.BuildOTelProvider(serviceProvider) is { } otelProvider)
+        {
+            serviceProvider.AddService(otelProvider);
+        }
+
+        // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
+        // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
+        if (serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>() is { } registeredPlatformOTelService)
+        {
+            // Set before creating any span so every span picks it up, including the ones created with an
+            // explicit parent id (which do not inherit tracestate).
+            registeredPlatformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+            context.BuilderActivity = registeredPlatformOTelService.StartActivity(
+                TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
+                startTime: buildBuilderStart);
         }
 
         _ = bool.TryParse(context.Configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);
@@ -229,6 +234,7 @@ internal sealed partial class TestHostBuilder
         serviceProvider.AddService(context.TestFrameworkCapabilities);
 
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;
+        IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptionDefaults;
         try
         {
             // Normalize JSON-sourced scalar option entries to the indexed shape for arg-bearing
@@ -262,6 +268,7 @@ internal sealed partial class TestHostBuilder
             context.Configuration.NormalizeJsonCommandLineOptionScalars(optionByName);
 
             jsonCommandLineOptions = context.Configuration.EnumerateJsonCommandLineOptions();
+            jsonCommandLineOptionDefaults = context.Configuration.EnumerateJsonCommandLineOptionDefaults();
         }
         catch (FormatException ex) when (!loggingState.CommandLineParseResult.HasTool)
         {
@@ -281,6 +288,7 @@ internal sealed partial class TestHostBuilder
             // A tool such as --info or --version is being invoked. Degrade gracefully by treating
             // the malformed testconfig.json as empty so the tool can still complete its job.
             jsonCommandLineOptions = [];
+            jsonCommandLineOptionDefaults = [];
         }
 
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
@@ -288,7 +296,8 @@ internal sealed partial class TestHostBuilder
             context.CommandLineHandler.SystemCommandLineOptionsProviders,
             context.CommandLineHandler.ExtensionsCommandLineOptionsProviders,
             context.CommandLineHandler,
-            jsonCommandLineOptions).ConfigureAwait(false);
+            jsonCommandLineOptions,
+            jsonCommandLineOptionDefaults).ConfigureAwait(false);
 
         if (!commandLineValidationResult.IsValid)
         {

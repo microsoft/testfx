@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 /// <summary>
 /// Represents an extension that orchestrates test host execution.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostExecutionOrchestrator : ITestHostOrchestratorExtension
 {

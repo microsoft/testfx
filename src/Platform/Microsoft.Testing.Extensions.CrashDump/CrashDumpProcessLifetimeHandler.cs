@@ -121,6 +121,9 @@ internal sealed partial class CrashDumpProcessLifetimeHandler : ITestHostProcess
     internal static string GetDumpDirectory(string dumpFileNamePattern)
         => CrashDumpFileNameHelper.GetDumpDirectory(dumpFileNamePattern);
 
+    internal static string GetDumpSearchPattern(string dumpFileNamePattern)
+        => CrashDumpFileNameHelper.GetDumpSearchPattern(dumpFileNamePattern);
+
     internal static Regex BuildDumpFileNameRegex(string fileName)
         => CrashDumpFileNameHelper.BuildDumpFileNameRegex(fileName);
 

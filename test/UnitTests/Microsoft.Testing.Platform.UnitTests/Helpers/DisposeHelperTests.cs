@@ -25,7 +25,7 @@ public sealed class DisposeHelperTests
         await DisposeHelper.DisposeAsync(resource);
 
         Assert.AreSequenceEqual(
-            new[] { nameof(RecordingSyncResource.CleanupAsync), nameof(RecordingSyncResource.Dispose) },
+            [nameof(RecordingSyncResource.CleanupAsync), nameof(RecordingSyncResource.Dispose)],
             resource.Invocations);
     }
 
@@ -39,7 +39,7 @@ public sealed class DisposeHelperTests
             () => DisposeHelper.DisposeAsync(resource));
 
         Assert.AreSame(expectedException, actualException);
-        Assert.AreSequenceEqual(new[] { nameof(RecordingSyncResource.CleanupAsync) }, resource.Invocations);
+        Assert.AreSequenceEqual([nameof(RecordingSyncResource.CleanupAsync)], resource.Invocations);
     }
 
     [TestMethod]
@@ -53,7 +53,7 @@ public sealed class DisposeHelperTests
 
         Assert.AreSame(expectedException, actualException);
         Assert.AreSequenceEqual(
-            new[] { nameof(RecordingSyncResource.CleanupAsync), nameof(RecordingSyncResource.Dispose) },
+            [nameof(RecordingSyncResource.CleanupAsync), nameof(RecordingSyncResource.Dispose)],
             resource.Invocations);
     }
 
@@ -66,13 +66,12 @@ public sealed class DisposeHelperTests
         await DisposeHelper.DisposeAsync(resource);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 nameof(RecordingSyncResource.CleanupAsync),
                 nameof(RecordingSyncResource.Dispose),
                 nameof(RecordingSyncResource.CleanupAsync),
                 nameof(RecordingSyncResource.Dispose),
-            },
+            ],
             resource.Invocations);
     }
 
@@ -85,7 +84,7 @@ public sealed class DisposeHelperTests
         await DisposeHelper.DisposeAsync(resource);
 
         Assert.AreSequenceEqual(
-            new[] { nameof(RecordingAsyncResource.CleanupAsync), nameof(RecordingAsyncResource.DisposeAsync) },
+            [nameof(RecordingAsyncResource.CleanupAsync), nameof(RecordingAsyncResource.DisposeAsync)],
             resource.Invocations);
     }
 
@@ -102,7 +101,7 @@ public sealed class DisposeHelperTests
         Assert.AreSame(expectedException, actualException);
         Assert.AreEqual(cancellationToken, actualException.CancellationToken);
         Assert.AreSequenceEqual(
-            new[] { nameof(RecordingAsyncResource.CleanupAsync), nameof(RecordingAsyncResource.DisposeAsync) },
+            [nameof(RecordingAsyncResource.CleanupAsync), nameof(RecordingAsyncResource.DisposeAsync)],
             resource.Invocations);
     }
 #endif

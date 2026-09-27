@@ -68,6 +68,19 @@ internal sealed partial class UnitTestRunner
 
         // Bridge the adapter setting to the TestFramework for assertion failure behavior.
         AssertionFailureSettings.LaunchDebuggerOnAssertionFailure = MSTestSettings.CurrentSettings.LaunchDebuggerOnAssertionFailure;
+#if WINDOWS_UWP || WIN_UI
+        if (MSTestSettings.CurrentSettings.CaptureAssertionFailureDiagnostics)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                "CaptureAssertionFailureDiagnostics is not supported on UWP or WinUI and will be ignored.");
+        }
+
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure = null;
+#else
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure = MSTestSettings.CurrentSettings.CaptureAssertionFailureDiagnostics
+            ? TestContextImplementation.CaptureAssertionFailureDiagnostics
+            : null;
+#endif
 
         Logger.OnLogMessage += message => (TestContext.Current as TestContextImplementation)?.StandardOutputBuilder.Append(message);
 

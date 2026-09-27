@@ -1,7 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -41,7 +43,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            _actualCount = collection.Count();
+            _actualCount = CollectionCountHelper.GetCount(collection);
             _expectedCount = count;
             shouldAppend = _actualCount != _expectedCount;
             if (shouldAppend)
@@ -59,7 +61,7 @@ public sealed partial class Assert
         /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable<TItem> collection, out bool shouldAppend)
         {
-            _actualCount = collection.Count();
+            _actualCount = CollectionCountHelper.GetCount(collection);
             _expectedCount = 0;
             shouldAppend = _actualCount != _expectedCount;
             if (shouldAppend)
@@ -69,6 +71,31 @@ public sealed partial class Assert
         }
 
 #if NETCOREAPP3_1_OR_GREATER
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="count">The expected item count.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, TItem[] collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, count, (IEnumerable<TItem>)collection, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, TItem[] collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, (IEnumerable<TItem>)collection, out shouldAppend)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.

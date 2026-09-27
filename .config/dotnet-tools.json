@@ -3,16 +3,9 @@
   "isRoot": true,
   "tools": {
     "dotnet-coverage": {
-      "version": "18.10.0",
+      "version": "18.11.2",
       "commands": [
         "dotnet-coverage"
-      ],
-      "rollForward": false
-    },
-    "dotnet-stryker": {
-      "version": "4.16.0",
-      "commands": [
-        "dotnet-stryker"
       ],
       "rollForward": false
     }

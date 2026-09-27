@@ -5,7 +5,10 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -139,6 +142,36 @@ public sealed class PackagedAppConnectBackHandshakeTests
     }
 
     [TestMethod]
+    public async Task AddPackagedAppDeployment_RetryChild_DoesNotRegisterLauncher()
+    {
+        string[] arguments = ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(arguments);
+
+        PackagedAppExtensions.AddPackagedAppDeployment(builder, arguments);
+
+        ITestHostLauncher? launcher =
+            await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        Assert.IsNull(launcher);
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_RetryChild_AddsControllerSkipMarker()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"],
+            new Dictionary<string, string?>(),
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
+
+        Assert.HasCount(1, environment);
+        Assert.AreEqual(
+            "1",
+            environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION"]);
+    }
+
+    [TestMethod]
     public void GetConnectBackEnvironment_IncludesRetryAttemptAndExcludesUnrelatedValues()
     {
         var context = new TestHostLaunchContext(
@@ -147,6 +180,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
             new Dictionary<string, string?>
             {
                 ["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"] = "controller-pipe",
+                ["testingplatform_dotnettest_executionid"] = "execution-id",
                 ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2",
                 ["TRXNAMEDPIPENAME"] = @"LOCAL\trx-pipe",
                 ["TESTINGPLATFORM_HANGDUMP_PIPENAME"] = @"LOCAL\hangdump-pipe",
@@ -158,14 +192,44 @@ public sealed class PackagedAppConnectBackHandshakeTests
 
         var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
 
-        Assert.HasCount(6, environment);
+        Assert.HasCount(7, environment);
         Assert.AreEqual("controller-pipe", environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_1234"]);
+        Assert.AreEqual("execution-id", environment["testingplatform_dotnettest_executionid"]);
+        Assert.HasCount(
+            1,
+            environment.Keys.Where(
+                static key => string.Equals(
+                    key,
+                    "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
+                    StringComparison.OrdinalIgnoreCase)));
         Assert.AreEqual("2", environment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
         Assert.AreEqual(@"LOCAL\trx-pipe", environment["TRXNAMEDPIPENAME"]);
         Assert.AreEqual(@"LOCAL\hangdump-pipe", environment["TESTINGPLATFORM_HANGDUMP_PIPENAME"]);
         Assert.AreEqual("trx-run", environment["TESTINGPLATFORM_TRX_TESTRUN_ID"]);
         Assert.AreEqual("logical-run", environment["testingplatform_logical_run_id"]);
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_ForAppContainer_RedirectsRetryArtifactManifest()
+    {
+        const string RedirectedManifestPath = @"C:\PackageLocalState\MtpTestHost\retry-recovered-artifacts.manifest";
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            [],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = @"C:\ControllerTemp\retry.txt",
+            },
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher
+            .GetConnectBackEnvironment(context, RedirectedManifestPath)
+            .ToDictionary();
+
+        Assert.AreEqual(
+            RedirectedManifestPath,
+            environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
     }
 }
 

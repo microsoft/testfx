@@ -15,7 +15,7 @@ We are measuring the process execution time using the PowerShell `Measure-Comman
 Running tests:
 
 - with runner: `..\..\artifacts\bin\<FOLDER_TO_TEST>\Debug\net8.0\10C100M.exe --coverage --report-trx`
-- with VSTest: `dotnet test <FOLDER_TO_TEST> --no-restore --no-build --logger trx --collect "Code Coverage"`
+- with VSTest: `dotnet test <FOLDER_TO_TEST> --no-restore --no-build -p:EnableMSTestRunner=false --logger trx --collect "Code Coverage"`
 
 NOTE: Values are reported from our work machines as examples, you may see differences depending on performance and load of your own machine.
 

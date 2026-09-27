@@ -426,6 +426,35 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
+    public void GetShowTestResultsVisibility_WhenPassiveDefaultPresent_ReturnsParsedFlags()
+    {
+        var options = new Helpers.TestCommandLineOptions(
+            [],
+            new Dictionary<string, string[]>
+            {
+                [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["failed"],
+            });
+
+        Assert.AreEqual(TestResultVisibility.Failed, TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenOptionAndPassiveDefaultPresent_OptionWins()
+    {
+        var options = new Helpers.TestCommandLineOptions(
+            new Dictionary<string, string[]>
+            {
+                [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["skipped"],
+            },
+            new Dictionary<string, string[]>
+            {
+                [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["failed"],
+            });
+
+        Assert.AreEqual(TestResultVisibility.Skipped, TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
     public void GetShowTestResultsVisibility_WhenPresentValueWasNotValidated_Throws()
     {
         var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
@@ -438,10 +467,10 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.AreEqual("The --show-test-results option was not validated.", exception.Message);
     }
 
-    // TerminalOutputDevice.GetShowTestResultsVisibility resolution/precedence: an explicit --show-test-results
-    // always wins over --output; absent it, --output's 'Minimal' maps to 'failed', 'Detailed' maps to 'all', and
-    // everything else (including no --output at all) maps to 'failed'+'skipped'. Since both options are read independently by name from the
-    // same options bag, the resolution cannot depend on which one a user typed first on the command line.
+    // TerminalOutputDevice.GetShowTestResultsVisibility resolution/precedence: an explicit or passive-default
+    // --show-test-results value wins over --output; absent both, --output's 'Minimal' maps to 'failed', 'Detailed'
+    // maps to 'all', and everything else (including no --output at all) maps to 'failed'+'skipped'. Since both
+    // options are read independently by name from the same options bag, resolution cannot depend on CLI order.
     //
     // Comparisons cast to int: TerminalOutputDevice itself is not compiled into this test project (only the
     // OutputDevice\Terminal folder is, via the Compile Include in the .csproj), so its return value is the

@@ -15,6 +15,25 @@ is specified in its own document.
 The machine-readable JSON Schema for the base protocol is
 [`server-mode-1.0.schema.json`](./server-mode-1.0.schema.json).
 
+## Reference client
+
+Rather than implementing this protocol by hand, clients can consume the canonical, source-only
+[`Microsoft.Testing.Platform.ServerMode.Client.Sources`](https://www.nuget.org/packages/Microsoft.Testing.Platform.ServerMode.Client.Sources)
+package. It compiles the same protocol and serialization source files the server uses, so it is wire
+compatible by construction, and it offers two launch paths:
+
+- `MtpServerClient.LaunchAsync(path)` starts the test application as a **child process**. This is the
+  default for IDE, CLI and CI tooling.
+- `MtpServerClient.LaunchInProcessAsync(callback)` hosts the test application **in the caller's own
+  process** through a callback, for embedded runners (MAUI, Android/iOS test apps) that cannot spawn a
+  process. The client generates the complete server-mode argument array
+  (`--server jsonrpc --client-host <host> --client-port <port> --no-banner`) and hands it to the
+  callback, which forwards it verbatim to `TestApplication.CreateBuilderAsync`.
+
+Both paths use loopback TCP, so neither works on browser/WASM; the in-process path fails fast with a
+`PlatformNotSupportedException` there. See the package's `PACKAGE.md` for ownership, cancellation and
+shutdown-bound details.
+
 ## API overview
 
 Here's the current list of APIs that supported by the client.
@@ -238,9 +257,11 @@ interface InitializeParams {
 
             // If true, the client is stateful: it persists an addressable set of test nodes for the
             // whole session and keeps each node in its last-known state until it is explicitly updated
-            // (for example, an IDE test explorer). If false or missing, the client is stateless: it
-            // consumes test updates as a stream and does not retain node state after the run
-            // (for example, `dotnet test`). Defaults to false.
+            // (for example, an IDE test explorer). If false, the client explicitly declares that it is
+            // stateless and consumes test updates as a stream without retaining node state after the run
+            // (for example, `dotnet test`). If missing, the client does not support or did not declare
+            // the capability, allowing consumers to apply compatibility behavior for known legacy clients.
+            // This is independent of connection lifetime and experimental_multiRequestSupport.
             isStateful?: boolean,
         },
     }

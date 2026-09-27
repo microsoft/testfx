@@ -213,13 +213,34 @@ public class DataRowAttributeTests : TestContainer
         displayName.Should().Be("DataRowObjectArrayTestMethod ([\"a\",null,'b'])");
     }
 
-    public void GetDisplayNamePreservesRawStringAndCharacterContents()
+    public void GetDisplayNameEscapesStringAndCharacterContents()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
 
-        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["quote\"\\\n", '\'']);
+        string? displayName = new DataRowAttribute().GetDisplayName(
+            methodInfo,
+            ["quote\"\\\0\a\b\f\n\r\t\v\u001F\u2028\u2029", '\'', '\\', '\n', '\u001F', '\uD800']);
 
-        displayName.Should().Be("DataRowTestMethod (\"quote\"\\\n\",''')");
+        displayName.Should().Be(
+            "DataRowTestMethod (\"quote\\\"\\\\\\0\\a\\b\\f\\n\\r\\t\\v\\u001F\\u2028\\u2029\",'\\'','\\\\','\\n','\\u001F','\\uD800')");
+    }
+
+    public void GetDisplayNameEscapesUnpairedSurrogatesAndPreservesValidSurrogatePairs()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["\uD800", "\uDC00", "\uDC00\uD800", "😀"]);
+
+        displayName.Should().Be("DataRowTestMethod (\"\\uD800\",\"\\uDC00\",\"\\uDC00\\uD800\",\"😀\")");
+    }
+
+    public void GetDisplayNameDistinguishesControlCharactersFromLiteralEscapeSequences()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        string? displayName = new DataRowAttribute().GetDisplayName(methodInfo, ["\n", "\\n", "\r\n", "\\r\\n"]);
+
+        displayName.Should().Be("DataRowTestMethod (\"\\n\",\"\\\\n\",\"\\r\\n\",\"\\\\r\\\\n\")");
     }
 
     public void GetDisplayNameUsesCurrentCultureForValues()
@@ -257,6 +278,26 @@ public class DataRowAttributeTests : TestContainer
         finally
         {
             CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    public void GetDisplayNameRefreshesLocalizedFormatWhenUICultureChanges()
+    {
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+            var attribute = new DataRowAttribute();
+
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            attribute.GetDisplayName(methodInfo, ["value"]).Should().Be("DataRowTestMethod (\"value\")");
+
+            CultureInfo.CurrentUICulture = new CultureInfo("ko-KR");
+            attribute.GetDisplayName(methodInfo, ["value"]).Should().Be("DataRowTestMethod(\"value\")");
+        }
+        finally
+        {
             CultureInfo.CurrentUICulture = previousUICulture;
         }
     }

@@ -7,6 +7,9 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_NOLOGO = "DOTNET_NOLOGO" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_WATCH = "DOTNET_WATCH" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT = "TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC = "TESTINGPLATFORM_DIAGNOSTIC" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX = "TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX" -> string!
@@ -15,6 +18,7 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLA
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE = "TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = "TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION = "TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE = "TESTINGPLATFORM_EXITCODE_IGNORE" -> string!
@@ -22,6 +26,7 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLA
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = "TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS = "TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER = "TESTINGPLATFORM_NOBANNER" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT = "TESTINGPLATFORM_TELEMETRY_OPTOUT" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID" -> string!
@@ -62,11 +67,15 @@ const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.Text = 4 -> ushort
 const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.ErrorMessage = 1 -> ushort
 const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.ErrorType = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.StackTrace = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Actual = 11 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.DisplayName = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Duration = 4 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.ErrorOutput = 8 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.ExceptionMessageList = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Expected = 10 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.IsSuperseded = 13 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Reason = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.RetryAttemptNumber = 12 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.SessionUid = 9 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.StandardOutput = 7 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.State = 3 -> ushort
@@ -74,6 +83,8 @@ const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Uid = 1 -> 
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Description = 3 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.DisplayName = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.FullPath = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.InputArtifactPaths = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.SessionUid = 6 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.TestDisplayName = 5 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.TestUid = 4 -> ushort
@@ -82,12 +93,15 @@ const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.FileArtifactMe
 const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.InstanceId = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.MessagesSerializerId = 7 -> int
 const Microsoft.Testing.Platform.IPC.HandshakeMessageFieldsId.MessagesSerializerId = 9 -> int
+const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
 const Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId.Kind = 1 -> ushort
 const Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId.MessagesSerializerId = 14 -> int
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.DisplayName = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Duration = 4 -> ushort
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.ErrorOutput = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.IsSuperseded = 10 -> ushort
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Reason = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.RetryAttemptNumber = 9 -> ushort
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.SessionUid = 8 -> ushort
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.StandardOutput = 6 -> ushort
 const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.State = 3 -> ushort
@@ -207,6 +221,7 @@ Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
 Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants
 Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.AtLeastOneTestFailed = 2 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.DependentProcessExited = 11 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.GenericFailure = 1 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.IncompatibleProtocolVersion = 12 -> Microsoft.Testing.Platform.Helpers.ExitCode
@@ -215,6 +230,7 @@ Microsoft.Testing.Platform.Helpers.ExitCode.InvalidPlatformSetup = 4 -> Microsof
 Microsoft.Testing.Platform.Helpers.ExitCode.MinimumExpectedTestsPolicyViolation = 9 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.Success = 0 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestAdapterTestSessionFailure = 10 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedForMaxFailedTests = 13 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestHostProcessExitedNonGracefully = 7 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestSessionAborted = 3 -> Microsoft.Testing.Platform.Helpers.ExitCode
@@ -270,13 +286,15 @@ Microsoft.Testing.Platform.IPC.NamedPipeClient.RequestReplyAsync<TRequest, TResp
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.DisposeBuffers() -> void
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.NamedPipeConnectionBase() -> void
-Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
-Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Stream! stream, System.Threading.CancellationToken cancellationToken, int maximumFrameSize = 2147483647) -> System.Threading.Tasks.Task<object?>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Stream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.IPC.NamedPipeServer
 Microsoft.Testing.Platform.IPC.NamedPipeServer.Dispose() -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, int maxNumberOfServerInstances, System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, int maxNumberOfServerInstances, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Collections.Generic.IReadOnlyList<string!>? authorizedSecurityIdentities, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -337,20 +355,26 @@ static Microsoft.Testing.Platform.Helpers.TimeSpanParser.ParseRequireSuffix(stri
 static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParse(string? time, Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit defaultUnit, out System.TimeSpan result) -> bool
 static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParse(string? time, out System.TimeSpan result) -> bool
 static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParseRequireSuffix(string? time, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsureDirectoryIsWritable(string! directory) -> void
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsurePathLengthWithinLimit(string! path) -> void
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.GetPipeName(string! name) -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.ResolvePipeDirectory(string? overrideDirectory, string? tempPath) -> (string! Directory, bool IsExplicitOverride)
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.DebugAssert(bool condition, string! message) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.IsNullOrEmpty<T>(T[]? list) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadBool(System.IO.Stream! stream) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadByte(System.IO.Stream! stream) -> byte
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadInt(System.IO.Stream! stream) -> int
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadLong(System.IO.Stream! stream) -> long
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadString(System.IO.Stream! stream) -> string!
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadStringValue(System.IO.Stream! stream, int size) -> string!
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadUShort(System.IO.Stream! stream) -> ushort
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.SetPosition(System.IO.Stream! stream, long position) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteAtPosition(System.IO.Stream! stream, int value, long position) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteBool(System.IO.Stream! stream, bool value) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteByte(System.IO.Stream! stream, byte value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, byte? value) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, string? value) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, bool? value) -> void
@@ -359,12 +383,15 @@ static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(Syst
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, long? value) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, string? value) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteInt(System.IO.Stream! stream, int value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteLong(System.IO.Stream! stream, long value) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteSize<T>(System.IO.Stream! stream) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteString(System.IO.Stream! stream, string! str) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteUShort(System.IO.Stream! stream, ushort value) -> void
 static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool

@@ -254,6 +254,7 @@ public sealed class PackagedAppActivationArgumentsTests
                 handshakePath,
                 new Dictionary<string, string?>
                 {
+                    ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = "controller-execution-id",
                     ["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_4321"] = "MONITORTOHOST_deadbeef",
                 });
 
@@ -269,6 +270,7 @@ public sealed class PackagedAppActivationArgumentsTests
                 (name, value) => restoredEnvironment[name] = value);
 
             AssertArgumentsAreEqual(expectedArguments, actualArguments);
+            Assert.AreEqual("controller-execution-id", restoredEnvironment["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"]);
             Assert.AreEqual("MONITORTOHOST_deadbeef", restoredEnvironment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_4321"]);
             Assert.IsFalse(File.Exists(handshakePath), "The bootstrap must consume the connect-back handshake before returning.");
         }
@@ -299,7 +301,11 @@ public sealed class PackagedAppActivationArgumentsTests
             string handshakePath = Path.Combine(directory, PackagedAppConnectBackHandshake.GetHandshakeFileName(handshakeId));
             PackagedAppConnectBackHandshake.Write(
                 handshakePath,
-                new Dictionary<string, string?> { ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2" });
+                new Dictionary<string, string?>
+                {
+                    ["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2",
+                    ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = "retry-execution-id",
+                });
             PackagedAppActivationData activation = PackagedAppActivationArguments.Create(expectedArguments, directory);
             var restoredEnvironment = new Dictionary<string, string?>(StringComparer.Ordinal);
 
@@ -312,6 +318,7 @@ public sealed class PackagedAppActivationArgumentsTests
 
             AssertArgumentsAreEqual(expectedArguments, actualArguments);
             Assert.AreEqual("2", restoredEnvironment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
+            Assert.AreEqual("retry-execution-id", restoredEnvironment["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"]);
             Assert.IsFalse(File.Exists(handshakePath));
         }
         finally

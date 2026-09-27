@@ -15,7 +15,7 @@
       <trans-unit id="AddResourceLockFix">
         <source>Add '[ResourceLock(WellKnownResources.{0})]'</source>
         <target state="translated">'[ResourceLock(WellKnownResources.{0})]' 추가</target>
-        <note>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</note>
+        <note>{0} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}</note>
       </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
@@ -87,6 +87,11 @@
         <target state="translated">서명 수정</target>
         <note />
       </trans-unit>
+      <trans-unit id="MakeOSConditionConsistentFix">
+        <source>Make '[OSCondition]' consistent with platform compatibility attributes</source>
+        <target state="translated">'[OSCondition]'을 플랫폼 호환성 특성과 일치하도록 설정</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">메서드 호출에 'TestContext.CancellationToken' 인수 전달</target>
@@ -111,6 +116,11 @@
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">기본 'AutoDetect'를 사용하려면 'DynamicDataSourceType' 매개 변수를 제거합니다.</target>
         <note>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</note>
+      </trans-unit>
+      <trans-unit id="RemoveRedundantTestMethodAttributeFix">
+        <source>Remove redundant attribute</source>
+        <target state="translated">중복된 특성 제거</target>
+        <note />
       </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
         <source>Remove redundant 'DisplayName'</source>

@@ -9,8 +9,10 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 using Moq;
 
@@ -44,6 +46,43 @@ public sealed class TestHostBuilderTests
     }
 
     [TestMethod]
+    public async Task ControllerPreLaunch_CooperativeShutdownTimeoutUsesFinalProviderValue()
+    {
+        Mock<ITestHostEnvironmentVariableProvider> provider = new();
+        provider.SetupGet(x => x.Uid).Returns("provider");
+        provider.SetupGet(x => x.DisplayName).Returns("provider");
+        provider.Setup(x => x.UpdateAsync(It.IsAny<IEnvironmentVariables>()))
+            .Callback<IEnvironmentVariables>(environmentVariables => environmentVariables.SetVariable(new(
+                EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS,
+                "60",
+                isSecret: false,
+                isLocked: false)))
+            .Returns(Task.CompletedTask);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        var environmentVariables = new EnvironmentVariables(loggerFactory.Object);
+
+        await TestHostControllersTestHost.ApplyControllerExtensionPreLaunchAsync(
+            [],
+            [provider.Object],
+            environmentVariables,
+            CancellationToken.None);
+
+        Assert.AreEqual(
+            TimeSpan.FromSeconds(75),
+            TestHostControllersTestHost.GetTestHostCooperativeShutdownTimeout(environmentVariables));
+        Assert.AreEqual(
+            TimeSpan.FromSeconds(60),
+            ShutdownTimeouts.GetCanceledConsumerCompletion("60"));
+    }
+
+    // Mutates a real process-global environment variable (via SystemEnvironment, not a mock) under the
+    // assembly's method-level parallelism. No other test in this assembly reads or writes the same
+    // PID-qualified TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_<pid> key (the other tests in this class use
+    // mocked ITestHostEnvironmentVariableProvider/IEnvironmentVariables, never the real Environment), so a
+    // method-level lock is sufficient without serializing the rest of the class.
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task ConnectToTestHostProcessMonitorIfAvailableAsync_MissingPipeName_ReportsPidQualifiedEnvironmentVariable()
     {
         const int testHostControllerPid = 123456789;
@@ -73,6 +112,78 @@ public sealed class TestHostBuilderTests
             environment.SetEnvironmentVariable(pipeEnvironmentVariable, previousPipeName);
         }
     }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_RetryChild_RetainsControllerComposition()
+    {
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(testHostControllerPid: null);
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            ["internal-retry-pipename"] = ["retry-pipe"],
+        });
+
+        Assert.IsFalse(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            commandLineOptions,
+            Mock.Of<IEnvironment>()));
+    }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_PackagedRetryChildWithSkipMarker_SkipsControllerComposition()
+    {
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(testHostControllerPid: null);
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            ["internal-retry-pipename"] = ["retry-pipe"],
+        });
+        Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION))
+            .Returns("1");
+
+        Assert.IsTrue(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            commandLineOptions,
+            environment.Object));
+    }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_ControllerChildWithSkipMarker_SkipsControllerComposition()
+    {
+        const int ControllerPid = 42;
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(ControllerPid);
+        Mock<IEnvironment> environment = new();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(
+                $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{ControllerPid}"))
+            .Returns("1");
+
+        Assert.IsTrue(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            new TestCommandLineOptions([]),
+            environment.Object));
+    }
+
+    [TestMethod]
+    public void ShouldSkipTestHostControllersHost_ControllerChildWithoutSkipMarker_RetainsControllerComposition()
+    {
+        TestHostControllerInfo controllerInfo = CreateTestHostControllerInfo(testHostControllerPid: 42);
+
+        Assert.IsFalse(TestHostBuilder.ShouldSkipTestHostControllersHost(
+            controllerInfo,
+            new TestCommandLineOptions([]),
+            Mock.Of<IEnvironment>()));
+    }
+
+    private static TestHostControllerInfo CreateTestHostControllerInfo(int? testHostControllerPid)
+        => new(new CommandLineParseResult(
+            null,
+            testHostControllerPid.HasValue
+                ? [new CommandLineParseOption(
+                    PlatformCommandLineProvider.TestHostControllerPIDOptionKey,
+                    [testHostControllerPid.Value.ToString(CultureInfo.InvariantCulture)])]
+                : [],
+            []));
 
     private static async Task ConnectToTestHostProcessMonitorIfAvailableAsync(
         MethodInfo method,

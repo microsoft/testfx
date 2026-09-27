@@ -2,27 +2,28 @@
 
   <PropertyGroup>
     <AspireTestingVersion>13.4.6</AspireTestingVersion>
-    <CodeCoverageVersion>18.9.0</CodeCoverageVersion>
-    <MSTestVersion>4.3.2</MSTestVersion>
+    <CodeCoverageVersion>18.11.0</CodeCoverageVersion>
+    <MSTestVersion>4.4.1</MSTestVersion>
     <!--
-      MSTestAOTVersion pins the experimental MSTest.Engine and the last independently versioned
-      MSTest.SourceGeneration package used by the non-SDK Native AOT runner sample
-      (mstest-runner/NativeAotRunner). It is kept at the highest version mirrored to the dotnet-public NuGet
-      feed used by these samples. MSTestEngineVersion aliases it for the same reason. New
-      MSTest.SourceGeneration packages use the standard MSTestVersion; the legacy pin can be removed once a
-      matching package is available on the feed.
+      MSTestAOTVersion pins the compatible experimental MSTest.Engine and MSTest.SourceGeneration
+      pair used by the non-SDK Native AOT runner sample (mstest-runner/NativeAotRunner).
+      MSTestSdkAOTVersion pins the newer source generator required by MSTest.Sdk's Native AOT
+      pipeline. Both remain independently pinned to versions mirrored to the dotnet-public NuGet
+      feed used by these samples. The SDK-specific pin can be removed once a matching stable
+      MSTest.SourceGeneration package is available on the feed.
     -->
     <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
+    <MSTestSdkAOTVersion>2.0.0-alpha.26358.12</MSTestSdkAOTVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
-    <TestingPlatformVersion>2.3.2</TestingPlatformVersion>
+    <TestingPlatformVersion>2.4.1</TestingPlatformVersion>
     <!--
       Microsoft.Testing.Extensions.PackagedApp deploys and launches a packaged Windows (UWP/WinUI)
       test host. The latest published package predates its alignment with the testing platform version,
       so this sample pins that package separately.
     -->
     <MicrosoftTestingExtensionsPackagedAppVersion>1.0.0-alpha.26363.8</MicrosoftTestingExtensionsPackagedAppVersion>
-    <VSTestVersion>18.8.0</VSTestVersion>
+    <VSTestVersion>18.9.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>

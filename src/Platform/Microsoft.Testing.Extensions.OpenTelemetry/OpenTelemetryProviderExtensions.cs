@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
 using OpenTelemetry.Metrics;
@@ -13,14 +12,38 @@ using OpenTelemetry.Trace;
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
-/// Extensions for adding AppInsights telemetry provider.
+/// Extensions for activating Microsoft Testing Platform diagnostics and configuring OpenTelemetry providers.
 /// </summary>
 public static class OpenTelemetryProviderExtensions
 {
     /// <summary>
+    /// Activates the Microsoft Testing Platform diagnostics producer so its activities and metrics can be observed
+    /// by application-owned listeners or OpenTelemetry providers.
+    /// </summary>
+    /// <remarks>
+    /// This method only registers the platform's <see cref="System.Diagnostics.ActivitySource"/> and
+    /// <see cref="System.Diagnostics.Metrics.Meter"/> adapters. It does not create, configure, flush, or dispose an
+    /// OpenTelemetry <see cref="TracerProvider"/> or <see cref="MeterProvider"/>.
+    /// <para>Call <see cref="AddTestingPlatformInstrumentation(TracerProviderBuilder)"/> and
+    /// <see cref="AddTestingPlatformInstrumentation(MeterProviderBuilder)"/> on the application-owned provider
+    /// builders to subscribe them to the emitted signals.</para>
+    /// <para>Registration is idempotent and can be combined with <see cref="AddOpenTelemetryProvider"/> or
+    /// <see cref="AddOpenTelemetryProviderFromEnvironment"/> in any order.</para>
+    /// </remarks>
+    /// <param name="builder">The application builder on which to activate Microsoft Testing Platform diagnostics.</param>
+    public static void AddTestingPlatformDiagnostics(this ITestApplicationBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryService(_ => new OpenTelemetryPlatformService());
+    }
+
+    /// <summary>
     /// Registers OpenTelemetry tracing and metrics providers whose lifetime is managed by the Microsoft Testing Platform.
     /// </summary>
-    /// <remarks>The providers are created with empty configuration. Callers are responsible for wiring everything
+    /// <remarks>This method also activates the platform diagnostics producer through
+    /// <see cref="AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/>.
+    /// The providers are created with empty configuration. Callers are responsible for wiring everything
     /// the providers should observe and export, including:
     /// <list type="bullet">
     /// <item><description>The Microsoft Testing Platform instrumentation, via
@@ -32,16 +55,16 @@ public static class OpenTelemetryProviderExtensions
     /// without an exporter, collected telemetry is not emitted anywhere.</description></item>
     /// </list>
     /// No defaults are applied — this method does not pick instrumentation or exporters on the caller's behalf because
-    /// the right choice depends on the target observability backend.</remarks>
+    /// the right choice depends on the target observability backend. Applications that already own their OpenTelemetry
+    /// providers should call <see cref="AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/> instead.</remarks>
     /// <param name="builder">The application builder to which the OpenTelemetry providers will be added. Cannot be null.</param>
     /// <param name="withTracing">An optional delegate to configure the tracing provider (sources, instrumentation, exporters).</param>
     /// <param name="withMetrics">An optional delegate to configure the metrics provider (meters, instrumentation, exporters).</param>
     public static void AddOpenTelemetryProvider(this ITestApplicationBuilder builder, Action<TracerProviderBuilder>? withTracing = null, Action<MeterProviderBuilder>? withMetrics = null)
-        => ((TestApplicationBuilder)builder).Telemetry.AddOpenTelemetryProvider(serviceProvider =>
-        {
-            ((ServiceProvider)serviceProvider).AddService(new OpenTelemetryPlatformService());
-            return new OpenTelemetryProvider(withTracing, withMetrics);
-        });
+    {
+        builder.AddTestingPlatformDiagnostics();
+        ((TestApplicationBuilder)builder).Telemetry.AddOpenTelemetryProvider(_ => new OpenTelemetryProvider(withTracing, withMetrics));
+    }
 
     /// <summary>
     /// Enables instrumentation for the Microsoft Testing Platform by adding its activity source to the specified tracer
@@ -85,8 +108,14 @@ public static class OpenTelemetryProviderExtensions
     /// Adds the Microsoft Testing Platform resource attributes (test assembly, host, OS, runtime and the detected
     /// CI provider, pipeline and commit) to the resource of a tracer, meter or logger provider.
     /// </summary>
-    /// <remarks>Resource attributes are attached once to every span and metric point exported by the provider, which
-    /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.
+    /// <remarks>This is the standalone aggregate convenience path. It configures service identity and adds host, OS,
+    /// process, test assembly, CI and source-control attributes.
+    /// <para>Applications that already configure their own service, host, OS or process identity through Aspire
+    /// ServiceDefaults, <c>HostApplicationBuilder</c> or another application-level OpenTelemetry composition root
+    /// should use <see cref="AddTestingPlatformTestResource(ResourceBuilder)"/> and
+    /// <see cref="AddTestingPlatformCIResource(ResourceBuilder)"/> instead.</para>
+    /// <para>Resource attributes are attached once to every span and metric point exported by the provider, which
+    /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.</para>
     /// <para>The CI attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
     /// from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins environment variables.</para></remarks>
     /// <param name="builder">The resource builder to enrich.</param>
@@ -101,6 +130,39 @@ public static class OpenTelemetryProviderExtensions
                 serviceVersion: TestingPlatformResourceDetector.GetServiceVersion(),
                 autoGenerateServiceInstanceId: true)
             .AddAttributes(TestingPlatformResourceDetector.GetResourceAttributes());
+    }
+
+    /// <summary>
+    /// Adds Microsoft Testing Platform test-specific resource attributes to the resource of a tracer, meter or logger
+    /// provider.
+    /// </summary>
+    /// <remarks>This focused helper currently adds the test assembly name. It does not configure or overwrite
+    /// <c>service.*</c>, <c>host.*</c>, <c>os.*</c>, <c>process.*</c>, <c>cicd.*</c> or <c>vcs.*</c> attributes,
+    /// so it can be composed with application-owned OpenTelemetry resource configuration.</remarks>
+    /// <param name="builder">The resource builder to enrich.</param>
+    /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
+    public static ResourceBuilder AddTestingPlatformTestResource(this ResourceBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        return builder.AddAttributes(TestingPlatformResourceDetector.GetTestResourceAttributes());
+    }
+
+    /// <summary>
+    /// Adds CI and source-control provenance for the current test run to the resource of a tracer, meter or logger
+    /// provider.
+    /// </summary>
+    /// <remarks>The attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
+    /// from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins environment variables. User-info credentials are
+    /// removed from repository URLs. This focused helper does not configure or overwrite <c>service.*</c>,
+    /// <c>host.*</c>, <c>os.*</c>, <c>process.*</c> or <c>test.*</c> attributes.</remarks>
+    /// <param name="builder">The resource builder to enrich.</param>
+    /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
+    public static ResourceBuilder AddTestingPlatformCIResource(this ResourceBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        return builder.AddAttributes(TestingPlatformResourceDetector.GetCiResourceAttributes());
     }
 
     /// <summary>
@@ -129,16 +191,12 @@ public static class OpenTelemetryProviderExtensions
     {
         _ = builder ?? throw new ArgumentNullException(nameof(builder));
 
-        if (IsTrue(Environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.SdkDisabled)))
-        {
-            return;
-        }
+        EnvironmentConfiguration configuration = ResolveEnvironmentConfiguration(
+            Environment.GetEnvironmentVariable,
+            hasTracingDelegate: configureTracing is not null,
+            hasMetricsDelegate: configureMetrics is not null);
 
-        bool useOtlpTracing = UseOtlpExporter(OpenTelemetryEnvironmentVariables.TracesExporter);
-        bool useOtlpMetrics = UseOtlpExporter(OpenTelemetryEnvironmentVariables.MetricsExporter);
-        bool configureTracingProvider = useOtlpTracing || configureTracing is not null;
-        bool configureMetricsProvider = useOtlpMetrics || configureMetrics is not null;
-        if (!configureTracingProvider && !configureMetricsProvider)
+        if (!configuration.ShouldRegisterProvider)
         {
             return;
         }
@@ -149,14 +207,14 @@ public static class OpenTelemetryProviderExtensions
                 // Registering the source installs an ActivityListener that samples and fully tags every span, so
                 // when nothing will consume them we must not instrument at all - otherwise every test allocates a
                 // span (and copies its whole stdout/stderr into tags) just to have it dropped.
-                if (configureTracingProvider)
+                if (configuration.ConfigureTracingProvider)
                 {
                     tracing
                         .AddTestingPlatformInstrumentation()
                         .ConfigureResource(resource => resource.AddTestingPlatformResource());
                 }
 
-                if (useOtlpTracing)
+                if (configuration.UseOtlpTracing)
                 {
                     tracing.AddOtlpExporter();
                 }
@@ -165,14 +223,14 @@ public static class OpenTelemetryProviderExtensions
             },
             metrics =>
             {
-                if (configureMetricsProvider)
+                if (configuration.ConfigureMetricsProvider)
                 {
                     metrics
                         .AddTestingPlatformInstrumentation()
                         .ConfigureResource(resource => resource.AddTestingPlatformResource());
                 }
 
-                if (useOtlpMetrics)
+                if (configuration.UseOtlpMetrics)
                 {
                     metrics.AddOtlpExporter();
                 }
@@ -181,14 +239,44 @@ public static class OpenTelemetryProviderExtensions
             });
     }
 
-    private static bool UseOtlpExporter(string environmentVariableName)
+    /// <summary>
+    /// Resolves, from the standard <c>OTEL_*</c> environment variables, whether the tracing and metrics providers
+    /// should be configured and whether the OTLP exporter should be attached to each. Kept as a pure function -
+    /// reading environment values through <paramref name="getEnvironmentVariable"/> rather than
+    /// <see cref="Environment.GetEnvironmentVariable(string)"/> directly - so the decision can be unit-tested
+    /// without a live <see cref="ITestApplicationBuilder"/>.
+    /// </summary>
+    /// <param name="getEnvironmentVariable">Resolves an environment variable by name.</param>
+    /// <param name="hasTracingDelegate">Whether the caller passed a tracing configuration delegate.</param>
+    /// <param name="hasMetricsDelegate">Whether the caller passed a metrics configuration delegate.</param>
+    /// <returns>The resolved configuration decision.</returns>
+    internal static EnvironmentConfiguration ResolveEnvironmentConfiguration(
+        Func<string, string?> getEnvironmentVariable,
+        bool hasTracingDelegate,
+        bool hasMetricsDelegate)
     {
-        string? configured = Environment.GetEnvironmentVariable(environmentVariableName);
+        // OTEL_SDK_DISABLED wins over everything, including an explicit endpoint or a caller-supplied delegate.
+        if (IsTrue(getEnvironmentVariable(OpenTelemetryEnvironmentVariables.SdkDisabled)))
+        {
+            return EnvironmentConfiguration.Disabled;
+        }
+
+        bool useOtlpTracing = UseOtlpExporter(getEnvironmentVariable, OpenTelemetryEnvironmentVariables.TracesExporter);
+        bool useOtlpMetrics = UseOtlpExporter(getEnvironmentVariable, OpenTelemetryEnvironmentVariables.MetricsExporter);
+        bool configureTracingProvider = useOtlpTracing || hasTracingDelegate;
+        bool configureMetricsProvider = useOtlpMetrics || hasMetricsDelegate;
+
+        return new EnvironmentConfiguration(configureTracingProvider, configureMetricsProvider, useOtlpTracing, useOtlpMetrics);
+    }
+
+    private static bool UseOtlpExporter(Func<string, string?> getEnvironmentVariable, string environmentVariableName)
+    {
+        string? configured = getEnvironmentVariable(environmentVariableName);
 
         // Mirror the behavior of the OpenTelemetry auto-instrumentation: an endpoint alone is enough to opt in.
         if (OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(configured))
         {
-            return !OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint));
+            return !OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(getEnvironmentVariable(OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint));
         }
 
         // The specification defines these variables as comma-separated lists, so 'otlp,console' must still enable
@@ -204,6 +292,55 @@ public static class OpenTelemetryProviderExtensions
         return false;
     }
 
+    // OTEL_SDK_DISABLED follows the OpenTelemetry boolean convention: only a case-insensitive "true" enables it,
+    // any other value (including "1" or leading/trailing whitespace) leaves the SDK enabled. This is
+    // intentionally stricter than the CI-marker parsing in TestingPlatformResourceDetector, which recognises
+    // provider-specific spellings.
     private static bool IsTrue(string? value)
-        => value is "1" or "true" or "True" or "TRUE";
+        => value is not null && value.Equals("true", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The decision produced by <see cref="ResolveEnvironmentConfiguration"/>: which providers to configure and
+    /// whether to attach the OTLP exporter to each.
+    /// </summary>
+    internal readonly struct EnvironmentConfiguration
+    {
+        public EnvironmentConfiguration(bool configureTracingProvider, bool configureMetricsProvider, bool useOtlpTracing, bool useOtlpMetrics)
+        {
+            ConfigureTracingProvider = configureTracingProvider;
+            ConfigureMetricsProvider = configureMetricsProvider;
+            UseOtlpTracing = useOtlpTracing;
+            UseOtlpMetrics = useOtlpMetrics;
+        }
+
+        /// <summary>
+        /// Gets the decision returned when <c>OTEL_SDK_DISABLED</c> is set: nothing is configured.
+        /// </summary>
+        public static EnvironmentConfiguration Disabled => default;
+
+        /// <summary>
+        /// Gets a value indicating whether the tracing provider should be instrumented with the platform source and resource.
+        /// </summary>
+        public bool ConfigureTracingProvider { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the metrics provider should be instrumented with the platform meter and resource.
+        /// </summary>
+        public bool ConfigureMetricsProvider { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the OTLP exporter should be attached to the tracing provider.
+        /// </summary>
+        public bool UseOtlpTracing { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the OTLP exporter should be attached to the metrics provider.
+        /// </summary>
+        public bool UseOtlpMetrics { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether any provider should be registered at all. When false the whole helper is a no-op.
+        /// </summary>
+        public bool ShouldRegisterProvider => ConfigureTracingProvider || ConfigureMetricsProvider;
+    }
 }

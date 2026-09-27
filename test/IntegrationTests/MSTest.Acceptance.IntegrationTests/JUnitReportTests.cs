@@ -212,7 +212,7 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
         Assert.AreEqual("2", consolidated.Attribute("tests")!.Value);
         Assert.AreEqual("0", consolidated.Attribute("failures")!.Value);
         Assert.AreSequenceEqual(
-            new[] { "AlwaysPasses", "Flaky_FailsOnceThenPasses" },
+            ["AlwaysPasses", "Flaky_FailsOnceThenPasses"],
             consolidated.Descendants("testcase")
                 .Select(testCase => testCase.Attribute("name")!.Value)
                 .OrderBy(name => name, StringComparer.Ordinal));

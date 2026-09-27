@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// carry extension-specific connection metadata such as Retry. Launchers must forward the supplied context
 /// opaquely rather than require one specific handshake. The launcher does not have to start a local OS
 /// process as long as it returns an <see cref="ITestHostHandle"/> the platform can monitor.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostLauncher : ITestHostControllersExtension

@@ -11,6 +11,7 @@ public static class AcceptanceFixture
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
     {
+        DotnetCli.UseMultithreadedMSBuild = true;
         Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
 
         s_directoryToCleanup = Path.Combine(TempDirectory.TestSuiteDirectory, RandomId.Next());

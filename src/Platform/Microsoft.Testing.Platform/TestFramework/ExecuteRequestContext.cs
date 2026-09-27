@@ -23,6 +23,9 @@ public sealed class ExecuteRequestContext
     /// <param name="messageBus">The message bus.</param>
     /// <param name="executeRequestCompletionNotifier">The request completion notifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public ExecuteRequestContext(IRequest request, IMessageBus messageBus, IExecuteRequestCompletionNotifier executeRequestCompletionNotifier,
         CancellationToken cancellationToken)

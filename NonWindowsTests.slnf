@@ -9,6 +9,7 @@
       "src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj",
       "src\\Analyzers\\MSTest.GlobalConfigsGenerator\\MSTest.GlobalConfigsGenerator.csproj",
       "src\\Analyzers\\MSTest.SourceGeneration\\MSTest.SourceGeneration.csproj",
+      "src\\Package\\MSTest.Sdk.AppModelController\\MSTest.Sdk.AppModelController.csproj",
       "src\\Package\\MSTest.Sdk\\MSTest.Sdk.csproj",
       "src\\Package\\MSTest\\MSTest.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.AzureDevOpsReport\\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj",

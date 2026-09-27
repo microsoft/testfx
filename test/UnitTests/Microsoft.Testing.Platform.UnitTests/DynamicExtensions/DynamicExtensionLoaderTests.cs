@@ -15,9 +15,14 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-[DoNotParallelize] // The hook types below record their invocations in static state.
+// The hook types below (RecordingHook, SecondRecordingHook, ThrowingHook, AsyncVoidHook, BaseHook) record their
+// invocations in static state that [TestInitialize] resets. Under the assembly's method-level parallelization
+// scope, a class-level lock is reacquired for each test and spans its [TestInitialize]/[TestCleanup], so it
+// serializes access to that shared static state without forcing the whole class out of the parallel scheduler.
+[ResourceLock(HookInvocationState)]
 public sealed class DynamicExtensionLoaderTests
 {
+    private const string HookInvocationState = "Microsoft.Testing.Platform.UnitTests.DynamicExtensionLoaderTests.HookInvocationState";
     private const string ApplicationDirectory = "/app";
     private static readonly string[] Args = ["--some-option"];
 

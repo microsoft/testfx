@@ -4,7 +4,8 @@ description: >-
   Automatically audits the MSTest tests changed by a non-draft PR for
   parallel-safety when the change touches `test/**`, or the repository-root
   `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props`
-  that every test project imports.
+  that every test project imports. Submits a COMMENT review only when findings
+  exist; clean automatic runs are silent.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial audit

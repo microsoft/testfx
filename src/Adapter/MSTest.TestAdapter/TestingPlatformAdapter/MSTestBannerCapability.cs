@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Shared;
@@ -18,4 +17,3 @@ internal sealed class MSTestBannerCapability : IBannerMessageOwnerCapability
     public Task<string?> GetBannerMessageAsync()
         => Task.FromResult<string?>(BannerMessageHelper.BuildBannerMessage(_platformInformation, "MSTest", MSTestVersion.SemanticVersion));
 }
-#endif

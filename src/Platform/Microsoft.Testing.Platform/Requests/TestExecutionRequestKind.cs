@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Requests;
 /// <summary>
 /// Specifies the kind of test execution request.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum TestExecutionRequestKind
 {

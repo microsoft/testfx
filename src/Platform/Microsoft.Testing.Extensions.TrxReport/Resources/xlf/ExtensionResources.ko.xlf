@@ -25,7 +25,7 @@
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file.</source>
         <target state="translated">기준 TRX 파일입니다.</target>
-        <note>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</note>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
         <source>'--{0}' and '--{1}' must both be specified</source>
@@ -45,17 +45,17 @@
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
         <target state="translated">'--{0}'에는 단일 trx 파일 경로가 인수로 필요합니다.</target>
-        <note>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</note>
+        <note>{0} is the option name without the leading {Locked="--"}. Do not localize file type {Locked="trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline.</source>
         <target state="translated">기준과 비교할 TRX 파일입니다.</target>
-        <note>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</note>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
         <target state="translated">경고: Trx 파일 '{0}' 이미 있으므로 덮어씁니다.</target>
-        <note>{0} is the {Locked="TRX"} report file path.</note>
+        <note>{0} is the {Locked="Trx"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
         <source>Merges multiple TRX files into one from the command line.</source>
@@ -70,7 +70,7 @@
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths.</source>
         <target state="translated">둘 이상의 입력 TRX 파일 경로입니다.</target>
-        <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
         <source>'--input' expects two or more existing TRX file paths</source>
@@ -85,7 +85,7 @@
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path.</source>
         <target state="translated">출력 TRX 파일 경로입니다.</target>
-        <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
         <source>{0} TRX files merged</source>
@@ -129,7 +129,7 @@ Example: 'MyReport_{tfm}.trx'.</source>
         <target state="translated">생성된 TRX 보고서의 이름입니다. 상대 경로 또는 절대 경로를 사용할 수 있습니다. 상대 경로는 테스트 결과 디렉터리를 기준으로 확인되며, 없는 디렉터리는 만들어집니다.
 자리 표시자 {pname}(테스트 애플리케이션 이름), {pid}(프로세스 ID), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {arch}(프로세스 아키텍처), {time}(타임스탬프)을(를) 지원합니다.
 예: 'MyReport_{tfm}.trx'.</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="'MyReport_{tfm}.trx'"}.</note>
+        <note>Do not localize format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
@@ -179,7 +179,7 @@ Example: 'MyReport_{tfm}.trx'.</source>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report.</source>
         <target state="translated">TRX 보고서 생성을 활성화합니다.</target>
-        <note>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</note>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>

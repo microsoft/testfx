@@ -5,7 +5,7 @@
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
         <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
@@ -46,6 +46,11 @@
         <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Динамической публикации Azure DevOps не удалось отправить несколько ({0}) вложений; они будут отсутствовать в тестовом запуске Azure DevOps.</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="translated">Проверка подлинности через REST API Azure DevOps не удалась или произошел переход на страницу входа (статус: {0}), что указывает на недействительность или недоступность SYSTEM_ACCESSTOKEN. При сборке вилок с проверкой запросов на вытягивание не раскрывайте секреты недоверенному коду вилки. Публикуйте результаты из отдельного доверенного контекста конвейера или отключите публикацию в реальном времени в Azure DevOps.</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
@@ -90,7 +95,7 @@
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
         <target state="translated">Для "--publish-azdo-test-results" установлено значение, но публикация в реальном времени в Azure DevOps отключена, так как следующие переменные среды отсутствуют или недопустимы: {0}.</target>
-        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -162,6 +167,11 @@
         <target state="translated">Превышено время ожидания: {0}</target>
         <note>{0} is the timeout reason.</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="translated">Azure DevOps REST API возвратил неожиданный успешный ответ с кодом состояния {0} и типом контента '{1}'.</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>
         <target state="translated">Динамической публикации Azure DevOps не удалось отобразить предупреждение на устройстве вывода.</target>
@@ -225,7 +235,7 @@
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
         <target state="translated">Не удалось загрузить журнал ненадежных экземпляров Azure DevOps. Продолжение без заметок журнала. {0}</target>
-        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
+        <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
@@ -235,7 +245,7 @@
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
         <target state="translated">Запрошен журнал ненадежных экземпляров Azure DevOps, но обязательные переменные среды Azure DevOps отсутствуют. Продолжение без заметок журнала.</target>
-        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+        <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -340,7 +350,7 @@
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
         <target state="translated">Не удалось загрузить файл карантина Azure DevOps "{0}". Продолжение без учета карантина. {1}</target>
-        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
+        <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
@@ -413,9 +423,9 @@
         <note>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
-        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="translated">По завершении тестового запуска составьте краткий отчет в формате Markdown и загрузите его с помощью "##vso[task.uploadsummary]". Необязательный аргумент пути к файлу переопределяет расположение по умолчанию ("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"). Требуется "--report-azdo".</target>
-        <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
+        <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">Запишите сводку задания в формате Markdown в конце тестового запуска и отправьте ее на вкладку расширений Azure DevOps. Необязательный аргумент пути к файлу переопределяет расположение по умолчанию ("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"). Требуется "--report-azdo".</target>
+        <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>

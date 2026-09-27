@@ -7,7 +7,6 @@ using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -88,7 +87,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment()));
 
-        var endpoint = new NamedPipeServerEndpoint(NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N")).Name);
+        NamedPipeServerEndpoint endpoint = NamedPipeServerFactory.CreateEndpoint();
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {

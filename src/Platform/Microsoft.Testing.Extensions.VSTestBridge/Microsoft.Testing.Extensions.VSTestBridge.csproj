@@ -22,6 +22,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Performance.Benchmarks" Key="$(VsPublicKey)" />
   </ItemGroup>
 
 

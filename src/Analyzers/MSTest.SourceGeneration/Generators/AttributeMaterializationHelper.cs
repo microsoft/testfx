@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -246,7 +246,9 @@ internal static class AttributeMaterializationHelper
     private static bool AreArgumentTypesReferenceable(TypedConstant constant, IAssemblySymbol consumingAssembly)
         => constant.Kind switch
         {
-            TypedConstantKind.Array => constant.Values.All(element => AreArgumentTypesReferenceable(element, consumingAssembly)),
+            // Null arrays have default Values, but their typed null casts still name the element type.
+            TypedConstantKind.Array => IsArgumentTypeReferenceable(constant.Type, consumingAssembly)
+                && (constant.IsNull || constant.Values.All(element => AreArgumentTypesReferenceable(element, consumingAssembly))),
 
             // typeof(X): the target type must be referenceable. Non-named targets (arrays, type
             // parameters) are conservatively rejected.
@@ -255,8 +257,15 @@ internal static class AttributeMaterializationHelper
 
             // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type must be
             // referenceable. Untyped values (Type is null) are plain literals.
-            _ => constant.Type is not INamedTypeSymbol namedType
-                || SymbolReferenceabilityHelper.IsTypeReferenceableFrom(namedType, consumingAssembly),
+            _ => IsArgumentTypeReferenceable(constant.Type, consumingAssembly),
+        };
+
+    private static bool IsArgumentTypeReferenceable(ITypeSymbol? type, IAssemblySymbol consumingAssembly)
+        => type switch
+        {
+            IArrayTypeSymbol arrayType => IsArgumentTypeReferenceable(arrayType.ElementType, consumingAssembly),
+            INamedTypeSymbol namedType => SymbolReferenceabilityHelper.IsTypeReferenceableFrom(namedType, consumingAssembly),
+            _ => true,
         };
 
     internal static TypedConstantModel ToModel(TypedConstant constant)

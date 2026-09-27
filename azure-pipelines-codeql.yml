@@ -13,6 +13,10 @@ variables:
   # Force CodeQL enabled so it may be run on any branch
 - name: Codeql.Enabled
   value: true
+  # This must stay in sync with the identifier generated for the official Windows job.
+  # Otherwise CodeQL tracks separate cadences and the official build is traced again.
+- name: Codeql.BuildIdentifier
+  value: build_Windows
   # Do not let CodeQL 3000 Extension gate scan frequency
 - name: Codeql.Cadence
   value: 0

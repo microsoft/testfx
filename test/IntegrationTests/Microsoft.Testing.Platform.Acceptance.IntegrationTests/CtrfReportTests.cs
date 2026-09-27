@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Text.Json;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -49,6 +51,38 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         Assert.IsTrue(match.Success, $"CTRF report path not found in output:\n{testHostResult.StandardOutput}");
 
         AssertCtrfReportShape(match.Value);
+    }
+
+    [TestMethod]
+    public async Task Ctrf_WhenTestHostCrashes_RecoversCompletedResultsAndMarksReportIncomplete()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename crash-{{pid}}.ctrf.json --results-directory \"{resultDirectory}\"",
+            new() { ["CRASHPROCESS"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        string[] files = Directory.GetFiles(resultDirectory, "crash-*.ctrf.json");
+        Assert.HasCount(1, files);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+        testHostResult.AssertOutputContains(files[0]);
+
+        Match pidMatch = Regex.Match(testHostResult.StandardOutput, @"CRASHED_CHILD_PID=(\d+)");
+        Assert.IsTrue(pidMatch.Success, testHostResult.StandardOutput);
+        Assert.AreEqual($"crash-{pidMatch.Groups[1].Value}.ctrf.json", Path.GetFileName(files[0]));
+
+        using var document = JsonDocument.Parse(File.ReadAllText(files[0]));
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement extra = results.GetProperty("environment").GetProperty("extra");
+        Assert.IsTrue(extra.GetProperty("incomplete").GetBoolean());
+        Assert.AreEqual("aborted", extra.GetProperty("runStatus").GetString());
+        JsonElement[] tests = results.GetProperty("tests").EnumerateArray().ToArray();
+        Assert.HasCount(2, tests);
+        Assert.AreEqual("PassingTest", tests[0].GetProperty("name").GetString());
+        Assert.AreEqual("FailingTest", tests[1].GetProperty("name").GetString());
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -107,6 +141,54 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         Assert.IsTrue(
             File.Exists(customFilePath),
             $"Expected custom CTRF report file '{customFileName}' was not found in '{testResultsPath}'.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Ctrf_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm)
+    {
+        // CtrfReportEngine resolves its output file name through the shared
+        // ReportEngineBase.ResolveOutputPath, unlike TrxReportEngine which has its own
+        // ResolveTrxOutputPath. This exercises that shared code path end to end: a
+        // testconfig.json default is passive (it does not enable the report on its own,
+        // and it is not treated as an explicit value), and an explicit
+        // --report-ctrf-filename still wins over the configured default.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string configFile = Path.Combine(testHost.DirectoryName, $"{TestAssetFixture.AssetName}.testconfig.json");
+        await File.WriteAllTextAsync(
+            configFile,
+            """
+            {
+              "commandLineOptionDefaults": {
+                "report-ctrf-filename": "configured-{asm}.ctrf.json"
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.IsEmpty(Directory.GetFiles(testHost.DirectoryName, "configured-*.ctrf.json", SearchOption.AllDirectories));
+
+        string defaultResultsPath = Path.Combine(testHost.DirectoryName, "default-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --results-directory \"{defaultResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.IsTrue(File.Exists(Path.Combine(defaultResultsPath, $"configured-{TestAssetFixture.AssetName}.ctrf.json")));
+
+        string explicitResultsPath = Path.Combine(testHost.DirectoryName, "explicit-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename explicit.ctrf.json --results-directory \"{explicitResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.IsTrue(File.Exists(Path.Combine(explicitResultsPath, "explicit.ctrf.json")));
+        Assert.IsFalse(File.Exists(Path.Combine(explicitResultsPath, $"configured-{TestAssetFixture.AssetName}.ctrf.json")));
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -344,6 +426,40 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     new FailedTestNodeStateProperty("Expected 1 but got 2"),
                     new FileArtifactProperty(new FileInfo(attachmentPath), "failure.log", "Failure diagnostics")),
             }));
+
+        if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
+        {
+            string journalPath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_CTRFREPORT_JOURNAL")
+                ?? throw new InvalidOperationException("CTRF report recovery journal was not configured.");
+            bool journalReady = false;
+            for (int i = 0; i < 100; i++)
+            {
+                using FileStream stream = File.Open(journalPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(stream);
+                int lineCount = 0;
+                while (lineCount < 3 && reader.ReadLine() is not null)
+                {
+                    lineCount++;
+                }
+
+                if (lineCount == 3)
+                {
+                    journalReady = true;
+                    break;
+                }
+
+                await Task.Delay(50);
+            }
+
+            if (!journalReady)
+            {
+                throw new TimeoutException("CTRF report recovery journal did not contain the expected results before the crash deadline.");
+            }
+
+            Console.WriteLine($"CRASHED_CHILD_PID={System.Diagnostics.Process.GetCurrentProcess().Id}");
+            await Console.Out.FlushAsync();
+            Environment.FailFast("CRASHPROCESS");
+        }
 
         // 3) Distinct executions with the same UID must remain separate results.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(

@@ -15,7 +15,6 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
@@ -71,6 +70,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     private static readonly TimeSpan InProgressTestsQueryTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan BestEffortDiagnosticsTimeout = TimeSpan.FromSeconds(1);
 
+    private readonly TimeSpan _disposeTimeout = TimeoutHelper.DefaultHangTimeSpanTimeout;
     private int _dumpTaken;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;
@@ -168,16 +168,14 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
             await _logger.LogInformationAsync($"Hang dump deadline setup {_deadlineDumpAt:o}.").ConfigureAwait(false);
         }
 
-        _singleConnectionNamedPipeServer = new(
-            new PipeNameDescription(_endpoint.PipeName),
+        _singleConnectionNamedPipeServer = NamedPipeServerFactory.CreateAndBind(
+            _endpoint,
             CallbackAsync,
             _environment,
             _logger,
             _task,
-            maxNumberOfServerInstances: 1,
-            _serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities(),
+            _serviceProvider,
             cancellationToken);
-        _endpoint.PipeName = _singleConnectionNamedPipeServer.PipeName.Name;
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
@@ -212,12 +210,13 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         }
         else if (request is ActivitySignalRequest)
         {
+            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
+
             if (_traceEnabled)
             {
-                _logger.LogTrace($"Activity signal received by the test host '{_clock.UtcNow}'");
+                await _logger.LogTraceAsync($"Activity signal received by the test host '{_clock.UtcNow}'").ConfigureAwait(false);
             }
 
-            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
             return VoidResponse.CachedInstance;
         }
         else
@@ -369,7 +368,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {
-            _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
+            await _logger.LogDebugAsync($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')").ConfigureAwait(false);
         }
 
         foreach (string dumpFile in _dumpFiles)

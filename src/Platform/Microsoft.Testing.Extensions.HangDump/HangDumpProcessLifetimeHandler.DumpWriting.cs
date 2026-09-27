@@ -118,7 +118,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             // Skip creating the dump if the option is set to none, and just kill the process.
             if (dumpType.HasValue)
             {
-                diagnosticsClient.WriteDump(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false);
+                await diagnosticsClient.WriteDumpAsync(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false, cancellationToken).ConfigureAwait(false);
                 _dumpFiles.Enqueue(dumpFileNames.ArtifactDumpFileName);
             }
         }

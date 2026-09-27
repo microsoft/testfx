@@ -103,7 +103,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     continue;
                 }
 
-                _logger.LogDebug($"Starting test '{publicMethod.Name}'");
+                await _logger.LogDebugAsync($"Starting test '{publicMethod.Name}'");
                 TestNode testNode = new()
                 {
                     Uid = testNodeUid,
@@ -189,7 +189,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         }
 
         Assembly assembly = Assembly.GetEntryAssembly()!;
-        _logger.LogDebug($"Discovering tests in assembly '{assembly.FullName}'");
+        await _logger.LogDebugAsync($"Discovering tests in assembly '{assembly.FullName}'");
 
         IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
@@ -198,7 +198,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _logger.LogDebug($"Discovering tests for container '{testContainerType.FullName}'");
+            await _logger.LogDebugAsync($"Discovering tests for container '{testContainerType.FullName}'");
 
             IEnumerable<MethodInfo> testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
                 memberInfo.IsPublic
@@ -222,7 +222,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     continue;
                 }
 
-                _logger.LogDebug($"Found test '{publicMethod.Name}'");
+                await _logger.LogDebugAsync($"Found test '{publicMethod.Name}'");
                 TestNode testNode = new()
                 {
                     Uid = $"{testContainerType.FullName}.{publicMethod.Name}",
@@ -290,7 +290,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
         try
         {
-            _logger.LogDebug($"Executing test '{testNode.DisplayName}'");
+            await _logger.LogDebugAsync($"Executing test '{testNode.DisplayName}'");
             if (publicMethod.Invoke(testClassInstance, null) is Task task)
             {
                 await task;
@@ -302,7 +302,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         catch (Exception ex)
         {
             Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
-            _logger.LogError("Error during test", realException);
+            await _logger.LogErrorAsync("Error during test", realException);
             DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new TimingProperty(
@@ -324,7 +324,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         {
             if (testClassInstance is not null)
             {
-                _logger.LogDebug($"Executing test '{testNode.DisplayName}' teardown (dispose for '{testContainerType.FullName}')");
+                await _logger.LogDebugAsync($"Executing test '{testNode.DisplayName}' teardown (dispose for '{testContainerType.FullName}')");
                 teardownMethod.Invoke(testClassInstance, null);
             }
 
@@ -334,7 +334,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         catch (Exception ex)
         {
             Exception realException = ex.InnerException ?? ex;
-            _logger.LogError("Error during test teardown", realException);
+            await _logger.LogErrorAsync("Error during test teardown", realException);
             DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new TimingProperty(

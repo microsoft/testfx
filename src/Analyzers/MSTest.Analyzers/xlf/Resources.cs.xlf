@@ -169,8 +169,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="translated">Od verze MSTest 3.8 je 'DynamicDataSourceType.AutoDetect' výchozí hodnotou a automaticky rozpoznává vlastnosti, metody a pole, čímž omezuje rozvláčnost a závislost na druhu členu.</target>
-        <note>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</note>
+        <target state="translated">Od verze MSTest 3.8 je ‚DynamicDataSourceType.AutoDetect' výchozí hodnotou a automaticky rozpoznává vlastnosti, metody a pole, čímž omezuje rozvláčnost a závislost na druhu členu.</target>
+        <note>{Locked="MSTest 3.8"}{Locked="DynamicDataSourceType.AutoDetect"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
@@ -312,8 +312,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Metody 'CollectionAssert' mají odpovídající protějšky ve třídě 'Assert'. Používání jediného rozhraní API pro kontrolní výrazy zlepšuje konzistenci a usnadňuje vyhledávání.</target>
-        <note>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+        <target state="new">'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <note>{Locked="CollectionAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
@@ -348,7 +348,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
         <target state="translated">{0} změní globální adresář procesu, který nemá ekvivalent pro jednotlivá vlákna a je pozorovaný každým souběžně spuštěným testem. Vyhněte se příslušné mutaci v paralelizované sadě testů (deklarujte [ResourceLock(WellKnownResources.CurrentDirectory)] na alespoň souřadnici nebo [DoNotParallelize])</target>
-        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
@@ -417,13 +417,28 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="translated">Objekt TestContext předaný inicializaci sestavení nebo třídy je specifický pro daný kontext a při každém spuštění testu se neaktualizuje. Jeho opakované použití ve členovi 'static' může zpřístupnit zastaralý kontext.</target>
-        <note>{Locked="TestContext"}{Locked="'static'"}</note>
+        <target state="translated">Objekt TestContext předaný inicializaci sestavení nebo třídy je specifický pro daný kontext a při každém spuštění testu se neaktualizuje. Jeho opakované použití ve členovi ‚static' může zpřístupnit zastaralý kontext.</target>
+        <note>{Locked="TestContext"}{Locked="static"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="translated">Duplicitní zobrazované názvy „DataRow“ znemožňují rozlišit datově řízené testovací případy ve výsledcích testů a v průzkumnících testů.</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
+        <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
+        <target state="translated">Nepoužívejte duplicitní zobrazovaný název „DataRow“ „{0}“. Každý objekt DataRow v testovací metodě by měl používat jedinečný zobrazovaný název.</target>
+        <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameTitle">
+        <source>Avoid duplicated 'DataRow' display names</source>
+        <target state="translated">Vyhněte se duplicitním zobrazovaným názvům DataRow</target>
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
         <target state="translated">MSTest překládá zděděné atributy životního cyklu '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' a '[ClassCleanup]' a testovací atributy '[TestMethod]' a '[DataTestMethod]' podle přesné identity typu architektury. Sestavení architektury bylo přejmenováno z 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', takže základní třída zkompilovaná pro jinou hlavní verzi MSTest zpřístupňuje tyto atributy s jinou identitou typu. Když testovací třída zkompilovaná pro jinou verzi dědí z takové základní třídy, zděděné nastavení a vyčištění se nespustí a zděděné testovací metody se nezjistí, aniž by došlo k chybě sestavení nebo chybě zjišťování. Znovu zkompilujte základní sestavení a u vlastních atributů také sestavení, které atribut definuje, proti stejné verzi MSTest jako testovací projekt.</target>
-        <note>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</note>
+        <note>{Locked="MSTest"}{Locked="[TestInitialize]"}{Locked="[TestCleanup]"}{Locked="[ClassInitialize]"}{Locked="[ClassCleanup]"}{Locked="[TestMethod]"}{Locked="[DataTestMethod]"}{Locked="Microsoft.VisualStudio.TestPlatform.TestFramework"}{Locked="MSTest.TestFramework"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
         <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' and, for custom attributes, the assembly that defines '[{2}]', against the same MSTest version as the test project.</source>
@@ -760,10 +775,25 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Neignorovat návratovou hodnotu řetězcových metod</target>
         <note />
       </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
+        <target state="translated">Atributy SupportedOSPlatformAttribute a UnsupportedOSPlatformAttribute poskytují analýze kompatibility platformy informace, ale neřídí spouštění testů MSTest. Testovací metody a testovací třídy, které tyto atributy používají, by měly také deklarovat kompatibilní atribut [OSCondition], aby se testy v nepodporovaných řadách operačního systému za běhu přeskočily. [OSCondition] nevynucuje omezení verze platformy.</target>
+        <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
+        <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
+        <target state="translated">Atributy kompatibility platformy v testu {0} nejsou reprezentovány kompatibilním atributem [OSCondition].</target>
+        <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
+        <source>Platform compatibility attributes should be consistent with '[OSCondition]'</source>
+        <target state="translated">Atributy kompatibility platformy by měly být konzistentní s atributem '[OSCondition]'</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="translated">'Assert.Fail' explicitně vyjadřuje záměrné selhání a umožňuje ve zprávě o selhání zdokumentovat, proč test nemůže pokračovat.</target>
-        <note>{Locked="'Assert.Fail'"}</note>
+        <target state="translated">‚Assert.Fail' explicitně vyjadřuje záměrné selhání a umožňuje ve zprávě o selhání zdokumentovat, proč test nemůže pokračovat.</target>
+        <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
@@ -797,7 +827,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="translated">Klíč prostředku atributu [ResourceLock] {0} je zadaný přímo jako řetězcový literál. Odkazujte na sdílenou konstantu (například člen WellKnownResources nebo vlastní konstantu 'const'), aby překlepy bez upozornění nevytvářely jiný nesdílený klíč</target>
+        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
         <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
@@ -807,23 +837,23 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="translated">Konstruktory umožňují inicializaci prostřednictvím polí 'readonly' a poskytují lepší zpětnou vazbu kompilátoru, zejména u typů odkazů s možnou hodnotou null. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0019.</target>
-        <note>{Locked="'readonly'"}{Locked="MSTEST0019"}</note>
+        <target state="translated">Konstruktory umožňují inicializaci prostřednictvím polí ‚readonly' a poskytují lepší zpětnou vazbu kompilátoru, zejména u typů odkazů s možnou hodnotou null. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0019.</target>
+        <note>{Locked="readonly"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="translated">'Dispose' a 'DisposeAsync' používají standardní vzory životního cyklu .NET, takže je čištění testů konzistentní s produkčním kódem. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0022.</target>
-        <note>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
+        <target state="new">'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</target>
+        <note>{Locked="DisposeAsync"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="translated">'[TestCleanup]' podporuje asynchronní vyčištění v cílových architekturách, ve kterých není k dispozici 'IAsyncDisposable'. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0021.</target>
-        <note>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</note>
+        <target state="translated">‚[TestCleanup]' podporuje asynchronní vyčištění v cílových architekturách, ve kterých není k dispozici ‚IAsyncDisposable'. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0021.</target>
+        <note>{Locked="[TestCleanup]"}{Locked="IAsyncDisposable"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
         <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
         <target state="translated">'[TestInitialize]' podporuje synchronní i asynchronní inicializaci, zatímco u konstruktorů nejde použít await. Toto volitelné pravidlo stylu se vzájemně vylučuje s pravidlem MSTEST0020.</target>
-        <note>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</note>
+        <note>{Locked="[TestInitialize]"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
@@ -839,6 +869,21 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
         <target state="translated">Preferovat TestMethod před DataTestMethod</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeDescription">
+        <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
+        <target state="translated">Atribut na úrovni metody by měl být odebrán, pokud již obsahující testovací třída vytváří ekvivalentní nebo více restriktivní chování.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeMessageFormat">
+        <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
+        <target state="translated">{0} u '{1}' testovací metody je redundantní, protože nemění chování stanovené její obsaženou testovací třídou.</target>
+        <note>{0} is the attribute name and {1} is the test method name.</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeTitle">
+        <source>Remove redundant test method attribute</source>
+        <target state="translated">Odebrat redundantní atribut testovací metody</target>
+        <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
@@ -957,8 +1002,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="translated">Metody 'StringAssert' mají odpovídající protějšky ve třídě 'Assert'. Používání jediného rozhraní 'API' pro kontrolní výrazy zlepšuje konzistenci a usnadňuje vyhledávání.</target>
-        <note>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+        <target state="new">'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <note>{Locked="StringAssert"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
@@ -970,9 +1015,24 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Použijte Assert místo StringAssert</target>
         <note>{Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription">
+        <source>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</source>
+        <target state="translated">MSTest ignoruje atributy [TestClass] použité u abstraktních tříd. Testovací metody deklarované abstraktní třídou se zjišťují prostřednictvím konkrétních odvozených testovacích tříd, které musí deklarovat vlastní atribut [TestClass].</target>
+        <note>{Locked="MSTest"}{Locked="[TestClass]"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassMessageFormat">
+        <source>'[TestClass]' has no effect on abstract class '{0}'</source>
+        <target state="translated">Atribut [TestClass] nemá na abstraktní třídu {0} žádný vliv.</target>
+        <note>{0} is the class name. {Locked="[TestClass]"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassTitle">
+        <source>'[TestClass]' should not be applied to abstract classes</source>
+        <target state="translated">Atribut [TestClass] by se neměl používat u abstraktních tříd</target>
+        <note>{Locked="[TestClass]"}</note>
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">Testovací class {0} by měla být platná.</target>
+        <target state="translated">Testovací class ‚{0}' by měla být platná.</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -1027,7 +1087,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="translated">Odvozená class TestMethodAttribute {0} by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
+        <target state="translated">Odvozená class TestMethodAttribute ‚{0}' by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
@@ -1063,7 +1123,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
         <target state="translated">„{0}“ mutuje globální stav procesu a není bezpečný, když testy běží paralelně; v testu deklarujte „[ResourceLock(WellKnownResources.{1})]“ (nebo „[DoNotParallelize]“)</target>
-        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>
@@ -1138,12 +1198,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
+        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být ‚static' s metodami s označením ‚'[AssemblyInitialize]' a/nebo '[AssemblyCleanup]'.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">Testovací class {0} by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
+        <target state="translated">Testovací class ‚{0}' by měla mít aspoň jednu testovací metodu nebo by měla být ‚static' s metodami s označením ‚[AssemblyInitialize]' a/nebo ‚[AssemblyCleanup]'.</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
@@ -1364,8 +1424,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="translated">'MSTest' ignoruje '[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
-        <note>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</note>
+        <target state="translated">MSTest ignoruje ‚[DeploymentItem]', pokud se použije mimo testovací třídu nebo testovací metodu.</target>
+        <note>{Locked="MSTest"}{Locked="[DeploymentItem]"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
@@ -1469,7 +1529,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksTitle">
         <source>Do not use asserts in catch blocks</source>
-        <target state="translated">Nepoužívat kontrolní výrazy v blocích catch</target>
+        <target state="translated">Nepoužívejte kontrolní výrazy v blocích catch</target>
         <note>{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
@@ -1479,7 +1539,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
-        <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch. Pravidlo také označí výjimku throw new AssertFailedException(...) a throw new AssertInconclusiveException(...). (asynchronní tvary Assert.Fail a Assert.Inconclusive). Assert.Inconclusive (a throw new AssertInconclusiveException(...)) se vyloučí při použití uvnitř filtrovaného catch ('catch (...) when (...)'), protože snížení úrovně zachyceného selhání na neprůkazný výsledek je jediný případ použití, který se nedá vyjádřit bez bloku catch. U jiných záměrných obejití (například při připojení zprávy sestavené za běhu k selhání) potlačte diagnostiku pomocí „#pragma warning disable MSTEST0058“.</target>
+        <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde i tehdy, když se nevyvolá žádná výjimka a blok catch se vůbec nespustí. K ověření, že je vyvolána výjimka, použijte metody ‚Assert.Throws‘, ‚Assert.ThrowsExactly‘, ‚Assert.ThrowsAsync‘ nebo ‚Assert.ThrowsExactlyAsync‘, a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try‑catch. Pravidlo také označí výskyty ‚throw new AssertFailedException(...)‘ a ‚throw new AssertInconclusiveException(...)‘ (desugarované formy ‚Assert.Fail‘ a ‚Assert.Inconclusive‘). ‚Assert.Inconclusive‘ (a ‚throw new AssertInconclusiveException(...)‘) je vyňato, pokud je použito uvnitř filtrovaného catch (‚catch (...) when (...)‘), protože převedení zachyceného selhání na neprůkazný výsledek je jediný případ použití, který nelze vyjádřit bez bloku catch.
+U jiných záměrných obejití (například při připojení zprávy sestavené za běhu k selhání) potlačte diagnostiku pomocí ‚#pragma warning disable MSTEST0058‘.</target>
         <note>{Locked="#pragma warning disable MSTEST0058"}{Locked="AssertInconclusiveException"}{Locked="Assert.ThrowsExactlyAsync"}{Locked="AssertFailedException"}{Locked="Assert.ThrowsExactly"}{Locked="Assert.Inconclusive"}{Locked="Assert.ThrowsAsync"}{Locked="Assert.Throws"}{Locked="Assert.Fail"}{Locked="throw new AssertFailedException(...)"}{Locked="throw new AssertInconclusiveException(...)"}{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
@@ -1549,7 +1610,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="translated">Testovací class {0} nemá platný konstruktor. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
+        <target state="translated">Testovací class ‚{0}' nemá platný konstruktor. Platné konstruktory jsou ‚public', a to a buď bez parametrů, nebo s jedním parametrem typu ‚TestContext'.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">

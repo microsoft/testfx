@@ -178,11 +178,74 @@ public static class ConfigurationExtensions
         return true;
     }
 
+    /// <summary>
+    /// Returns the passive default argument list for an option without making that option active.
+    /// </summary>
+    internal static bool TryGetCommandLineOptionDefaultArguments(this IConfiguration configuration, string optionName, [NotNullWhen(true)] out string[]? arguments)
+    {
+        if (configuration is AggregatedConfiguration aggregated)
+        {
+            if (aggregated.TryGetCommandLineOptionDefaultFromProviders(optionName, out string[] args))
+            {
+                arguments = args;
+                return true;
+            }
+
+            arguments = null;
+            return false;
+        }
+
+        string baseKey = GetBaseKey(PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName, optionName);
+        List<string>? collected = null;
+        int index = 0;
+        while (configuration[baseKey + PlatformConfigurationConstants.KeyDelimiter + index.ToString(CultureInfo.InvariantCulture)] is string indexed)
+        {
+            collected ??= [];
+            collected.Add(indexed);
+            index++;
+        }
+
+        if (collected is { Count: > 0 })
+        {
+            arguments = [.. collected];
+            return true;
+        }
+
+        if (configuration[baseKey] is string scalar)
+        {
+            arguments = [scalar];
+            return true;
+        }
+
+        arguments = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns an explicit option argument list or its passive default while preserving an explicit
+    /// disable from a higher-priority provider.
+    /// </summary>
+    internal static bool TryGetCommandLineOptionArgumentsOrDefault(this IConfiguration configuration, string optionName, [NotNullWhen(true)] out string[]? arguments)
+    {
+        if (configuration is AggregatedConfiguration aggregated
+            && aggregated.TryGetCommandLineOptionFromProviders(optionName, out bool isSet, out string[] explicitArguments))
+        {
+            arguments = isSet ? explicitArguments : null;
+            return isSet;
+        }
+
+        return configuration.TryGetCommandLineOptionArguments(optionName, out arguments)
+            || configuration.TryGetCommandLineOptionDefaultArguments(optionName, out arguments);
+    }
+
     private static string GetBaseKey(string optionName)
+        => GetBaseKey(PlatformConfigurationConstants.CommandLineOptionsSectionName, optionName);
+
+    private static string GetBaseKey(string sectionName, string optionName)
     {
         // Match CommandLineParseResult.IsOptionSet/TryGetOptionArgumentList: callers may pass
         // either "--foo" or "foo", but storage is keyed by the bare name.
         string trimmed = optionName.Trim(CommandLineParseResult.OptionPrefix);
-        return PlatformConfigurationConstants.CommandLineOptionsSectionName + PlatformConfigurationConstants.KeyDelimiter + trimmed;
+        return sectionName + PlatformConfigurationConstants.KeyDelimiter + trimmed;
     }
 }

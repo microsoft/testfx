@@ -28,9 +28,9 @@ public sealed class HtmlArtifactPostProcessorTests
     {
         HtmlArtifactPostProcessor processor = new();
 
-        Assert.AreSequenceEqual(new[] { HtmlReportGenerator.HtmlArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual([HtmlReportGenerator.HtmlArtifactKind], processor.SupportedKinds);
         Assert.AreSequenceEqual(
-            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts],
             processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
@@ -150,9 +150,9 @@ public sealed class HtmlArtifactPostProcessorTests
             Assert.AreEqual(2, (int?)summary["total"]);
             Assert.AreEqual(1, (int?)summary["passed"]);
             Assert.AreEqual(1, (int?)summary["failed"]);
-            Assert.AreEqual(30d, (double?)summary["totalDurationMs"]);
+            Assert.AreEqual(7_200_000d, (double?)summary["totalDurationMs"]);
             Assert.AreSequenceEqual(
-                new[] { "first.html", "second.html" },
+                ["first.html", "second.html"],
                 Directory.GetFiles(directory, "*.html").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
         }
         finally
@@ -961,7 +961,7 @@ public sealed class HtmlArtifactPostProcessorTests
             Assert.AreEqual(3, (int?)summary["passed"]);
             Assert.AreEqual(0, (int?)summary["failed"]);
             Assert.AreEqual(1, (int?)summary["flaky"]);
-            Assert.AreEqual(33, (double?)summary["totalDurationMs"]);
+            Assert.AreEqual(180_000d, (double?)summary["totalDurationMs"]);
         }
         finally
         {

@@ -48,6 +48,13 @@ internal sealed partial class TestContextImplementation
     private const int TestTempDirectoryReservedHeadroom = 80;
 
     /// <summary>
+    /// <see cref="Path.GetInvalidFileNameChars"/> allocates a new array on every call. The set of
+    /// invalid characters is constant for the process lifetime, so it is cached once instead of
+    /// re-allocating it for every test's first <c>TestTempDirectory</c> access.
+    /// </summary>
+    private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+
+    /// <summary>
     /// Computes how many characters the readable portion of the directory name may use so that the
     /// full path plus the reserved headroom for the test's own files fits within <c>MAX_PATH</c>.
     /// May be negative when the base path alone already exhausts the budget.
@@ -80,7 +87,7 @@ internal sealed partial class TestContextImplementation
             return string.Empty;
         }
 
-        char[] invalidChars = Path.GetInvalidFileNameChars();
+        char[] invalidChars = InvalidFileNameChars;
         var builder = new StringBuilder(name.Length);
         bool lastWasUnderscore = false;
         foreach (char c in name)

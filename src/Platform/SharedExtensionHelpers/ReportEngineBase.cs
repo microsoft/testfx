@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -10,6 +10,8 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
+#pragma warning disable RS0051 // Report engine internals are shared-source implementation detail, not package API.
+
 internal readonly record struct ReportEngineContext(
     IFileSystem FileSystem,
     ITestApplicationModuleInfo TestApplicationModuleInfo,
@@ -20,7 +22,61 @@ internal readonly record struct ReportEngineContext(
     ITestFramework TestFramework,
     DateTimeOffset TestStartTime,
     int ExitCode,
-    CancellationToken CancellationToken);
+    CancellationToken CancellationToken,
+    int? ProcessId = null,
+    bool IsIncomplete = false)
+{
+    public ReportEngineContext(
+        IFileSystem fileSystem,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IEnvironment environment,
+        ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
+        IClock clock,
+        ITestFramework testFramework,
+        DateTimeOffset testStartTime,
+        int exitCode,
+        CancellationToken cancellationToken)
+        : this(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken,
+            ProcessId: null,
+            IsIncomplete: false)
+    {
+    }
+
+    public void Deconstruct(
+        out IFileSystem fileSystem,
+        out ITestApplicationModuleInfo testApplicationModuleInfo,
+        out IEnvironment environment,
+        out ICommandLineOptions commandLineOptions,
+        out IConfiguration configuration,
+        out IClock clock,
+        out ITestFramework testFramework,
+        out DateTimeOffset testStartTime,
+        out int exitCode,
+        out CancellationToken cancellationToken)
+    {
+        fileSystem = FileSystem;
+        testApplicationModuleInfo = TestApplicationModuleInfo;
+        environment = Environment;
+        commandLineOptions = CommandLineOptions;
+        configuration = Configuration;
+        clock = Clock;
+        testFramework = TestFramework;
+        testStartTime = TestStartTime;
+        exitCode = ExitCode;
+        cancellationToken = CancellationToken;
+    }
+}
 
 /// <summary>
 /// Shared base class for report engine implementations (CTRF, JUnit, HTML, ...) that all consume
@@ -40,6 +96,8 @@ internal abstract class ReportEngineBase
     protected readonly DateTimeOffset _testStartTime;
     protected readonly int _exitCode;
     protected readonly CancellationToken _cancellationToken;
+    protected readonly int? _processId;
+    protected readonly bool _isIncomplete;
 #pragma warning restore SA1401
 
     protected ReportEngineBase(ReportEngineContext context)
@@ -54,6 +112,8 @@ internal abstract class ReportEngineBase
         _testStartTime = context.TestStartTime;
         _exitCode = context.ExitCode;
         _cancellationToken = context.CancellationToken;
+        _processId = context.ProcessId;
+        _isIncomplete = context.IsIncomplete;
     }
 
     internal static string GetProvidedFileName(string[]? providedFileName)
@@ -67,7 +127,7 @@ internal abstract class ReportEngineBase
     protected string ResolveProvidedFileName(string template)
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        string processId = (_processId ?? _environment.ProcessId).ToString(CultureInfo.InvariantCulture);
         return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
@@ -94,8 +154,11 @@ internal abstract class ReportEngineBase
     {
         _cancellationToken.ThrowIfCancellationRequested();
 
-        bool wasExplicit = _commandLineOptions.TryGetOptionArgumentList(fileNameOptionName, out string[]? providedFileName);
-        string fileName = wasExplicit
+        // TryGetOptionArgumentListOrDefault also returns true for a passive default coming from
+        // testconfig.json, so it cannot be used to determine explicitness. Use it only to pick the
+        // file name, and derive wasExplicit from IsOptionSet to preserve the documented contract.
+        bool wasExplicit = _commandLineOptions.IsOptionSet(fileNameOptionName);
+        string fileName = _commandLineOptions.TryGetOptionArgumentListOrDefault(fileNameOptionName, out string[]? providedFileName)
             ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
             : defaultFileNameFactory();
 
@@ -125,3 +188,5 @@ internal abstract class ReportEngineBase
 #endif
     }
 }
+
+#pragma warning restore RS0051

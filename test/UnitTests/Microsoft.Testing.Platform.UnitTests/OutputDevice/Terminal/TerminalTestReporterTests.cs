@@ -681,7 +681,7 @@ public sealed class TerminalTestReporterTests
         progressAwareTerminal.WriteToTerminal(static _ => { });
 
         Assert.AreSequenceEqual(
-            new[] { "base", "other instance", "updated execution" },
+            ["base", "other instance", "updated execution"],
             renderer.Messages.Select(static message => message.Text).OrderBy(static message => message));
     }
 
@@ -897,11 +897,11 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    public void TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
+    public async Task TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
     {
         var terminal = new RecordingTerminal();
         var renderer = new ThrowingProgressRenderer();
-        using var logAttempted = new ManualResetEventSlim();
+        var logAttempted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ILogger> logger = new();
         logger
             .Setup(x => x.Log(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
@@ -909,14 +909,15 @@ public sealed class TerminalTestReporterTests
                 (_, message, _, _) =>
                 {
                     Assert.Contains(nameof(InvalidOperationException), message);
-                    logAttempted.Set();
+                    logAttempted.TrySetResult(true);
                 })
             .Throws(new IOException("Logging failed."));
         using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer, logger.Object);
 
         progressAwareTerminal.StartShowingProgress(workerCount: 1);
 
-        Assert.IsTrue(logAttempted.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken), "Expected the render failure to be logged.");
+        Task completedTask = await Task.WhenAny(logAttempted.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+        Assert.AreSame(logAttempted.Task, completedTask, "Expected the render failure to be logged.");
         progressAwareTerminal.StopShowingProgress();
         Assert.Contains("EraseProgress", terminal.Events);
     }
@@ -2099,8 +2100,11 @@ public sealed class TerminalTestReporterTests
         Assert.AreSame(first, second);
     }
 
+    // No [ResourceLock]/[DoNotParallelize] needed for the CultureInfo.CurrentCulture/CurrentUICulture
+    // mutations below: they are restored in finally. MSTest executes tests sequentially within each worker
+    // task, but tests on parallel workers can overlap and use separate ExecutionContexts, so this mutation cannot
+    // affect a sibling test's culture; `state` is also a private local instance.
     [TestMethod]
-    [DoNotParallelize]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
@@ -2155,8 +2159,11 @@ public sealed class TerminalTestReporterTests
         }
     }
 
+    // Same rationale as TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary
+    // above: CultureInfo.CurrentCulture/CurrentUICulture flow via ExecutionContext and cannot leak across
+    // the Task.Run-scheduled sibling tests that make up MSTest's method-level parallelization, and `state`
+    // is a private local instance, so no [ResourceLock]/[DoNotParallelize] is required here either.
     [TestMethod]
-    [DoNotParallelize]
     public void TestNodeResultsState_GetRunningTasks_WhenCultureChanges_ReformatsSummary()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
@@ -3204,6 +3211,59 @@ public sealed class TerminalTestReporterTests
 
         // The summary surfaces the failed-process count on a dedicated "error: 1" line.
         Assert.Contains($"{TerminalResources.Error}: 1", output);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_WithInvalidCommandLineExitCode_PrintsDescriptionAndDocumentationLink()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: (int)ExitCode.InvalidCommandLine);
+
+        string expected = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestRunExitCode,
+            (int)ExitCode.InvalidCommandLine,
+            TerminalResources.ExitCodeInvalidCommandLineDescription);
+        Assert.Contains(expected, stringBuilderConsole.Output);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_InDiscoveryModeWithInvalidCommandLineExitCode_PrintsDiscoveryDescription()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: true, isHelp: false, isRetry: false);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: (int)ExitCode.InvalidCommandLine);
+
+        string expected = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.TestDiscoveryExitCode,
+            (int)ExitCode.InvalidCommandLine,
+            TerminalResources.ExitCodeInvalidCommandLineDescription);
+        Assert.Contains(expected, stringBuilderConsole.Output);
+    }
+
+    [TestMethod]
+    public void GetExitCodeDescription_MapsEveryKnownFailureExitCode()
+    {
+        foreach (ExitCode exitCode in (ExitCode[])Enum.GetValues(typeof(ExitCode)))
+        {
+            if (exitCode == ExitCode.Success)
+            {
+                continue;
+            }
+
+            Assert.AreNotEqual(
+                TerminalResources.ExitCodeUnknownDescription,
+                TerminalTestReporter.GetExitCodeDescription((int)exitCode),
+                $"Exit code '{exitCode}' should have a description.");
+        }
+
+        Assert.AreEqual(TerminalResources.ExitCodeUnknownDescription, TerminalTestReporter.GetExitCodeDescription(42));
     }
 
     [TestMethod]

@@ -58,6 +58,8 @@ internal sealed class CiRunSummaryModule
 
     public CiRunSummaryHistoryTest[] HistoryTests { get; set; } = [];
 
+    public CiRunSummaryDependency[] Dependencies { get; set; } = [];
+
     public CiRunSummaryFailingClass[] TopFailingClasses { get; set; } = [];
 
     public CiCoverageSummaryData Coverage { get; set; } = new();
@@ -107,6 +109,27 @@ internal sealed class CiRunSummaryHistoryTest
     public long DurationTicks { get; set; }
 
     public bool IsFlaky { get; set; }
+
+    public int HistoricalPassCount { get; set; }
+
+    public int HistoricalFailCount { get; set; }
+
+    public int HistoryWindowInDays { get; set; }
+
+    public int DurationSampleCount { get; set; }
+
+    public double P95DurationMilliseconds { get; set; }
+
+    public double P99DurationMilliseconds { get; set; }
+}
+
+internal sealed class CiRunSummaryDependency
+{
+    public string DependentFullyQualifiedName { get; set; } = string.Empty;
+
+    public string Prerequisite { get; set; } = string.Empty;
+
+    public bool ProceedOnFailure { get; set; }
 }
 
 internal sealed class CiRunSummaryFailingClass

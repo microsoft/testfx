@@ -15,7 +15,7 @@
       <trans-unit id="AddResourceLockFix">
         <source>Add '[ResourceLock(WellKnownResources.{0})]'</source>
         <target state="translated">Добавить "[ResourceLock(WellKnownResources.{0})]"</target>
-        <note>{0} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}</note>
+        <note>{0} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}</note>
       </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
@@ -87,6 +87,11 @@
         <target state="translated">Исправить подпись</target>
         <note />
       </trans-unit>
+      <trans-unit id="MakeOSConditionConsistentFix">
+        <source>Make '[OSCondition]' consistent with platform compatibility attributes</source>
+        <target state="translated">Привести '[OSCondition]' в соответствие с атрибутами совместимости платформы</target>
+        <note>{Locked="[OSCondition]"}</note>
+      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Передайте аргумент "TestContext.CancellationToken" в вызов метода</target>
@@ -111,6 +116,11 @@
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Удалите параметр "DynamicDataSourceType", чтобы использовать значение по умолчанию "AutoDetect"</target>
         <note>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</note>
+      </trans-unit>
+      <trans-unit id="RemoveRedundantTestMethodAttributeFix">
+        <source>Remove redundant attribute</source>
+        <target state="translated">Удаление избыточного атрибута</target>
+        <note />
       </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
         <source>Remove redundant 'DisplayName'</source>

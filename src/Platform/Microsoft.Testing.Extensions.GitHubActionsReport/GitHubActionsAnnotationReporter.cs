@@ -192,7 +192,7 @@ internal sealed class GitHubActionsAnnotationReporter :
 
             if (_logger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace($"Showing exit-code annotation '{line}'.");
+                await _logger.LogTraceAsync($"Showing exit-code annotation '{line}'.").ConfigureAwait(false);
             }
 
             await DisplayAnnotationLineAsync(line, testSessionContext.CancellationToken).ConfigureAwait(false);
@@ -223,11 +223,11 @@ internal sealed class GitHubActionsAnnotationReporter :
             GitHubActionsEscaper.EscapeData(message));
     }
 
-    private Task WriteAnnotationAsync(TestNode testNode, string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
+    private async Task WriteAnnotationAsync(TestNode testNode, string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Failure received.");
+            await _logger.LogTraceAsync("Failure received.").ConfigureAwait(false);
         }
 
         string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
@@ -235,10 +235,10 @@ internal sealed class GitHubActionsAnnotationReporter :
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"Showing failure annotation '{line}'.");
+            await _logger.LogTraceAsync($"Showing failure annotation '{line}'.").ConfigureAwait(false);
         }
 
-        return DisplayAnnotationLineAsync(line, cancellationToken);
+        await DisplayAnnotationLineAsync(line, cancellationToken).ConfigureAwait(false);
     }
 
     internal string? AppendHistoryContext(
@@ -319,11 +319,11 @@ internal sealed class GitHubActionsAnnotationReporter :
         return FormatAnnotation("error", title, message, location);
     }
 
-    private Task WriteSkippedAnnotationAsync(TestNode testNode, string testName, string? explanation, CancellationToken cancellationToken)
+    private async Task WriteSkippedAnnotationAsync(TestNode testNode, string testName, string? explanation, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Skip received.");
+            await _logger.LogTraceAsync("Skip received.").ConfigureAwait(false);
         }
 
         string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
@@ -331,10 +331,10 @@ internal sealed class GitHubActionsAnnotationReporter :
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"Showing skip annotation '{line}'.");
+            await _logger.LogTraceAsync($"Showing skip annotation '{line}'.").ConfigureAwait(false);
         }
 
-        return DisplayAnnotationLineAsync(line, cancellationToken);
+        await DisplayAnnotationLineAsync(line, cancellationToken).ConfigureAwait(false);
     }
 
     // Prepend a newline so every workflow command annotation ('::error' or '::warning') starts at column 0

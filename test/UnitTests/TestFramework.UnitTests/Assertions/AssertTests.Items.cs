@@ -6,6 +6,8 @@ using System.Globalization;
 
 using AwesomeAssertions;
 
+using Moq;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
@@ -14,6 +16,28 @@ public partial class AssertTests
     {
         var collection = new List<int> { 1, 2, 3 };
         Assert.HasCount(3, collection);
+    }
+
+    public void Count_GenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(3);
+
+        Assert.HasCount(3, collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_GenericICollection_InterpolatedString_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(3);
+        DummyClassTrackingToStringCalls o = new();
+
+        Assert.HasCount(3, collection, $"User-provided message: {o}");
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+        o.WasToStringCalled.Should().BeFalse();
     }
 
     public void Count_NonGenericICollection_ShouldUseCountWithoutEnumerating()
@@ -551,6 +575,28 @@ public partial class AssertTests
     public void NotAny_WhenEmpty_ShouldPass()
         => Assert.IsEmpty(Array.Empty<int>());
 
+    public void IsEmpty_GenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(0);
+
+        Assert.IsEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_GenericICollection_InterpolatedString_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(0);
+        DummyClassTrackingToStringCalls o = new();
+
+        Assert.IsEmpty(collection, $"User-provided message: {o}");
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
     public void IsEmpty_NonGenericICollection_ShouldUseCountWithoutEnumerating()
     {
         CountTrackingCollection collection = new(0);
@@ -625,6 +671,22 @@ public partial class AssertTests
         var collection = new List<int> { 1 };
         DummyClassTrackingToStringCalls o = new();
         Assert.ContainsSingle(collection, $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void Single_InterpolatedString_GenericIList_ShouldUseCountAndIndexerWithoutEnumerating()
+    {
+        Mock<IList<int>> collection = new(MockBehavior.Strict);
+        collection.SetupGet(static list => list.Count).Returns(1);
+        collection.SetupGet(static list => list[0]).Returns(42);
+        DummyClassTrackingToStringCalls o = new();
+
+        int item = Assert.ContainsSingle(collection.Object, $"User-provided message: {o}");
+
+        item.Should().Be(42);
+        collection.VerifyGet(static list => list.Count, Times.Once);
+        collection.VerifyGet(static list => list[0], Times.Once);
+        collection.VerifyNoOtherCalls();
         o.WasToStringCalled.Should().BeFalse();
     }
 
@@ -722,6 +784,67 @@ public partial class AssertTests
         Assert.IsNotEmpty(collection);
     }
 
+    public void IsNotEmpty_GenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_GenericICollection_InterpolatedString_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingGenericCollection collection = new(1);
+        DummyClassTrackingToStringCalls o = new();
+
+        Assert.IsNotEmpty(collection, $"User-provided message: {o}");
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsNotEmpty_GenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingGenericEnumerable collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
+    public void IsNotEmpty_NonGenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_NonGenericICollection_WhenEmpty_ShouldFailWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(0);
+
+        Action action = () => Assert.IsNotEmpty(collection);
+
+        action.Should().Throw<Exception>();
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsNotEmpty_NonGenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingEnumerable collection = new(1);
+
+        Assert.IsNotEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
     public void Any_InterpolatedString_WhenAnyOneItem_ShouldPass()
     {
         DummyClassTrackingToStringCalls o = new();
@@ -769,6 +892,60 @@ public partial class AssertTests
                 Assert.IsNotEmpty(collection)
                 """);
         o.WasToStringCalled.Should().BeTrue();
+    }
+
+    private sealed class CountTrackingGenericCollection(int count) : ICollection<int>
+    {
+        public int Count
+        {
+            get
+            {
+                CountAccessCount++;
+                return count;
+            }
+        }
+
+        public int CountAccessCount { get; private set; }
+
+        public int EnumerationCount { get; private set; }
+
+        public bool IsReadOnly => true;
+
+        public void Add(int item)
+            => throw new NotSupportedException();
+
+        public void Clear()
+            => throw new NotSupportedException();
+
+        public bool Contains(int item)
+            => throw new NotSupportedException();
+
+        public void CopyTo(int[] array, int arrayIndex)
+            => throw new NotSupportedException();
+
+        public bool Remove(int item)
+            => throw new NotSupportedException();
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            EnumerationCount++;
+            throw new InvalidOperationException("The ICollection<T> fast path should not enumerate.");
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private sealed class CountTrackingGenericEnumerable(int count) : IEnumerable<int>
+    {
+        public int EnumerationCount { get; private set; }
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            EnumerationCount++;
+            return Enumerable.Range(0, count).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     private sealed class CountTrackingCollection(int count) : ICollection

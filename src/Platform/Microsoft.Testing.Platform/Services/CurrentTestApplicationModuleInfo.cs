@@ -10,6 +10,7 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
     private readonly IEnvironment _environment;
     private readonly IProcessHandler _process;
     private readonly string[]? _commandLineArguments;
+    private readonly string[]? _expandedCommandLineArguments;
     private static readonly string[] MuxerExec = ["exec"];
 
     public CurrentTestApplicationModuleInfo(IEnvironment environment, IProcessHandler process)
@@ -18,6 +19,15 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
     }
 
     public CurrentTestApplicationModuleInfo(IEnvironment environment, IProcessHandler process, string[]? commandLineArguments)
+        : this(environment, process, commandLineArguments, commandLineArguments)
+    {
+    }
+
+    public CurrentTestApplicationModuleInfo(
+        IEnvironment environment,
+        IProcessHandler process,
+        string[]? commandLineArguments,
+        string[]? expandedCommandLineArguments)
     {
         _environment = environment;
         _process = process;
@@ -25,6 +35,7 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
         // Take a snapshot so later mutations of the caller's array don't affect
         // GetCurrentExecutableInfo (and ExecutableInfo.Arguments exposes IEnumerable<string>).
         _commandLineArguments = commandLineArguments is null ? null : (string[])commandLineArguments.Clone();
+        _expandedCommandLineArguments = expandedCommandLineArguments is null ? null : (string[])expandedCommandLineArguments.Clone();
     }
 
     public bool IsCurrentTestApplicationHostDotnetMuxer
@@ -125,33 +136,37 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
         // the Retry extension needs to relaunch the test host with the same configuration.
         // Environment.GetCommandLineArgs() is still consulted to recover the dll path for the
         // dotnet/mono muxer cases since that information isn't part of the args passed to Main.
-        IEnumerable<string> arguments;
-        if (_commandLineArguments is { } passedArgs)
+        IEnumerable<string> arguments = GetArguments(_commandLineArguments);
+        IEnumerable<string> expandedArguments = GetArguments(_expandedCommandLineArguments);
+
+        return new ExecutableInfo(GetProcessPath(), arguments, expandedArguments, GetCurrentTestApplicationDirectory());
+
+        IEnumerable<string> GetArguments(string[]? passedArgs)
         {
-            if (isAppHost)
+            if (passedArgs is not null)
             {
-                arguments = passedArgs;
-            }
-            else if (isDotnetMuxer)
-            {
-                string[] envArgs = _environment.GetCommandLineArgs();
-                arguments = envArgs.Length > 0
-                    ? [.. MuxerExec, envArgs[0], .. passedArgs]
-                    : [.. MuxerExec, .. passedArgs];
-            }
-            else
-            {
+                if (isAppHost)
+                {
+                    return passedArgs;
+                }
+
+                if (isDotnetMuxer)
+                {
+                    string[] envArgs = _environment.GetCommandLineArgs();
+                    return envArgs.Length > 0
+                        ? [.. MuxerExec, envArgs[0], .. passedArgs]
+                        : [.. MuxerExec, .. passedArgs];
+                }
+
                 // Mono muxer: prepend the dll path (envArgs[0]) before user-supplied args.
-                string[] envArgs = _environment.GetCommandLineArgs();
-                arguments = envArgs.Length > 0
-                    ? [envArgs[0], .. passedArgs]
+                string[] monoArgs = _environment.GetCommandLineArgs();
+                return monoArgs.Length > 0
+                    ? [monoArgs[0], .. passedArgs]
                     : passedArgs;
             }
-        }
-        else
-        {
+
             string[] commandLineArguments = _environment.GetCommandLineArgs();
-            arguments = (isAppHost, isDotnetMuxer) switch
+            return (isAppHost, isDotnetMuxer) switch
             {
                 // When executable
                 (true, _) => commandLineArguments.Skip(1),
@@ -161,7 +176,5 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
                 _ => commandLineArguments,
             };
         }
-
-        return new ExecutableInfo(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
     }
 }

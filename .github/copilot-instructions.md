@@ -90,15 +90,26 @@ When making change to resource files, you MUST:
 - NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/TestFramework/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
 - A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
 - `{Locked="…"}` markers in a resource `<comment>` are matched as **substrings, not whole words**. A short locked token therefore also freezes every longer word that contains it, which blocks a legitimately translatable word. For example, `{Locked="const"}` on a message that also contains the English word *constant* locks `const` inside `constant`, so translators cannot localize it. Make each locked token unambiguous:
-  - Include the punctuation that surrounds the token in the message — usually the single quotes the message already uses — e.g. write `{Locked="'const'"}` rather than `{Locked="const"}`.
+  - Every locked token MUST occur verbatim in the corresponding `<value>`. Do not lock an option name or other contextual identifier that the user-facing string does not actually contain.
+  - Prefer locking the bare invariant token so translators can localize surrounding punctuation, including quotation marks.
+  - Include surrounding punctuation only when it is itself invariant or is required to prevent a substring collision. For example, write `{Locked="'const'"}` when the same message also contains *constant*.
   - Prefer the longest form that identifies the token (`{Locked="Assert.AreEqual"}`, `{Locked="[TestClass]"}`) over a bare fragment.
   - Before adding a marker, re-read the whole message and confirm the locked text does not appear as a substring of another word that should stay translatable.
 
 ## Public API guidelines
 
+- Treat adding an overload as a potential source-breaking change, even when it is binary-compatible. Existing calls can become ambiguous when an argument converts to multiple parameter types, especially across `Span<T>`, `ReadOnlySpan<T>`, arrays, generic interfaces such as `IEnumerable<T>`, and overloads with optional parameters.
+  - Before adding or changing overloads, enumerate representative existing call shapes and compare all applicable implicit conversions and generic type-inference paths.
+  - For `Assert` overload changes, update the manually maintained implicit consumer call shapes in [`AssertSourceCompatibilityTests.cs`](../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/AssertSourceCompatibilityTests.cs). The test compiles them against the packed `MSTest.TestFramework` using C# 12 and automatically requires every public `Assert` method family to have at least one representative scenario.
+  - Add equivalent package-consuming compilation coverage for overload changes in other public API types, using the oldest relevant default C# language version and target framework. Repository projects use `LangVersion=preview`, so an ordinary in-repo unit test does not detect overload-resolution regressions that only affect older compilers.
+  - During review, do not treat successful compilation under the repository's language version as sufficient evidence of source compatibility.
 - Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init` accessors.
   - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now would be a breaking change. However, we MUST NOT introduce **new** APIs using `init` accessors.
   - IMPORTANT: Make sure to apply this rule strictly both during PR review and when working on code changes.
+- Every API marked with `[Experimental]` MUST include this sentence in its XML documentation `<remarks>`: `This API is experimental. It may change, break, or be removed at any time without notice.` Documentation tooling does not reliably surface the attribute itself.
+  - Add the sentence in a `<para>` when `<remarks>` already contains other text; otherwise, add a new `<remarks>` block.
+  - Apply this rule to experimental members as well as types.
+- When designing a capability API or protocol field, consider clients that predate the capability. Model "unsupported or not declared" separately from an explicit value (for example, with a nullable value or presence-aware representation) unless absence is intentionally equivalent to the default, and document the compatibility behavior.
 
 ## Testing Guidelines
 
@@ -109,6 +120,7 @@ When making change to resource files, you MUST:
   - The adapter unit-test projects (`MSTestAdapter.UnitTests`, `MSTestAdapter.PlatformServices.UnitTests`) ban MSTest's `Assert` family and require `AwesomeAssertions` (FluentAssertions-style API).
 - Acceptance integration tests run with assembly-level method parallelization. Classes that share a single generated mutable test asset across multiple methods must be marked `[DoNotParallelize]` to avoid races on `bin/obj` outputs.
 - When asserting on test-host output that contains a rendered test **duration** (e.g. `failed MyTest (040ms)`), NEVER hard-code `\(\d+ms\)`. The duration format grows leading parts (`(1s 040ms)`, `(2m 03s 040ms)`, …) on slower machines (often macOS, sometimes Windows), so a `\d+ms`-only pattern is a classic source of timing flakiness. Use the shared `AcceptanceAssert.DurationPattern` constant (or, where a duration only ever applies to skipped tests, the deterministic `(0ms)`) instead.
+- Prefer deterministic output, marker, or rendezvous assertions over wall-clock timing. When an acceptance test must assert an upper bound on `Stopwatch.Elapsed` around a real process launch, use a named limit with a generous allowance for process startup, JIT, and teardown on loaded CI agents, and add a comment explaining its relationship to the configured timeout or expected operation.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
 
 ## CLI options guidelines

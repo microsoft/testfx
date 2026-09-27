@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+        <target state="translated">Azure DevOps hata ek açıklamalarını ('on' veya 'off') etkinleştirin veya devre dışı bırakın. Varsayılan olarak 'on'. '--report-azdo' gerektirir.</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
@@ -46,6 +46,11 @@
         <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Azure DevOps canlı yayımlama {0} eki karşıya yükleyemedi; bu ekler Azure DevOps test çalıştırmasında eksik olacak.</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="translated">Azure DevOps REST API kimlik doğrulaması başarısız oldu veya oturum açma bilgilerine yönlendirildi (durum: {0}); bu, SYSTEM_ACCESSTOKEN'in geçersiz veya kullanılamaz olduğunu gösterir. Çatal çekme isteği doğrulama derlemeleri için, güvenilmeyen çatal koduna gizli bilgileri kullanıma sunmayın; sonuçları ayrı bir güvenilir işlem hattı bağlamından yayımlayın veya Azure DevOps canlı yayımlamayı devre dışı bırakın.</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
@@ -90,7 +95,7 @@
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
         <target state="translated">'--publish-azdo-test-results' ayarlandı ancak şu ortam değişkenleri eksik veya geçersiz olduğundan Azure DevOps canlı yayımlama devre dışı bırakıldı: {0}.</target>
-        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -162,6 +167,11 @@
         <target state="translated">Zaman aşımı: {0}</target>
         <note>{0} is the timeout reason.</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="translated">Azure DevOps REST API, {0} durum kodu ve '{1}' içerik türüyle beklenmeyen başarılı bir yanıt döndürdü.</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>
         <target state="translated">Azure DevOps canlı yayımlama çıkış cihazında bir uyarı görüntüleyemedi.</target>
@@ -225,7 +235,7 @@
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
         <target state="translated">Azure DevOps güvenilir olmayan geçmişi yüklenemiyor. Geçmiş ek açıklamaları olmadan devam ediliyor. {0}</target>
-        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
+        <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
@@ -235,7 +245,7 @@
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
         <target state="translated">Azure DevOps güvenilir olmayan geçmişi istendi ancak gerekli Azure DevOps ortam değişkenleri eksik. Geçmiş ek açıklamaları olmadan devam ediliyor.</target>
-        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+        <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -340,7 +350,7 @@
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
         <target state="translated">Azure DevOps karantina dosyası '{0}' yüklenemiyor. Karantina tanıma olmadan devam ediliyor. {1}</target>
-        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
+        <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
@@ -413,9 +423,9 @@
         <note>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
-        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="translated">Test çalıştırmasının sonunda bir Markdown iş özeti yazın ve '##vso[task.uploadsummary]' aracılığıyla karşıya yükleyin. İsteğe bağlı bir dosya yolu bağımsız değişkeni varsayılan konumu ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md') geçersiz kılar. '--report-azdo' gerektirir.</target>
-        <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
+        <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">Test çalıştırmasının sonunda Markdown bir iş özeti yazın ve Azure DevOps Uzantılar sekmesine yükleyin. İsteğe bağlı bir dosya yolu bağımsız değişkeni varsayılan konumu ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md') geçersiz kılar. '--report-azdo' gerektirir.</target>
+        <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>

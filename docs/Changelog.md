@@ -4,7 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.4.0" />[4.4.0] - UNRELEASED
+## <a name="4.5.0" />[4.5.0] - UNRELEASED
+
+See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
+
+### Added
+
+* Run classic UWP, modern UWP, and AppContainer-configured WinUI test applications end to end through Microsoft.Testing.Platform using the MSTest.Sdk app-model sidecar controller, with AUMID activation, exact package-SID IPC authorization, UI-thread tests, TRX, HangDump, Retry, and encrypted activation payloads.
+* Ship the MSTest adapter's Microsoft.Testing.Platform integration and required runtime assets for classic and modern UWP targets while retaining VSTest routing for true UWP/AppContainer `MSTest.Sdk` applications, by @Evangelink in [#11118](https://github.com/microsoft/testfx/pull/11118)
+* Add opt-in assertion failure diagnostics through `CaptureAssertionFailureDiagnostics` / `mstest:execution:captureAssertionFailureDiagnostics`, producing bounded per-test artifacts with assertion values, source frames, concurrent tests and process state for supported VSTest and Microsoft.Testing.Platform runs, by @Evangelink in [#11244](https://github.com/microsoft/testfx/pull/11244)
+* Add MSTEST0084 and a code fix to align MSTest `OSCondition` attributes with `SupportedOSPlatformAttribute` and `UnsupportedOSPlatformAttribute`, including safe handling of versioned platform constraints, by @Evangelink in [#11044](https://github.com/microsoft/testfx/pull/11044) and [#11302](https://github.com/microsoft/testfx/pull/11302)
+* Add MSTEST0085 to report `[TestClass]` and derived attributes on abstract classes that MSTest cannot discover directly, by @Evangelink in [#11240](https://github.com/microsoft/testfx/pull/11240)
+* Add MSTEST0086 and a code fix to remove method-level MSTest attributes whose effective behavior is already supplied by the containing test class, by @Evangelink in [#11267](https://github.com/microsoft/testfx/pull/11267)
+* Add MSTEST0087 to report duplicate explicit `DataRow` display names within the same test method, by @Evangelink in [#11409](https://github.com/microsoft/testfx/pull/11409)
+
+### Changed
+
+* Use direct collection counts and indexers across `Assert.IsNotEmpty`, `Assert.HasCount`, `Assert.IsEmpty`, `Assert.ContainsSingle` and `CollectionAssert` equivalence checks, avoiding unnecessary enumeration for collection-backed inputs, by @Evangelink in [#10980](https://github.com/microsoft/testfx/pull/10980), [#11326](https://github.com/microsoft/testfx/pull/11326) and [#11353](https://github.com/microsoft/testfx/pull/11353)
+* Reduce reflection, resource lookup, allocation and array-enumeration overhead when generating data-driven test display names, by @Evangelink in [#11019](https://github.com/microsoft/testfx/pull/11019)
+* Escape control characters and unpaired surrogates in automatically generated data-driven test display names while preserving valid surrogate pairs and distinguishing literal escape-sequence text, by @Evangelink in [#11428](https://github.com/microsoft/testfx/pull/11428)
+* Avoid double enumeration and unnecessary allocation when converting VSTest test traits into Microsoft.Testing.Platform properties, by @Evangelink in [#11452](https://github.com/microsoft/testfx/pull/11452)
+
+### Fixed
+
+* Copy requested classic UWP adapter satellite assemblies independently of the build-machine culture when `EnableMSTestRunner=true`, by @Evangelink in [#11112](https://github.com/microsoft/testfx/pull/11112)
+* Prevent the MSTest source generator from crashing on null array attribute arguments such as `[DataRow(null)]`, preserving the value as one null test argument, by @Sergio0694 in [#11371](https://github.com/microsoft/testfx/pull/11371)
+* Restore source compatibility when asserting a non-null value against a collection with nullable element types, by @Sergio0694 in [#11374](https://github.com/microsoft/testfx/pull/11374)
+
+## <a name="4.4.1" />[4.4.1] - 2026-09-15
+
+See full log [of v4.4.0...v4.4.1](https://github.com/microsoft/testfx/compare/v4.4.0...v4.4.1)
+
+### Changed
+
+* Narrow the members rooted by the MSTest source generator for trimming and Native AOT while preserving the constructors and accessible inherited members required at runtime, by @Evangelink in [#10998](https://github.com/microsoft/testfx/pull/10998)
+
+### Fixed
+
+* Fix the MSTest.Sdk Native AOT validation warning for the Retry extension incorrectly referring to Hot Reload, by @Evangelink in [#10981](https://github.com/microsoft/testfx/pull/10981)
+* Respect `SatelliteResourceLanguages` when copying MSTest adapter satellite assemblies into Microsoft.Testing.Platform test outputs, by @Evangelink in [#10987](https://github.com/microsoft/testfx/pull/10987)
+* Emit compilable, type-preserving source-generated literals for narrow integral values, enums, control characters, `NaN` and infinities, by @Evangelink in [#10996](https://github.com/microsoft/testfx/pull/10996)
+* Exclude inaccessible and hidden inherited test members when source-generating metadata for a derived test class whose base type is declared in another assembly, by @Evangelink in [#11014](https://github.com/microsoft/testfx/pull/11014)
+* Restore C# 12 source compatibility for array and dual-convertible collection calls across the affected `Assert` overload families, by @Evangelink in [#11038](https://github.com/microsoft/testfx/pull/11038)
+* Make whitespace-only differences visible in bounded `Assert.AreEqual` string comparison previews, by @Evangelink in [#11109](https://github.com/microsoft/testfx/pull/11109)
+* Allow `MSTEST0032` assertions that intentionally compare an enum member converted to its underlying integral type with a numeric literal, by @Evangelink in [#11175](https://github.com/microsoft/testfx/pull/11175)
+
+## <a name="4.4.0" />[4.4.0] - 2026-09-02
 
 See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...main)
 
@@ -19,6 +64,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Add MSTEST0074 through MSTEST0077 to detect process-global state, current-directory, culture and shared-file-system mutations that are unsafe under parallel execution. MSTEST0074 and MSTEST0075 include code fixes that add the appropriate `[ResourceLock]`, by @Evangelink in [#10248](https://github.com/microsoft/testfx/pull/10248) and [#10430](https://github.com/microsoft/testfx/pull/10430)
 * Add `[DependsOn]` and equivalent `testconfig.json` declarations (`mstest:execution:dependencies`, with `chains` for straight sequences and `nodes` for fan-in/fan-out) to declare that a test runs after one or more other tests. Declarations form a directed acyclic graph rather than a flat order, so tests that share a prerequisite still run in parallel with each other; a test whose prerequisite does not pass is skipped (transitively) unless it sets `ProceedOnFailure`, and dependency cycles are reported before the run starts. The attribute works on both hosts; the `testconfig.json` declarations are Microsoft.Testing.Platform only. MSTEST0078 validates statically decidable references and cycles at build time. See [RFC 022](RFCs/022-Test-Dependencies.md), [#10260](https://github.com/microsoft/testfx/pull/10260) and [#10294](https://github.com/microsoft/testfx/pull/10294)
 * Add dedicated timeout configuration for `[GlobalTestInitialize]` / `[GlobalTestCleanup]` fixtures via the `timeout:globalTestInitialize` / `timeout:globalTestCleanup` `testconfig.json` keys (RunSettings XML: `GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). These fall back to the per-test `testInitialize` / `testCleanup` timeouts when unset, and global fixture timeout/cancellation diagnostics now use dedicated messages ("Global test initialize/cleanup method ...") in [#9985](https://github.com/microsoft/testfx/issues/9985)
+* Add an opt-in prototype for deadline-aware cancellation so CI can ask MSTest to stop scheduling tests before a hard job deadline, allowing in-flight tests and report extensions to finish cleanly, by @nohwnd and @Evangelink in [#10018](https://github.com/microsoft/testfx/pull/10018)
 * Add a code fix for MSTEST0041 that adds `[TestClass]` to a type decorated with a `ConditionBaseAttribute`-derived attribute in [#10283](https://github.com/microsoft/testfx/pull/10283)
 * Add MSTEST0079, which suggests replacing a `RuntimeInformation.ProcessArchitecture` guard at the top of a test method (early `return` or `Assert.Inconclusive`) with `[ArchitectureCondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
 * Add MSTEST0080, which suggests replacing a null check on the `CI` environment variable at the top of a test method (early `return` or `Assert.Inconclusive`) with `[CICondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
@@ -26,9 +72,11 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Add `RetryResult.AllResults` so custom `RetryBaseAttribute` implementations can expose every retry attempt in order by @Evangelink in [#9936](https://github.com/microsoft/testfx/pull/9936)
 * Support testing unpackaged WinUI applications under Microsoft.Testing.Platform by @Evangelink in [#10330](https://github.com/microsoft/testfx/pull/10330)
 * Report assertion expected/actual values through a dedicated platform property so IDEs and reporters can consume structured assertion details by @Evangelink in [#10353](https://github.com/microsoft/testfx/pull/10353)
+* Preserve `[WorkItem]` and `[GitHubWorkItem]` metadata in Microsoft.Testing.Platform TRX reports so CI dashboards and downstream triage tools retain their work-item links, by @Evangelink in [#10861](https://github.com/microsoft/testfx/pull/10861)
 * Emit OpenTelemetry spans for MSTest tests and fixture methods as part of the expanded testing semantic conventions by @Evangelink in [#10358](https://github.com/microsoft/testfx/pull/10358)
 * Add MSTEST0082 to detect lifecycle and test members inherited from a base class compiled against a different major MSTest framework version, where the assembly rename between v3 and v4 would otherwise make those members silently undiscoverable, by @nohwnd and @Evangelink in [#10508](https://github.com/microsoft/testfx/pull/10508) and [#10637](https://github.com/microsoft/testfx/pull/10637)
 * Add MSTEST0083 and a code fix to replace executable-file guards before matching `Process.Start` calls with `[ExecutableCondition]`, by @Evangelink in [#10634](https://github.com/microsoft/testfx/pull/10634)
+* Add exhaustive combinatorial test data through `CombinatorialData`, with explicit, inferred, range and random parameter-value providers, by @AArnott in [#10896](https://github.com/microsoft/testfx/pull/10896)
 
 ### Changed
 
@@ -37,6 +85,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Make `DynamicData` and reflection-free source-generation metadata safer under trimming and Native AOT, reducing trim warnings and retaining the members needed for discovery and execution by @Evangelink in [#9832](https://github.com/microsoft/testfx/pull/9832), [#9861](https://github.com/microsoft/testfx/pull/9861) and [#10136](https://github.com/microsoft/testfx/pull/10136)
 * Clarify the `[Retry]` documentation that a data-driven attempt continues retrying while any row failed or timed out; an inconclusive row only stops retrying when no sibling row in that attempt failed or timed out, by @Evangelink in [#9936](https://github.com/microsoft/testfx/pull/9936)
 * Graduate `MSTest.SourceGeneration` from its independently versioned alpha line so it ships at the MSTest version. Non-NativeAOT MSTest.Sdk projects can opt in with `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>`, by @Evangelink in [#10477](https://github.com/microsoft/testfx/pull/10477)
+* Use source-generated descriptors to bypass runtime discovery and validation for supported synchronous `[TestMethod]` and `[DataRow]` methods on Microsoft.Testing.Platform, while preserving per-method fallback for unsupported shapes and leaving VSTest unchanged, by @Evangelink in [#10777](https://github.com/microsoft/testfx/pull/10777)
 * Reduce data-driven display-name allocations by formatting scalar and recursively nested array arguments into one buffer while preserving existing display names and culture-sensitive formatting, by @Evangelink in [#10528](https://github.com/microsoft/testfx/pull/10528)
 * Reduce reflection-free source-generation startup time and generated output size by removing unused metadata and streamlining runtime registration, by @Evangelink in [#10545](https://github.com/microsoft/testfx/pull/10545)
 * Reduce assertion telemetry contention during parallel test execution, by @Evangelink in [#10560](https://github.com/microsoft/testfx/pull/10560)
@@ -54,6 +103,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Prevent long-running .NET Framework tests from losing cross-AppDomain assembly-resolution logging after the remoting lease expires, and keep fallback diagnostics from being misclassified as MSBuild errors, by @Evangelink and @nohwnd in [#10532](https://github.com/microsoft/testfx/pull/10532) and [#10604](https://github.com/microsoft/testfx/pull/10604)
 * Preserve user-declared source-generated method attributes for async tests while merging only compiler-generated async metadata at runtime, by @Evangelink in [#10700](https://github.com/microsoft/testfx/pull/10700)
 * Mark `MSTestAdapter.PlatformServices` as non-packable because it is embedded in `MSTest.TestAdapter`, preventing direct pack invocations from producing an unintended standalone package, by @Evangelink in [#10728](https://github.com/microsoft/testfx/pull/10728)
+* Make `TestContext.TestTempDirectory` creation consistent across supported platforms and extend its acceptance coverage, by @Evangelink in [#10800](https://github.com/microsoft/testfx/pull/10800)
 
 ## <a name="4.3.3" />[4.3.3] - 2026-07-28
 
@@ -1281,7 +1331,7 @@ See full log [of v3.6.0...v3.6.1](https://github.com/microsoft/testfx/compare/v3
 * Microsoft.Testing.Extensions.Retry: [1.4.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.4.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.4.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.4.1)
 
-## <a name="3.6.1" />[3.6.0] - 2024-09-11
+## <a name="3.6.0" />[3.6.0] - 2024-09-11
 
 See full log [of v3.5.2...v3.6.0](https://github.com/microsoft/testfx/compare/v3.5.2...v3.6.0)
 

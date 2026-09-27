@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Logging;
 /// <summary>
 /// Represents a logger provider that can be used to create loggers.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ILoggerProvider
 {

@@ -6,9 +6,17 @@
 (T1, T2).Item2 -> T2
 (T1, T2).ValueTuple() -> void
 (T1, T2).ValueTuple(T1 item1, T2 item2) -> void
+abstract Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
+abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.DisplayName.get -> string!
+abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> string?
+abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Uid.get -> string!
+abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Version.get -> string!
 abstract Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data.TestDataConnection.GetColumns(string! tableName) -> System.Collections.Generic.List<string!>?
 abstract Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data.TestDataConnection.GetDataTablesAndViews() -> System.Collections.Generic.List<string!>?
 abstract Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data.TestDataConnection.ReadTable(string! tableName, System.Collections.IEnumerable? columns) -> System.Data.DataTable?
+const Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.RunSettingsOptionName = "settings" -> string!
+const Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterOptionName = "filter" -> string!
+const Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.TestRunParameterOptionName = "test-parameter" -> string!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsCommandLineOptionsProvider.RunSettingsOptionName = "settings" -> string!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName = "filter" -> string!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName = "test-parameter" -> string!
@@ -25,6 +33,32 @@ const Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.EngineC
 extern Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.SetupConfiguration.SetupConfiguration() -> void
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase
+Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.RunSettingsCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! optionDescription, string! fileDoesNotExistErrorFormat, string! fileCannotBeReadErrorFormat) -> void
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Configurations.IConfigurationProvider!>!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Description.get -> string!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.LoadAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Order.get -> int
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.RunSettingsConfigurationProviderBase() -> void
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.TryGet(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.TryGetScalar(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Description.get -> string!
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.DisplayName.get -> string!
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.RunSettingsEnvironmentVariableProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Uid.get -> string!
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.UpdateAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Version.get -> string!
+Microsoft.Testing.Extensions.RunSettingsProviderHelper
+Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase
+Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription) -> void
+Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase
+Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.TestRunParametersCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription, string! argumentIsNotParameterErrorFormat) -> void
 Microsoft.Testing.Shared.BannerMessageHelper
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TcmTestPropertiesProvider
@@ -38,6 +72,12 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer.Discover
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer.DiscoverTestsAsync(System.Collections.Generic.IEnumerable<string!>! sources, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext! discoveryContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! logger, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseDiscoverySink! discoverySink, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IConfiguration? configuration, bool isMTP) -> System.Threading.Tasks.Task!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer.MSTestDiscoverer() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer.MSTestDiscoverer(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler, System.Func<string!, System.Collections.Generic.IDictionary<string!, object!>!, System.Threading.Tasks.Task!>? telemetrySender = null) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.Cancel() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.DiscoverAsync(System.Collections.Generic.IEnumerable<string!>! sources, string? settingsXml, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IUnitTestElementSink! elementSink, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestElementFilterProvider? filterProvider, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IConfiguration? configuration, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler, bool isMTP) -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.MSTestEngine(System.Threading.CancellationToken cancellationToken, System.Func<string!, System.Collections.Generic.IDictionary<string!, object!>!, System.Threading.Tasks.Task!>? telemetrySender = null, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager? testExecutionManager = null) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.RunFromSourcesAsync(System.Collections.Generic.IEnumerable<string!>! sources, string? settingsXml, string? testRunDirectory, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings!, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder!>! recorderFactory, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestElementFilterProvider? filterProvider, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IConfiguration? configuration, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler, bool isMTP) -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.RunFromTestElementsAsync(System.Func<System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>!>! testElementsFactory, System.Collections.Generic.IEnumerable<string!>! sourcesForInitialization, string? settingsXml, string? testRunDirectory, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings!, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder!>! recorderFactory, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestElementFilterProvider? filterProvider, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IConfiguration? configuration, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! testSourceHandler) -> System.Threading.Tasks.Task!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.Cancel() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.MSTestExecutor() -> void
@@ -54,6 +94,8 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestElementFilterProvider
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestElementFilterProvider.TestElementFilterProvider(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IMSTestTrxReportCapability
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IMSTestTrxReportCapability.IsTrxEnabled.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IUnitTestElementFilterExpression
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IUnitTestElementFilterExpression.MatchTestElement(System.Func<string!, object?>! propertyValueProvider) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryContext
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryContext.MSTestDiscoveryContext(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestFilterContextBase
@@ -109,6 +151,9 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MS
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestCaseFilterCommandLineOptionsProvider.MSTestTestCaseFilterCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestRunParametersCommandLineOptionsProvider
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestRunParametersCommandLineOptionsProvider.MSTestTestRunParametersCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider.GetTestElementFilter(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, out bool filterHasError) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestElementFilter?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider.MtpTestElementFilterProvider(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestFilterContextBase! filterContext) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestMethodFilter
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestMethodFilter.GetFilterExpression(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, out bool filterHasError) -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseFilterExpression?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestMethodFilter.GetTestElementFilter(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, out bool filterHasError) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestElementFilter?
@@ -255,7 +300,17 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MSTestExtension.MSTestExtension() -
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestExtension.Uid.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestExtension.Version.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionCompleted() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionPending() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionStarting() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.StopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.TryStopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.Dispose() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.MSTestPlatformActivity(Microsoft.Testing.Platform.Telemetry.IPlatformActivity! activity) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.RecordException(System.Exception! exception) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.SetFailed(string? description) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.SetTag(string! key, object? value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.CloseTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionResult!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.CreateTestSessionAsync(Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionContext! context) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionResult!>!
@@ -295,6 +350,9 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MTPTraceLogger.Warning(string! mess
 Microsoft.VisualStudio.TestTools.UnitTesting.MtpUnitTestElementSink
 Microsoft.VisualStudio.TestTools.UnitTesting.MtpUnitTestElementSink.MtpUnitTestElementSink(Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, bool isTrxEnabled) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MtpUnitTestElementSink.SendTestElementAsync(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! testElement) -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter
+Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.PlatformServicesConfigurationAdapter(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.this[string! key].get -> string?
 override (T1, T2).Equals(object? obj) -> bool
 override (T1, T2).GetHashCode() -> int
 override (T1, T2).ToString() -> string!
@@ -303,8 +361,13 @@ override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAs
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TypeCache.InitializeLifetimeService() -> object?
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.InitializeLifetimeService() -> object?
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.ReflectHelper.InitializeLifetimeService() -> object?
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsCommandLineOptionsProvider.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.DisplayName.get -> string!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.Uid.get -> string!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.Version.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestRunParametersCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter.EqtTraceLogger.InitializeLifetimeService() -> object?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.InitializeLifetimeService() -> object?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data.CsvDataConnection.GetColumns(string! tableName) -> System.Collections.Generic.List<string!>?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data.CsvDataConnection.GetDataTablesAndViews() -> System.Collections.Generic.List<string!>!
@@ -326,11 +389,20 @@ override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Test
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DataRow.get -> System.Data.DataRow?
 override Microsoft.VisualStudio.TestTools.UnitTesting.MSTestBridgedTestFramework.AddAdditionalProperties(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase) -> void
 override Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeException.StackTrace.get -> string?
+override Microsoft.VisualStudio.TestTools.UnitTesting.MTPTraceLogger.InitializeLifetimeService() -> object?
+override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override sealed Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 override System.Runtime.InteropServices.OSPlatform.Equals(object? obj) -> bool
 override System.Runtime.InteropServices.OSPlatform.GetHashCode() -> int
 override System.Runtime.InteropServices.OSPlatform.ToString() -> string!
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.ApplyEnvironmentVariables(System.Xml.Linq.XDocument! runSettings, Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.CanReadFile(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! filePath) -> bool
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.FindInvalidTestParameter(string![]! arguments) -> string?
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.HasEnvironmentVariables(System.Xml.Linq.XDocument! runSettings) -> bool
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.TryLoadRunSettingsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! runSettingsOptionName) -> System.Threading.Tasks.Task<System.Xml.Linq.XDocument?>!
 static Microsoft.Testing.Shared.BannerMessageHelper.BuildBannerMessage(Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, string! productName, string! version) -> string!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TcmTestPropertiesProvider.GetTcmProperties(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase? testCase) -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>?
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TestCaseExtensions.GetHierarchy(this Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase) -> string![]?
@@ -373,8 +445,11 @@ static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilit
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.PathToPrivateAssemblies.get -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.PathToPublicAssemblies.get -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.VSInstallPath.get -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.Create() -> Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability!
 static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability!
+static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.TryEnable(System.IServiceProvider! serviceProvider) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeConverter.ToDiscoveredTestNode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, bool isTrxEnabled) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
+static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeConverter.ToEmptyResultTestNode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, bool isTrxEnabled) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
 static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeConverter.ToInProgressTestNode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, bool isTrxEnabled) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
 static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeConverter.ToResultTestNode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, Microsoft.VisualStudio.TestTools.UnitTesting.TestResult! result, System.DateTimeOffset startTime, System.DateTimeOffset endTime, bool isTrxEnabled, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings! settings) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
@@ -393,6 +468,7 @@ static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTe
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.BuildNumberProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.BuildPlatformProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.BuildUriProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
+static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.DependenciesProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.DeploymentItemsProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.DoNotParallelizeProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.ExecutionIdProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
@@ -400,6 +476,7 @@ static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTe
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.ParameterTypesProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.ParentExecIdProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.PriorityProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
+static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.ResourceLocksProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.TestCaseIdProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.TestCaseIndexProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.TestCategoryProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!

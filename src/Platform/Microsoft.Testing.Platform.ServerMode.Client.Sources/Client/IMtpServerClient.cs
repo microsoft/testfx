@@ -55,7 +55,8 @@ internal interface IMtpServerClient : IDisposable
 
     /// <summary>
     /// Gets the process id of the launched application, or 0 when the client was created over an
-    /// externally supplied connection (for example in tests).
+    /// externally supplied connection (for example in tests). For an application hosted in the caller's
+    /// own process this is the current process id.
     /// </summary>
     int ProcessId { get; }
 
@@ -64,6 +65,23 @@ internal interface IMtpServerClient : IDisposable
     /// before initialize has completed.
     /// </summary>
     MtpServerCapabilities? Capabilities { get; }
+
+    /// <summary>
+    /// Gets the exit code the launched application reported, or <see langword="null"/> while it is still
+    /// running, when it failed rather than exiting, or when the client was created over an externally
+    /// supplied connection.
+    /// </summary>
+    /// <remarks>
+    /// For an externally launched application the value is available only when the process exits on its own;
+    /// teardown that must forcibly terminate it reports <see langword="null"/> rather than an operating-system
+    /// kill status.
+    /// <para>
+    /// For an application hosted in the caller's own process this is the value the launch callback returned
+    /// (typically <c>TestApplication.RunAsync</c>'s exit code) and it becomes available once
+    /// <see cref="ShutdownAsync"/> or <see cref="IDisposable.Dispose"/> has completed.
+    /// </para>
+    /// </remarks>
+    int? ServerExitCode { get; }
 
     /// <summary>
     /// Gets or sets an opt-in handler for server-initiated requests (for example the debugger-attach
@@ -141,6 +159,23 @@ internal interface IMtpServerClient : IDisposable
     /// Sends the <c>exit</c> notification, asking the application to shut down.
     /// </summary>
     Task ExitAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tears the client and the launched application down without blocking the calling thread, then returns.
+    /// </summary>
+    /// <remarks>
+    /// Equivalent to <see cref="IDisposable.Dispose"/> but asynchronous, which matters for an application
+    /// hosted in the caller's own process: teardown waits for the hosted application, and doing that
+    /// synchronously on a UI thread can trip a platform responsiveness watchdog (Android ANR, the iOS
+    /// watchdog). Both entry points share one teardown, so a following <see cref="IDisposable.Dispose"/> is
+    /// safe and returns as soon as that teardown is done — a <c>using</c> block plus an
+    /// <c>await client.ShutdownAsync()</c> before it leaves is the recommended pattern on those platforms.
+    /// For an in-process application, a callback fault or self-cancellation that occurs after connection is
+    /// rethrown once teardown has finished. Cancellation requested by teardown itself is expected and is not
+    /// rethrown. Synchronous <see cref="IDisposable.Dispose"/> reports callback failures through the configured
+    /// logger instead so cleanup cannot mask an exception already propagating from the caller.
+    /// </remarks>
+    Task ShutdownAsync();
 }
 
 /// <summary>

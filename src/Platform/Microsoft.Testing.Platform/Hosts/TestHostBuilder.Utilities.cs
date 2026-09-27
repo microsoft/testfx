@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -33,7 +33,7 @@ internal sealed partial class TestHostBuilder
 
         if (OperatingSystem.IsBrowser())
         {
-            logger.LogWarning($"Test Host Controller connection is not supported on WebAssembly targets.");
+            await logger.LogWarningAsync($"Test Host Controller connection is not supported on WebAssembly targets.").ConfigureAwait(false);
             return null;
         }
 
@@ -58,6 +58,25 @@ internal sealed partial class TestHostBuilder
             new TestHostProcessPIDRequest(environment.ProcessId),
             testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         return client;
+    }
+
+    private static TestHostControllerCancellationListener? CreateTestHostControllerCancellationListenerIfAvailable(
+        CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource,
+        ILogger logger,
+        TestHostControllerInfo testHostControllerInfo,
+        SystemEnvironment environment)
+    {
+        if (!testHostControllerInfo.HasTestHostController || OperatingSystem.IsBrowser())
+        {
+            return null;
+        }
+
+        string pipeEnvironmentVariable = $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME}_{testHostControllerInfo.GetTestHostControllerPID()}";
+        string? pipeName = environment.GetEnvironmentVariable(pipeEnvironmentVariable);
+        environment.SetEnvironmentVariable(pipeEnvironmentVariable, string.Empty);
+        return RoslynString.IsNullOrEmpty(pipeName)
+            ? null
+            : new TestHostControllerCancellationListener(pipeName, testApplicationCancellationTokenSource, environment, logger);
     }
 
     private void AddApplicationTelemetryMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)

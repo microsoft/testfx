@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -163,6 +165,90 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         result.AssertOutputContains("::warning file=src/MyTests.cs,line=9,col=1,title=Test skipped%3A SkippedTest::Not today");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenStepSummarySectionsIsSlowTests_OnlyTheSlowestSectionIsRendered(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(
+            tfm,
+            testMode: "timed",
+            extraArgs: "--report-gh-step-summary-sections slow-tests");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+
+        // The slow-tests section is rendered (the tests carry a real duration)...
+        Assert.Contains("### ⏱ Slowest tests", summary);
+        Assert.Contains("SlowTest", summary);
+
+        // ...but the test-results totals table is gated out by the section selection.
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Flaky | Duration |", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenStepSummarySectionsIsTestResults_TheSlowestSectionIsOmitted(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(
+            tfm,
+            testMode: "timed",
+            extraArgs: "--report-gh-step-summary-sections test-results");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+
+        // The test-results totals table is rendered...
+        Assert.Contains("| Total | Passed | Failed | Skipped | Flaky | Duration |", summary);
+
+        // ...but the slow-tests section is gated out by the section selection.
+        Assert.DoesNotContain("### ⏱ Slowest tests", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenHistoryIsEnabled_SamplesPersistAndAccumulateAcrossRuns(string tfm)
+    {
+        string historyPath = Path.Combine(TestContext.TestRunDirectory!, $"gh-history-{Guid.NewGuid():N}.json");
+
+        // Each run is identified by a distinct GITHUB_RUN_ID (and a fixed RUNNER_OS so the persisted samples pass the
+        // history schema validation on the next read), so the two runs contribute two distinct samples for the test.
+        static Dictionary<string, string?> RunEnvironment(string runId) => new()
+        {
+            ["GITHUB_RUN_ID"] = runId,
+            ["RUNNER_OS"] = "TestOs",
+        };
+
+        (TestHostResult firstResult, _) = await RunAsync(
+            tfm,
+            testMode: "pass",
+            extraArgs: $"--report-gh-history \"{historyPath}\"",
+            extraEnvironmentVariables: RunEnvironment("run-1"));
+        firstResult.AssertExitCodeIs(ExitCode.Success);
+
+        Assert.IsTrue(File.Exists(historyPath), $"Expected the history snapshot to be created at '{historyPath}'.");
+
+        (TestHostResult secondResult, _) = await RunAsync(
+            tfm,
+            testMode: "pass",
+            extraArgs: $"--report-gh-history \"{historyPath}\"",
+            extraEnvironmentVariables: RunEnvironment("run-2"));
+        secondResult.AssertExitCodeIs(ExitCode.Success);
+
+        using var snapshot = JsonDocument.Parse(File.ReadAllText(historyPath));
+        JsonElement root = snapshot.RootElement;
+
+        Assert.AreEqual(1, root.GetProperty("schemaVersion").GetInt32());
+
+        JsonElement[] samples = [.. root.GetProperty("samples").EnumerateArray()];
+
+        // The second run merged with the first, so both runs' samples for the passing test survive.
+        Assert.HasCount(2, samples);
+        Assert.IsTrue(samples.All(sample => sample.GetProperty("displayName").GetString() == "PassingTest"));
+        Assert.IsTrue(samples.All(sample => sample.GetProperty("outcome").GetString() == "passed"));
+
+        string[] runIds = [.. samples.Select(sample => sample.GetProperty("runId").GetString()!).OrderBy(id => id, StringComparer.Ordinal)];
+        Assert.AreEqual("run-1", runIds[0]);
+        Assert.AreEqual("run-2", runIds[1]);
+    }
+
     private async Task<(TestHostResult Result, string Summary)> RunAsync(
         string tfm,
         string testMode,
@@ -258,6 +344,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         //   "failex"   -> publish a single failing test carrying a real exception, so the job summary can expand it
         //                 into a collapsible section with the exception type and stack trace
         //   "pass"     -> publish a single passing test (exit code Success, unless --minimum-expected-tests forces a violation)
+        //   "timed"    -> publish several passing tests, each carrying a TimingProperty with a distinct duration, so the
+        //                 job summary's slow-tests section has real durations to rank
         //   "location" -> publish a failing and a skipped test, both carrying a TestFileLocationProperty and no
         //                 exception, so the annotations can only be pinned through the declared-location fallback
         string mode = Environment.GetEnvironmentVariable("GH_TEST_MODE") ?? "pass";
@@ -321,6 +409,30 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                         new SkippedTestNodeStateProperty("Not today"),
                         new TestFileLocationProperty(file, new LinePositionSpan(new LinePosition(9, -1), new LinePosition(9, -1)))),
                 }));
+        }
+        else if (mode == "timed")
+        {
+            (string Uid, string DisplayName, TimeSpan Duration)[] timedTests =
+            [
+                ("test-1", "SlowTest", TimeSpan.FromSeconds(5)),
+                ("test-2", "MediumTest", TimeSpan.FromSeconds(3)),
+                ("test-3", "FastTest", TimeSpan.FromSeconds(1)),
+            ];
+
+            foreach ((string uid, string displayName, TimeSpan duration) in timedTests)
+            {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                    context.Request.Session.SessionUid,
+                    new TestNode()
+                    {
+                        Uid = uid,
+                        DisplayName = displayName,
+                        Properties = new PropertyBag(
+                            PassedTestNodeStateProperty.CachedInstance,
+                            new TimingProperty(new TimingInfo(start, start + duration, duration))),
+                    }));
+            }
         }
         else if (mode == "pass")
         {

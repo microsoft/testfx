@@ -38,6 +38,11 @@ internal sealed class MtpServerConnectionClosedException : MtpServerClientExcept
         : base(message)
     {
     }
+
+    public MtpServerConnectionClosedException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 }
 
 /// <summary>

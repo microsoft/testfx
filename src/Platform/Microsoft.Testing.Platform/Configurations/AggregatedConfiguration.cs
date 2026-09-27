@@ -224,6 +224,44 @@ internal sealed class AggregatedConfiguration(
     }
 
     /// <summary>
+    /// Resolves a passive command-line option default without changing the option's active state.
+    /// </summary>
+    internal bool TryGetCommandLineOptionDefaultFromProviders(string optionName, out string[] arguments)
+    {
+        string baseKey = PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName
+            + PlatformConfigurationConstants.KeyDelimiter
+            + optionName.Trim(CommandLineParseResult.OptionPrefix);
+
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            List<string>? collected = null;
+            int index = 0;
+            while (provider.TryGet(baseKey + PlatformConfigurationConstants.KeyDelimiter + index.ToString(CultureInfo.InvariantCulture), out string? indexed)
+                && indexed is not null)
+            {
+                collected ??= [];
+                collected.Add(indexed);
+                index++;
+            }
+
+            if (collected is { Count: > 0 })
+            {
+                arguments = [.. collected];
+                return true;
+            }
+
+            if (provider.TryGet(baseKey, out string? scalar) && scalar is not null)
+            {
+                arguments = [scalar];
+                return true;
+            }
+        }
+
+        arguments = [];
+        return false;
+    }
+
+    /// <summary>
     /// Returns the immediate (one-level) string entries declared under <paramref name="sectionName"/>
     /// in the loaded testconfig.json file. Returns an empty list if no JSON configuration source is
     /// active or the section is absent.
@@ -253,6 +291,18 @@ internal sealed class AggregatedConfiguration(
     }
 
     /// <summary>
+    /// Returns the typed passive command-line option defaults declared in the loaded testconfig.json file.
+    /// </summary>
+    internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateJsonCommandLineOptionDefaults()
+    {
+        JsonConfigurationSource.JsonConfigurationProvider? jsonProvider = _configurationProviders
+            .OfType<JsonConfigurationSource.JsonConfigurationProvider>()
+            .FirstOrDefault();
+
+        return jsonProvider?.EnumerateCommandLineOptionDefaults() ?? [];
+    }
+
+    /// <summary>
     /// Normalizes JSON-sourced scalar command-line option entries to the indexed shape for any
     /// option in <paramref name="optionByName"/> with <see cref="ArgumentArity.Min"/> &gt;= 1,
     /// so that subsequent <see cref="TryGetCommandLineOptionFromProviders"/> and validator passes
@@ -276,7 +326,18 @@ internal sealed class AggregatedConfiguration(
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
-        _resultsDirectory = _fileSystem.CreateDirectory(this[PlatformConfigurationConstants.PlatformResultDirectory]!);
+        string resultsDirectory = this[PlatformConfigurationConstants.PlatformResultDirectory]!;
+        if (_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey))
+        {
+            // The controller owns the user-selected results directory. A sandboxed or remote test host
+            // may not be able to access that path, and controller-side report/lifetime extensions publish
+            // the final artifacts there. Preserve the logical value for option consumers without touching
+            // the filesystem from the child process.
+            _resultsDirectory = resultsDirectory;
+            return;
+        }
+
+        _resultsDirectory = _fileSystem.CreateDirectory(resultsDirectory);
 
         // In case of the result directory is overridden by the config file we move logs to it.
         // This can happen in case of VSTest mode where the result directory is set to a different location.

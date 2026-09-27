@@ -17,6 +17,12 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal static class ObjectModelConverters
 {
+    private const string MSTestDependenciesPropertyId = "MSTestDiscoverer.Dependencies";
+    private const string MSTestDependencyTestNodePropertyKey = "mstest.TestCase.Dependency";
+    private const int MaxMSTestDependenciesPerTest = 32;
+    private const int MaxMSTestDependencyCandidatesPerTest = 64;
+    private const int MaxMSTestDependencyLength = 1024;
+
     private static readonly TestProperty OriginalExecutorUriProperty = TestProperty.Register(
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
@@ -45,6 +51,7 @@ internal static class ObjectModelConverters
         };
 
         CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
+        CopyMSTestDependencies(testCase, testNode);
 
         if (ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions))
         {
@@ -60,6 +67,36 @@ internal static class ObjectModelConverters
 
         addAdditionalProperties(testNode, testCase);
         return testNode;
+    }
+
+    private static void CopyMSTestDependencies(TestCase testCase, TestNode testNode)
+    {
+        foreach (KeyValuePair<TestProperty, object?> property in testCase.GetProperties())
+        {
+            if (property.Key.Id == MSTestDependenciesPropertyId
+                && property.Value is string[] dependencies)
+            {
+                int copiedDependencyCount = 0;
+                foreach (string dependency in dependencies.Take(MaxMSTestDependencyCandidatesPerTest))
+                {
+                    if (dependency.Length > MaxMSTestDependencyLength)
+                    {
+                        continue;
+                    }
+
+                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty(
+                        MSTestDependencyTestNodePropertyKey,
+                        dependency));
+                    copiedDependencyCount++;
+                    if (copiedDependencyCount == MaxMSTestDependenciesPerTest)
+                    {
+                        break;
+                    }
+                }
+
+                return;
+            }
+        }
     }
 
     private static void CopyCategoryAndTraits(TestObject testCaseOrResult, TestNode testNode, bool isTrxEnabled)

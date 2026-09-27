@@ -41,9 +41,11 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingResourceLockAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingRetryAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingRetryBaseAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingStringAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestArchitectures = "Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingTestCategoryAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestContext = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
@@ -80,6 +82,8 @@ internal static class WellKnownTypeNames
     public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
     public const string SystemRuntimeInteropServicesArchitecture = "System.Runtime.InteropServices.Architecture";
     public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
+    public const string SystemRuntimeVersioningSupportedOSPlatformAttribute = "System.Runtime.Versioning.SupportedOSPlatformAttribute";
+    public const string SystemRuntimeVersioningUnsupportedOSPlatformAttribute = "System.Runtime.Versioning.UnsupportedOSPlatformAttribute";
     public const string SystemThreadingCancellationToken = "System.Threading.CancellationToken";
     public const string SystemThreadingCancellationTokenSource = "System.Threading.CancellationTokenSource";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";

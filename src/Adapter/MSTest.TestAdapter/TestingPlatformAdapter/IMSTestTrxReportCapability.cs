@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
@@ -15,4 +14,3 @@ internal interface IMSTestTrxReportCapability : ITrxReportCapability
 {
     bool IsTrxEnabled { get; }
 }
-#endif

@@ -35,6 +35,7 @@ public class Program
 #endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+            testApplicationBuilder.AddAffectedTestsProvider();
 
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);

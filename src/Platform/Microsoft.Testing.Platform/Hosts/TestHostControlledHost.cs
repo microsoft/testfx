@@ -4,27 +4,25 @@
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
 [UnsupportedOSPlatform("browser")]
 [StackTraceHidden]
-internal sealed class TestHostControlledHost(
-    NamedPipeClient testHostControllerPipeClient,
-    IHost innerHost,
-    CancellationToken cancellationToken,
-    TestApplicationResult? testApplicationResult = null) : IHost, IDisposable
+internal sealed class TestHostControlledHost : IHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly NamedPipeClient _namedPipeClient = testHostControllerPipeClient;
-    private readonly IHost _innerHost = innerHost;
-    private readonly CancellationToken _cancellationToken = cancellationToken;
-    private readonly TestApplicationResult? _testApplicationResult = testApplicationResult;
+    private readonly NamedPipeClient _namedPipeClient;
+    private readonly IHost _innerHost;
+    private readonly CancellationToken _cancellationToken;
+    private readonly TestApplicationResult? _testApplicationResult;
+    private TestHostControllerCancellationListener? _testHostControllerCancellationListener;
 
     public TestHostControlledHost(
         NamedPipeClient testHostControllerPipeClient,
@@ -34,9 +32,30 @@ internal sealed class TestHostControlledHost(
     {
     }
 
+    public TestHostControlledHost(
+        NamedPipeClient testHostControllerPipeClient,
+        IHost innerHost,
+        CancellationToken cancellationToken,
+        TestApplicationResult? testApplicationResult = null)
+    {
+        _namedPipeClient = testHostControllerPipeClient;
+        _innerHost = innerHost;
+        _cancellationToken = cancellationToken;
+        _testApplicationResult = testApplicationResult;
+    }
+
+    public void SetCancellationListener(TestHostControllerCancellationListener? testHostControllerCancellationListener)
+        => _testHostControllerCancellationListener = testHostControllerCancellationListener;
+
     public async Task<int> RunAsync()
     {
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
+        using CancellationTokenSource completionCancellationTokenSource = new();
+        using CancellationTokenRegistration completionCancellationRegistration = RegisterCompletionCancellationTransition(
+            _cancellationToken,
+            () => _testHostControllerCancellationListener?.ShouldReportCompletionAfterCancellation == true,
+            completionCancellationTokenSource,
+            ShutdownTimeouts.DefaultControllerFinalization);
         try
         {
             int unfilteredExitCode = _testApplicationResult?.GetProcessExitCode() == exitCode
@@ -44,23 +63,45 @@ internal sealed class TestHostControlledHost(
                 : exitCode;
             await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
                 new TestHostCompletedRequest(exitCode, unfilteredExitCode),
-                _cancellationToken).ConfigureAwait(false);
+                completionCancellationTokenSource.Token).ConfigureAwait(false);
         }
-        catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
+        catch (OperationCanceledException oc) when (
+            oc.CancellationToken == _cancellationToken
+            || oc.CancellationToken == completionCancellationTokenSource.Token)
         {
             // We do nothing we're canceling
         }
         finally
         {
+            await DisposeHelper.DisposeAsync(_testHostControllerCancellationListener).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(_namedPipeClient).ConfigureAwait(false);
         }
 
         return exitCode;
     }
 
+    internal static CancellationTokenRegistration RegisterCompletionCancellationTransition(
+        CancellationToken applicationCancellationToken,
+        Func<bool> shouldReportCompletionAfterCancellation,
+        CancellationTokenSource completionCancellationTokenSource,
+        TimeSpan cooperativeCompletionTimeout)
+        => applicationCancellationToken.Register(
+            () =>
+            {
+                if (shouldReportCompletionAfterCancellation())
+                {
+                    completionCancellationTokenSource.CancelAfter(cooperativeCompletionTimeout);
+                }
+                else
+                {
+                    completionCancellationTokenSource.Cancel();
+                }
+            });
+
     public void Dispose()
     {
         (_innerHost as IDisposable)?.Dispose();
+        _testHostControllerCancellationListener?.Dispose();
         _namedPipeClient.Dispose();
     }
 
@@ -68,6 +109,7 @@ internal sealed class TestHostControlledHost(
     public async ValueTask DisposeAsync()
     {
         await DisposeHelper.DisposeAsync(_innerHost).ConfigureAwait(false);
+        await DisposeHelper.DisposeAsync(_testHostControllerCancellationListener).ConfigureAwait(false);
         _namedPipeClient.Dispose();
     }
 #endif

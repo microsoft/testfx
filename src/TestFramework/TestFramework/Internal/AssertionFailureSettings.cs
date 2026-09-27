@@ -13,4 +13,16 @@ internal static class AssertionFailureSettings
     /// Gets or sets a value specifying when to launch the debugger on assertion failure.
     /// </summary>
     public static DebuggerLaunchMode LaunchDebuggerOnAssertionFailure { get; set; }
+
+    /// <summary>
+    /// Gets or sets the callback invoked immediately before an assertion failure is reported.
+    /// </summary>
+    public static Action<string, string?, string?>? CaptureDiagnosticsOnFailure { get; set; }
+
+    /// <summary>
+    /// Invokes the configured assertion failure diagnostics callback while the failing caller is still on the stack.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void CaptureDiagnostics(string message, string? expected, string? actual)
+        => CaptureDiagnosticsOnFailure?.Invoke(message, expected, actual);
 }

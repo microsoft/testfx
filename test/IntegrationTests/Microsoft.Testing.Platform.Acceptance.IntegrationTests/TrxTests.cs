@@ -6,6 +6,7 @@ using System.Xml.Linq;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public class TrxTests : AcceptanceTestBase<TrxTests.TestAssetFixture>
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -36,6 +37,48 @@ Out of process file artifacts produced:
 
         // number of test is the third param because we have two different test code with different number of tests.
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_CommandLineOptionDefault_IsPassiveAndExplicitValueWins(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string configFile = Path.Combine(testHost.DirectoryName, $"{TestAssetFixture.AssetName}.testconfig.json");
+        await File.WriteAllTextAsync(
+            configFile,
+            """
+            {
+              "commandLineOptionDefaults": {
+                "report-trx-filename": "configured-{asm}.trx"
+              }
+            }
+            """,
+            TestContext.CancellationToken);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsEmpty(Directory.GetFiles(testHost.DirectoryName, "configured-*.trx", SearchOption.AllDirectories));
+
+        string defaultResultsPath = Path.Combine(testHost.DirectoryName, "default-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --results-directory \"{defaultResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(Path.Combine(defaultResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
+
+        string explicitResultsPath = Path.Combine(testHost.DirectoryName, "explicit-results");
+        testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename explicit.trx --results-directory \"{explicitResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(Path.Combine(explicitResultsPath, "explicit.trx")));
+        Assert.IsFalse(File.Exists(Path.Combine(explicitResultsPath, $"configured-{TestAssetFixture.AssetName}.trx")));
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

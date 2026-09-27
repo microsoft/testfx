@@ -210,16 +210,13 @@ public sealed class NamedPipeServerSecurityTests
     /// actually uses: the pipe must still be created with a DACL that names only the owner and the validated
     /// package.
     /// </summary>
-    /// <remarks>
-    /// Reading the descriptor back by name connects a client and consumes this single-instance pipe, so this
-    /// test deliberately never calls <c>WaitConnectionAsync</c> and performs exactly one such read.
-    /// </remarks>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
     public void NamedPipeServer_WithASequenceThatChangesBetweenEnumerations_DoesNotWidenTheDacl()
     {
         PipeNameDescription pipeName = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        var shapeShifting = new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD");
 
         using var server = new NamedPipeServer(
             pipeName,
@@ -228,12 +225,14 @@ public sealed class NamedPipeServerSecurityTests
             new Mock<ILogger>().Object,
             new SystemTask(),
             maxNumberOfServerInstances: 1,
-            new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD"),
+            shapeShifting,
             CancellationToken.None);
 
-        string sddl = WindowsSecurity.ConnectAndGetSecurityDescriptorSddl(server.PipeName.Name);
+        string sddl = WindowsSecurity.GetSecurityDescriptorSddl(server.GetServerStream().SafePipeHandle);
 
+        Assert.AreEqual(1, shapeShifting.ReadCount);
         Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
+        Assert.Contains($"(A;;0x12019b;;;{PackageSid})", sddl);
         Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
         Assert.IsFalse(sddl.Contains(";;;S-1-1-0)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
     }
@@ -460,14 +459,15 @@ public sealed class NamedPipeServerSecurityTests
     }
 
     /// <summary>
-    /// End-to-end through <see cref="NamedPipeServer"/> itself: the hardened pipe is created from a raw
-    /// handle rather than by the <see cref="NamedPipeServerStream"/> name constructor, so the whole
-    /// connect / request / reply / dispose cycle has to keep working on it.
+    /// Verifies that <see cref="NamedPipeServer"/> publishes the AppContainer-local name that the packaged
+    /// child must use. A desktop process cannot resolve another package's <c>LOCAL\</c> namespace; the
+    /// live AppContainer acceptance tests cover the request/reply path, while
+    /// <see cref="CreateServerStream_TheCurrentUserCanStillConnect"/> covers the owner DACL entry.
     /// </summary>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
-    public async Task NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip()
+    public void NamedPipeServer_WithAuthorizedPackage_PublishesAppContainerLocalPipeName()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
@@ -480,23 +480,28 @@ public sealed class NamedPipeServerSecurityTests
             maxNumberOfServerInstances: 1,
             [PackageSid],
             CancellationToken.None);
-        server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        server.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
         Assert.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, server.PipeName.Name);
-        using var client = new NamedPipeClient(server.PipeName.Name);
-        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        client.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+    }
 
-        Task waitConnection = server.WaitConnectionAsync(CancellationToken.None);
-        await client.ConnectAsync(CancellationToken.None);
-        await waitConnection;
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void NamedPipeServer_WithMultipleAuthorizedPackages_FailsBeforePublishingAnUnreachableLocalPipe()
+    {
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
-        VoidResponse response = await client.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
-            new TestHostCompletedRequest(returnCode: 0),
-            CancellationToken.None);
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => new NamedPipeServer(
+            pipeNameDescription,
+            static _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
+            new SystemEnvironment(),
+            new Mock<ILogger>().Object,
+            new SystemTask(),
+            maxNumberOfServerInstances: 1,
+            [PackageSid, OtherPackageSid],
+            CancellationToken.None));
 
-        Assert.IsNotNull(response);
+        Assert.Contains("exactly one authorized package SID", exception.Message);
     }
 
     /// <summary>
@@ -514,10 +519,9 @@ public sealed class NamedPipeServerSecurityTests
     /// Token impersonation does not place the desktop test process inside the AppContainer named-object
     /// namespace: trying to resolve <c>LOCAL\</c> under impersonation returns
     /// <c>ERROR_FILE_NOT_FOUND</c>. This test therefore isolates the restricted-token/DACL check on a bare
-    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip"/>
-    /// separately proves the product publishes and connects through the Windows-required <c>LOCAL\</c>
-    /// namespace. A real package-activated process remains the only way to exercise both constraints in one
-    /// process boundary.
+    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_PublishesAppContainerLocalPipeName"/>
+    /// separately proves the product publishes the Windows-required <c>LOCAL\</c> name. A real
+    /// package-activated process remains the only way to exercise both constraints in one process boundary.
     /// </para>
     /// <para>
     /// Candidates are filtered to the shape a real test host has. An AppContainer at <em>untrusted</em>

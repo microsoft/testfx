@@ -75,7 +75,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
 """;
 
         string configFilePath = Path.Combine(Path.GetDirectoryName(testHost.FullName)!, "Config.xml");
-        File.WriteAllText(configFilePath, config);
+        await File.WriteAllTextAsync(configFilePath, config);
         StringBuilder commandLine = new();
         commandLine.Append(CultureInfo.InvariantCulture, $"/Config \"{configFilePath}\" /launch \"{testHost.FullName}\" /outdir \"{Path.GetDirectoryName(testHost.FullName)!}\"");
 
@@ -125,7 +125,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
         Console.WriteLine($"Compressing to '{sample}'");
-        ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
+        await ZipFile.CreateFromDirectoryAsync(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
         return new Files([sample]);
     }

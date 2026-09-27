@@ -129,16 +129,14 @@ internal sealed class TrxProcessLifetimeHandler :
     [UnsupportedOSPlatform("wasi")]
     private void BeforeTestHostProcessStartCore(CancellationToken cancellationToken)
     {
-        _singleConnectionNamedPipeServer = new(
-            new PipeNameDescription(_endpoint.PipeName),
+        _singleConnectionNamedPipeServer = NamedPipeServerFactory.CreateAndBind(
+            _endpoint,
             CallbackAsync,
             _environment,
             _logger,
             _task,
-            maxNumberOfServerInstances: 1,
-            _serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities(),
+            _serviceProvider,
             cancellationToken);
-        _endpoint.PipeName = _singleConnectionNamedPipeServer.PipeName.Name;
         _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new TrxStreamLocationRequestSerializer(), typeof(TrxStreamLocationRequest));

@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Combinatorial.MSTest;
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.TestInfrastructure;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace MSTest.Acceptance.IntegrationTests;
 

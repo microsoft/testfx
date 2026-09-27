@@ -77,6 +77,36 @@
       ]
     },
     {
+      "id": "msbuild-dotnet-muxer-locator-windows",
+      "local_path": "src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.Windows.cs",
+      "notes": "Adapted from vstest's DotnetHostHelper. Windows PE header parsing, split out of DotnetMuxerLocator.cs.",
+      "sources": [
+        {
+          "repo": "microsoft/vstest",
+          "ref": "main",
+          "path": "src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs",
+          "baseline_ref_sha": "d5a7e3b67a2ccb6dc5b3b81255f3e6571c318b78",
+          "baseline_blob_sha": "d9bc7043f4612d95b7415f3512cbb2b188e825ec",
+          "scope": "GetMuxerArchitectureByPEHeaderOnWin"
+        }
+      ]
+    },
+    {
+      "id": "msbuild-dotnet-muxer-locator-macos",
+      "local_path": "src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.MacOs.cs",
+      "notes": "Adapted from vstest's DotnetHostHelper. Mach-O header parsing, split out of DotnetMuxerLocator.cs.",
+      "sources": [
+        {
+          "repo": "microsoft/vstest",
+          "ref": "main",
+          "path": "src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs",
+          "baseline_ref_sha": "d5a7e3b67a2ccb6dc5b3b81255f3e6571c318b78",
+          "baseline_blob_sha": "d9bc7043f4612d95b7415f3512cbb2b188e825ec",
+          "scope": "GetMuxerArchitectureByMachoOnMac and Mach-O constants"
+        }
+      ]
+    },
+    {
       "id": "platform-env-config-provider",
       "local_path": "src/Platform/Microsoft.Testing.Platform/Configurations/EnvironmentVariablesConfigurationProvider.cs",
       "notes": "Adapted from runtime's Microsoft.Extensions.Configuration.EnvironmentVariables.",
@@ -228,8 +258,8 @@
           "repo": "dotnet/msbuild",
           "ref": "main",
           "path": "src/Framework/NativeMethods.cs",
-          "baseline_ref_sha": "5d4dd79d0ffc1b827c1c6baa9dee0a0c475fe79c",
-          "baseline_blob_sha": "a62b415fd2be6de86ee2d23aa35dc591050dfe95",
+          "baseline_ref_sha": "fcb368d8894f6448382f20304c659f383d210f61",
+          "baseline_blob_sha": "57b65e7302795a75fb72756f72353521f15b1d3b",
           "scope": "QueryIsScreenAndTryEnableAnsiColorCodes and supporting console-mode P/Invokes"
         }
       ]

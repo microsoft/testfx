@@ -7,6 +7,18 @@ It is the consumer of the platform's `ITestHostLauncher` extension point for Win
 - **Packaged AUMID activation** (Windows build): a packaged (MSIX) layout is registered in place with the `PackageManager` and the app is activated by AUMID via `IApplicationActivationManager`. `packagedClassicApp`/`win32App` hosts receive the platform-prepared command line through `argv`, including when their trust level is `appContainer`. `windowsApp`/UWP hosts receive one opaque launch string and restore the exact logical argument array through `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` in `Application.OnLaunched` (see [#10485](https://github.com/microsoft/testfx/issues/10485)). Registering an unsigned build-output layout requires Developer Mode (or sideloading). The plain `net8.0`/`net9.0` build rejects a packaged layout with an actionable error pointing at the Windows TFM.
 - **Deploy + launch loose layout** (opt-in): a non-packaged app — one without an `AppxManifest.xml` — is deployed to a deployment directory and the produced executable is launched from there.
 
+## Switching packaged build layouts
+
+Before activation, the launcher verifies that the current user's main package registration points to the directory containing the requested `AppxManifest.xml`. Windows can report registration success while retaining a different layout with the same package identity and version. In that case, the launcher removes only the stale **development registration**, using `PreserveApplicationData`, and registers the requested layout again. Repeated runs from the same layout do not remove its registration.
+
+Launchers serialize the entire registration-and-activation sequence per user and package family, including across processes. Another launcher cannot switch the layout between verification and AUMID activation. Waiting for another launch respects cancellation.
+
+The manifest is held open for reading throughout that sequence, preventing a concurrent rebuild from changing its identity or application declarations. The same parsed identity determines the family lock, registration verification, handoff storage, and activation AUMID.
+
+If cancellation is observed before stale-registration removal starts, no destructive change is made. Once removal completes, the launcher finishes registering and verifying the replacement before it surfaces cancellation, so an interrupted run does not intentionally leave the package unregistered.
+
+If the conflicting package is not a development registration, removal does not actually unregister it, or the requested location still cannot be registered, the launcher reports an error instead of activating another build. A failed replacement can leave the package unregistered, but its application data is retained; resolve the reported deployment error and retry. Callers do not need to uninstall their app or change its version for each build.
+
 ## When the launcher takes over
 
 Registering an *enabled* test host launcher switches the run to the test host controller (process restart) model, because a launcher only has an effect when an out-of-process test host is started. To avoid charging that cost to apps that do not need it, the launcher enables itself only when it has real work to do:
@@ -58,7 +70,9 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 The handoff is versioned and length-prefixed, so empty values, whitespace, quotes, backslashes, Unicode, repeated options, and option order round-trip exactly. Payloads within Windows' documented 2,048-character launch-argument envelope stay entirely in the activation string. Larger payloads are written to package `LocalState` only as authenticated ciphertext; the one-shot key remains in the activation string, and both the host and launcher delete the file at the earliest cleanup point. User filters, runsettings, and other arguments are never persisted in plaintext.
 
-Argument restoration and exact package-SID pipe authorization are both implemented. They are the communication primitives needed after AppContainer activation; true UWP/AppContainer still is not an end-to-end MTP test-host mode because the SDK/platform startup path routes those projects to VSTest rather than starting an ordinary MTP controller process. Full-trust packaged and unpackaged hosts are unaffected by that limitation.
+The one-shot connect-back handshake file in `LocalState` carries only the explicit protocol metadata that AUMID activation cannot inherit, including the native `dotnet test` execution ID. This keeps the activated host on the controller's existing .NET 10+ test session while continuing to exclude arbitrary environment values, filters, runsettings, credentials, and secrets.
+
+Argument restoration, connect-back metadata, and exact package-SID pipe authorization are implemented. `MSTest.Sdk` uses them from an ordinary full-trust sidecar controller, so classic UWP, modern UWP, and AppContainer-configured WinUI applications execute through Microsoft.Testing.Platform without a VSTest runtime or deployment provider.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.PackagedApp` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 

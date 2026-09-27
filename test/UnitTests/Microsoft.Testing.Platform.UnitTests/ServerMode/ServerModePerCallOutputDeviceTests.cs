@@ -44,7 +44,7 @@ public sealed class ServerModePerCallOutputDeviceTests
 
         ServerLogMessage[] messages = GetMessages(device);
         Assert.HasCount(2, messages);
-        Assert.AreSequenceEqual(new[] { "Restoring", "Restored" }, messages.Select(static message => message.Message));
+        Assert.AreSequenceEqual(["Restoring", "Restored"], messages.Select(static message => message.Message));
     }
 
     [TestMethod]

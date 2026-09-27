@@ -17,4 +17,10 @@ public sealed class TrxReportPropertiesTests
         => Assert.AreEqual(
             "TrxCategoriesProperty { Categories = [some category] }",
             new TrxCategoriesProperty(["some category"]).ToString());
+
+    [TestMethod]
+    public void TrxWorkItemsProperty_ToStringIsCorrect()
+        => Assert.AreEqual(
+            "TrxWorkItemsProperty { WorkItemIds = [123, 456] }",
+            new TrxWorkItemsProperty(["123", "456"]).ToString());
 }

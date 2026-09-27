@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -75,4 +74,3 @@ internal sealed class MSTestFrameworkHandle : IFrameworkHandle, IOutputDeviceDat
 
     Task<bool> IExtension.IsEnabledAsync() => _extension.IsEnabledAsync();
 }
-#endif

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -21,6 +21,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// </remarks>
 internal interface ITestResultRecorder
 {
+    /// <summary>
+    /// Allows the host-specific recorder to prepare a complete result batch before individual results are reported.
+    /// </summary>
+    /// <param name="testElement">The test the results belong to.</param>
+    /// <param name="results">The complete result batch.</param>
+    void PrepareResults(UnitTestElement testElement, FrameworkTestResult[] results);
+
     /// <summary>
     /// Signals that execution of the given test has started.
     /// </summary>

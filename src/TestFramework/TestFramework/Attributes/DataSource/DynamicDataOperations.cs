@@ -18,11 +18,9 @@ internal static class DynamicDataOperations
     /// <see cref="DynamicDataAttribute"/> can resolve the source by name at runtime.
     /// </summary>
     /// <remarks>
-    /// This mirrors the <c>[DynamicDependency(DynamicallyAccessedMemberTypes.All, ...)]</c> that
-    /// <c>MSTest.SourceGeneration</c> already emits for every discovered test class and its base types. It over-preserves
-    /// (constructors, events, instance members, and so on) because there is no static-only or member-kind-scoped variant
-    /// that also walks the base hierarchy; this is intentional and unavoidable to keep the inherited-source scenario
-    /// trim-safe.
+    /// <c>MSTest.SourceGeneration</c> emits explicit method, field, and property roots for every discovered test class
+    /// and its base types. This broader annotation remains necessary for reflection-only callers because there is no
+    /// static-only or member-kind-scoped variant that also walks the base hierarchy.
     /// </remarks>
     internal const DynamicallyAccessedMemberTypes RequiredMemberTypes = DynamicallyAccessedMemberTypes.All;
 
@@ -30,8 +28,9 @@ internal static class DynamicDataOperations
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
         // In the supported trimming/NativeAOT configuration the test class (and its base types) are rooted by the
-        // [DynamicDependency(All)] that MSTest.SourceGeneration emits, so MethodInfo.DeclaringType stays trim-safe even
-        // though it is not statically annotated with DynamicallyAccessedMembersAttribute (see GetTestMethodDeclaringType).
+        // member-scoped [DynamicDependency] attributes that MSTest.SourceGeneration emits, so
+        // MethodInfo.DeclaringType stays trim-safe even though it is not statically annotated with
+        // DynamicallyAccessedMembersAttribute (see GetTestMethodDeclaringType).
         dynamicDataDeclaringType ??= GetTestMethodDeclaringType(methodInfo);
         DebugEx.Assert(dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
@@ -199,7 +198,7 @@ internal static class DynamicDataOperations
     }
 
     [return: DynamicallyAccessedMembers(RequiredMemberTypes)]
-    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "In the supported trimming/NativeAOT configuration, test classes are source-generated: MSTest.SourceGeneration emits [DynamicDependency(DynamicallyAccessedMemberTypes.All, ...)] for every discovered test class and its base types, so MethodInfo.DeclaringType and its members are already rooted. This fallback only runs for the test method's own declaring type; it does not claim safety for unsupported reflection-only trimmed callers that discover tests without the source generator.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "In the supported trimming/NativeAOT configuration, test classes are source-generated: MSTest.SourceGeneration emits explicit constructor, method, field, and property roots for every discovered test class and its base types, so MethodInfo.DeclaringType and the members DynamicData reflects over are already rooted. This fallback only runs for the test method's own declaring type; it does not claim safety for unsupported reflection-only trimmed callers that discover tests without the source generator.")]
     internal static Type? GetTestMethodDeclaringType(MethodInfo methodInfo)
         => methodInfo.DeclaringType;
 }

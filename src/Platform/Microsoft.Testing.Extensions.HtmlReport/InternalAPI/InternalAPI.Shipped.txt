@@ -15,6 +15,7 @@ abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedT
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.GetGenerationLogMessage(int testResultCount) -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.TryCapture(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> TCapturedTestResult?
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Uid.get -> string!
+const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.HtmlArtifactKind = "microsoft.testing.html" -> string!
 const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName = "report-html-filename" -> string!
 const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine.HtmlReportOptionName = "report-html" -> string!
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxIdentityFieldLength = 4096 -> int
@@ -24,6 +25,7 @@ const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStandardStreamLeng
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxTraitFieldLength = 1024 -> int
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.ArtifactPostProcessingHelper
 Microsoft.Testing.Extensions.CapturedExceptionDetails
 Microsoft.Testing.Extensions.CapturedExceptionDetails.CapturedExceptionDetails() -> void
 Microsoft.Testing.Extensions.CapturedExceptionDetails.CapturedExceptionDetails(string? ErrorMessage, string? StackTrace, string? ExceptionType) -> void
@@ -100,8 +102,27 @@ Microsoft.Testing.Extensions.CapturedTestResultProperties.Traits.get -> System.C
 Microsoft.Testing.Extensions.CapturedTestResultProperties.Traits.init -> void
 Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult
 Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.CapturedTestResult() -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.get -> bool?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.IsSupersededRetryAttempt.init -> void
 Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.Outcome.get -> string!
 Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.Outcome.init -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.get -> int?
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.RetryAttemptNumber.init -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.HtmlArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedModes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingMode>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.Version.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode.CollapseRetryAttempts = 1 -> Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
+Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode.Concatenate = 0 -> Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.GenerateReportAsync(Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult![]! results) -> System.Threading.Tasks.Task<(string! FileName, string? Warning)>!
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.HtmlReportEngine(Microsoft.Testing.Extensions.ReportEngineContext context) -> void
@@ -109,7 +130,9 @@ Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.HtmlReportGenerator(System.IServiceProvider! serviceProvider) -> void
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine
 Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine.HtmlReportGeneratorCommandLine() -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger
 Microsoft.Testing.Extensions.HtmlReport.TestResultCapture
+Microsoft.Testing.Extensions.MergeOutputFileHelper
 Microsoft.Testing.Extensions.ReportEngineBase
 Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! extension) -> string!
 Microsoft.Testing.Extensions.ReportEngineBase.ReportEngineBase(Microsoft.Testing.Extensions.ReportEngineContext context) -> void
@@ -171,6 +194,7 @@ Microsoft.Testing.Extensions.TestResultCaptureHelper
 Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
 Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.AtLeastOneTestFailed = 2 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.DependentProcessExited = 11 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.GenericFailure = 1 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.IncompatibleProtocolVersion = 12 -> Microsoft.Testing.Platform.Helpers.ExitCode
@@ -179,6 +203,7 @@ Microsoft.Testing.Platform.Helpers.ExitCode.InvalidPlatformSetup = 4 -> Microsof
 Microsoft.Testing.Platform.Helpers.ExitCode.MinimumExpectedTestsPolicyViolation = 9 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.Success = 0 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestAdapterTestSessionFailure = 10 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedForMaxFailedTests = 13 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestHostProcessExitedNonGracefully = 7 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestSessionAborted = 3 -> Microsoft.Testing.Platform.Helpers.ExitCode
@@ -208,13 +233,24 @@ readonly Microsoft.Testing.Extensions.ReportEngineBase._fileSystem -> Microsoft.
 readonly Microsoft.Testing.Extensions.ReportEngineBase._testApplicationModuleInfo -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
 readonly Microsoft.Testing.Extensions.ReportEngineBase._testFramework -> Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!
 readonly Microsoft.Testing.Extensions.ReportEngineBase._testStartTime -> System.DateTimeOffset
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.IsReparsePoint(string! path) -> bool
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.OrderInputs(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, bool includeModuleMetadata) -> System.Linq.IOrderedEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
 static Microsoft.Testing.Extensions.CapturedExceptionDetails.operator !=(Microsoft.Testing.Extensions.CapturedExceptionDetails left, Microsoft.Testing.Extensions.CapturedExceptionDetails right) -> bool
 static Microsoft.Testing.Extensions.CapturedExceptionDetails.operator ==(Microsoft.Testing.Extensions.CapturedExceptionDetails left, Microsoft.Testing.Extensions.CapturedExceptionDetails right) -> bool
 static Microsoft.Testing.Extensions.CapturedTestResultCoreData.operator !=(Microsoft.Testing.Extensions.CapturedTestResultCoreData left, Microsoft.Testing.Extensions.CapturedTestResultCoreData right) -> bool
 static Microsoft.Testing.Extensions.CapturedTestResultCoreData.operator ==(Microsoft.Testing.Extensions.CapturedTestResultCoreData left, Microsoft.Testing.Extensions.CapturedTestResultCoreData right) -> bool
 static Microsoft.Testing.Extensions.CapturedTestResultProperties.operator !=(Microsoft.Testing.Extensions.CapturedTestResultProperties left, Microsoft.Testing.Extensions.CapturedTestResultProperties right) -> bool
 static Microsoft.Testing.Extensions.CapturedTestResultProperties.operator ==(Microsoft.Testing.Extensions.CapturedTestResultProperties left, Microsoft.Testing.Extensions.CapturedTestResultProperties right) -> bool
+static Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.CreateMergeId(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.ExtractReportJson(string! html) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.RenderReport(string! json) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports, Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode mode) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports) -> string!
+static Microsoft.Testing.Extensions.HtmlReport.HtmlReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputPath, Microsoft.Testing.Extensions.HtmlReport.HtmlMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Extensions.HtmlReport.TestResultCapture.TryCapture(Microsoft.Testing.Platform.Extensions.Messages.TestNode! node) -> Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult?
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! testApplicationModule, string! extension) -> string!
 static Microsoft.Testing.Extensions.ReportEngineBase.GetProvidedFileName(string![]? providedFileName) -> string!
 static Microsoft.Testing.Extensions.ReportEngineBase.ReplaceInvalidFileNameChars(string! fileName) -> string!
@@ -242,10 +278,13 @@ static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTar
 static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
 static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
@@ -261,4 +300,5 @@ static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
 System.Numerics.Hashing.HashHelpers
 System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
 System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
+virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
 virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.OnTestNodeUpdate(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> void
