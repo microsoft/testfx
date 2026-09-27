@@ -391,9 +391,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
         {
             Assert.IsNotNull(serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>());
             Assert.IsNull(serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
-            Assert.Contains(
-                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                stoppedActivities);
+            AssertBuilderActivityObserved(stoppedActivities);
         }
         finally
         {
@@ -436,9 +434,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
             LegacyOpenTelemetryProvider provider = Assert.IsInstanceOfType<LegacyOpenTelemetryProvider>(
                 serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
             Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
-            Assert.Contains(
-                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                stoppedActivities);
+            AssertBuilderActivityObserved(stoppedActivities);
         }
         finally
         {
@@ -676,6 +672,16 @@ public sealed class OpenTelemetryProviderExtensionsTests
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(["--no-banner", "--ignore-exit-code", "8", "--internal-testingplatform-skipbuildercheck"]);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new MockTestFramework());
         return builder;
+    }
+
+    private static void AssertBuilderActivityObserved(List<Activity> stoppedActivities)
+    {
+        lock (stoppedActivities)
+        {
+            Assert.Contains(
+                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                stoppedActivities);
+        }
     }
 
     private static async Task AssertSingleDiagnosticsRegistrationAsync(ITestApplicationBuilder builder, bool expectProvider)
