@@ -10,6 +10,14 @@ The adapter is intentionally one-way: it takes a snapshot of an existing `Micros
 dotnet add package Microsoft.Testing.Extensions.Configuration
 ```
 
+The example below also uses the standard configuration builder plus JSON and environment-variable providers:
+
+```dotnetcli
+dotnet add package Microsoft.Extensions.Configuration
+dotnet add package Microsoft.Extensions.Configuration.Json
+dotnet add package Microsoft.Extensions.Configuration.EnvironmentVariables
+```
+
 ## Usage
 
 ```csharp

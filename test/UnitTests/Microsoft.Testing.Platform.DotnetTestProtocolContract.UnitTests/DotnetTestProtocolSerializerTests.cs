@@ -355,6 +355,17 @@ public sealed class DotnetTestProtocolSerializerTests
     }
 
     [TestMethod]
+    public void CommandLineOptionMessageFieldIds_ProviderAndArity_AreStable()
+    {
+        Assert.AreEqual((ushort)6, GetConstantValue(nameof(CommandLineOptionMessageFieldsId.ProviderUid)));
+        Assert.AreEqual((ushort)7, GetConstantValue(nameof(CommandLineOptionMessageFieldsId.MinimumArity)));
+        Assert.AreEqual((ushort)8, GetConstantValue(nameof(CommandLineOptionMessageFieldsId.MaximumArity)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(CommandLineOptionMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
     public void CommandLineOptionMessages_LegacyReaderSkipsProviderAndArityMetadata()
     {
         var message = new CommandLineOptionMessages(

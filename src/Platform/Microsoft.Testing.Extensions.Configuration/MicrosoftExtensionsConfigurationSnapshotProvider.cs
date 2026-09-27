@@ -20,7 +20,7 @@ internal sealed class MicrosoftExtensionsConfigurationSnapshotProvider(
         Dictionary<string, string?> data = [with(StringComparer.OrdinalIgnoreCase)];
         HashSet<string> containerKeys = [with(StringComparer.OrdinalIgnoreCase)];
 
-        AddChildren(_configuration, data, containerKeys);
+        AddChildren(_configuration, string.Empty, data, containerKeys);
 
         _data = data;
         _containerKeys = containerKeys;
@@ -66,17 +66,21 @@ internal sealed class MicrosoftExtensionsConfigurationSnapshotProvider(
 
     private static void AddChildren(
         MelIConfiguration configuration,
+        string prefix,
         Dictionary<string, string?> data,
         HashSet<string> containerKeys)
     {
         foreach (MelIConfigurationSection section in configuration.GetChildren())
         {
+            string key = prefix.Length == 0
+                ? section.Key
+                : prefix + MelConfigurationPath.KeyDelimiter + section.Key;
             MelIConfigurationSection[] children = [.. section.GetChildren()];
-            data[section.Path] = section.Value;
+            data[key] = section.Value;
             if (children.Length > 0)
             {
-                containerKeys.Add(section.Path);
-                AddChildren(section, data, containerKeys);
+                containerKeys.Add(key);
+                AddChildren(section, key, data, containerKeys);
             }
         }
     }

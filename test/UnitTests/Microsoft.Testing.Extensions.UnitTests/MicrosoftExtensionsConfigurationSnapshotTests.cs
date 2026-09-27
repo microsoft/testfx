@@ -82,6 +82,26 @@ public sealed class MicrosoftExtensionsConfigurationSnapshotTests
     }
 
     [TestMethod]
+    public async Task Provider_WithConfigurationSection_UsesSectionRelativeKeys()
+    {
+        MelIConfiguration configuration = CreateConfiguration(
+            ("root:value", "scalar"),
+            ("root:child:leaf", "nested"),
+            ("other:value", "ignored"));
+        var provider = new MicrosoftExtensionsConfigurationSnapshotProvider(configuration.GetSection("root"));
+
+        await provider.LoadAsync();
+
+        Assert.AreSequenceEqual(new[] { "child", "value" }, provider.GetChildKeys(null).OrderBy(static key => key).ToArray());
+        Assert.IsTrue(provider.TryGet("value", out string? value));
+        Assert.AreEqual("scalar", value);
+        Assert.IsTrue(provider.TryGet("child:leaf", out string? leaf));
+        Assert.AreEqual("nested", leaf);
+        Assert.IsFalse(provider.TryGet("root:value", out _));
+        Assert.IsFalse(provider.TryGet("other:value", out _));
+    }
+
+    [TestMethod]
     public async Task Source_UsesConfiguredOrderAndBuildsSnapshotProvider()
     {
         MelIConfiguration configuration = CreateConfiguration(("key", "value"));
