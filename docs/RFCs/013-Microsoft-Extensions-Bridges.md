@@ -2,14 +2,17 @@
 
 - [x] Approved in principle
 - [ ] Under discussion
-- [x] Implementation (Logging bridge)
+- [x] Implementation (Logging and Configuration bridges)
 - [ ] Shipped
 
 ## Summary
 
 Microsoft.Testing.Platform (MTP) intentionally ships zero-dependency abstractions for logging, configuration, dependency injection, and hosting. This RFC defines an architectural pattern and the first concrete deliverable for **opt-in side-package bridges** that let users interoperate with the `Microsoft.Extensions.*` ecosystem (`Microsoft.Extensions.Logging`, `Microsoft.Extensions.Configuration`, `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Hosting`).
 
-The first bridge delivered with this RFC is `Microsoft.Testing.Extensions.Logging`, which forwards MTP's diagnostic logs to any `Microsoft.Extensions.Logging` provider (Console, Debug, Serilog, Application Insights, OpenTelemetry, etc.).
+The first bridges delivered with this RFC are:
+
+- `Microsoft.Testing.Extensions.Logging`, which forwards MTP's diagnostic logs to any `Microsoft.Extensions.Logging` provider.
+- `Microsoft.Testing.Extensions.Configuration`, which imports a build-time snapshot of an externally owned `Microsoft.Extensions.Configuration.IConfiguration`.
 
 ## Motivation
 
@@ -46,9 +49,10 @@ The current "homegrown core + opt-in bridge extensions" pattern satisfies both c
 | Phase | Package | Status |
 | --- | --- | --- |
 | 1 | `Microsoft.Testing.Extensions.Logging` | This RFC |
-| 2 | `Microsoft.Testing.Extensions.Configuration` | Future |
-| 3 | `Microsoft.Testing.Extensions.DependencyInjection` | Future |
-| 4 | `Microsoft.Testing.Extensions.Hosting` | Future |
+| 2 | `Microsoft.Testing.Extensions.Configuration` | This RFC |
+| 3 | Host-owned composition sample | This RFC |
+| 4 | `Microsoft.Testing.Extensions.DependencyInjection` | Deferred; no container conversion is planned |
+| 5 | `Microsoft.Testing.Extensions.Hosting` | Deferred pending lifecycle, exit-code, and process-boundary contracts |
 
 ## Detailed design — `Microsoft.Testing.Extensions.Logging`
 
@@ -145,9 +149,38 @@ MTP's `Logger.Log` already calls `logger.IsEnabled(level)` per child provider in
 2. `EventId` is dropped. Users who rely on `EventId`-based filtering downstream of the bridge will lose that fidelity; documented.
 3. `LogAsync` becomes synchronous when going through a MEL provider that performs blocking I/O (Console, plain file). MEL has no async API; this is a known and intrinsic limitation.
 
+## Detailed design — `Microsoft.Testing.Extensions.Configuration`
+
+The Configuration bridge operates only from an externally owned
+`Microsoft.Extensions.Configuration.IConfiguration` into the MTP configuration pipeline. It captures
+a read-only hierarchical snapshot while the test application is built. It does not expose MTP
+configuration as `Microsoft.Extensions.Configuration.IConfiguration`, does not synthesize reload
+tokens, and does not claim `IOptionsMonitor` support.
+
+The default source order is `2`: command-line (`0`) and environment (`1`) values win, while the
+external snapshot wins over `testconfig.json` (`3`). The caller can select another order explicitly.
+MTP does not dispose the external configuration, and the live object is not propagated across process
+boundaries.
+
+## Host-owned composition sample
+
+The `samples/public/MTPOTel` sample demonstrates the supported composition direction: an outer
+`HostApplicationBuilder` owns its service provider, configuration, logging, OpenTelemetry providers,
+shutdown, and disposal. MTP imports only the supported configuration snapshot and logging factory,
+runs explicitly, returns its exit code, and shuts down before the outer host is stopped.
+
+This is intentionally a sample rather than an `IHostedService` package. A stable hosting package
+requires explicit contracts for exit-code ownership, shutdown timeout, exception propagation,
+out-of-process execution, and service ownership.
+
 ## Future work (not in this RFC's deliverable)
 
 - **Direction B** adapter (MTP `ILoggerFactory` exposed as `Microsoft.Extensions.Logging.ILoggerFactory`).
-- **`Microsoft.Testing.Extensions.Configuration`** — wrap `Microsoft.Extensions.Configuration.IConfiguration` as an MTP `IConfigurationSource`. Additive; does not retire the vendored `JsonConfigurationFileParser`.
-- **`Microsoft.Testing.Extensions.DependencyInjection`** — expose MTP services in an `IServiceCollection`/`IServiceProvider`.
-- **`Microsoft.Testing.Extensions.Hosting`** — `IHostedService` lifecycle bound to the test session.
+- **Dependency injection interop** — import only proven, externally owned service instances. Do not
+  convert the MTP registry into `IServiceCollection`, implicitly build a second container, or transfer
+  disposal ownership.
+- **Hosting package** — reconsider only after the host-owned sample validates concrete consumers and
+  the lifecycle/process contracts above.
+- **Command-line tooling** — the existing machine-readable `dotnet test` option message includes
+  provider identity and minimum/maximum arity in addition to name, description, visibility, and
+  built-in status. This provides tooling metadata without a runtime `System.CommandLine` bridge.
