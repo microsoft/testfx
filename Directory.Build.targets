@@ -115,8 +115,22 @@
       <_DependencyFreeProjectResolvedDependency Include="@(ResolvedCompileFileDefinitions)">
         <DependencyKind>compile asset</DependencyKind>
       </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(ReferencePath)"
+                                                Condition=" '%(ReferencePath.FrameworkReferenceName)' == ''
+                                                  and '%(ReferencePath.NuGetPackageId)' != 'NETStandard.Library' ">
+        <DependencyKind>assembly reference</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
       <_DependencyFreeProjectResolvedDependency Include="@(RuntimeCopyLocalItems)">
         <DependencyKind>runtime asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(NativeCopyLocalItems)">
+        <DependencyKind>native asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(ResourceCopyLocalItems)">
+        <DependencyKind>resource asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(RuntimeTargetsCopyLocalItems)">
+        <DependencyKind>RID-specific runtime asset</DependencyKind>
       </_DependencyFreeProjectResolvedDependency>
       <_DependencyFreeProjectResolvedDependency Include="@(ReferenceCopyLocalPaths)">
         <DependencyKind>copy-local reference</DependencyKind>

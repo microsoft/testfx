@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -176,6 +178,32 @@ public sealed class DependencyFreeProjectGuardTests
             "Microsoft.Extensions.Logging");
     }
 
+    [TestMethod]
+    public async Task Build_WithNativeOnlyPackageInjectedByImport_FailsOnResolvedClosure()
+    {
+        using TestAssetDirectory asset = CreateAsset(DependencySource.NativePackage);
+
+        DotnetMuxerResult result = await BuildAsync(asset);
+
+        AssertBuildFailed(
+            result,
+            "must remain dependency-free for net8.0, but dependency assets were resolved",
+            "native asset");
+    }
+
+    [TestMethod]
+    public async Task Build_WithNonCopyLocalReferenceInjectedByImport_FailsOnResolvedClosure()
+    {
+        using TestAssetDirectory asset = CreateAsset(DependencySource.NonCopyLocalReference);
+
+        DotnetMuxerResult result = await BuildAsync(asset);
+
+        AssertBuildFailed(
+            result,
+            "must remain dependency-free for net8.0, but dependency assets were resolved",
+            "assembly reference");
+    }
+
     private async Task<DotnetMuxerResult> BuildAsync(TestAssetDirectory asset)
         => await DotnetCli.RunAsync(
             $"msbuild \"{asset.ProjectPath}\" -restore -t:Build -p:Configuration={Constants.BuildConfiguration} -v:minimal",
@@ -204,29 +232,87 @@ public sealed class DependencyFreeProjectGuardTests
   </ItemGroup>
 """
             : string.Empty;
-        string import = dependencySource == DependencySource.Import
+        string import = dependencySource is DependencySource.Import
+            or DependencySource.NativePackage
+            or DependencySource.NonCopyLocalReference
             ? """  <Import Project="InjectedDependency.props" />"""
+            : string.Empty;
+        string dependencyProperties = dependencySource == DependencySource.NativePackage
+            ? """
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+"""
             : string.Empty;
         string projectContents = $"""
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <EnforceDependencyFreeProject>true</EnforceDependencyFreeProject>
+{dependencyProperties}
   </PropertyGroup>
 {dependencyItem}{import}
 </Project>
 """;
         File.WriteAllText(projectPath, projectContents, Encoding.UTF8);
 
-        if (dependencySource == DependencySource.Import)
+        if (dependencySource is DependencySource.Import
+            or DependencySource.NativePackage
+            or DependencySource.NonCopyLocalReference)
         {
+            string importedDependency = dependencySource switch
+            {
+                DependencySource.Import => """    <PackageReference Include="Microsoft.Extensions.Logging" PrivateAssets="all" />""",
+                DependencySource.NativePackage => """    <PackageReference Include="DependencyFreeNativePackage" VersionOverride="1.0.0" IncludeAssets="native" PrivateAssets="all" />""",
+                DependencySource.NonCopyLocalReference => """
+    <ProjectReference Include="Dependency\Dependency.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+""",
+                _ => throw new InvalidOperationException(),
+            };
             File.WriteAllText(
                 Path.Combine(assetPath, "InjectedDependency.props"),
-                """
+                $"""
 <Project>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" PrivateAssets="all" />
+{importedDependency}
   </ItemGroup>
+</Project>
+""",
+                Encoding.UTF8);
+        }
+
+        if (dependencySource == DependencySource.NativePackage)
+        {
+            CreateNativePackage(Path.Combine(assetPath, "packages"));
+            File.WriteAllText(
+                Path.Combine(assetPath, "NuGet.config"),
+                """
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="dependency-free-fixtures" value="packages" />
+  </packageSources>
+  <packageSourceMapping>
+    <packageSource key="dependency-free-fixtures">
+      <package pattern="DependencyFreeNativePackage" />
+    </packageSource>
+  </packageSourceMapping>
+</configuration>
+""",
+                Encoding.UTF8);
+        }
+
+        if (dependencySource == DependencySource.NonCopyLocalReference)
+        {
+            string dependencyDirectory = Path.Combine(assetPath, "Dependency");
+            Directory.CreateDirectory(dependencyDirectory);
+            File.WriteAllText(
+                Path.Combine(dependencyDirectory, "Dependency.csproj"),
+                """
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
 </Project>
 """,
                 Encoding.UTF8);
@@ -235,11 +321,40 @@ public sealed class DependencyFreeProjectGuardTests
         return new TestAssetDirectory(assetPath, projectPath);
     }
 
+    private static void CreateNativePackage(string packageDirectory)
+    {
+        Directory.CreateDirectory(packageDirectory);
+        using ZipArchive archive = ZipFile.Open(
+            Path.Combine(packageDirectory, "DependencyFreeNativePackage.1.0.0.nupkg"),
+            ZipArchiveMode.Create);
+        ZipArchiveEntry nuspecEntry = archive.CreateEntry("DependencyFreeNativePackage.nuspec");
+        using (StreamWriter writer = new(nuspecEntry.Open(), Encoding.UTF8))
+        {
+            writer.Write(
+                """
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>DependencyFreeNativePackage</id>
+    <version>1.0.0</version>
+    <authors>TestFx</authors>
+    <description>Native-only dependency fixture.</description>
+  </metadata>
+</package>
+""");
+        }
+
+        using Stream nativeAsset = archive.CreateEntry("runtimes/win-x64/native/dependency.dll").Open();
+        nativeAsset.WriteByte(0);
+    }
+
     private enum DependencySource
     {
         None,
         Project,
         Import,
+        NativePackage,
+        NonCopyLocalReference,
     }
 
     private sealed class TestAssetDirectory(string path, string projectPath) : IDisposable
