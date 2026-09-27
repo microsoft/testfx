@@ -1494,7 +1494,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="translated">在測試方和測試 class 法上使用重試屬性</target>
+        <target state="translated">在測試方或測試 class 上使用 retry 屬性</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
