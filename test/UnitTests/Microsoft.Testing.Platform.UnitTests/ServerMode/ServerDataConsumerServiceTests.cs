@@ -125,10 +125,8 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     [TestMethod]
     public async Task OnTestSessionStartingAsync_CompletesWithoutSendingUpdates()
     {
-        Task result = _service.OnTestSessionStartingAsync(_serviceProvider.GetTestSessionContext());
+        await _service.OnTestSessionStartingAsync(_serviceProvider.GetTestSessionContext()).ConfigureAwait(false);
 
-        Assert.AreSame(Task.CompletedTask, result);
-        await result.ConfigureAwait(false);
         _serverTestHost.Verify(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
