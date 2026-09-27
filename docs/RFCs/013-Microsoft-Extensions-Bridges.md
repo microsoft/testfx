@@ -50,9 +50,8 @@ The current "homegrown core + opt-in bridge extensions" pattern satisfies both c
 | --- | --- | --- |
 | 1 | `Microsoft.Testing.Extensions.Logging` | This RFC |
 | 2 | `Microsoft.Testing.Extensions.Configuration` | This RFC |
-| 3 | Host-owned composition sample | This RFC |
+| 3 | `Microsoft.Testing.Extensions.Hosting` | Experimental |
 | 4 | `Microsoft.Testing.Extensions.DependencyInjection` | Deferred; no container conversion is planned |
-| 5 | `Microsoft.Testing.Extensions.Hosting` | Deferred pending lifecycle, exit-code, and process-boundary contracts |
 
 ## Detailed design — `Microsoft.Testing.Extensions.Logging`
 
@@ -162,16 +161,19 @@ external snapshot wins over `testconfig.json` (`3`). The caller can select anoth
 MTP does not dispose the external configuration, and the live object is not propagated across process
 boundaries.
 
-## Host-owned composition sample
+## Detailed design — `Microsoft.Testing.Extensions.Hosting`
 
-The `samples/public/MTPOTel` sample demonstrates the supported composition direction: an outer
-`HostApplicationBuilder` owns its service provider, configuration, logging, OpenTelemetry providers,
-shutdown, and disposal. MTP imports only the supported configuration snapshot and logging factory,
-runs explicitly, returns its exit code, and shuts down before the outer host is stopped.
+The Hosting bridge provides one experimental `IHost.RunTestingPlatformAsync` entry point. The outer
+host owns its service provider, configuration, logging, OpenTelemetry providers, and disposal. The
+helper imports only the supported configuration snapshot and logging factory, starts the host before
+building MTP, returns MTP's exit code, and stops the host in a `finally` block.
 
-This is intentionally a sample rather than an `IHostedService` package. A stable hosting package
-requires explicit contracts for exit-code ownership, shutdown timeout, exception propagation,
-out-of-process execution, and service ownership.
+It intentionally does not expose MTP as an `IHostedService`, build a second Microsoft.Extensions
+container, dispose the caller's host, or imply that live services cross process boundaries. The API
+remains experimental while cancellation and out-of-process behavior are evaluated.
+
+The `samples/public/MTPOTel` and `samples/public/MTPHostIntegration` examples demonstrate the same
+composition pattern with a generic host, ASP.NET Core, and Aspire ServiceDefaults.
 
 ## Future work (not in this RFC's deliverable)
 
@@ -179,8 +181,8 @@ out-of-process execution, and service ownership.
 - **Dependency injection interop** — import only proven, externally owned service instances. Do not
   convert the MTP registry into `IServiceCollection`, implicitly build a second container, or transfer
   disposal ownership.
-- **Hosting package** — reconsider only after the host-owned sample validates concrete consumers and
-  the lifecycle/process contracts above.
+- **Hosting cancellation** — consider a cancellable MTP run API before claiming that
+  `IHostApplicationLifetime.ApplicationStopping` can cancel an active test run.
 - **Command-line tooling** — the existing machine-readable `dotnet test` option message includes
   provider identity and minimum/maximum arity in addition to name, description, visibility, and
   built-in status. This provides tooling metadata without a runtime `System.CommandLine` bridge.

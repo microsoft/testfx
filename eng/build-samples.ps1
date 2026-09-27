@@ -40,6 +40,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRootWithTrailingSeparator = $repoRoot + [System.IO.Path]::DirectorySeparatorChar
 $samplesFolder = "$repoRoot/samples/public"
 
 # Source the arcade tools to get access to InitializeDotNetCli
@@ -72,6 +73,7 @@ foreach ($solution in $solutions) {
             "restore",
             $solution.FullName,
             "/p:Configuration=$Configuration",
+            "/p:RepoRoot=$repoRootWithTrailingSeparator",
             "/p:Platform=x64"
         )
 
@@ -89,6 +91,7 @@ foreach ($solution in $solutions) {
         $buildArgs = @(
             $solution.FullName,
             "/p:Configuration=$Configuration",
+            "/p:RepoRoot=$repoRootWithTrailingSeparator",
             "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors",
             "/p:Platform=x64",
             "/v:minimal"
@@ -107,6 +110,7 @@ foreach ($solution in $solutions) {
             "build",
             $solution.FullName,
             "--configuration", $Configuration,
+            "/p:RepoRoot=$repoRootWithTrailingSeparator",
             "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
         )
 
