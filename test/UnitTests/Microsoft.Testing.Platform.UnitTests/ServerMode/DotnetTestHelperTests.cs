@@ -75,12 +75,12 @@ public sealed class DotnetTestHelperTests
     }
 
     [TestMethod]
-    public void TryGetDotnetTestTransport_TransportOptionWithNonHttpArgumentAndNoPipeOption_ReturnsFalse()
+    [DataRow(new string[] { "--dotnet-test-transport", "pipe" }, DisplayName = "NonHttpArgument")]
+    [DataRow(new string[] { "--dotnet-test-transport" }, DisplayName = "NoArgument")]
+    [DataRow(new string[] { "--dotnet-test-transport", "http", "extra" }, DisplayName = "MultipleArguments")]
+    public void TryGetDotnetTestTransport_NonHttpOrInvalidArityWithoutPipeOption_ReturnsFalse(string[] args)
     {
-        // The transport option's argument is validated by PlatformCommandLineProvider to be either "pipe" or
-        // "http", but TryGetDotnetTestTransport itself only special-cases "http"; any other single argument
-        // (e.g. the explicit "pipe" value) falls through to the pipe-option check, which is not set here.
-        CommandLineHandler handler = CreateCommandLineHandler(["--dotnet-test-transport", "pipe"]);
+        CommandLineHandler handler = CreateCommandLineHandler(args);
 
         bool result = handler.TryGetDotnetTestTransport(out DotnetTestTransportKind transport);
 
