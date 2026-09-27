@@ -94,7 +94,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
-    public async Task OnTestSessionFinishingAsync_WithPendingUpdate_FlushesToServerHost()
+    public async Task OnTestSessionFinishingAsync_BeforeIdleDelayCompletes_FlushesPendingUpdate()
     {
         TestNodeUpdateMessage update = new(new SessionUid("1"), new TestNode
         {
