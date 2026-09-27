@@ -6,6 +6,13 @@
 | --- | --- |
 | Use an application-owned `HostApplicationBuilder` to supply configuration and logging, collect MTP diagnostics with OpenTelemetry, and preserve the application's resource identity and service ownership | [`MTPOTel`](MTPOTel) |
 
+## Application hosting
+
+| Scenario | Sample |
+| --- | --- |
+| Start a real ASP.NET Core application, run MSTest against its endpoint, and reuse the web host's configuration, logging, DI, and OpenTelemetry pipeline | [`MTPHostIntegration/AspNetCoreTests`](MTPHostIntegration/AspNetCoreTests) |
+| Start an Aspire AppHost with `Aspire.Hosting.Testing` while the MTP test process uses the same ServiceDefaults pattern and owns a single host/provider pipeline | [`MTPHostIntegration/AspireTests`](MTPHostIntegration/AspireTests) |
+
 ## Windows application testing
 
 The sample name identifies the Windows application model, test host, and packaging mode.
