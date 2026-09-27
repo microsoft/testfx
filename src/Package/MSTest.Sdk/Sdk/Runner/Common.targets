@@ -44,7 +44,7 @@
     <EnableMicrosoftTestingExtensionsPackagedApp
       Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None' ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp
-      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') ">true</EnableMicrosoftTestingExtensionsPackagedApp>
+      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' ">false</EnableMicrosoftTestingExtensionsPackagedApp>
 
     <!-- MS Code Coverage -->

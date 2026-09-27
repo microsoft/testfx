@@ -229,7 +229,6 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <GenerateTestingPlatformApplicationHelper>false</GenerateTestingPlatformApplicationHelper>
