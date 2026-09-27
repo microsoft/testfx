@@ -1200,7 +1200,6 @@ public sealed class PackagedWinUITestCases
         }
         RecordExecution(nameof(PlainTestMethod_PreservesDotnetTestExecutionId));
     }
-    }
 
     [UITestMethod]
     public void UITestMethod_RunsOnWinUIDispatcher()
