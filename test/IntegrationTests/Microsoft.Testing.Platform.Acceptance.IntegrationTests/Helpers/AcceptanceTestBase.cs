@@ -35,6 +35,7 @@ public abstract class AcceptanceTestBase
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
+        MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
         MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
@@ -115,6 +116,8 @@ public abstract class AcceptanceTestBase
             StringComparison.Ordinal);
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsConfigurationVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
 
