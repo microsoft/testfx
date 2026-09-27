@@ -1,10 +1,7 @@
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory=$true)]
-    [System.String] $configuration,
-
-    [Parameter(Mandatory=$false)]
-    [System.String] $productsToBuild = "all"
+    [System.String] $configuration
 )
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -112,7 +109,15 @@ function Confirm-NugetPackages {
         }
     }
 
-    if ($productsToBuild -in @("all", "mstest")) {
+    $isMSTestProductBuild = $false
+    foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+        if ($verifiedPackageKeys.Contains($expectedPackageKey)) {
+            $isMSTestProductBuild = $true
+            break
+        }
+    }
+
+    if ($isMSTestProductBuild) {
         foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
             if (!$verifiedPackageKeys.Contains($expectedPackageKey)) {
                 $errors += "Expected package '$expectedPackageKey' was not found"
