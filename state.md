@@ -11,13 +11,13 @@
 ```
 
 ## Task Schedule (last run dates)
-- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-26)
-- Task 2 (Identify Opportunities): 2026-09-26 (found DeploymentItemUtility.IsInvalidPath array-allocation issue, fixed same run)
-- Task 3 (Implement): 2026-09-26 (PR: "Cache invalid-path/filename char arrays in DeploymentItemUtility")
-- Task 4 (Maintain PRs): 2026-09-26 (no open perf-improver PRs before this run's new PR)
-- Task 5 (Comment Issues): 2026-09-26 (no open performance-labeled issues; #3495 reviewed, not actionable for a new comment)
-- Task 6 (Infrastructure): 2026-09-13 (added TelemetryCollectorBenchmarks.cs; measurement-infra now considered complete for all prior fixes)
-- Task 7 (Monthly Summary): 2026-09-26
+- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-27)
+- Task 2 (Identify Opportunities): 2026-09-27 (found Assert.That fast-path Compile() IL-emission cost, fixed same run)
+- Task 3 (Implement): 2026-09-27 (PR: "Avoid IL-emitting Compile() in Assert.That fast path")
+- Task 4 (Maintain PRs): 2026-09-27 (no open perf-improver PRs before this run's new PR; confirmed #11555 DeploymentItemUtility PR merged)
+- Task 5 (Comment Issues): 2026-09-27 (no open performance-labeled issues)
+- Task 6 (Infrastructure): 2026-09-27 (added AssertThatBenchmarks.cs alongside the fix)
+- Task 7 (Monthly Summary): 2026-09-27
 
 Full history of individual PRs/fixes from July-August 2026 and early September 2026 is condensed in the "September 2026 Runs" and "August 2026 Runs Summary" sections below (all cross-referenced by PR number).
 
@@ -25,7 +25,7 @@ Full history of individual PRs/fixes from July-August 2026 and early September 2
 - Issue #10914 (September 2026, open) — kept updated every run; rewrite-from-scratch needed multiple times 09-21 through 09-25 due to a recurring append-vs-replace duplication bug (not observed on 09-26 run).
 
 ## Work In Progress
-New PR created 2026-09-26: "Cache invalid-path/filename char arrays in DeploymentItemUtility" (branch perf-assist/deploymentitem-invalidpath-cache), awaiting maintainer review. No other in-progress work.
+New PR created 2026-09-27: "Avoid IL-emitting Compile() in Assert.That fast path" (branch perf-assist/assert-that-compile-interpretation), awaiting maintainer review. Previous PR #11555 (DeploymentItemUtility char-array caching) MERGED by Evangelink 2026-09-27. No other in-progress work.
 
 ## Optimization Backlog (low priority, all re-verified multiple times, not fixed)
 1. `PrivateObject.Helpers.cs BuildGenericMethodCacheForType` (net-framework-only): rebuilds cache per PrivateObject instance construction. Medium risk (touches internal representation).
@@ -36,7 +36,7 @@ New PR created 2026-09-26: "Cache invalid-path/filename char arrays in Deploymen
 6. `RetryOrchestrator.ArtifactRecovery.cs` Any() per-manifest-line: low volume.
 
 ### Done (fixed, merged or PR open) - see Run History sections for full PR list
-`ObjectModelConverters.FixUpTestCase` Any(lambda), `Assert.HasCount`/`IsEmpty` ICollection fast path, `TelemetryCollector.TrackAssertionCall` contention, `InheritedMemberFromDifferentMSTestVersionAnalyzer` LINQ ordering (#11225), `DeploymentItemUtility.IsInvalidPath` array caching (2026-09-26, PR open).
+`ObjectModelConverters.FixUpTestCase` Any(lambda), `Assert.HasCount`/`IsEmpty` ICollection fast path, `TelemetryCollector.TrackAssertionCall` contention, `InheritedMemberFromDifferentMSTestVersionAnalyzer` LINQ ordering (#11225), `DeploymentItemUtility.IsInvalidPath` array caching (PR #11555, MERGED 2026-09-27), `Assert.That` fast-path IL-emitting `Compile()` replaced with `Compile(preferInterpretation: true)` (2026-09-27, PR open, ~33x faster/~65% less alloc per side-effect-free call, `#if NETFRAMEWORK` fallback since net462 ref assemblies lack the overload).
 
 
 ## Performance Notes
@@ -137,3 +137,15 @@ Monthly Activity issue #10914 (September 2026): updated every run per Task 7 man
 - Task 7: Monthly Activity issue #10914 - was clean (no duplication this time, single "## Activity" section, 25-run streak apparently not recurring today) - did a normal update (not forced full-rewrite-due-to-duplication) adding this run's entry and the new PR to Suggested Actions, condensing older Run History slightly.
 - Backlog: item 8 (DeploymentItemUtility.IsInvalidPath) now DONE (PR created this run). Remaining unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enumeration (low volume, measured), RetryOrchestrator.ArtifactRecovery.cs Any() per-manifest-line (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run (fresh scan, 1 new finding+fix), Task 3 done this run (PR created), Task 4 done this run (nothing to maintain before new PR), Task 5 done this run (nothing actionable), Task 7 done this run (issue updated, no duplication bug observed this time - monitor if it recurs). Next run: continue exploring fresh ground since today's scan proved there are still small wins available (Deployment/Configurations/Helpers areas) - consider TestDeployment.cs remaining methods, DeploymentUtility.cs (distinct from DeploymentItemUtility.cs), or Assert.ThrowsException*.cs more deeply; also watch #10914 for renewed duplication.
+
+## Run 2026-09-27 Notes
+- Task 4: PR #11555 ("Cache invalid-path/filename char arrays in DeploymentItemUtility") from previous run MERGED by Evangelink 2026-09-27 - confirmed via pull_request_read. No other open perf-improver PRs before this run's new PR (search_pull_requests confirmed 0 open).
+- Task 5: no open performance-labeled issues found (search_issues label:performance is:open -> 0, also tried plain "performance" text search -> 0).
+- Task 2/3: dispatched explore-agent to fresh ground (Assertions remaining files, Adapter PlatformServices Services/*.cs, Platform Services/Requests/Messages). Found a genuine hot-path issue: `Assert.That`'s side-effect-free fast path (`Assert.That.cs:80`) called `Expression<Func<bool>>.Compile()` per assertion call - `Compile()` dynamically emits IL/JITs a delegate that's then invoked exactly once, which is pure overhead for a one-shot invocation. Fixed by switching to `Compile(preferInterpretation: true)` (BCL expression interpreter, no IL emission), gated behind `#if NETFRAMEWORK` since the `preferInterpretation` overload doesn't exist in the `Microsoft.NETFramework.ReferenceAssemblies.net462` 1.0.3 package this repo builds net462 against (verified via reflection over the actual reference assembly DLL - only `Compile()` and `Compile(DebugInfoGenerator)` exist there, confirmed netstandard2.0/net8.0/net9.0 all have the 2-arg bool overload).
+- **Measured with a real before/after via git stash**: stashed the fix, rebuilt TestFramework in Release, ran new `AssertThatBenchmarks.That_SideEffectFree` benchmark -> 37.71us/4.64KB per call (baseline). Restored fix, rebuilt, re-ran identical benchmark -> 1.14us/1.6KB per call. **~33x faster, ~65% less alloc**. This is the largest single win found by this agent to date (prior fixes were in the 1.5-4x range) - `Assert.That` is a commonly-used assertion API, so the per-call impact compounds significantly.
+- `./build.sh -c Release` succeeded across all TFMs including net462 (confirms `#if NETFRAMEWORK` fallback compiles correctly - initially hit a CS1739/CS1503 build error on net462 before adding the conditional, good catch from full multi-TFM build). `TestFramework.UnitTests` (net9.0): 1574/1574 passed (includes full `AssertTests` coverage for `Assert.That`). Added `AssertThatBenchmarks.cs` to the benchmarks project for future regression tracking.
+- **LESSON**: when adding an overload-based fix, always verify the overload's availability across ALL target frameworks the project builds (not just the primary net9.0) before assuming it's universally available - `./build.sh -c Release` (full multi-TFM build) caught the net462 incompatibility that a single-TFM `dotnet build -f net9.0` would have missed.
+- Created PR "Avoid IL-emitting Compile() in Assert.That fast path" (branch `perf-assist/assert-that-compile-interpretation`).
+- Task 7: Monthly Activity issue #10914 - single "## Activity" section (no duplication observed this run), did a normal update.
+- Backlog: item 9 (Assert.That Compile() IL-emission) now DONE (PR created this run, largest win to date). Remaining unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enumeration (low volume, measured), RetryOrchestrator.ArtifactRecovery.cs Any() per-manifest-line (low volume) - all low priority, not fixed.
+- Task schedule: Task 2 done this run (fresh scan of Assertions/Adapter-Services/Platform-Services, 1 new finding+fix - the biggest one yet), Task 3 done this run (PR created), Task 4 done this run (confirmed prior PR merged, nothing else to maintain), Task 5 done this run (nothing actionable), Task 6 done this run (new benchmark added alongside fix), Task 7 done this run (issue updated, no duplication observed). Next run: continue exploring Assertions/Assert.That.ExpressionEvaluation*.cs siblings for similar patterns (the single-pass/side-effecting path already caches per-sub-expression so likely fine, but worth a fresh look), or the remaining Adapter PlatformServices Services/*.cs files not yet covered this run.
