@@ -48,6 +48,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\JsonRpc\RpcIdParser.cs" Link="ServerMode\RpcIdParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
     <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\SlowestTestsConsumer.cs" Link="TestInfrastructure\SlowestTestsConsumer.cs" />
     <!-- The terminal reporter types are [Embedded] (hidden cross-assembly) so they can be shared as source.

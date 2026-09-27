@@ -14,14 +14,26 @@ registered by the repository's hand-authored MTP entry points.
 Package `18.12.0-preview.26473.3` includes the fixed JSON discovery path and ships both `netstandard2.0` and `net8.0`
 assets for the base extension, collector, CodeCoverage extension, and Azure DevOps provider.
 
+Affected-test execution is temporarily disabled in the pipeline. Azure DevOps rejects map uploads from provider
+versions `18.12.0-preview.26473.3` and `18.12.0-preview.26474.2` because their file-container PUT requests omit the
+required `Content-Range` header. The package owns that HTTP request, so repository configuration cannot repair it.
+The pinned `11.0.100-rc.2.26471.109` SDK also reports a successful collection application that suppresses SDK
+reporting as a handshake failure: local storage writes the complete map and the application exits `0`, but the parent
+`dotnet test` command exits `1`. Keep the packages and storage configuration dormant until the provider upload and
+collection protocol are both corrected, then update the affected package/SDK versions and re-enable the shared
+Windows test call.
+
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- The trusted main-branch Windows Release test runs `--collect-test-map`.
-- The Windows Release PR test runs `--affected-tests`.
+- Once re-enabled, the trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
+  retry, or coverage arguments, because collection owns its instrumentation and launches discovery
+  children with `--list-tests`. A normal full test run follows to retain test reporting and coverage.
+- Once re-enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
-  package's `netstandard2.0` assets.
+  package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
+  `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework outputs.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
@@ -47,8 +59,8 @@ A missing, stale, incompatible, or inaccessible artifact is an expected state, n
 runs all tests. The pipeline's explicit full-test fallback remains for extension/process failures, while scheduled and
 manual builds always keep full validation.
 
-Selected-test runs do not publish their partial coverage as the repository coverage report. Collection and full
-fallback runs still publish complete coverage.
+Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
+after collection and full fallback runs still publish complete coverage.
 
-The one-switch rollback remains setting `enableAffectedTests` to `false`, which keeps the package and dormant storage
-configuration in place while restoring the ordinary full-test command.
+The one-switch rollback is currently active: `enableAffectedTests` is `false`, which keeps the package and dormant
+storage configuration in place while restoring the ordinary full-test command.

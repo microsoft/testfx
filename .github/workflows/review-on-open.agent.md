@@ -31,13 +31,12 @@ permissions:
 imports:
   - shared/review-shared.md
 
-# The expert-reviewer agent fans out into many dimension sub-agents on
-# claude-opus-4.6, so the default 1000 AI-credit budget is too low (see #9115).
+# Broad PRs can require several risk-scope agents, validators, and specialist
+# reviews on claude-opus-4.6, so retain headroom above the default budget.
 max-ai-credits: 2000
 
-# This same fan-out means a single run can consume several thousand AI credits, so
-# raise the per-workflow 24h budget above the enterprise default to avoid skipping
-# reviews on a busy PR day (see issue #9053).
+# Retain a higher 24h budget so several broad reviews can run on a busy PR day
+# without starving later reviews (see issue #9053).
 max-daily-ai-credits: 20K
 
 safe-outputs:

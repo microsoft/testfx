@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Messages;
 
@@ -12,7 +13,7 @@ namespace Microsoft.Testing.Platform.Messages;
 /// blocks until <see cref="IDataConsumer.ConsumeAsync"/> has completed.
 /// </summary>
 [DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
-internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcessor
+internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcessorWithActivityContext
 {
     private readonly CancellationToken _cancellationToken;
     private readonly TimeSpan _canceledShutdownTimeout;
@@ -43,7 +44,13 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
 
     public long ReceivedCount => Volatile.Read(ref _receivedCount);
 
-    public async Task PublishAsync(IDataProducer dataProducer, IData data)
+    public Task PublishAsync(IDataProducer dataProducer, IData data)
+        => PublishAsync(dataProducer, data, executionActivityContext: null);
+
+    public async Task PublishAsync(
+        IDataProducer dataProducer,
+        IData data,
+        PlatformActivityContext? executionActivityContext)
     {
         // Increment unconditionally and before honoring cancellation, to keep the same ReceivedCount
         // semantics as AsyncConsumerDataProcessor (even self-produced data we skip below is counted).
@@ -60,7 +67,18 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
         try
         {
-            await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
+            if (DataConsumer is ITestExecutionActivityContextConsumer activityContextConsumer)
+            {
+                await activityContextConsumer.ConsumeAsync(
+                    dataProducer,
+                    data,
+                    executionActivityContext,
+                    _cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
+            }
         }
         finally
         {

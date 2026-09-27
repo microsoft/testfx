@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
 using OpenTelemetry.Metrics;
@@ -13,14 +12,38 @@ using OpenTelemetry.Trace;
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
-/// Extensions for adding AppInsights telemetry provider.
+/// Extensions for activating Microsoft Testing Platform diagnostics and configuring OpenTelemetry providers.
 /// </summary>
 public static class OpenTelemetryProviderExtensions
 {
     /// <summary>
+    /// Activates the Microsoft Testing Platform diagnostics producer so its activities and metrics can be observed
+    /// by application-owned listeners or OpenTelemetry providers.
+    /// </summary>
+    /// <remarks>
+    /// This method only registers the platform's <see cref="System.Diagnostics.ActivitySource"/> and
+    /// <see cref="System.Diagnostics.Metrics.Meter"/> adapters. It does not create, configure, flush, or dispose an
+    /// OpenTelemetry <see cref="TracerProvider"/> or <see cref="MeterProvider"/>.
+    /// <para>Call <see cref="AddTestingPlatformInstrumentation(TracerProviderBuilder)"/> and
+    /// <see cref="AddTestingPlatformInstrumentation(MeterProviderBuilder)"/> on the application-owned provider
+    /// builders to subscribe them to the emitted signals.</para>
+    /// <para>Registration is idempotent and can be combined with <see cref="AddOpenTelemetryProvider"/> or
+    /// <see cref="AddOpenTelemetryProviderFromEnvironment"/> in any order.</para>
+    /// </remarks>
+    /// <param name="builder">The application builder on which to activate Microsoft Testing Platform diagnostics.</param>
+    public static void AddTestingPlatformDiagnostics(this ITestApplicationBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryService(_ => new OpenTelemetryPlatformService());
+    }
+
+    /// <summary>
     /// Registers OpenTelemetry tracing and metrics providers whose lifetime is managed by the Microsoft Testing Platform.
     /// </summary>
-    /// <remarks>The providers are created with empty configuration. Callers are responsible for wiring everything
+    /// <remarks>This method also activates the platform diagnostics producer through
+    /// <see cref="AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/>.
+    /// The providers are created with empty configuration. Callers are responsible for wiring everything
     /// the providers should observe and export, including:
     /// <list type="bullet">
     /// <item><description>The Microsoft Testing Platform instrumentation, via
@@ -32,16 +55,16 @@ public static class OpenTelemetryProviderExtensions
     /// without an exporter, collected telemetry is not emitted anywhere.</description></item>
     /// </list>
     /// No defaults are applied — this method does not pick instrumentation or exporters on the caller's behalf because
-    /// the right choice depends on the target observability backend.</remarks>
+    /// the right choice depends on the target observability backend. Applications that already own their OpenTelemetry
+    /// providers should call <see cref="AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/> instead.</remarks>
     /// <param name="builder">The application builder to which the OpenTelemetry providers will be added. Cannot be null.</param>
     /// <param name="withTracing">An optional delegate to configure the tracing provider (sources, instrumentation, exporters).</param>
     /// <param name="withMetrics">An optional delegate to configure the metrics provider (meters, instrumentation, exporters).</param>
     public static void AddOpenTelemetryProvider(this ITestApplicationBuilder builder, Action<TracerProviderBuilder>? withTracing = null, Action<MeterProviderBuilder>? withMetrics = null)
-        => ((TestApplicationBuilder)builder).Telemetry.AddOpenTelemetryProvider(serviceProvider =>
-        {
-            ((ServiceProvider)serviceProvider).AddService(new OpenTelemetryPlatformService());
-            return new OpenTelemetryProvider(withTracing, withMetrics);
-        });
+    {
+        builder.AddTestingPlatformDiagnostics();
+        ((TestApplicationBuilder)builder).Telemetry.AddOpenTelemetryProvider(_ => new OpenTelemetryProvider(withTracing, withMetrics));
+    }
 
     /// <summary>
     /// Enables instrumentation for the Microsoft Testing Platform by adding its activity source to the specified tracer
@@ -85,8 +108,14 @@ public static class OpenTelemetryProviderExtensions
     /// Adds the Microsoft Testing Platform resource attributes (test assembly, host, OS, runtime and the detected
     /// CI provider, pipeline and commit) to the resource of a tracer, meter or logger provider.
     /// </summary>
-    /// <remarks>Resource attributes are attached once to every span and metric point exported by the provider, which
-    /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.
+    /// <remarks>This is the standalone aggregate convenience path. It configures service identity and adds host, OS,
+    /// process, test assembly, CI and source-control attributes.
+    /// <para>Applications that already configure their own service, host, OS or process identity through Aspire
+    /// ServiceDefaults, <c>HostApplicationBuilder</c> or another application-level OpenTelemetry composition root
+    /// should use <see cref="AddTestingPlatformTestResource(ResourceBuilder)"/> and
+    /// <see cref="AddTestingPlatformCIResource(ResourceBuilder)"/> instead.</para>
+    /// <para>Resource attributes are attached once to every span and metric point exported by the provider, which
+    /// is what lets you slice a dashboard by branch, pipeline or machine without adding those values to every span.</para>
     /// <para>The CI attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
     /// from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins environment variables.</para></remarks>
     /// <param name="builder">The resource builder to enrich.</param>
@@ -101,6 +130,39 @@ public static class OpenTelemetryProviderExtensions
                 serviceVersion: TestingPlatformResourceDetector.GetServiceVersion(),
                 autoGenerateServiceInstanceId: true)
             .AddAttributes(TestingPlatformResourceDetector.GetResourceAttributes());
+    }
+
+    /// <summary>
+    /// Adds Microsoft Testing Platform test-specific resource attributes to the resource of a tracer, meter or logger
+    /// provider.
+    /// </summary>
+    /// <remarks>This focused helper currently adds the test assembly name. It does not configure or overwrite
+    /// <c>service.*</c>, <c>host.*</c>, <c>os.*</c>, <c>process.*</c>, <c>cicd.*</c> or <c>vcs.*</c> attributes,
+    /// so it can be composed with application-owned OpenTelemetry resource configuration.</remarks>
+    /// <param name="builder">The resource builder to enrich.</param>
+    /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
+    public static ResourceBuilder AddTestingPlatformTestResource(this ResourceBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        return builder.AddAttributes(TestingPlatformResourceDetector.GetTestResourceAttributes());
+    }
+
+    /// <summary>
+    /// Adds CI and source-control provenance for the current test run to the resource of a tracer, meter or logger
+    /// provider.
+    /// </summary>
+    /// <remarks>The attributes follow the OpenTelemetry <c>cicd.*</c> and <c>vcs.*</c> conventions and are detected
+    /// from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins environment variables. User-info credentials are
+    /// removed from repository URLs. This focused helper does not configure or overwrite <c>service.*</c>,
+    /// <c>host.*</c>, <c>os.*</c>, <c>process.*</c> or <c>test.*</c> attributes.</remarks>
+    /// <param name="builder">The resource builder to enrich.</param>
+    /// <returns>The same <see cref="ResourceBuilder"/> instance.</returns>
+    public static ResourceBuilder AddTestingPlatformCIResource(this ResourceBuilder builder)
+    {
+        _ = builder ?? throw new ArgumentNullException(nameof(builder));
+
+        return builder.AddAttributes(TestingPlatformResourceDetector.GetCiResourceAttributes());
     }
 
     /// <summary>

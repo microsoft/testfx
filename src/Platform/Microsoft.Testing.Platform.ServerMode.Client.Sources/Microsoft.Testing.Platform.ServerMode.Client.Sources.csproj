@@ -163,6 +163,7 @@
     <Compile Remove="$(MTPDir)Messages\BaseMessageBus.cs" />
     <Compile Remove="$(MTPDir)Messages\BlockingConsumerDataProcessor.cs" />
     <Compile Remove="$(MTPDir)Messages\IAsyncConsumerDataProcessor.cs" />
+    <Compile Remove="$(MTPDir)Messages\IAsyncConsumerDataProcessorWithActivityContext.cs" />
     <Compile Remove="$(MTPDir)Messages\IDataProducer.cs" />
     <Compile Remove="$(MTPDir)Messages\IMessageBus.cs" />
     <Compile Remove="$(MTPDir)Messages\MessageBusProxy.cs" />
