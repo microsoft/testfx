@@ -39,7 +39,26 @@ internal sealed partial class OpenTelemetryResultHandler
         _totalStartedTests?.Add(1);
         string activityName = GetActivityName(testNode);
         string? parentId = _otelService.TestFrameworkActivity?.Id;
-        IEnumerable<KeyValuePair<string, object?>> tags = GetTestInitialInfo(testNode, parentUid);
+        TestExecutionActivityProperty? canonicalActivity = GetTestExecutionActivityProperty(testNode);
+        if (canonicalActivity is not null)
+        {
+            lock (_syncRoot)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                if (_canonicalActivities.Add(canonicalActivity.Reservation))
+                {
+                    _activeTestCases.Add(1);
+                }
+            }
+
+            return;
+        }
+
+        IEnumerable<KeyValuePair<string, object?>> tags = GetTestInitialInfo(testNode, parentUid, _options);
         IPlatformActivity? activity =
             executionActivityContext is not null
             && _otelService is IPlatformOpenTelemetryServiceWithActivityLinks linkService
@@ -70,6 +89,13 @@ internal sealed partial class OpenTelemetryResultHandler
     internal void NotifyExecutionCompleted(TestNode testNode)
     {
         _totalCompletedTests?.Add(1);
+        if (GetTestExecutionActivityProperty(testNode) is { } canonicalActivity)
+        {
+            CompleteCanonicalActivity(canonicalActivity);
+            canonicalActivity.Reservation.CompleteWithoutResult();
+            return;
+        }
+
         if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity))
         {
             return;
@@ -158,4 +184,34 @@ internal sealed partial class OpenTelemetryResultHandler
 
     private static TestActivityKey GetActivityKey(TestNode testNode)
         => new(testNode.Uid, testNode.Properties.SingleOrDefault<RetryAttemptProperty>()?.AttemptNumber);
+
+    private void CompleteCanonicalActivity(TestExecutionActivityProperty property)
+    {
+        if (!property.IsFinalResult)
+        {
+            return;
+        }
+
+        lock (_syncRoot)
+        {
+            if (_canonicalActivities.Remove(property.Reservation))
+            {
+                _activeTestCases.Add(-1);
+            }
+        }
+    }
+
+    private static TestExecutionActivityProperty? GetTestExecutionActivityProperty(TestNode testNode)
+    {
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            if (enumerator.Current is TestExecutionActivityProperty property)
+            {
+                return property;
+            }
+        }
+
+        return null;
+    }
 }

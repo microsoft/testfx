@@ -5,11 +5,14 @@ using AwesomeAssertions;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -742,6 +745,49 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         bool isFailed = await recorder.RecordResultAsync(CreateElement(), new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now);
 
         isFailed.Should().BeFalse();
+    }
+
+    public async Task MtpTestResultRecorder_CarriesOneOpaqueOccurrenceAcrossMultipleResults()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            messageBus,
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings(),
+            broker);
+        UnitTestElement element = CreateElement();
+        FrameworkTestResult[] results =
+        [
+            new() { Outcome = UnitTestOutcome.Passed },
+            new() { Outcome = UnitTestOutcome.Passed },
+        ];
+
+        await recorder.RecordStartAsync(element);
+        ((Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder)recorder)
+            .PrepareResults(element, results);
+        await recorder.RecordResultAsync(element, results[0], DateTimeOffset.Now, DateTimeOffset.Now);
+        await recorder.RecordResultAsync(element, results[1], DateTimeOffset.Now, DateTimeOffset.Now);
+
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty firstResultProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty finalResultProperty = messages[2].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        startProperty.Reservation.Should().BeSameAs(firstResultProperty.Reservation);
+        startProperty.Reservation.Should().BeSameAs(finalResultProperty.Reservation);
+        startProperty.IsFinalResult.Should().BeFalse();
+        firstResultProperty.IsFinalResult.Should().BeFalse();
+        finalResultProperty.IsFinalResult.Should().BeTrue();
+        element.ExecutionActivityLease.Should().BeNull();
     }
 
     private static TestNode ResultNode(UnitTestOutcome outcome)

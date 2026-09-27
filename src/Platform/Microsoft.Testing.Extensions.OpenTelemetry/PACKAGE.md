@@ -67,18 +67,18 @@ return exitCode;
 The focused resource helpers are recommended when Aspire ServiceDefaults, `HostApplicationBuilder`, or another application-level composition root already owns `service.*`, `host.*`, `os.*`, and `process.*`. Use `AddTestingPlatformResource()` only when the test application wants the extension to configure that complete standalone resource identity.
 
 See the complete [`HostApplicationBuilder` sample](../../../samples/public/MTPOTel).
-It also subscribes to a custom `ActivitySource` used inside test execution. The custom activity and MTP's test-case
-result span share the run trace and are siblings under the `TestFramework` span. The result span also carries an
-`ActivityLink` to the custom activity that was current when the framework published the test's in-progress update.
-This preserves the real parentage of both spans while giving backends a deterministic edge from the asynchronously
-created result to the activity that represents actual execution.
+Native MSTest uses one MTP-owned activity for each test execution. MSTest makes that activity current only while the
+test's constructor, test initialization, test method, cleanup, and custom `TestMethodAttribute` code execute, so
+automatic `HttpClient`, SQL, Entity Framework, WCF, and custom activities become children of the test activity. MTP
+then adds the reported result attributes, status, output, artifacts, and timing to that same activity and stops it
+with the execution-end timestamp recorded by MSTest. The asynchronous result queue therefore does not inflate the
+test duration, and no duplicate `MSTest.TestMethod` plus MTP result spans are emitted.
 
-MTP deliberately does not reparent the result span to ambient user test code: result messages are consumed on an
-asynchronous message bus, where `Activity.Current` can belong to another parallel test or no longer exist. Frameworks
-that want this correlation should keep their W3C execution activity current while publishing the
-`InProgressTestNodeStateProperty` update for that `TestNodeUid`. The link is intentionally absent when no distinct
-W3C activity is current. In a backend, query the test-result span's links by linked trace ID and span ID rather than
-assuming the linked execution activity is a child of the result span.
+Frameworks that do not participate in this internal execution-lease integration keep the existing compatibility
+behavior demonstrated by the sample: the framework's execution activity and MTP's test-result activity remain
+siblings under `TestFramework`, and the result activity carries an `ActivityLink` to the activity that was current
+when the framework published the in-progress update. MTP never reparents an asynchronously consumed result to
+whatever activity happens to be current on the message-bus thread.
 
 ## Emitted metrics
 

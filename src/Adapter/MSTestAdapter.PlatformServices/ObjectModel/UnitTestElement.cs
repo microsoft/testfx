@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -100,6 +101,15 @@ internal sealed class UnitTestElement
     [field: NonSerialized]
 #endif
     internal IReadOnlyDictionary<string, object?>? ExecutionContextProperties { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional host-provided lease that makes the canonical test activity ambient while user
+    /// code executes. The lease is process-local and is intentionally not serialized across AppDomain boundaries.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal ITestExecutionActivityLease? ExecutionActivityLease { get; set; }
 
     /// <summary>
     /// Gets or sets the host's test case for this test, used to report its lifecycle and results back to the

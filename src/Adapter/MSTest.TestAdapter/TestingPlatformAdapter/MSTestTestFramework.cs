@@ -40,6 +40,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly PlatformServicesConfigurationAdapter _configuration;
     private readonly ILoggerFactory _loggerFactory;
     private readonly MSTestGracefulStopTestExecutionCapability _gracefulStopCapability;
+    private readonly TestExecutionActivityBroker? _testExecutionActivityBroker;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private bool? _isTrxEnabled;
     private bool _isDisposed;
@@ -55,6 +56,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _gracefulStopCapability = (MSTestGracefulStopTestExecutionCapability)capabilities.GetCapability<IGracefulStopTestExecutionCapability>()!;
+        _testExecutionActivityBroker =
+            (serviceProvider.GetService(typeof(ITestApplicationProcessExitCode)) as TestApplicationResult)?
+                .CreateTestExecutionActivityBroker();
         PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         _gracefulStopCapability.NotifyTestExecutionPending();
 
@@ -187,7 +191,13 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                     runSettings.SettingsXml,
                     runContext.TestRunDirectory,
                     handle.ToAdapterMessageLogger(),
-                    settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
+                    settings => new MtpTestResultRecorder(
+                        messageBus,
+                        this,
+                        sessionUid,
+                        IsTrxEnabled,
+                        settings,
+                        _testExecutionActivityBroker),
                     new MtpTestElementFilterProvider(runContext),
                     _configuration,
                     new TestSourceHandler(),

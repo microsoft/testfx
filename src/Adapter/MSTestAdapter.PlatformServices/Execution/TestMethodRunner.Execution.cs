@@ -28,6 +28,7 @@ internal sealed partial class TestMethodRunner
             if (capturedContext is null)
             {
                 using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
+                using (_executionActivityLease?.Enter())
                 {
                     testMethodInfo.TestContext = executionContext;
                     results = await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false);
@@ -44,6 +45,7 @@ internal sealed partial class TestMethodRunner
                         try
                         {
                             using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
+                            using (_executionActivityLease?.Enter())
                             {
                                 testMethodInfo.TestContext = executionContext;
                                 tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));

@@ -14,17 +14,19 @@ public sealed class OpenTelemetryActivityTopologyTests : AcceptanceTestBase<Open
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworksToTest))]
-    public async Task MSTestSdk_ApplicationOwnedOpenTelemetry_CharacterizesCurrentActivityTopology(string tfm)
+    public async Task MSTestSdk_ApplicationOwnedOpenTelemetry_UsesOneCanonicalTestActivity(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
-        result.AssertOutputContains("[MSTEST-OTEL-CHARACTERIZATION] exact-current-behavior");
+        result.AssertOutputContains("[MSTEST-OTEL-CANONICAL] one-span-per-test");
         result.AssertOutputContains($"[MSTEST-OTEL-TFM] {tfm}");
-        result.AssertOutputContains("[MSTEST-OTEL-AMBIENT] TestFramework");
-        result.AssertOutputContains("[MSTEST-OTEL-LINKS] empty-before-TestMethod");
+        result.AssertOutputContains("[MSTEST-OTEL-AMBIENT] canonical-test");
+        result.AssertOutputContains("[MSTEST-OTEL-HTTP] child-of-canonical-test");
         result.AssertOutputContains("[MSTEST-OTEL-PARALLEL] isolated");
+        result.AssertOutputContains("[MSTEST-OTEL-OCCURRENCES] retries-and-data-rows");
+        result.AssertOutputContains("[MSTEST-OTEL-FIXTURE-CONTEXT] no-completed-span-leak");
         result.AssertOutputContains("[MSTEST-OTEL-METRIC] test.run.duration");
         result.AssertOutputContains("[MSTEST-OTEL-RESOURCE] service.name=mstest-otel-characterization");
 
@@ -70,13 +72,18 @@ public sealed class OpenTelemetryActivityTopologyTests : AcceptanceTestBase<Open
     <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="OpenTelemetry" Version="$OpenTelemetryVersion$" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$OpenTelemetryVersion$" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
   </ItemGroup>
 </Project>
 
 #file Program.cs
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
@@ -106,6 +113,7 @@ internal static class Program
             .WithTracing(tracing => tracing
                 .AddSource(TelemetryProbe.SourceName)
                 .AddTestingPlatformInstrumentation()
+                .AddHttpClientInstrumentation()
                 .AddProcessor(new SimpleActivityExportProcessor(activityExporter)))
             .WithMetrics(metrics => metrics
                 .AddTestingPlatformInstrumentation()
@@ -132,7 +140,7 @@ internal static class Program
         applicationRoot.Stop();
         ServiceProviderServiceExtensions.GetRequiredService<TracerProvider>(host.Services).ForceFlush();
         ServiceProviderServiceExtensions.GetRequiredService<MeterProvider>(host.Services).ForceFlush();
-        ActivityTopologyVerifier.Verify(activityExporter.Snapshot(), applicationRoot);
+        ActivityTopologyVerifier.Verify(activityExporter.Snapshot());
         ResourceVerifier.Verify(activityExporter.GetCapturedResource(), "trace", ApplicationServiceName);
         ResourceVerifier.Verify(metricExporter.GetCapturedResource(), "metric", ApplicationServiceName);
         if (!metricExporter.Contains("test.run.duration"))
@@ -140,11 +148,13 @@ internal static class Program
             throw new InvalidOperationException("The application-owned meter provider did not export test.run.duration.");
         }
 
-        Console.WriteLine("[MSTEST-OTEL-CHARACTERIZATION] exact-current-behavior");
+        Console.WriteLine("[MSTEST-OTEL-CANONICAL] one-span-per-test");
         Console.WriteLine($"[MSTEST-OTEL-TFM] {GetTargetFrameworkMoniker()}");
-        Console.WriteLine("[MSTEST-OTEL-AMBIENT] TestFramework");
-        Console.WriteLine("[MSTEST-OTEL-LINKS] empty-before-TestMethod");
+        Console.WriteLine("[MSTEST-OTEL-AMBIENT] canonical-test");
+        Console.WriteLine("[MSTEST-OTEL-HTTP] child-of-canonical-test");
         Console.WriteLine("[MSTEST-OTEL-PARALLEL] isolated");
+        Console.WriteLine("[MSTEST-OTEL-OCCURRENCES] retries-and-data-rows");
+        Console.WriteLine("[MSTEST-OTEL-FIXTURE-CONTEXT] no-completed-span-leak");
         Console.WriteLine("[MSTEST-OTEL-METRIC] test.run.duration");
         Console.WriteLine($"[MSTEST-OTEL-RESOURCE] service.name={ApplicationServiceName}");
 
@@ -161,30 +171,35 @@ internal static class ActivityTopologyVerifier
 {
     private const string MtpSourceName = "Microsoft.Testing.Platform";
 
-    public static void Verify(Activity[] activities, Activity applicationRoot)
+    public static void Verify(ActivitySnapshot[] activities)
     {
         try
         {
-            Activity builder = Single(activities, MtpSourceName, "TestHostBuilder");
-            Activity testHost = Single(activities, MtpSourceName, "TestHost");
-            Activity run = Single(activities, MtpSourceName, "Run");
-            Activity testFrameworkInvoker = Single(activities, MtpSourceName, "TestFrameworkInvoker");
-            Activity executeTestRequest = Single(activities, MtpSourceName, "ExecuteTestRequest");
-            Activity testFramework = Single(activities, MtpSourceName, "TestFramework");
-            Activity assemblyInitialize = Single(activities, MtpSourceName, "MSTest.AssemblyInitialize");
-            Activity assemblyCleanup = Single(activities, MtpSourceName, "MSTest.AssemblyCleanup");
-            Activity classInitialize = Single(activities, MtpSourceName, "MSTest.ClassInitialize");
-            Activity classCleanup = Single(activities, MtpSourceName, "MSTest.ClassCleanup");
-            Activity[] testInitialize = Multiple(activities, MtpSourceName, "MSTest.TestInitialize", expectedCount: 2);
-            Activity[] testCleanup = Multiple(activities, MtpSourceName, "MSTest.TestCleanup", expectedCount: 2);
-            Activity firstMethod = SingleMSTestMethod(activities, nameof(ParallelActivityTests.FirstTest));
-            Activity secondMethod = SingleMSTestMethod(activities, nameof(ParallelActivityTests.SecondTest));
-            Activity firstCustom = Single(activities, TelemetryProbe.SourceName, "custom-first");
-            Activity secondCustom = Single(activities, TelemetryProbe.SourceName, "custom-second");
-            Activity firstResult = SingleResult(activities, nameof(ParallelActivityTests.FirstTest));
-            Activity secondResult = SingleResult(activities, nameof(ParallelActivityTests.SecondTest));
+            ActivitySnapshot applicationRoot = Single(activities, TelemetryProbe.SourceName, "application-test-run");
+            ActivitySnapshot builder = Single(activities, MtpSourceName, "TestHostBuilder");
+            ActivitySnapshot testHost = Single(activities, MtpSourceName, "TestHost");
+            ActivitySnapshot run = Single(activities, MtpSourceName, "Run");
+            ActivitySnapshot testFrameworkInvoker = Single(activities, MtpSourceName, "TestFrameworkInvoker");
+            ActivitySnapshot executeTestRequest = Single(activities, MtpSourceName, "ExecuteTestRequest");
+            ActivitySnapshot testFramework = Single(activities, MtpSourceName, "TestFramework");
+            ActivitySnapshot assemblyInitialize = Single(activities, MtpSourceName, "MSTest.AssemblyInitialize");
+            ActivitySnapshot assemblyCleanup = Single(activities, MtpSourceName, "MSTest.AssemblyCleanup");
+            ActivitySnapshot classInitialize = Single(activities, MtpSourceName, "MSTest.ClassInitialize");
+            ActivitySnapshot classCleanup = Single(activities, MtpSourceName, "MSTest.ClassCleanup");
+            ActivitySnapshot[] testInitialize = Multiple(activities, MtpSourceName, "MSTest.TestInitialize", expectedCount: 2);
+            ActivitySnapshot[] testCleanup = Multiple(activities, MtpSourceName, "MSTest.TestCleanup", expectedCount: 2);
+            ActivitySnapshot firstTest = SingleResult(activities, nameof(ParallelActivityTests.FirstTest));
+            ActivitySnapshot secondTest = SingleResult(activities, nameof(ParallelActivityTests.SecondTest));
+            ActivitySnapshot firstCustom = Single(activities, TelemetryProbe.SourceName, "custom-first");
+            ActivitySnapshot secondCustom = Single(activities, TelemetryProbe.SourceName, "custom-second");
+            ActivitySnapshot firstHttp = SingleChild(activities, "System.Net.Http", firstTest.SpanId);
+            ActivitySnapshot secondHttp = SingleChild(activities, "System.Net.Http", secondTest.SpanId);
+            ActivitySnapshot retry = SingleResult(activities, nameof(OccurrenceIdentityTests.RetryTest));
+            ActivitySnapshot folded = SingleResult(activities, nameof(OccurrenceIdentityTests.FoldedDataRows));
+            ActivitySnapshot[] unfolded = ResultsForMethod(activities, nameof(OccurrenceIdentityTests.UnfoldedDataRows), expectedCount: 2);
+            ActivitySnapshot skipped = SingleResult(activities, nameof(OccurrenceIdentityTests.SkippedTest));
 
-            foreach (Activity activity in activities)
+            foreach (ActivitySnapshot activity in activities)
             {
                 Require(
                     activity.TraceId == applicationRoot.TraceId,
@@ -202,43 +217,42 @@ internal static class ActivityTopologyVerifier
             Require(assemblyCleanup.ParentSpanId == testFramework.SpanId, "MSTest.AssemblyCleanup was not parented to TestFramework.");
             Require(classInitialize.ParentSpanId == testFramework.SpanId, "MSTest.ClassInitialize was not parented to TestFramework.");
             Require(classCleanup.ParentSpanId == testFramework.SpanId, "MSTest.ClassCleanup was not parented to TestFramework.");
-            Require(testInitialize.All(activity => activity.ParentSpanId == testFramework.SpanId), "MSTest.TestInitialize was not parented to TestFramework.");
-            Require(testCleanup.All(activity => activity.ParentSpanId == testFramework.SpanId), "MSTest.TestCleanup was not parented to TestFramework.");
-            Require(firstMethod.ParentSpanId == testFramework.SpanId, "The first MSTest.TestMethod was not parented to TestFramework.");
-            Require(secondMethod.ParentSpanId == testFramework.SpanId, "The second MSTest.TestMethod was not parented to TestFramework.");
+            Require(testInitialize.All(activity => activity.ParentSpanId == firstTest.SpanId || activity.ParentSpanId == secondTest.SpanId), "MSTest.TestInitialize was not parented to a canonical test activity.");
+            Require(testCleanup.All(activity => activity.ParentSpanId == firstTest.SpanId || activity.ParentSpanId == secondTest.SpanId), "MSTest.TestCleanup was not parented to a canonical test activity.");
+            Require(!activities.Any(activity => activity.SourceName == MtpSourceName && activity.OperationName == "MSTest.TestMethod"), "A duplicate MSTest.TestMethod activity was exported.");
 
-            Require(firstResult.ParentSpanId == testFramework.SpanId, "The first result activity was not parented to TestFramework.");
-            Require(secondResult.ParentSpanId == testFramework.SpanId, "The second result activity was not parented to TestFramework.");
-            Require(!firstResult.Links.Any(), "The first result activity unexpectedly had an execution link.");
-            Require(!secondResult.Links.Any(), "The second result activity unexpectedly had an execution link.");
-            Require(firstResult.StartTimeUtc <= firstMethod.StartTimeUtc, "The first result activity did not start before MSTest.TestMethod.");
-            Require(secondResult.StartTimeUtc <= secondMethod.StartTimeUtc, "The second result activity did not start before MSTest.TestMethod.");
-            Require(firstResult.GetTagItem("test.case.duration_ms") is not null, "The first result activity did not carry the reported duration.");
-            Require(secondResult.GetTagItem("test.case.duration_ms") is not null, "The second result activity did not carry the reported duration.");
-            Require(firstResult.GetTagItem("test.case.result.status")?.ToString() == "pass", "The first result activity did not carry the pass result.");
-            Require(secondResult.GetTagItem("test.case.result.status")?.ToString() == "pass", "The second result activity did not carry the pass result.");
-            Require(firstMethod.GetTagItem("test.case.duration_ms") is null, "The first MSTest.TestMethod unexpectedly duplicated the reported duration attribute.");
-            Require(secondMethod.GetTagItem("test.case.duration_ms") is null, "The second MSTest.TestMethod unexpectedly duplicated the reported duration attribute.");
-            Require(firstMethod.GetTagItem("test.case.result.status")?.ToString() == "pass", "The first MSTest.TestMethod did not carry the engine result.");
-            Require(secondMethod.GetTagItem("test.case.result.status")?.ToString() == "pass", "The second MSTest.TestMethod did not carry the engine result.");
+            Require(firstTest.ParentSpanId == testFramework.SpanId, "The first canonical test activity was not parented to TestFramework.");
+            Require(secondTest.ParentSpanId == testFramework.SpanId, "The second canonical test activity was not parented to TestFramework.");
+            Require(firstTest.Links.Length == 0, "The first canonical test activity unexpectedly had an execution link.");
+            Require(secondTest.Links.Length == 0, "The second canonical test activity unexpectedly had an execution link.");
+            Require(firstTest.GetTagItem("test.case.duration_ms") is not null, "The first canonical test activity did not carry the reported duration.");
+            Require(secondTest.GetTagItem("test.case.duration_ms") is not null, "The second canonical test activity did not carry the reported duration.");
+            Require(firstTest.GetTagItem("test.case.result.status")?.ToString() == "pass", "The first canonical test activity did not carry the pass result.");
+            Require(secondTest.GetTagItem("test.case.result.status")?.ToString() == "pass", "The second canonical test activity did not carry the pass result.");
+            RequireDurationMatchesReportedTiming(firstTest);
+            RequireDurationMatchesReportedTiming(secondTest);
 
-            Require(firstCustom.ParentSpanId == testFramework.SpanId, "The first custom activity was not parented to ambient TestFramework.");
-            Require(secondCustom.ParentSpanId == testFramework.SpanId, "The second custom activity was not parented to ambient TestFramework.");
-            Require(firstCustom.ParentSpanId != firstMethod.SpanId, "The first custom activity unexpectedly parented to MSTest.TestMethod.");
-            Require(secondCustom.ParentSpanId != secondMethod.SpanId, "The second custom activity unexpectedly parented to MSTest.TestMethod.");
+            Require(firstCustom.ParentSpanId == firstTest.SpanId, "The first custom activity was not parented to the first canonical test activity.");
+            Require(secondCustom.ParentSpanId == secondTest.SpanId, "The second custom activity was not parented to the second canonical test activity.");
+            Require(firstHttp.ParentSpanId == firstTest.SpanId, "The first HTTP activity was not parented to the first canonical test activity.");
+            Require(secondHttp.ParentSpanId == secondTest.SpanId, "The second HTTP activity was not parented to the second canonical test activity.");
 
             Require(TelemetryProbe.AssemblyInitializeAmbientSpanId == testFramework.SpanId, "AssemblyInitialize did not observe TestFramework as ambient.");
             Require(TelemetryProbe.AssemblyCleanupAmbientSpanId == testFramework.SpanId, "AssemblyCleanup did not observe TestFramework as ambient.");
             Require(TelemetryProbe.ClassInitializeAmbientSpanId == testFramework.SpanId, "ClassInitialize did not observe TestFramework as ambient.");
             Require(TelemetryProbe.ClassCleanupAmbientSpanId == testFramework.SpanId, "ClassCleanup did not observe TestFramework as ambient.");
-            RequireFixtureAmbient(TelemetryProbe.TestInitializeAmbientSpanIds, testFramework, "TestInitialize");
-            RequireFixtureAmbient(TelemetryProbe.TestCleanupAmbientSpanIds, testFramework, "TestCleanup");
-            RequireAmbient(TelemetryProbe.GetSnapshot("first"), testFramework, firstCustom);
-            RequireAmbient(TelemetryProbe.GetSnapshot("second"), testFramework, secondCustom);
+            RequireFixtureAmbient(TelemetryProbe.TestInitializeAmbientSpanIds, firstTest, secondTest, "TestInitialize");
+            RequireFixtureAmbient(TelemetryProbe.TestCleanupAmbientSpanIds, firstTest, secondTest, "TestCleanup");
+            RequireAmbient(TelemetryProbe.GetSnapshot("first"), firstTest, firstCustom);
+            RequireAmbient(TelemetryProbe.GetSnapshot("second"), secondTest, secondCustom);
 
-            Require(firstMethod.SpanId != secondMethod.SpanId, "Parallel tests exported the same MSTest.TestMethod span.");
+            Require(firstTest.SpanId != secondTest.SpanId, "Parallel tests exported the same canonical activity.");
             Require(firstCustom.SpanId != secondCustom.SpanId, "Parallel tests exported the same custom span.");
-            Require(firstResult.SpanId != secondResult.SpanId, "Parallel tests exported the same result span.");
+            Require(firstHttp.SpanId != secondHttp.SpanId, "Parallel tests exported the same HTTP span.");
+            Require(retry.GetTagItem("test.case.result.status")?.ToString() == "pass", "The retry occurrence did not finish with the final pass result.");
+            Require(folded.GetTagItem("test.case.result.status")?.ToString() == "pass", "The folded data-row occurrence did not aggregate to pass.");
+            Require(unfolded.Select(activity => activity.SpanId).Distinct().Count() == 2, "Unfolded data rows did not receive distinct occurrences.");
+            Require(skipped.GetTagItem("test.case.result.status")?.ToString() == "skipped", "The skipped occurrence did not retain its result status.");
 
             PrintTopology("application-root", applicationRoot);
             PrintTopology("mtp-builder", builder);
@@ -247,12 +261,15 @@ internal static class ActivityTopologyVerifier
             PrintTopology("mtp-test-framework-invoker", testFrameworkInvoker);
             PrintTopology("mtp-execute-test-request", executeTestRequest);
             PrintTopology("mtp-test-framework", testFramework);
-            PrintTopology("mstest-method-first", firstMethod);
+            PrintTopology("canonical-first", firstTest);
             PrintTopology("custom-first", firstCustom);
-            PrintTopology("mtp-result-first", firstResult);
-            PrintTopology("mstest-method-second", secondMethod);
+            PrintTopology("http-first", firstHttp);
+            PrintTopology("canonical-second", secondTest);
             PrintTopology("custom-second", secondCustom);
-            PrintTopology("mtp-result-second", secondResult);
+            PrintTopology("http-second", secondHttp);
+            PrintTopology("retry", retry);
+            PrintTopology("folded", folded);
+            PrintTopology("skipped", skipped);
         }
         catch (Exception ex)
         {
@@ -262,60 +279,81 @@ internal static class ActivityTopologyVerifier
         }
     }
 
-    private static Activity SingleMSTestMethod(Activity[] activities, string methodName)
+    private static ActivitySnapshot SingleResult(ActivitySnapshot[] activities, string methodName)
         => activities.Single(activity =>
-            activity.Source.Name == MtpSourceName
-            && activity.OperationName == "MSTest.TestMethod"
-            && string.Equals(activity.GetTagItem("test.case.name")?.ToString(), methodName, StringComparison.Ordinal));
-
-    private static Activity SingleResult(Activity[] activities, string methodName)
-        => activities.Single(activity =>
-            activity.Source.Name == MtpSourceName
-            && activity.OperationName == methodName
+            activity.SourceName == MtpSourceName
             && activity.GetTagItem("test.case.id") is not null
-            && string.Equals(activity.GetTagItem("test.case.name")?.ToString(), methodName, StringComparison.Ordinal));
+            && string.Equals(activity.GetTagItem("code.function.name")?.ToString()?.Split('.').Last(), methodName, StringComparison.Ordinal));
 
-    private static Activity Single(Activity[] activities, string sourceName, string operationName)
-        => activities.Single(activity =>
-            activity.Source.Name == sourceName
-            && activity.OperationName == operationName);
-
-    private static Activity[] Multiple(Activity[] activities, string sourceName, string operationName, int expectedCount)
+    private static ActivitySnapshot[] ResultsForMethod(ActivitySnapshot[] activities, string methodName, int expectedCount)
     {
-        Activity[] matches = activities
-            .Where(activity => activity.Source.Name == sourceName && activity.OperationName == operationName)
+        ActivitySnapshot[] matches = activities
+            .Where(activity =>
+                activity.SourceName == MtpSourceName
+                && activity.GetTagItem("test.case.id") is not null
+                && string.Equals(activity.GetTagItem("code.function.name")?.ToString()?.Split('.').Last(), methodName, StringComparison.Ordinal))
+            .ToArray();
+        Require(matches.Length == expectedCount, $"Expected {expectedCount} canonical activities for {methodName}, but found {matches.Length}.");
+        return matches;
+    }
+
+    private static ActivitySnapshot SingleChild(ActivitySnapshot[] activities, string sourceName, ActivitySpanId parentSpanId)
+        => activities.Single(activity => activity.SourceName == sourceName && activity.ParentSpanId == parentSpanId);
+
+    private static ActivitySnapshot Single(ActivitySnapshot[] activities, string sourceName, string operationName)
+        => activities.Single(activity => activity.SourceName == sourceName && activity.OperationName == operationName);
+
+    private static ActivitySnapshot[] Multiple(ActivitySnapshot[] activities, string sourceName, string operationName, int expectedCount)
+    {
+        ActivitySnapshot[] matches = activities
+            .Where(activity => activity.SourceName == sourceName && activity.OperationName == operationName)
             .ToArray();
         Require(matches.Length == expectedCount, $"Expected {expectedCount} {operationName} activities, but found {matches.Length}.");
         return matches;
     }
 
-    private static void RequireAmbient(TelemetryProbe.Snapshot snapshot, Activity testFramework, Activity custom)
+    private static void RequireAmbient(TelemetryProbe.Snapshot snapshot, ActivitySnapshot canonical, ActivitySnapshot custom)
     {
-        Require(snapshot.BeforeOperationName == "TestFramework", $"{snapshot.Name} did not observe TestFramework before its custom activity.");
-        Require(snapshot.BeforeTraceId == testFramework.TraceId, $"{snapshot.Name} ambient trace id did not match TestFramework.");
-        Require(snapshot.BeforeSpanId == testFramework.SpanId, $"{snapshot.Name} ambient span id did not match TestFramework.");
+        Require(snapshot.BeforeOperationName == canonical.OperationName, $"{snapshot.Name} did not observe its canonical test activity before its custom activity.");
+        Require(snapshot.BeforeTraceId == canonical.TraceId, $"{snapshot.Name} ambient trace id did not match its canonical test activity.");
+        Require(snapshot.BeforeSpanId == canonical.SpanId, $"{snapshot.Name} ambient span id did not match its canonical test activity.");
         Require(snapshot.CustomTraceId == custom.TraceId, $"{snapshot.Name} custom trace id did not match the exported custom activity.");
         Require(snapshot.CustomSpanId == custom.SpanId, $"{snapshot.Name} custom span id did not match the exported custom activity.");
-        Require(snapshot.AfterOperationName == "TestFramework", $"{snapshot.Name} did not restore TestFramework after its custom activity.");
-        Require(snapshot.AfterTraceId == testFramework.TraceId, $"{snapshot.Name} restored trace id did not match TestFramework.");
-        Require(snapshot.AfterSpanId == testFramework.SpanId, $"{snapshot.Name} restored span id did not match TestFramework.");
+        Require(snapshot.AfterOperationName == canonical.OperationName, $"{snapshot.Name} did not restore its canonical test activity after its custom activity.");
+        Require(snapshot.AfterTraceId == canonical.TraceId, $"{snapshot.Name} restored trace id did not match its canonical test activity.");
+        Require(snapshot.AfterSpanId == canonical.SpanId, $"{snapshot.Name} restored span id did not match its canonical test activity.");
     }
 
     private static void RequireFixtureAmbient(
         IReadOnlyDictionary<string, ActivitySpanId> ambientSpanIds,
-        Activity testFramework,
+        ActivitySnapshot firstTest,
+        ActivitySnapshot secondTest,
         string fixtureName)
     {
         Require(ambientSpanIds.Count == 2, $"Expected two {fixtureName} ambient snapshots, but found {ambientSpanIds.Count}.");
         Require(
-            ambientSpanIds.Values.All(spanId => spanId == testFramework.SpanId),
-            $"{fixtureName} did not consistently observe TestFramework as ambient.");
+            ambientSpanIds[nameof(ParallelActivityTests.FirstTest)] == firstTest.SpanId,
+            $"{fixtureName} for the first test did not observe the first canonical activity.");
+        Require(
+            ambientSpanIds[nameof(ParallelActivityTests.SecondTest)] == secondTest.SpanId,
+            $"{fixtureName} for the second test did not observe the second canonical activity.");
     }
 
-    private static void PrintTopology(string name, Activity activity)
+    private static void RequireDurationMatchesReportedTiming(ActivitySnapshot activity)
+    {
+        double reportedDuration = Convert.ToDouble(
+            activity.GetTagItem("test.case.duration_ms"),
+            CultureInfo.InvariantCulture);
+        double difference = Math.Abs(activity.Duration.TotalMilliseconds - reportedDuration);
+        Require(
+            difference < 500,
+            $"{activity.OperationName} duration differed from the reported execution timing by {difference}ms.");
+    }
+
+    private static void PrintTopology(string name, ActivitySnapshot activity)
         => Console.WriteLine(
             $"[MSTEST-OTEL-TOPOLOGY] name={name};trace={activity.TraceId};span={activity.SpanId};" +
-            $"parent={activity.ParentSpanId};links={string.Join(",", activity.Links.Select(link => link.Context.SpanId))}");
+            $"parent={activity.ParentSpanId};links={string.Join(",", activity.Links)}");
 
     private static void Require(bool condition, string message)
     {
@@ -325,21 +363,21 @@ internal static class ActivityTopologyVerifier
         }
     }
 
-    private static string Dump(Activity[] activities)
+    private static string Dump(ActivitySnapshot[] activities)
         => string.Join(
             Environment.NewLine,
             activities
                 .OrderBy(activity => activity.StartTimeUtc)
                 .Select(activity =>
-                    $"{activity.Source.Name}|{activity.OperationName}|trace={activity.TraceId}|span={activity.SpanId}|" +
-                    $"parent={activity.ParentSpanId}|links={string.Join(",", activity.Links.Select(link => link.Context.SpanId))}|" +
+                    $"{activity.SourceName}|{activity.OperationName}|trace={activity.TraceId}|span={activity.SpanId}|" +
+                    $"parent={activity.ParentSpanId}|links={string.Join(",", activity.Links)}|" +
                     $"test.case.name={activity.GetTagItem("test.case.name")}|test.case.id={activity.GetTagItem("test.case.id")}"));
 }
 
 internal sealed class CapturingActivityExporter : BaseExporter<Activity>
 {
     private readonly object _syncRoot = new();
-    private readonly List<Activity> _activities = [];
+    private readonly List<ActivitySnapshot> _activities = [];
     private Resource? _capturedResource;
 
     public override ExportResult Export(in Batch<Activity> batch)
@@ -349,14 +387,14 @@ internal sealed class CapturingActivityExporter : BaseExporter<Activity>
             _capturedResource ??= ParentProvider?.GetResource();
             foreach (Activity activity in batch)
             {
-                _activities.Add(activity);
+                _activities.Add(ActivitySnapshot.Create(activity));
             }
         }
 
         return ExportResult.Success;
     }
 
-    public Activity[] Snapshot()
+    public ActivitySnapshot[] Snapshot()
     {
         lock (_syncRoot)
         {
@@ -371,6 +409,33 @@ internal sealed class CapturingActivityExporter : BaseExporter<Activity>
             return _capturedResource;
         }
     }
+}
+
+internal sealed record ActivitySnapshot(
+    string SourceName,
+    string OperationName,
+    ActivityTraceId TraceId,
+    ActivitySpanId SpanId,
+    ActivitySpanId ParentSpanId,
+    DateTime StartTimeUtc,
+    TimeSpan Duration,
+    ActivitySpanId[] Links,
+    IReadOnlyDictionary<string, object?> Tags)
+{
+    public object? GetTagItem(string key)
+        => Tags.TryGetValue(key, out object? value) ? value : null;
+
+    public static ActivitySnapshot Create(Activity activity)
+        => new(
+            activity.Source.Name,
+            activity.OperationName,
+            activity.TraceId,
+            activity.SpanId,
+            activity.ParentSpanId,
+            activity.StartTimeUtc,
+            activity.Duration,
+            activity.Links.Select(link => link.Context.SpanId).ToArray(),
+            activity.TagObjects.ToDictionary(tag => tag.Key, tag => tag.Value, StringComparer.Ordinal));
 }
 
 internal sealed class CapturingMetricExporter : BaseExporter<Metric>
@@ -488,6 +553,7 @@ internal static class TelemetryProbe
         started.SetResult();
         await otherStarted.WaitAsync(TimeSpan.FromSeconds(30));
         custom.Stop();
+        await HttpProbe.GetAsync();
 
         Activity after = RequireCurrent($"{name} after custom");
         Snapshots[name] = new(
@@ -529,6 +595,49 @@ internal static class TelemetryProbe
         ActivitySpanId AfterSpanId);
 }
 
+internal static class HttpProbe
+{
+    public static async Task GetAsync()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        Task serverTask = ServeOnceAsync(listener);
+
+        using var client = new HttpClient();
+        using HttpResponseMessage response = await client.GetAsync(new Uri($"http://127.0.0.1:{port}/"));
+        response.EnsureSuccessStatusCode();
+        await serverTask;
+    }
+
+    private static async Task ServeOnceAsync(TcpListener listener)
+    {
+        try
+        {
+            using TcpClient client = await listener.AcceptTcpClientAsync();
+            using NetworkStream stream = client.GetStream();
+            var buffer = new byte[1024];
+            int count;
+            while ((count = await stream.ReadAsync(buffer)) > 0)
+            {
+                string request = Encoding.ASCII.GetString(buffer, 0, count);
+                if (request.Contains("\r\n\r\n", StringComparison.Ordinal))
+                {
+                    break;
+                }
+            }
+
+            byte[] response = Encoding.ASCII.GetBytes(
+                "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK");
+            await stream.WriteAsync(response);
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+}
+
 [TestClass]
 public sealed class ParallelActivityTests
 {
@@ -565,6 +674,41 @@ public sealed class ParallelActivityTests
     [TestMethod]
     public Task SecondTest()
         => TelemetryProbe.CaptureSecondAsync();
+}
+
+[TestClass]
+[DoNotParallelize]
+public sealed class OccurrenceIdentityTests
+{
+    private static int s_retryAttempt;
+
+    [TestMethod]
+    [Retry(1)]
+    public void RetryTest()
+    {
+        if (Interlocked.Increment(ref s_retryAttempt) == 1)
+        {
+            Assert.Fail("First attempt fails.");
+        }
+    }
+
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DataRow(1)]
+    [DataRow(2)]
+    public void FoldedDataRows(int value)
+        => Assert.IsGreaterThan(0, value);
+
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DataRow(1)]
+    [DataRow(2)]
+    public void UnfoldedDataRows(int value)
+        => Assert.IsGreaterThan(0, value);
+
+    [TestMethod]
+    [Ignore("Characterize a selected test that never enters user execution.")]
+    public void SkippedTest()
+    {
+    }
 }
 """;
 
