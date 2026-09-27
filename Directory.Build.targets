@@ -68,6 +68,69 @@
            Text="$(MSBuildProjectName) is packable but has no package README, so its nuget.org page would show no rendered documentation. Add a PACKAGE.md next to the project file (it is picked up automatically) or set PackageReadmeFile." />
   </Target>
 
+  <!--
+    Projects that opt into EnforceDependencyFreeProject are foundational assemblies whose consumer-facing
+    compile and runtime closure must remain limited to the target framework. Build-only dependencies injected
+    by repository infrastructure (analyzers, localization and source-generation tasks) remain allowed because
+    they neither originate in the project file nor contribute compile/runtime assets.
+  -->
+  <Target Name="_ValidateDependencyFreeProjectDeclarations"
+          BeforeTargets="CollectPackageReferences;ResolveReferences;GenerateNuspec"
+          Condition=" '$(EnforceDependencyFreeProject)' == 'true' ">
+    <ItemGroup>
+      <_DependencyFreeProjectDeclaredDependency Include="@(PackageReference)"
+                                                Condition=" '%(PackageReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>PackageReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(ProjectReference)"
+                                                Condition=" '%(ProjectReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>ProjectReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(Reference)"
+                                                Condition=" '%(Reference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>Reference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(FrameworkReference)"
+                                                Condition=" '%(FrameworkReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>FrameworkReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(COMReference)"
+                                                Condition=" '%(COMReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>COMReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+      <_DependencyFreeProjectDeclaredDependency Include="@(NativeReference)"
+                                                Condition=" '%(NativeReference.DefiningProjectFullPath)' == '$(MSBuildProjectFullPath)' ">
+        <DependencyKind>NativeReference</DependencyKind>
+      </_DependencyFreeProjectDeclaredDependency>
+    </ItemGroup>
+
+    <Error Condition=" '@(_DependencyFreeProjectDeclaredDependency)' != '' "
+           Text="$(MSBuildProjectName) must remain dependency-free and cannot declare dependency-bearing items in its project file. Found: @(_DependencyFreeProjectDeclaredDependency->'%(DependencyKind) &quot;%(Identity)&quot;', ', ')." />
+  </Target>
+
+  <Target Name="_ValidateDependencyFreeProjectClosure"
+          AfterTargets="ResolveReferences"
+          Condition=" '$(EnforceDependencyFreeProject)' == 'true' and '$(TargetFramework)' != '' ">
+    <ItemGroup>
+      <_DependencyFreeProjectResolvedDependency Include="@(ResolvedCompileFileDefinitions)">
+        <DependencyKind>compile asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(RuntimeCopyLocalItems)">
+        <DependencyKind>runtime asset</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(ReferenceCopyLocalPaths)">
+        <DependencyKind>copy-local reference</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+      <_DependencyFreeProjectResolvedDependency Include="@(FrameworkReference)"
+                                                Condition=" '%(FrameworkReference.IsImplicitlyDefined)' != 'true' ">
+        <DependencyKind>framework reference</DependencyKind>
+      </_DependencyFreeProjectResolvedDependency>
+    </ItemGroup>
+
+    <Error Condition=" '@(_DependencyFreeProjectResolvedDependency)' != '' "
+           Text="$(MSBuildProjectName) must remain dependency-free for $(TargetFramework), but dependency assets were resolved: @(_DependencyFreeProjectResolvedDependency->'%(DependencyKind) &quot;%(Identity)&quot;', ', ')." />
+  </Target>
+
   <ItemGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>

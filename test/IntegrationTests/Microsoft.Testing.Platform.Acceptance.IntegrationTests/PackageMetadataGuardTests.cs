@@ -131,3 +131,127 @@ public sealed class PackageMetadataGuardTests
         }
     }
 }
+
+/// <summary>
+/// Verifies the opt-in dependency-free project guards in the repository's <c>Directory.Build.targets</c>.
+/// </summary>
+[TestClass]
+public sealed class DependencyFreeProjectGuardTests
+{
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task Build_WithoutDependencies_Succeeds()
+    {
+        using TestAssetDirectory asset = CreateAsset(DependencySource.None);
+
+        DotnetMuxerResult result = await BuildAsync(asset);
+
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+    }
+
+    [TestMethod]
+    public async Task Build_WithDependencyDeclaredInProject_Fails()
+    {
+        using TestAssetDirectory asset = CreateAsset(DependencySource.Project);
+
+        DotnetMuxerResult result = await BuildAsync(asset);
+
+        AssertBuildFailed(
+            result,
+            "must remain dependency-free and cannot declare dependency-bearing items in its project file",
+            "PackageReference \"Microsoft.Extensions.Logging\"");
+    }
+
+    [TestMethod]
+    public async Task Build_WithDependencyInjectedByImport_FailsOnResolvedClosure()
+    {
+        using TestAssetDirectory asset = CreateAsset(DependencySource.Import);
+
+        DotnetMuxerResult result = await BuildAsync(asset);
+
+        AssertBuildFailed(
+            result,
+            "must remain dependency-free for net8.0, but dependency assets were resolved",
+            "Microsoft.Extensions.Logging");
+    }
+
+    private async Task<DotnetMuxerResult> BuildAsync(TestAssetDirectory asset)
+        => await DotnetCli.RunAsync(
+            $"msbuild \"{asset.ProjectPath}\" -restore -t:Build -p:Configuration={Constants.BuildConfiguration} -v:minimal",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+    private static void AssertBuildFailed(DotnetMuxerResult result, string expectedError, string expectedDependency)
+    {
+        string output = result.StandardOutput + result.StandardError;
+        Assert.AreNotEqual(0, result.ExitCode, result.ToString());
+        Assert.Contains(expectedError, output);
+        Assert.Contains(expectedDependency, output);
+    }
+
+    private static TestAssetDirectory CreateAsset(DependencySource dependencySource)
+    {
+        string assetId = $"DependencyFreeProjectGuard{Guid.NewGuid():N}";
+        string assetPath = Path.Combine(Constants.Root, "artifacts", "tmp", Constants.BuildConfiguration, "dependencyFreeProjectGuardTests", assetId);
+        Directory.CreateDirectory(assetPath);
+
+        string projectPath = Path.Combine(assetPath, $"{assetId}.csproj");
+        string dependencyItem = dependencySource == DependencySource.Project
+            ? """
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+"""
+            : string.Empty;
+        string import = dependencySource == DependencySource.Import
+            ? """  <Import Project="InjectedDependency.props" />"""
+            : string.Empty;
+        string projectContents = $"""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnforceDependencyFreeProject>true</EnforceDependencyFreeProject>
+  </PropertyGroup>
+{dependencyItem}{import}
+</Project>
+""";
+        File.WriteAllText(projectPath, projectContents, Encoding.UTF8);
+
+        if (dependencySource == DependencySource.Import)
+        {
+            File.WriteAllText(
+                Path.Combine(assetPath, "InjectedDependency.props"),
+                """
+<Project>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
+""",
+                Encoding.UTF8);
+        }
+
+        return new TestAssetDirectory(assetPath, projectPath);
+    }
+
+    private enum DependencySource
+    {
+        None,
+        Project,
+        Import,
+    }
+
+    private sealed class TestAssetDirectory(string path, string projectPath) : IDisposable
+    {
+        public string ProjectPath { get; } = projectPath;
+
+        public void Dispose()
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+    }
+}
