@@ -184,29 +184,7 @@ internal static class ActivityTopologyVerifier
             Activity firstResult = SingleResult(activities, nameof(ParallelActivityTests.FirstTest));
             Activity secondResult = SingleResult(activities, nameof(ParallelActivityTests.SecondTest));
 
-            Activity[] expectedTrace =
-            [
-                builder,
-                testHost,
-                run,
-                testFrameworkInvoker,
-                executeTestRequest,
-                testFramework,
-                assemblyInitialize,
-                assemblyCleanup,
-                classInitialize,
-                classCleanup,
-                .. testInitialize,
-                .. testCleanup,
-                firstMethod,
-                secondMethod,
-                firstCustom,
-                secondCustom,
-                firstResult,
-                secondResult,
-            ];
-
-            foreach (Activity activity in expectedTrace)
+            foreach (Activity activity in activities)
             {
                 Require(
                     activity.TraceId == applicationRoot.TraceId,
