@@ -85,6 +85,15 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_WithUnrecognizedData_DoesNotAddArtifact()
+    {
+        await _service.ConsumeAsync(new DataProducer(), new Mock<IData>().Object, CancellationToken.None).ConfigureAwait(false);
+
+        Assert.IsEmpty(_service.Artifacts);
+        _serverTestHost.Verify(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
     public async Task OnTestSessionFinishingAsync_WithPendingUpdate_FlushesToServerHost()
     {
         TestNodeUpdateMessage update = new(new SessionUid("1"), new TestNode
