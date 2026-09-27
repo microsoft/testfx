@@ -89,6 +89,17 @@ public sealed class DotnetTestHelperTests
     }
 
     [TestMethod]
+    public void TryGetDotnetTestTransport_PipeTransportWithPipeOption_ReturnsTrueWithNamedPipeKind()
+    {
+        CommandLineHandler handler = CreateCommandLineHandler(["--dotnet-test-transport", "pipe", "--dotnet-test-pipe", "42"]);
+
+        bool result = handler.TryGetDotnetTestTransport(out DotnetTestTransportKind transport);
+
+        Assert.IsTrue(result);
+        Assert.AreEqual(DotnetTestTransportKind.NamedPipe, transport);
+    }
+
+    [TestMethod]
     public void TryGetDotnetTestTransport_NeitherOptionSet_ReturnsFalse()
     {
         CommandLineHandler handler = CreateCommandLineHandler([]);
