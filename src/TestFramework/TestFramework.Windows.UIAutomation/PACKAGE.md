@@ -11,7 +11,7 @@ This preview targets unpackaged Win32, WinForms, and WPF applications running in
 Enable the feature when using `MSTest.Sdk`:
 
 ```xml
-<Project Sdk="MSTest.Sdk/4.4.0">
+<Project Sdk="MSTest.Sdk/4.5.0">
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>

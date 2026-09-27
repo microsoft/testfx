@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hant" original="../WindowsUIAutomationResources.resx">
+    <body>
+      <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
+        <source>Application '{0}' exited with code {1} before a window was discovered.</source>
+        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ApplicationProcessFailedToStart">
+        <source>Failed to start process '{0}'.</source>
+        <target state="new">Failed to start process '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ApplicationProcessNotAvailable">
+        <source>The application process is available only after application setup and before disposal.</source>
+        <target state="new">The application process is available only after application setup and before disposal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ApplicationProcessTerminationTimedOut">
+        <source>Application process {0} did not exit within {1} after termination was requested.</source>
+        <target state="new">Application process {0} did not exit within {1} after termination was requested.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidApplicationShutdownTimeout">
+        <source>The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</source>
+        <target state="new">The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</target>
+        <note>{Locked="Int32.MaxValue"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidWindowDiscoveryTimeout">
+        <source>The window discovery timeout must be non-negative or infinite.</source>
+        <target state="new">The window discovery timeout must be non-negative or infinite.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WindowDiscoveryTimedOut">
+        <source>Application '{0}' did not expose a window within {1}.</source>
+        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

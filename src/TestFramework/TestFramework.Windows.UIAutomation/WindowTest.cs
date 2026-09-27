@@ -3,6 +3,8 @@
 
 using System.Windows.Automation;
 
+using UIAutomationResources = Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation.Resources.WindowsUIAutomationResources;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;
 
 /// <summary>
@@ -105,7 +107,7 @@ public abstract class WindowTest : ApplicationTest
             ? throw new ArgumentOutOfRangeException(
                 nameof(WindowDiscoveryTimeout),
                 configuredDiscoveryTimeout,
-                "The window discovery timeout must be non-negative or infinite.")
+                UIAutomationResources.InvalidWindowDiscoveryTimeout)
             : configuredDiscoveryTimeout;
         bool hasInfiniteDiscoveryTimeout = discoveryTimeout == Timeout.InfiniteTimeSpan;
 
@@ -128,7 +130,11 @@ public abstract class WindowTest : ApplicationTest
             if (!hasInfiniteDiscoveryTimeout && remainingTime <= TimeSpan.Zero)
             {
                 throw new TimeoutException(
-                    $"Application '{AppProcess.StartInfo.FileName}' did not expose a window within {discoveryTimeout}.");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        UIAutomationResources.WindowDiscoveryTimedOut,
+                        AppProcess.StartInfo.FileName,
+                        discoveryTimeout));
             }
 
             TimeSpan delay = remainingTime < TimeSpan.FromMilliseconds(50)
@@ -140,5 +146,9 @@ public abstract class WindowTest : ApplicationTest
 
     private static InvalidOperationException CreateProcessExitedException(Process applicationProcess)
         => new(
-            $"Application '{applicationProcess.StartInfo.FileName}' exited with code {applicationProcess.ExitCode} before a window was discovered.");
+            string.Format(
+                CultureInfo.CurrentCulture,
+                UIAutomationResources.ApplicationExitedBeforeWindowDiscovery,
+                applicationProcess.StartInfo.FileName,
+                applicationProcess.ExitCode));
 }

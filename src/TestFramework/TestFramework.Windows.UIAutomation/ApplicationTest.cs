@@ -3,6 +3,8 @@
 
 using System.ComponentModel;
 
+using UIAutomationResources = Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation.Resources.WindowsUIAutomationResources;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;
 
 /// <summary>
@@ -27,7 +29,7 @@ public abstract class ApplicationTest : IDisposable
     /// </summary>
     protected Process AppProcess
         => _appProcess
-        ?? throw new InvalidOperationException("The application process is available only after application setup and before disposal.");
+        ?? throw new InvalidOperationException(UIAutomationResources.ApplicationProcessNotAvailable);
 
     /// <summary>
     /// Gets the time to wait for graceful shutdown and forced termination.
@@ -51,7 +53,8 @@ public abstract class ApplicationTest : IDisposable
 
         ProcessStartInfo startInfo = CreateProcessStartInfo();
         _appProcess = Process.Start(startInfo)
-            ?? throw new InvalidOperationException($"Failed to start process '{startInfo.FileName}'.");
+            ?? throw new InvalidOperationException(
+                string.Format(CultureInfo.CurrentCulture, UIAutomationResources.ApplicationProcessFailedToStart, startInfo.FileName));
     }
 
     /// <summary>
@@ -99,7 +102,11 @@ public abstract class ApplicationTest : IDisposable
                 if (!applicationProcess.WaitForExit(_shutdownTimeoutMilliseconds))
                 {
                     throw new TimeoutException(
-                        $"Application process {applicationProcess.Id} did not exit within {ApplicationShutdownTimeout} after termination was requested.");
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            UIAutomationResources.ApplicationProcessTerminationTimedOut,
+                            applicationProcess.Id,
+                            ApplicationShutdownTimeout));
                 }
             }
         }
@@ -118,7 +125,7 @@ public abstract class ApplicationTest : IDisposable
             ? throw new ArgumentOutOfRangeException(
                 nameof(ApplicationShutdownTimeout),
                 timeout,
-                "The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.")
+                UIAutomationResources.InvalidApplicationShutdownTimeout)
             : (int)Math.Ceiling(timeout.TotalMilliseconds);
     }
 }
