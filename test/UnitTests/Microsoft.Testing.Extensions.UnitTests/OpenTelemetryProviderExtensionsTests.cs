@@ -37,11 +37,12 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
 /// project): they still serialize against every other test in the assembly that mutates environment variables, but
 /// can run in parallel with tests that never touch environment variables at all. The two raw-listener methods carry
-/// a method-level <see cref="ResourceLockAttribute"/> on <see cref="OpenTelemetryPlatformService.ActivitySourceName"/>
-/// instead: <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers against the process-wide
-/// listener registry for that source name, and every test in <c>OpenTelemetryPlatformServiceTests</c> (the only
-/// other class in this assembly that touches the same source) carries a matching class-level lock, so the two
-/// declarations fully cover every concurrently-runnable observer of the resource. The end-to-end
+/// a method-level write <see cref="ResourceLockAttribute"/> on
+/// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> instead:
+/// <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers an unfiltered listener against the
+/// process-wide listener registry for that source name. Tests that only produce or observe their own filtered
+/// activities carry matching read locks, so they remain mutually parallel while serializing against the raw
+/// listeners. The end-to-end
 /// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
 /// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c> through
 /// <see cref="TracerProviderBuilder"/>'s own SDK-level subscription, a broader and unbounded process-global
@@ -295,6 +296,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow("provider-only")]
     [DataRow("diagnostics-provider")]
     [DataRow("provider-diagnostics")]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
     public async Task DiagnosticsAndProviderRegistration_IsIdempotentAndOrdered(string registrationOrder)
     {
         ITestApplicationBuilder builder = await CreateBuilderAsync();
@@ -335,6 +337,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow(true)]
     [DataRow(false)]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
     public async Task DiagnosticsAndEnvironmentProviderRegistration_IsIdempotentAndOrdered(bool diagnosticsFirst)
         => await WithEnvironmentAsync(
             new()
