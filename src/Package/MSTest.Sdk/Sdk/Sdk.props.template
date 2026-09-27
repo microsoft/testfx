@@ -38,9 +38,11 @@
 
   <PropertyGroup>
     <EnableAspireTesting Condition=" '$(EnableAspireTesting)' == '' ">false</EnableAspireTesting>
+    <EnableWindowsUIAutomation Condition=" '$(EnableWindowsUIAutomation)' == '' ">false</EnableWindowsUIAutomation>
     <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
     <AspireHostingTestingVersion Condition=" '$(AspireHostingTestingVersion)' == '' ">${AspireHostingTestingVersion}</AspireHostingTestingVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
+    <MSTestWindowsUIAutomationVersion Condition=" '$(MSTestWindowsUIAutomationVersion)' == '' ">${MSTestWindowsUIAutomationVersion}</MSTestWindowsUIAutomationVersion>
     <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">${MicrosoftPlaywrightVersion}</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >${MicrosoftTestingExtensionsCtrfReportVersion}</MicrosoftTestingExtensionsCtrfReportVersion>
