@@ -17,7 +17,7 @@ using System.Reflection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.AddServiceDefaults();
 
 using IHost host = builder.Build();
@@ -27,6 +27,10 @@ return await host.RunTestingPlatformAsync(args, testApplication =>
     testApplication.AddTestingPlatformDiagnostics();
 });
 ```
+
+The process command line belongs to MTP in this composition. Configure the host through code,
+environment variables, or application configuration rather than passing the same argument array
+to both parsers.
 
 `RunTestingPlatformAsync`:
 
@@ -44,8 +48,11 @@ return await host.RunTestingPlatformAsync(args, testApplication =>
 - The extension does not create a second Microsoft.Extensions dependency-injection container.
 - Imported configuration has snapshot semantics and does not propagate reloads after the MTP application is built.
 - Composition is process-local. Live services do not cross into separately launched test host or controller processes.
-- Host cancellation currently controls host start/stop only because `ITestApplication.RunAsync` has no cancellation-token overload.
+- The cancellation token controls host startup. Shutdown uses an uncancelled token so graceful cleanup is still attempted.
+- `ITestApplication.RunAsync` has no cancellation-token overload, so the token does not cancel the MTP run.
 - Exceptions from host startup, MTP construction/execution, and host shutdown are surfaced to the caller.
+  When an operation and its cleanup both fail, the operation remains the primary exception and the cleanup
+  exception is attached to its `Data` dictionary.
 
 See the runnable ASP.NET Core and Aspire ServiceDefaults samples under `samples/public/MTPHostIntegration`.
 

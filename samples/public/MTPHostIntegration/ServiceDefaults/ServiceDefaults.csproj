@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <IsAspireSharedProject>true</IsAspireSharedProject>
-    <RepoRoot>$(MSBuildThisFileDirectory)..\..\..\..\</RepoRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,9 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj"
-                      AdditionalProperties="RepoRoot=$(RepoRoot)"
-                      GlobalPropertiesToRemove="RepoRoot" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
   </ItemGroup>
 
 </Project>

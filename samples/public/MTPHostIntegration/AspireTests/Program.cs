@@ -6,7 +6,7 @@ using System.Reflection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.AddTestServiceDefaults();
 
 using IHost host = builder.Build();

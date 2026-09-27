@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Testing.Extensions;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder();
 builder.AddTestServiceDefaults();
 builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Configuration["Greeting"] = "Hello from ASP.NET Core";

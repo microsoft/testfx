@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
 
 using MelIConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 using MelILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
@@ -51,29 +53,63 @@ public static class MicrosoftExtensionsHostingExtensions
         _ = args ?? throw new ArgumentNullException(nameof(args));
         _ = configure ?? throw new ArgumentNullException(nameof(configure));
 
-        MelIConfiguration configuration = GetRequiredHostService<MelIConfiguration>(host.Services);
-        MelILoggerFactory loggerFactory = GetRequiredHostService<MelILoggerFactory>(host.Services);
+        MelIConfiguration configuration = host.Services.GetRequiredService<MelIConfiguration>();
+        MelILoggerFactory loggerFactory = host.Services.GetRequiredService<MelILoggerFactory>();
 
         ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args).ConfigureAwait(false);
-        testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(configuration);
-        testApplicationBuilder.AddMicrosoftExtensionsLogging(loggerFactory);
-        configure(testApplicationBuilder);
-
-        await host.StartAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            using ITestApplication testApplication = await testApplicationBuilder.BuildAsync().ConfigureAwait(false);
-            return await testApplication.RunAsync().ConfigureAwait(false);
+            testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(configuration);
+            testApplicationBuilder.AddMicrosoftExtensionsLogging(loggerFactory);
+            configure(testApplicationBuilder);
+
+            Exception? operationException = null;
+            try
+            {
+                await host.StartAsync(cancellationToken).ConfigureAwait(false);
+                using ITestApplication testApplication = await testApplicationBuilder.BuildAsync().ConfigureAwait(false);
+                return await testApplication.RunAsync().ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                operationException = exception;
+                throw;
+            }
+            finally
+            {
+                try
+                {
+                    await host.StopAsync(CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception stopException) when (operationException is not null)
+                {
+                    AddSecondaryException(operationException, nameof(IHost.StopAsync), stopException);
+                }
+            }
         }
-        finally
+        catch (Exception exception)
         {
-            await host.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                if (testApplicationBuilder is IAsyncCleanableExtension cleanableBuilder)
+                {
+                    await cleanableBuilder.CleanupAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception disposeException)
+            {
+                AddSecondaryException(exception, nameof(IAsyncCleanableExtension.CleanupAsync), disposeException);
+            }
+
+            throw;
         }
     }
 
-    private static TService GetRequiredHostService<TService>(IServiceProvider services)
-        where TService : class
-        => services.GetService(typeof(TService)) as TService
-            ?? throw new InvalidOperationException(
-                $"The application host does not provide the required service '{typeof(TService).FullName}'.");
+    private static void AddSecondaryException(Exception primaryException, string operation, Exception secondaryException)
+    {
+        if (primaryException.Data is { IsReadOnly: false } data)
+        {
+            data[operation] = secondaryException;
+        }
+    }
 }

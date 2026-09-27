@@ -8,16 +8,23 @@ namespace MTPHostIntegration.AspireTests;
 [TestClass]
 public sealed class DistributedApplicationTests
 {
+    private const int StartupTimeoutMilliseconds = 120_000;
+
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
+    [Timeout(StartupTimeoutMilliseconds, CooperativeCancellation = true)]
     public async Task ApiGreetingIsAvailable()
     {
+        CancellationToken cancellationToken = TestContext.CancellationToken;
         IDistributedApplicationTestingBuilder builder =
-            await DistributedApplicationTestingBuilder.CreateAsync<Projects.AspireAppHost>();
-        await using var app = await builder.BuildAsync();
-        await app.StartAsync();
+            await DistributedApplicationTestingBuilder.CreateAsync<Projects.AspireAppHost>(cancellationToken: cancellationToken);
+        await using var app = await builder.BuildAsync(cancellationToken);
+        await app.StartAsync(cancellationToken);
+        await app.ResourceNotifications.WaitForResourceHealthyAsync("api", cancellationToken);
         using HttpClient client = app.CreateHttpClient("api");
 
-        string greeting = await client.GetStringAsync("/greeting");
+        string greeting = await client.GetStringAsync("/greeting", cancellationToken);
 
         Assert.AreEqual("Hello from Aspire", greeting);
     }

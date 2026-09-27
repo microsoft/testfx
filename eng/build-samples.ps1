@@ -43,6 +43,10 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $repoRootWithTrailingSeparator = $repoRoot + [System.IO.Path]::DirectorySeparatorChar
 $samplesFolder = "$repoRoot/samples/public"
 
+if ($BinaryLogDirectory) {
+    New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
+}
+
 # Source the arcade tools to get access to InitializeDotNetCli
 . "$PSScriptRoot/common/tools.ps1"
 
@@ -77,6 +81,12 @@ foreach ($solution in $solutions) {
             "/p:Platform=x64"
         )
 
+        if ($BinaryLogDirectory) {
+            $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
+            $restoreBinlogPath = Join-Path $BinaryLogDirectory "$solutionName.restore.binlog"
+            $restoreArgs += "/bl:$restoreBinlogPath"
+        }
+
         & $dotnetPath $restoreArgs
 
         if ($LASTEXITCODE -ne 0) {
@@ -110,7 +120,6 @@ foreach ($solution in $solutions) {
             "build",
             $solution.FullName,
             "--configuration", $Configuration,
-            "/p:RepoRoot=$repoRootWithTrailingSeparator",
             "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
         )
 

@@ -11,9 +11,45 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
+[ResourceLock(WellKnownResources.EnvironmentVariables)]
 public sealed class MicrosoftExtensionsHostingExtensionsTests
 {
+    private static readonly string[] DiagnosticEnvironmentVariables =
+    [
+        "TESTINGPLATFORM_DIAGNOSTIC",
+        "TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY",
+        "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY",
+        "TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX",
+        "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX",
+        "TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE",
+        "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE",
+    ];
+
+    private Dictionary<string, string?> _originalDiagnosticEnvironmentVariables = null!;
+
     public TestContext TestContext { get; set; } = null!;
+
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        _originalDiagnosticEnvironmentVariables = DiagnosticEnvironmentVariables.ToDictionary(
+            static name => name,
+            Environment.GetEnvironmentVariable);
+
+        foreach (string name in DiagnosticEnvironmentVariables)
+        {
+            Environment.SetEnvironmentVariable(name, null);
+        }
+    }
+
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        foreach (KeyValuePair<string, string?> variable in _originalDiagnosticEnvironmentVariables)
+        {
+            Environment.SetEnvironmentVariable(variable.Key, variable.Value);
+        }
+    }
 
     [TestMethod]
     public async Task RunTestingPlatformAsync_NullHostThrows()
@@ -113,6 +149,127 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         Assert.IsTrue(lifecycle.Stopped);
     }
 
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenMtpAndHostStopFail_PreservesMtpFailure()
+    {
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        var stopException = new InvalidOperationException("host stop failure");
+        hostBuilder.Services.AddSingleton<IHostedService>(new ThrowingStopHostedService(stopException));
+        using IHost host = hostBuilder.Build();
+        var expectedException = new InvalidOperationException("framework failure");
+        InvalidOperationException? actualException = null;
+
+        try
+        {
+            await host.RunTestingPlatformAsync(
+                [],
+                testApplication =>
+                    testApplication.RegisterTestFramework(
+                        _ => new TestFrameworkCapabilities(),
+                        (_, _) => throw expectedException),
+                TestContext.CancellationToken);
+        }
+        catch (InvalidOperationException exception)
+        {
+            actualException = exception;
+        }
+
+        Assert.IsNotNull(actualException);
+        Assert.AreSame(expectedException, actualException);
+        Assert.AreSame(stopException, actualException.Data[nameof(IHost.StopAsync)]);
+    }
+
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenConfigureFails_ReleasesDiagnosticLog()
+    {
+        using IHost host = Host.CreateApplicationBuilder().Build();
+        string diagnosticDirectory = CreateDiagnosticDirectory();
+        var expectedException = new InvalidOperationException("configuration failure");
+        InvalidOperationException? actualException = null;
+
+        try
+        {
+            await host.RunTestingPlatformAsync(
+                CreateDiagnosticArguments(diagnosticDirectory),
+                _ => throw expectedException,
+                TestContext.CancellationToken);
+        }
+        catch (InvalidOperationException exception)
+        {
+            actualException = exception;
+        }
+
+        Assert.AreSame(expectedException, actualException);
+        AssertDiagnosticLogIsReleased(diagnosticDirectory);
+    }
+
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenHostStartFails_ReleasesDiagnosticLog()
+    {
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        var lifecycle = new RecordingHostedService();
+        var expectedException = new InvalidOperationException("host start failure");
+        hostBuilder.Services.AddSingleton<IHostedService>(lifecycle);
+        hostBuilder.Services.AddSingleton<IHostedService>(new ThrowingHostedService(expectedException));
+        using IHost host = hostBuilder.Build();
+        string diagnosticDirectory = CreateDiagnosticDirectory();
+        InvalidOperationException? actualException = null;
+
+        try
+        {
+            await host.RunTestingPlatformAsync(
+                CreateDiagnosticArguments(diagnosticDirectory),
+                testApplication => testApplication.RegisterTestFramework(
+                    _ => new TestFrameworkCapabilities(),
+                    (_, _) => new EmptyTestFramework()),
+                TestContext.CancellationToken);
+        }
+        catch (InvalidOperationException exception)
+        {
+            actualException = exception;
+        }
+
+        Assert.AreSame(expectedException, actualException);
+        Assert.IsTrue(lifecycle.Started);
+        Assert.IsTrue(lifecycle.Stopped);
+        AssertDiagnosticLogIsReleased(diagnosticDirectory);
+    }
+
+    private static string CreateDiagnosticDirectory()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), nameof(MicrosoftExtensionsHostingExtensionsTests), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
+
+    private static string[] CreateDiagnosticArguments(string diagnosticDirectory)
+        =>
+        [
+            "--diagnostic",
+            "--diagnostic-synchronous-write",
+            "--diagnostic-output-directory",
+            diagnosticDirectory,
+            "--diagnostic-file-prefix",
+            "hosting-failure",
+        ];
+
+    private static void AssertDiagnosticLogIsReleased(string diagnosticDirectory)
+    {
+        try
+        {
+            string[] diagnosticFiles = Directory.GetFiles(diagnosticDirectory, "hosting-failure*.diag");
+            Assert.HasCount(1, diagnosticFiles);
+
+            using (File.Open(diagnosticFiles[0], FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+            }
+        }
+        finally
+        {
+            Directory.Delete(diagnosticDirectory, recursive: true);
+        }
+    }
+
     private sealed class RecordingHostedService : IHostedService
     {
         public bool Started { get; private set; }
@@ -130,6 +287,20 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             Stopped = true;
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class ThrowingHostedService(InvalidOperationException exception) : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken) => throw exception;
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class ThrowingStopHostedService(InvalidOperationException exception) : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task StopAsync(CancellationToken cancellationToken) => throw exception;
     }
 
     private sealed class EmptyTestFramework : ITestFramework

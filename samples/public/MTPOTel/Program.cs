@@ -26,7 +26,7 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         using var testActivitySource = new ActivitySource("MTPOTel.Tests");
-        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
         hostBuilder.Configuration["MTPOTel:Composition"] = "HostApplicationBuilder";
 
         // The host owns the OpenTelemetry providers, just like an Aspire ServiceDefaults project or any other

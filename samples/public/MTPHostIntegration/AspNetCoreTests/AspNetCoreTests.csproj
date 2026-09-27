@@ -5,7 +5,6 @@
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
-    <RepoRoot>$(MSBuildThisFileDirectory)..\..\..\..\</RepoRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,9 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj"
-                      AdditionalProperties="RepoRoot=$(RepoRoot)"
-                      GlobalPropertiesToRemove="RepoRoot" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj" />
   </ItemGroup>
 
   <ItemGroup>
