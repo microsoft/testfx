@@ -35,6 +35,7 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
     // The queued activity is nullable on purpose: when no tracer is listening StartActivity returns null, and we
     // still need the entry so the in-flight bookkeeping (and therefore test.case.active) stays balanced.
     private readonly Dictionary<TestActivityKey, Queue<IPlatformActivity?>> _testActivities = [];
+    private readonly HashSet<TestExecutionActivityReservation> _canonicalActivities = [];
 
     // The notifications are normally serialised by the message bus's single-reader consumer loop. They are not on
     // the cancellation path: a cancelled run skips the drain/disable step, so a consumer can still be publishing
@@ -115,6 +116,11 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
             }
 
             _testActivities.Clear();
+            if (_canonicalActivities.Count > 0)
+            {
+                _activeTestCases.Add(-_canonicalActivities.Count);
+                _canonicalActivities.Clear();
+            }
         }
 
         foreach (IPlatformActivity? activity in orphaned)
