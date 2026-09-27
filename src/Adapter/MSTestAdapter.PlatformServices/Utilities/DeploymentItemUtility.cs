@@ -144,9 +144,15 @@ internal sealed class DeploymentItemUtility
         }
     }
 
+    // Path.GetInvalidPathChars()/GetInvalidFileNameChars() allocate a new array on every call.
+    // These characters are static for the lifetime of the process, so cache them once instead of
+    // re-allocating on every [DeploymentItem]-attributed method encountered during test discovery.
+    private static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
+    private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+
     private static bool IsInvalidPath(string path)
     {
-        if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+        if (path.IndexOfAny(InvalidPathChars) != -1)
         {
             return true;
         }
@@ -155,7 +161,7 @@ internal sealed class DeploymentItemUtility
         {
             string fileName = Path.GetFileName(path);
 
-            if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            if (fileName.IndexOfAny(InvalidFileNameChars) != -1)
             {
                 return true;
             }
