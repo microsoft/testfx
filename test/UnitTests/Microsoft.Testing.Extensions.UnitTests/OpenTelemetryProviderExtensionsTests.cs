@@ -36,10 +36,17 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
 /// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
 /// project): they still serialize against every other test in the assembly that mutates environment variables, but
-/// can run in parallel with tests that never touch environment variables at all. The end-to-end
+/// can run in parallel with tests that never touch environment variables at all. The two raw-listener methods carry
+/// a method-level write <see cref="ResourceLockAttribute"/> on
+/// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> instead:
+/// <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers an unfiltered listener against the
+/// process-wide listener registry for that source name. Tests that only produce or observe their own filtered
+/// activities carry matching read locks, so they remain mutually parallel while serializing against the raw
+/// listeners. The end-to-end
 /// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
-/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c>, an unbounded process-global
-/// resource that a <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
+/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c> through
+/// <see cref="TracerProviderBuilder"/>'s own SDK-level subscription, a broader and unbounded process-global
+/// registration that a single <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
 /// in-memory environment fake (or only read process state) and stay in the parallel set. Captured spans in the
 /// end-to-end test are additionally filtered by a per-test unique name prefix so an ambient provider in the test
 /// host cannot pollute the assertions.
@@ -289,6 +296,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow("provider-only")]
     [DataRow("diagnostics-provider")]
     [DataRow("provider-diagnostics")]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
     public async Task DiagnosticsAndProviderRegistration_IsIdempotentAndOrdered(string registrationOrder)
     {
         ITestApplicationBuilder builder = await CreateBuilderAsync();
@@ -329,6 +337,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     [DataRow(true)]
     [DataRow(false)]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
     public async Task DiagnosticsAndEnvironmentProviderRegistration_IsIdempotentAndOrdered(bool diagnosticsFirst)
         => await WithEnvironmentAsync(
             new()
@@ -354,7 +363,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
             });
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
     public async Task AddTestingPlatformDiagnostics_RawListenerObservesBuilderActivityWithoutProvider()
     {
         List<Activity> stoppedActivities = [];
@@ -382,9 +391,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
         {
             Assert.IsNotNull(serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>());
             Assert.IsNull(serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
-            Assert.Contains(
-                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                stoppedActivities);
+            AssertBuilderActivityObserved(stoppedActivities);
         }
         finally
         {
@@ -393,7 +400,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
     }
 
     [TestMethod]
-    [DoNotParallelize]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
     public async Task LegacyProviderFactorySideEffect_StillActivatesDiagnostics()
     {
         List<Activity> stoppedActivities = [];
@@ -427,9 +434,7 @@ public sealed class OpenTelemetryProviderExtensionsTests
             LegacyOpenTelemetryProvider provider = Assert.IsInstanceOfType<LegacyOpenTelemetryProvider>(
                 serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
             Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
-            Assert.Contains(
-                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                stoppedActivities);
+            AssertBuilderActivityObserved(stoppedActivities);
         }
         finally
         {
@@ -667,6 +672,16 @@ public sealed class OpenTelemetryProviderExtensionsTests
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(["--no-banner", "--ignore-exit-code", "8", "--internal-testingplatform-skipbuildercheck"]);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new MockTestFramework());
         return builder;
+    }
+
+    private static void AssertBuilderActivityObserved(List<Activity> stoppedActivities)
+    {
+        lock (stoppedActivities)
+        {
+            Assert.Contains(
+                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                stoppedActivities);
+        }
     }
 
     private static async Task AssertSingleDiagnosticsRegistrationAsync(ITestApplicationBuilder builder, bool expectProvider)

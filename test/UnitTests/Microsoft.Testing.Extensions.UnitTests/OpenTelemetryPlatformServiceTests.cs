@@ -18,9 +18,15 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <remarks>
 /// <see cref="Activity.Current"/> and the listener registries are process-global, so listeners only collect
 /// activities and instruments created by this test instance (identified by a unique name prefix), and ambient
-/// activity assertions are relative to the activity that was current when the test started.
+/// activity assertions are relative to the activity that was current when the test started. The constructor
+/// registers an <see cref="ActivityListener"/> against the process-wide listener registry for
+/// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> for every test in this class, so the class carries
+/// a matching read-mode <see cref="ResourceLockAttribute"/> on that source name: tests in this class remain
+/// mutually parallel while serializing against the two raw-listener tests in
+/// <c>OpenTelemetryProviderExtensionsTests</c> that register unfiltered listeners on the same source.
 /// </remarks>
 [TestClass]
+[ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
 public sealed class OpenTelemetryPlatformServiceTests : IDisposable
 {
     private static readonly FieldInfo ObservableInstrumentsField = typeof(OpenTelemetryPlatformService)
