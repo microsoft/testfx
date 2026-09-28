@@ -248,6 +248,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
         startNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
         _handler.NotifyInProgress(startNode, null);
+        reservation.Activate();
         DateTimeOffset executionEnd = DateTimeOffset.UtcNow;
         reservation.RecordExecutionEnd(executionEnd);
 
@@ -294,6 +295,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
         startNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
         _handler.NotifyInProgress(startNode, null);
+        reservation.Activate();
         DateTimeOffset executionEnd = DateTimeOffset.UtcNow;
         reservation.RecordExecutionEnd(executionEnd);
 
