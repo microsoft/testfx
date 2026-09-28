@@ -373,12 +373,34 @@ public class RetryTests
     }
 
     [TestMethod]
+    public void CollectRecoveredArtifacts_NullKind_AddsRecoveredArtifact()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        string attemptDirectory = Path.GetFullPath("attempt");
+        string recoveredArtifactPath = Path.Combine(attemptDirectory, "recovered.xml");
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(CreateManifestLine(recoveredArtifactPath, kind: null)));
+        List<ArtifactRequest> artifacts = [];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
+
+        ArtifactRequest artifact = Assert.ContainsSingle(artifacts);
+        Assert.AreEqual(recoveredArtifactPath, artifact.Path);
+        Assert.IsNull(artifact.Kind);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
     public void CollectRecoveredArtifacts_OversizedLine_IsRejectedAndManifestIsDeleted()
     {
         const string manifestPath = "recovered-artifacts.txt";
         string attemptDirectory = Path.GetFullPath("attempt");
-        int maxLineBytes = (int)typeof(RetryOrchestrator)
-            .GetField("MaxRecoveredArtifactManifestLineBytes", BindingFlags.Static | BindingFlags.NonPublic)!
+        Type manifestType = typeof(RetryOrchestrator).Assembly
+            .GetType("Microsoft.Testing.Extensions.RetryArtifactManifest")!;
+        int maxLineBytes = (int)manifestType
+            .GetField("MaxLineLength", BindingFlags.Static | BindingFlags.Public)!
             .GetRawConstantValue()!;
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(fs => fs.ExistFile(manifestPath)).Returns(true);
@@ -398,8 +420,10 @@ public class RetryTests
         const string manifestPath = "recovered-artifacts.txt";
         string attemptDirectory = Path.GetFullPath("attempt");
         string recoveredArtifactPath = Path.Combine(attemptDirectory, "recovered.xml");
-        int maxRecords = (int)typeof(RetryOrchestrator)
-            .GetField("MaxRecoveredArtifactManifestRecords", BindingFlags.Static | BindingFlags.NonPublic)!
+        Type manifestType = typeof(RetryOrchestrator).Assembly
+            .GetType("Microsoft.Testing.Extensions.RetryArtifactManifest")!;
+        int maxRecords = (int)manifestType
+            .GetField("MaxRecords", BindingFlags.Static | BindingFlags.Public)!
             .GetRawConstantValue()!;
         var manifest = new StringBuilder();
         for (int i = 0; i < maxRecords; i++)

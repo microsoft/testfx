@@ -12,9 +12,6 @@ internal sealed partial class RetryOrchestrator
     private const string AppContainerArtifactRootsConfiguredEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED";
     private const string ArtifactPathDestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
     private const string DiagnosticArtifactPathDestinationRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
-    private const long MaxRecoveredArtifactManifestBytes = 16L * 1024 * 1024;
-    private const int MaxRecoveredArtifactManifestLineBytes = 64 * 1024;
-    private const int MaxRecoveredArtifactManifestRecords = 10_000;
     private const int MaxRecoveredArtifactPathChars = 32 * 1024;
     private const int MaxRecoveredArtifactKindChars = 1024;
 
@@ -35,7 +32,7 @@ internal sealed partial class RetryOrchestrator
             using IFileStream stream = fileSystem.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = new BoundedManifestLineReader(stream.Stream);
             int recordCount = 0;
-            while (recordCount++ < MaxRecoveredArtifactManifestRecords)
+            while (recordCount++ < RetryArtifactManifest.MaxRecords)
             {
                 BoundedManifestLineReadResult readResult = reader.ReadLine(out string line);
                 if (readResult == BoundedManifestLineReadResult.End)
@@ -49,20 +46,15 @@ internal sealed partial class RetryOrchestrator
                     return;
                 }
 
-                int separatorIndex = line.IndexOf('\t');
-                if (separatorIndex <= 0)
-                {
-                    logger.LogWarning($"Ignoring malformed recovered retry artifact manifest entry in '{manifestPath}'.");
-                    continue;
-                }
-
                 try
                 {
-                    string path = Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(0, separatorIndex)));
-                    string encodedKind = line.Substring(separatorIndex + 1);
-                    string? kind = encodedKind == "-"
-                        ? null
-                        : Encoding.UTF8.GetString(Convert.FromBase64String(encodedKind));
+                    if (!RetryArtifactManifest.TryParseEntry(line, out string path, out string encodedKind))
+                    {
+                        logger.LogWarning($"Ignoring malformed recovered retry artifact manifest entry in '{manifestPath}'.");
+                        continue;
+                    }
+
+                    string? kind = RetryArtifactManifest.DecodeKind(encodedKind);
                     if (path.Length > MaxRecoveredArtifactPathChars
                         || kind?.Length > MaxRecoveredArtifactKindChars)
                     {
@@ -101,7 +93,7 @@ internal sealed partial class RetryOrchestrator
                 }
             }
 
-            logger.LogWarning($"Stopped reading recovered retry artifact manifest '{manifestPath}' after the maximum of {MaxRecoveredArtifactManifestRecords} records.");
+            logger.LogWarning($"Stopped reading recovered retry artifact manifest '{manifestPath}' after the maximum of {RetryArtifactManifest.MaxRecords} records.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -195,7 +187,7 @@ internal sealed partial class RetryOrchestrator
         private const int BufferSize = 8192;
 
         private readonly byte[] _readBuffer = new byte[BufferSize];
-        private readonly byte[] _lineBuffer = new byte[MaxRecoveredArtifactManifestLineBytes];
+        private readonly byte[] _lineBuffer = new byte[RetryArtifactManifest.MaxLineLength];
         private int _readOffset;
         private int _readCount;
         private long _bytesRead;
@@ -205,7 +197,7 @@ internal sealed partial class RetryOrchestrator
             int lineLength = 0;
             while (TryReadByte(out byte value))
             {
-                if (++_bytesRead > MaxRecoveredArtifactManifestBytes)
+                if (++_bytesRead > RetryArtifactManifest.MaxBytes)
                 {
                     line = string.Empty;
                     return BoundedManifestLineReadResult.LimitExceeded;
@@ -216,7 +208,7 @@ internal sealed partial class RetryOrchestrator
                     return DecodeLine(lineLength, out line);
                 }
 
-                if (lineLength >= MaxRecoveredArtifactManifestLineBytes)
+                if (lineLength >= RetryArtifactManifest.MaxLineLength)
                 {
                     line = string.Empty;
                     return BoundedManifestLineReadResult.LimitExceeded;
