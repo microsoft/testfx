@@ -63,13 +63,17 @@ internal static class TrxLongPathHelper
         // The extended-length syntax disables all path normalization, so the value has to be fully
         // qualified and canonical before the prefix is applied. Resolving also has to happen before
         // the length is measured, because a short relative path can still resolve past MAX_PATH.
-        // GetFullPath can itself reject the path when the consuming application opted into the legacy
-        // (pre-4.6.2) path quirks, in which case we hand back the original path and let the caller
-        // surface the failure.
+        // GetFullPath can itself reject a long path when the consuming application opted into the
+        // legacy (pre-4.6.2) path quirks. An already-rooted path without relative segments is already
+        // safe to prefix directly.
         string fullPath;
         try
         {
             fullPath = Path.GetFullPath(path);
+        }
+        catch (PathTooLongException) when (Path.IsPathRooted(path) && !ContainsRelativePathSegments(path))
+        {
+            fullPath = path;
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
@@ -85,4 +89,19 @@ internal static class TrxLongPathHelper
                 : ExtendedPathPrefix + fullPath;
 #endif
     }
+
+#if !NETCOREAPP
+    private static bool ContainsRelativePathSegments(string path)
+    {
+        foreach (string segment in path.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment is "." or "..")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+#endif
 }

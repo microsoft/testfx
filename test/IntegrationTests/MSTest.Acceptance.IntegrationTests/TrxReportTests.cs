@@ -66,6 +66,67 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
         Assert.Contains("at MSTestTrxReport.UnitTest1.FailingTest()", trxContent, trxContent);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TrxReport_ResultFilesUnderTestResultsDirectory_SurviveDeploymentCleanup(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        string testResultsPath = Path.Combine(Path.GetTempPath(), $"mstest-trx-{Guid.NewGuid():N}");
+        string sourcePathsRecord = Path.Combine(AssetFixture.TargetAssetPath, $"{Guid.NewGuid():N}.txt");
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
+
+        try
+        {
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                $"--filter \"FullyQualifiedName~ResultFilesUnderTestResultsDirectory\" --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+                new() { ["MSTEST_RESULT_FILE_PATHS_RECORD"] = sourcePathsRecord },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputDoesNotContain("The attachment will be skipped.");
+
+            string[] sourcePaths = File.ReadAllLines(sourcePathsRecord);
+            Assert.HasCount(2, sourcePaths);
+            if (TargetFrameworks.NetFramework.Contains(tfm))
+            {
+                foreach (string sourcePath in sourcePaths)
+                {
+                    Assert.StartsWith(Path.GetFullPath(testResultsPath), Path.GetFullPath(sourcePath));
+                    Assert.IsFalse(File.Exists(sourcePath), $"MSTest deployment cleanup should remove the original result file '{sourcePath}'.");
+                }
+            }
+
+            string trxFile = Assert.ContainsSingle(Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories));
+            var trxDocument = XDocument.Load(trxFile);
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            XElement unitTestResult = trxDocument.Descendants(ns + "UnitTestResult").Single();
+            string relativeResultsDirectory = unitTestResult.Attribute("relativeResultsDirectory")!.Value;
+            string runDeploymentRoot = trxDocument.Descendants(ns + "Deployment").Single().Attribute("runDeploymentRoot")!.Value;
+            string[] copiedResultFiles = [.. unitTestResult
+                .Descendants(ns + "ResultFile")
+                .Select(resultFile => resultFile.Attribute("path")!.Value)
+                .Select(path => Path.Combine(
+                    testResultsPath,
+                    runDeploymentRoot,
+                    "In",
+                    relativeResultsDirectory,
+                    path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar)))];
+
+            Assert.HasCount(2, copiedResultFiles);
+            Assert.AreSequenceEqual(["first attachment", "second attachment"], copiedResultFiles.Select(File.ReadAllText).Order(StringComparer.Ordinal).ToArray());
+            Assert.AreSequenceEqual(["attachment.txt", "attachment_1.txt"], copiedResultFiles.Select(Path.GetFileName).Order(StringComparer.Ordinal).ToArray());
+            Assert.IsEmpty(Directory.GetDirectories(testResultsPath, ".mstest-*", SearchOption.TopDirectoryOnly));
+        }
+        finally
+        {
+            File.Delete(sourcePathsRecord);
+            if (Directory.Exists(testResultsPath))
+            {
+                Directory.Delete(testResultsPath, recursive: true);
+            }
+        }
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "MSTestTrxReport";
@@ -97,6 +158,9 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
 </Project>
 
 #file UnitTest1.cs
+using System;
+using System.IO;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTestTrxReport;
@@ -104,6 +168,8 @@ namespace MSTestTrxReport;
 [TestClass]
 public class UnitTest1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     [WorkItem(1234)]
     [GitHubWorkItem("https://github.com/microsoft/testfx/issues/5678")]
@@ -115,6 +181,26 @@ public class UnitTest1
     public void FailingTest()
     {
         Assert.AreEqual(1, 2);
+    }
+
+    [TestMethod]
+    public void ResultFilesUnderTestResultsDirectory()
+    {
+        string firstDirectory = Path.Combine(TestContext.TestResultsDirectory!, "first");
+        string secondDirectory = Path.Combine(TestContext.TestResultsDirectory!, "second");
+        Directory.CreateDirectory(firstDirectory);
+        Directory.CreateDirectory(secondDirectory);
+
+        string firstAttachment = Path.Combine(firstDirectory, "attachment.txt");
+        string secondAttachment = Path.Combine(secondDirectory, "attachment.txt");
+        File.WriteAllText(firstAttachment, "first attachment");
+        File.WriteAllText(secondAttachment, "second attachment");
+        TestContext.AddResultFile(firstAttachment);
+        TestContext.AddResultFile(secondAttachment);
+
+        string sourcePathsRecord = Environment.GetEnvironmentVariable("MSTEST_RESULT_FILE_PATHS_RECORD")
+            ?? throw new InvalidOperationException("MSTEST_RESULT_FILE_PATHS_RECORD is not set.");
+        File.WriteAllLines(sourcePathsRecord, [firstAttachment, secondAttachment]);
     }
 }
 """;
