@@ -19,11 +19,21 @@ Framework authors can create and run a test application directly:
 ```csharp
 using Microsoft.Testing.Platform.Builder;
 
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+using var cancellationTokenSource = new CancellationTokenSource();
+var options = new TestApplicationOptions
+{
+    CancellationToken = cancellationTokenSource.Token,
+};
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args, options);
 // Register the test framework and extensions with builder.
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 ```
+
+`TestApplicationOptions.CancellationToken` requests cooperative cancellation while the application is
+running. It shares MTP's existing cancellation path with Ctrl+C, timeouts, controller cancellation,
+and test framework stop policies. A canceled run completes cleanup and returns the
+test-session-aborted exit code (`3`).
 
 ## About
 

@@ -64,8 +64,9 @@ to both parsers.
 3. Forwards MTP diagnostic logs to the host-owned `ILoggerFactory`.
 4. Invokes the caller's MTP registration callback.
 5. Starts the host before building MTP, so host-owned observability providers can subscribe first.
-6. Runs MTP and returns its exit code.
-7. Stops the host in a `finally` block.
+6. Links the caller token and `IHostApplicationLifetime.ApplicationStopping` to MTP's cooperative cancellation path.
+7. Runs MTP and returns its exit code.
+8. Stops the host in a `finally` block.
 
 ### Ownership and limitations
 
@@ -74,8 +75,10 @@ to both parsers.
 - Imported configuration has snapshot semantics and does not propagate reloads after the MTP application is built.
 - Composition is process-local. Live services do not cross into separately launched test host or controller processes.
 - Process-restart extensions (for example retry, crash dump, or hang dump scenarios) execute the generated entry point in each process. Until MTP exposes a role-aware pre-build hook, the factory can therefore be invoked in both the controller and child process; factories used with those extensions must avoid exclusive global resources such as fixed ports.
-- The cancellation token controls host startup. Shutdown uses an uncancelled token so graceful cleanup is still attempted.
-- When the host provides `IHostApplicationLifetime`, `ApplicationStopping` is linked to MTP's existing cooperative cancellation path. MTP completion or cancellation finishes its own cleanup before the bridge stops the host in `finally`. Custom `IHost` implementations without that optional service retain the previous start/run/stop behavior.
+- The cancellation token controls host startup and active MTP execution. Cancellation during `StartAsync` follows the host contract and can throw `OperationCanceledException`; once MTP is running, cancellation uses MTP's cooperative path and returns the test-session-aborted exit code (`3`) after cleanup.
+- When the host provides `IHostApplicationLifetime`, `ApplicationStopping` is linked to the same MTP cancellation source. Caller cancellation, host stopping, Ctrl+C, `--timeout`, controller cancellation, and test framework stop policies are peer signals; the first signal starts the same idempotent MTP shutdown path. MTP cancellation does not call `StopApplication`; the helper stops the host after MTP cleanup completes.
+- In controller mode, cancellation uses MTP's existing controller control channel to request cooperative cancellation in the active test host process. Existing bounded termination remains the fallback for a non-cooperative child.
+- Cancellation registrations are removed when execution completes. The lifetime bridge disconnects before the helper's own `StopAsync`, and shutdown uses an uncancelled token so graceful cleanup is still attempted without re-entering MTP cancellation.
 - Exceptions from host startup, MTP construction/execution, and host shutdown are surfaced to the caller.
   When an operation and its cleanup both fail, the operation remains the primary exception and the cleanup
   exception is attached to its `Data` dictionary. If that dictionary cannot be updated, an

@@ -194,10 +194,32 @@ one normal `TestingPlatformBuilderHook` that calls only `AddTestingPlatformDiagn
 continues to own the only providers, exporters, resource identity, and dependency-injection container.
 The focused test/CI resource helpers remain the recommended composition.
 
-Host stopping is connected to MTP through a bounded internal, zero-Microsoft.Extensions lifetime
-bridge. `IHostApplicationLifetime.ApplicationStopping` requests MTP cooperative cancellation. MTP
-finishes test cleanup, report generation, and artifact processing before the Hosting bridge stops the
-host in its final `StopAsync`.
+`TestApplicationOptions.CancellationToken` is the compatible core execution contract: it adds one
+property to the existing options class instead of adding a source-breaking member to
+`ITestApplication`. The token is registered only for the built application's execution lifetime and
+the registration is disposed when `RunAsync` completes or the application is disposed.
+
+Host stopping is connected to that contract through a bounded internal,
+zero-Microsoft.Extensions lifetime bridge. `RunTestingPlatformAsync` supplies its caller token through
+`TestApplicationOptions`, `IHostApplicationLifetime.ApplicationStopping` requests the same MTP
+cooperative cancellation, and the helper stops the host after MTP cleanup completes. MTP cancellation
+does not call `StopApplication`. The bridge disconnects before the helper's final `StopAsync` so that
+normal host shutdown cannot re-enter MTP cancellation after the run has ended.
+
+Caller cancellation, `ApplicationStopping`, Ctrl+C, `--timeout`, controller cancellation, and
+test-framework stop policies converge on the existing application cancellation source. They have no
+priority ordering: the first signal starts the idempotent shutdown path, cleanup is preserved, and a
+canceled active run returns `TestSessionAborted` (`3`). Cancellation during the host's initial
+`StartAsync` remains governed by the host contract and can throw `OperationCanceledException`.
+
+The same application token already drives controller and orchestrator cancellation. In controller
+mode it requests cooperative child cancellation over the existing control channel, with the existing
+bounded termination fallback for a non-cooperative child. No `Microsoft.Extensions.*` dependency is
+added to `Microsoft.Testing.Platform`.
+
+Run, build, or framework failures remain primary. The helper disconnects cancellation callbacks before
+its uncancelled host shutdown attempt, and a shutdown failure is attached as secondary exception data
+(or aggregated when exception data is unavailable) instead of replacing the earlier failure.
 
 It intentionally does not expose MTP as an `IHostedService`, build a second Microsoft.Extensions
 container, dispose the caller's host, or imply that live services cross process boundaries. The API

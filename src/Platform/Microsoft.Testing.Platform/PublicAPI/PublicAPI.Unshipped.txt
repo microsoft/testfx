@@ -1,6 +1,8 @@
 #nullable enable
 [TPEXP]Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions
 [TPEXP]static Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions.GetIsStateful(this Microsoft.Testing.Platform.Services.IClientCapabilities! capabilities) -> bool?
+Microsoft.Testing.Platform.Builder.TestApplicationOptions.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.Testing.Platform.Builder.TestApplicationOptions.CancellationToken.set -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandleExitCodePolicy
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandleExitCodePolicy.IsExitCodeAuthoritative.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ILocalTestHostHandle

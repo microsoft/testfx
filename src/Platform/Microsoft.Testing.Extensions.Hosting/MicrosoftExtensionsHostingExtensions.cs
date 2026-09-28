@@ -47,7 +47,7 @@ public static class MicrosoftExtensionsHostingExtensions
     /// <param name="host">The application-owned host.</param>
     /// <param name="args">The test application command-line arguments.</param>
     /// <param name="configure">Registers the test framework and optional MTP extensions.</param>
-    /// <param name="cancellationToken">A token used while starting the host.</param>
+    /// <param name="cancellationToken">A token used while starting the host and running the test application.</param>
     /// <returns>The Microsoft Testing Platform exit code.</returns>
     /// <remarks>
     /// <para>
@@ -82,6 +82,7 @@ public static class MicrosoftExtensionsHostingExtensions
             : new(hostApplicationLifetime);
         var testApplicationOptions = new TestApplicationOptions
         {
+            CancellationToken = cancellationToken,
             HostLifetimeBridge = hostApplicationLifetimeBridge,
         };
 

@@ -299,31 +299,77 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     }
 
     [TestMethod]
-    public async Task RunTestingPlatformAsync_WhenHostStops_CancelsMtp()
+    public async Task RunTestingPlatformAsync_WhenCancellationTokenIsCancelled_CancelsActiveMtpRun()
     {
-        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
-        hostBuilder.Services.AddHostedService<StopApplicationHostedService>();
-        using IHost host = hostBuilder.Build();
+        using IHost host = Host.CreateApplicationBuilder().Build();
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var testFramework = new BlockingTestFramework();
+
+        Task<int> runTask = host.RunTestingPlatformAsync(
+            [],
+            testApplication => testApplication.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => testFramework),
+            cancellationTokenSource.Token);
+
+        await testFramework.Started;
+        cancellationTokenSource.Cancel();
+
+        int exitCode = await runTask;
+
+        Assert.AreEqual(3, exitCode);
+        Assert.IsTrue(testFramework.CancellationObserved);
+    }
+
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenHostStops_CancelsActiveMtpRun()
+    {
+        using IHost host = Host.CreateApplicationBuilder().Build();
+        IHostApplicationLifetime hostApplicationLifetime = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+            .GetRequiredService<IHostApplicationLifetime>(host.Services);
+        var testFramework = new BlockingTestFramework();
+
+        Task<int> runTask = host.RunTestingPlatformAsync(
+            [],
+            testApplication => testApplication.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => testFramework),
+            TestContext.CancellationToken);
+
+        await testFramework.Started;
+        hostApplicationLifetime.StopApplication();
+
+        int exitCode = await runTask;
+
+        Assert.AreEqual(3, exitCode);
+        Assert.IsTrue(testFramework.CancellationObserved);
+    }
+
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_AfterRunCompletes_ReleasesCancellationRegistration()
+    {
+        using IHost host = new HostWithoutApplicationLifetime(Host.CreateApplicationBuilder().Build());
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var testFramework = new CancellationObservingTestFramework();
 
         int exitCode = await host.RunTestingPlatformAsync(
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, _) => new EmptyTestFramework()),
-            TestContext.CancellationToken);
+                (_, _) => testFramework),
+            cancellationTokenSource.Token);
 
-        Assert.AreEqual(3, exitCode);
+        cancellationTokenSource.Cancel();
+
+        Assert.AreEqual(8, exitCode);
+        Assert.IsFalse(testFramework.CancellationObserved);
+        testFramework.DisposeRegistration();
     }
 
     [TestMethod]
-    public async Task RunTestingPlatformAsync_WhenMtpStops_RequestsHostStop()
+    public async Task RunTestingPlatformAsync_WhenMtpStops_DoesNotRequestHostStopBeforeCleanup()
     {
-        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
-        using IHost host = hostBuilder.Build();
-        bool hostStopRequested = false;
-        Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
-            .GetRequiredService<IHostApplicationLifetime>(host.Services)
-            .ApplicationStopping.Register(() => hostStopRequested = true);
+        using var host = new StopObservationHost(Host.CreateApplicationBuilder().Build());
 
         int exitCode = await host.RunTestingPlatformAsync(
             [],
@@ -334,7 +380,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             TestContext.CancellationToken);
 
         Assert.AreEqual(3, exitCode);
-        Assert.IsTrue(hostStopRequested);
+        Assert.IsFalse(host.ApplicationStoppingWasRequestedBeforeStopAsync);
     }
 
     private static string CreateDiagnosticDirectory()
@@ -391,17 +437,6 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         }
     }
 
-    private sealed class StopApplicationHostedService(IHostApplicationLifetime hostApplicationLifetime) : IHostedService
-    {
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            hostApplicationLifetime.StopApplication();
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-    }
-
     private sealed class HostWithoutApplicationLifetime(IHost innerHost) : IHost
     {
         public IServiceProvider Services { get; } = new ServiceProviderWithoutApplicationLifetime(innerHost.Services);
@@ -421,6 +456,29 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             => serviceType == typeof(IHostApplicationLifetime) ? null : innerServiceProvider.GetService(serviceType);
     }
 
+    private sealed class StopObservationHost(IHost innerHost) : IHost
+    {
+        private readonly IHostApplicationLifetime _hostApplicationLifetime =
+            Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+                .GetRequiredService<IHostApplicationLifetime>(innerHost.Services);
+
+        public IServiceProvider Services => innerHost.Services;
+
+        public bool ApplicationStoppingWasRequestedBeforeStopAsync { get; private set; }
+
+        public void Dispose() => innerHost.Dispose();
+
+        public Task StartAsync(CancellationToken cancellationToken = default)
+            => innerHost.StartAsync(cancellationToken);
+
+        public Task StopAsync(CancellationToken cancellationToken = default)
+        {
+            ApplicationStoppingWasRequestedBeforeStopAsync =
+                _hostApplicationLifetime.ApplicationStopping.IsCancellationRequested;
+            return innerHost.StopAsync(cancellationToken);
+        }
+    }
+
     private sealed class CancellingTestFramework(ITestApplicationCancellationTokenSource cancellationTokenSource) : EmptyTestFramework
     {
         public override Task ExecuteRequestAsync(ExecuteRequestContext context)
@@ -429,6 +487,48 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             context.Complete();
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class BlockingTestFramework : EmptyTestFramework
+    {
+        private readonly TaskCompletionSource<object?> _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task Started => _started.Task;
+
+        public bool CancellationObserved { get; private set; }
+
+        public override async Task ExecuteRequestAsync(ExecuteRequestContext context)
+        {
+            _started.SetResult(null);
+            try
+            {
+                await Task.Delay(Timeout.Infinite, context.CancellationToken);
+            }
+            catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+            {
+                CancellationObserved = true;
+            }
+            finally
+            {
+                context.Complete();
+            }
+        }
+    }
+
+    private sealed class CancellationObservingTestFramework : EmptyTestFramework
+    {
+        private CancellationTokenRegistration _cancellationRegistration;
+
+        public bool CancellationObserved { get; private set; }
+
+        public override Task ExecuteRequestAsync(ExecuteRequestContext context)
+        {
+            _cancellationRegistration = context.CancellationToken.Register(() => CancellationObserved = true);
+            context.Complete();
+            return Task.CompletedTask;
+        }
+
+        public void DisposeRegistration() => _cancellationRegistration.Dispose();
     }
 
     private sealed class ThrowingHostedService(InvalidOperationException exception) : IHostedService
