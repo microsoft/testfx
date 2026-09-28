@@ -11,13 +11,13 @@
 ```
 
 ## Task Schedule (last run dates)
-- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-27)
-- Task 2 (Identify Opportunities): 2026-09-27 (found Assert.That fast-path Compile() IL-emission cost, fixed same run)
-- Task 3 (Implement): 2026-09-27 (PR: "Avoid IL-emitting Compile() in Assert.That fast path")
-- Task 4 (Maintain PRs): 2026-09-27 (no open perf-improver PRs before this run's new PR; confirmed #11555 DeploymentItemUtility PR merged)
-- Task 5 (Comment Issues): 2026-09-27 (no open performance-labeled issues)
-- Task 6 (Infrastructure): 2026-09-27 (added AssertThatBenchmarks.cs alongside the fix)
-- Task 7 (Monthly Summary): 2026-09-27
+- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-28)
+- Task 2 (Identify Opportunities): 2026-09-28 (fresh scan, no new findings - diminishing returns)
+- Task 3 (Implement): 2026-09-27 (PR #11561 merged; no new work this run - nothing to implement)
+- Task 4 (Maintain PRs): 2026-09-28 (confirmed PR #11561 merged 2026-09-27; no open perf-improver PRs)
+- Task 5 (Comment Issues): 2026-09-28 (no open performance-labeled issues)
+- Task 6 (Infrastructure): 2026-09-27 (AssertThatBenchmarks.cs added alongside fix; no new infra work this run)
+- Task 7 (Monthly Summary): 2026-09-28
 
 Full history of individual PRs/fixes from July-August 2026 and early September 2026 is condensed in the "September 2026 Runs" and "August 2026 Runs Summary" sections below (all cross-referenced by PR number).
 
@@ -25,7 +25,7 @@ Full history of individual PRs/fixes from July-August 2026 and early September 2
 - Issue #10914 (September 2026, open) — kept updated every run; rewrite-from-scratch needed multiple times 09-21 through 09-25 due to a recurring append-vs-replace duplication bug (not observed on 09-26 run).
 
 ## Work In Progress
-New PR created 2026-09-27: "Avoid IL-emitting Compile() in Assert.That fast path" (branch perf-assist/assert-that-compile-interpretation), awaiting maintainer review. Previous PR #11555 (DeploymentItemUtility char-array caching) MERGED by Evangelink 2026-09-27. No other in-progress work.
+No PR in progress this run (2026-09-28). PR #11561 ("Avoid IL-emitting Compile() in Assert.That fast path") MERGED by Evangelink 2026-09-27. No other in-progress work.
 
 ## Optimization Backlog (low priority, all re-verified multiple times, not fixed)
 1. `PrivateObject.Helpers.cs BuildGenericMethodCacheForType` (net-framework-only): rebuilds cache per PrivateObject instance construction. Medium risk (touches internal representation).
@@ -149,3 +149,11 @@ Monthly Activity issue #10914 (September 2026): updated every run per Task 7 man
 - Task 7: Monthly Activity issue #10914 - single "## Activity" section (no duplication observed this run), did a normal update.
 - Backlog: item 9 (Assert.That Compile() IL-emission) now DONE (PR created this run, largest win to date). Remaining unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enumeration (low volume, measured), RetryOrchestrator.ArtifactRecovery.cs Any() per-manifest-line (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run (fresh scan of Assertions/Adapter-Services/Platform-Services, 1 new finding+fix - the biggest one yet), Task 3 done this run (PR created), Task 4 done this run (confirmed prior PR merged, nothing else to maintain), Task 5 done this run (nothing actionable), Task 6 done this run (new benchmark added alongside fix), Task 7 done this run (issue updated, no duplication observed). Next run: continue exploring Assertions/Assert.That.ExpressionEvaluation*.cs siblings for similar patterns (the single-pass/side-effecting path already caches per-sub-expression so likely fine, but worth a fresh look), or the remaining Adapter PlatformServices Services/*.cs files not yet covered this run.
+
+## Run 2026-09-28 Notes
+- Task 4: PR #11561 ("Avoid IL-emitting Compile() in Assert.That fast path") from previous run MERGED by Evangelink 2026-09-27 - confirmed via pull_request_read. No other open PRs with "[perf-improver]" title prefix (search_pull_requests confirmed all historical matches closed/merged, 0 open).
+- Task 5: no open performance-labeled issues found (list_issues label:area/performance state:OPEN -> 0 results returned, plus 2 items filtered by integrity policy which are the monthly-activity issues themselves, not fresh candidates).
+- Task 2: dispatched explore-agent to fresh ground per prior run's suggestion (Assertions remaining 87 files incl. StringAssert.Regex.cs, TcmTestPropertiesProvider.cs, UnitTestOutcomeHelper.cs, PropertyBag.cs, Platform Services/Requests/Messages remaining files incl. TreeNodeFilter.Parsing/TestExecutionFilterComposer/ConsoleTestExecutionFilterFactory/ShutdownProgressReporter, Adapter PlatformServices Execution/{TestMethodInfo,TestMethodRunner,TestClassInfo}.cs). RESULT: no new actionable findings - everything examined is already optimized (explicit `// PERF` comments present) or cold/startup/one-shot paths, consistent with prior exhaustive scans. No fix attempted this run (nothing new to fix).
+- Task 7: Monthly Activity issue #10914 (September 2026) - single "## Activity" section, no duplication observed, did a normal update adding this run's entry, removing the now-resolved "Review PR #11561" item from Suggested Actions since it was merged.
+- Backlog unchanged (all items previously measured/verified, none newly actionable): PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enumeration (low volume, measured), RetryOrchestrator.ArtifactRecovery.cs Any() per-manifest-line (low volume) - all low priority, not fixed.
+- Task schedule: Task 2 done this run (fresh scan, no new findings - diminishing returns continue), Task 4 done this run (confirmed PR #11561 merged, nothing else to maintain), Task 5 done this run (nothing actionable), Task 7 done this run (issue updated, resolved item removed from Suggested Actions). Next run: the codebase has now gone ~2 consecutive scan cycles without new fixable hot-path findings after the Assert.That win - consider a lighter-weight Task 2 cadence and lean more into Task 4/5/7 maintenance, or explore a genuinely fresh angle like MSTest.Sdk multi-targeting build evaluation cost more deeply, or CI perf-regression-gate infrastructure (Task 6) if no fresh runtime hot-path candidates emerge again next run.
