@@ -616,12 +616,32 @@ internal static class HttpProbe
         {
             using TcpClient client = await listener.AcceptTcpClientAsync();
             using NetworkStream stream = client.GetStream();
-            var buffer = new byte[1024];
+            var buffer = new byte[1];
+            const string HeaderTerminator = "\r\n\r\n";
+            int matchedTerminatorBytes = 0;
+            int totalRequestBytes = 0;
             int count;
             while ((count = await stream.ReadAsync(buffer)) > 0)
             {
-                string request = Encoding.ASCII.GetString(buffer, 0, count);
-                if (request.Contains("\r\n\r\n", StringComparison.Ordinal))
+                totalRequestBytes += count;
+                if (totalRequestBytes > 16 * 1024)
+                {
+                    throw new InvalidOperationException("The HTTP request headers exceeded 16 KB.");
+                }
+
+                for (int i = 0; i < count; i++)
+                {
+                    char current = (char)buffer[i];
+                    matchedTerminatorBytes = current == HeaderTerminator[matchedTerminatorBytes]
+                        ? matchedTerminatorBytes + 1
+                        : current == HeaderTerminator[0] ? 1 : 0;
+                    if (matchedTerminatorBytes == HeaderTerminator.Length)
+                    {
+                        break;
+                    }
+                }
+
+                if (matchedTerminatorBytes == HeaderTerminator.Length)
                 {
                     break;
                 }
